@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -263,7 +279,7 @@ var NRS = (function (NRS, $) {
 		return converters.byteArrayToHexString(v.concat(h));
 	};
 
-	NRS.verifyBytes = function(signature, message, publicKey) {
+	NRS.verifySignature = function(signature, message, publicKey, callback) {
 		var signatureBytes = converters.hexStringToByteArray(signature);
 		var messageBytes = converters.hexStringToByteArray(message);
 		var publicKeyBytes = converters.hexStringToByteArray(publicKey);
@@ -272,7 +288,14 @@ var NRS = (function (NRS, $) {
 		var y = curve25519.verify(v, h, publicKeyBytes);
 		var m = simpleHash(messageBytes);
 		var h2 = simpleHash(m, y);
-		return areByteArraysEqual(h, h2);
+		if (!areByteArraysEqual(h, h2)) {
+            callback({
+                "errorCode": 1,
+                "errorDescription": $.t("error_signature_verification_client")
+            }, data);
+            return false;
+        }
+        return true;
 	};
 
 	NRS.setEncryptionPassword = function(password) {

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {3rdparty/jquery-2.1.0.js}
  */
@@ -63,6 +79,7 @@ var NRS = (function(NRS, $, undefined) {
             _replaceModalHTMLTemplateDiv(data, 'add_message_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'add_public_message_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'secret_phrase_modal_template');
+            _replaceModalHTMLTemplateDiv(data, 'admin_password_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_fee_deadline_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_approve_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_rt_hash_template');
@@ -94,9 +111,9 @@ var NRS = (function(NRS, $, undefined) {
         $elems.each(function(i) {
             $(this).empty();
             $(this).append(template(context));
+            $(this).parent().find("[data-i18n]").i18n();
         });
 
-       $('div[data-modal-ui-element]').find("[data-i18n]").i18n();
        return $elems;
     }
 
@@ -114,6 +131,7 @@ var NRS = (function(NRS, $, undefined) {
             if (!inserted) {
                 $('#sidebar_menu').append(menuHTML);
             }
+            $("#sidebar_menu [data-i18n]").i18n();
         }
     }
 

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Db;
@@ -32,9 +48,14 @@ public final class APIServlet extends HttpServlet {
     abstract static class APIRequestHandler {
 
         private final List<String> parameters;
+        private final String fileParameter;
         private final Set<APITag> apiTags;
 
         APIRequestHandler(APITag[] apiTags, String... parameters) {
+            this(null, apiTags, parameters);
+        }
+
+        APIRequestHandler(String fileParameter, APITag[] apiTags, String... parameters) {
             List<String> origParameters = Arrays.asList(parameters);
             if ((requirePassword() || origParameters.contains("lastIndex")) && ! API.disableAdminPassword) {
                 List<String> newParameters = new ArrayList<>(parameters.length + 1);
@@ -45,6 +66,7 @@ public final class APIServlet extends HttpServlet {
                 this.parameters = origParameters;
             }
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
+            this.fileParameter = fileParameter;
         }
 
         final List<String> getParameters() {
@@ -55,7 +77,15 @@ public final class APIServlet extends HttpServlet {
             return apiTags;
         }
 
+        final String getFileParameter() {
+            return fileParameter;
+        }
+
         abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
+
+        JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
+            return processRequest(request);
+        }
 
         boolean requirePost() {
             return false;
@@ -68,6 +98,7 @@ public final class APIServlet extends HttpServlet {
         boolean requirePassword() {
         	return false;
         }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
@@ -141,6 +172,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlockId", GetBlockId.instance);
         map.put("getBlocks", GetBlocks.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
+        map.put("getBlockchainTransactions", GetBlockchainTransactions.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getCurrency", GetCurrency.instance);
         map.put("getCurrencies", GetCurrencies.instance);
@@ -165,6 +197,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDGSTagsLike", GetDGSTagsLike.instance);
         map.put("getGuaranteedBalance", GetGuaranteedBalance.instance);
         map.put("getECBlock", GetECBlock.instance);
+        map.put("getInboundPeers", GetInboundPeers.instance);
         map.put("getPlugins", GetPlugins.instance);
         map.put("getMyInfo", GetMyInfo.instance);
         //map.put("getNextBlockGenerators", GetNextBlockGenerators.instance);
@@ -218,6 +251,7 @@ public final class APIServlet extends HttpServlet {
         map.put("issueCurrency", IssueCurrency.instance);
         map.put("leaseBalance", LeaseBalance.instance);
         map.put("longConvert", LongConvert.instance);
+        map.put("hexConvert", HexConvert.instance);
         map.put("markHost", MarkHost.instance);
         map.put("parseTransaction", ParseTransaction.instance);
         map.put("placeAskOrder", PlaceAskOrder.instance);
@@ -249,7 +283,9 @@ public final class APIServlet extends HttpServlet {
         map.put("extendTaggedData", ExtendTaggedData.instance);
         map.put("getAccountTaggedData", GetAccountTaggedData.instance);
         map.put("getAllTaggedData", GetAllTaggedData.instance);
+        map.put("getChannelTaggedData", GetChannelTaggedData.instance);
         map.put("getTaggedData", GetTaggedData.instance);
+        map.put("downloadTaggedData", DownloadTaggedData.instance);
         map.put("getDataTags", GetDataTags.instance);
         map.put("getDataTagCount", GetDataTagCount.instance);
         map.put("getDataTagsLike", GetDataTagsLike.instance);
@@ -327,7 +363,7 @@ public final class APIServlet extends HttpServlet {
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }
-                response = apiRequestHandler.processRequest(req);
+                response = apiRequestHandler.processRequest(req, resp);
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
@@ -336,7 +372,7 @@ public final class APIServlet extends HttpServlet {
                 JSONData.putException(json, e);
                 response = JSON.prepare(json);
             } catch (ExceptionInInitializerError err) {
-                Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
+                Logger.logErrorMessage("Initialization Error", err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
             } finally {
                 if (apiRequestHandler.startDbTransaction()) {

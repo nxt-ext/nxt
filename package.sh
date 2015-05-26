@@ -4,7 +4,7 @@ PACKAGE=nxt-client-setup-${VERSION}
 echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
 
-FILES="conf lib html resource MIT-license.txt run.sh run.bat run-tor.sh verify.sh changelogs README.txt README_win.txt NXT_Wallet.url Dockerfile docker_start.sh mint.bat mint.sh"
+FILES="conf lib html resource LICENSE.txt 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md USERS-GUIDE.md README.md run.sh run.bat run-tor.sh verify.sh changelogs README.txt README_win.txt NXT_Wallet.url Dockerfile docker_start.sh mint.bat mint.sh"
 FILES="${FILES}  build-installer.sh setup.xml shortcutSpec.xml RegistrySpec.xml nxt.exe nxtservice.exe compile.sh win-compile.sh javadoc.sh"
 
 # unix2dos *.bat

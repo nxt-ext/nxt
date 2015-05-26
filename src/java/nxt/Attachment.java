@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -9,6 +25,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,6 +60,10 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        final void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            getTransactionType().validateAttachmentAtFinish(transaction);
+        }
+
         final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             getTransactionType().apply((TransactionImpl)transaction, senderAccount, recipientAccount);
         }
@@ -50,6 +71,11 @@ public interface Attachment extends Appendix {
         @Override
         public Fee getBaselineFee(Transaction transaction) {
             return getTransactionType().getBaselineFee(transaction);
+        }
+
+        @Override
+        final boolean isPhasable() {
+            return getTransactionType().isPhasable();
         }
 
     }
@@ -363,7 +389,7 @@ public interface Attachment extends Appendix {
         private final int finishHeight;
 
         private final byte minNumberOfOptions;
-        private final byte maxNumberOfOptions; //only for choice voting
+        private final byte maxNumberOfOptions;
         private final byte minRangeValue;
         private final byte maxRangeValue;
         private final VoteWeighting voteWeighting;
@@ -2424,6 +2450,7 @@ public interface Attachment extends Appendix {
         private final String description;
         private final String tags;
         private final String type;
+        private final String channel;
         private final boolean isText;
         private final String filename;
         private final byte[] data;
@@ -2435,6 +2462,7 @@ public interface Attachment extends Appendix {
             this.description = null;
             this.tags = null;
             this.type = null;
+            this.channel = null;
             this.isText = false;
             this.filename = null;
             this.data = null;
@@ -2447,6 +2475,7 @@ public interface Attachment extends Appendix {
                 this.description = (String) attachmentData.get("description");
                 this.tags = (String) attachmentData.get("tags");
                 this.type = (String) attachmentData.get("type");
+                this.channel = Convert.nullToEmpty((String) attachmentData.get("channel"));
                 this.isText = Boolean.TRUE.equals(attachmentData.get("isText"));
                 this.data = isText ? Convert.toBytes(dataJSON) : Convert.parseHexString(dataJSON);
                 this.filename = (String) attachmentData.get("filename");
@@ -2455,6 +2484,7 @@ public interface Attachment extends Appendix {
                 this.description = null;
                 this.tags = null;
                 this.type = null;
+                this.channel = null;
                 this.isText = false;
                 this.filename = null;
                 this.data = null;
@@ -2462,11 +2492,12 @@ public interface Attachment extends Appendix {
 
         }
 
-        private TaggedDataAttachment(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
+        private TaggedDataAttachment(String name, String description, String tags, String type, String channel, boolean isText, String filename, byte[] data) {
             this.name = name;
             this.description = description;
             this.tags = tags;
             this.type = type;
+            this.channel = channel;
             this.isText = isText;
             this.data = data;
             this.filename = filename;
@@ -2474,11 +2505,11 @@ public interface Attachment extends Appendix {
 
         @Override
         final int getMyFullSize() {
-            if (data == null) {
+            if (getData() == null) {
                 return 0;
             }
-            return Convert.toBytes(name).length + Convert.toBytes(description).length + Convert.toBytes(type).length
-                    + Convert.toBytes(tags).length + Convert.toBytes(filename).length + data.length;
+            return Convert.toBytes(getName()).length + Convert.toBytes(getDescription()).length + Convert.toBytes(getType()).length
+                    + Convert.toBytes(getChannel()).length + Convert.toBytes(getTags()).length + Convert.toBytes(getFilename()).length + getData().length;
         }
 
         @Override
@@ -2488,6 +2519,7 @@ public interface Attachment extends Appendix {
                 attachment.put("description", taggedData.getDescription());
                 attachment.put("tags", taggedData.getTags());
                 attachment.put("type", taggedData.getType());
+                attachment.put("channel", taggedData.getChannel());
                 attachment.put("isText", taggedData.isText());
                 attachment.put("filename", taggedData.getFilename());
                 attachment.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
@@ -2496,6 +2528,7 @@ public interface Attachment extends Appendix {
                 attachment.put("description", description);
                 attachment.put("tags", tags);
                 attachment.put("type", type);
+                attachment.put("channel", channel);
                 attachment.put("isText", isText);
                 attachment.put("filename", filename);
                 attachment.put("data", isText ? Convert.toString(data) : Convert.toHexString(data));
@@ -2512,6 +2545,7 @@ public interface Attachment extends Appendix {
             digest.update(Convert.toBytes(description));
             digest.update(Convert.toBytes(tags));
             digest.update(Convert.toBytes(type));
+            digest.update(Convert.toBytes(channel));
             digest.update((byte)(isText ? 1 : 0));
             digest.update(Convert.toBytes(filename));
             digest.update(data);
@@ -2546,6 +2580,13 @@ public interface Attachment extends Appendix {
             return type;
         }
 
+        public final String getChannel() {
+            if (taggedData != null) {
+                return taggedData.getChannel();
+            }
+            return channel;
+        }
+
         public final boolean isText() {
             if (taggedData != null) {
                 return taggedData.isText();
@@ -2565,11 +2606,6 @@ public interface Attachment extends Appendix {
                 return taggedData.getData();
             }
             return data;
-        }
-
-        @Override
-        final boolean isPhasable() {
-            return false;
         }
 
         @Override
@@ -2610,9 +2646,13 @@ public interface Attachment extends Appendix {
             }
         }
 
-        public TaggedDataUpload(String name, String description, String tags, String type, boolean isText, String filename, byte[] data) {
-            super(name, description, tags, type, isText, filename, data);
+        public TaggedDataUpload(String name, String description, String tags, String type, String channel, boolean isText,
+                                String filename, byte[] data) throws NxtException.NotValidException {
+            super(name, description, tags, type, channel, isText, filename, data);
             this.hash = null;
+            if (isText && !Arrays.equals(data, Convert.toBytes(Convert.toString(data)))) {
+                throw new NxtException.NotValidException("Data is not UTF-8 text");
+            }
         }
 
         @Override
@@ -2661,26 +2701,26 @@ public interface Attachment extends Appendix {
         }
 
         private volatile byte[] hash;
-        private /*final*/ long taggedDataId;
+        private final long taggedDataId;
+        private final boolean jsonIsPruned;
 
         TaggedDataExtend(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.taggedDataId = buffer.getLong();
+            this.jsonIsPruned = false;
         }
 
         TaggedDataExtend(JSONObject attachmentData) {
             super(attachmentData);
             this.taggedDataId = Convert.parseUnsignedLong((String)attachmentData.get("taggedData"));
-            //TODO: remove
-            if (this.taggedDataId == 0) {
-                this.taggedDataId = Convert.parseUnsignedLong((String)attachmentData.get("taggedDataId"));
-            }
+            this.jsonIsPruned = attachmentData.get("data") == null;
         }
 
         public TaggedDataExtend(TaggedData taggedData) {
             super(taggedData.getName(), taggedData.getDescription(), taggedData.getTags(), taggedData.getType(),
-                    taggedData.isText(), taggedData.getFilename(), taggedData.getData());
+                    taggedData.getChannel(), taggedData.isText(), taggedData.getFilename(), taggedData.getData());
             this.taggedDataId = taggedData.getId();
+            this.jsonIsPruned = false;
         }
 
         @Override
@@ -2697,8 +2737,6 @@ public interface Attachment extends Appendix {
         void putMyJSON(JSONObject attachment) {
             super.putMyJSON(attachment);
             attachment.put("taggedData", Long.toUnsignedString(taggedDataId));
-            //TODO: remove
-            attachment.put("taggedDataId", Long.toUnsignedString(taggedDataId));
         }
 
         @Override
@@ -2725,6 +2763,10 @@ public interface Attachment extends Appendix {
         @Override
         long getTaggedDataId(Transaction transaction) {
             return taggedDataId;
+        }
+
+        boolean jsonIsPruned() {
+            return jsonIsPruned;
         }
 
     }

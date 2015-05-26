@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -317,11 +333,15 @@ var NRS = (function(NRS, $, undefined) {
 		return NRS.convertToNXT(quantityQNT.multiply(priceNQT));
 	};
 
-	NRS.calculatePercentage = function(a, b) {
+	NRS.calculatePercentage = function(a, b, rounding_mode) {
+		if (rounding_mode != undefined) { // Rounding mode from Big.js
+			Big.RM = rounding_mode;
+		}
 		a = new Big(String(a));
 		b = new Big(String(b));
 
 		var result = a.div(b).times(new Big("100")).toFixed(2);
+		Big.RM = 1;
 
 		return result.toString();
 	};
@@ -499,6 +519,11 @@ var NRS = (function(NRS, $, undefined) {
 		if (!/^\d+$/.test(qnt)) {
 			throw $.t("error_invalid_input_numbers");
 		}
+        try {
+            if (parseInt(qnt) === 0) {
+                return "0";
+            }
+        } catch(e) {}
 
 		//remove leading zeroes
 		return qnt.replace(/^0+/, "");
@@ -878,10 +903,10 @@ var NRS = (function(NRS, $, undefined) {
 				return NRS.accountRS;
 				break;
 			case "message_link":
-				return document.URL.replace(/#.*$/, "") + "#message:" + NRS.account;
+				return document.URL.replace(/#.*$/, "") + "#message:" + encodeURIComponent(NRS.accountRS);
 				break;
 			case "send_link":
-				return document.URL.replace(/#.*$/, "") + "#send:" + NRS.account;
+				return document.URL.replace(/#.*$/, "") + "#send:" + encodeURIComponent(NRS.accountRS);
 				break;
 			case "asset_id":
 				return $("#asset_id").text();
@@ -1402,11 +1427,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				break;
 			case 4:
-				var match = response.errorDescription.match(/Incorrect "([^"]+)"/i);
-
-				if (match && match[1]) {
-					return $.t("error_incorrect_name", {
-						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+				var match = response.errorDescription.match(/Incorrect "(.*)"(.*)/i);
+				if (match && match[1] && match[2]) {
+                    return $.t("error_incorrect_name", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase(),
+                        "reason": match[2]
 					}).capitalize();
 				} else {
 					return response.errorDescription;
@@ -1579,7 +1604,17 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 		return false;
-	}  
+	}
+
+	// http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
+	NRS.getUtf8Bytes = function(str) {
+	    var utf8 = unescape(encodeURIComponent(str));
+	    var arr = [];
+	    for (var i = 0; i < utf8.length; i++) {
+			arr[i] = utf8.charCodeAt(i);
+		}
+	    return arr;
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));

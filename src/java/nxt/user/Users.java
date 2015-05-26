@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.user;
 
 import nxt.Account;
@@ -191,7 +207,7 @@ public final class Users {
                 JSONArray addedBlacklistedPeers = new JSONArray();
                 JSONObject addedBlacklistedPeer = new JSONObject();
                 addedBlacklistedPeer.put("index", Users.getIndex(peer));
-                addedBlacklistedPeer.put("address", peer.getPeerAddress());
+                addedBlacklistedPeer.put("address", peer.getHost());
                 addedBlacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 addedBlacklistedPeer.put("software", peer.getSoftware());
                 addedBlacklistedPeers.add(addedBlacklistedPeer);
@@ -209,7 +225,7 @@ public final class Users {
                 JSONArray addedKnownPeers = new JSONArray();
                 JSONObject addedKnownPeer = new JSONObject();
                 addedKnownPeer.put("index", Users.getIndex(peer));
-                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("address", peer.getHost());
                 addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 addedKnownPeer.put("software", peer.getSoftware());
                 addedKnownPeers.add(addedKnownPeer);
@@ -227,7 +243,7 @@ public final class Users {
                 JSONArray addedKnownPeers = new JSONArray();
                 JSONObject addedKnownPeer = new JSONObject();
                 addedKnownPeer.put("index", Users.getIndex(peer));
-                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("address", peer.getHost());
                 addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 addedKnownPeer.put("software", peer.getSoftware());
                 addedKnownPeers.add(addedKnownPeer);
@@ -291,7 +307,7 @@ public final class Users {
                 if (peer.getState() != Peer.State.CONNECTED) {
                     addedActivePeer.put("disconnected", true);
                 }
-                addedActivePeer.put("address", peer.getPeerAddress());
+                addedActivePeer.put("address", peer.getHost());
                 addedActivePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 addedActivePeer.put("weight", peer.getWeight());
                 addedActivePeer.put("downloaded", peer.getDownloadedVolume());
@@ -319,7 +335,7 @@ public final class Users {
                 JSONArray addedKnownPeers = new JSONArray();
                 JSONObject addedKnownPeer = new JSONObject();
                 addedKnownPeer.put("index", Users.getIndex(peer));
-                addedKnownPeer.put("address", peer.getPeerAddress());
+                addedKnownPeer.put("address", peer.getHost());
                 addedKnownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 addedKnownPeer.put("software", peer.getSoftware());
                 addedKnownPeers.add(addedKnownPeer);
@@ -467,11 +483,11 @@ public final class Users {
     }
 
     static int getIndex(Peer peer) {
-        Integer index = peerIndexMap.get(peer.getPeerAddress());
+        Integer index = peerIndexMap.get(peer.getHost());
         if (index == null) {
             index = peerCounter.incrementAndGet();
-            peerIndexMap.put(peer.getPeerAddress(), index);
-            peerAddressMap.put(index, peer.getPeerAddress());
+            peerIndexMap.put(peer.getHost(), index);
+            peerAddressMap.put(index, peer.getHost());
         }
         return index;
     }

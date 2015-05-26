@@ -1,3 +1,19 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div id="open_orders_page" class="page">
     <section class="content-header"><h1 data-i18n="open_orders">Open Orders</h1></section>
     <section class="content">
@@ -175,7 +191,9 @@
                         <div id="no_asset_selected" style="padding-top: 150px;text-align:center;" data-i18n="no_asset_selected">Please select an asset in the left sidebar.</div>
                         <div id="loading_asset_data" style="padding-top: 150px;text-align:center;display: none;"><span data-i18n="asset_data_loading">Asset data loading, please wait...</span><br /><br /><img class="loading" src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                         <div id="asset_details" style="display:none;">
-                            <div class="alert alert-danger alert-no-icon" id="asset_exchange_duplicates_warning" style="display:none" data-i18n="[html]asset_exchange_duplicates_warning"></div>
+                            <div class="alert alert-danger alert-no-icon" id="asset_exchange_duplicates_warning" style="display:none">
+                                <span data-i18n="asset_exchange_duplicates_warning"></span>
+                            </div>
 
                             <div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
                                 <strong data-i18n="account">Account</strong>: <span id="asset_account"></span><br />

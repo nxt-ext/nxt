@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -59,36 +75,42 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject accountBalance(Account account) {
+    static JSONObject accountBalance(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account == null) {
             json.put("balanceNQT", "0");
             json.put("unconfirmedBalanceNQT", "0");
-            json.put("effectiveBalanceNXT", "0");
             json.put("forgedBalanceNQT", "0");
-            json.put("guaranteedBalanceNQT", "0");
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", "0");
+                json.put("guaranteedBalanceNQT", "0");
+            }
         } else {
             json.put("balanceNQT", String.valueOf(account.getBalanceNQT()));
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
-            json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
-            json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+            }
         }
         return json;
     }
 
-    static JSONObject lessor(Account account) {
+    static JSONObject lessor(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
         if (account.getCurrentLesseeId() != 0) {
             putAccount(json, "currentLessee", account.getCurrentLesseeId());
             json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
             json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+            if (includeEffectiveBalance) {
+                json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
+            }
         }
         if (account.getNextLesseeId() != 0) {
             putAccount(json, "nextLessee", account.getNextLesseeId());
             json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
             json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
-            json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
         }
         return json;
     }
@@ -244,8 +266,10 @@ final class JSONData {
         }
         json.put("blockSignature", Convert.toHexString(block.getBlockSignature()));
         JSONArray transactions = new JSONArray();
-        for (Transaction transaction : block.getTransactions()) {
-            transactions.add(includeTransactions ? transaction(transaction) : Long.toUnsignedString(transaction.getId()));
+        if (includeTransactions) {
+            block.getTransactions().forEach(transaction -> transactions.add(transaction(transaction)));
+        } else {
+            block.getTransactions().forEach(transaction -> transactions.add(transaction.getStringId()));
         }
         json.put("transactions", transactions);
         return json;
@@ -291,6 +315,7 @@ final class JSONData {
         JSONObject json = new JSONObject();
         putAccount(json, "account", Account.getId(hallmark.getPublicKey()));
         json.put("host", hallmark.getHost());
+        json.put("port", hallmark.getPort());
         json.put("weight", hallmark.getWeight());
         String dateString = Hallmark.formatDate(hallmark.getDate());
         json.put("date", dateString);
@@ -308,7 +333,8 @@ final class JSONData {
 
     static JSONObject peer(Peer peer) {
         JSONObject json = new JSONObject();
-        json.put("address", peer.getPeerAddress());
+        json.put("address", peer.getHost());
+        json.put("port", peer.getPort());
         json.put("state", peer.getState().ordinal());
         json.put("announcedAddress", peer.getAnnouncedAddress());
         json.put("shareAddress", peer.shareAddress());
@@ -323,6 +349,9 @@ final class JSONData {
         json.put("platform", peer.getPlatform());
         json.put("blacklisted", peer.isBlacklisted());
         json.put("lastUpdated", peer.getLastUpdated());
+        json.put("inbound", peer.isInbound());
+        json.put("inboundWebSocket", peer.isInboundWebSocket());
+        json.put("outboundWebSocket", peer.isOutboundWebSocket());
         if (peer.isBlacklisted()) {
             json.put("blacklistingCause", peer.getBlacklistingCause());
         }
@@ -355,7 +384,14 @@ final class JSONData {
         if (voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
             json.put("decimals", Asset.getAsset(voteWeighting.getHoldingId()).getDecimals());
         } else if(voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
-            json.put("decimals", Currency.getCurrency(voteWeighting.getHoldingId()).getDecimals());
+            Currency currency = Currency.getCurrency(voteWeighting.getHoldingId());
+            if (currency != null) {
+                json.put("decimals", currency.getDecimals());
+            } else {
+                Transaction currencyIssuance = Nxt.getBlockchain().getTransaction(voteWeighting.getHoldingId());
+                Attachment.MonetarySystemCurrencyIssuance currencyIssuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) currencyIssuance.getAttachment();
+                json.put("decimals", currencyIssuanceAttachment.getDecimals());
+            }
         }
         putVoteWeighting(json, voteWeighting);
         json.put("finished", poll.isFinished());
@@ -682,17 +718,23 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject taggedData(TaggedData taggedData) {
+    static JSONObject taggedData(TaggedData taggedData, boolean includeData) {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(taggedData.getId()));
         putAccount(json, "account", taggedData.getAccountId());
         json.put("name", taggedData.getName());
         json.put("description", taggedData.getDescription());
         json.put("tags", taggedData.getTags());
+        JSONArray tagsJSON = new JSONArray();
+        Collections.addAll(tagsJSON, taggedData.getParsedTags());
+        json.put("parsedTags", tagsJSON);
         json.put("type", taggedData.getType());
+        json.put("channel", taggedData.getChannel());
         json.put("filename", taggedData.getFilename());
         json.put("isText", taggedData.isText());
-        json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
+        if (includeData) {
+            json.put("data", taggedData.isText() ? Convert.toString(taggedData.getData()) : Convert.toHexString(taggedData.getData()));
+        }
         json.put("transactionTimestamp", taggedData.getTransactionTimestamp());
         json.put("blockTimestamp", taggedData.getBlockTimestamp());
         return json;

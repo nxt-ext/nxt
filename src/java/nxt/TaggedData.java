@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
@@ -19,7 +35,7 @@ import java.util.Map;
 
 public class TaggedData {
 
-    public static final DbKey.LongKeyFactory<TaggedData> taggedDataKeyFactory = new DbKey.LongKeyFactory<TaggedData>("id") {
+    private static final DbKey.LongKeyFactory<TaggedData> taggedDataKeyFactory = new DbKey.LongKeyFactory<TaggedData>("id") {
 
         @Override
         public DbKey newKey(TaggedData taggedData) {
@@ -28,7 +44,7 @@ public class TaggedData {
 
     };
 
-    public static final VersionedPrunableDbTable<TaggedData> taggedDataTable = new VersionedPrunableDbTable<TaggedData>(
+    private static final VersionedPrunableDbTable<TaggedData> taggedDataTable = new VersionedPrunableDbTable<TaggedData>(
             "tagged_data", taggedDataKeyFactory, "name,description,tags") {
 
         @Override
@@ -110,7 +126,7 @@ public class TaggedData {
     }
 
 
-    public static final DbKey.LongKeyFactory<Timestamp> timestampKeyFactory = new DbKey.LongKeyFactory<Timestamp>("id") {
+    private static final DbKey.LongKeyFactory<Timestamp> timestampKeyFactory = new DbKey.LongKeyFactory<Timestamp>("id") {
 
         @Override
         public DbKey newKey(Timestamp timestamp) {
@@ -119,7 +135,7 @@ public class TaggedData {
 
     };
 
-    public static final VersionedEntityDbTable<Timestamp> timestampTable = new VersionedEntityDbTable<Timestamp>(
+    private static final VersionedEntityDbTable<Timestamp> timestampTable = new VersionedEntityDbTable<Timestamp>(
             "tagged_data_timestamp", timestampKeyFactory) {
 
         @Override
@@ -256,20 +272,29 @@ public class TaggedData {
         return taggedDataTable.get(taggedDataKeyFactory.newKey(transactionId));
     }
 
-    public static DbIterator<TaggedData> getData(long accountId, int from, int to) {
-        return taggedDataTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    public static DbIterator<TaggedData> getData(String channel, long accountId, int from, int to) {
+        if (channel == null && accountId == 0) {
+            throw new IllegalArgumentException("Either channel, or accountId, or both, must be specified");
+        }
+        return taggedDataTable.getManyBy(getDbClause(channel, accountId), from, to);
     }
 
-    public static DbIterator<TaggedData> searchAccountData(String query, long accountId, int from, int to) {
-        return taggedDataTable.search(query, new DbClause.LongClause("account_id", accountId), from, to,
+    public static DbIterator<TaggedData> searchData(String query, String channel, long accountId, int from, int to) {
+        return taggedDataTable.search(query, getDbClause(channel, accountId), from, to,
                 " ORDER BY ft.score DESC, tagged_data.block_timestamp DESC, tagged_data.db_id DESC ");
     }
 
-    public static DbIterator<TaggedData> searchData(String query, int from, int to) {
-        return taggedDataTable.search(query, DbClause.EMPTY_CLAUSE, from, to,
-                " ORDER BY ft.score DESC, tagged_data.block_timestamp DESC, tagged_data.db_id DESC ");
+    private static DbClause getDbClause(String channel, long accountId) {
+        DbClause dbClause = DbClause.EMPTY_CLAUSE;
+        if (channel != null) {
+            dbClause = new DbClause.StringClause("channel", channel);
+        }
+        if (accountId != 0) {
+            DbClause accountClause = new DbClause.LongClause("account_id", accountId);
+            dbClause = dbClause != DbClause.EMPTY_CLAUSE ? dbClause.and(accountClause) : accountClause;
+        }
+        return dbClause;
     }
-
 
     static void init() {
         Tag.init();
@@ -284,6 +309,7 @@ public class TaggedData {
     private final String[] parsedTags;
     private final byte[] data;
     private final String type;
+    private final String channel;
     private final boolean isText;
     private final String filename;
     private int transactionTimestamp;
@@ -299,6 +325,7 @@ public class TaggedData {
         this.parsedTags = Search.parseTags(tags, 3, 20, 5);
         this.data = attachment.getData();
         this.type = attachment.getType();
+        this.channel = attachment.getChannel();
         this.isText = attachment.isText();
         this.filename = attachment.getFilename();
         this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
@@ -316,6 +343,7 @@ public class TaggedData {
         this.parsedTags = Arrays.copyOf(array, array.length, String[].class);
         this.data = rs.getBytes("data");
         this.type = rs.getString("type");
+        this.channel = rs.getString("channel");
         this.isText = rs.getBoolean("is_text");
         this.filename = rs.getString("filename");
         this.blockTimestamp = rs.getInt("block_timestamp");
@@ -324,8 +352,8 @@ public class TaggedData {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO tagged_data (id, account_id, name, description, tags, parsed_tags, "
-                + "type, data, is_text, filename, block_timestamp, transaction_timestamp, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "type, channel, data, is_text, filename, block_timestamp, transaction_timestamp, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.accountId);
@@ -334,6 +362,7 @@ public class TaggedData {
             pstmt.setString(++i, this.tags);
             pstmt.setObject(++i, this.parsedTags);
             pstmt.setString(++i, this.type);
+            pstmt.setString(++i, this.channel);
             pstmt.setBytes(++i, this.data);
             pstmt.setBoolean(++i, this.isText);
             pstmt.setString(++i, this.filename);
@@ -374,6 +403,10 @@ public class TaggedData {
 
     public String getType() {
         return type;
+    }
+
+    public String getChannel() {
+        return channel;
     }
 
     public boolean isText() {

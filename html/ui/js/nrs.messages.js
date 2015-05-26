@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -10,7 +26,7 @@ var NRS = (function(NRS, $) {
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
-		NRS.sendRequest("getAccountTransactions+", {
+		NRS.sendRequest("getBlockchainTransactions+", {
 			"account": NRS.account,
 			"firstIndex": 0,
 			"lastIndex": 75,
@@ -451,6 +467,34 @@ var NRS = (function(NRS, $) {
 			"stop": true
 		};
 	};
+
+    $('#upload_file').bind('change', function () {
+        // Mimics the server side SizeBasedFee calculation
+        var size = this.files[0].size;
+        size += NRS.getUtf8Bytes($('#tagged_data_name').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_description').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_tags').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_type').val()).length;
+        size += NRS.getUtf8Bytes($('#tagged_data_channel').val()).length;
+        size += NRS.getUtf8Bytes(this.files[0].name).length;
+        var dataFee = parseInt(new BigInteger("" + size).divide(new BigInteger("1024")).toString()) * 0.1;
+        $('#upload_data_fee').val(1 + dataFee);
+        $('#upload_data_fee_label').html(String(1 + dataFee) + " NXT");
+    });
+
+    $("#extend_data_modal").on("show.bs.modal", function (e) {
+        var $invoker = $(e.relatedTarget);
+        var transaction = $invoker.data("transaction");
+        $("#extend_data_transaction").val(transaction);
+        NRS.sendRequest("getTransaction", {
+            "transaction": transaction
+        }, function (response) {
+            var fee = NRS.convertToNXT(String(response.feeNQT).escapeHTML());
+            $('#extend_data_fee').val(fee);
+            $('#extend_data_fee_label').html(String(fee) + " NXT");
+        })
+    });
+
 
 	return NRS;
 }(NRS || {}, jQuery));

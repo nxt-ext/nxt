@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -248,7 +264,26 @@ var NRS = (function(NRS, $, undefined) {
                 }
             }
         },
-    }
+        6: {
+            'title': "Tagged Data",
+            'i18nKeyTitle': 'tagged_data',
+            'iconHTML': '<i class="fa fa-dashboard"></i>',
+            'subTypes': {
+                0: {
+                    'title': "Upload Tagged Data",
+                    'i18nKeyTitle': 'upload_tagged_data',
+                    'iconHTML': '<i class="fa fa-upload"></i>'
+                },
+                1: {
+                    'title': "Extend Tagged Data",
+                    'i18nKeyTitle': 'extend_tagged_data',
+                    'iconHTML': '<i class="fa fa-expand"></i>'
+                }
+            }
+        }
+    };
+
+    NRS.subtype = {};
 
     NRS.loadTransactionTypeConstants = function() {
         NRS.sendRequest("getConstants", {}, function (response) {
@@ -273,9 +308,10 @@ var NRS = (function(NRS, $, undefined) {
                         NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex]["serverConstants"] = subType;
                     });
                 });
+                NRS.subtype = response.transactionSubTypes;
             }
         });
-    }
+    };
     
     return NRS;
 }(NRS || {}, jQuery));

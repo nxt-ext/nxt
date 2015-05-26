@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -42,7 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.showWelcomeScreen = function() {
-		$("#login_panel, account_phrase_custom_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
+		$("#login_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#welcome_panel").show();
 	}
 
@@ -57,7 +73,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.registerAccount = function() {
 		$("#login_panel, #welcome_panel").hide();
 		$("#account_phrase_generator_panel").show();
-		$("#account_phrase_generator_panel step_3 .callout").hide();
+		$("#account_phrase_generator_panel .step_3 .callout").hide();
 
 		var $loading = $("#account_phrase_generator_loading");
 		var $loaded = $("#account_phrase_generator_loaded");
@@ -148,14 +164,14 @@ var NRS = (function(NRS, $, undefined) {
 					);
 				}
 			});
-			$('#login_account')
-			.append($("<li></li>")
-				.append($("<a></a>")
-					.attr("href","#")
-					.attr("style","display: inline-block;width: 380px;")
-					.attr("onClick","$('#login_account_container').hide();$('#login_account_container_other').show();")
-					.text("Other"))
-			);
+			var otherHTML = "<li><a href='#' style='display: inline-block;width: 380px;' ";
+			otherHTML += "data-i18n='other'>Other</a></li>";
+			var $otherHTML = $(otherHTML);
+			$otherHTML.click(function(e) {
+				$('#login_account_container').hide();
+				$('#login_account_container_other').show();
+			});
+			$otherHTML.appendTo($('#login_account'));
 		}
 		else{
 			$('#login_account_container').hide();
@@ -218,7 +234,7 @@ var NRS = (function(NRS, $, undefined) {
 			$("#login_check_password_length").val(1);
 		}
 
-		NRS.sendRequest("getBlockchainStatus", function(response) {
+		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				$.growl($.t("error_server_connect"), {
 					"type": "danger",
@@ -286,9 +302,9 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 					if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
-						NRS.disableAllPlugins = false;
+						NRS.disablePluginsDuringSession = false;
 					} else {
-						NRS.disableAllPlugins = true;
+						NRS.disablePluginsDuringSession = true;
 					}
 
 					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
@@ -319,27 +335,30 @@ var NRS = (function(NRS, $, undefined) {
 						}
 
 						//forging requires password to be sent to the server, so we don't do it automatically if not localhost
-						if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 || !NRS.isLocalHost || NRS.downloadingBlockchain || NRS.isLeased) {
-							$("#forging_indicator").removeClass("forging");
-							$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-							$("#forging_indicator").show();
+                        var forgingIndicator = $("#forging_indicator");
+                        if (!NRS.accountInfo.publicKey || NRS.accountInfo.effectiveBalanceNXT == 0 ||
+                            !NRS.isLocalHost || !passLogin ||
+                            NRS.downloadingBlockchain || NRS.isLeased) {
+                            forgingIndicator.removeClass("forging");
+							forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+							forgingIndicator.show();
 							NRS.isForging = false;
-						} else if (NRS.isLocalHost && passLogin) {
-							NRS.sendRequest("startForging", {
-								"secretPhrase": password
-							}, function(response) {
-								if ("deadline" in response) {
-									$("#forging_indicator").addClass("forging");
-									$("#forging_indicator span").html($.t("forging")).attr("data-i18n", "forging");
-									NRS.isForging = true;
-								} else {
-									$("#forging_indicator").removeClass("forging");
-									$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-									NRS.isForging = false;
-								}
-								$("#forging_indicator").show();
-							});
+                            return;
 						}
+                        NRS.sendRequest("startForging", {
+                            "secretPhrase": password
+                        }, function(response) {
+                            if ("deadline" in response) {
+                                forgingIndicator.addClass("forging");
+                                forgingIndicator.find("span").html($.t("forging")).attr("data-i18n", "forging");
+                                NRS.isForging = true;
+                            } else {
+                                forgingIndicator.removeClass("forging");
+                                forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+                                NRS.isForging = false;
+                            }
+                            forgingIndicator.show();
+                        });
 					});
 
 					//NRS.getAccountAliases();
@@ -382,7 +401,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 					
-					NRS.loadPlugins();
+					setTimeout(function () { NRS.loadPlugins(); }, 1500);
+					
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
 
@@ -471,13 +491,8 @@ var NRS = (function(NRS, $, undefined) {
 			html += "</p>";
 			html += "<p data-i18n='plugin_security_notice_trusted_sources'>";
 			html += "Make sure to only run plugins downloaded from trusted sources, otherwise ";
-			html += "you can loose your NXT! In doubt don't log into the client with an account ";
-			html += "used to store larger amounts of NXT now or in the future while plugins ";
-			html += "are active."
-			html += "</p>";
-			html += "<p data-i18n='plugin_security_notice_remember_passphrase'>";
-			html += "Logging into the client without remembering the passphrase won't make ";
-			html += "the process more secure.";
+			html += "you can loose your NXT! In doubt don't run plugins with accounts ";
+			html += "used to store larger amounts of NXT now or in the future.";
 			html += "</p>";
 			html += "</div>";
 

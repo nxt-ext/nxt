@@ -1,5 +1,10 @@
 Copyright © 2013-2015 The Nxt core developers.
 
+The license below applies to the client UI code only, as found under /html/ui.
+For the licensing conditions applicable to the server-side code, see the top
+level LICENSE.txt file.
+
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

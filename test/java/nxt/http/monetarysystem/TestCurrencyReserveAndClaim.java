@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http.monetarysystem;
 
 import nxt.Account;
@@ -25,7 +41,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 reserveSupply((long)100000).
                 build();
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall);
-        reserveIncreaseImpl(currencyId, secretPhrase1, secretPhrase2);
+        reserveIncreaseImpl(currencyId, ALICE.getSecretPhrase(), BOB.getSecretPhrase());
     }
 
     @Test
@@ -38,12 +54,11 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 reserveSupply((long)100000).
                 build();
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall1);
-        long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
-        long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
-        reserveIncreaseImpl(currencyId, secretPhrase1, secretPhrase2);
+        long balanceNQT1 = ALICE.getBalance();
+        long balanceNQT2 = BOB.getBalance();
+        reserveIncreaseImpl(currencyId, ALICE.getSecretPhrase(), BOB.getSecretPhrase());
         generateBlock(); // cancellation of crowd funding because of insufficient funds
         APICall apiCall = new APICall.Builder("getCurrencyFounders").
-                secretPhrase(secretPhrase2).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 build();
@@ -51,9 +66,8 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
         Logger.logMessage("getFoundersResponse: " + getFoundersResponse);
         Assert.assertEquals(5L, getFoundersResponse.get("errorCode"));
         Assert.assertEquals("Unknown currency", getFoundersResponse.get("errorDescription"));
-        Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
-        Assert.assertEquals(balanceNQT2 - 2*Constants.ONE_NXT, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT());
-
+        Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT, ALICE.getBalance());
+        Assert.assertEquals(balanceNQT2 - 2*Constants.ONE_NXT, BOB.getBalance());
     }
 
     @Test
@@ -67,14 +81,14 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 build();
 
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall);
-        long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
-        long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
-        reserveIncreaseImpl(currencyId, secretPhrase1, secretPhrase2);
+        long balanceNQT1 = ALICE.getBalance();
+        long balanceNQT2 = BOB.getBalance();
+        reserveIncreaseImpl(currencyId, ALICE.getSecretPhrase(), BOB.getSecretPhrase());
         generateBlock(); // distribution of currency to founders
-        Assert.assertEquals(20000, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(80000, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT - 200000 + (100000*10), Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
-        Assert.assertEquals(balanceNQT2 - 2*Constants.ONE_NXT - 800000, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT());
+        Assert.assertEquals(20000, ALICE.getCurrencyUnits(Convert.parseAccountId(currencyId)));
+        Assert.assertEquals(80000, BOB.getCurrencyUnits(Convert.parseAccountId(currencyId)));
+        Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT - 200000 + (100000*10), ALICE.getBalance());
+        Assert.assertEquals(balanceNQT2 - 2*Constants.ONE_NXT - 800000, BOB.getBalance());
     }
 
     @Test
@@ -89,21 +103,21 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 build();
 
         String currencyId = TestCurrencyIssuance.issueCurrencyApi(apiCall);
-        long balanceNQT1 = Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT();
-        long balanceNQT2 = Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT();
-        long balanceNQT3 = Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getBalanceNQT();
-        reserveIncreaseImpl(currencyId, secretPhrase2, secretPhrase3);
+        long balanceNQT1 = ALICE.getBalance();
+        long balanceNQT2 = BOB.getBalance();
+        long balanceNQT3 = CHUCK.getBalance();
+        reserveIncreaseImpl(currencyId, BOB.getSecretPhrase(), CHUCK.getSecretPhrase());
         generateBlock(); // distribution of currency to founders
 
         // account 2 balance round(24 * 0.2) = round(4.8) = 4
         // account 3 balance round(24 * 0.8) = round(19.2) = 19
         // issuer receives the leftover of 1
-        Assert.assertEquals(4, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(19, Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(1, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getCurrencyUnits(Convert.parseAccountId(currencyId)));
-        Assert.assertEquals(balanceNQT1 + 24 * 10, Account.getAccount(Crypto.getPublicKey(secretPhrase1)).getBalanceNQT());
-        Assert.assertEquals(balanceNQT2 - Constants.ONE_NXT - 24 * 2, Account.getAccount(Crypto.getPublicKey(secretPhrase2)).getBalanceNQT());
-        Assert.assertEquals(balanceNQT3 - 2 * Constants.ONE_NXT - 24 * 8, Account.getAccount(Crypto.getPublicKey(secretPhrase3)).getBalanceNQT());
+        Assert.assertEquals(4, BOB.getCurrencyUnits(Convert.parseAccountId(currencyId)));
+        Assert.assertEquals(19, CHUCK.getCurrencyUnits(Convert.parseAccountId(currencyId)));
+        Assert.assertEquals(1, ALICE.getCurrencyUnits(Convert.parseAccountId(currencyId)));
+        Assert.assertEquals(balanceNQT1 + 24 * 10, ALICE.getBalance());
+        Assert.assertEquals(balanceNQT2 - Constants.ONE_NXT - 24 * 2, BOB.getBalance());
+        Assert.assertEquals(balanceNQT3 - 2 * Constants.ONE_NXT - 24 * 8, CHUCK.getBalance());
 
         apiCall = new APICall.Builder("getCurrency").
                 param("currency", currencyId).

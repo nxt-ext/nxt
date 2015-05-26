@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -227,11 +243,10 @@ final class TransactionImpl implements Transaction {
 
     private final List<Appendix.AbstractAppendix> appendages;
     private final int appendagesSize;
-    private final int appendagesFullSize;
 
     private volatile int height = Integer.MAX_VALUE;
     private volatile long blockId;
-    private volatile Block block;
+    private volatile BlockImpl block;
     private volatile int blockTimestamp = -1;
     private volatile short index = -1;
     private volatile long id;
@@ -289,13 +304,10 @@ final class TransactionImpl implements Transaction {
         }
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
-        int appendagesFullSize = 0;
         for (Appendix appendage : appendages) {
             appendagesSize += appendage.getSize();
-            appendagesFullSize += appendage.getFullSize();
         }
         this.appendagesSize = appendagesSize;
-        this.appendagesFullSize = appendagesFullSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
             if (this.phasing == null) {
@@ -370,11 +382,6 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public int getValidationHeight() {
-        return phasing == null ? Nxt.getBlockchain().getHeight() : phasing.getFinishHeight();
-    }
-
-    @Override
     public byte[] getSignature() {
         return signature;
     }
@@ -395,14 +402,14 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
-    public Block getBlock() {
+    public BlockImpl getBlock() {
         if (block == null && blockId != 0) {
-            block = Nxt.getBlockchain().getBlock(blockId);
+            block = BlockchainImpl.getInstance().getBlock(blockId);
         }
         return block;
     }
 
-    void setBlock(Block block) {
+    void setBlock(BlockImpl block) {
         this.block = block;
         this.blockId = block.getId();
         this.height = block.getHeight();
@@ -699,6 +706,10 @@ final class TransactionImpl implements Transaction {
             if (taggedDataUpload != null) {
                 builder.appendix(taggedDataUpload);
             }
+            Attachment.TaggedDataExtend taggedDataExtend = Attachment.TaggedDataExtend.parse(prunableAttachments);
+            if (taggedDataExtend != null) {
+                builder.appendix(taggedDataExtend);
+            }
             Appendix.PrunablePlainMessage prunablePlainMessage = Appendix.PrunablePlainMessage.parse(prunableAttachments);
             if (prunablePlainMessage != null) {
                 builder.appendix(prunablePlainMessage);
@@ -858,12 +869,16 @@ final class TransactionImpl implements Transaction {
         return hasValidSignature;
     }
 
-    int getSize() {
+    private int getSize() {
         return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
     int getFullSize() {
-        return getSize() - appendagesSize + appendagesFullSize;
+        int fullSize = getSize() - appendagesSize;
+        for (Appendix.AbstractAppendix appendage : getAppendages()) {
+            fullSize += appendage.getFullSize();
+        }
+        return fullSize;
     }
 
     private int signatureOffset() {
@@ -948,13 +963,18 @@ final class TransactionImpl implements Transaction {
             }
         }
 
+        boolean validatingAtFinish = phasing != null && getSignature() != null && PhasingPoll.getPoll(getId()) != null;
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.loadPrunable(this);
             if (! appendage.verifyVersion(this.version)) {
                 throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
                         + " for transaction version " + this.version);
             }
-            appendage.validate(this);
+            if (validatingAtFinish) {
+                appendage.validateAtFinish(this);
+            } else {
+                appendage.validate(this);
+            }
         }
 
         if (getFullSize() > Constants.MAX_PAYLOAD_LENGTH) {
@@ -985,7 +1005,7 @@ final class TransactionImpl implements Transaction {
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if (phasing != null && attachment.isPhasable()) {
+        if (phasing != null && type.isPhasable()) {
             senderAccount.addToBalanceNQT(-feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {
@@ -1009,7 +1029,7 @@ final class TransactionImpl implements Transaction {
         return type.isUnconfirmedDuplicate(this, duplicates);
     }
 
-    long getMinimumFeeNQT(int blockchainHeight) {
+    private long getMinimumFeeNQT(int blockchainHeight) {
         long totalFee = 0;
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.loadPrunable(this);

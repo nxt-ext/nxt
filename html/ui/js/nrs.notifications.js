@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -110,7 +126,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.resetNotificationState = function(page) {
-		NRS.sendRequest("getTime", function(response) {
+		NRS.sendRequest("getTime", {}, function(response) {
 			if (response.time) {
 				$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
 					$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
@@ -134,7 +150,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.initNotificationCounts = function(time) {
 		var fromTS = time - 60 * 60 * 24 * 14;
-		NRS.sendRequest("getAccountTransactions+", {
+		NRS.sendRequest("getBlockchainTransactions+", {
 			"account": NRS.account,
 			"timestamp": fromTS,
 			"firstIndex": 0,
@@ -183,7 +199,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.updateNotifications = function() {
-		NRS.sendRequest("getTime", function(response) {
+		NRS.sendRequest("getTime", {}, function(response) {
 			if (response.time) {
 				var tsDictString = "";
 				if (NRS.databaseSupport) {

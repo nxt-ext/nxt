@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {3rdparty/jquery-2.1.0.js}
  * @depends {3rdparty/bootstrap.js}
@@ -27,9 +43,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.server = "";
 	NRS.state = {};
 	NRS.blocks = [];
-	NRS.genesis = "1739068987193023818";
-	NRS.genesisRS = "NXT-MRCC-2YLS-8M54-3CMAJ";
-
 	NRS.account = "";
 	NRS.accountRS = "";
 	NRS.publicKey = "";
@@ -277,8 +290,10 @@ var NRS = (function(NRS, $, undefined) {
 		}, 1000 * seconds);
 	};
 
+	var _firstTimeAfterLoginRun = false;
+
 	NRS.getState = function(callback) {
-		NRS.sendRequest("getBlockchainStatus", function(response) {
+		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
 				//todo
@@ -321,6 +336,10 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
 						});
 					}
+				}
+				if (NRS.account && !_firstTimeAfterLoginRun) {
+					//Executed ~30 secs after login, can be used for tasks needing this condition state
+					_firstTimeAfterLoginRun = true;
 				}
 
 				if (callback) {
@@ -789,7 +808,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
                         if (NRS.publicKey == "") {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk", {
-                                "account_id": String(NRS.accountRS).escapeHTML(),
+                                "account_id": String(NRS.accountRS).escapeHTML()
                             })).show();
                         } else {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
@@ -916,7 +935,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 
 				/* Display message count in top and limit to 100 for now because of possible performance issues*/	
-				NRS.sendRequest("getAccountTransactions+", {
+				NRS.sendRequest("getBlockchainTransactions+", {
 					"account": NRS.account,
 					"type": 1,
 					"subtype": 0,
@@ -1051,9 +1070,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
-			$("#forging_indicator").removeClass("forging");
-			$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-			$("#forging_indicator").show();
+            var forgingIndicator = $("#forging_indicator");
+            forgingIndicator.removeClass("forging");
+			forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+			forgingIndicator.show();
 			NRS.isForging = false;
 		}
 
@@ -1120,13 +1140,13 @@ var NRS = (function(NRS, $, undefined) {
 		var current_balances_ = {};
 		var previous_balances_ = {};
 
-		if (previous_balances.length) {
+		if (previous_balances && previous_balances.length) {
 			for (var k in previous_balances) {
 				previous_balances_[previous_balances[k].asset] = previous_balances[k].balanceQNT;
 			}
 		}
 
-		if (current_balances.length) {
+		if (current_balances && current_balances.length) {
 			for (var k in current_balances) {
 				current_balances_[current_balances[k].asset] = current_balances[k].balanceQNT;
 			}
@@ -1224,10 +1244,6 @@ var NRS = (function(NRS, $, undefined) {
 
 				if ($modal) {
 					var account_id = String($.trim(hash[1]));
-					if (!/^\d+$/.test(account_id) && account_id.indexOf("@") !== 0) {
-						account_id = "@" + account_id;
-					}
-
 					$modal.find("input[name=recipient]").val(account_id.unescapeHTML()).trigger("blur");
 					if (password && typeof password == "string") {
 						$modal.find("input[name=secretPhrase]").val(password);
@@ -1366,7 +1382,7 @@ var NRS = (function(NRS, $, undefined) {
 						} else {
 							NRS.sendRequest("getBlock", {
 								"block": id,
-                        "includeTransactions": "true"
+                                "includeTransactions": "true"
 							}, function(response, input) {
 								if (!response.errorCode) {
 									response.block = input.block;

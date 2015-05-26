@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbIterator;
@@ -181,7 +197,32 @@ final class BlockchainImpl implements Blockchain {
                 }
             }
             return result;
-        } catch (NxtException.ValidationException|SQLException e) {
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
+    public List<BlockImpl> getBlocksAfter(long blockId, List<Long> blockList) {
+        List<BlockImpl> result = new ArrayList<>();
+        if (blockList.isEmpty())
+            return result;
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
+            pstmt.setLong(1, blockId);
+            pstmt.setInt(2, blockList.size());
+            pstmt.setFetchSize(100);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                int index = 0;
+                while (rs.next()) {
+                    BlockImpl block = BlockDb.loadBlock(con, rs, true);
+                    if (block.getId() != blockList.get(index++))
+                        break;
+                    result.add(block);
+                }
+            }
+            return result;
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
@@ -256,13 +297,16 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp) {
-        return getTransactions(account, 0, type, subtype, blockTimestamp, false, false, 0, -1);
+        return getTransactions(account, 0, type, subtype, blockTimestamp, false, false, false, 0, -1);
     }
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
-                                                       int blockTimestamp, boolean withMessage, boolean phased,
+                                                       int blockTimestamp, boolean withMessage, boolean phasedOnly, boolean nonPhasedOnly,
                                                        int from, int to) {
+        if (phasedOnly && nonPhasedOnly) {
+            throw new IllegalArgumentException("At least one of phasedOnly or nonPhasedOnly must be false");
+        }
         int height = numberOfConfirmations > 0 ? getHeight() - numberOfConfirmations : Integer.MAX_VALUE;
         if (height < 0) {
             throw new IllegalArgumentException("Number of confirmations required " + numberOfConfirmations
@@ -288,8 +332,10 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE ");
                 buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
-            if (phased) {
+            if (phasedOnly) {
                 buf.append("AND phased = TRUE ");
+            } else if (nonPhasedOnly) {
+                buf.append("AND phased = FALSE ");
             }
 
             buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
@@ -309,9 +355,12 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE ");
                 buf.append("OR ((has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE) AND timestamp > ?)) ");
             }
-            if (phased) {
+            if (phasedOnly) {
                 buf.append("AND phased = TRUE ");
+            } else if (nonPhasedOnly) {
+                buf.append("AND phased = FALSE ");
             }
+
             buf.append("ORDER BY block_timestamp DESC, transaction_index DESC");
             buf.append(DbUtils.limitsClause(from, to));
             con = Db.db.getConnection();
@@ -362,7 +411,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
-        return new DbIterator<TransactionImpl>(con, pstmt, TransactionDb::loadTransaction);
+        return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
 }

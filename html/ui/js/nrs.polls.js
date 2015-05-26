@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -85,11 +101,11 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<tr>";
 								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
-								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>";
+								rows += "<td>" + (poll.sender != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote </a> ";
-								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></nobr></td>";
+								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>" + $.t('vote_btn_short') + "</a> ";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></nobr></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -151,19 +167,19 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<tr>"
 								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#'  data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
-								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
+								rows += "<td>" + (poll.sender != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
 									rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
-									rows += "<td style='text-align:center;'><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>Vote</a> ";
+									rows += "<td style='text-align:center;'><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>" + $.t('vote_btn_short') + "</a> ";
 								}
 								else
 								{
-									rows += "<td style='text-align:center;'>Complete</td>";
-									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>Results</a> ";
+									rows += "<td style='text-align:center;'>" + $.t('complete') + "</td>";
+									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>" + $.t('vote_results_btn_short') + "</a> ";
 								}
-								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -183,7 +199,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.pages.voted_polls = function() {
-		NRS.sendRequest("getAccountTransactions",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
+		NRS.sendRequest("getBlockchainTransactions",{"account": NRS.accountRS, "type": 1, "subtype": 3}, function(response) {
 			
 			if (response.transactions && response.transactions.length > 0) {
 				var polls = {};
@@ -221,7 +237,7 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<tr>"
 								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
-								rows += "<td>" + (poll.sender != NRS.genesis ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
+								rows += "<td>" + (poll.sender != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight)
 								{
@@ -231,10 +247,10 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								else
 								{
-									rows += "<td style='text-align:center;'>Complete</td>";
-									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>Results </a></td>";
+									rows += "<td style='text-align:center;'>" + $.t('complete') + "</td>";
+									rows += "<td style='text-align:center;'><a href='#' class='results_button btn btn-xs btn-default' data-results='" + poll.transaction +"'>" + $.t('vote_results_btn_short') + "</a></td>";
 								}
-								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>Follow </a></td>";
+								rows += "<td style='text-align:center;'><a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -408,10 +424,21 @@ var NRS = (function(NRS, $, undefined) {
 			$("#cast_vote_poll_name").text(response.attachment.name);
 			$("#cast_vote_poll_description").text(response.attachment.description);
 			$("#cast_vote_answers_entry").text("");
-			if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions)
-			$("#cast_vote_range").text("Select between " + response.attachment.minNumberOfOptions + " and " + response.attachment.maxNumberOfOptions + " options from below.")
-			else if(response.attachment.minNumberOfOptions != 1) $("#cast_vote_range").text("Select " + response.attachment.minNumberOfOptions +  " options from below.")
-			else $("#cast_vote_range").text("Select 1 option from below.")
+			if(response.attachment.minNumberOfOptions != response.attachment.maxNumberOfOptions) {
+				var selectText = $.t('poll_select_min_max_options', {
+					'min': response.attachment.minNumberOfOptions,
+					'max': response.attachment.maxNumberOfOptions
+				});
+				$("#cast_vote_range").text(selectText);
+			} else if (response.attachment.minNumberOfOptions != 1) {
+				var selectText = $.t('poll_select_num_options', {
+					'num': response.attachment.minNumberOfOptions
+				});
+				$("#cast_vote_range").text(selectText);
+			} else {
+				var selectText = $.t('poll_select_one_option');
+				$("#cast_vote_range").text(selectText);
+			}
 
 			$("#cast_vote_poll").val(response.transaction);
 			if(response.attachment.maxRangeValue != 1)

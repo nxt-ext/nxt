@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
@@ -64,7 +80,7 @@ var NRS = (function (NRS, $, undefined) {
             if (transactionDetails.height == NRS.constants.MAX_INT_JAVA) {
                 transactionDetails.height = "unknown";
             } else {
-                transactionDetails.height_formatted_html = "<a href='#' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
+                transactionDetails.height_formatted_html = "<a href='#' class='block show_block_modal_action' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
                 delete transactionDetails.height;
             }
             $("#transaction_info_modal_transaction").html(String(transaction.transaction).escapeHTML());
@@ -75,21 +91,46 @@ var NRS = (function (NRS, $, undefined) {
             $("#transaction_info_table").find("tbody").empty();
 
             var incorrect = false;
-
             if (transaction.senderRS == NRS.accountRS) {
-                $("#transaction_info_actions").hide();
+                $("#transaction_info_modal_send_money").attr('disabled','disabled');
+                $("#transaction_info_modal_transfer_currency").attr('disabled','disabled');
+                $("#transaction_info_modal_send_message").attr('disabled','disabled');
             } else {
-                if (transaction.senderRS in NRS.contacts) {
-                    var accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
-                    $("#transaction_info_modal_add_as_contact").hide();
-                } else {
-                    var accountButton = transaction.senderRS;
-                    $("#transaction_info_modal_add_as_contact").show();
-                }
-
-                $("#transaction_info_actions").show();
-                $("#transaction_info_actions_tab").find("button").data("account", accountButton);
+                $("#transaction_info_modal_send_money").removeAttr('disabled');
+                $("#transaction_info_modal_transfer_currency").removeAttr('disabled');
+                $("#transaction_info_modal_send_message").removeAttr('disabled');
             }
+            if (transaction.senderRS in NRS.contacts) {
+                var accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
+                $("#transaction_info_modal_add_as_contact").attr('disabled','disabled');
+            } else {
+                var accountButton = transaction.senderRS;
+                $("#transaction_info_modal_add_as_contact").removeAttr('disabled');
+            }
+            var approveTransactionButton = $("#transaction_info_modal_approve_transaction");
+            if (!transaction.attachment || !transaction.block ||
+                !transaction.attachment.phasingFinishHeight ||
+                transaction.attachment.phasingFinishHeight <= NRS.lastBlockHeight) {
+                approveTransactionButton.attr('disabled', 'disabled');
+            } else {
+                approveTransactionButton.removeAttr('disabled');
+                approveTransactionButton.data("transaction", transaction.transaction);
+                approveTransactionButton.data("fullhash", transaction.fullHash);
+                approveTransactionButton.data("timestamp", transaction.timestamp);
+                approveTransactionButton.data("fee", NRS.getPhasingFee(transaction));
+                approveTransactionButton.data("minBalanceFormatted", "");
+                approveTransactionButton.data("votingmodel", transaction.attachment.phasingVotingModel);
+            }
+            var extendDataButton = $("#transaction_info_modal_extend_data");
+            if (transaction.type == NRS.subtype.TaggedDataUpload.type && transaction.subtype == NRS.subtype.TaggedDataUpload.subtype) {
+                extendDataButton.removeAttr('disabled');
+                extendDataButton.data("transaction", transaction.transaction);
+            } else {
+                extendDataButton.attr('disabled','disabled');
+            }
+
+            $("#transaction_info_actions").show();
+            $("#transaction_info_actions_tab").find("button").data("account", accountButton);
 
             if (transaction.attachment && transaction.attachment.phasingFinishHeight) {
                 var finishHeight = transaction.attachment.phasingFinishHeight;
@@ -98,16 +139,16 @@ var NRS = (function (NRS, $, undefined) {
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
                 phasingDetails.quorum = transaction.attachment.phasingQuorum;
                 phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
-                var votingModel = NRS.getVotingModel(parseInt(transaction.attachment.phasingVotingModel));
-                phasingDetails.votingModel = $.t(votingModel.name);
+                var votingModel = NRS.getVotingModelName(parseInt(transaction.attachment.phasingVotingModel));
+                phasingDetails.votingModel = $.t(votingModel);
                 var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
-                if (votingModel == NRS.constants.VOTING_MODEL.ASSET) {
+                if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
                     phasingDetails.asset_formatted_html = phasingTransactionLink;
-                } else if (votingModel == NRS.constants.VOTING_MODEL.CURRENCY) {
+                } else if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.CURRENCY) {
                     phasingDetails.currency_formatted_html = phasingTransactionLink;
                 }
-                var minBalanceModel = NRS.getMinBalanceModel(parseInt(transaction.attachment.phasingMinBalanceModel));
-                phasingDetails.minBalanceModel = $.t(minBalanceModel.name);
+                var minBalanceModel = NRS.getMinBalanceModelName(parseInt(transaction.attachment.phasingMinBalanceModel));
+                phasingDetails.minBalanceModel = $.t(minBalanceModel);
                 var rows = "";
                 if (transaction.attachment.phasingWhitelist && transaction.attachment.phasingWhitelist.length > 0) {
                     rows = "<table class='table table-striped'><thead><tr>" +
@@ -122,6 +163,10 @@ var NRS = (function (NRS, $, undefined) {
                     rows = "-";
                 }
                 phasingDetails.whitelist_formatted_html = rows;
+                if (transaction.attachment.phasingHashedSecret) {
+                    phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
+                    phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
+                }
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();
             } else {
@@ -1006,13 +1051,13 @@ var NRS = (function (NRS, $, undefined) {
 
                     $("#transaction_info_callout").html("");
                     if (currency != null && NRS.isExchangeable(currency.type)) {
-                        $("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>Exchange Booth</a><br/>");
+                        $("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>" + $.t('exchange_booth') + "</a><br/>");
                     }
                     if (currency != null && NRS.isReservable(currency.type)) {
                         $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' data-issueheight='" + String(currency.issuanceHeight).escapeHTML() + "'>View Founders</a><br/>");
                     }
                     if (currency != null) {
-                        $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'>Currency Distribution</a>");
+                        $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'  data-i18n='Currency Distribution'>Currency Distribution</a>");
                     }
                     $("#transaction_info_callout").show();
 
@@ -1024,7 +1069,27 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     NRS.fetchingModalData = false;
                 }
+            } else if (transaction.type == 6) {
+                switch (transaction.subtype) {
+                    case 0:
+                        var data = NRS.getTaggedData(transaction.attachment, 0);
+                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+                        $("#transaction_info_table").show();
+
+                        break;
+                    case 1:
+                        var data = NRS.getTaggedData(transaction.attachment, 1);
+                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
+                        $("#transaction_info_table").show();
+
+                        break;
+
+                    default:
+                        incorrect = true;
+                        break;
+                }
             }
+
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
                     if (transaction.attachment.message) {
@@ -1274,22 +1339,52 @@ var NRS = (function (NRS, $, undefined) {
         return data;
     };
 
+    NRS.getTaggedData = function (attachment, subtype) {
+        var data = {
+            "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle),
+            "hash": attachment.hash
+        };
+        if (attachment.data) {
+            data["name"] = attachment.name;
+            data["description"] = attachment.description;
+            data["tags"] = attachment.tags;
+            data["mime_type"] = attachment.type;
+            data["channel"] = attachment.channel;
+            data["is_text"] = attachment.isText;
+            data["filename"] = attachment.filename;
+            if (attachment.isText == "true") {
+                data["data_size"] = NRS.getUtf8Bytes(attachment.data).length;
+            } else {
+                data["data_size"] = converters.hexStringToByteArray(attachment.data).length;
+            }
+        }
+        return data;
+    };
+
     $(document).on("click", ".approve_transaction_btn", function (e) {
         e.preventDefault();
-        $('#approve_transaction_modal .at_transaction_full_hash_display').text($(this).data("transaction"));
-        $('#approve_transaction_modal .at_transaction_timestamp').text($(this).data("transactionTimestamp"));
+        var approveTransactionModal = $('#approve_transaction_modal');
+        approveTransactionModal.find('.at_transaction_full_hash_display').text($(this).data("transaction"));
+        approveTransactionModal.find('.at_transaction_timestamp').text(NRS.formatTimestamp($(this).data("timestamp")));
         $("#approve_transaction_button").data("transaction", $(this).data("transaction"));
-        $('#approve_transaction_modal #at_transaction_full_hash').val($(this).data("fullHash"));
+        approveTransactionModal.find('#at_transaction_full_hash').val($(this).data("fullhash"));
 
         var mbFormatted = $(this).data("minBalanceFormatted");
-        if (mbFormatted != "") {
-            $('#at_min_balance_warning .at_min_balance_amount').html(mbFormatted);
-            $('#at_min_balance_warning').show();
+        var minBalanceWarning = $('#at_min_balance_warning');
+        if (mbFormatted && mbFormatted != "") {
+            minBalanceWarning.find('.at_min_balance_amount').html(mbFormatted);
+            minBalanceWarning.show();
         } else {
-            $('#at_min_balance_warning').hide();
+            minBalanceWarning.hide();
         }
-        $('#approve_transaction_modal .advanced_fee').html($(this).data("transactionFee") + " NXT");
-        $('#approve_transaction_modal input[name="feeNXT"]').val($(this).data("transactionFee"));
+        var revealSecretDiv = $("#at_revealed_secret_div");
+        if ($(this).data("votingmodel") == NRS.constants.VOTING_MODELS.HASH) {
+            revealSecretDiv.show();
+        } else {
+            revealSecretDiv.hide();
+        }
+        approveTransactionModal.find('.advanced_fee').html($(this).data("fee") + " NXT");
+        approveTransactionModal.find('input[name="feeNXT"]').val($(this).data("fee"));
     });
 
     $("#approve_transaction_button").on("click", function (e) {

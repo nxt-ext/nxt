@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -138,7 +154,7 @@ var NRS = (function(NRS, $, undefined) {
 			successMessage = $.t("success_sell_alias");
 			errorMessage = $.t("error_sell_alias");
 
-			if (data.recipient == NRS.genesisRS) {
+			if (data.recipient == NRS.constants.GENESIS_RS) {
 				if (!data.priceNXT || data.priceNXT == "0") {
 					return {
 						"error": $.t("error_not_specified", {
@@ -235,7 +251,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $modal = $(this).closest(".modal");
 
 		if ($(this).attr("id") == "sell_alias_to_anyone") {
-			$modal.find("input[name=recipient]").val(NRS.genesisRS);
+			$modal.find("input[name=recipient]").val(NRS.constants.GENESIS_RS);
 			$("#sell_alias_recipient_div").hide();
 			$modal.find(".add_message_container, .optional_message").hide();
 		} else {

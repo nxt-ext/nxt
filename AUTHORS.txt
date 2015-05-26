@@ -1,0 +1,56 @@
+This is a list of current and past developers working on the Nxt core software,
+in order approximately corresponding to the time they joined the team.
+
+
+BCNext
+no contact info available
+
+
+Come-from-Beyond
+come-from-beyond@mail.ru
+
+
+Jean-Luc Picard
+jlp666@yandex.ru
+GPG key fingerprint: B88D C0A6 2ECD DDD1 643A  28FD CEF1 F4A9 FF2A 19FA
+Nxt account: NXT-X4LF-9A4G-WN9Z-2R322
+
+
+Wesley
+wesley@tutanota.de
+
+
+Ronald Hoffman (ScripterRon)
+ronald.hoffman6@gmail.com
+GPG key fingerprint: E0AD 742C F130 D180 0504  8EDE A4C8 C35D D619 0F05
+Nxt account: NXT-YKDR-R624-MM4S-5ZKQK
+
+
+Alexander Chepurnoy (kushti)
+kushtech@yahoo.com
+
+
+Lior Yaffe (lyaffe)
+lyaffe@gmail.com
+
+
+Holger Drewes (holgerd77)
+Holger.Drewes@gmail.com
+
+
+Mr V
+mrv777@comcast.net
+
+
+Alex Jones
+alex@jonesnet.tk
+
+
+Musa Yassin (mess)
+musa.yassin@gmail.com
+
+
+Petko Petkov
+petkodp@gmail.com
+
+

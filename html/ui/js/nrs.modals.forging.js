@@ -1,14 +1,31 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	//todo: use a startForgingError function instaed!
+	//todo: use a startForgingError function instead!
 
 	NRS.forms.startForgingComplete = function(response, data) {
 		if ("deadline" in response) {
-			$("#forging_indicator").addClass("forging");
-			$("#forging_indicator span").html($.t("forging")).attr("data-i18n", "forging");
+            var forgingIndicator = $("#forging_indicator");
+            forgingIndicator.addClass("forging");
+			forgingIndicator.find("span").html($.t("forging")).attr("data-i18n", "forging");
 			NRS.isForging = true;
 			$.growl($.t("success_start_forging"), {
 				type: "success"
@@ -19,16 +36,17 @@ var NRS = (function(NRS, $, undefined) {
 				type: 'danger'
 			});
 		}
-	}
+	};
 
 	NRS.forms.stopForgingComplete = function(response, data) {
-		if ($("#stop_forging_modal .show_logout").css("display") == "inline") {
+		if ($("#stop_forging_modal").find(".show_logout").css("display") == "inline") {
 			NRS.logout();
 			return;
 		}
 
-		$("#forging_indicator").removeClass("forging");
-		$("#forging_indicator span").html($.t("not_forging")).attr("data-i18n", "not_forging");
+        var forgingIndicator = $("#forging_indicator");
+        forgingIndicator.removeClass("forging");
+		forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
 
 		NRS.isForging = false;
 
@@ -41,7 +59,7 @@ var NRS = (function(NRS, $, undefined) {
 				type: 'danger'
 			});
 		}
-	}
+	};
 
 	$("#forging_indicator").click(function(e) {
 		e.preventDefault();

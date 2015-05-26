@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -813,13 +829,13 @@ public final class Account {
             if (height - this.creationHeight < 1440) {
                 return 0;
             }
-            long receivedInlastBlock = 0;
+            long receivedInLastBlock = 0;
             for (Transaction transaction : Nxt.getBlockchain().getBlockAtHeight(height).getTransactions()) {
                 if (id == transaction.getRecipientId()) {
-                    receivedInlastBlock += transaction.getAmountNQT();
+                    receivedInLastBlock += transaction.getAmountNQT();
                 }
             }
-            return (balanceNQT - receivedInlastBlock) / Constants.ONE_NXT;
+            return (balanceNQT - receivedInLastBlock) / Constants.ONE_NXT;
         }
         if (height < currentLeasingHeightFrom) {
             return (getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;

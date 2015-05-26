@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.util;
 
 import nxt.Nxt;
@@ -84,21 +100,22 @@ public final class ThreadPool {
     public static void shutdown() {
         if (scheduledThreadPool != null) {
 	        Logger.logShutdownMessage("Stopping background jobs...");
-            shutdownExecutor(scheduledThreadPool);
+            shutdownExecutor("scheduledThreadPool", scheduledThreadPool, 10);
             scheduledThreadPool = null;
         	Logger.logShutdownMessage("...Done");
         }
     }
 
-    public static void shutdownExecutor(ExecutorService executor) {
+    public static void shutdownExecutor(String name, ExecutorService executor, int timeout) {
+        Logger.logShutdownMessage("shutting down " + name);
         executor.shutdown();
         try {
-            executor.awaitTermination(10, TimeUnit.SECONDS);
+            executor.awaitTermination(timeout, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
         if (! executor.isTerminated()) {
-            Logger.logShutdownMessage("some threads didn't terminate, forcing shutdown");
+            Logger.logShutdownMessage("some threads in " + name + " didn't terminate, forcing shutdown");
             executor.shutdownNow();
         }
     }
