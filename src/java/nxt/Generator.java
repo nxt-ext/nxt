@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -21,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class Generator implements Comparable<Generator> {
 
-    public static enum Event {
+    public enum Event {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
@@ -89,10 +105,10 @@ public final class Generator implements Comparable<Generator> {
                         }
                     } // synchronized
                 } catch (Exception e) {
-                    Logger.logDebugMessage("Error in block generation thread", e);
+                    Logger.logMessage("Error in block generation thread", e);
                 }
             } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+                Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
                 t.printStackTrace();
                 System.exit(1);
             }
@@ -197,7 +213,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
     static long getHitTime(Account account, Block block) {
-        return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT()), getHit(account.getPublicKey(), block), block);
+        return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT(block.getHeight())), getHit(account.getPublicKey(), block), block);
     }
 
     static boolean allowsFakeForging(byte[] publicKey) {
@@ -267,7 +283,7 @@ public final class Generator implements Comparable<Generator> {
 
     @Override
     public String toString() {
-        return "Forger " + Convert.toUnsignedLong(accountId) + " deadline " + getDeadline() + " hit " + hitTime;
+        return "Forger " + Long.toUnsignedString(accountId) + " deadline " + getDeadline() + " hit " + hitTime;
     }
 
     private void setLastBlock(Block lastBlock) {

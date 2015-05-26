@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Constants;
@@ -22,6 +38,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.net.Inet4Address;
@@ -39,11 +56,14 @@ import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 public final class API {
 
     public static final int TESTNET_API_PORT = 6876;
+    public static final int TESTNET_API_SSLPORT = 6877;
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
     static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
+    static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
+
     private static final Server apiServer;
 
     static {
@@ -73,18 +93,32 @@ public final class API {
         boolean enableAPIServer = Nxt.getBooleanProperty("nxt.enableAPIServer");
         if (enableAPIServer) {
             final int port = Constants.isTestnet ? TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
+            final int sslPort = Constants.isTestnet ? TESTNET_API_SSLPORT : Nxt.getIntProperty("nxt.apiServerSSLPort");
             final String host = Nxt.getStringProperty("nxt.apiServerHost");
-            disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword") || "127.0.0.1".equals(host);
+            disableAdminPassword = Nxt.getBooleanProperty("nxt.disableAdminPassword") || ("127.0.0.1".equals(host) && adminPassword.isEmpty());
 
             apiServer = new Server();
             ServerConnector connector;
-
             boolean enableSSL = Nxt.getBooleanProperty("nxt.apiSSL");
+            //
+            // Create the HTTP connector
+            //
+            if (!enableSSL || port != sslPort) {
+                connector = new ServerConnector(apiServer);
+                connector.setPort(port);
+                connector.setHost(host);
+                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setReuseAddress(true);
+                apiServer.addConnector(connector);
+                Logger.logMessage("API server using HTTP port " + port);
+            }
+            //
+            // Create the HTTPS connector
+            //
             if (enableSSL) {
-                Logger.logMessage("Using SSL (https) for the API server");
                 HttpConfiguration https_config = new HttpConfiguration();
                 https_config.setSecureScheme("https");
-                https_config.setSecurePort(port);
+                https_config.setSecurePort(sslPort);
                 https_config.addCustomizer(new SecureRequestCustomizer());
                 SslContextFactory sslContextFactory = new SslContextFactory();
                 sslContextFactory.setKeyStorePath(Nxt.getStringProperty("nxt.keyStorePath"));
@@ -95,15 +129,13 @@ public final class API {
                 sslContextFactory.setExcludeProtocols("SSLv3");
                 connector = new ServerConnector(apiServer, new SslConnectionFactory(sslContextFactory, "http/1.1"),
                         new HttpConnectionFactory(https_config));
-            } else {
-                connector = new ServerConnector(apiServer);
+                connector.setPort(sslPort);
+                connector.setHost(host);
+                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setReuseAddress(true);
+                apiServer.addConnector(connector);
+                Logger.logMessage("API server using HTTPS port " + sslPort);
             }
-
-            connector.setPort(port);
-            connector.setHost(host);
-            connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
-            connector.setReuseAddress(true);
-            apiServer.addConnector(connector);
 
             HandlerList apiHandlers = new HandlerList();
 
@@ -131,7 +163,8 @@ public final class API {
                 apiHandlers.addHandler(contextHandler);
             }
 
-            apiHandler.addServlet(APIServlet.class, "/nxt");
+            ServletHolder servletHolder = apiHandler.addServlet(APIServlet.class, "/nxt");
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(null, Constants.MAX_TAGGED_DATA_DATA_LENGTH, -1L, 0));
             if (Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
                 FilterHolder gzipFilterHolder = apiHandler.addFilter(GzipFilter.class, "/nxt", null);
                 gzipFilterHolder.setInitParameter("methods", "GET,POST");
@@ -154,18 +187,15 @@ public final class API {
             apiServer.setHandler(apiHandlers);
             apiServer.setStopAtShutdown(true);
 
-            ThreadPool.runBeforeStart(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        apiServer.start();
-                        Logger.logMessage("Started API server at " + host + ":" + port);
-                    } catch (Exception e) {
-                        Logger.logErrorMessage("Failed to start API server", e);
-                        throw new RuntimeException(e.toString(), e);
-                    }
-
+            ThreadPool.runBeforeStart(() -> {
+                try {
+                    apiServer.start();
+                    Logger.logMessage("Started API server at " + host + ":" + port + (enableSSL && port != sslPort ? ", " + host + ":" + sslPort : ""));
+                } catch (Exception e) {
+                    Logger.logErrorMessage("Failed to start API server", e);
+                    throw new RuntimeException(e.toString(), e);
                 }
+
             }, true);
 
         } else {
@@ -195,8 +225,13 @@ public final class API {
         if (API.adminPassword.isEmpty()) {
             throw new ParameterException(NO_PASSWORD_IN_CONFIG);
         } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
+            Logger.logWarningMessage("Incorrect adminPassword");
             throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
         }
+    }
+
+    static boolean checkPassword(HttpServletRequest req) {
+        return (API.disableAdminPassword || (!API.adminPassword.isEmpty() && API.adminPassword.equals(req.getParameter("adminPassword"))));
     }
 
     static boolean isAllowed(String remoteHost) {

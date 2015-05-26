@@ -1,4 +1,20 @@
-<div class="modal fade" id="send_money_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<div class="modal fade" id="send_money_modal" data-transaction-type="0" data-transaction-subtype="0" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-700">
         <div class="modal-content">
             <div class="modal-header">
@@ -22,7 +38,11 @@
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
                     <input type="hidden" name="request_type" value="sendMoney" data-default="sendMoney" />
@@ -158,7 +178,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="account_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="account_info_modal" data-transaction-type="1" data-transaction-subtype="5" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -177,7 +197,11 @@
                         <textarea class="form-control" id="account_info_description" name="description" rows="4" tabindex="2"></textarea>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
                     
                     <input type="hidden" name="request_type" value="setAccountInfo" />
                 </form>
@@ -283,7 +307,10 @@
 
                 <div id="token_modal_generate_token" class="token_modal_content" style="display:none">
                     <form role="form" id="generate_token_form" autocomplete="off">
-                        <div class="callout callout-danger remote_warning" style="display:none" data-i18n="[html]passphrase_remote_warning"><strong>Warning</strong>: Your pass phrase will be sent to the server!</div>
+                        <div class="callout callout-danger remote_warning" style="display:none">
+                            <strong><span data-i18n="warning">Warning</span>:</strong>
+                            <span data-i18n="passphrase_remote_warning">Your passphrase will be sent to the server!</span>
+                        </div>
                         <div class="callout callout-danger error_message" style="display:none"></div>
                         <div class="callout callout-info" id="generate_token_output" style="display:none;"></div>
                         <div class="form-group">
@@ -509,6 +536,7 @@
                     <div class="row">
                         <div class="col-xs-6 col-md-6" style="margin-left:auto;margin-right:auto;float:none;">
                             <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_money_modal" data-account="" data-i18n="send_nxt">Send NXT</button>
+                            <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#transfer_currency_modal" data-account="" data-i18n="send_currency">Send Currency</button>
                             <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#send_message_modal" data-account="" data-i18n="send_a_message">Send a Message</button>
                             <button type="button" id="user_info_modal_add_as_contact" class="btn btn-default btn-lg btn-block" data-toggle="modal" data-target="#add_contact_modal" data-account="" data-i18n="add_as_contact">Add as Contact</button>
                         </div>
@@ -518,6 +546,25 @@
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="logout_clear_user_data_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="warning">Warning</h4>
+            </div>
+            <div class="modal-body">
+                <span data-i18n="confirm_logout_clear_user_data_msg">All personal settings like contacts or asset
+                    bookmarks will be deleted. Continue?</span>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-default" id="logout_clear_user_data_confirm_btn" data-i18n="continue">Continue</button>
             </div>
         </div>
     </div>

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.util;
 
 import nxt.Constants;
@@ -10,7 +26,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -20,7 +38,10 @@ public final class Convert {
     private static final long[] multipliers = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     public static final BigInteger two64 = new BigInteger("18446744073709551616");
-    public static int counter;
+    public static final long[] EMPTY_LONG = new long[0];
+    public static final byte[] EMPTY_BYTE = new byte[0];
+    public static final byte[][] EMPTY_BYTES = new byte[0][];
+    public static final String[] EMPTY_STRING = new String[0];
 
     private Convert() {} //never
 
@@ -54,23 +75,11 @@ public final class Convert {
         return String.valueOf(chars);
     }
 
-    public static String toUnsignedLong(long objectId) {
-        if (objectId >= 0) {
-            return String.valueOf(objectId);
-        }
-        BigInteger id = BigInteger.valueOf(objectId).add(two64);
-        return id.toString();
-    }
-
     public static long parseUnsignedLong(String number) {
         if (number == null) {
             return 0;
         }
-        BigInteger bigInt = new BigInteger(number.trim());
-        if (bigInt.signum() < 0 || bigInt.compareTo(two64) != -1) {
-            throw new IllegalArgumentException("overflow: " + number);
-        }
-        return bigInt.longValue();
+        return Long.parseUnsignedLong(number);
     }
 
     public static long parseLong(Object o) {
@@ -86,14 +95,14 @@ public final class Convert {
     }
 
     public static long parseAccountId(String account) {
-        if (account == null) {
+        if (account == null || (account = account.trim()).isEmpty()) {
             return 0;
         }
         account = account.toUpperCase();
         if (account.startsWith("NXT-")) {
             return Crypto.rsDecode(account.substring(4));
         } else {
-            return parseUnsignedLong(account);
+            return Long.parseUnsignedLong(account);
         }
     }
 
@@ -109,15 +118,12 @@ public final class Convert {
         return bigInteger.longValue();
     }
 
-    public static long fullHashToId(String hash) {
-        if (hash == null) {
-            return 0;
-        }
-        return fullHashToId(Convert.parseHexString(hash));
-    }
-
     public static long fromEpochTime(int epochTime) {
         return epochTime * 1000L + Constants.EPOCH_BEGINNING - 500L;
+    }
+
+    public static int toEpochTime(long currentTime) {
+        return (int)((currentTime - Constants.EPOCH_BEGINNING + 500) / 1000);
     }
 
     public static String emptyToNull(String s) {
@@ -138,6 +144,30 @@ public final class Convert {
             }
         }
         return null;
+    }
+
+    public static byte[][] nullToEmpty(byte[][] bytes) {
+        return bytes == null ? EMPTY_BYTES : bytes;
+    }
+
+    public static long[] nullToEmpty(long[] array) {
+        return array == null ? EMPTY_LONG : array;
+    }
+
+    public static long[] toArray(List<Long> list) {
+        long[] result = new long[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            result[i] = list.get(i);
+        }
+        return result;
+    }
+
+    public static List<Long> toList(long[] array) {
+        List<Long> result = new ArrayList<>(array.length);
+        for (long elem : array) {
+            result.add(elem);
+        }
+        return result;
     }
 
     public static byte[] toBytes(String s) {
@@ -221,60 +251,6 @@ public final class Convert {
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-    }
-
-    // overflow checking based on https://www.securecoding.cert.org/confluence/display/java/NUM00-J.+Detect+or+prevent+integer+overflow
-    public static long safeAdd(long left, long right)
-            throws ArithmeticException {
-        if (right > 0 ? left > Long.MAX_VALUE - right
-                : left < Long.MIN_VALUE - right) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left + right;
-    }
-
-    public static long safeSubtract(long left, long right)
-            throws ArithmeticException {
-        if (right > 0 ? left < Long.MIN_VALUE + right
-                : left > Long.MAX_VALUE + right) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left - right;
-    }
-
-    public static long safeMultiply(long left, long right)
-            throws ArithmeticException {
-        if (right > 0 ? left > Long.MAX_VALUE/right
-                || left < Long.MIN_VALUE/right
-                : (right < -1 ? left > Long.MIN_VALUE/right
-                || left < Long.MAX_VALUE/right
-                : right == -1
-                && left == Long.MIN_VALUE) ) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left * right;
-    }
-
-    public static long safeDivide(long left, long right)
-            throws ArithmeticException {
-        if ((left == Long.MIN_VALUE) && (right == -1)) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return left / right;
-    }
-
-    public static long safeNegate(long a) throws ArithmeticException {
-        if (a == Long.MIN_VALUE) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return -a;
-    }
-
-    public static long safeAbs(long a) throws ArithmeticException {
-        if (a == Long.MIN_VALUE) {
-            throw new ArithmeticException("Integer overflow");
-        }
-        return Math.abs(a);
     }
 
 }

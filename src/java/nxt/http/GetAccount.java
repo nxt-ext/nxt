@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -15,7 +31,7 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
     static final GetAccount instance = new GetAccount();
 
     private GetAccount() {
-        super(new APITag[] {APITag.ACCOUNTS}, "account", "includeLessors", "includeAssets", "includeCurrencies");
+        super(new APITag[] {APITag.ACCOUNTS}, "account", "includeLessors", "includeAssets", "includeCurrencies", "includeEffectiveBalance");
     }
 
     @Override
@@ -25,22 +41,18 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         boolean includeLessors = !"false".equalsIgnoreCase(req.getParameter("includeLessors"));
         boolean includeAssets = !"false".equalsIgnoreCase(req.getParameter("includeAssets"));
         boolean includeCurrencies = !"false".equalsIgnoreCase(req.getParameter("includeCurrencies"));
+        boolean includeEffectiveBalance = !"false".equalsIgnoreCase(req.getParameter("includeEffectiveBalance"));
 
-        JSONObject response = JSONData.accountBalance(account);
+        JSONObject response = JSONData.accountBalance(account, includeEffectiveBalance);
         JSONData.putAccount(response, "account", account.getId());
 
         if (account.getPublicKey() != null) {
             response.put("publicKey", Convert.toHexString(account.getPublicKey()));
         }
-        if (account.getName() != null) {
-            response.put("name", account.getName());
-        }
-        if (account.getDescription() != null) {
-            response.put("description", account.getDescription());
-        }
-        if (account.getMessagePattern() != null) {
-            response.put("messagePatternRegex", account.getMessagePattern().pattern());
-            response.put("messagePatternFlags", account.getMessagePattern().flags());
+        Account.AccountInfo accountInfo = account.getAccountInfo();
+        if (accountInfo != null) {
+            response.put("name", Convert.nullToEmpty(accountInfo.getName()));
+            response.put("description", Convert.nullToEmpty(accountInfo.getDescription()));
         }
         if (account.getCurrentLesseeId() != 0) {
             JSONData.putAccount(response, "currentLessee", account.getCurrentLesseeId());
@@ -61,9 +73,9 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                     JSONArray lessorInfo = new JSONArray();
                     while (lessors.hasNext()) {
                         Account lessor = lessors.next();
-                        lessorIds.add(Convert.toUnsignedLong(lessor.getId()));
+                        lessorIds.add(Long.toUnsignedString(lessor.getId()));
                         lessorIdsRS.add(Convert.rsAccount(lessor.getId()));
-                        lessorInfo.add(JSONData.lessor(lessor));
+                        lessorInfo.add(JSONData.lessor(lessor, includeEffectiveBalance));
                     }
                     response.put("lessors", lessorIds);
                     response.put("lessorsRS", lessorIdsRS);
@@ -79,11 +91,11 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 while (accountAssets.hasNext()) {
                     Account.AccountAsset accountAsset = accountAssets.next();
                     JSONObject assetBalance = new JSONObject();
-                    assetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+                    assetBalance.put("asset", Long.toUnsignedString(accountAsset.getAssetId()));
                     assetBalance.put("balanceQNT", String.valueOf(accountAsset.getQuantityQNT()));
                     assetBalances.add(assetBalance);
                     JSONObject unconfirmedAssetBalance = new JSONObject();
-                    unconfirmedAssetBalance.put("asset", Convert.toUnsignedLong(accountAsset.getAssetId()));
+                    unconfirmedAssetBalance.put("asset", Long.toUnsignedString(accountAsset.getAssetId()));
                     unconfirmedAssetBalance.put("unconfirmedBalanceQNT", String.valueOf(accountAsset.getUnconfirmedQuantityQNT()));
                     unconfirmedAssetBalances.add(unconfirmedAssetBalance);
                 }

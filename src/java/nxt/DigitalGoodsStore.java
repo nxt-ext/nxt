@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.EncryptedData;
@@ -9,14 +25,8 @@ import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.util.Version;
+import nxt.util.Search;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,30 +38,27 @@ import java.util.List;
 
 public final class DigitalGoodsStore {
 
-    public static enum Event {
+    public enum Event {
         GOODS_LISTED, GOODS_DELISTED, GOODS_PRICE_CHANGE, GOODS_QUANTITY_CHANGE,
         PURCHASE, DELIVERY, REFUND, FEEDBACK
     }
 
     static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() <= Constants.DIGITAL_GOODS_STORE_BLOCK) {
-                    return;
+        Nxt.getBlockchainProcessor().addListener(block -> {
+            if (block.getHeight() <= Constants.DIGITAL_GOODS_STORE_BLOCK) {
+                return;
+            }
+            List<Purchase> expiredPurchases = new ArrayList<>();
+            try (DbIterator<Purchase> iterator = Purchase.getExpiredPendingPurchases(block)) {
+                while (iterator.hasNext()) {
+                    expiredPurchases.add(iterator.next());
                 }
-                List<Purchase> expiredPurchases = new ArrayList<>();
-                try (DbIterator<Purchase> iterator = Purchase.getExpiredPendingPurchases(block)) {
-                    while (iterator.hasNext()) {
-                        expiredPurchases.add(iterator.next());
-                    }
-                }
-                for (Purchase purchase : expiredPurchases) {
-                    Account buyer = Account.getAccount(purchase.getBuyerId());
-                    buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT()));
-                    Goods.getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
-                    purchase.setPending(false);
-                }
+            }
+            for (Purchase purchase : expiredPurchases) {
+                Account buyer = Account.getAccount(purchase.getBuyerId());
+                buyer.addToUnconfirmedBalanceNQT(Math.multiplyExact((long) purchase.getQuantity(), purchase.getPriceNQT()));
+                Goods.getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
+                purchase.setPending(false);
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
@@ -114,8 +121,10 @@ public final class DigitalGoodsStore {
             return tagTable.getCount();
         }
 
+        private static final DbClause inStockOnlyClause = new DbClause.FixedClause(" in_stock_count > 0 ");
+
         public static int getCountInStock() {
-            return tagTable.getCount(new DbClause.FixedClause(" in_stock_count > 0 "));
+            return tagTable.getCount(inStockOnlyClause);
         }
 
         public static DbIterator<Tag> getAllTags(int from, int to) {
@@ -123,7 +132,15 @@ public final class DigitalGoodsStore {
         }
 
         public static DbIterator<Tag> getInStockTags(int from, int to) {
-            return tagTable.getManyBy(new DbClause.FixedClause(" in_stock_count > 0 "), from, to);
+            return tagTable.getManyBy(inStockOnlyClause, from, to);
+        }
+
+        public static DbIterator<Tag> getTagsLike(String prefix, boolean inStockOnly, int from, int to) {
+            DbClause dbClause = new DbClause.LikeClause("tag", prefix);
+            if (inStockOnly) {
+                dbClause = dbClause.and(inStockOnlyClause);
+            }
+            return tagTable.getManyBy(dbClause, from, to, " ORDER BY tag ");
         }
 
         private static void init() {}
@@ -205,7 +222,7 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory) {
+        private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory, "name,description,tags") {
 
             @Override
             protected Goods load(Connection con, ResultSet rs) throws SQLException {
@@ -286,11 +303,11 @@ public final class DigitalGoodsStore {
             this.name = attachment.getName();
             this.description = attachment.getDescription();
             this.tags = attachment.getTags();
-            this.parsedTags = parseTags(this.tags);
+            this.parsedTags = Search.parseTags(this.tags, 3, 20, 3);
             this.quantity = attachment.getQuantity();
             this.priceNQT = attachment.getPriceNQT();
             this.delisted = false;
-            this.timestamp = transaction.getTimestamp();
+            this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         }
 
         private Goods(ResultSet rs) throws SQLException {
@@ -313,16 +330,16 @@ public final class DigitalGoodsStore {
                     + "description, tags, parsed_tags, timestamp, quantity, price, delisted, height, latest) KEY (id, height) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
-                pstmt.setLong(++i, this.getId());
-                pstmt.setLong(++i, this.getSellerId());
-                pstmt.setString(++i, this.getName());
-                pstmt.setString(++i, this.getDescription());
-                pstmt.setString(++i, this.getTags());
-                pstmt.setObject(++i, this.getParsedTags());
-                pstmt.setInt(++i, this.getTimestamp());
-                pstmt.setInt(++i, this.getQuantity());
-                pstmt.setLong(++i, this.getPriceNQT());
-                pstmt.setBoolean(++i, this.isDelisted());
+                pstmt.setLong(++i, this.id);
+                pstmt.setLong(++i, this.sellerId);
+                pstmt.setString(++i, this.name);
+                pstmt.setString(++i, this.description);
+                pstmt.setString(++i, this.tags);
+                pstmt.setObject(++i, this.parsedTags);
+                pstmt.setInt(++i, this.timestamp);
+                pstmt.setInt(++i, this.quantity);
+                pstmt.setLong(++i, this.priceNQT);
+                pstmt.setBoolean(++i, this.delisted);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -395,28 +412,6 @@ public final class DigitalGoodsStore {
 
         public String[] getParsedTags() {
             return parsedTags;
-        }
-
-        private static final Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_30);
-        private static final String[] emptyTags = new String[0];
-
-        private static String[] parseTags(String tags) {
-            if (tags.trim().length() == 0) {
-                return emptyTags;
-            }
-            List<String> list = new ArrayList<>();
-            try (TokenStream stream = analyzer.tokenStream(null, new StringReader(tags))) {
-                CharTermAttribute attribute = stream.addAttribute(CharTermAttribute.class);
-                String tag;
-                while (stream.incrementToken() && list.size() < 3 && (tag = attribute.toString()).length() <= 20 && tag.length() >= 3) {
-                    if (!list.contains(tag)) {
-                        list.add(tag);
-                    }
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e.toString(), e);
-            }
-            return list.toArray(new String[list.size()]);
         }
 
     }
@@ -607,8 +602,12 @@ public final class DigitalGoodsStore {
             return purchaseTable.getCount(new SellerBuyerPurchasesClause(sellerId, buyerId, withPublicFeedbacksOnly, completedOnly));
         }
 
-        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
-            return purchaseTable.getManyBy(new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly), from, to);
+        public static DbIterator<Purchase> getGoodsPurchases(long goodsId, long buyerId, boolean withPublicFeedbacksOnly, boolean completedOnly, int from, int to) {
+            DbClause clause = new LongPurchasesClause("goods_id", goodsId, withPublicFeedbacksOnly, completedOnly);
+            if (buyerId != 0) {
+                clause = clause.and(new DbClause.LongClause("buyer_id", buyerId));
+            }
+            return purchaseTable.getManyBy(clause, from, to);
         }
 
         public static int getGoodsPurchaseCount(final long goodsId, boolean withPublicFeedbacksOnly, boolean completedOnly) {
@@ -624,6 +623,13 @@ public final class DigitalGoodsStore {
             return purchaseTable.getManyBy(dbClause, from, to);
         }
 
+        public static DbIterator<Purchase> getExpiredSellerPurchases(final long sellerId, int from, int to) {
+            DbClause dbClause = new DbClause.LongClause("seller_id", sellerId)
+                    .and(new DbClause.FixedClause("pending = FALSE"))
+                    .and(new DbClause.FixedClause("goods IS NULL"));
+            return purchaseTable.getManyBy(dbClause, from, to);
+        }
+
         static Purchase getPendingPurchase(long purchaseId) {
             Purchase purchase = getPurchase(purchaseId);
             return purchase == null || ! purchase.isPending() ? null : purchase;
@@ -632,14 +638,9 @@ public final class DigitalGoodsStore {
         private static DbIterator<Purchase> getExpiredPendingPurchases(Block block) {
             final int timestamp = block.getTimestamp();
             final int previousTimestamp = Nxt.getBlockchain().getBlock(block.getPreviousBlockId()).getTimestamp();
-            DbClause dbClause = new DbClause(" deadline < ? AND deadline >= ? AND pending = TRUE ") {
-                @Override
-                public int set(PreparedStatement pstmt, int index) throws SQLException {
-                    pstmt.setLong(index++, timestamp);
-                    pstmt.setLong(index++, previousTimestamp);
-                    return index;
-                }
-            };
+            DbClause dbClause = new DbClause.LongClause("deadline", DbClause.Op.LT, timestamp)
+                    .and(new DbClause.LongClause("deadline", DbClause.Op.GTE, previousTimestamp))
+                    .and(new DbClause.FixedClause("pending = TRUE"));
             return purchaseTable.getManyBy(dbClause, 0, -1);
         }
 
@@ -677,7 +678,7 @@ public final class DigitalGoodsStore {
             this.priceNQT = attachment.getPriceNQT();
             this.deadline = attachment.getDeliveryDeadlineTimestamp();
             this.note = transaction.getEncryptedMessage() == null ? null : transaction.getEncryptedMessage().getEncryptedData();
-            this.timestamp = transaction.getTimestamp();
+            this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
             this.isPending = true;
         }
 
@@ -707,25 +708,25 @@ public final class DigitalGoodsStore {
                     + "refund_nonce, has_feedback_notes, has_public_feedbacks, discount, refund, height, latest) KEY (id, height) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
-                pstmt.setLong(++i, this.getId());
-                pstmt.setLong(++i, this.getBuyerId());
-                pstmt.setLong(++i, this.getGoodsId());
-                pstmt.setLong(++i, this.getSellerId());
-                pstmt.setInt(++i, this.getQuantity());
-                pstmt.setLong(++i, this.getPriceNQT());
-                pstmt.setInt(++i, this.getDeliveryDeadlineTimestamp());
-                setEncryptedData(pstmt, this.getNote(), ++i);
+                pstmt.setLong(++i, this.id);
+                pstmt.setLong(++i, this.buyerId);
+                pstmt.setLong(++i, this.goodsId);
+                pstmt.setLong(++i, this.sellerId);
+                pstmt.setInt(++i, this.quantity);
+                pstmt.setLong(++i, this.priceNQT);
+                pstmt.setInt(++i, this.deadline);
+                setEncryptedData(pstmt, this.note, ++i);
                 ++i;
-                pstmt.setInt(++i, this.getTimestamp());
-                pstmt.setBoolean(++i, this.isPending());
-                setEncryptedData(pstmt, this.getEncryptedGoods(), ++i);
+                pstmt.setInt(++i, this.timestamp);
+                pstmt.setBoolean(++i, this.isPending);
+                setEncryptedData(pstmt, this.encryptedGoods, ++i);
                 ++i;
-                setEncryptedData(pstmt, this.getRefundNote(), ++i);
+                setEncryptedData(pstmt, this.refundNote, ++i);
                 ++i;
                 pstmt.setBoolean(++i, this.hasFeedbackNotes);
                 pstmt.setBoolean(++i, this.hasPublicFeedbacks);
-                pstmt.setLong(++i, this.getDiscountNQT());
-                pstmt.setLong(++i, this.getRefundNQT());
+                pstmt.setLong(++i, this.discountNQT);
+                pstmt.setLong(++i, this.refundNQT);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -818,8 +819,10 @@ public final class DigitalGoodsStore {
                 feedbackNotes = new ArrayList<>();
             }
             feedbackNotes.add(feedbackNote);
-            this.hasFeedbackNotes = true;
-            purchaseTable.insert(this);
+            if (!this.hasFeedbackNotes) {
+                this.hasFeedbackNotes = true;
+                purchaseTable.insert(this);
+            }
             feedbackTable.insert(this, feedbackNotes);
 		}
 
@@ -840,8 +843,10 @@ public final class DigitalGoodsStore {
                 publicFeedbacks = new ArrayList<>();
             }
             publicFeedbacks.add(publicFeedback);
-            this.hasPublicFeedbacks = true;
-            purchaseTable.insert(this);
+            if (!this.hasPublicFeedbacks) {
+                this.hasPublicFeedbacks = true;
+                purchaseTable.insert(this);
+            }
             publicFeedbackTable.insert(this, publicFeedbacks);
         }
 
@@ -849,7 +854,7 @@ public final class DigitalGoodsStore {
             return discountNQT;
         }
 
-        public void setDiscountNQT(long discountNQT) {
+        private void setDiscountNQT(long discountNQT) {
             this.discountNQT = discountNQT;
             purchaseTable.insert(this);
         }
@@ -858,7 +863,7 @@ public final class DigitalGoodsStore {
             return refundNQT;
         }
 
-        public void setRefundNQT(long refundNQT) {
+        private void setRefundNQT(long refundNQT) {
             this.refundNQT = refundNQT;
             purchaseTable.insert(this);
         }
@@ -922,14 +927,15 @@ public final class DigitalGoodsStore {
     static void purchase(Transaction transaction,  Attachment.DigitalGoodsPurchase attachment) {
         Goods goods = Goods.goodsTable.get(Goods.goodsDbKeyFactory.newKey(attachment.getGoodsId()));
         if (! goods.isDelisted() && attachment.getQuantity() <= goods.getQuantity() && attachment.getPriceNQT() == goods.getPriceNQT()
-                && attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlock().getTimestamp()) {
+                && (attachment.getDeliveryDeadlineTimestamp() > Nxt.getBlockchain().getLastBlockTimestamp()
+                || Nxt.getBlockchain().getHeight() >= Constants.VOTING_SYSTEM_BLOCK)) { // temporary
             goods.changeQuantity(-attachment.getQuantity());
             Purchase purchase = new Purchase(transaction, attachment, goods.getSellerId());
             Purchase.purchaseTable.insert(purchase);
             purchaseListeners.notify(purchase, Event.PURCHASE);
         } else {
             Account buyer = Account.getAccount(transaction.getSenderId());
-            buyer.addToUnconfirmedBalanceNQT(Convert.safeMultiply(attachment.getQuantity(), attachment.getPriceNQT()));
+            buyer.addToUnconfirmedBalanceNQT(Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
             // restoring the unconfirmed balance if purchase not successful, however buyer still lost the transaction fees
         }
     }
@@ -937,12 +943,12 @@ public final class DigitalGoodsStore {
     static void deliver(Transaction transaction, Attachment.DigitalGoodsDelivery attachment) {
         Purchase purchase = Purchase.getPendingPurchase(attachment.getPurchaseId());
         purchase.setPending(false);
-        long totalWithoutDiscount = Convert.safeMultiply(purchase.getQuantity(), purchase.getPriceNQT());
+        long totalWithoutDiscount = Math.multiplyExact((long) purchase.getQuantity(), purchase.getPriceNQT());
         Account buyer = Account.getAccount(purchase.getBuyerId());
-        buyer.addToBalanceNQT(Convert.safeSubtract(attachment.getDiscountNQT(), totalWithoutDiscount));
+        buyer.addToBalanceNQT(Math.subtractExact(attachment.getDiscountNQT(), totalWithoutDiscount));
         buyer.addToUnconfirmedBalanceNQT(attachment.getDiscountNQT());
         Account seller = Account.getAccount(transaction.getSenderId());
-        seller.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeSubtract(totalWithoutDiscount, attachment.getDiscountNQT()));
+        seller.addToBalanceAndUnconfirmedBalanceNQT(Math.subtractExact(totalWithoutDiscount, attachment.getDiscountNQT()));
         purchase.setEncryptedGoods(attachment.getGoods(), attachment.goodsIsText());
         purchase.setDiscountNQT(attachment.getDiscountNQT());
         purchaseListeners.notify(purchase, Event.DELIVERY);

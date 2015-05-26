@@ -1,6 +1,23 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbUtils;
+import nxt.db.DerivedDbTable;
 import nxt.util.Logger;
 
 import java.math.BigInteger;
@@ -31,11 +48,15 @@ final class BlockDb {
     }
 
     static boolean hasBlock(long blockId) {
+        return hasBlock(blockId, Integer.MAX_VALUE);
+    }
+
+    static boolean hasBlock(long blockId, int height) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM block WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT height FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
+                return rs.next() && rs.getInt("height") <= height;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -112,7 +133,11 @@ final class BlockDb {
         }
     }
 
-    static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.ValidationException {
+    static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.NotValidException {
+        return loadBlock(con, rs, false);
+    }
+
+    static BlockImpl loadBlock(Connection con, ResultSet rs, boolean loadTransactions) {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
@@ -132,7 +157,7 @@ final class BlockDb {
             long id = rs.getLong("id");
             return new BlockImpl(version, timestamp, previousBlockId, totalAmountNQT, totalFeeNQT, payloadLength, payloadHash,
                     generatorId, generationSignature, blockSignature, previousBlockHash,
-                    cumulativeDifficulty, baseTarget, nextBlockId, height, id);
+                    cumulativeDifficulty, baseTarget, nextBlockId, height, id, loadTransactions ? TransactionDb.findBlockTransactions(con, id) : null);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -234,7 +259,13 @@ final class BlockDb {
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
-                stmt.executeUpdate("TRUNCATE TABLE public_key");
+                for (DerivedDbTable table : BlockchainProcessorImpl.getInstance().getDerivedTables()) {
+                    if (table.isPersistent()) {
+                        try {
+                            stmt.executeUpdate("TRUNCATE TABLE " + table.toString());
+                        } catch (SQLException ignore) {}
+                    }
+                }
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
                 Db.db.commitTransaction();
             } catch (SQLException e) {

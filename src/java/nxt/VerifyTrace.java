@@ -1,6 +1,21 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
-import nxt.util.Convert;
 import nxt.util.Logger;
 
 import java.io.BufferedReader;
@@ -97,11 +112,11 @@ public final class VerifyTrace {
                 }
                 if ("currency mint".equals(event)) {
                     String currencyId = valueMap.get("currency");
-                    issuedCurrencyUnits.put(currencyId, Convert.safeAdd(nullToZero(issuedCurrencyUnits.get(currencyId)), Long.parseLong(valueMap.get("currency units"))));
+                    issuedCurrencyUnits.put(currencyId, Math.addExact(nullToZero(issuedCurrencyUnits.get(currencyId)), Long.parseLong(valueMap.get("currency units"))));
                 }
                 if ("currency claim".equals(event)) {
                     String currencyId = valueMap.get("currency");
-                    issuedCurrencyUnits.put(currencyId, Convert.safeAdd(nullToZero(issuedCurrencyUnits.get(currencyId)), Long.parseLong(valueMap.get("currency units"))));
+                    issuedCurrencyUnits.put(currencyId, Math.addExact(nullToZero(issuedCurrencyUnits.get(currencyId)), Long.parseLong(valueMap.get("currency units"))));
                 }
                 if ("currency delete".equals(event) || "undo crowdfunding".equals(event)) {
                     String currencyId = valueMap.get("currency");
@@ -117,7 +132,7 @@ public final class VerifyTrace {
                         accountTotals.put(header, Long.parseLong(value));
                     } else if (isDelta(header)) {
                         long previousValue = nullToZero(accountTotals.get(header));
-                        accountTotals.put(header, Convert.safeAdd(previousValue, Long.parseLong(value)));
+                        accountTotals.put(header, Math.addExact(previousValue, Long.parseLong(value)));
                     } else if (isAssetQuantity(header)) {
                         String assetId = valueMap.get("asset");
                         Map<String,Long> assetTotals = accountAssetMap.get(assetId);
@@ -134,7 +149,7 @@ public final class VerifyTrace {
                             accountAssetMap.put(assetId, assetTotals);
                         }
                         long previousValue = nullToZero(assetTotals.get(header));
-                        assetTotals.put(header, Convert.safeAdd(previousValue, Long.parseLong(value)));
+                        assetTotals.put(header, Math.addExact(previousValue, Long.parseLong(value)));
                     } else if (isCurrencyBalance(header)) {
                         String currencyId = valueMap.get("currency");
                         Map<String,Long> currencyTotals = accountCurrencyMap.get(currencyId);
@@ -151,7 +166,7 @@ public final class VerifyTrace {
                             accountCurrencyMap.put(currencyId, currencyTotals);
                         }
                         long previousValue = nullToZero(currencyTotals.get(header));
-                        currencyTotals.put(header, Convert.safeAdd(previousValue, Long.parseLong(value)));
+                        currencyTotals.put(header, Math.addExact(previousValue, Long.parseLong(value)));
                     }
                 }
             }
@@ -168,7 +183,7 @@ public final class VerifyTrace {
                 long totalDelta = 0;
                 for (String header : deltaHeaders) {
                     long delta = nullToZero(accountValues.get(header));
-                    totalDelta = Convert.safeAdd(totalDelta, delta);
+                    totalDelta = Math.addExact(totalDelta, delta);
                     System.out.println(header + ": " + delta);
                 }
                 System.out.println("total confirmed balance change: " + totalDelta);
@@ -188,7 +203,7 @@ public final class VerifyTrace {
                     long totalAssetDelta = 0;
                     for (String header : deltaAssetQuantityHeaders) {
                         long delta = nullToZero(assetValues.get(header));
-                        totalAssetDelta = Convert.safeAdd(totalAssetDelta, delta);
+                        totalAssetDelta = Math.addExact(totalAssetDelta, delta);
                     }
                     System.out.println("total confirmed asset quantity change: " + totalAssetDelta);
                     long assetBalance = nullToZero(assetValues.get("asset balance"));
@@ -197,7 +212,7 @@ public final class VerifyTrace {
                         failed.add(accountId);
                     }
                     long previousAssetQuantity = nullToZero(accountAssetQuantities.get(assetId));
-                    accountAssetQuantities.put(assetId, Convert.safeAdd(previousAssetQuantity, assetBalance));
+                    accountAssetQuantities.put(assetId, Math.addExact(previousAssetQuantity, assetBalance));
                 }
                 Map<String,Map<String,Long>> accountCurrencyMap = accountCurrencyTotals.get(accountId);
                 for (Map.Entry<String,Map<String,Long>> currencyMapEntry : accountCurrencyMap.entrySet()) {
@@ -210,7 +225,7 @@ public final class VerifyTrace {
                     long totalCurrencyDelta = 0;
                     for (String header : deltaCurrencyUnitHeaders) {
                         long delta = nullToZero(currencyValues.get(header));
-                        totalCurrencyDelta = Convert.safeAdd(totalCurrencyDelta, delta);
+                        totalCurrencyDelta = Math.addExact(totalCurrencyDelta, delta);
                     }
                     System.out.println("total confirmed currency units change: " + totalCurrencyDelta);
                     long currencyBalance = nullToZero(currencyValues.get("currency balance"));
@@ -219,7 +234,7 @@ public final class VerifyTrace {
                         failed.add(accountId);
                     }
                     long previousCurrencyQuantity = nullToZero(accountCurrencyUnits.get(currencyId));
-                    accountCurrencyUnits.put(currencyId, Convert.safeAdd(previousCurrencyQuantity, currencyBalance));
+                    accountCurrencyUnits.put(currencyId, Math.addExact(previousCurrencyQuantity, currencyBalance));
                 }
                 System.out.println();
             }

@@ -1,4 +1,20 @@
-<div class="modal fade" id="transfer_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<div class="modal fade" id="transfer_currency_modal" data-transaction-type="5" data-transaction-subtype="3" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -8,13 +24,16 @@
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div data-replace-with-modal-template="recipient_modal_template"></div>
                     <div class="form-group">
-                        <label data-i18n="currency">CURRENCY</label>
-                        <p><span id="transfer_currency_code"></span><span id="transfer_currency_available" style="font-style:italic"></span></p>
+                        <div class="form-group">
+                            <label for="transfer_currency_code" data-i18n="currency">CURRENCY</label>
+                            <input type="text" maxlength="5" class="form-control" name="code" id="transfer_currency_code" placeholder="Currency Code" data-i18n="[placeholder]currency_code" tabindex="2" />
+                        </div>
+                        <p><span id="transfer_currency_available" style="font-style:italic"></span></p>
                         <input type="hidden" name="currency" id="transfer_currency_currency" value="" />
                         <input type="hidden" name="decimals" id="transfer_currency_decimals" value="" />
                     </div>
-                    <div data-replace-with-modal-template="recipient_modal_template"></div>
                     <div class="form-group">
                         <label for="transfer_currency_units" data-i18n="units">UNITS</label>
                         <div class="input-group">
@@ -24,7 +43,11 @@
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
                     <input type="hidden" name="request_type" value="transferCurrency" />
@@ -48,7 +71,7 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <!-- todo -->
-                <h4 class="modal-title" data-i18n="[html]confirm__exchange">Confirm <span class="currency_order_modal_type"></span> Exchange</h4>
+                <h4 class="modal-title"><span data-i18n="confirm_exchange">Confirm Exchange</span> <span class="currency_order_modal_type"></span></h4>
             </div>
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
@@ -86,7 +109,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="issue_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="issue_currency_modal" data-transaction-type="5" data-transaction-subtype="0" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -183,12 +206,17 @@
                         <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label> <i>Current Height: <span class="nrs_current_block"></span></i>
                         <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="18" value="0" disabled>
                     </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
                     <div class="row">
                         <div class="col-xs-6 col-sm-6 col-md-6 advanced" data-advanced="6">
                             <div class="form-group">
                                 <label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The fees are the following: 3 Letters - 25000 NXT, 4 Letters - 1000 NXT, 5 Letters - 40 NXT" data-i18n="[data-content]currency_minimum_fee_help" data-container="body" style="color:red"></i></label>
                                 <div class="input-group">
                                     <input type="text" name="feeNXT" id="issue_currency_fee" class="form-control" placeholder="Fee" min="40" data-default="25000" value="25000" tabindex="19">
+                                    <span class="input-group-addon" style="min-width:50px;"><i class="fa fa-gavel"></i> 
+                                        <span id="{{name}}_feeNXT_addition_info" class="feeNXT_approval_addition_info">+0</span>
+                                    </span>
+                                    <input type="hidden" id="{{name}}_feeNXT_approval_addition" name="feeNXT_approval_addition" value="0" />
                                     <span class="input-group-addon">NXT</span>
                                 </div>
                             </div>
@@ -200,27 +228,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group secret_phrase">
-                        <label for="issue_currency_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="issue_currency_password" class="form-control" placeholder="" tabindex="21">
-                    </div>
-                    <div class="form-group advanced">
-                        <label for="issue_currency_referenced_transaction" data-i18n="referenced_transaction_hash">REFERENCED TRANSACTION HASH</label>
-                        <input type="text" class="form-control" name="referencedTransactionFullHash" id="issue_currency_referenced_transaction" placeholder="Referenced Transaction Full Hash" data-i18n="referenced_transaction_full_hash" tabindex="22" spellcheck="false" />
-                    </div>
-                    <div class="form-group advanced" style="margin-bottom:0;">
-                        <input type="checkbox" name="doNotBroadcast" id="issue_currency_do_not_broadcast" value="1" /> <label for="issue_currency_do_not_broadcast" style="font-weight:normal;" tabindex="23" data-i18n="do_not_broadcast">Do Not Broadcast</label>
-                    </div>
-                    <div class="form-group advanced">
-                        <input type="checkbox" name="add_note_to_self" id="issue_currency_add_note_to_self" class="add_note_to_self" tabindex="24" /> <label for="issue_currency_add_note_to_self" style="font-weight:normal;margin-bottom:0;"> <span data-i18n="add_note_to_self">Add Note to Self?</span></label>
-                    </div>
-                    <div class="form-group advanced optional_note">
-                        <label for="issue_currency_note_to_self" data-i18n="note_to_self">Note to Self</label>
-                        <textarea class="form-control" id="issue_currency_note_to_self" name="note_to_self" rows="4" tabindex="25"></textarea>
-                        <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="note_is_encrypted">This note is encrypted.</label>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
                     <input type="hidden" name="request_type" value="issueCurrency" />
                 </form>
             </div>
@@ -266,7 +277,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="publish_exchange_offer_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="publish_exchange_offer_modal" data-transaction-type="5" data-transaction-subtype="4" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -306,7 +317,7 @@
                             <div class="col-sm-9">
                                 <div class="input-group">
                                     <input id="buy_currency_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" tabindex="4" />
-                                    <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
+                                    <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                 </div>
                             </div>
                         </div>
@@ -333,12 +344,12 @@
                             <div class="col-sm-9">
                                 <div class="input-group">
                                     <input id="sell_currency_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" tabindex="7" />
-                                    <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
+                                    <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="expiration_height" class="col-sm-3 control-label" data-i18n="expiration_height">Expiration Height</label><i>Current Height: <span class="nrs_current_block"></span></i>
+                            <label for="expiration_height" class="col-sm-3 control-label" data-i18n="expiration_height">Expiration Height</label><i><span data-i18n="current_height">Current Height</span>: <span class="nrs_current_block"></span></i>
                             <div class="col-sm-9">
                                 <div class="input-group">
                                     <input id="expiration_height" type="number" name="expirationHeight" class="form-control" tabindex="8" />
@@ -347,23 +358,12 @@
                         </div>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced">
-                            <div class="form-group">
-                                <label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-container="body" style="color:red"></i></label>
-                                <div class="input-group">
-                                    <input type="number" name="feeNXT" id="exchange_offer_currency_fee" class="form-control" placeholder="Fee" step="any" min="1" data-default="1" value="1" tabindex="9">
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced">
-                            <div class="form-group">
-                                <label for="issue_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="exchange_offer_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="10">
-                            </div>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
+                    
                     <input type="hidden" name="request_type" value="publishExchangeOffer" />
                 </form>
             </div>
@@ -376,7 +376,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="claim_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="claim_currency_modal" data-transaction-type="5" data-transaction-subtype="2" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -396,7 +396,11 @@
                         <input type="text" class="form-control" name="units" id="claim_currency_amount" placeholder="Number of units" data-i18n="units" tabindex="1" />
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <input type="hidden" name="request_type" value="currencyReserveClaim" />
                 </form>
@@ -411,7 +415,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="mine_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="mine_currency_modal" data-transaction-type="5" data-transaction-subtype="7" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -442,7 +446,11 @@
                         <input type="text" class="form-control" name="nonce" id="mine_currency_nonce" data-i18n="nonce" tabindex="1" />
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <input type="hidden" name="request_type" value="currencyMint" />
                 </form>
@@ -457,7 +465,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="reserve_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="reserve_currency_modal" data-transaction-type="5" data-transaction-subtype="1" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -478,20 +486,24 @@
                         <label for="reserve_currency_initialSupply_text" data-i18n="initial_supply_included">Initial Supply Included</label> <i><span id="reserve_currency_initialSupply_text"></span></i>
                         </p>
                         <p>
-                        <label for="reserve_currency_minReserve_text" data-i18n="activation_per_unit_reserve">Activation Per Unit Reserve</label> <i><span id="reserve_currency_minReserve_text"></span></i>
-                        <label for="reserve_currency_currentReserve_text" data-i18n="current_per_unit_reserve">Current Per Unit Reserve</label> <i><span id="reserve_currency_currentReserve_text"></span></i>
+                        <label for="reserve_currency_minReserve_text" data-i18n="target_reserve">Target Amount [NXT]</label> <i><span id="reserve_currency_minReserve_text"></span></i>
+                        <label for="reserve_currency_currentReserve_text" data-i18n="current_reserve">Reserved Amount [NXT]</label> <i><span id="reserve_currency_currentReserve_text"></span></i>
                         </p>
                     </div>
                     <div class="form-group">
-                        <label for="reserve_currency_amount" data-i18n="amount_per_currency_unit">Amount of NXT per currency unit</label>
-                        <input type="text" class="form-control" name="amountPerUnitNQT" id="reserve_currency_amount" placeholder="NXT per unit" data-i18n="amount" tabindex="1" />
+                        <label for="reserve_currency_amount" data-i18n="amount_per_currency_unit">Amount of NXT to reserve</label>
+                        <input type="text" class="form-control" id="reserve_currency_amount" placeholder="NXT amount" data-i18n="amount" tabindex="1" />
                     </div>
                     <div class="form-group">
-                        <label for="reserve_currency_total" data-i18n="amount_nxt_reserved">Amount of NXT reserved</label>
-                        <span id="reserve_currency_total"></span>
+                        <label for="reserve_currency_total" data-i18n="amount_nxt_reserved">Reserve per Unit</label>
+                        <input id="reserve_currency_total" name="amountPerUnitNQT" readonly style="border: none"/>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <input type="hidden" name="request_type" value="currencyReserveIncrease" />
                 </form>
@@ -506,7 +518,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="delete_currency_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="delete_currency_modal" data-transaction-type="5" data-transaction-subtype="8" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -520,7 +532,11 @@
                         <input type="hidden" class="form-control" name="currency" id="delete_currency_currency" />
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
                     
                     <input type="hidden" name="request_type" value="deleteCurrency" />
                 </form>

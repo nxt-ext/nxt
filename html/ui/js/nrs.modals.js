@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -78,7 +94,8 @@ var NRS = (function(NRS, $, undefined) {
 
 	//hide modal when another one is activated.
 	$(".modal").on("show.bs.modal", function(e) {
-		var $inputFields = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
+		
+		var $inputFields = $(this).find("input[name=recipient], input[name=account_id], input[name=phasingWhitelisted]").not("[type=hidden]");
 
 		$.each($inputFields, function() {
 			if ($(this).hasClass("noMask")) {
@@ -102,6 +119,16 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$(this).find(".form-group").css("margin-bottom", "");
+
+		$(this).find('.approve_tab_list a:first').click();
+		NRS.initAdvancedModalFormValues($(this));
+		$(this).find(".pas_contact_info").text(" ");
+		// Activating context help popovers
+		$(function () { 
+            $("[data-toggle='popover']").popover({
+            	"html": true
+            }); 
+        });
 	});
 
 	$(".modal").on("shown.bs.modal", function() {
@@ -164,6 +191,14 @@ var NRS = (function(NRS, $, undefined) {
 			var advancedSize = $(obj).data("advanced");
 			$(obj).removeClass("col-xs-" + advancedSize + " col-sm-" + advancedSize + " col-md-" + advancedSize).addClass("col-xs-" + normalSize + " col-sm-" + normalSize + " col-md-" + normalSize);
 		});
+
+		$("#create_poll_asset_id_group").css("display", "none");
+		$("#create_poll_ms_currency_group").css("display", "none");
+		$("#create_poll_type_group").removeClass("col-xs-6").addClass("col-xs-12");
+		$("#create_poll_type_group").removeClass("col-sm-6").addClass("col-sm-12");
+		$("#create_poll_type_group").removeClass("col-md-6").addClass("col-md-12");
+
+		$(this).find(".tx-modal-approve").empty();
 
 		var $feeInput = $(this).find("input[name=feeNXT]");
 
@@ -243,7 +278,10 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$(this).text($.t("advanced"));
 		}
+		// Close accidentally triggered popovers
+		$(".show_popover").popover("hide");
 	});
+
 
 	return NRS;
 }(NRS || {}, jQuery));

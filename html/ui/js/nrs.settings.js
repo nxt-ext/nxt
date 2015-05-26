@@ -1,20 +1,37 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	NRS.defaultSettings = {
-		"submit_on_enter": 0,
-		"animate_forging": 1,
-		"news": -1,
-		"console_log": 0,
+		"submit_on_enter": "0",
+		"animate_forging": "1",
+		"news": "-1",
+		"console_log": "0",
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000",
 		"currency_transfer_warning": "10000",
-		"24_hour_format": 1,
-		"remember_passphrase": 0,
+		"24_hour_format": "1",
+		"remember_passphrase": "0",
 		"language": "en",
-		"items_page": 15,
+		"enable_plugins": "0",
+		"items_page": "15",
 		"themeChoice": "default"
 	};
 
@@ -25,28 +42,33 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.languages = {
-		"de": "Deutsch (Beta)",          // german
+		"de": "Deutsch",                 // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
-		"fi": "Suomi (Beta)",            // finnish
+		"ca": "Català (Experimental)",   // catalan
+		"fi": "Suomi (Experimental)",    // finnish
 		"fr": "Français",                // french
-		"gl": "Galego (Beta)",           // galician
-		"sh": "Hrvatski (Beta)",         // croatian
-		"id": "Bahasa Indonesia (Beta)", // indonesian
+		"gl": "Galego (Experimental)",   // galician
+		"el": "Ελληνικά (Experimental)", // greek
+		"sh": "Hrvatski (Experimental)", // croatian
+		"hi": "हिन्दी (Experimental)",  // hindi
+		"id": "Bahasa Indonesia",        // indonesian
 		"it": "Italiano",                // italian
-		"ja": "日本語 (Beta)",            // japanese
+		"ja": "日本語",                   // japanese
 		"lt": "Lietuviškai",             // lithuanian
 		"nl": "Nederlands",              // dutch
+		"cs": "Čeština (Beta)",          // czech
 		"sk": "Slovensky (Beta)",        // slovakian
-		"pt-pt": "Português (Beta)",     // portugese
+		"pt-pt": "Português",            // portugese
 		"pt-br": "Português Brasileiro", // portugese, brazilian
-		"sr": "Српски (Beta)",           // serbian, cyrillic
-		"sr-cs": "Srpski (Beta)",        // serbian, latin
+		"sr": "Српски (Experimental)",   // serbian, cyrillic
+		"sr-cs": "Srpski (Experimental)",// serbian, latin
+		"bg": "Български",               // bulgarian
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
-		"zh-cn": "中文 (simplified)",     // chinese simplified
-		"zh-tw": "中文 (traditional)"     // chinese traditional
-	}
+		"zh-cn": "中文 simplified",      // chinese simplified
+		"zh-tw": "中文 traditional"      // chinese traditional
+	};
 
 	var userStyles = {};
 
@@ -231,9 +253,12 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.inApp) {
 			$("#settings_console_log_div").hide();
 		}
+		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
+			$("#settings_db_warning").show();
+		}
 
 		NRS.pageLoaded();
-	}
+	};
 
 	function getCssGradientStyle(start, stop, vertical) {
 		var output = "";
@@ -415,7 +440,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$style.text(css);
 		}
-	}
+	};
 
 	$("ul.color_scheme_editor").on("click", "li a", function(e) {
 		e.preventDefault();
@@ -454,10 +479,21 @@ var NRS = (function(NRS, $, undefined) {
 			$langSelBoxes.append('<option value="' + code + '">' + name + '</option>');
 		});
 		$langSelBoxes.val(NRS.settings['language']);
-	}
+	};
 
 	NRS.getSettings = function() {
-		if (NRS.databaseSupport) {
+		if (!NRS.account) {
+			NRS.settings = NRS.defaultSettings;
+			if (NRS.getCookie("language")) {
+				NRS.settings["language"] = NRS.getCookie("language");
+			}
+			if (NRS.getCookie("themeChoice")) {
+				NRS.settings["themeChoice"] = NRS.getCookie("themeChoice");
+			}
+			NRS.createLangSelect();
+			NRS.applySettings();
+		} else {
+			if (NRS.databaseSupport) {
 			NRS.database.select("data", [{
 				"id": "settings"
 			}], function(error, result) {
@@ -470,17 +506,25 @@ var NRS = (function(NRS, $, undefined) {
 					});
 					NRS.settings = NRS.defaultSettings;
 				}
-				NRS.createLangSelect();
+                NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
+                for (var setting in NRS.defaultSettings) {
+                    if (!NRS.defaultSettings.hasOwnProperty(setting)) {
+                        continue;
+                    }
+                    var status = (NRS.defaultSettings[setting] !== NRS.settings[setting] ? "modified" : "default");
+                    NRS.logConsole(setting + " = " + NRS.settings[setting] + " [" + status + "]");
+                }
 				NRS.applySettings();
 			});
-		} else {
-			if (NRS.hasLocalStorage) {
-				NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
 			} else {
-				NRS.settings = NRS.defaultSettings;
+				if (NRS.hasLocalStorage) {
+					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+                    NRS.logConsole("Loading settings from local storage");
+				} else {
+					NRS.settings = NRS.defaultSettings;
+				}
+				NRS.applySettings();
 			}
-			NRS.createLangSelect();
-			NRS.applySettings();
 		}
 	};
 	NRS.applySettings = function(key) {
@@ -525,7 +569,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (!key || key == "submit_on_enter") {
-			if (NRS.settings["submit_on_enter"]) {
+			if (NRS.settings["submit_on_enter"] == "1") {
 				$(".modal form:not('#decrypt_note_form_container')").on("submit.onEnter", function(e) {
 					e.preventDefault();
 					NRS.submitForm($(this).closest(".modal"));
@@ -536,28 +580,29 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (!key || key == "animate_forging") {
-			if (NRS.settings["animate_forging"]) {
-				$("#forging_indicator").addClass("animated");
+            var forgingIndicator = $("#forging_indicator");
+            if (NRS.settings["animate_forging"] == "1") {
+				forgingIndicator.addClass("animated");
 			} else {
-				$("#forging_indicator").removeClass("animated");
+				forgingIndicator.removeClass("animated");
 			}
 		}
 
 		if (!key || key == "news") {
-			if (NRS.settings["news"] == 0) {
+			if (NRS.settings["news"] == "0") {
 				$("#news_link").hide();
-			} else if (NRS.settings["news"] == 1) {
+			} else if (NRS.settings["news"] == "1") {
 				$("#news_link").show();
 			}
 		}
 		
 		if (!key || key == "items_page") {
-			NRS.itemsPerPage = NRS.settings["items_page"];
+			NRS.itemsPerPage = parseInt(NRS.settings["items_page"], 10);
 		}
 
 		if (!NRS.inApp && !NRS.downloadingBlockchain) {
 			if (!key || key == "console_log") {
-				if (NRS.settings["console_log"] == 0) {
+				if (NRS.settings["console_log"] == "0") {
 					$("#show_console").hide();
 				} else {
 					$("#show_console").show();
@@ -568,7 +613,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (key == "24_hour_format") {
-			var $dashboard_dates = $("#dashboard_transactions_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
+			var $dashboard_dates = $("#dashboard_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
 
 			$.each($dashboard_dates, function(key, value) {
 				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
@@ -576,17 +621,24 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (!key || key == "remember_passphrase") {
-			if (NRS.settings["remember_passphrase"]) {
+			if (NRS.settings["remember_passphrase"] == "1") {
 				NRS.setCookie("remember_passphrase", 1, 1000);
 			} else {
 				NRS.deleteCookie("remember_passphrase");
 			}
 		}
-	}
+	};
 
 	NRS.updateSettings = function(key, value) {
 		if (key) {
 			NRS.settings[key] = value;
+			
+			if (key == "themeChoice") {
+				NRS.setCookie("themeChoice", value, 1000);
+			}
+			if (key == "language") {
+				NRS.setCookie("language", value, 1000);
+			}
 		}
 
 		if (NRS.databaseSupport) {
@@ -600,7 +652,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.applySettings(key);
-	}
+	};
 
 	$("#settings_box select, #welcome_panel select[name='language']").on("change", function(e) {
 		e.preventDefault();

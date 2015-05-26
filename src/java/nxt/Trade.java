@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
@@ -5,7 +21,6 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
-import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -16,7 +31,7 @@ import java.sql.SQLException;
 
 public final class Trade {
 
-    public static enum Event {
+    public enum Event {
         TRADE
     }
 
@@ -61,6 +76,10 @@ public final class Trade {
         return listeners.removeListener(listener, eventType);
     }
 
+    public static Trade getTrade(long askOrderId, long bidOrderId) {
+        return tradeTable.get(tradeDbKeyFactory.newKey(askOrderId, bidOrderId));
+    }
+
     public static DbIterator<Trade> getAssetTrades(long assetId, int from, int to) {
         return tradeTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
     }
@@ -70,7 +89,7 @@ public final class Trade {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ?"
-                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -89,7 +108,7 @@ public final class Trade {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE seller_id = ? AND asset_id = ?"
-                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? AND asset_id = ? ORDER BY height DESC"
+                    + " UNION ALL SELECT * FROM trade WHERE buyer_id = ? AND seller_id <> ? AND asset_id = ? ORDER BY height DESC, db_id DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -105,12 +124,20 @@ public final class Trade {
         }
     }
 
+    public static DbIterator<Trade> getAskOrderTrades(long askOrderId, int from, int to) {
+        return tradeTable.getManyBy(new DbClause.LongClause("ask_order_id", askOrderId), from, to);
+    }
+
+    public static DbIterator<Trade> getBidOrderTrades(long bidOrderId, int from, int to) {
+        return tradeTable.getManyBy(new DbClause.LongClause("bid_order_id", bidOrderId), from, to);
+    }
+
     public static int getTradeCount(long assetId) {
         return tradeTable.getCount(new DbClause.LongClause("asset_id", assetId));
     }
 
-    static Trade addTrade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
-        Trade trade = new Trade(assetId, block, askOrder, bidOrder);
+    static Trade addTrade(long assetId, Order.Ask askOrder, Order.Bid bidOrder) {
+        Trade trade = new Trade(assetId, askOrder, bidOrder);
         tradeTable.insert(trade);
         listeners.notify(trade, Event.TRADE);
         return trade;
@@ -134,7 +161,8 @@ public final class Trade {
     private final long priceNQT;
     private final boolean isBuy;
 
-    private Trade(long assetId, Block block, Order.Ask askOrder, Order.Bid bidOrder) {
+    private Trade(long assetId, Order.Ask askOrder, Order.Bid bidOrder) {
+        Block block = Nxt.getBlockchain().getLastBlock();
         this.blockId = block.getId();
         this.height = block.getHeight();
         this.assetId = assetId;
@@ -147,7 +175,19 @@ public final class Trade {
         this.buyerId = bidOrder.getAccountId();
         this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
         this.quantityQNT = Math.min(askOrder.getQuantityQNT(), bidOrder.getQuantityQNT());
-        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
+        if (askOrderHeight < bidOrderHeight) {
+            this.isBuy = true;
+        } else if (askOrderHeight == bidOrderHeight) {
+            if (this.height <= Constants.VOTING_SYSTEM_BLOCK) {
+                this.isBuy = askOrderId < bidOrderId;
+            } else {
+                this.isBuy = askOrder.getTransactionHeight() < bidOrder.getTransactionHeight() ||
+                        (askOrder.getTransactionHeight() == bidOrder.getTransactionHeight()
+                                && askOrder.getTransactionIndex() < bidOrder.getTransactionIndex());
+            }
+        } else {
+            this.isBuy = false;
+        }
         this.priceNQT = isBuy ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
     }
 
@@ -165,26 +205,27 @@ public final class Trade {
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");
         this.height = rs.getInt("height");
-        this.isBuy = askOrderHeight < bidOrderHeight || (askOrderHeight == bidOrderHeight && askOrderId < bidOrderId);
+        this.isBuy = rs.getBoolean("is_buy");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO trade (asset_id, block_id, "
-                + "ask_order_id, bid_order_id, ask_order_height, bid_order_height, seller_id, buyer_id, quantity, price, timestamp, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "ask_order_id, bid_order_id, ask_order_height, bid_order_height, seller_id, buyer_id, quantity, price, is_buy, timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getAssetId());
-            pstmt.setLong(++i, this.getBlockId());
-            pstmt.setLong(++i, this.getAskOrderId());
-            pstmt.setLong(++i, this.getBidOrderId());
-            pstmt.setInt(++i, this.getAskOrderHeight());
-            pstmt.setInt(++i, this.getBidOrderHeight());
-            pstmt.setLong(++i, this.getSellerId());
-            pstmt.setLong(++i, this.getBuyerId());
-            pstmt.setLong(++i, this.getQuantityQNT());
-            pstmt.setLong(++i, this.getPriceNQT());
-            pstmt.setInt(++i, this.getTimestamp());
-            pstmt.setInt(++i, this.getHeight());
+            pstmt.setLong(++i, this.assetId);
+            pstmt.setLong(++i, this.blockId);
+            pstmt.setLong(++i, this.askOrderId);
+            pstmt.setLong(++i, this.bidOrderId);
+            pstmt.setInt(++i, this.askOrderHeight);
+            pstmt.setInt(++i, this.bidOrderHeight);
+            pstmt.setLong(++i, this.sellerId);
+            pstmt.setLong(++i, this.buyerId);
+            pstmt.setLong(++i, this.quantityQNT);
+            pstmt.setLong(++i, this.priceNQT);
+            pstmt.setBoolean(++i, this.isBuy);
+            pstmt.setInt(++i, this.timestamp);
+            pstmt.setInt(++i, this.height);
             pstmt.executeUpdate();
         }
     }
@@ -229,8 +270,8 @@ public final class Trade {
 
     @Override
     public String toString() {
-        return "Trade asset: " + Convert.toUnsignedLong(assetId) + " ask: " + Convert.toUnsignedLong(askOrderId)
-                + " bid: " + Convert.toUnsignedLong(bidOrderId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
+        return "Trade asset: " + Long.toUnsignedString(assetId) + " ask: " + Long.toUnsignedString(askOrderId)
+                + " bid: " + Long.toUnsignedString(bidOrderId) + " price: " + priceNQT + " quantity: " + quantityQNT + " height: " + height;
     }
 
 }

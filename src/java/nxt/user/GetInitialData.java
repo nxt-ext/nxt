@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.user;
 
 import nxt.Block;
@@ -37,10 +53,10 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 unconfirmedTransaction.put("index", Users.getIndex(transaction));
                 unconfirmedTransaction.put("timestamp", transaction.getTimestamp());
                 unconfirmedTransaction.put("deadline", transaction.getDeadline());
-                unconfirmedTransaction.put("recipient", Convert.toUnsignedLong(transaction.getRecipientId()));
+                unconfirmedTransaction.put("recipient", Long.toUnsignedString(transaction.getRecipientId()));
                 unconfirmedTransaction.put("amountNQT", transaction.getAmountNQT());
                 unconfirmedTransaction.put("feeNQT", transaction.getFeeNQT());
-                unconfirmedTransaction.put("sender", Convert.toUnsignedLong(transaction.getSenderId()));
+                unconfirmedTransaction.put("sender", Long.toUnsignedString(transaction.getSenderId()));
                 unconfirmedTransaction.put("id", transaction.getStringId());
 
                 unconfirmedTransactions.add(unconfirmedTransaction);
@@ -53,24 +69,18 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
 
                 JSONObject blacklistedPeer = new JSONObject();
                 blacklistedPeer.put("index", Users.getIndex(peer));
-                blacklistedPeer.put("address", peer.getPeerAddress());
+                blacklistedPeer.put("address", peer.getHost());
                 blacklistedPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 blacklistedPeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    blacklistedPeer.put("wellKnown", true);
-                }
                 blacklistedPeers.add(blacklistedPeer);
 
             } else if (peer.getState() == Peer.State.NON_CONNECTED) {
 
                 JSONObject knownPeer = new JSONObject();
                 knownPeer.put("index", Users.getIndex(peer));
-                knownPeer.put("address", peer.getPeerAddress());
+                knownPeer.put("address", peer.getHost());
                 knownPeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 knownPeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    knownPeer.put("wellKnown", true);
-                }
                 knownPeers.add(knownPeer);
 
             } else {
@@ -80,15 +90,12 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 if (peer.getState() == Peer.State.DISCONNECTED) {
                     activePeer.put("disconnected", true);
                 }
-                activePeer.put("address", peer.getPeerAddress());
+                activePeer.put("address", peer.getHost());
                 activePeer.put("announcedAddress", Convert.truncate(peer.getAnnouncedAddress(), "-", 25, true));
                 activePeer.put("weight", peer.getWeight());
                 activePeer.put("downloaded", peer.getDownloadedVolume());
                 activePeer.put("uploaded", peer.getUploadedVolume());
                 activePeer.put("software", peer.getSoftware());
-                if (peer.isWellKnown()) {
-                    activePeer.put("wellKnown", true);
-                }
                 activePeers.add(activePeer);
             }
         }
@@ -102,7 +109,7 @@ public final class GetInitialData extends UserServlet.UserRequestHandler {
                 recentBlock.put("totalAmountNQT", block.getTotalAmountNQT());
                 recentBlock.put("totalFeeNQT", block.getTotalFeeNQT());
                 recentBlock.put("payloadLength", block.getPayloadLength());
-                recentBlock.put("generator", Convert.toUnsignedLong(block.getGeneratorId()));
+                recentBlock.put("generator", Long.toUnsignedString(block.getGeneratorId()));
                 recentBlock.put("height", block.getHeight());
                 recentBlock.put("version", block.getVersion());
                 recentBlock.put("block", block.getStringId());

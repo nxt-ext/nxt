@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
@@ -14,20 +30,20 @@ import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,6 +51,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     private static final boolean enableTransactionRebroadcasting = Nxt.getBooleanProperty("nxt.enableTransactionRebroadcasting");
     private static final boolean testUnconfirmedTransactions = Nxt.getBooleanProperty("nxt.testUnconfirmedTransactions");
+    private static final int maxUnconfirmedTransactions;
+    static {
+        int n = Nxt.getIntProperty("nxt.maxUnconfirmedTransactions");
+        maxUnconfirmedTransactions = n <= 0 ? Integer.MAX_VALUE : n;
+    }
 
     private static final TransactionProcessorImpl instance = new TransactionProcessorImpl();
 
@@ -71,7 +92,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
-                        lostTransactions.add(load(con, rs));
+                        waitingTransactions.add(load(con, rs));
                     }
                 }
             } catch (SQLException e) {
@@ -88,136 +109,145 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<TransactionImpl,Boolean>());
+    private final Set<TransactionImpl> broadcastedTransactions = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Listeners<List<? extends Transaction>,Event> transactionListeners = new Listeners<>();
-    private final Set<UnconfirmedTransaction> lostTransactions = new HashSet<>();
+
+    private final PriorityQueue<UnconfirmedTransaction> waitingTransactions = new PriorityQueue<UnconfirmedTransaction>(
+            (UnconfirmedTransaction o1, UnconfirmedTransaction o2) -> {
+                int result;
+                if ((result = Integer.compare(o2.getHeight(), o1.getHeight())) != 0) {
+                    return result;
+                }
+                if ((result = Long.compare(o1.getFeePerByte(), o2.getFeePerByte())) != 0) {
+                    return result;
+                }
+                if ((result = Long.compare(o2.getArrivalTimestamp(), o1.getArrivalTimestamp())) != 0) {
+                    return result;
+                }
+                return Long.compare(o2.getId(), o1.getId());
+            })
+    {
+
+        @Override
+        public boolean add(UnconfirmedTransaction unconfirmedTransaction) {
+            if (!super.add(unconfirmedTransaction)) {
+                return false;
+            }
+            if (size() > maxUnconfirmedTransactions) {
+                UnconfirmedTransaction removed = remove();
+                Logger.logDebugMessage("Dropped unconfirmed transaction " + removed.getJSONObject().toJSONString());
+            }
+            return true;
+        }
+
+    };
+
     private final Map<TransactionType, Map<String, Boolean>> unconfirmedDuplicates = new HashMap<>();
 
 
-    private final Runnable removeUnconfirmedTransactionsThread = new Runnable() {
+    private final Runnable removeUnconfirmedTransactionsThread = () -> {
 
-        private final DbClause expiredClause = new DbClause(" expiration < ? ") {
-            @Override
-            protected int set(PreparedStatement pstmt, int index) throws SQLException {
-                pstmt.setInt(index, Nxt.getEpochTime());
-                return index + 1;
-            }
-        };
-
-        @Override
-        public void run() {
-
+        try {
             try {
-                try {
-                    List<UnconfirmedTransaction> expiredTransactions = new ArrayList<>();
-                    try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(expiredClause, 0, -1, "")) {
-                        while (iterator.hasNext()) {
-                            expiredTransactions.add(iterator.next());
-                        }
+                List<UnconfirmedTransaction> expiredTransactions = new ArrayList<>();
+                try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(
+                        new DbClause.IntClause("expiration", DbClause.Op.LT, Nxt.getEpochTime()), 0, -1, "")) {
+                    while (iterator.hasNext()) {
+                        expiredTransactions.add(iterator.next());
                     }
-                    if (expiredTransactions.size() > 0) {
-                        synchronized (BlockchainImpl.getInstance()) {
-                            try {
-                                Db.db.beginTransaction();
-                                for (UnconfirmedTransaction unconfirmedTransaction : expiredTransactions) {
-                                    removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
-                                }
-                                Db.db.commitTransaction();
-                            } catch (Exception e) {
-                                Logger.logErrorMessage(e.toString(), e);
-                                Db.db.rollbackTransaction();
-                                throw e;
-                            } finally {
-                                Db.db.endTransaction();
+                }
+                if (expiredTransactions.size() > 0) {
+                    synchronized (BlockchainImpl.getInstance()) {
+                        try {
+                            Db.db.beginTransaction();
+                            for (UnconfirmedTransaction unconfirmedTransaction : expiredTransactions) {
+                                removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
                             }
-                        } // synchronized
-                    }
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Error removing unconfirmed transactions", e);
-                }
-            } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
-            }
-
-        }
-
-    };
-
-    private final Runnable rebroadcastTransactionsThread = new Runnable() {
-
-        @Override
-        public void run() {
-
-            try {
-                try {
-                    List<Transaction> transactionList = new ArrayList<>();
-                    int curTime = Nxt.getEpochTime();
-                    for (TransactionImpl transaction : broadcastedTransactions) {
-                        if (TransactionDb.hasTransaction(transaction.getId()) || transaction.getExpiration() < curTime) {
-                            broadcastedTransactions.remove(transaction);
-                        } else if (transaction.getTimestamp() < curTime - 30) {
-                            transactionList.add(transaction);
+                            Db.db.commitTransaction();
+                        } catch (Exception e) {
+                            Logger.logErrorMessage(e.toString(), e);
+                            Db.db.rollbackTransaction();
+                            throw e;
+                        } finally {
+                            Db.db.endTransaction();
                         }
-                    }
-
-                    if (transactionList.size() > 0) {
-                        Peers.sendToSomePeers(transactionList);
-                    }
-
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Error in transaction re-broadcasting thread", e);
+                    } // synchronized
                 }
-            } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
+            } catch (Exception e) {
+                Logger.logMessage("Error removing unconfirmed transactions", e);
             }
-
+        } catch (Throwable t) {
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            t.printStackTrace();
+            System.exit(1);
         }
 
     };
 
-    private final Runnable processTransactionsThread = new Runnable() {
+    private final Runnable rebroadcastTransactionsThread = () -> {
 
-        private final JSONStreamAware getUnconfirmedTransactionsRequest;
-        {
-            JSONObject request = new JSONObject();
-            request.put("requestType", "getUnconfirmedTransactions");
-            getUnconfirmedTransactionsRequest = JSON.prepareRequest(request);
+        try {
+            try {
+                List<Transaction> transactionList = new ArrayList<>();
+                int curTime = Nxt.getEpochTime();
+                for (TransactionImpl transaction : broadcastedTransactions) {
+                    if (transaction.getExpiration() < curTime || TransactionDb.hasTransaction(transaction.getId())) {
+                        broadcastedTransactions.remove(transaction);
+                    } else if (transaction.getTimestamp() < curTime - 30) {
+                        transactionList.add(transaction);
+                    }
+                }
+
+                if (transactionList.size() > 0) {
+                    Peers.sendToSomePeers(transactionList);
+                }
+
+            } catch (Exception e) {
+                Logger.logMessage("Error in transaction re-broadcasting thread", e);
+            }
+        } catch (Throwable t) {
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            t.printStackTrace();
+            System.exit(1);
         }
 
-        @Override
-        public void run() {
+    };
+
+    private final Runnable processTransactionsThread = () -> {
+
+        try {
             try {
-                try {
-                    processLostTransactions();
-                    Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
-                    if (peer == null) {
-                        return;
-                    }
-                    JSONObject response = peer.send(getUnconfirmedTransactionsRequest, 10 * 1024 * 1024);
-                    if (response == null) {
-                        return;
-                    }
-                    JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
-                    if (transactionsData == null || transactionsData.size() == 0) {
-                        return;
-                    }
-                    try {
-                        processPeerTransactions(transactionsData);
-                    } catch (NxtException.ValidationException|RuntimeException e) {
-                        peer.blacklist(e);
-                    }
-                } catch (Exception e) {
-                    Logger.logDebugMessage("Error processing unconfirmed transactions", e);
+                processWaitingTransactions();
+                Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
+                if (peer == null) {
+                    return;
                 }
-            } catch (Throwable t) {
-                Logger.logMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
-                t.printStackTrace();
-                System.exit(1);
+                JSONObject request = new JSONObject();
+                request.put("requestType", "getUnconfirmedTransactions");
+                JSONArray exclude = new JSONArray();
+                getAllUnconfirmedTransactionIds().forEach(transactionId -> exclude.add(Long.toUnsignedString(transactionId)));
+                Collections.sort(exclude);
+                request.put("exclude", exclude);
+                JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);
+                if (response == null) {
+                    return;
+                }
+                JSONArray transactionsData = (JSONArray)response.get("unconfirmedTransactions");
+                if (transactionsData == null || transactionsData.size() == 0) {
+                    return;
+                }
+                try {
+                    processPeerTransactions(transactionsData);
+                } catch (NxtException.ValidationException|RuntimeException e) {
+                    peer.blacklist(e);
+                }
+            } catch (Exception e) {
+                Logger.logMessage("Error processing unconfirmed transactions", e);
             }
+        } catch (Throwable t) {
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            t.printStackTrace();
+            System.exit(1);
         }
 
     };
@@ -225,22 +255,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private TransactionProcessorImpl() {
         ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
-        ThreadPool.runAfterStart(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (BlockchainImpl.getInstance()) {
-                    try (DbIterator<UnconfirmedTransaction> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
-                        for (UnconfirmedTransaction unconfirmedTransaction : oldNonBroadcastedTransactions) {
-                            if (unconfirmedTransaction.getTransaction().isUnconfirmedDuplicate(unconfirmedDuplicates)) {
-                                Logger.logDebugMessage("Skipping duplicate unconfirmed transaction " + unconfirmedTransaction.getTransaction().getJSONObject().toString());
-                            } else if (enableTransactionRebroadcasting) {
-                                broadcastedTransactions.add(unconfirmedTransaction.getTransaction());
-                            }
-                        }
-                    }
-                }
-            }
-        });
+        ThreadPool.runAfterStart(this::rebroadcastAllUnconfirmedTransactions);
         if (enableTransactionRebroadcasting) {
             ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
         }
@@ -268,6 +283,37 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     @Override
     public Transaction getUnconfirmedTransaction(long transactionId) {
         return unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
+    }
+
+    private List<Long> getAllUnconfirmedTransactionIds() {
+        List<Long> result = new ArrayList<>();
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT id FROM unconfirmed_transaction");
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                result.add(rs.getLong("id"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+        return result;
+    }
+
+    @Override
+    public UnconfirmedTransaction[] getAllWaitingTransactions() {
+        UnconfirmedTransaction[] transactions;
+        synchronized (BlockchainImpl.getInstance()) {
+            transactions = waitingTransactions.toArray(new UnconfirmedTransaction[waitingTransactions.size()]);
+        }
+        Arrays.sort(transactions, waitingTransactions.comparator());
+        return transactions;
+    }
+
+    @Override
+    public TransactionImpl[] getAllBroadcastedTransactions() {
+        synchronized (BlockchainImpl.getInstance()) {
+            return broadcastedTransactions.toArray(new TransactionImpl[broadcastedTransactions.size()]);
+        }
     }
 
     @Override
@@ -305,16 +351,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
-    public Transaction parseTransaction(byte[] bytes) throws NxtException.ValidationException {
-        return TransactionImpl.parseTransaction(bytes);
-    }
-
-    @Override
-    public TransactionImpl parseTransaction(JSONObject transactionData) throws NxtException.NotValidException {
-        return TransactionImpl.parseTransaction(transactionData);
-    }
-
-    @Override
     public void clearUnconfirmedTransactions() {
         synchronized (BlockchainImpl.getInstance()) {
             List<Transaction> removed = new ArrayList<>();
@@ -336,23 +372,58 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 Db.db.endTransaction();
             }
             unconfirmedDuplicates.clear();
-            lostTransactions.clear();
+            waitingTransactions.clear();
+            broadcastedTransactions.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         }
     }
 
-    void requeueAllUnconfirmedTransactions() {
-        List<Transaction> removed = new ArrayList<>();
-        try (DbIterator<UnconfirmedTransaction> unconfirmedTransactions = getAllUnconfirmedTransactions()) {
-            for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
-                unconfirmedTransaction.getTransaction().undoUnconfirmed();
-                removed.add(unconfirmedTransaction.getTransaction());
-                lostTransactions.add(unconfirmedTransaction);
+    @Override
+    public void requeueAllUnconfirmedTransactions() {
+        synchronized (BlockchainImpl.getInstance()) {
+            if (!Db.db.isInTransaction()) {
+                try {
+                    Db.db.beginTransaction();
+                    requeueAllUnconfirmedTransactions();
+                    Db.db.commitTransaction();
+                } catch (Exception e) {
+                    Logger.logErrorMessage(e.toString(), e);
+                    Db.db.rollbackTransaction();
+                    throw e;
+                } finally {
+                    Db.db.endTransaction();
+                }
+                return;
+            }
+            List<Transaction> removed = new ArrayList<>();
+            try (DbIterator<UnconfirmedTransaction> unconfirmedTransactions = getAllUnconfirmedTransactions()) {
+                for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
+                    unconfirmedTransaction.getTransaction().undoUnconfirmed();
+                    if (removed.size() < maxUnconfirmedTransactions) {
+                        removed.add(unconfirmedTransaction.getTransaction());
+                    }
+                    waitingTransactions.add(unconfirmedTransaction);
+                }
+            }
+            unconfirmedTransactionTable.truncate();
+            unconfirmedDuplicates.clear();
+            transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
+        }
+    }
+
+    @Override
+    public void rebroadcastAllUnconfirmedTransactions() {
+        synchronized (BlockchainImpl.getInstance()) {
+            try (DbIterator<UnconfirmedTransaction> oldNonBroadcastedTransactions = getAllUnconfirmedTransactions()) {
+                for (UnconfirmedTransaction unconfirmedTransaction : oldNonBroadcastedTransactions) {
+                    if (unconfirmedTransaction.getTransaction().isUnconfirmedDuplicate(unconfirmedDuplicates)) {
+                        Logger.logDebugMessage("Skipping duplicate unconfirmed transaction " + unconfirmedTransaction.getTransaction().getJSONObject().toString());
+                    } else if (enableTransactionRebroadcasting) {
+                        broadcastedTransactions.add(unconfirmedTransaction.getTransaction());
+                    }
+                }
             }
         }
-        unconfirmedTransactionTable.truncate();
-        unconfirmedDuplicates.clear();
-        transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
     }
 
     void removeUnconfirmedTransaction(TransactionImpl transaction) {
@@ -384,25 +455,22 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    int getTransactionVersion(int previousBlockHeight) {
-        return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
-    }
-
     void processLater(Collection<TransactionImpl> transactions) {
         long currentTime = System.currentTimeMillis();
         synchronized (BlockchainImpl.getInstance()) {
             for (TransactionImpl transaction : transactions) {
                 transaction.unsetBlock();
-                lostTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
+                waitingTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }
         }
     }
 
-    private void processLostTransactions() {
+    void processWaitingTransactions() {
         synchronized (BlockchainImpl.getInstance()) {
-            if (lostTransactions.size() > 0) {
+            if (waitingTransactions.size() > 0) {
+                int currentTime = Nxt.getEpochTime();
                 List<Transaction> addedUnconfirmedTransactions = new ArrayList<>();
-                Iterator<UnconfirmedTransaction> iterator = lostTransactions.iterator();
+                Iterator<UnconfirmedTransaction> iterator = waitingTransactions.iterator();
                 while (iterator.hasNext()) {
                     UnconfirmedTransaction unconfirmedTransaction = iterator.next();
                     try {
@@ -411,8 +479,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         addedUnconfirmedTransactions.add(unconfirmedTransaction.getTransaction());
                     } catch (NxtException.ExistingTransactionException e) {
                         iterator.remove();
-                    } catch (NxtException.NotCurrentlyValidException ignore) {
-                        if (unconfirmedTransaction.getExpiration() < Nxt.getEpochTime()) {
+                    } catch (NxtException.NotCurrentlyValidException e) {
+                        if (unconfirmedTransaction.getExpiration() < currentTime
+                                || currentTime - Convert.toEpochTime(unconfirmedTransaction.getArrivalTimestamp()) > 3600) {
                             iterator.remove();
                         }
                     } catch (NxtException.ValidationException|RuntimeException e) {
@@ -443,7 +512,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         List<Exception> exceptions = new ArrayList<>();
         for (Object transactionData : transactionsData) {
             try {
-                TransactionImpl transaction = parseTransaction((JSONObject) transactionData);
+                TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject) transactionData);
                 receivedTransactions.add(transaction);
                 if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     continue;
@@ -471,9 +540,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         if (addedUnconfirmedTransactions.size() > 0) {
             transactionListeners.notify(addedUnconfirmedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
         }
-        for (TransactionImpl transaction : receivedTransactions) {
-            broadcastedTransactions.remove(transaction);
-        }
+        broadcastedTransactions.removeAll(receivedTransactions);
         if (!exceptions.isEmpty()) {
             throw new NxtException.NotValidException("Peer sends invalid transactions: " + exceptions.toString());
         }
@@ -482,11 +549,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private void processTransaction(UnconfirmedTransaction unconfirmedTransaction) throws NxtException.ValidationException {
         TransactionImpl transaction = unconfirmedTransaction.getTransaction();
         int curTime = Nxt.getEpochTime();
-        if (transaction.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || transaction.getDeadline() > 1440 || transaction.getExpiration() < curTime) {
+        if (transaction.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || transaction.getExpiration() < curTime) {
             throw new NxtException.NotCurrentlyValidException("Invalid transaction timestamp");
         }
         if (transaction.getVersion() < 1) {
             throw new NxtException.NotValidException("Invalid transaction version");
+        }
+        if (transaction.getId() == 0L) {
+            throw new NxtException.NotValidException("Invalid transaction id 0");
         }
 
         synchronized (BlockchainImpl.getInstance()) {

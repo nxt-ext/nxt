@@ -1,3 +1,19 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div id="currencies_page" class="paginated page">
     <section class="content-header">
         <h1 data-i18n="currencies">Currencies</h1>
@@ -62,7 +78,7 @@
         </div>
     </section>
     <section class="content" id="MSnoCode">
-            <p>Please type in your currency code in the top right.</p>
+            <p data-i18n="please_type_in_currency_code_top_right">Please type in your currency code in the top right.</p>
     </section>
     <section class="content" id="MScode" style="display:none">
         <div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
@@ -109,7 +125,7 @@
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="buy_currency_price" type="text" value="0" name="buy_currency_price" class="form-control" data-type="buy" />
-                                            <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
+                                            <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                         </div>
                                     </div>
                                 </div>
@@ -194,7 +210,7 @@
                                     <div class="col-sm-9">
                                         <div class="input-group">
                                             <input id="sell_currency_price" type="text" value="0" name="sell_currency_price" class="form-control" data-type="sell" />
-                                            <span class="input-group-addon">NXT / <span class="currency_code"></span></span>
+                                            <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                         </div>
                                     </div>
                                 </div>
@@ -347,6 +363,44 @@
             <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
             <div class="data-empty-container"><p data-i18n="no_exchange_history">No Exchanges available.</p></div>
         </div>
+        <div class="data-pagination"></div>
+    </section>
+</div>
+
+<div id="approval_requests_currency_page" class="paginated page">
+    <section class="content-header">
+        <h1><span data-i18n="approval_requests">Approval Requests</span> (<span data-i18n="currency">Currency</span>)</h1>
+    </section>
+
+    <section class="content">
+        <div style="margin-bottom:4px;" id="approve_curreny_navi">
+            <select id="approve_currency_select" class="form-control" style="max-width:250px;"></select>
+        </div>
+        <div class="panel panel-default">
+        <div class="data-container data-loading panel-body">
+            <table class="table table-striped" id="approval_requests_currency_table">
+                <thead>
+                <tr>
+                    <th data-i18n="transaction">Transaction</th>
+                    <th style="width:60px;text-align:center;"><i class="fa fa-envelope-o"></i></th>
+                    <th data-i18n="type">Type</th>
+                    <th data-i18n="amount" colspan="2">Amount</th>
+                    <th style="text-align:center;" data-i18n="fee">Fee</th>
+                    <th data-i18n="account">Account</th>
+                    <th style="text-align:center;"><i class="fa fa-gavel"></i></th>
+                    <th style="text-align:center;" data-i18n="conf_abbrev">Conf.</th>
+                    <th data-i18n="actions" style="text-align:right;">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+            <div class="data-empty-container" style="text-align:center;">
+                <p style="padding-top:80px;padding-bottom:100px;"><span id="ar_currency_no_entries"></span>.</p>
+            </div>
+        </div>
+    </div>
         <div class="data-pagination"></div>
     </section>
 </div>

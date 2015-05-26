@@ -1,4 +1,20 @@
 <!DOCTYPE html>
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <html>
 <head>
     <meta charset="UTF-8"/>
@@ -273,6 +289,27 @@
         <tr>
             <td>Alias:</td>
             <td><input type="text" name="aliasName"/></td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="submit"/></td>
+        </tr>
+    </table>
+    <div class="result"></div>
+</form>
+<hr>
+<b>Upload File:</b><br/>
+<form action="/nxt" enctype="multipart/form-data" method="POST">
+    <input type="hidden" name="requestType" value="uploadTaggedData"/>
+    <input type="hidden" name="deadline" value="1440"/>
+    <input type="hidden" name="feeNQT" value="500000000"/>
+    <table>
+        <tr>
+            <td>File:</td>
+            <td><input type="file" name="file"/></td>
+        </tr>
+        <tr>
+            <td>Secret Phrase:</td>
+            <td><input type="password" name="secretPhrase"/></td>
         </tr>
         <tr>
             <td colspan="2"><input type="submit" value="submit"/></td>

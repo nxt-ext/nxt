@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
@@ -55,7 +71,7 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }
-        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
+        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(Account account, int from, int to) {
@@ -67,14 +83,14 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }
-        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_index ASC ");
+        return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
     }
 
     public static CurrencySellOffer getOffer(Currency currency, Account account) {
         return getOffer(currency.getId(), account.getId());
     }
 
-    static CurrencySellOffer getOffer(final long currencyId, final long accountId) {
+    public static CurrencySellOffer getOffer(final long currencyId, final long accountId) {
         return sellOfferTable.getBy(new DbClause.LongClause("currency_id", currencyId).and(new DbClause.LongClause("account_id", accountId)));
     }
 
@@ -108,10 +124,6 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
     private CurrencySellOffer(ResultSet rs) throws SQLException {
         super(rs);
         this.dbKey = sellOfferDbKeyFactory.newKey(super.id);
-    }
-
-    protected void save(Connection con, String table) throws SQLException {
-        super.save(con, table);
     }
 
     @Override

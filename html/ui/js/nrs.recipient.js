@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -29,7 +45,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#send_message_modal, #send_money_modal, #add_contact_modal").on("show.bs.modal", function(e) {
+	$("#send_message_modal, #send_money_modal, #transfer_currency_modal, #add_contact_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var account = $invoker.data("account");
@@ -61,7 +77,7 @@ var NRS = (function(NRS, $, undefined) {
 	*/
 
 	//todo later: http://twitter.github.io/typeahead.js/
-	$("span.recipient_selector button").on("click", function(e) {
+	$(".modal").on("click", "span.recipient_selector button, span.plain_adress_selector button", function(e) {
 		if (!Object.keys(NRS.contacts).length) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -73,14 +89,29 @@ var NRS = (function(NRS, $, undefined) {
 		$list.empty();
 
 		for (var accountId in NRS.contacts) {
-			$list.append("<li><a href='#' data-contact='" + String(NRS.contacts[accountId].name).escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
+			$list.append("<li><a href='#' data-contact-id='" + accountId + "' data-contact='" + String(NRS.contacts[accountId].name).escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
 		}
 	});
 
-	$("span.recipient_selector").on("click", "ul li a", function(e) {
+	$(".modal").on("click", "span.recipient_selector ul li a", function(e) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
 		$(this).closest("form").find("input[name=recipient],input[name=account_id]").not("[type=hidden]").trigger("unmask").val($(this).data("contact")).trigger("blur");
+	});
+
+	$(".modal").on("click", "span.plain_adress_selector ul li a", function(e) {
+		e.preventDefault();
+		$(this).closest(".input-group").find("input.plain_adress_selector_input").not("[type=hidden]").trigger("unmask").val($(this).data("contact-id")).trigger("blur");
+	});
+
+	$(".modal").on("keyup blur show", ".plain_adress_selector_input", function(e) {
+		var currentValue = $(this).val();
+		if (NRS.contacts[currentValue]) {
+			var contactInfo = NRS.contacts[currentValue]['name'];
+		} else {
+			var contactInfo = " ";
+		}
+		$(this).closest(".input-group").find(".pas_contact_info").text(contactInfo);
 	});
 
 	NRS.forms.sendMoneyComplete = function(response, data) {
@@ -189,7 +220,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			if (address.set(account)) {
 				NRS.getAccountError(account, function(response) {
-					if (response.noPublicKey) {
+					if (response.noPublicKey && account!=NRS.accountRS) {
 						modal.find(".recipient_public_key").show();
 					} else {
 						modal.find("input[name=recipientPublicKey]").val("");
@@ -198,10 +229,13 @@ var NRS = (function(NRS, $, undefined) {
 					if (response.account && response.account.description) {
 						checkForMerchant(response.account.description, modal);
 					}
-
-					var message = response.message.escapeHTML();
-
-					callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
+					
+					if (account==NRS.accountRS)
+						callout.removeClass(classes).addClass("callout-" + response.type).html("This is your account").show();
+					else{
+						var message = response.message.escapeHTML();
+						callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
+					}
 				});
 			} else {
 				if (address.guess.length == 1) {
@@ -229,7 +263,7 @@ var NRS = (function(NRS, $, undefined) {
 					if (!error && contact.length) {
 						contact = contact[0];
 						NRS.getAccountError(contact.accountRS, function(response) {
-							if (response.noPublicKey) {
+							if (response.noPublicKey && account!=NRS.account) {
 								modal.find(".recipient_public_key").show();
 							} else {
 								modal.find("input[name=recipientPublicKey]").val("");

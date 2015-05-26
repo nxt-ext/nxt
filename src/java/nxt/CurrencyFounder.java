@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
@@ -38,6 +54,11 @@ public class CurrencyFounder {
         @Override
         protected void save(Connection con, CurrencyFounder currencyFounder) throws SQLException {
             currencyFounder.save(con);
+        }
+
+        @Override
+        public String defaultSort() {
+            return " ORDER BY height DESC ";
         }
 
     };
@@ -105,6 +126,10 @@ public class CurrencyFounder {
         return currencyFounderTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
     }
 
+    public static DbIterator<CurrencyFounder> getFounderCurrencies(long accountId, int from, int to) {
+        return currencyFounderTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    }
+
     static void remove(long currencyId) {
         List<CurrencyFounder> founders = new ArrayList<>();
         try (DbIterator<CurrencyFounder> currencyFounders = CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
@@ -112,8 +137,6 @@ public class CurrencyFounder {
                 founders.add(founder);
             }
         }
-        for (CurrencyFounder founder : founders) {
-            currencyFounderTable.delete(founder);
-        }
+        founders.forEach(currencyFounderTable::delete);
     }
 }

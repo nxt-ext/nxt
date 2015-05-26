@@ -1,10 +1,25 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
-import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -18,7 +33,7 @@ import java.util.List;
 @SuppressWarnings("UnusedDeclaration")
 public final class Currency {
 
-    public static enum Event {
+    public enum Event {
         BEFORE_DISTRIBUTE_CROWDFUNDING, BEFORE_UNDO_CROWDFUNDING, BEFORE_DELETE
     }
 
@@ -31,7 +46,7 @@ public final class Currency {
 
     };
 
-    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory) {
+    private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory, "code,name,description") {
 
         @Override
         protected Currency load(Connection con, ResultSet rs) throws SQLException {
@@ -50,10 +65,10 @@ public final class Currency {
 
     };
 
-    private static class CurrencySupply {
+    private static final class CurrencySupply {
 
         private final DbKey dbKey;
-        private long currencyId;
+        private final long currencyId;
         private long currentSupply;
         private long currentReservePerUnitNQT;
 
@@ -133,7 +148,7 @@ public final class Currency {
     }
 
     public static Currency getCurrencyByCode(String code) {
-        return currencyTable.getBy(new DbClause.StringClause("code", code));
+        return currencyTable.getBy(new DbClause.StringClause("code", code.toUpperCase()));
     }
 
     public static DbIterator<Currency> getCurrencyIssuedBy(long accountId, int from, int to) {
@@ -144,19 +159,19 @@ public final class Currency {
         return currencyTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, currency.creation_height DESC ");
     }
 
-    static void addCurrency(Transaction transaction, Attachment.MonetarySystemCurrencyIssuance attachment) {
+    static void addCurrency(Transaction transaction, Account senderAccount, Attachment.MonetarySystemCurrencyIssuance attachment) {
         Currency oldCurrency;
         if ((oldCurrency = Currency.getCurrencyByCode(attachment.getCode())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+            oldCurrency.delete(senderAccount);
         }
-        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName().toUpperCase())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+        if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName())) != null) {
+            oldCurrency.delete(senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByName(attachment.getName())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+            oldCurrency.delete(senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByName(attachment.getCode())) != null) {
-            oldCurrency.delete(transaction.getSenderId());
+            oldCurrency.delete(senderAccount);
         }
         Currency currency = new Currency(transaction, attachment);
         currencyTable.insert(currency);
@@ -206,7 +221,7 @@ public final class Currency {
         this.initialSupply = attachment.getInitialSupply();
         this.reserveSupply = attachment.getReserveSupply();
         this.maxSupply = attachment.getMaxSupply();
-        this.creationHeight = transaction.getHeight();
+        this.creationHeight = Nxt.getBlockchain().getHeight();
         this.issuanceHeight = attachment.getIssuanceHeight();
         this.minReservePerUnitNQT = attachment.getMinReservePerUnitNQT();
         this.minDifficulty = attachment.getMinDifficulty();
@@ -243,23 +258,23 @@ public final class Currency {
                 + "min_difficulty, max_difficulty, ruleset, algorithm, decimals, height, latest) "
                 + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setString(++i, this.getName());
-            pstmt.setString(++i, this.getCode());
-            pstmt.setString(++i, this.getDescription());
-            pstmt.setInt(++i, this.getType());
-            pstmt.setLong(++i, this.getInitialSupply());
-            pstmt.setLong(++i, this.getReserveSupply());
-            pstmt.setLong(++i, this.getMaxSupply());
-            pstmt.setInt(++i, this.getCreationHeight());
-            pstmt.setInt(++i, this.getIssuanceHeight());
-            pstmt.setLong(++i, this.getMinReservePerUnitNQT());
-            pstmt.setByte(++i, (byte)this.getMinDifficulty());
-            pstmt.setByte(++i, (byte)this.getMaxDifficulty());
-            pstmt.setByte(++i, this.getRuleset());
-            pstmt.setByte(++i, this.getAlgorithm());
-            pstmt.setByte(++i, this.getDecimals());
+            pstmt.setLong(++i, this.currencyId);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setString(++i, this.name);
+            pstmt.setString(++i, this.code);
+            pstmt.setString(++i, this.description);
+            pstmt.setInt(++i, this.type);
+            pstmt.setLong(++i, this.initialSupply);
+            pstmt.setLong(++i, this.reserveSupply);
+            pstmt.setLong(++i, this.maxSupply);
+            pstmt.setInt(++i, this.creationHeight);
+            pstmt.setInt(++i, this.issuanceHeight);
+            pstmt.setLong(++i, this.minReservePerUnitNQT);
+            pstmt.setByte(++i, (byte)this.minDifficulty);
+            pstmt.setByte(++i, (byte)this.maxDifficulty);
+            pstmt.setByte(++i, this.ruleset);
+            pstmt.setByte(++i, this.algorithm);
+            pstmt.setByte(++i, this.decimals);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -369,7 +384,7 @@ public final class Currency {
 
     static void increaseReserve(Account account, long currencyId, long amountPerUnitNQT) {
         Currency currency = Currency.getCurrency(currencyId);
-        account.addToBalanceNQT(-Convert.safeMultiply(currency.getReserveSupply(), amountPerUnitNQT));
+        account.addToBalanceNQT(-Math.multiplyExact(currency.getReserveSupply(), amountPerUnitNQT));
         CurrencySupply currencySupply = currency.getSupplyData();
         currencySupply.currentReservePerUnitNQT += amountPerUnitNQT;
         currencySupplyTable.insert(currencySupply);
@@ -380,7 +395,7 @@ public final class Currency {
         account.addToCurrencyUnits(currencyId, -units);
         Currency currency = Currency.getCurrency(currencyId);
         currency.increaseSupply(- units);
-        account.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(units, currency.getCurrentReservePerUnitNQT()));
+        account.addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(units, currency.getCurrentReservePerUnitNQT()));
     }
 
     static void transferCurrency(Account senderAccount, Account recipientAccount, long currencyId, long units) {
@@ -403,9 +418,6 @@ public final class Currency {
     }
 
     public DbIterator<Account.AccountCurrency> getAccounts(int height, int from, int to) {
-        if (height < 0) {
-            return getAccounts(from, to);
-        }
         return Account.getCurrencyAccounts(this.currencyId, height, from, to);
     }
 
@@ -421,34 +433,33 @@ public final class Currency {
         return (this.type & type.getCode()) != 0;
     }
 
-    public boolean canBeDeletedBy(long ownerAccountId) {
+    public boolean canBeDeletedBy(long senderAccountId) {
         if (!isActive()) {
-            return ownerAccountId == accountId;
+            return senderAccountId == accountId;
         }
-        if (is(CurrencyType.MINTABLE) && getCurrentSupply() < maxSupply && ownerAccountId != accountId) {
+        if (is(CurrencyType.MINTABLE) && getCurrentSupply() < maxSupply && senderAccountId != accountId) {
             return false;
         }
         try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getCurrencyAccounts(this.currencyId, 0, -1)) {
-            return ! accountCurrencies.hasNext() || accountCurrencies.next().getAccountId() == ownerAccountId && ! accountCurrencies.hasNext();
+            return ! accountCurrencies.hasNext() || accountCurrencies.next().getAccountId() == senderAccountId && ! accountCurrencies.hasNext();
         }
     }
 
-    void delete(long ownerAccountId) {
-        if (!canBeDeletedBy(ownerAccountId)) {
+    void delete(Account senderAccount) {
+        if (!canBeDeletedBy(senderAccount.getId())) {
             // shouldn't happen as ownership has already been checked in validate, but as a safety check
-            throw new IllegalStateException("Currency " + Convert.toUnsignedLong(currencyId) + " not entirely owned by " + Convert.toUnsignedLong(ownerAccountId));
+            throw new IllegalStateException("Currency " + Long.toUnsignedString(currencyId) + " not entirely owned by " + Long.toUnsignedString(senderAccount.getId()));
         }
         listeners.notify(this, Event.BEFORE_DELETE);
-        Account ownerAccount = Account.getAccount(ownerAccountId);
         if (is(CurrencyType.RESERVABLE)) {
             if (is(CurrencyType.CLAIMABLE) && isActive()) {
-                ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
-                Currency.claimReserve(ownerAccount, currencyId, ownerAccount.getCurrencyUnits(currencyId));
+                senderAccount.addToUnconfirmedCurrencyUnits(currencyId, -senderAccount.getCurrencyUnits(currencyId));
+                Currency.claimReserve(senderAccount, currencyId, senderAccount.getCurrencyUnits(currencyId));
             }
             if (!isActive()) {
                 try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
                     for (CurrencyFounder founder : founders) {
-                        Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(reserveSupply, founder.getAmountPerUnitNQT()));
+                        Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(reserveSupply, founder.getAmountPerUnitNQT()));
                     }
                 }
             }
@@ -461,15 +472,13 @@ public final class Currency {
                     buyOffers.add(offers.next());
                 }
             }
-            for (CurrencyBuyOffer offer : buyOffers) {
-                CurrencyExchangeOffer.removeOffer(offer);
-            }
+            buyOffers.forEach(CurrencyExchangeOffer::removeOffer);
         }
         if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);
         }
-        ownerAccount.addToUnconfirmedCurrencyUnits(currencyId, -ownerAccount.getUnconfirmedCurrencyUnits(currencyId));
-        ownerAccount.addToCurrencyUnits(currencyId, -ownerAccount.getCurrencyUnits(currencyId));
+        senderAccount.addToUnconfirmedCurrencyUnits(currencyId, -senderAccount.getUnconfirmedCurrencyUnits(currencyId));
+        senderAccount.addToCurrencyUnits(currencyId, -senderAccount.getCurrencyUnits(currencyId));
         currencyTable.delete(this);
     }
 
@@ -496,7 +505,7 @@ public final class Currency {
         private void undoCrowdFunding(Currency currency) {
             try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
                 for (CurrencyFounder founder : founders) {
-                    Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(currency.getReserveSupply(), founder.getAmountPerUnitNQT()));
+                    Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(currency.getReserveSupply(), founder.getAmountPerUnitNQT()));
                 }
             }
             Account.getAccount(currency.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), - currency.getInitialSupply());
@@ -516,14 +525,14 @@ public final class Currency {
             }
             CurrencySupply currencySupply = currency.getSupplyData();
             for (CurrencyFounder founder : currencyFounders) {
-                long units = Convert.safeDivide(Convert.safeMultiply(remainingSupply, founder.getAmountPerUnitNQT()), totalAmountPerUnit);
+                long units = Math.multiplyExact(remainingSupply, founder.getAmountPerUnitNQT()) / totalAmountPerUnit;
                 currencySupply.currentSupply += units;
                 Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
             }
             Account issuerAccount = Account.getAccount(currency.getAccountId());
             issuerAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), currency.getReserveSupply() - currency.getCurrentSupply());
             if (!currency.is(CurrencyType.CLAIMABLE)) {
-                issuerAccount.addToBalanceAndUnconfirmedBalanceNQT(Convert.safeMultiply(totalAmountPerUnit, currency.getReserveSupply()));
+                issuerAccount.addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(totalAmountPerUnit, currency.getReserveSupply()));
             }
             currencySupply.currentSupply = currency.getReserveSupply();
             currencySupplyTable.insert(currencySupply);

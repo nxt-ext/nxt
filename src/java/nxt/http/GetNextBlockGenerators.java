@@ -1,10 +1,25 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Block;
 import nxt.Constants;
 import nxt.Hub;
 import nxt.Nxt;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -49,7 +64,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("time", Nxt.getEpochTime());
-        response.put("lastBlock", Convert.toUnsignedLong(curBlock.getId()));
+        response.put("lastBlock", Long.toUnsignedString(curBlock.getId()));
         JSONArray hubs = new JSONArray();
 
         int limit;
@@ -63,7 +78,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
         while (iterator.hasNext() && hubs.size() < limit) {
             JSONObject hub = new JSONObject();
             Hub.Hit hit = iterator.next();
-            hub.put("account", Convert.toUnsignedLong(hit.hub.getAccountId()));
+            hub.put("account", Long.toUnsignedString(hit.hub.getAccountId()));
             hub.put("minFeePerByteNQT", hit.hub.getMinFeePerByteNQT());
             hub.put("time", hit.hitTime);
             JSONArray uris = new JSONArray();

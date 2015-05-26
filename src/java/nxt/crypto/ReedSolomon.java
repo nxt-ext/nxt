@@ -6,8 +6,6 @@
 */
 package nxt.crypto;
 
-import nxt.util.Convert;
-
 import java.math.BigInteger;
 
 final class ReedSolomon {
@@ -23,7 +21,7 @@ final class ReedSolomon {
 
     static String encode(long plain) {
 
-        String plain_string = Convert.toUnsignedLong(plain);
+        String plain_string = Long.toUnsignedString(plain);
         int length = plain_string.length();
         int[] plain_string_10 = new int[ReedSolomon.base_10_length];
         for (int i = 0; i < length; i++) {

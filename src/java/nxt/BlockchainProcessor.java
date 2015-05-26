@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DerivedDbTable;
@@ -9,7 +25,7 @@ import java.util.List;
 
 public interface BlockchainProcessor extends Observable<Block,BlockchainProcessor.Event> {
 
-    public static enum Event {
+    enum Event {
         BLOCK_PUSHED, BLOCK_POPPED, BLOCK_GENERATED, BLOCK_SCANNED,
         RESCAN_BEGIN, RESCAN_END,
         BEFORE_BLOCK_ACCEPT,
@@ -30,48 +46,65 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void scan(int height, boolean validate);
 
+    void fullScanWithShutdown();
+
     void setGetMoreBlocks(boolean getMoreBlocks);
 
     List<? extends Block> popOffTo(int height);
 
     void registerDerivedTable(DerivedDbTable table);
 
-    public static class BlockNotAcceptedException extends NxtException {
+    void trimDerivedTables();
 
-        BlockNotAcceptedException(String message) {
+    class BlockNotAcceptedException extends NxtException {
+
+        private final BlockImpl block;
+
+        BlockNotAcceptedException(String message, BlockImpl block) {
             super(message);
+            this.block = block;
         }
 
-        BlockNotAcceptedException(Throwable cause) {
+        BlockNotAcceptedException(Throwable cause, BlockImpl block) {
             super(cause);
+            this.block = block;
+        }
+
+        @Override
+        public String getMessage() {
+            return block == null ? super.getMessage() : super.getMessage() + ", block " + block.getStringId() + " " + block.getJSONObject().toJSONString();
         }
 
     }
 
-    public static class TransactionNotAcceptedException extends BlockNotAcceptedException {
+    class TransactionNotAcceptedException extends BlockNotAcceptedException {
 
         private final TransactionImpl transaction;
 
         TransactionNotAcceptedException(String message, TransactionImpl transaction) {
-            super(message  + " transaction: " + transaction.getJSONObject().toJSONString());
+            super(message, transaction.getBlock());
             this.transaction = transaction;
         }
 
         TransactionNotAcceptedException(Throwable cause, TransactionImpl transaction) {
-            super(cause);
+            super(cause, transaction.getBlock());
             this.transaction = transaction;
         }
 
-        public Transaction getTransaction() {
+        public TransactionImpl getTransaction() {
             return transaction;
         }
 
+        @Override
+        public String getMessage() {
+            return super.getMessage() + ", transaction " + transaction.getStringId() + " " + transaction.getJSONObject().toJSONString();
+        }
     }
 
-    public static class BlockOutOfOrderException extends BlockNotAcceptedException {
+    class BlockOutOfOrderException extends BlockNotAcceptedException {
 
-        BlockOutOfOrderException(String message) {
-            super(message);
+        BlockOutOfOrderException(String message, BlockImpl block) {
+            super(message, block);
         }
 
 	}

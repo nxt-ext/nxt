@@ -1,7 +1,22 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.HashFunction;
-import nxt.util.Convert;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -66,15 +81,16 @@ public enum CurrencyType {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 int issuanceHeight = attachment.getIssuanceHeight();
-                if  (issuanceHeight <= Nxt.getBlockchain().getHeight()) {
+                int finishHeight = transaction.getType().getFinishValidationHeight(transaction);
+                if  (issuanceHeight <= finishHeight) {
                     throw new NxtException.NotCurrentlyValidException(
-                        String.format("Reservable currency activation height %d not higher than current height %d",
-                                issuanceHeight, Nxt.getBlockchain().getHeight()));
+                        String.format("Reservable currency activation height %d not higher than transaction apply height %d",
+                                issuanceHeight, finishHeight));
                 }
                 if (attachment.getMinReservePerUnitNQT() <= 0) {
                     throw new NxtException.NotValidException("Minimum reserve per unit must be > 0");
                 }
-                if (Convert.safeMultiply(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
+                if (Math.multiplyExact(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Minimal reserve per unit is too large");
                 }
                 if (attachment.getReserveSupply() <= attachment.getInitialSupply()) {
@@ -85,7 +101,7 @@ public enum CurrencyType {
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_INCREASE) {
-                if (currency != null && currency.isActive()) {
+                if (currency != null && currency.getIssuanceHeight() <= transaction.getType().getFinishValidationHeight(transaction)) {
                     throw new NxtException.NotCurrentlyValidException("Cannot increase reserve for active currency");
                 }
             }
@@ -156,8 +172,11 @@ public enum CurrencyType {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
                 Attachment.MonetarySystemCurrencyIssuance issuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 try {
-                    HashFunction.getHashFunction(issuanceAttachment.getAlgorithm());
-                } catch(IllegalArgumentException e) {
+                    HashFunction hashFunction = HashFunction.getHashFunction(issuanceAttachment.getAlgorithm());
+                    if (!acceptedHashFunctions.contains(hashFunction)) {
+                        throw new NxtException.NotValidException("Invalid minting algorithm " + hashFunction);
+                    }
+                } catch (IllegalArgumentException e) {
                     throw new NxtException.NotValidException("Illegal algorithm code specified" , e);
                 }
                 if (issuanceAttachment.getMinDifficulty() < 1 || issuanceAttachment.getMaxDifficulty() > 255 ||
@@ -202,10 +221,11 @@ public enum CurrencyType {
 
     };
 
-    
+    private static final EnumSet<HashFunction> acceptedHashFunctions = EnumSet.of(HashFunction.SHA256, HashFunction.SHA3, HashFunction.SCRYPT, HashFunction.Keccak25);
+
     private final int code;
 
-    private CurrencyType(int code) {
+    CurrencyType(int code) {
         this.code = code;
     }
 
@@ -288,7 +308,7 @@ public enum CurrencyType {
         if ((currency = Currency.getCurrencyByName(normalizedName)) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency name already used: " + normalizedName);
         }
-        if ((currency = Currency.getCurrencyByCode(name.toUpperCase())) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
+        if ((currency = Currency.getCurrencyByCode(name)) != null && ! currency.canBeDeletedBy(issuerAccountId)) {
             throw new NxtException.NotCurrentlyValidException("Currency name already used as code: " + normalizedName);
         }
         if ((currency = Currency.getCurrencyByCode(code)) != null && ! currency.canBeDeletedBy(issuerAccountId)) {

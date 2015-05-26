@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.db;
 
 
@@ -13,12 +29,11 @@ import java.util.List;
 public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
 
     protected VersionedEntityDbTable(String table, DbKey.Factory<T> dbKeyFactory) {
-        super(table, dbKeyFactory, true);
+        super(table, dbKeyFactory, true, null);
     }
 
-    @Override
-    public void rollback(int height) {
-        rollback(db, table, height, dbKeyFactory);
+    protected VersionedEntityDbTable(String table, DbKey.Factory<T> dbKeyFactory, String fullTextSearchColumns) {
+        super(table, dbKeyFactory, true, fullTextSearchColumns);
     }
 
     public final boolean delete(T t) {
@@ -57,11 +72,6 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         } finally {
             db.getCache(table).remove(dbKey);
         }
-    }
-
-    @Override
-    public void trim(int height) {
-        trim(db, table, height, dbKeyFactory);
     }
 
     static void rollback(final TransactionalDb db, final String table, final int height, final DbKey.Factory dbKeyFactory) {

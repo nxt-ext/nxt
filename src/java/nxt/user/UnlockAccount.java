@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.user;
 
 import nxt.Account;
@@ -5,7 +21,6 @@ import nxt.Block;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -26,21 +41,18 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
 
     private UnlockAccount() {}
 
-    private static final Comparator<JSONObject> myTransactionsComparator = new Comparator<JSONObject>() {
-        @Override
-        public int compare(JSONObject o1, JSONObject o2) {
-            int t1 = ((Number)o1.get("timestamp")).intValue();
-            int t2 = ((Number)o2.get("timestamp")).intValue();
-            if (t1 < t2) {
-                return 1;
-            }
-            if (t1 > t2) {
-                return -1;
-            }
-            String id1 = (String)o1.get("id");
-            String id2 = (String)o2.get("id");
-            return id2.compareTo(id1);
+    private static final Comparator<JSONObject> myTransactionsComparator = (o1, o2) -> {
+        int t1 = ((Number)o1.get("timestamp")).intValue();
+        int t2 = ((Number)o2.get("timestamp")).intValue();
+        if (t1 < t2) {
+            return 1;
         }
+        if (t1 > t2) {
+            return -1;
+        }
+        String id1 = (String)o1.get("id");
+        String id2 = (String)o2.get("id");
+        return id2.compareTo(id1);
     };
 
     @Override
@@ -60,7 +72,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
 
         JSONObject response = new JSONObject();
         response.put("response", "unlockAccount");
-        response.put("account", Convert.toUnsignedLong(accountId));
+        response.put("account", Long.toUnsignedString(accountId));
 
         if (secretPhrase.length() < 30) {
 
@@ -92,7 +104,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                         myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("deadline", transaction.getDeadline());
-                        myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
+                        myTransaction.put("account", Long.toUnsignedString(transaction.getRecipientId()));
                         myTransaction.put("sentAmountNQT", transaction.getAmountNQT());
                         if (accountId == transaction.getRecipientId()) {
                             myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
@@ -109,7 +121,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                         myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
                         myTransaction.put("deadline", transaction.getDeadline());
-                        myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
+                        myTransaction.put("account", Long.toUnsignedString(transaction.getSenderId()));
                         myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
                         myTransaction.put("feeNQT", transaction.getFeeNQT());
                         myTransaction.put("numberOfConfirmations", -1);
@@ -149,7 +161,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                         myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.toUnsignedLong(transaction.getRecipientId()));
+                        myTransaction.put("account", Long.toUnsignedString(transaction.getRecipientId()));
                         myTransaction.put("sentAmountNQT", transaction.getAmountNQT());
                         if (accountId == transaction.getRecipientId()) {
                             myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
@@ -164,7 +176,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
                         myTransaction.put("index", Users.getIndex(transaction));
                         myTransaction.put("blockTimestamp", transaction.getBlockTimestamp());
                         myTransaction.put("transactionTimestamp", transaction.getTimestamp());
-                        myTransaction.put("account", Convert.toUnsignedLong(transaction.getSenderId()));
+                        myTransaction.put("account", Long.toUnsignedString(transaction.getSenderId()));
                         myTransaction.put("receivedAmountNQT", transaction.getAmountNQT());
                         myTransaction.put("feeNQT", transaction.getFeeNQT());
                         myTransaction.put("numberOfConfirmations", blockchainHeight - transaction.getHeight());

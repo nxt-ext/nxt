@@ -1,4 +1,20 @@
 <!DOCTYPE html>
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <html class="lockscreen">
     <head>
         <meta charset="UTF-8">
@@ -61,7 +77,12 @@
         <script src="js/3rdparty/pako.js" type="text/javascript"></script>
         <script src="js/3rdparty/maskedinput.js" type="text/javascript"></script>
         <script src="js/3rdparty/qrcode.js" type="text/javascript"></script>
+        <script src="js/3rdparty/d3.js" type="text/javascript"></script>
+        <script src="js/3rdparty/d3pie.js" type="text/javascript"></script>
         <script src="js/3rdparty/handlebars.js" type="text/javascript"></script>
+        <script src="js/3rdparty/moment.js" type="text/javascript"></script>
+        <script src="js/3rdparty/date.format.js" type="text/javascript"></script>
+        <script src="js/nrs.constants.js" type="text/javascript"></script>
         <script src="js/nrs.sitebuild.js" type="text/javascript"></script>
 
         <script type="text/javascript">
@@ -72,10 +93,12 @@
             
             NRS.loadPageHTML("html/pages/dashboard.html");
             NRS.loadPageHTML("html/pages/settings.html");
+            NRS.loadPageHTML("html/pages/plugins.html");
             NRS.loadPageHTML("html/pages/transactions.html");
             NRS.loadPageHTML("html/pages/asset_exchange.html");
             NRS.loadPageHTML("html/pages/monetary_system.html");
             NRS.loadPageHTML("html/pages/dgs.html");
+            NRS.loadPageHTML("html/pages/voting_system.html");
             NRS.loadPageHTML("html/pages/contacts.html");
             NRS.loadPageHTML("html/pages/messages.html");
             NRS.loadPageHTML("html/pages/aliases.html");
@@ -91,18 +114,19 @@
             NRS.loadModalHTML("html/modals/asset_exchange.html");
             NRS.loadModalHTML("html/modals/monetary_system.html");
             NRS.loadModalHTML("html/modals/dgs.html");
+            NRS.loadModalHTML("html/modals/voting_system.html");
             NRS.loadModalHTML("html/modals/contacts.html");
             NRS.loadModalHTML("html/modals/messages.html");
             NRS.loadModalHTML("html/modals/aliases.html");
             NRS.loadModalHTML("html/modals/peers.html");
             NRS.loadModalHTMLTemplates();
+            NRS.preloadModalUIElements();
         </script>
 
         <script src="js/util/extensions.js" type="text/javascript"></script>
         <script src="js/util/converters.js" type="text/javascript"></script>
         <script src="js/util/nxtaddress.js" type="text/javascript"></script>
 
-		<script src="js/crypto/3rdparty/jssha256.js" type="text/javascript"></script>
         <script src="js/crypto/curve25519.js" type="text/javascript"></script>
         <script src="js/crypto/curve25519_.js" type="text/javascript"></script>
         <script src="js/crypto/3rdparty/cryptojs/aes.js" type="text/javascript"></script>
@@ -111,6 +135,7 @@
         <script src="js/nrs.js" type="text/javascript"></script>
         <script src="js/nrs.server.js" type="text/javascript"></script>
         <script src="js/nrs.forms.js" type="text/javascript"></script>
+        <script src="js/nrs.plugins.js" type="text/javascript"></script>
         <script src="js/nrs.login.js" type="text/javascript"></script>
         <script src="js/nrs.update.js" type="text/javascript"></script>
         <script src="js/nrs.recipient.js" type="text/javascript"></script>
@@ -121,7 +146,9 @@
         <script src="js/nrs.aliases.js" type="text/javascript"></script>
         <script src="js/nrs.polls.js" type="text/javascript"></script>
         <script src="js/nrs.blocks.js" type="text/javascript"></script>
+        <script src="js/nrs.transactions.types.js" type="text/javascript"></script>
         <script src="js/nrs.transactions.js" type="text/javascript"></script>
+        <script src="js/nrs.notifications.js" type="text/javascript"></script>
         <script src="js/nrs.peers.js" type="text/javascript"></script>
         <script src="js/nrs.contacts.js" type="text/javascript"></script>
         <script src="js/nrs.news.js" type="text/javascript"></script>
@@ -129,6 +156,7 @@
         <script src="js/nrs.sidebar.js" type="text/javascript"></script>
         <script src="js/nrs.encryption.js" type="text/javascript"></script>
         <script src="js/nrs.modals.js" type="text/javascript"></script>
+        <script src="js/nrs.modals.uielements.js" type="text/javascript"></script>
         <script src="js/nrs.modals.account.js" type="text/javascript"></script>
         <script src="js/nrs.modals.accountdetails.js" type="text/javascript"></script>
         <script src="js/nrs.modals.block.js" type="text/javascript"></script>

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -11,12 +27,21 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * <p>This API is deprecated and will be removed in 1.6. It does not include the phased transactions
+ * that an account may have. To retrieve both phased and non-phased transactions, the new
+ * getBlockchainTransactions API must be used. Do not simply switch from getAccountTransactions to
+ * getBlockchainTransactions without a detailed understanding of how phased transactions work,
+ * and without being prepared to analyze them correctly.</p>
+ */
+@Deprecated
 public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler {
 
     static final GetAccountTransactionIds instance = new GetAccountTransactionIds();
 
     private GetAccountTransactionIds() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.TRANSACTIONS}, "account", "timestamp", "type", "subtype", "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.TRANSACTIONS}, "account", "timestamp", "type", "subtype",
+                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage");
     }
 
     @Override
@@ -45,7 +70,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
 
         JSONArray transactionIds = new JSONArray();
         try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations, type, subtype, timestamp,
-                withMessage, firstIndex, lastIndex)) {
+                withMessage, false, true, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactionIds.add(transaction.getStringId());
@@ -54,6 +79,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
 
         JSONObject response = new JSONObject();
         response.put("transactionIds", transactionIds);
+        response.put("WARNING", "The getAccountTransactionIds API is deprecated and will be removed in 1.6");
         return response;
 
     }

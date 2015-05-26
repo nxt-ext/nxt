@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
@@ -9,20 +25,45 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 public final class Vote {
 
-    private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = null;
+    private static final DbKey.LongKeyFactory<Vote> voteDbKeyFactory = new DbKey.LongKeyFactory<Vote>("id") {
+        @Override
+        public DbKey newKey(Vote vote) {
+            return vote.dbKey;
+        }
+    };
 
-    private static final EntityDbTable<Vote> voteTable = null;
+    private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>("vote", voteDbKeyFactory) {
 
-    static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
-        Vote vote = new Vote(transaction, attachment);
-        voteTable.insert(vote);
-        return vote;
-    }
+        @Override
+        protected Vote load(Connection con, ResultSet rs) throws SQLException {
+            return new Vote(rs);
+        }
+
+        @Override
+        protected void save(Connection con, Vote vote) throws SQLException {
+            vote.save(con);
+        }
+
+        @Override
+        public void trim(int height) {
+            super.trim(height);
+            try (Connection con = Db.db.getConnection();
+                 DbIterator<Poll> polls = Poll.getPollsFinishingAtOrBefore(height);
+                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM vote WHERE poll_id = ?")) {
+                for (Poll poll : polls) {
+                    pstmt.setLong(1, poll.getId());
+                    pstmt.executeUpdate();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            } finally {
+                clearCache();
+            }
+        }
+    };
 
     public static int getCount() {
         return voteTable.getCount();
@@ -32,15 +73,19 @@ public final class Vote {
         return voteTable.get(voteDbKeyFactory.newKey(id));
     }
 
-    public static Map<Long,Long> getVoters(Poll poll) {
-        Map<Long,Long> map = new HashMap<>();
-        try (DbIterator<Vote> voteIterator = voteTable.getManyBy(new DbClause.LongClause("poll_id", poll.getId()), 0, -1)) {
-            while (voteIterator.hasNext()) {
-                Vote vote = voteIterator.next();
-                map.put(vote.getVoterId(), vote.getId());
-            }
-        }
-        return map;
+    public static DbIterator<Vote> getVotes(long pollId, int from, int to) {
+        return voteTable.getManyBy(new DbClause.LongClause("poll_id", pollId), from, to);
+    }
+
+    public static Vote getVote(long pollId, long voterId){
+        DbClause clause = new DbClause.LongClause("poll_id", pollId).and(new DbClause.LongClause("voter_id", voterId));
+        return voteTable.getBy(clause);
+    }
+
+    static Vote addVote(Transaction transaction, Attachment.MessagingVoteCasting attachment) {
+        Vote vote = new Vote(transaction, attachment);
+        voteTable.insert(vote);
+        return vote;
     }
 
     static void init() {}
@@ -72,10 +117,10 @@ public final class Vote {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO vote (id, poll_id, voter_id, "
                 + "vote_bytes, height) VALUES (?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getPollId());
-            pstmt.setLong(++i, this.getVoterId());
-            pstmt.setBytes(++i, this.getVote());
+            pstmt.setLong(++i, this.id);
+            pstmt.setLong(++i, this.pollId);
+            pstmt.setLong(++i, this.voterId);
+            pstmt.setBytes(++i, this.voteBytes);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -85,10 +130,16 @@ public final class Vote {
         return id;
     }
 
-    public long getPollId() { return pollId; }
+    public long getPollId() {
+        return pollId;
+    }
 
-    public long getVoterId() { return voterId; }
+    public long getVoterId() {
+        return voterId;
+    }
 
-    public byte[] getVote() { return voteBytes; }
+    public byte[] getVoteBytes() {
+        return voteBytes;
+    }
 
 }

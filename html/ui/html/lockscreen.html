@@ -1,3 +1,19 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div id="lockscreen">
     <div id="old_browser_warning" style="display:none;margin-left:auto;margin-right:auto;margin-top:200px;background:white;color:black;padding:20px;width:300px;" data-i18n="old_browser_warning">You are using an old browser which this application does not support.</div>
     
@@ -20,24 +36,69 @@
             <center><img src="img/nxt_logo.png" alt="Nxt" width="320" height="320" style="margin-bottom:40px;" /></center>
 
             <div id="login_panel">   
-                <div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="[html]testnet_login_warning">Log in with your <strong>TestNet</strong> account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
+                <div class="callout callout-danger" id="testnet_login" style="max-width:400px;min-width:400px;display:none;" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
                     <div class="callout callout-danger"></div>
                 </div>
-
+                
+				<button type="button" id="loginButtons" class="btn btn-primary" data-toggle="button" data-login-type="account" aria-pressed="false" style="min-width:40px;">
+    				<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>
+				</button>
+				
                 <div class="lockscreen-item">
-                    <div class="lockscreen-credentials">   
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus />
+                    <div class="lockscreen-credentials">
+                    	<div class="input-group" id="login_account_container" style="display:table;height:34px;width: 100%;">
+                            <div class="dropdown" style="width: 100%;">
+							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true" style="width: 100%;">
+								<span data-i18n="select_account_to_login">Select an Account to Login with</span>
+								<span class="caret"></span>
+							  </button>
+							  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="login_account">
+
+							  </ul>
+							</div>
+                        </div>
+                        <div class="input-group" id="login_account_container_other">
+                            <input type="text" class="form-control" id="login_account_other" name="login_account_other" placeholder="Your NXT Account" data-i18n="[placeholder]your_account" autofocus />
                             <div class="input-group-btn" style="border:1px solid #fff;">
-                                <button class="btn btn-flat" onclick="NRS.login($('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+                                <button class="btn btn-flat" onclick="NRS.login(0,$('#login_account_other').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+                            </div>
+                            <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
+                        </div>
+                        <div class="input-group" style="display:none">
+                            <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus disabled />
+                            <div class="input-group-btn" style="border:1px solid #fff;">
+                                <button class="btn btn-flat" onclick="NRS.login(1,$('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
                             </div>
                             <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
                         </div>
                     </div>
-                </div>  
-                
-                <div id="remember_password_container">
-                    <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
+                </div>
+                			
+                <div id="remember_account_container">
+                    <input type="checkbox" name="remember_account" id="remember_account" value="1" /> <span></span><label for="remember_account" data-i18n="remember_account">Remember account on this computer</label>
+                </div>
+                <div style="height:30px;">
+                    <div id="remember_password_container" style="display: none;">
+                        <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember passphrase during session</label>
+                    </div>
+                </div>
+
+                <div id="lockscreen_active_plugins_warning" style="margin-top:7px;display:none;">
+                <div style="display:inline-block;max-width: 400px; min-width: 400px;">
+                    <div style="margin-top:10px;margin-bottom:12px;">
+                        <a href="#" id="lockscreen_active_plugins_overview" class="label label-default" data-content="" data-toggle="popover" data-placement="top" data-i18n="active_plugins">
+                            Active Plugins
+                        </a>&nbsp;
+                        <a href="#" id="lockscreen_active_plugins_security" class="label label-warning" data-content="" data-toggle="popover" data-placement="top" data-i18n="security_notice">
+                            Security Notice
+                        </a>
+                    </div>
+                    <div>
+                        <span style="color:#fff;opacity:0.96;">
+                            <input type="checkbox" name="disable_all_plugins" id="disable_all_plugins" value="1" /> <label for="disable_all_plugins" style="font-weight:normal;" data-i18n="disable_plugins">Disable Plugins during Session</label>
+                        </span>
+                    </div>
+                </div>
                 </div>
                 
                 <div id="registration_link">
@@ -68,7 +129,15 @@
                     <form class="form-horizontal" role="form" method="post" autocomplete="off">
                         <div class="callout callout-info" style="max-width:500px;" data-i18n="passphrase_length_warning">Your passphrase must be at least 35 characters long.</div>
                         
-                        <div class="callout callout-danger" data-i18n="[html]passphrase_warning"><strong>Attention</strong>: The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.<br /><br />Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
+                        <div class="callout callout-danger" style="word-break:inherit;">
+                            <span data-i18n="attention">Attention</span>:<br><br>
+                            <span data-i18n="passphrase_warning_unique">
+                                The passphrase is everything that stands between your account and the rest of the world. Do not use any meaningful sentence, especially any that appears in song or literature.
+                            </span><br><br>
+                            <span data-i18n="passphrase_warning_disclose">
+                                Don't ever disclose your passphrase. If you lose it you lose access to your account!
+                            </span>
+                        </div>
 
                         <div class="form-group">
                             <label for="registration_password" class="col-sm-3 control-label" data-i18n="passphrase">Passphrase</label>
@@ -124,7 +193,12 @@
                             
                                 <p data-i18n="memorize_passphrase_help">Please write down or memorize these 12 words (their order and capitalization matters - always lowercase). This passphrase is needed in order to access your Nxt account.</p>
                                             
-                                <div class="callout callout-danger" data-i18n="[html]assphrase_disclosure_warning"><strong>Attention</strong>: Don't ever disclose your passphrase. If you lose it you lose access to your account!</div>
+                                <div class="callout callout-danger">
+                                    <strong><span data-i18n="attention">Attention</span></strong>: 
+                                    <span data-i18n="passphrase_warning_disclose">
+                                        Don't ever disclose your passphrase. If you lose it you lose access to your account!
+                                    </span>
+                                </div>
                             
                                 <div style="text-align:right">
                                     <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>

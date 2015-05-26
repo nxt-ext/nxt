@@ -1,6 +1,20 @@
-package nxt.util;
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
 
-import nxt.Constants;
+package nxt.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -8,15 +22,15 @@ public interface Time {
 
     int getTime();
 
-    public static final class EpochTime implements Time {
+    final class EpochTime implements Time {
 
         public int getTime() {
-            return (int)((System.currentTimeMillis() - Constants.EPOCH_BEGINNING + 500) / 1000);
+            return Convert.toEpochTime(System.currentTimeMillis());
         }
 
     }
 
-    public static final class ConstantTime implements Time {
+    final class ConstantTime implements Time {
 
         private final int time;
 
@@ -30,7 +44,7 @@ public interface Time {
 
     }
 
-    public static final class FasterTime implements Time {
+    final class FasterTime implements Time {
 
         private final int multiplier;
         private final long systemStartTime;
@@ -51,7 +65,7 @@ public interface Time {
 
     }
 
-    public static final class CounterTime implements Time {
+    final class CounterTime implements Time {
 
         private final AtomicInteger counter;
 

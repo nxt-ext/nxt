@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 var converters = function() {
 	var charToNibble = {};
 	var nibbleToChar = [];
@@ -126,6 +142,9 @@ var converters = function() {
 		},
 		// assumes wordArray is Big-Endian
 		wordArrayToByteArray: function(wordArray) {
+			return converters.wordArrayToByteArrayImpl(wordArray, true);
+		},
+		wordArrayToByteArrayImpl: function(wordArray, isFirstByteHasSign) {
 			var len = wordArray.words.length;
 			if (len == 0) {
 				return new Array(0);
@@ -135,13 +154,13 @@ var converters = function() {
 				word, i;
 			for (i = 0; i < len - 1; i++) {
 				word = wordArray.words[i];
-				byteArray[offset++] = word >> 24;
+				byteArray[offset++] = isFirstByteHasSign ? word >> 24 : (word >> 24) & 0xff;
 				byteArray[offset++] = (word >> 16) & 0xff;
 				byteArray[offset++] = (word >> 8) & 0xff;
 				byteArray[offset++] = word & 0xff;
 			}
 			word = wordArray.words[len - 1];
-			byteArray[offset++] = word >> 24;
+			byteArray[offset++] = isFirstByteHasSign ? word >> 24 : (word >> 24) & 0xff;
 			if (wordArray.sigBytes % 4 == 0) {
 				byteArray[offset++] = (word >> 16) & 0xff;
 				byteArray[offset++] = (word >> 8) & 0xff;

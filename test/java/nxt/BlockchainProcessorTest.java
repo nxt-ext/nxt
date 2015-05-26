@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbIterator;
@@ -118,6 +134,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     }
 
     private static void rescan(final int numBlocks) {
+        if (numBlocks > Constants.MAX_ROLLBACK) {
+            return;
+        }
         int endHeight = blockchain.getHeight();
         int rescanHeight = endHeight - numBlocks;
         blockchainProcessor.scan(rescanHeight, true);
@@ -128,6 +147,9 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     }
 
     private static void redownload(final int numBlocks, boolean preserveTransactions) {
+        if (numBlocks > Constants.MAX_ROLLBACK) {
+            return;
+        }
         int endHeight = blockchain.getHeight();
         List<List<Long>> allLessorsBefore = new ArrayList<>();
         List<List<Long>> allLessorBalancesBefore = new ArrayList<>();
@@ -143,7 +165,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors(endHeight - numBlocks)) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
-                    balances.add(lessor.getGuaranteedBalanceNQT(1440, endHeight - numBlocks));
+                    balances.add(lessor.getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, endHeight - numBlocks));
                 }
             }
         }
@@ -182,7 +204,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
             try (DbIterator<Account> iter = account.getLessors()) {
                 for (Account lessor : iter) {
                     lessors.add(lessor.getId());
-                    balances.add(lessor.getGuaranteedBalanceNQT(1440));
+                    balances.add(lessor.getGuaranteedBalanceNQT());
                 }
             }
         }

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbClause;
@@ -38,9 +54,9 @@ public final class Alias {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
                     + "height) VALUES (?, ?, ?, ?)")) {
                 int i = 0;
-                pstmt.setLong(++i, this.getId());
-                pstmt.setLong(++i, this.getPriceNQT());
-                DbUtils.setLongZeroToNull(pstmt, ++i, this.getBuyerId());
+                pstmt.setLong(++i, this.aliasId);
+                pstmt.setLong(++i, this.priceNQT);
+                DbUtils.setLongZeroToNull(pstmt, ++i, this.buyerId);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -127,6 +143,10 @@ public final class Alias {
         return aliasTable.getBy(new DbClause.StringClause("alias_name_lower", aliasName.toLowerCase()));
     }
 
+    public static DbIterator<Alias> getAliasesLike(String aliasName, int from, int to) {
+        return aliasTable.getManyBy(new DbClause.LikeClause("alias_name_lower", aliasName.toLowerCase()), from, to);
+    }
+
     public static Alias getAlias(long id) {
         return aliasTable.get(aliasDbKeyFactory.newKey(id));
     }
@@ -147,11 +167,11 @@ public final class Alias {
     static void addOrUpdateAlias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
         Alias alias = getAlias(attachment.getAliasName());
         if (alias == null) {
-            alias = new Alias(transaction.getId(), transaction, attachment);
+            alias = new Alias(transaction, attachment);
         } else {
             alias.accountId = transaction.getSenderId();
             alias.aliasURI = attachment.getAliasURI();
-            alias.timestamp = transaction.getBlockTimestamp();
+            alias.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         }
         aliasTable.insert(alias);
     }
@@ -171,15 +191,15 @@ public final class Alias {
                 offerTable.insert(offer);
             }
         } else {
-            changeOwner(buyerId, aliasName, transaction.getBlockTimestamp());
+            changeOwner(buyerId, aliasName);
         }
 
     }
 
-    static void changeOwner(long newOwnerId, String aliasName, int timestamp) {
+    static void changeOwner(long newOwnerId, String aliasName) {
         Alias alias = getAlias(aliasName);
         alias.accountId = newOwnerId;
-        alias.timestamp = timestamp;
+        alias.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         aliasTable.insert(alias);
         Offer offer = getOffer(alias);
         offerTable.delete(offer);
@@ -195,18 +215,13 @@ public final class Alias {
     private String aliasURI;
     private int timestamp;
 
-    private Alias(long id, long accountId, String aliasName, String aliasURI, int timestamp) {
-        this.id = id;
+    private Alias(Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
+        this.id = transaction.getId();
         this.dbKey = aliasDbKeyFactory.newKey(this.id);
-        this.accountId = accountId;
-        this.aliasName = aliasName;
-        this.aliasURI = aliasURI;
-        this.timestamp = timestamp;
-    }
-
-    private Alias(long aliasId, Transaction transaction, Attachment.MessagingAliasAssignment attachment) {
-        this(aliasId, transaction.getSenderId(), attachment.getAliasName(), attachment.getAliasURI(),
-                transaction.getBlockTimestamp());
+        this.accountId = transaction.getSenderId();
+        this.aliasName = attachment.getAliasName();
+        this.aliasURI = attachment.getAliasURI();
+        this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
     }
 
     private Alias(ResultSet rs) throws SQLException {
@@ -223,11 +238,11 @@ public final class Alias {
                 + "alias_uri, timestamp, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            pstmt.setLong(++i, this.getAccountId());
-            pstmt.setString(++i, this.getAliasName());
-            pstmt.setString(++i, this.getAliasURI());
-            pstmt.setInt(++i, this.getTimestamp());
+            pstmt.setLong(++i, this.id);
+            pstmt.setLong(++i, this.accountId);
+            pstmt.setString(++i, this.aliasName);
+            pstmt.setString(++i, this.aliasURI);
+            pstmt.setInt(++i, this.timestamp);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

@@ -19,9 +19,9 @@ in such a way that no trusted third parties are required anymore.
   - *pre-packaged* - `https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-client-{version}.zip`
 
   - *dependencies*:
-    - *general* - Java 7 or 8
-    - *Ubuntu* - `http://www.webupd8.org/2012/01/install-oracle-java-jdk-7-in-ubuntu-via.html`
-    - *Debian* - `http://www.webupd8.org/2012/06/how-to-install-oracle-java-7-in-debian.html`
+    - *general* - Java 8
+    - *Ubuntu* - `http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html`
+    - *Debian* - `http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html`
 
   - *repository* - `git clone https://bitbucket.org/JeanLucPicard/nxt.git`
   
@@ -37,7 +37,7 @@ in such a way that no trusted third parties are required anymore.
 ## Compile it! ##
 
   - if necessary with: `./compile.sh`
-  - you need jdk-7 or 8 as well
+  - you need jdk-8 as well
 
 ----
 ## Improve it! ##

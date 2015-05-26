@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -12,10 +28,10 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * Issue a currency on the NXT blockchain
- * <p/>
+ * <p>
  * A currency is the basic block of the NXT Monetary System it can be exchanged with NXT, transferred between accounts,
  * minted using proof of work methods, reserved and claimed as a crowd funding tool.
- * <p/>
+ * <p>
  * Pass the following parameters in order to issue a currency
  * <ul>
  * <li>name - unique identifier of the currency composed of between 3 to 10 latin alphabetic symbols and numbers, name must be
@@ -40,7 +56,7 @@ import javax.servlet.http.HttpServletRequest;
  * <li>algorithm - the hashing {@link nxt.crypto.HashFunction algorithm} used for minting.
  * For {@link nxt.CurrencyType#MINTABLE} currency
  * </ul>
- * <p/>
+ * <p>
  * Constraints
  * <ul>
  * <li>A given currency can not be neither {@link nxt.CurrencyType#EXCHANGEABLE} nor {@link nxt.CurrencyType#CLAIMABLE}.<br>
@@ -53,7 +69,7 @@ import javax.servlet.http.HttpServletRequest;
  * When a {@link nxt.CurrencyType#RESERVABLE} becomes active, in case it is non {@link nxt.CurrencyType#CLAIMABLE} the NXT used for
  * reserving the currency are sent to the issuer account as crowd funding.
  * <li>When issuing a {@link nxt.CurrencyType#MINTABLE} currency, the number of units per {@link nxt.http.CurrencyMint} cannot exceed 0.01% of the
- * total supply. Therefore make sure totalSupply > 10000 or otherwise the currency cannot be minted
+ * total supply. Therefore make sure totalSupply &gt; 10000 or otherwise the currency cannot be minted
  * <li>difficulty is calculated as follows<br>
  * difficulty of minting the first unit is based on 2^minDifficulty<br>
  * difficulty of minting the last unit is based on 2^maxDifficulty<br>
@@ -119,9 +135,9 @@ public final class IssueCurrency extends CreateTransaction {
         long minReservePerUnit = ParameterParser.getLong(req, "minReservePerUnitNQT", 1, Constants.MAX_BALANCE_NQT, false);
         int minDifficulty = ParameterParser.getInt(req, "minDifficulty", 1, 255, false);
         int maxDifficulty = ParameterParser.getInt(req, "maxDifficulty", 1, 255, false);
-        byte ruleset = ParameterParser.getByte(req, "ruleset", (byte)0, Byte.MAX_VALUE);
-        byte algorithm = ParameterParser.getByte(req, "algorithm", (byte)0, Byte.MAX_VALUE);
-        byte decimals = ParameterParser.getByte(req, "decimals", (byte)0, Byte.MAX_VALUE);
+        byte ruleset = ParameterParser.getByte(req, "ruleset", (byte)0, Byte.MAX_VALUE, false);
+        byte algorithm = ParameterParser.getByte(req, "algorithm", (byte)0, Byte.MAX_VALUE, false);
+        byte decimals = ParameterParser.getByte(req, "decimals", (byte)0, Byte.MAX_VALUE, false);
         Account account = ParameterParser.getSenderAccount(req);
         Attachment attachment = new Attachment.MonetarySystemCurrencyIssuance(name, code, description, (byte)type, initialSupply,
                 reserveSupply, maxSupply, issuanceHeight, minReservePerUnit, minDifficulty, maxDifficulty, ruleset, algorithm, decimals);

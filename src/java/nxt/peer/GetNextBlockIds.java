@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.peer;
 
 import nxt.Nxt;
@@ -23,11 +39,7 @@ final class GetNextBlockIds extends PeerServlet.PeerRequestHandler {
         JSONArray nextBlockIds = new JSONArray();
         long blockId = Convert.parseUnsignedLong((String) request.get("blockId"));
         List<Long> ids = Nxt.getBlockchain().getBlockIdsAfter(blockId, 1440);
-
-        for (Long id : ids) {
-            nextBlockIds.add(Convert.toUnsignedLong(id));
-        }
-
+        ids.forEach(id -> nextBlockIds.add(Long.toUnsignedString(id)));
         response.put("nextBlockIds", nextBlockIds);
 
         return response;

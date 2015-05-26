@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -40,12 +56,9 @@ public abstract class AbstractBlockchainTest {
         blockchain = BlockchainImpl.getInstance();
         blockchainProcessor = BlockchainProcessorImpl.getInstance();
         blockchainProcessor.setGetMoreBlocks(false);
-        Listener<Block> countingListener = new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (block.getHeight() % 1000 == 0) {
-                    Logger.logMessage("downloaded block " + block.getHeight());
-                }
+        Listener<Block> countingListener = block -> {
+            if (block.getHeight() % 1000 == 0) {
+                Logger.logMessage("downloaded block " + block.getHeight());
             }
         };
         blockchainProcessor.addListener(countingListener, BlockchainProcessor.Event.BLOCK_PUSHED);
@@ -64,16 +77,13 @@ public abstract class AbstractBlockchainTest {
             return;
         }
         Assert.assertTrue(blockchain.getHeight() < endHeight);
-        Listener<Block> stopListener = new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (blockchain.getHeight() == endHeight) {
-                    synchronized (doneLock) {
-                        done = true;
-                        blockchainProcessor.setGetMoreBlocks(false);
-                        doneLock.notifyAll();
-                        throw new NxtException.StopException("Reached height " + endHeight);
-                    }
+        Listener<Block> stopListener = block -> {
+            if (blockchain.getHeight() == endHeight) {
+                synchronized (doneLock) {
+                    done = true;
+                    blockchainProcessor.setGetMoreBlocks(false);
+                    doneLock.notifyAll();
+                    throw new NxtException.StopException("Reached height " + endHeight);
                 }
             }
         };
@@ -99,15 +109,12 @@ public abstract class AbstractBlockchainTest {
             return;
         }
         Assert.assertTrue(blockchain.getHeight() < endHeight);
-        Listener<Block> stopListener = new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                if (blockchain.getHeight() == endHeight) {
-                    synchronized (doneLock) {
-                        done = true;
-                        Generator.stopForging(secretPhrase);
-                        doneLock.notifyAll();
-                    }
+        Listener<Block> stopListener = block -> {
+            if (blockchain.getHeight() == endHeight) {
+                synchronized (doneLock) {
+                    done = true;
+                    Generator.stopForging(secretPhrase);
+                    doneLock.notifyAll();
                 }
             }
         };

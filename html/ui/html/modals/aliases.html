@@ -1,3 +1,19 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div class="modal fade" id="alias_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -22,7 +38,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="register_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="register_alias_modal" data-transaction-type="1" data-transaction-subtype="1" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -51,7 +67,11 @@
                         <p class="help-block" id="register_alias_help"></p>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
                     
                     <input type="hidden" name="register_alias_alias_update" id="register_alias_alias_update" value="0" />
                     <input type="hidden" name="request_type" value="setAlias" />
@@ -67,7 +87,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="delete_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="delete_alias_modal" data-transaction-type="1" data-transaction-subtype="8" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -84,7 +104,11 @@
                         <p id="delete_alias_alias_noneditable" style="display:none"></p>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <input type="hidden" name="delete_alias_alias_update" id="delete_alias_alias_update" value="0" />
                     <input type="hidden" name="request_type" value="deleteAlias" />
@@ -100,7 +124,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="buy_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="buy_alias_modal" data-transaction-type="1" data-transaction-subtype="7" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -124,7 +148,11 @@
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <input type="hidden" name="request_type" value="buyAlias" />
                     <input type="hidden" name="recipient" id="buy_alias_recipient" value="" />
@@ -140,7 +168,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="transfer_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="transfer_alias_modal" data-transaction-type="1" data-transaction-subtype="6" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -159,7 +187,11 @@
                     <div data-replace-with-modal-template="recipient_modal_template"></div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
                     <input type="hidden" name="request_type" value="sellAlias" />
@@ -177,7 +209,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="sell_alias_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="sell_alias_modal" data-transaction-type="1" data-transaction-subtype="6" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-700">
         <div class="modal-content">
             <div class="modal-header">
@@ -210,7 +242,11 @@
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
                     <input type="hidden" name="modal" value="sell_alias" />
@@ -228,7 +264,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="cancel_alias_sale_modal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="cancel_alias_sale_modal" data-transaction-type="1" data-transaction-subtype="6" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -246,7 +282,11 @@
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
 
                     <input type="hidden" name="request_type" value="sellAlias" />
                 </form>

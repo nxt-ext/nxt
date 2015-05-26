@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -13,7 +29,12 @@ import nxt.Exchange;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
+import nxt.PhasingPoll;
+import nxt.Poll;
+import nxt.PrunableMessage;
+import nxt.TaggedData;
 import nxt.Trade;
+import nxt.Vote;
 import nxt.peer.Peers;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -65,17 +86,21 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfGoods", DigitalGoodsStore.Goods.getCount());
             response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getCount());
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
-            //response.put("numberOfPolls", Poll.getCount());
-            //response.put("numberOfVotes", Vote.getCount());
+            response.put("numberOfPolls", Poll.getCount());
+            response.put("numberOfVotes", Vote.getCount());
+            response.put("numberOfPhasedTransactions", PhasingPoll.getPhasedCount());
+            response.put("numberOfPrunableMessages", PrunableMessage.getCount());
+            response.put("numberOfTaggedData", TaggedData.getCount());
+            response.put("numberOfDataTags", TaggedData.Tag.getTagCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
+        response.put("numberOfActivePeers", Peers.getActivePeers().size());
         response.put("numberOfUnlockedAccounts", Generator.getAllGenerators().size());
         response.put("availableProcessors", Runtime.getRuntime().availableProcessors());
         response.put("maxMemory", Runtime.getRuntime().maxMemory());
         response.put("totalMemory", Runtime.getRuntime().totalMemory());
         response.put("freeMemory", Runtime.getRuntime().freeMemory());
         response.put("peerPort", Peers.getDefaultPeerPort());
-        response.put("isTestnet", Constants.isTestnet);
         response.put("isOffline", Constants.isOffline);
         response.put("needsAdminPassword", !API.disableAdminPassword);
         return response;

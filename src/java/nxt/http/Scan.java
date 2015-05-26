@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Nxt;
@@ -22,7 +38,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
             int numBlocks = 0;
             try {
                 numBlocks = Integer.parseInt(req.getParameter("numBlocks"));
-            } catch (NumberFormatException e) {}
+            } catch (NumberFormatException ignored) {}
             int height = -1;
             try {
                 height = Integer.parseInt(req.getParameter("height"));
@@ -35,8 +51,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
                 } else if (height >= 0) {
                     Nxt.getBlockchainProcessor().scan(height, validate);
                 } else {
-                    response.put("error", "invalid numBlocks or height");
-                    return response;
+                    return JSONResponses.missing("numBlocks", "height");
                 }
             } finally {
                 Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
@@ -45,7 +60,7 @@ public final class Scan extends APIServlet.APIRequestHandler {
             response.put("done", true);
             response.put("scanTime", (end - start)/1000);
         } catch (RuntimeException e) {
-            response.put("error", e.toString());
+            JSONData.putException(response, e);
         }
         return response;
     }
