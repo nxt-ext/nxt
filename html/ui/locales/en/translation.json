@@ -29,6 +29,7 @@
   "actions": "Actions",
   "active_plugins": "Active Plugins",
   "active_polls": "Active Polls",
+  "plugins_status_page": "Status page",
   "plugins_disabled_for_session_msg": "Plugins have been disabled for current session.",
   "plugins_disabled_for_account_msg": "Plugins are disabled for this account. This behaviour can be changed in the settings.",
   "one_plugin_active_and_running_msg": "1 Plugin active and running.",
