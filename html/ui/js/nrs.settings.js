@@ -57,13 +57,13 @@ var NRS = (function(NRS, $) {
 		"ja": "日本語",                   // japanese
 		"lt": "Lietuviškai",             // lithuanian
 		"nl": "Nederlands",              // dutch
-		"cs": "Čeština (Experimental)",  // czech
-		"sk": "Slovensky (Experimental)",// slovakian
+		"cs": "Čeština (Beta)",          // czech
+		"sk": "Slovensky (Beta)",        // slovakian
 		"pt-pt": "Português",            // portugese
 		"pt-br": "Português Brasileiro", // portugese, brazilian
 		"sr": "Српски (Experimental)",   // serbian, cyrillic
 		"sr-cs": "Srpski (Experimental)",// serbian, latin
-		"bg": "Български (Beta)",        // bulgarian
+		"bg": "Български",               // bulgarian
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
 		"zh-cn": "中文 simplified",      // chinese simplified
