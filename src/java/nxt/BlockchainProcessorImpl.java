@@ -1543,7 +1543,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     currentBlock = BlockDb.loadBlock(con, rs, true);
                                     currentBlock.loadTransactions();
                                     TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
-                                } catch (NxtException.ValidationException ignore) {
                                 } catch (RuntimeException e2) {
                                     Logger.logErrorMessage(e2.toString(), e);
                                     break;

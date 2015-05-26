@@ -197,7 +197,7 @@ final class BlockchainImpl implements Blockchain {
                 }
             }
             return result;
-        } catch (NxtException.ValidationException|SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
@@ -222,7 +222,7 @@ final class BlockchainImpl implements Blockchain {
                 }
             }
             return result;
-        } catch (NxtException.ValidationException|SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
