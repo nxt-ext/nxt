@@ -137,7 +137,7 @@ final class BlockDb {
         return loadBlock(con, rs, false);
     }
 
-    static BlockImpl loadBlock(Connection con, ResultSet rs, boolean loadTransactions) throws NxtException.NotValidException {
+    static BlockImpl loadBlock(Connection con, ResultSet rs, boolean loadTransactions) {
         try {
             int version = rs.getInt("version");
             int timestamp = rs.getInt("timestamp");
