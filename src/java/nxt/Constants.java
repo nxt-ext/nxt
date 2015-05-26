@@ -134,10 +134,10 @@ public final class Constants {
     public static final int MAX_REFERENCED_TRANSACTION_TIMESPAN = 60 * 1440 * 60;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
-    public static final int PHASING_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
+    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
+    public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 272000 : 414000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 436000;
 
     public static final int[] MIN_VERSION = isTestnet ? new int[] {1, 5} : new int[] {1, 4};
 
