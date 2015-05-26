@@ -23,7 +23,7 @@ wesley@tutanota.de
 Ronald Hoffman (ScripterRon)
 ronald.hoffman6@gmail.com
 GPG key fingerprint: E0AD 742C F130 D180 0504  8EDE A4C8 C35D D619 0F05
-Nxt account: NXT-YKDR-R624-MM4S-5ZKQKZZ
+Nxt account: NXT-YKDR-R624-MM4S-5ZKQK
 
 
 Alexander Chepurnoy (kushti)
