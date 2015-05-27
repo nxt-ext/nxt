@@ -219,15 +219,6 @@ public final class JSON {
             if (pos > start)
                 sb.append(string.substring(start, pos));
             start = pos + 1;
-            int ch = string.codePointAt(pos);
-            //
-            // Process a supplementary codepoint
-            //
-            if (Character.isSupplementaryCodePoint(ch)) {
-                sb.appendCodePoint(ch);
-                start++;
-                continue;
-            }
             //
             // Escape control characters
             //
