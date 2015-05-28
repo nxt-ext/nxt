@@ -278,7 +278,7 @@ public class PeerWebSocket {
             requestMap.put(requestId, postRequest);
             response = postRequest.get(Peers.readTimeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException exc) {
-            throw new IOException("WebSocket POST interrupted", exc);
+            throw new SocketTimeoutException("WebSocket POST interrupted");
         }
         return response;
     }
@@ -450,7 +450,7 @@ public class PeerWebSocket {
          */
         public String get(long timeout, TimeUnit unit) throws InterruptedException, IOException {
             if (!latch.await(timeout, unit))
-                throw new IOException("WebSocket read timeout exceeded");
+                throw new SocketTimeoutException("WebSocket read timeout exceeded");
             if (exception != null)
                 throw exception;
             return response;
