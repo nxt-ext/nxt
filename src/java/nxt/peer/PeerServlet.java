@@ -148,7 +148,7 @@ public final class PeerServlet extends WebSocketServlet {
         //
         resp.setContentType("text/plain; charset=UTF-8");
         try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
-            jsonResponse.writeJSONString(writer);
+            JSON.writeJSONString(jsonResponse, writer);
             long byteCount;
             if (isGzipEnabled)
                 byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
@@ -191,7 +191,7 @@ public final class PeerServlet extends WebSocketServlet {
         //
         try {
             StringWriter writer = new StringWriter(1000);
-            jsonResponse.writeJSONString(writer);
+            JSON.writeJSONString(jsonResponse, writer);
             String response = writer.toString();
             webSocket.sendResponse(requestId, response);
             if (peer != null)
