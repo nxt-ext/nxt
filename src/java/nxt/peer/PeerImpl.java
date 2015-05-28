@@ -500,8 +500,7 @@ final class PeerImpl implements Peer {
             if (connection != null)
                 connection.disconnect();
         } catch (RuntimeException|ParseException|IOException e) {
-            if (state == State.CONNECTED ||
-                    !(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
+            if (!(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
                                         e instanceof SocketException || Errors.END_OF_FILE.equals(e.getMessage()))) {
                 Logger.logDebugMessage(String.format("Error sending request to peer %s: %s",
                                        host, e.getMessage()!=null ? e.getMessage() : e.toString()));
