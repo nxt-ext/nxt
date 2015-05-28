@@ -20,6 +20,7 @@ import nxt.Nxt;
 import nxt.util.Logger;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.UpgradeException;
+import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
@@ -261,6 +262,8 @@ public class PeerWebSocket {
             if (buf.limit() > MAX_MESSAGE_SIZE)
                 throw new ProtocolException("POST request length exceeds max message size");
             session.getRemote().sendBytes(buf);
+        } catch (WebSocketException exc) {
+            throw new IOException(exc.getMessage());
         } finally {
             lock.unlock();
         }
@@ -313,6 +316,8 @@ public class PeerWebSocket {
                     throw new ProtocolException("POST response length exceeds max message size");
                 session.getRemote().sendBytes(buf);
             }
+        } catch (WebSocketException exc) {
+            throw new IOException(exc.getMessage());
         } finally {
             lock.unlock();
         }
