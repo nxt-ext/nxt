@@ -84,7 +84,7 @@
 
     <resources>
 		<res id="InfoPanel.info" src="changelogs/nxt-client-@{runtime.nxt.version}.changelog.txt" parse="yes"/>
-		<res id="LicencePanel.licence" src="MIT-license.txt"/>
+		<res id="LicencePanel.licence" src="LICENSE.txt"/>
 		<res id="Installer.image" src="html/ui/img/installer_left_pane.png"/>
 		<res id="shortcutSpec.xml" src="shortcutSpec.xml"/>
         <res id="RegistrySpec.xml" src="RegistrySpec.xml"/>		
@@ -113,14 +113,22 @@
             <file src="nxt.jar" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="README.txt" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="MIT-license.txt" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="conf/nxt-default.properties" targetdir="${INSTALL_PATH}/conf" override="true"/>
+			<file src="3RD-PARTY-LICENSES.txt" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="AUTHORS.txt" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="COPYING.txt" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="DEVELOPER-AGREEMENT.txt" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="LICENSE.txt" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="DEVELOPERS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="OPERATORS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="README.md" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="USERS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="conf/nxt-default.properties" targetdir="${INSTALL_PATH}/conf" override="true"/>
 			<file src="conf/logging-default.properties" targetdir="${INSTALL_PATH}/conf" override="true"/>
 			<fileset dir="lib" targetdir="${INSTALL_PATH}/lib" override="true" excludes=".gitignore"/>
 			<fileset dir="changelogs" targetdir="${INSTALL_PATH}/changelogs" override="true" excludes=".gitignore"/>
 			<fileset dir="classes" targetdir="${INSTALL_PATH}/classes" override="true" excludes=".gitignore"/>
 			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true" excludes=".gitignore"/>
-			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore"/>
+			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore nxt-private.iml"/>
 		</pack>
         <pack name="server.windows" os="windows" required="yes">
             <description>Windows Specific Resources</description>
@@ -129,7 +137,8 @@
             <file src="nxtservice.exe" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="nxtservice.jar" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="run.bat" targetdir="${INSTALL_PATH}" override="false"/>
-			<parsable targetfile="${INSTALL_PATH}/run.bat"/>
+            <file src="mint.bat" targetdir="${INSTALL_PATH}" override="false"/>
+            <parsable targetfile="${INSTALL_PATH}/run.bat"/>
 			<singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
 			<singlefile src="resource/nxtservice.properties" target="${INSTALL_PATH}/resource/nxtservice.properties" override="true"/>
 		</pack>
@@ -139,13 +148,19 @@
 			<executable targetfile="${INSTALL_PATH}/run.sh"/>
             <file src="run-tor.sh" targetdir="${INSTALL_PATH}" override="true"/>
 			<executable targetfile="${INSTALL_PATH}/run-tor.sh"/>
+            <file src="run-desktop.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <executable targetfile="${INSTALL_PATH}/run-desktop.sh"/>
+            <file src="mint.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <executable targetfile="${INSTALL_PATH}/mint.sh"/>
             <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
 			<executable targetfile="${INSTALL_PATH}/compile.sh"/>
-            <file src="win-compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<executable targetfile="${INSTALL_PATH}/win-compile.sh"/>
-			<file src="javadoc.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="jar.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/jar.sh"/>
+            <file src="javadoc.sh" targetdir="${INSTALL_PATH}" override="true"/>
 			<executable targetfile="${INSTALL_PATH}/javadoc.sh"/>
-			<file src="verify.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="package.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/package.sh"/>
+            <file src="verify.sh" targetdir="${INSTALL_PATH}" override="true"/>
 			<executable targetfile="${INSTALL_PATH}/verify.sh"/>
 			<file src="docker_start.sh" targetdir="${INSTALL_PATH}" override="true"/>
 			<executable targetfile="${INSTALL_PATH}/docker_start.sh"/>
@@ -153,7 +168,7 @@
 		</pack>
         <pack name="jre" os="windows" required="yes" uninstall="false">
             <description>Java 32 bit</description>
-			<fileset dir="..\jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
+			<fileset dir="../jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
 		</pack>
 	</packs>
 </installation>

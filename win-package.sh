@@ -13,12 +13,12 @@ FILES="${FILES} compile.sh javadoc.sh jar.sh package.sh"
 FILES="${FILES} win-compile.sh win-javadoc.sh win-package.sh"
 
 echo compile
-./compile.sh
+./win-compile.sh
 echo jar
 ./jar.sh
 echo javadoc
 rm -rf html/doc/*
-./javadoc.sh
+./win-javadoc.sh
 
 rm -rf nxt
 rm -rf ${PACKAGE}

@@ -21,7 +21,7 @@ public class DefaultDirProvider implements DirProvider {
 
     @Override
     public File getLogFileDir() {
-        return null;
+        return new File(getUserHomeDir(), "logs");
     }
 
     @Override
