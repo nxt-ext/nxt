@@ -156,6 +156,7 @@ public final class API {
                 defaultServletHolder.setInitParameter("welcomeServlets", "true");
                 defaultServletHolder.setInitParameter("redirectWelcome", "true");
                 defaultServletHolder.setInitParameter("gzip", "true");
+                defaultServletHolder.setInitParameter("etags", "true");
                 apiHandler.addServlet(defaultServletHolder, "/*");
                 apiHandler.setWelcomeFiles(new String[]{Nxt.getStringProperty("nxt.apiWelcomeFile")});
             }
