@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http.twophased;
 
 
@@ -20,7 +36,7 @@ public class TestGetAccountPhasedTransactions extends BlockchainTest {
     }
 
     static APICall phasedTransactionsApiCall() {
-        return phasedTransactionsApiCall(id1);
+        return phasedTransactionsApiCall(ALICE.getId());
     }
 
     @Test
@@ -34,7 +50,7 @@ public class TestGetAccountPhasedTransactions extends BlockchainTest {
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
 
-        response = phasedTransactionsApiCall(id3).invoke();
+        response = phasedTransactionsApiCall(CHUCK.getId()).invoke();
         Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());
         transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
@@ -46,17 +62,16 @@ public class TestGetAccountPhasedTransactions extends BlockchainTest {
         JSONObject transactionJSON = TestCreateTwoPhased.issueCreateTwoPhased(apiCall, false);
         generateBlock();
 
-        JSONObject response = phasedTransactionsApiCall(id2).invoke();
+        JSONObject response = phasedTransactionsApiCall(BOB.getId()).invoke();
         Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());
         JSONArray transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertTrue(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
 
-        response = phasedTransactionsApiCall(id3).invoke();
+        response = phasedTransactionsApiCall(CHUCK.getId()).invoke();
         Logger.logMessage("getAccountPhasedTransactionsResponse:" + response.toJSONString());
         transactionsJson = (JSONArray) response.get("transactions");
         Assert.assertFalse(TwoPhasedSuite.searchForTransactionId(transactionsJson, (String) transactionJSON.get("transaction")));
     }
-
 
     @Test
     public void multiple() {

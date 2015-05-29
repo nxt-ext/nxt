@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -363,11 +379,6 @@ final class TransactionImpl implements Transaction {
 
     void setHeight(int height) {
         this.height = height;
-    }
-
-    @Override
-    public int getValidationHeight() {
-        return phasing == null ? Nxt.getBlockchain().getHeight() : phasing.getFinishHeight();
     }
 
     @Override
@@ -952,13 +963,18 @@ final class TransactionImpl implements Transaction {
             }
         }
 
+        boolean validatingAtFinish = phasing != null && getSignature() != null && PhasingPoll.getPoll(getId()) != null;
         for (Appendix.AbstractAppendix appendage : appendages) {
             appendage.loadPrunable(this);
             if (! appendage.verifyVersion(this.version)) {
                 throw new NxtException.NotValidException("Invalid attachment version " + appendage.getVersion()
                         + " for transaction version " + this.version);
             }
-            appendage.validate(this);
+            if (validatingAtFinish) {
+                appendage.validateAtFinish(this);
+            } else {
+                appendage.validate(this);
+            }
         }
 
         if (getFullSize() > Constants.MAX_PAYLOAD_LENGTH) {

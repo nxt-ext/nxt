@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http.monetarysystem;
 
 import nxt.BlockchainTest;
@@ -31,7 +47,7 @@ public class TestCurrencyMint extends BlockchainTest {
     public void mintCurrency(String currencyId) {
         // Failed attempt to mint
         APICall apiCall = new APICall.Builder("currencyMint").
-                secretPhrase(secretPhrase1).
+                secretPhrase(ALICE.getSecretPhrase()).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("nonce", 123456).
@@ -42,7 +58,6 @@ public class TestCurrencyMint extends BlockchainTest {
         Logger.logDebugMessage("mintResponse: " + mintResponse);
         generateBlock();
         apiCall = new APICall.Builder("getCurrency").
-                secretPhrase(secretPhrase1).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 build();
@@ -55,14 +70,14 @@ public class TestCurrencyMint extends BlockchainTest {
         long algorithm = (Long)getCurrencyResponse.get("algorithm");
         long nonce;
         for (nonce=0; nonce < Long.MAX_VALUE; nonce++) {
-            if (CurrencyMinting.meetsTarget(CurrencyMinting.getHash((byte) algorithm, nonce, Convert.parseUnsignedLong(currencyId), units, 1, id1),
+            if (CurrencyMinting.meetsTarget(CurrencyMinting.getHash((byte) algorithm, nonce, Convert.parseUnsignedLong(currencyId), units, 1, ALICE.getId()),
                     CurrencyMinting.getTarget(2, 8, units, 0, 100000))) {
                 break;
             }
         }
         Logger.logDebugMessage("nonce: " + nonce);
         apiCall = new APICall.Builder("currencyMint").
-                secretPhrase(secretPhrase1).
+                secretPhrase(ALICE.getSecretPhrase()).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 param("nonce", nonce).
@@ -73,7 +88,6 @@ public class TestCurrencyMint extends BlockchainTest {
         Logger.logDebugMessage("mintResponse: " + mintResponse);
         generateBlock();
         apiCall = new APICall.Builder("getCurrency").
-                secretPhrase(secretPhrase1).
                 feeNQT(Constants.ONE_NXT).
                 param("currency", currencyId).
                 build();
@@ -83,7 +97,7 @@ public class TestCurrencyMint extends BlockchainTest {
 
         apiCall = new APICall.Builder("getMintingTarget").
                 param("currency", currencyId).
-                param("account", id1).
+                param("account", ALICE.getId()).
                 param("units", "1000").
                 build();
         JSONObject getMintingTargetResponse = apiCall.invoke();

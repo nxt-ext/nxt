@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -19,8 +35,8 @@ public class SendMessageTest extends BlockchainTest {
     @Test
     public void sendMessage() {
         JSONObject response = new APICall.Builder("sendMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
-                param("recipient", testers.get(2).getStrId()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
+                param("recipient", BOB.getStrId()).
                 param("message", "hello world").
                 param("feeNQT", Constants.ONE_NXT).
                 build().invoke();
@@ -30,7 +46,7 @@ public class SendMessageTest extends BlockchainTest {
         Assert.assertEquals("hello world", attachment.get("message"));
         generateBlock();
         response = new APICall.Builder("readMessage").
-                param("secretPhrase", testers.get(2).getSecretPhrase()).
+                param("secretPhrase", BOB.getSecretPhrase()).
                 param("transaction", transaction).
                 build().invoke();
         Logger.logDebugMessage("readMessage: " + response);
@@ -40,8 +56,8 @@ public class SendMessageTest extends BlockchainTest {
     @Test
     public void sendEncryptedMessage() {
         JSONObject response = new APICall.Builder("sendMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
-                param("recipient", testers.get(2).getStrId()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
+                param("recipient", BOB.getStrId()).
                 param("messageToEncrypt", "hello world").
                 param("feeNQT", Constants.ONE_NXT).
                 build().invoke();
@@ -49,11 +65,11 @@ public class SendMessageTest extends BlockchainTest {
         String transaction = (String) response.get("transaction");
         JSONObject attachment = (JSONObject) ((JSONObject)response.get("transactionJSON")).get("attachment");
         JSONObject encryptedMessage = (JSONObject) attachment.get("encryptedMessage");
-        Assert.assertNotEquals(64, ((String)encryptedMessage.get("data")).length());
+        Assert.assertNotEquals(64, ((String) encryptedMessage.get("data")).length());
         Assert.assertNotEquals(32, ((String) encryptedMessage.get("nonce")).length());
         generateBlock();
         response = new APICall.Builder("readMessage").
-                param("secretPhrase", testers.get(2).getSecretPhrase()).
+                param("secretPhrase", BOB.getSecretPhrase()).
                 param("transaction", transaction).
                 build().invoke();
         Logger.logDebugMessage("readMessage: " + response);
@@ -62,10 +78,10 @@ public class SendMessageTest extends BlockchainTest {
 
     @Test
     public void sendClientEncryptedMessage() {
-        EncryptedData encryptedData = testers.get(2).getAccount().encryptTo(Convert.toBytes("hello world"), testers.get(1).getSecretPhrase(), false);
+        EncryptedData encryptedData = BOB.getAccount().encryptTo(Convert.toBytes("hello world"), ALICE.getSecretPhrase(), true);
         JSONObject response = new APICall.Builder("sendMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
-                param("recipient", testers.get(2).getStrId()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
+                param("recipient", BOB.getStrId()).
                 param("encryptedMessageData", Convert.toHexString(encryptedData.getData())).
                 param("encryptedMessageNonce", Convert.toHexString(encryptedData.getNonce())).
                 param("feeNQT", Constants.ONE_NXT).
@@ -74,11 +90,11 @@ public class SendMessageTest extends BlockchainTest {
         String transaction = (String) response.get("transaction");
         JSONObject attachment = (JSONObject) ((JSONObject)response.get("transactionJSON")).get("attachment");
         JSONObject encryptedMessage = (JSONObject) attachment.get("encryptedMessage");
-        Assert.assertNotEquals(64, ((String)encryptedMessage.get("data")).length());
+        Assert.assertNotEquals(64, ((String) encryptedMessage.get("data")).length());
         Assert.assertNotEquals(32, ((String) encryptedMessage.get("nonce")).length());
         generateBlock();
         response = new APICall.Builder("readMessage").
-                param("secretPhrase", testers.get(2).getSecretPhrase()).
+                param("secretPhrase", BOB.getSecretPhrase()).
                 param("transaction", transaction).
                 build().invoke();
         Logger.logDebugMessage("readMessage: " + response);
@@ -88,8 +104,8 @@ public class SendMessageTest extends BlockchainTest {
     @Test
     public void sendEncryptedMessageToSelf() {
         JSONObject response = new APICall.Builder("sendMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
-                param("recipient", testers.get(2).getStrId()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
+                param("recipient", BOB.getStrId()).
                 param("messageToEncryptToSelf", "hello world").
                 param("feeNQT", Constants.ONE_NXT).
                 build().invoke();
@@ -97,11 +113,11 @@ public class SendMessageTest extends BlockchainTest {
         String transaction = (String) response.get("transaction");
         JSONObject attachment = (JSONObject) ((JSONObject)response.get("transactionJSON")).get("attachment");
         JSONObject encryptedMessage = (JSONObject) attachment.get("encryptToSelfMessage");
-        Assert.assertNotEquals(64, ((String)encryptedMessage.get("data")).length());
-        Assert.assertNotEquals(32, ((String)encryptedMessage.get("nonce")).length());
+        Assert.assertNotEquals(64, ((String) encryptedMessage.get("data")).length());
+        Assert.assertNotEquals(32, ((String) encryptedMessage.get("nonce")).length());
         generateBlock();
         response = new APICall.Builder("readMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
                 param("transaction", transaction).
                 build().invoke();
         Logger.logDebugMessage("readMessage: " + response);
@@ -110,10 +126,10 @@ public class SendMessageTest extends BlockchainTest {
 
     @Test
     public void sendClientEncryptedMessageToSelf() {
-        EncryptedData encryptedData = testers.get(1).getAccount().encryptTo(Convert.toBytes("hello world"), testers.get(1).getSecretPhrase(), false);
+        EncryptedData encryptedData = ALICE.getAccount().encryptTo(Convert.toBytes("hello world"), ALICE.getSecretPhrase(), true);
         JSONObject response = new APICall.Builder("sendMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
-                param("recipient", testers.get(2).getStrId()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
+                param("recipient", BOB.getStrId()).
                 param("encryptToSelfMessageData", Convert.toHexString(encryptedData.getData())).
                 param("encryptToSelfMessageNonce", Convert.toHexString(encryptedData.getNonce())).
                 param("feeNQT", Constants.ONE_NXT).
@@ -122,11 +138,11 @@ public class SendMessageTest extends BlockchainTest {
         String transaction = (String) response.get("transaction");
         JSONObject attachment = (JSONObject) ((JSONObject)response.get("transactionJSON")).get("attachment");
         JSONObject encryptedMessage = (JSONObject) attachment.get("encryptToSelfMessage");
-        Assert.assertNotEquals(64, ((String)encryptedMessage.get("data")).length());
-        Assert.assertNotEquals(32, ((String) encryptedMessage.get("nonce")).length());
+        Assert.assertEquals(64 + 32 /* data + hash */, ((String) encryptedMessage.get("data")).length());
+        Assert.assertEquals(64, ((String) encryptedMessage.get("nonce")).length());
         generateBlock();
         response = new APICall.Builder("readMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
                 param("transaction", transaction).
                 build().invoke();
         Logger.logDebugMessage("readMessage: " + response);
@@ -144,10 +160,10 @@ public class SendMessageTest extends BlockchainTest {
                 param("account", rsAccount).
                 build().invoke();
         Logger.logDebugMessage("getAccount: " + response);
-        Assert.assertEquals((long)5, response.get("errorCode"));
+        Assert.assertEquals((long) 5, response.get("errorCode"));
 
         response = new APICall.Builder("sendMessage").
-                param("secretPhrase", testers.get(1).getSecretPhrase()).
+                param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", rsAccount).
                 param("recipientPublicKey", publicKeyStr).
                 param("feeNQT", Constants.ONE_NXT).
@@ -161,16 +177,4 @@ public class SendMessageTest extends BlockchainTest {
         Logger.logDebugMessage("getAccount: " + response);
         Assert.assertEquals(publicKeyStr, response.get("publicKey"));
     }
-
-    @BeforeClass
-    public static void beforeClass() {
-        Nxt.init();
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        Nxt.shutdown();
-    }
-
-
 }

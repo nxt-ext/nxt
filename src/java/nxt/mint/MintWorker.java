@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.mint;
 
 import nxt.Attachment;
@@ -183,9 +199,7 @@ public class MintWorker {
     private long solve(Executor executor, Collection<Callable<Long>> solvers) {
         CompletionService<Long> ecs = new ExecutorCompletionService<>(executor);
         List<Future<Long>> futures = new ArrayList<>(solvers.size());
-        for (Callable<Long> solver : solvers) {
-            futures.add(ecs.submit(solver));
-        }
+        solvers.forEach(solver -> futures.add(ecs.submit(solver)));
         try {
             return ecs.take().get();
         } catch (ExecutionException | InterruptedException e) {

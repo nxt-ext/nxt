@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -49,11 +65,11 @@ final class ParameterParser {
         try {
             byte value = Byte.parseByte(paramValue);
             if (value < min || value > max) {
-                throw new ParameterException(incorrect(name));
+                throw new ParameterException(incorrect(name, String.format("value %d not in range [%d-%d]", value, min, max)));
             }
             return value;
         } catch (RuntimeException e) {
-            throw new ParameterException(incorrect(name));
+            throw new ParameterException(incorrect(name, String.format("value %s is not numeric", paramValue)));
         }
     }
 
@@ -68,11 +84,11 @@ final class ParameterParser {
         try {
             int value = Integer.parseInt(paramValue);
             if (value < min || value > max) {
-                throw new ParameterException(incorrect(name));
+                throw new ParameterException(incorrect(name, String.format("value %d not in range [%d-%d]", value, min, max)));
             }
             return value;
         } catch (RuntimeException e) {
-            throw new ParameterException(incorrect(name));
+            throw new ParameterException(incorrect(name, String.format("value %s is not numeric", paramValue)));
         }
     }
 
@@ -88,11 +104,11 @@ final class ParameterParser {
         try {
             long value = Long.parseLong(paramValue);
             if (value < min || value > max) {
-                throw new ParameterException(incorrect(name));
+                throw new ParameterException(incorrect(name, String.format("value %d not in range [%d-%d]", value, min, max)));
             }
             return value;
         } catch (RuntimeException e) {
-            throw new ParameterException(incorrect(name));
+            throw new ParameterException(incorrect(name, String.format("value %s is not numeric", paramValue)));
         }
     }
 

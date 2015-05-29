@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import org.junit.Assert;
@@ -14,14 +30,14 @@ public class GeneratorTest extends BlockchainTest {
     @Ignore
     @Test
     public void forge() {
-        byte[] publicKey = testers.get(1).getPublicKey();
+        byte[] publicKey = ALICE.getPublicKey();
         BlockImpl lastBlock = blockchain.getLastBlock();
         BigInteger hit = Generator.getHit(publicKey, lastBlock);
         Account account = Account.getAccount(publicKey);
         BigInteger effectiveBalance = BigInteger.valueOf(account == null || account.getEffectiveBalanceNXT() <= 0 ? 0 : account.getEffectiveBalanceNXT());
         long hitTime = Generator.getHitTime(effectiveBalance, hit, lastBlock);
         long deadline = hitTime - lastBlock.getTimestamp();
-        Generator generator = Generator.startForging(secretPhrase1);
+        Generator generator = Generator.startForging(ALICE.getSecretPhrase());
         int i=1;
         try {
             while (i<deadline) {

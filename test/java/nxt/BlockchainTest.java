@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.util.Logger;
@@ -13,6 +29,12 @@ import java.util.Properties;
 
 public abstract class BlockchainTest extends AbstractBlockchainTest {
 
+    protected static Tester FORGY;
+    protected static Tester ALICE;
+    protected static Tester BOB;
+    protected static Tester CHUCK;
+    protected static Tester DAVE;
+
     protected static int baseHeight;
 
     protected static List<Tester> testers = new ArrayList<>();
@@ -23,10 +45,10 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
     protected static String secretPhrase3 = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
     protected static String secretPhrase4 = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
-    protected static long id1;
-    protected static long id2;
-    protected static long id3;
-    protected static long id4;
+    private static final String aliceSecretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+    private static final String bobSecretPhrase2 = "rshw9abtpsa2";
+    private static final String chuckSecretPhrase = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
+    private static final String daveSecretPhrase = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
     protected static boolean isNxtInitted = false;
     protected static boolean needShutdownAfterClass = false;
@@ -39,6 +61,9 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
             properties.setProperty("nxt.enableFakeForging", "true");
             properties.setProperty("nxt.fakeForgingAccount", forgerAccountId);
             properties.setProperty("nxt.timeMultiplier", "1");
+            properties.setProperty("nxt.testnetGuaranteedBalanceConfirmations", "1");
+            properties.setProperty("nxt.testnetLeasingDelay", "1");
+            properties.setProperty("nxt.disableProcessTransactionsThread", "true");
             AbstractForgingTest.init(properties);
             isNxtInitted = true;
         }
@@ -52,15 +77,11 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
-        testers.add(new Tester(forgerSecretPhrase));
-        testers.add(new Tester(secretPhrase1));
-        testers.add(new Tester(secretPhrase2));
-        testers.add(new Tester(secretPhrase3));
-        testers.add(new Tester(secretPhrase4));
-        id1 = testers.get(1).getId();
-        id2 = testers.get(2).getId();
-        id3 = testers.get(3).getId();
-        id4 = testers.get(4).getId();
+        FORGY = new Tester(forgerSecretPhrase);
+        ALICE = new Tester(aliceSecretPhrase);
+        BOB = new Tester(bobSecretPhrase2);
+        CHUCK = new Tester(chuckSecretPhrase);
+        DAVE = new Tester(daveSecretPhrase);
     }
 
     @AfterClass
@@ -90,10 +111,4 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
             generateBlock();
         }
     }
-
-    protected long balanceById(long id) {
-        return Account.getAccount(id).getBalanceNQT();
-    }
-
-
 }

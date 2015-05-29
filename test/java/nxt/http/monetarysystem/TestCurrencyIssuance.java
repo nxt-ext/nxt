@@ -1,10 +1,25 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http.monetarysystem;
 
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.CurrencyType;
 import nxt.http.APICall;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,12 +48,10 @@ public class TestCurrencyIssuance extends BlockchainTest {
     static String issueCurrencyApi(APICall apiCall) {
         JSONObject issueCurrencyResponse = apiCall.invoke();
         String currencyId = (String) issueCurrencyResponse.get("transaction");
-        Logger.logMessage("issueCurrencyResponse: " + issueCurrencyResponse.toJSONString());
         generateBlock();
 
         apiCall = new APICall.Builder("getCurrency").param("currency", currencyId).build();
         JSONObject getCurrencyResponse = apiCall.invoke();
-        Logger.logMessage("getCurrencyResponse:" + getCurrencyResponse.toJSONString());
         Assert.assertEquals(currencyId, getCurrencyResponse.get("currency"));
         return currencyId;
     }
@@ -47,7 +60,7 @@ public class TestCurrencyIssuance extends BlockchainTest {
 
         public Builder() {
             super("issueCurrency");
-            secretPhrase(secretPhrase1);
+            secretPhrase(ALICE.getSecretPhrase());
             feeNQT(0l);
             //feeNQT(25000 * Constants.ONE_NXT);
             param("name", "Test1");

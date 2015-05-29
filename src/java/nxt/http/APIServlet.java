@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Db;
@@ -156,6 +172,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlockId", GetBlockId.instance);
         map.put("getBlocks", GetBlocks.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
+        map.put("getBlockchainTransactions", GetBlockchainTransactions.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getCurrency", GetCurrency.instance);
         map.put("getCurrencies", GetCurrencies.instance);
@@ -363,7 +380,7 @@ public final class APIServlet extends HttpServlet {
                 JSONData.putException(json, e);
                 response = JSON.prepare(json);
             } catch (ExceptionInInitializerError err) {
-                Logger.logErrorMessage("Initialization Error", (Exception) err.getCause());
+                Logger.logErrorMessage("Initialization Error", err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
             } finally {
                 if (apiRequestHandler.startDbTransaction()) {
@@ -379,7 +396,7 @@ public final class APIServlet extends HttpServlet {
             // The response will be null if we created an asynchronous context
             if (response != null) {
                 try (Writer writer = resp.getWriter()) {
-                    response.writeJSONString(writer);
+                    JSON.writeJSONString(response, writer);
                 }
             }
         }

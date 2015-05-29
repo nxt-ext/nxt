@@ -1,10 +1,26 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div class="modal fade" id="asset_order_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <!-- todo -->
-                <h4 class="modal-title" data-i18n="[html]confirm__order">Confirm <span class="asset_order_modal_type"></span> Order</h4>
+                <h4 class="modal-title"><span data-i18n="confirm_order">Confirm Order</span> (<span class="asset_order_modal_type"></span>)</h4>
             </div>
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
@@ -157,7 +173,10 @@
             </div>
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
-                    <div class="callout callout-danger never_hide" data-i18n="[html]issue_asset_warning"><strong>Warning</strong>: Once submitted, you will not be able to change this information again, ever. Make sure it is correct.</div>
+                    <div class="callout callout-danger never_hide">
+                        <strong><span data-i18n="warning">Warning</span>:</strong>
+                        <span data-i18n="issue_asset_warning">Once submitted, you will not be able to change this information again, ever. Make sure it is correct.</span>
+                    </div>
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
                         <label for="issue_asset_name"><span data-i18n="asset_name">ASSET NAME</span> <i class="fa fa-question-circle show_popover" data-content="The asset name is non-unique. Should be between 3 and 10 characters long." data-i18n="[data-content]asset_name_help" data-container="body" style="color:#4CAA6E" ></i></label>

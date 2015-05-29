@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbVersion;
@@ -766,27 +782,29 @@ class NxtDbVersion extends DbVersion {
             case 322:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_channel_idx ON tagged_data (channel, height DESC)");
             case 323:
+                apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS last_updated INT");
+            case 324:
                 apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NULL, "
                         + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
                         + "stage TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 324:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_idx ON shuffling (id, height DESC)");
             case 325:
-                apply("CREATE INDEX IF NOT EXISTS shuffling_currency_id_idx ON shuffling (currency_id)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_idx ON shuffling (id, height DESC)");
             case 326:
-                apply("CREATE INDEX IF NOT EXISTS shuffling_stage_idx ON shuffling (stage)");
+                apply("CREATE INDEX IF NOT EXISTS shuffling_currency_id_idx ON shuffling (currency_id)");
             case 327:
+                apply("CREATE INDEX IF NOT EXISTS shuffling_stage_idx ON shuffling (stage)");
+            case 328:
                 apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, "
                         + "account_id BIGINT NOT NULL, next_account_id BIGINT NULL, recipient_id BIGINT NOT NULL, "
                         + "state TINYINT NOT NULL, data VARBINARY, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 328:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
             case 329:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
+            case 330:
                 return;
             default:
-                throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
+                throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
         }
     }
 }

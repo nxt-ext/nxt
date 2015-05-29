@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -31,28 +47,17 @@ public class MessageEncryptionTest extends BlockchainTest {
         Assert.assertEquals("", Convert.toString(decrypt(encryptedData)));
     }
 
-    @Test
-    public void encryptEncryptedData() {
-        byte[] bytes = { (byte)0x01, (byte)0x02, (byte)0xF1, (byte)0xF2 };
-        EncryptedData encryptedData = encrypt(bytes);
-        byte[] encryptedBytes = EncryptedData.marshalData(encryptedData);
-        EncryptedData encryptedData2 = encrypt(encryptedBytes);
-        byte[] decryptedBytes2 = decrypt(encryptedData2);
-        Assert.assertArrayEquals(encryptedBytes, decryptedBytes2);
-        EncryptedData decryptedData2 = EncryptedData.unmarshalData(decryptedBytes2);
-        byte[] decryptedBytes = decrypt(decryptedData2);
-        Assert.assertArrayEquals(bytes, decryptedBytes);
-    }
-
-
     private EncryptedData encrypt(byte[] data) {
-        Account recipient = Account.getAccount(Crypto.getPublicKey(secretPhrase2));
-        return recipient.encryptTo(data, secretPhrase1, false);
+        Account recipient = Account.getAccount(BOB.getPublicKey());
+        if (recipient == null) {
+            throw new IllegalStateException();
+        }
+        return recipient.encryptTo(data, ALICE.getSecretPhrase(), false);
     }
 
     private byte[] decrypt(EncryptedData encryptedData) {
-        Account sender = testers.get(1).getAccount();
-        return sender.decryptFrom(encryptedData, secretPhrase2, false);
+        Account sender = ALICE.getAccount();
+        return sender.decryptFrom(encryptedData, BOB.getSecretPhrase(), false);
     }
 
 }

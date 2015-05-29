@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Block;
@@ -60,11 +76,12 @@ class EventListener implements Runnable, AsyncListener {
             @Override
             public void run() {
                 long oldestTime = System.currentTimeMillis() - eventTimeout*1000;
+                //TODO: why not directly do eventListeners().values().stream(), or parallelStream() ?
                 List<EventListener>listeners = new ArrayList<>();
                 listeners.addAll(eventListeners.values());
                 listeners.stream()
                          .filter(listener -> listener.getTimestamp() < oldestTime)
-                         .forEach(listener -> listener.deactivateListener());
+                         .forEach(EventListener::deactivateListener);
             }
         }, eventTimeout*500, eventTimeout*500);
     }
@@ -193,21 +210,21 @@ class EventListener implements Runnable, AsyncListener {
         try {
             if (deactivated)
                 return;
-            peerEvents.stream().forEach(event -> {
+            peerEvents.forEach(event -> {
                 PeerEventListener listener = new PeerEventListener(event);
                 if (!peerListeners.contains(listener)) {
                     peerListeners.add(listener);
                     Peers.addListener(listener, event);
                 }
             });
-            blockEvents.stream().forEach(event -> {
+            blockEvents.forEach(event -> {
                 BlockEventListener listener = new BlockEventListener(event);
                 if (!blockListeners.contains(listener)) {
                     blockListeners.add(listener);
                     blockProcessor.addListener(listener, event);
                 }
             });
-            txEvents.stream().forEach(event -> {
+            txEvents.forEach(event -> {
                 TransactionEventListener listener = new TransactionEventListener(event);
                 if (!txListeners.contains(listener)) {
                     txListeners.add(listener);
@@ -234,7 +251,7 @@ class EventListener implements Runnable, AsyncListener {
         try {
             if (deactivated)
                 return;
-            peerEvents.stream().forEach(event -> {
+            peerEvents.forEach(event -> {
                 Iterator<PeerEventListener> peerIt = peerListeners.iterator();
                 while (peerIt.hasNext()) {
                     PeerEventListener peerListener = peerIt.next();
@@ -244,7 +261,7 @@ class EventListener implements Runnable, AsyncListener {
                     }
                 }
             });
-            blockEvents.stream().forEach(event -> {
+            blockEvents.forEach(event -> {
                 Iterator<BlockEventListener> blockIt = blockListeners.iterator();
                 while (blockIt.hasNext()) {
                     BlockEventListener blockListener = blockIt.next();
@@ -254,7 +271,7 @@ class EventListener implements Runnable, AsyncListener {
                     }
                 }
             });
-            txEvents.stream().forEach(event -> {
+            txEvents.forEach(event -> {
                 Iterator<TransactionEventListener> txIt = txListeners.iterator();
                 while (txIt.hasNext()) {
                     TransactionEventListener txListener = txIt.next();
@@ -299,9 +316,9 @@ class EventListener implements Runnable, AsyncListener {
             //
             // Stop listening for events
             //
-            peerListeners.stream().forEach(listener -> Peers.removeListener(listener, listener.getEvent()));
-            blockListeners.stream().forEach(listener -> blockProcessor.removeListener(listener, listener.getEvent()));
-            txListeners.stream().forEach(listener -> txProcessor.removeListener(listener, listener.getEvent()));
+            peerListeners.forEach(listener -> Peers.removeListener(listener, listener.getEvent()));
+            blockListeners.forEach(listener -> blockProcessor.removeListener(listener, listener.getEvent()));
+            txListeners.forEach(listener -> txProcessor.removeListener(listener, listener.getEvent()));
         } finally {
             lock.unlock();
         }
@@ -706,7 +723,7 @@ class EventListener implements Runnable, AsyncListener {
         @Override
         public void notify(List<? extends Transaction> txList) {
             List<String> idList = new ArrayList<>();
-            txList.stream().forEach((tx)->idList.add(tx.getStringId()));
+            txList.forEach((tx) -> idList.add(tx.getStringId()));
             lock.lock();
             try {
                 pendingEvents.add(new PendingEvent("Transaction."+event.name(), idList));

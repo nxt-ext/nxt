@@ -1,3 +1,19 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div class="modal fade" id="add_contact_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -7,7 +23,10 @@
             </div>
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
-                    <div class="callout callout-danger never_hide" data-i18n="[html]contacts_local_storage_help"><strong>Remember</strong>: Contacts are stored locally, not on the blockchain.</div>
+                    <div class="callout callout-danger never_hide">
+                        <strong><span data-i18n="remember">Remember</span>:</strong>
+                        <span data-i18n="contacts_local_storage_help">Contacts are stored locally, not on the blockchain.</span>
+                    </div>
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
                         <label for="add_contact_name" data-i18n="name">NAME</label>

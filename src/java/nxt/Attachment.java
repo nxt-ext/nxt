@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -44,6 +60,10 @@ public interface Attachment extends Appendix {
         }
 
         @Override
+        final void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            getTransactionType().validateAttachmentAtFinish(transaction);
+        }
+
         final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             getTransactionType().apply((TransactionImpl)transaction, senderAccount, recipientAccount);
         }
@@ -652,9 +672,7 @@ public interface Attachment extends Appendix {
             super(attachmentData);
             JSONArray hashes = (JSONArray) attachmentData.get("transactionFullHashes");
             transactionFullHashes = new ArrayList<>(hashes.size());
-            for (Object hash : hashes) {
-                transactionFullHashes.add(Convert.parseHexString((String) hash));
-            }
+            hashes.forEach(hash -> transactionFullHashes.add(Convert.parseHexString((String) hash)));
             String revealedSecret = Convert.emptyToNull((String) attachmentData.get("revealedSecret"));
             this.revealedSecret = revealedSecret != null ? Convert.parseHexString(revealedSecret) : Convert.EMPTY_BYTE;
         }
@@ -672,9 +690,7 @@ public interface Attachment extends Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.put((byte) transactionFullHashes.size());
-            for (byte[] hash : transactionFullHashes) {
-                buffer.put(hash);
-            }
+            transactionFullHashes.forEach(buffer::put);
             buffer.putInt(revealedSecret.length);
             buffer.put(revealedSecret);
         }
@@ -682,9 +698,7 @@ public interface Attachment extends Appendix {
         @Override
         void putMyJSON(JSONObject attachment) {
             JSONArray jsonArray = new JSONArray();
-            for (byte[] hash : transactionFullHashes) {
-                jsonArray.add(Convert.toHexString(hash));
-            }
+            transactionFullHashes.forEach(hash -> jsonArray.add(Convert.toHexString(hash)));
             attachment.put("transactionFullHashes", jsonArray);
             if (revealedSecret.length > 0) {
                 attachment.put("revealedSecret", Convert.toHexString(revealedSecret));

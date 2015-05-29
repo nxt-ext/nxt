@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.peer;
 
 import nxt.Account;
@@ -41,6 +57,9 @@ import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
 
+    private static final boolean useProxy = System.getProperty("socksProxyHost") != null ||
+                                            System.getProperty("http.proxyHost") != null;
+
     private final String host;
     private final PeerWebSocket webSocket;
     private volatile PeerWebSocket inboundSocket;
@@ -74,7 +93,7 @@ final class PeerImpl implements Peer {
         this.state = State.NON_CONNECTED;
         this.shareAddress = true;
         this.webSocket = new PeerWebSocket();
-        this.useWebSocket = Peers.useWebSockets;
+        this.useWebSocket = Peers.useWebSockets && !useProxy;
     }
 
     @Override
@@ -419,6 +438,7 @@ final class PeerImpl implements Peer {
                 connection.setConnectTimeout(Peers.connectTimeout);
                 connection.setReadTimeout(Peers.readTimeout);
                 connection.setRequestProperty("Accept-Encoding", "gzip");
+                connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
                 try (Writer writer = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream(), "UTF-8"))) {
                     CountingOutputWriter cow = new CountingOutputWriter(writer);
                     request.writeJSONString(cow);
@@ -483,8 +503,7 @@ final class PeerImpl implements Peer {
             if (connection != null)
                 connection.disconnect();
         } catch (RuntimeException|ParseException|IOException e) {
-            if (state == State.CONNECTED ||
-                    !(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
+            if (!(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
                                         e instanceof SocketException || Errors.END_OF_FILE.equals(e.getMessage()))) {
                 Logger.logDebugMessage(String.format("Error sending request to peer %s: %s",
                                        host, e.getMessage()!=null ? e.getMessage() : e.toString()));

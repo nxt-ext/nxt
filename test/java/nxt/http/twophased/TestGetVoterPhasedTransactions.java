@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http.twophased;
 
 import nxt.BlockchainTest;
@@ -14,7 +30,7 @@ public class TestGetVoterPhasedTransactions extends BlockchainTest {
 
     static APICall getVoterPhasedTransactions() {
         return new APICall.Builder("getVoterPhasedTransactions")
-                .param("account", Long.toUnsignedString(id3))
+                .param("account", Long.toUnsignedString(CHUCK.getId()))
                 .param("firstIndex", 0)
                 .param("lastIndex", 10)
                 .build();
@@ -46,7 +62,7 @@ public class TestGetVoterPhasedTransactions extends BlockchainTest {
 
         long fee = Constants.ONE_NXT;
         apiCall = new APICall.Builder("approveTransaction")
-                .param("secretPhrase", secretPhrase3)
+                .param("secretPhrase", CHUCK.getSecretPhrase())
                 .param("transactionFullHash", transactionFullHash)
                 .param("feeNQT", fee)
                 .build();

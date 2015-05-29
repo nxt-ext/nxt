@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.peer;
 
 import nxt.Nxt;
@@ -132,7 +148,7 @@ public final class PeerServlet extends WebSocketServlet {
         //
         resp.setContentType("text/plain; charset=UTF-8");
         try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
-            jsonResponse.writeJSONString(writer);
+            JSON.writeJSONString(jsonResponse, writer);
             long byteCount;
             if (isGzipEnabled)
                 byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
@@ -141,8 +157,17 @@ public final class PeerServlet extends WebSocketServlet {
             if (peer != null)
                 peer.updateUploadedVolume(byteCount);
         } catch (RuntimeException | IOException e) {
-            if (peer != null)
+            if (peer != null) {
+                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
+                    if (e instanceof RuntimeException) {
+                        Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
+                    } else {
+                        Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
+                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                    }
+                }
                 peer.blacklist(e);
+            }
             throw e;
         }
     }
@@ -159,11 +184,11 @@ public final class PeerServlet extends WebSocketServlet {
         //
         // Process the peer request
         //
-        InetSocketAddress socketAddr = webSocket.getRemoteAddress();
-        if (socketAddr == null)
+        InetSocketAddress socketAddress = webSocket.getRemoteAddress();
+        if (socketAddress == null)
             return;
-        String remoteAddr = socketAddr.getHostString();
-        PeerImpl peer = Peers.findOrCreatePeer(remoteAddr);
+        String remoteAddress = socketAddress.getHostString();
+        PeerImpl peer = Peers.findOrCreatePeer(remoteAddress);
         if (peer == null) {
             jsonResponse = UNKNOWN_PEER;
         } else {
@@ -175,20 +200,22 @@ public final class PeerServlet extends WebSocketServlet {
         //
         try {
             StringWriter writer = new StringWriter(1000);
-            jsonResponse.writeJSONString(writer);
+            JSON.writeJSONString(jsonResponse, writer);
             String response = writer.toString();
             webSocket.sendResponse(requestId, response);
             if (peer != null)
                 peer.updateUploadedVolume(response.length());
         } catch (RuntimeException | IOException e) {
             if (peer != null) {
-                if (e instanceof RuntimeException) {
-                    Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
-                } else {
-                    Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
-                        peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
-                    peer.blacklist(e);
+                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
+                    if (e instanceof RuntimeException) {
+                        Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
+                    } else {
+                        Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
+                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                    }
                 }
+                peer.blacklist(e);
             }
         }
     }

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.user;
 
 import nxt.Account;
@@ -169,11 +185,11 @@ public final class Users {
                 response.put("response", "setBalance");
                 response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
                 byte[] accountPublicKey = account.getPublicKey();
-                for (User user : Users.users.values()) {
+                Users.users.values().forEach(user -> {
                     if (user.getSecretPhrase() != null && Arrays.equals(user.getPublicKey(), accountPublicKey)) {
                         user.send(response);
                     }
-                }
+                });
             }, Account.Event.UNCONFIRMED_BALANCE);
 
             Peers.addListener(peer -> {
@@ -421,11 +437,11 @@ public final class Users {
                 JSONObject response = new JSONObject();
                 response.put("response", "setBlockGenerationDeadline");
                 response.put("deadline", generator.getDeadline());
-                for (User user : users.values()) {
+                users.values().forEach(user -> {
                     if (Arrays.equals(generator.getPublicKey(), user.getPublicKey())) {
                         user.send(response);
                     }
-                }
+                });
             }, Generator.Event.GENERATION_DEADLINE);
         }
 

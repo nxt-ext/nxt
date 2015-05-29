@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.util;
 
 import nxt.Nxt;
@@ -5,7 +21,6 @@ import nxt.Nxt;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.LogManager;
 
@@ -28,7 +43,7 @@ public final class Logger {
     private static final Listeners<String, Event> messageListeners = new Listeners<>();
 
     /** Exception listeners */
-    private static final Listeners<Exception, Event> exceptionListeners = new Listeners<>();
+    private static final Listeners<Throwable, Event> exceptionListeners = new Listeners<>();
 
     /** Our logger instance */
     private static final org.slf4j.Logger log;
@@ -62,21 +77,11 @@ public final class Logger {
         }
         if (! Boolean.getBoolean("nxt.doNotConfigureLogging")) {
             try {
-                boolean foundProperties = false;
                 Properties loggingProperties = new Properties();
-                try (InputStream is = ClassLoader.getSystemResourceAsStream("logging-default.properties")) {
-                    if (is != null) {
-                        loggingProperties.load(is);
-                        foundProperties = true;
-                    }
-                }
-                try (InputStream is = ClassLoader.getSystemResourceAsStream("logging.properties")) {
-                    if (is != null) {
-                        loggingProperties.load(is);
-                        foundProperties = true;
-                    }
-                }
-                if (foundProperties) {
+                Nxt.loadProperties(loggingProperties, "logging-default.properties", true);
+                Nxt.loadProperties(loggingProperties, "logging.properties", false);
+                Nxt.updateLogFileHandler(loggingProperties);
+                if (loggingProperties.size() > 0) {
                     ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                     loggingProperties.store(outStream, "logging properties");
                     ByteArrayInputStream inStream = new ByteArrayInputStream(outStream.toByteArray());
@@ -150,7 +155,7 @@ public final class Logger {
      * @param       eventType           Notification event type
      * @return                          TRUE if listener added
      */
-    public static boolean addExceptionListener(Listener<Exception> listener, Event eventType) {
+    public static boolean addExceptionListener(Listener<Throwable> listener, Event eventType) {
         return exceptionListeners.addListener(listener, eventType);
     }
 
@@ -172,7 +177,7 @@ public final class Logger {
      * @param       eventType           Notification event type
      * @return                          TRUE if listener removed
      */
-    public static boolean removeExceptionListener(Listener<Exception> listener, Event eventType) {
+    public static boolean removeExceptionListener(Listener<Throwable> listener, Event eventType) {
         return exceptionListeners.removeListener(listener, eventType);
     }
 
@@ -231,7 +236,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logErrorMessage(String message, Exception exc) {
+    public static void logErrorMessage(String message, Throwable exc) {
         doLog(Level.ERROR, message, exc);
     }
 
@@ -254,7 +259,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logWarningMessage(String message, Exception exc) {
+    public static void logWarningMessage(String message, Throwable exc) {
         doLog(Level.WARN, message, exc);
     }
 
@@ -287,7 +292,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logInfoMessage(String message, Exception exc) {
+    public static void logInfoMessage(String message, Throwable exc) {
         doLog(Level.INFO, message, exc);
     }
 
@@ -320,7 +325,7 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    public static void logDebugMessage(String message, Exception exc) {
+    public static void logDebugMessage(String message, Throwable exc) {
         doLog(Level.DEBUG, message, exc);
     }
 
@@ -331,9 +336,9 @@ public final class Logger {
      * @param       message             Message
      * @param       exc                 Exception
      */
-    private static void doLog(Level level, String message, Exception exc) {
+    private static void doLog(Level level, String message, Throwable exc) {
         String logMessage = message;
-        Exception e = exc;
+        Throwable e = exc;
         //
         // Add caller class and method if enabled
         //

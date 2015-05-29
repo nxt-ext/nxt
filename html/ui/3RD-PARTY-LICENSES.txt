@@ -1,5 +1,3 @@
-This project: MIT
-
 Theme - MIT - https://github.com/almasaeed2010/AdminLTE
 jquery.js - MIT - http://jquery.com/
 bootstrap.js / bootstrap.css - APACHE2 - http://getbootstrap.com

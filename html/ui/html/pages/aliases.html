@@ -1,6 +1,22 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div id="aliases_page" class="paginated page">
     <section class="content-header">
-        <h1 data-i18n="aliases">Aliases</h1> <span id="alias_count_heading">(Total: <span id="alias_count" class="loading_dots"><span>.</span><span>.</span><span>.</span></span>)</span>
+        <h1 data-i18n="aliases">Aliases</h1> <span id="alias_count_heading">(<span data-i18n="total">Total</span>: <span id="alias_count" class="loading_dots"><span>.</span><span>.</span><span>.</span></span>)</span>
         <div style="position:absolute;top:9px;right:9px;">
             <form action="#" method="get" class="sidebar-form" id="alias_search" style="width:180px;margin:0;display:inline-block;vertical-align:middle;" autocomplete="off">
                 <div class="input-group">
@@ -29,7 +45,12 @@
                 </tbody>
             </table>
             <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-            <div class="data-empty-container"><p data-i18n="[html]no_aliases_yet">No aliases yet, <a href="#" data-toggle="modal" data-target="#register_alias_modal">register one!</a></p></div>
+            <div class="data-empty-container">
+                <p>
+                    <span data-i18n="no_aliases_yet">No aliases yet</span>, 
+                    <a href="#" data-toggle="modal" data-target="#register_alias_modal" data-i18n="register_one_alias">register one</a>!
+                </p>
+            </div>
         </div>
         <div class="data-pagination"></div>
     </section>

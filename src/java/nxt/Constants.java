@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import java.util.Calendar;
@@ -16,8 +32,8 @@ public final class Constants {
     public static final long INITIAL_BASE_TARGET = 153722867;
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
     public static final int MAX_ROLLBACK = Math.max(Nxt.getIntProperty("nxt.maxRollback"), 720);
-    public static final int GUARANTEED_BALANCE_CONFIRMATIONS = 1440;
-    public static final int LEASING_DELAY = 1440;
+    public static final int GUARANTEED_BALANCE_CONFIRMATIONS = isTestnet ? Nxt.getIntProperty("nxt.testnetGuaranteedBalanceConfirmations", 1440) : 1440;
+    public static final int LEASING_DELAY = isTestnet ? Nxt.getIntProperty("nxt.testnetLeasingDelay", 1440) : 1440;
 
     public static final int MAX_TIMEDRIFT = 15; // allow up to 15 s clock difference
     public static final int FORGING_DELAY = Nxt.getIntProperty("nxt.forgingDelay");
@@ -118,10 +134,10 @@ public final class Constants {
     public static final int MAX_REFERENCED_TRANSACTION_TIMESPAN = 60 * 1440 * 60;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
-    public static final int PHASING_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
+    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
+    public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 272000 : 414000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 436000;
 
     public static final int[] MIN_VERSION = isTestnet ? new int[] {1, 5} : new int[] {1, 4};
 

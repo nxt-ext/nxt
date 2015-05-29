@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -275,8 +291,10 @@ final class JSONData {
         }
         json.put("blockSignature", Convert.toHexString(block.getBlockSignature()));
         JSONArray transactions = new JSONArray();
-        for (Transaction transaction : block.getTransactions()) {
-            transactions.add(includeTransactions ? transaction(transaction) : Long.toUnsignedString(transaction.getId()));
+        if (includeTransactions) {
+            block.getTransactions().forEach(transaction -> transactions.add(transaction(transaction)));
+        } else {
+            block.getTransactions().forEach(transaction -> transactions.add(transaction.getStringId()));
         }
         json.put("transactions", transactions);
         return json;

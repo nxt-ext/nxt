@@ -1,5 +1,8 @@
 #!/bin/sh
-/bin/rm -f nxt.jar 
-jar cf nxt.jar -C classes . || exit 1
+java -cp classes nxt.util.ManifestGenerator
+/bin/rm -f nxt.jar
+jar cfm nxt.jar resource/nxt.manifest.mf -C classes . || exit 1
+/bin/rm -f nxtservice.jar
+jar cfm nxtservice.jar resource/nxtservice.manifest.mf -C classes . || exit 1
 
-echo "nxt.jar generated successfully"
+echo "jar files generated successfully"

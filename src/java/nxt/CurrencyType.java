@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.HashFunction;
@@ -65,7 +81,7 @@ public enum CurrencyType {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 int issuanceHeight = attachment.getIssuanceHeight();
-                int finishHeight = transaction.getValidationHeight();
+                int finishHeight = transaction.getType().getFinishValidationHeight(transaction);
                 if  (issuanceHeight <= finishHeight) {
                     throw new NxtException.NotCurrentlyValidException(
                         String.format("Reservable currency activation height %d not higher than transaction apply height %d",
@@ -85,7 +101,7 @@ public enum CurrencyType {
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_INCREASE) {
-                if (currency != null && currency.getIssuanceHeight() <= transaction.getValidationHeight()) {
+                if (currency != null && currency.getIssuanceHeight() <= transaction.getType().getFinishValidationHeight(transaction)) {
                     throw new NxtException.NotCurrentlyValidException("Cannot increase reserve for active currency");
                 }
             }

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -116,7 +132,7 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.getInitialTransactions = function() {
-		NRS.sendRequest("getAccountTransactions", {
+		NRS.sendRequest("getBlockchainTransactions", {
 			"account": NRS.account,
 			"firstIndex": 0,
 			"lastIndex": 9
@@ -147,15 +163,15 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getNewTransactions = function() {
 		//check if there is a new transaction..
-		NRS.sendRequest("getAccountTransactionIds", {
+		NRS.sendRequest("getBlockchainTransactions", {
 			"account": NRS.account,
 			"timestamp": NRS.blocks[0].timestamp + 1,
 			"firstIndex": 0,
 			"lastIndex": 0
 		}, function(response) {
 			//if there is, get latest 10 transactions
-			if (response.transactionIds && response.transactionIds.length) {
-				NRS.sendRequest("getAccountTransactions", {
+			if (response.transactions && response.transactions.length) {
+				NRS.sendRequest("getBlockchainTransactions", {
 					"account": NRS.account,
 					"firstIndex": 0,
 					"lastIndex": 9
@@ -308,7 +324,7 @@ var NRS = (function(NRS, $, undefined) {
 							var finished = false;
 						}
 						var finishHeightFormatted = String(attachment.phasingFinishHeight);
-						var percentageFormatted = NRS.calculatePercentage(responsePoll.result, attachment.phasingQuorum) + "%";
+						var percentageFormatted = NRS.calculatePercentage(responsePoll.result, attachment.phasingQuorum, 0) + "%";
 						var percentageProgressBar = Math.round(responsePoll.result * 100 / attachment.phasingQuorum);
 						var progressBarWidth = Math.round(percentageProgressBar / 2);
 
@@ -547,7 +563,7 @@ var NRS = (function(NRS, $, undefined) {
                 html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
 				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-fullhash='" + String(t.fullHash).escapeHTML() + "' ";
 				html += "data-timestamp='" + t.timestamp + "' " + "data-votingmodel='" + t.attachment.phasingVotingModel + "' ";
-				html += "data-fee='" + fee + "' data-min-balance-formatted='' data-i18n='approve' >Approve</a>";
+				html += "data-fee='" + fee + "' data-min-balance-formatted=''>" + $.t('approve') + "</a>";
 			}
 			html += "</td>";
 		}
@@ -588,6 +604,7 @@ var NRS = (function(NRS, $, undefined) {
 		$('#transactions_type_navi a[data-toggle="popover"]').popover({
 			"trigger": "hover"
 		});
+		$("#transactions_type_navi [data-i18n]").i18n();
 	}
 
 	NRS.buildTransactionsSubTypeNavi = function() {
@@ -664,7 +681,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		NRS.sendRequest("getAccountTransactions+", params, function(response) {
+		NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
 			if (response.transactions && response.transactions.length) {
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
@@ -735,7 +752,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		NRS.sendRequest("getAccountTransactions+", params, function(response) {
+		NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
 			if (response.transactions && response.transactions.length) {
 				if (response.transactions.length > NRS.itemsPerPage) {
 					NRS.hasMorePages = true;

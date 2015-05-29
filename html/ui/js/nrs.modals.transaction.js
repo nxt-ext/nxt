@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
@@ -64,7 +80,7 @@ var NRS = (function (NRS, $, undefined) {
             if (transactionDetails.height == NRS.constants.MAX_INT_JAVA) {
                 transactionDetails.height = "unknown";
             } else {
-                transactionDetails.height_formatted_html = "<a href='#' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
+                transactionDetails.height_formatted_html = "<a href='#' class='block show_block_modal_action' data-block='" + String(transactionDetails.height).escapeHTML() + "'>" + String(transactionDetails.height).escapeHTML() + "</a>";
                 delete transactionDetails.height;
             }
             $("#transaction_info_modal_transaction").html(String(transaction.transaction).escapeHTML());
@@ -92,7 +108,9 @@ var NRS = (function (NRS, $, undefined) {
                 $("#transaction_info_modal_add_as_contact").removeAttr('disabled');
             }
             var approveTransactionButton = $("#transaction_info_modal_approve_transaction");
-            if (!transaction.attachment || !transaction.attachment.phasingFinishHeight) {
+            if (!transaction.attachment || !transaction.block ||
+                !transaction.attachment.phasingFinishHeight ||
+                transaction.attachment.phasingFinishHeight <= NRS.lastBlockHeight) {
                 approveTransactionButton.attr('disabled', 'disabled');
             } else {
                 approveTransactionButton.removeAttr('disabled');
@@ -1033,13 +1051,13 @@ var NRS = (function (NRS, $, undefined) {
 
                     $("#transaction_info_callout").html("");
                     if (currency != null && NRS.isExchangeable(currency.type)) {
-                        $("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>Exchange Booth</a><br/>");
+                        $("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>" + $.t('exchange_booth') + "</a><br/>");
                     }
                     if (currency != null && NRS.isReservable(currency.type)) {
                         $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' data-issueheight='" + String(currency.issuanceHeight).escapeHTML() + "'>View Founders</a><br/>");
                     }
                     if (currency != null) {
-                        $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'>Currency Distribution</a>");
+                        $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'  data-i18n='Currency Distribution'>Currency Distribution</a>");
                     }
                     $("#transaction_info_callout").show();
 
