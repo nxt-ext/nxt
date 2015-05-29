@@ -2603,8 +2603,8 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void loadPrunable(Transaction transaction) {
-            if (data == null && taggedData == null && shouldLoadPrunable(transaction)) {
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (data == null && taggedData == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
                 taggedData = TaggedData.getData(getTaggedDataId(transaction));
             }
         }

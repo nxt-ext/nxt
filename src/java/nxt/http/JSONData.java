@@ -645,7 +645,7 @@ final class JSONData {
             json.put("transaction", transaction.getStringId());
         }
         JSONObject attachmentJSON = new JSONObject();
-        for (Appendix appendage : transaction.getAppendages()) {
+        for (Appendix appendage : transaction.getAppendages(true)) {
             attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {
