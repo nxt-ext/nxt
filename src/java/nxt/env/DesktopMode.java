@@ -28,11 +28,7 @@ public class DesktopMode implements RuntimeMode {
     public void init() {
         LookAndFeel.init();
         desktopSystemTray = new DesktopSystemTray();
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                desktopSystemTray.createAndShowGUI();
-            }
-        });
+        SwingUtilities.invokeLater(desktopSystemTray::createAndShowGUI);
     }
 
     @Override

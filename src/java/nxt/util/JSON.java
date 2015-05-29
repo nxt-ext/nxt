@@ -118,7 +118,7 @@ public final class JSON {
      * @param   list                            List
      * @param   sb                              String builder
      */
-    private static void encodeArray(List<? extends Object> list, StringBuilder sb) {
+    private static void encodeArray(List<?> list, StringBuilder sb) {
         if (list == null) {
             sb.append("null");
             return;
@@ -141,7 +141,7 @@ public final class JSON {
      * @param   map                             Map
      * @param   sb                              String builder
      */
-    public static void encodeObject(Map<? extends Object, ? extends Object> map, StringBuilder sb) {
+    public static void encodeObject(Map<?, ?> map, StringBuilder sb) {
         if (map == null) {
             sb.append("null");
             return;

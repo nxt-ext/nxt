@@ -27,8 +27,6 @@ import nxt.util.Logger;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -80,43 +78,29 @@ public class DesktopSystemTray {
             return;
         }
 
-        trayIcon.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                displayStatus();
+        trayIcon.addActionListener(e -> displayStatus());
+
+        openWallet.addActionListener(e -> {
+            try {
+                Desktop.getDesktop().browse(dataProvider.getWallet());
+            } catch (IOException ex) {
+                Logger.logInfoMessage("Cannot open wallet", ex);
             }
         });
 
-        openWallet.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    Desktop.getDesktop().browse(dataProvider.getWallet());
-                } catch (IOException ex) {
-                    Logger.logInfoMessage("Cannot open wallet", ex);
-                }
+        viewLog.addActionListener(e -> {
+            try {
+                Desktop.getDesktop().open(dataProvider.getLogFile());
+            } catch (IOException ex) {
+                Logger.logInfoMessage("Cannot view log", ex);
             }
         });
 
-        viewLog.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    Desktop.getDesktop().open(dataProvider.getLogFile());
-                } catch (IOException ex) {
-                    Logger.logInfoMessage("Cannot view log", ex);
-                }
-            }
-        });
+        status.addActionListener(e -> displayStatus());
 
-        status.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                displayStatus();
-            }
-        });
-
-        shutdown.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Logger.logInfoMessage("Shutdown requested by System Tray");
-                System.exit(0); // Implicitly invokes shutdown using the shutdown hook
-            }
+        shutdown.addActionListener(e -> {
+            Logger.logInfoMessage("Shutdown requested by System Tray");
+            System.exit(0); // Implicitly invokes shutdown using the shutdown hook
         });
     }
 
@@ -163,22 +147,16 @@ public class DesktopSystemTray {
     }
 
     void setToolTip(final SystemTrayDataProvider dataProvider) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                trayIcon.setToolTip(dataProvider.getToolTip());
-                openWallet.setEnabled(dataProvider.getWallet() != null && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE));
-                viewLog.setEnabled(dataProvider.getWallet() != null);
-                DesktopSystemTray.this.dataProvider = dataProvider;
-            }
+        SwingUtilities.invokeLater(() -> {
+            trayIcon.setToolTip(dataProvider.getToolTip());
+            openWallet.setEnabled(dataProvider.getWallet() != null && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE));
+            viewLog.setEnabled(dataProvider.getWallet() != null);
+            DesktopSystemTray.this.dataProvider = dataProvider;
         });
     }
 
     void shutdown() {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                tray.remove(trayIcon);
-            }
-        });
+        SwingUtilities.invokeLater(() -> tray.remove(trayIcon));
     }
 
     public static String humanReadableByteCount(long bytes) {

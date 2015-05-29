@@ -17,7 +17,6 @@
 package nxt;
 
 import nxt.db.DbUtils;
-import nxt.db.DerivedDbTable;
 import nxt.util.Logger;
 
 import java.math.BigInteger;
@@ -42,8 +41,6 @@ final class BlockDb {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
-        } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database, id = " + blockId + ", does not pass validation!", e);
         }
     }
 
@@ -93,8 +90,6 @@ final class BlockDb {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
-        } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database at height " + height + ", does not pass validation!", e);
         }
     }
 
@@ -110,8 +105,6 @@ final class BlockDb {
             return block;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
-        } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Last block already in database does not pass validation!", e);
         }
     }
 
@@ -128,12 +121,10 @@ final class BlockDb {
             return block;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
-        } catch (NxtException.ValidationException e) {
-            throw new RuntimeException("Block already in database at timestamp " + timestamp + " does not pass validation!", e);
         }
     }
 
-    static BlockImpl loadBlock(Connection con, ResultSet rs) throws NxtException.NotValidException {
+    static BlockImpl loadBlock(Connection con, ResultSet rs) {
         return loadBlock(con, rs, false);
     }
 
@@ -259,13 +250,13 @@ final class BlockDb {
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY FALSE");
                 stmt.executeUpdate("TRUNCATE TABLE transaction");
                 stmt.executeUpdate("TRUNCATE TABLE block");
-                for (DerivedDbTable table : BlockchainProcessorImpl.getInstance().getDerivedTables()) {
+                BlockchainProcessorImpl.getInstance().getDerivedTables().forEach(table -> {
                     if (table.isPersistent()) {
                         try {
                             stmt.executeUpdate("TRUNCATE TABLE " + table.toString());
                         } catch (SQLException ignore) {}
                     }
-                }
+                });
                 stmt.executeUpdate("SET REFERENTIAL_INTEGRITY TRUE");
                 Db.db.commitTransaction();
             } catch (SQLException e) {

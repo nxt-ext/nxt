@@ -30,7 +30,7 @@ public interface FilteredFactory {
      * @param   stmt                Statement
      * @return                      Wrapped statement
      */
-    public Statement createStatement(Statement stmt);
+    Statement createStatement(Statement stmt);
 
     /**
      * Create a FilteredPreparedStatement for the supplied PreparedStatement
@@ -39,5 +39,5 @@ public interface FilteredFactory {
      * @param   sql                 SQL statement
      * @return                      Wrapped prepared statement
      */
-    public PreparedStatement createPreparedStatement(PreparedStatement stmt, String sql);
+    PreparedStatement createPreparedStatement(PreparedStatement stmt, String sql);
 }

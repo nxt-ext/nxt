@@ -1166,11 +1166,11 @@ public interface Appendix {
         private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
-            for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
+            transaction.getAppendages().forEach(appendage -> {
                 if (appendage.isPhasable()) {
                     appendage.apply(transaction, senderAccount, recipientAccount);
                 }
-            }
+            });
             TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }

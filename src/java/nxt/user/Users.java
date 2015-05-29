@@ -185,11 +185,11 @@ public final class Users {
                 response.put("response", "setBalance");
                 response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
                 byte[] accountPublicKey = account.getPublicKey();
-                for (User user : Users.users.values()) {
+                Users.users.values().forEach(user -> {
                     if (user.getSecretPhrase() != null && Arrays.equals(user.getPublicKey(), accountPublicKey)) {
                         user.send(response);
                     }
-                }
+                });
             }, Account.Event.UNCONFIRMED_BALANCE);
 
             Peers.addListener(peer -> {
@@ -437,11 +437,11 @@ public final class Users {
                 JSONObject response = new JSONObject();
                 response.put("response", "setBlockGenerationDeadline");
                 response.put("deadline", generator.getDeadline());
-                for (User user : users.values()) {
+                users.values().forEach(user -> {
                     if (Arrays.equals(generator.getPublicKey(), user.getPublicKey())) {
                         user.send(response);
                     }
-                }
+                });
             }, Generator.Event.GENERATION_DEADLINE);
         }
 

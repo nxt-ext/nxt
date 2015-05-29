@@ -26,12 +26,9 @@ public class NxtService_ServiceManagement {
 
     public static boolean serviceInit() {
         LookAndFeel.init();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String[] args = {};
-                Nxt.main(args);
-            }
+        new Thread(() -> {
+            String[] args = {};
+            Nxt.main(args);
         }).start();
         return true;
     }

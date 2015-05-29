@@ -59,14 +59,14 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req, User user) throws IOException {
         String secretPhrase = req.getParameter("secretPhrase");
         // lock all other instances of this account being unlocked
-        for (User u : Users.getAllUsers()) {
+        Users.getAllUsers().forEach(u -> {
             if (secretPhrase.equals(u.getSecretPhrase())) {
                 u.lockAccount();
                 if (! u.isInactive()) {
                     u.enqueue(LOCK_ACCOUNT);
                 }
             }
-        }
+        });
 
         long accountId = user.unlockAccount(secretPhrase);
 

@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,12 +52,12 @@ public class APICall {
         protected Map<String, List<String>> params = new HashMap<>();
         
         public Builder(String requestType) {
-            params.put("requestType", Arrays.asList(requestType));
-            params.put("deadline", Arrays.asList("1440"));
+            params.put("requestType", Collections.singletonList(requestType));
+            params.put("deadline", Collections.singletonList("1440"));
         }
 
         public Builder param(String key, String value) {
-            params.put(key, Arrays.asList(value));
+            params.put(key, Collections.singletonList(value));
             return this;
         }
 

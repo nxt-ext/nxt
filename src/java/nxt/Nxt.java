@@ -19,7 +19,6 @@ package nxt;
 import nxt.env.DirProvider;
 import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
-import nxt.env.WindowsUserDirProvider;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
@@ -29,10 +28,7 @@ import nxt.util.ThreadPool;
 import nxt.util.Time;
 import org.json.simple.JSONObject;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -175,9 +171,7 @@ public final class Nxt {
             } else {
                 return;
             }
-            for (String inputArgument : inputArguments) {
-                System.out.println(inputArgument);
-            }
+            inputArguments.forEach(System.out::println);
         } catch (AccessControlException e) {
             System.out.println("Cannot read input arguments " + e.getMessage());
         }
