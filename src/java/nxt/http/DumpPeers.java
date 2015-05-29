@@ -16,6 +16,7 @@
 
 package nxt.http;
 
+import nxt.Constants;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -31,16 +32,20 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
     static final DumpPeers instance = new DumpPeers();
 
     private DumpPeers() {
-        super(new APITag[] {APITag.DEBUG}, "version");
+        super(new APITag[] {APITag.DEBUG}, "version", "weight");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String version = Convert.nullToEmpty(req.getParameter("version"));
+        int weight = ParameterParser.getInt(req, "weight", 0, (int)Constants.MAX_BALANCE_NXT, false);
         Set<String> addresses = Peers.getAllPeers().parallelStream().unordered()
-                .filter(peer -> peer.getState() == Peer.State.CONNECTED && peer.shareAddress() && !peer.isBlacklisted()
-                        && peer.getVersion() != null && peer.getVersion().startsWith(version))
+                .filter(peer -> peer.getState() == Peer.State.CONNECTED
+                        && peer.shareAddress()
+                        && !peer.isBlacklisted()
+                        && peer.getVersion() != null && peer.getVersion().startsWith(version)
+                        && (weight == 0 || peer.getWeight() > weight))
                 .map(Peer::getAnnouncedAddress)
                 .collect(Collectors.toSet());
         StringBuilder buf = new StringBuilder();
