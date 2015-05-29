@@ -37,13 +37,14 @@ public class TransactionalDb extends BasicDb {
         long temp;
         stmtThreshold = (temp=Nxt.getIntProperty("nxt.statementLogThreshold")) != 0 ? temp : 1000;
         txThreshold = (temp=Nxt.getIntProperty("nxt.transactionLogThreshold")) != 0 ? temp : 5000;
-        txInterval = (temp=Nxt.getIntProperty("nxt.transactionLogInterval")) != 0 ? temp : 100;
+        txInterval = (temp=Nxt.getIntProperty("nxt.transactionLogInterval")) != 0 ? temp*60*1000 : 15*60*1000;
     }
 
     private final ThreadLocal<DbConnection> localConnection = new ThreadLocal<>();
     private final ThreadLocal<Map<String,Map<DbKey,Object>>> transactionCaches = new ThreadLocal<>();
     private volatile long txTimes = 0;
     private volatile long txCount = 0;
+    private volatile long statsTime = 0;
 
     public TransactionalDb(DbProperties dbProperties) {
         super(dbProperties);
@@ -113,17 +114,25 @@ public class TransactionalDb extends BasicDb {
         localConnection.set(null);
         transactionCaches.get().clear();
         transactionCaches.set(null);
-        long elapsed = System.currentTimeMillis() - ((DbConnection)con).txStart;
+        long now = System.currentTimeMillis();
+        long elapsed = now - ((DbConnection)con).txStart;
         if (elapsed >= txThreshold) {
             logThreshold(String.format("Database transaction required %.3f seconds at height %d",
                                        (double)elapsed/1000.0, Nxt.getBlockchain().getHeight()));
         } else {
             long count, times;
+            boolean logStats = false;
             synchronized(this) {
                 count = ++txCount;
                 times = txTimes += elapsed;
+                if (now - statsTime >= txInterval) {
+                    logStats = true;
+                    txCount = 0;
+                    txTimes = 0;
+                    statsTime = now;
+                }
             }
-            if (count%txInterval == 0)
+            if (logStats)
                 Logger.logDebugMessage(String.format("Average transaction time is %.3f seconds",
                                                      (double)times/1000.0/(double)count));
         }
