@@ -57,6 +57,9 @@ import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
 
+    private static final boolean useProxy = System.getProperty("socksProxyHost") != null ||
+                                            System.getProperty("http.proxyHost") != null;
+
     private final String host;
     private final PeerWebSocket webSocket;
     private volatile PeerWebSocket inboundSocket;
@@ -90,7 +93,7 @@ final class PeerImpl implements Peer {
         this.state = State.NON_CONNECTED;
         this.shareAddress = true;
         this.webSocket = new PeerWebSocket();
-        this.useWebSocket = Peers.useWebSockets;
+        this.useWebSocket = Peers.useWebSockets && !useProxy;
     }
 
     @Override
@@ -500,8 +503,7 @@ final class PeerImpl implements Peer {
             if (connection != null)
                 connection.disconnect();
         } catch (RuntimeException|ParseException|IOException e) {
-            if (state == State.CONNECTED ||
-                    !(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
+            if (!(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
                                         e instanceof SocketException || Errors.END_OF_FILE.equals(e.getMessage()))) {
                 Logger.logDebugMessage(String.format("Error sending request to peer %s: %s",
                                        host, e.getMessage()!=null ? e.getMessage() : e.toString()));

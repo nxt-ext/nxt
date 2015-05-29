@@ -714,28 +714,25 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     };
 
     private BlockchainProcessorImpl() {
-
+        final int trimFrequency = Nxt.getIntProperty("nxt.trimFrequency");
         blockListeners.addListener(block -> {
             if (block.getHeight() % 5000 == 0) {
                 Logger.logMessage("processed block " + block.getHeight());
             }
+            if (trimDerivedTables && block.getHeight() % trimFrequency == 0) {
+                doTrimDerivedTables();
+            }
         }, Event.BLOCK_SCANNED);
 
         blockListeners.addListener(block -> {
+            if (trimDerivedTables && block.getHeight() % trimFrequency == 0) {
+                trimDerivedTables();
+            }
             if (block.getHeight() % 5000 == 0) {
                 Logger.logMessage("received block " + block.getHeight());
                 Db.db.analyzeTables();
             }
         }, Event.BLOCK_PUSHED);
-
-        if (trimDerivedTables) {
-            final int trimFrequency = Nxt.getIntProperty("nxt.trimFrequency");
-            blockListeners.addListener(block -> {
-                if (block.getHeight() % trimFrequency == 0) {
-                    doTrimDerivedTables();
-                }
-            }, Event.AFTER_BLOCK_APPLY);
-        }
 
         blockListeners.addListener(checksumListener, Event.BLOCK_PUSHED);
 
@@ -991,11 +988,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         } // synchronized
 
-        blockListeners.notify(block, Event.BLOCK_PUSHED);
-
         if (block.getTimestamp() >= curTime - (Constants.MAX_TIMEDRIFT + Constants.FORGING_DELAY)) {
             Peers.sendToSomePeers(block);
         }
+
+        blockListeners.notify(block, Event.BLOCK_PUSHED);
 
     }
 
