@@ -78,6 +78,14 @@ public final class DbUtils {
         }
     }
 
+    public static void setIntMaxValueToNull(PreparedStatement pstmt, int index, int n) throws SQLException {
+        if (n != Integer.MAX_VALUE) {
+            pstmt.setInt(index, n);
+        } else {
+            pstmt.setNull(index, Types.INTEGER);
+        }
+    }
+
     public static void setLongZeroToNull(PreparedStatement pstmt, int index, long l) throws SQLException {
         if (l != 0) {
             pstmt.setLong(index, l);
