@@ -62,13 +62,34 @@ import java.util.concurrent.TimeUnit;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
-    private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[]{27, -54, -59, -98, 49, -42, 48, -68, -112, 49, 41, 94, -41, 78, -84, 27, -87, -22, -28, 36, -34, -90, 112, -50, -9, 5, 89, -35, 80, -121, -128, 112};
+    private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[] {
+            -122, -111, -35, 76, 59, 79, -75, 117, 34, 2, -70, -65, -38, 59, 0, 57,
+            120, 0, -107, 11, 97, -48, 21, 36, 48, -94, 88, 54, -14, 60, -101, -80
+    };
     private static final byte[] CHECKSUM_NQT_BLOCK = Constants.isTestnet ?
-            new byte[]{-126, -117, -94, -16, 125, -94, 38, 10, 11, 37, -33, 4, -70, -8, -40, -80, 18, -21, -54, -126, 109, -73, 63, -56, 67, 59, -30, 83, -6, -91, -24, 34}
-            : new byte[]{-125, 17, 63, -20, 90, -98, 52, 114, 7, -100, -20, -103, -50, 76, 46, -38, -29, -43, -43, 45, 81, 12, -30, 100, -67, -50, -112, -15, 22, -57, 84, -106};
+            new byte[] {
+                    110, -1, -56, -56, -58, 48, 43, 12, -41, -37, 90, -93, 80, 20, 3, -76, -84,
+                    -15, -113, -34, 30, 32, 57, 85, -30, 16, -10, 127, -101, 17, 121, 124
+            }
+            : new byte[] {
+            -90, -42, -57, -76, 88, -49, 127, 6, -47, -72, -39, -56, 51, 90, -90, -105,
+            121, 71, -94, -97, 49, -24, -12, 86, 7, -48, 90, -91, -24, -105, -17, -104
+    };
     private static final byte[] CHECKSUM_MONETARY_SYSTEM_BLOCK = Constants.isTestnet ?
-            new byte[]{107, 104, 79, -12, -101, 15, 114, -78, -44, 106, -62, 56, 102, 25, 49, -105, 21, 113, -50, 122, -5, 36, 126, 7, 63, 71, 19, -7, 93, -84, 67, -79}
-            : new byte[]{-54, -90, 113, -80, 17, -37, 44, -37, 80, 79, 107, -88, -60, -32, 93, 73, -60, 101, 102, -7, -5, -122, -93, -107, 63, 58, -125, -41, 26, -109, 51, -112};
+            new byte[] {
+                    119, 51, 105, -101, -74, -49, -49, 19, 11, 103, -84, 80, -46, -5, 51, 42,
+                    84, 88, 87, -115, -19, 104, 49, -93, -41, 84, -34, -92, 103, -48, 29, 44
+            }
+            : new byte[] {
+            -117, -101, 74, 111, -114, 39, 80, -67, 48, 86, 68, 106, -105, 2, 84, -109,
+            1, 4, -20, -82, -112, -112, 25, 119, 23, -113, 126, -121, -36, 15, -32, -24
+    };
+    private static final byte[] CHECKSUM_PHASING_BLOCK = Constants.isTestnet ?
+            new byte [] {
+                    4, -100, -26, 47, 93, 1, -114, 86, -42, 46, -103, 13, 120, 0, 2, 100, -52,
+                    -67, 109, -90, 87, 13, 30, -110, -58, -70, -94, 21, 105, -58, 20, 0
+            }
+            : null;
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -80,7 +101,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final List<DerivedDbTable> derivedTables = new CopyOnWriteArrayList<>();
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
-    private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
+    private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
+            ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
 
     private volatile int lastTrimHeight;
 
@@ -702,14 +724,21 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private final Listener<Block> checksumListener = block -> {
-        if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING, block.getHeight())) {
+        if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK
+                && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING, 0, Constants.TRANSPARENT_FORGING_BLOCK)) {
             popOffTo(0);
         }
-        if (block.getHeight() == Constants.NQT_BLOCK && ! verifyChecksum(CHECKSUM_NQT_BLOCK, block.getHeight())) {
+        if (block.getHeight() == Constants.NQT_BLOCK
+                && ! verifyChecksum(CHECKSUM_NQT_BLOCK, Constants.TRANSPARENT_FORGING_BLOCK, Constants.NQT_BLOCK)) {
             popOffTo(Constants.TRANSPARENT_FORGING_BLOCK);
         }
-        if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, block.getHeight())) {
+        if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK
+                && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, Constants.NQT_BLOCK, Constants.MONETARY_SYSTEM_BLOCK)) {
             popOffTo(Constants.NQT_BLOCK);
+        }
+        if (block.getHeight() == Constants.PHASING_BLOCK
+                && ! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
+            popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
         }
     };
 
@@ -1231,12 +1260,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         return previousBlockHeight < Constants.DIGITAL_GOODS_STORE_BLOCK ? 0 : 1;
     }
 
-    private boolean verifyChecksum(byte[] validChecksum, int height) {
+    private boolean verifyChecksum(byte[] validChecksum, int fromHeight, int toHeight) {
         MessageDigest digest = Crypto.sha256();
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement(
-                     "SELECT * FROM transaction WHERE height <= ? ORDER BY id ASC, timestamp ASC")) {
-            pstmt.setInt(1, height);
+                     "SELECT * FROM transaction WHERE height > ? AND height <= ? ORDER BY id ASC, timestamp ASC")) {
+            pstmt.setInt(1, fromHeight);
+            pstmt.setInt(2, toHeight);
             try (DbIterator<TransactionImpl> iterator = blockchain.getTransactions(con, pstmt)) {
                 while (iterator.hasNext()) {
                     digest.update(iterator.next().bytes());
