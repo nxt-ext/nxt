@@ -1,0 +1,19 @@
+Create installer package for Windows and Linux using the IzPack installer.
+
+Database performance improvements and optimizations.
+
+Track and log database query execution times. The new properties:
+nxt.statementLogThreshold, nxt.transactionLogThreshold, and
+nxt.transactionLogInterval can be used to configure logging of slow queries.
+
+Improved JSON encoding performance.
+
+Outbound websockets connections are no longer initiated when using a socks or
+http proxy (if system property socksProxyHost or http.proxyHost is defined).
+
+Include expired prunable JSON in API transaction JSON, if available.
+
+Added separate linux and windows build and release scripts.
+
+Updated jetty to version 9.2.11. If unpacking on top of existing installation,
+delete the old lib folder first.
