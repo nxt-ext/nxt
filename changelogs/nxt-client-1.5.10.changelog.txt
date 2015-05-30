@@ -13,6 +13,10 @@ http proxy (if system property socksProxyHost or http.proxyHost is defined).
 
 Include expired prunable JSON in API transaction JSON, if available.
 
+To protect public nodes from unneeded extra load, the getState API does not
+include counts even if includeCounts=true, unless the adminPassword is either
+provided as a parameter, or is not needed.
+
 Added separate linux and windows build and release scripts.
 
 Updated jetty to version 9.2.11. If unpacking on top of existing installation,
