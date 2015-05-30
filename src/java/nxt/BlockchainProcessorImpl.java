@@ -736,10 +736,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, Constants.NQT_BLOCK, Constants.MONETARY_SYSTEM_BLOCK)) {
             popOffTo(Constants.NQT_BLOCK);
         }
+        /*
         if (block.getHeight() == Constants.PHASING_BLOCK
                 && ! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
             popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
         }
+        */
     };
 
     private BlockchainProcessorImpl() {
