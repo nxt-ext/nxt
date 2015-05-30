@@ -5,12 +5,12 @@ echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
 OBFUSCATE=$2
 
-FILES="changelogs conf html lib resource"
+FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt README_win.txt USERS-GUIDE.md"
 FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh verify.sh"
-FILES="${FILES} Dockerfile docker_start.sh NXT_Wallet.url"
+FILES="${FILES} NXT_Wallet.url"
 FILES="${FILES} setup.xml RegistrySpec.xml shortcutSpec.xml"
 
 # unix2dos *.bat
