@@ -559,13 +559,14 @@ public final class Account {
         private final int height;
 
         private LeaseChangingAccountsClause(final int height) {
-            super(" current_lessee_id >= ? AND (current_leasing_height_from = ? OR current_leasing_height_to = ?) ");
+            super("db_id IN (" +
+                    "(SELECT db_id FROM account WHERE current_leasing_height_from = ?) UNION ALL " +
+                    "(SELECT db_id FROM account WHERE current_leasing_height_to = ?))");
             this.height = height;
         }
 
         @Override
         public int set(PreparedStatement pstmt, int index) throws SQLException {
-            pstmt.setLong(index++, Long.MIN_VALUE);
             pstmt.setInt(index++, height);
             pstmt.setInt(index++, height);
             return index;
