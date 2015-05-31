@@ -86,8 +86,8 @@
 		<res id="InfoPanel.info" src="changelogs/nxt-client-@{runtime.nxt.version}.changelog.txt" parse="yes"/>
 		<res id="LicencePanel.licence" src="LICENSE.txt"/>
 		<res id="Installer.image" src="html/ui/img/installer_left_pane.png"/>
-		<res id="shortcutSpec.xml" src="shortcutSpec.xml"/>
-        <res id="RegistrySpec.xml" src="RegistrySpec.xml"/>		
+		<res id="shortcutSpec.xml" src="../installer/shortcutSpec.xml"/>
+        <res id="RegistrySpec.xml" src="../installer/RegistrySpec.xml"/>
     </resources>
 
 	<variables>
