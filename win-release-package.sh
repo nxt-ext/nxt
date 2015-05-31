@@ -1,5 +1,10 @@
 #!/bin/bash
 VERSION=$1
+if [ -x ${VERSION} ];
+then
+	echo VERSION not defined
+	exit 1
+fi
 PACKAGE=nxt-client-${VERSION}
 echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
@@ -11,7 +16,6 @@ FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEME
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
 FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh verify.sh"
 FILES="${FILES} NXT_Wallet.url"
-FILES="${FILES} setup.xml RegistrySpec.xml shortcutSpec.xml"
 
 # unix2dos *.bat
 echo compile
@@ -49,13 +53,13 @@ done
 cd nxt
 echo generate jar files
 ../jar.sh
-echo create installer jar
-../build-installer.sh ../${PACKAGE}
+echo package installer Jar
+../installer/build-installer.sh ../${PACKAGE}
 cd -
 echo create installer exe
-./build-exe.bat ${PACKAGE}
+../installer/build-exe.bat ${PACKAGE}
 echo create installer zip
-zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml \*.xml nxt/conf/nxt.properties nxt/conf/logging.properties
+zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
 echo creating change log ${CHANGELOG}

@@ -13,7 +13,17 @@ http proxy (if system property socksProxyHost or http.proxyHost is defined).
 
 Include expired prunable JSON in API transaction JSON, if available.
 
+To protect public nodes from unneeded extra load, the getState API does not
+include counts even if includeCounts=true, unless the adminPassword is either
+provided as a parameter, or is not needed.
+
 Added separate linux and windows build and release scripts.
+
+The account database table columns current_leasing_height_from,
+current_leasing_height_to, next_leasing_height_from, next_leasing_height_to
+now store NULL when the corresponding value is Integer.MAX_VALUE.
+
+This release will perform a full blockchain rescan on first start.
 
 Updated jetty to version 9.2.11. If unpacking on top of existing installation,
 delete the old lib folder first.

@@ -559,13 +559,14 @@ public final class Account {
         private final int height;
 
         private LeaseChangingAccountsClause(final int height) {
-            super(" current_lessee_id >= ? AND (current_leasing_height_from = ? OR current_leasing_height_to = ?) ");
+            super("db_id IN (" +
+                    "(SELECT db_id FROM account WHERE current_leasing_height_from = ?) UNION ALL " +
+                    "(SELECT db_id FROM account WHERE current_leasing_height_to = ?))");
             this.height = height;
         }
 
         @Override
         public int set(PreparedStatement pstmt, int index) throws SQLException {
-            pstmt.setLong(index++, Long.MIN_VALUE);
             pstmt.setInt(index++, height);
             pstmt.setInt(index++, height);
             return index;
@@ -649,15 +650,17 @@ public final class Account {
                     leaseListeners.notify(
                             new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
                             Event.LEASE_ENDED);
-                    if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
-                        account.currentLeasingHeightFrom = Integer.MAX_VALUE;
+                    if (account.nextLeasingHeightFrom == 0) {
+                        account.currentLeasingHeightFrom = 0;
+                        account.currentLeasingHeightTo = 0;
                         account.currentLesseeId = 0;
                         accountTable.insert(account);
                     } else {
                         account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
                         account.currentLeasingHeightTo = account.nextLeasingHeightTo;
                         account.currentLesseeId = account.nextLesseeId;
-                        account.nextLeasingHeightFrom = Integer.MAX_VALUE;
+                        account.nextLeasingHeightFrom = 0;
+                        account.nextLeasingHeightTo = 0;
                         account.nextLesseeId = 0;
                         accountTable.insert(account);
                         if (height == account.currentLeasingHeightFrom) {
@@ -698,7 +701,6 @@ public final class Account {
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
         this.creationHeight = Nxt.getBlockchain().getHeight();
-        currentLeasingHeightFrom = Integer.MAX_VALUE;
     }
 
     private Account(ResultSet rs) throws SQLException {
@@ -837,7 +839,7 @@ public final class Account {
             }
             return (balanceNQT - receivedInLastBlock) / Constants.ONE_NXT;
         }
-        if (height < currentLeasingHeightFrom) {
+        if (currentLeasingHeightFrom == 0 || height < currentLeasingHeightFrom) {
             return (getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;
         }
         return getLessorsGuaranteedBalanceNQT(height) / Constants.ONE_NXT;
@@ -1029,11 +1031,11 @@ public final class Account {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getKeyHeight() > 0) {
             int height = Nxt.getBlockchain().getHeight();
-            if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
+            if (currentLeasingHeightFrom == 0) {
                 currentLeasingHeightFrom = height + Constants.LEASING_DELAY;
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
-                nextLeasingHeightFrom = Integer.MAX_VALUE;
+                nextLeasingHeightFrom = 0;
                 accountTable.insert(this);
                 leaseListeners.notify(
                         new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),

@@ -1,5 +1,10 @@
 #!/bin/sh
 VERSION=$1
+if [ -x ${VERSION} ];
+then
+	echo VERSION not defined
+	exit 1
+fi
 PACKAGE=nxt-client-${VERSION}.zip
 echo PACKAGE="${PACKAGE}"
 
