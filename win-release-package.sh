@@ -27,7 +27,7 @@ mkdir -p nxt/logs
 if [ "${OBFUSCATE}" == "obfuscate" ];
 then
 echo obfuscate
-/cygdrive/c/ltc/proguard5.2.1/bin/proguard.bat @nxt.pro
+proguard.bat @nxt.pro
 mv ../nxt.map ../nxt.map.${VERSION}
 mkdir -p nxt/src/
 else
