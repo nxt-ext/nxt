@@ -650,17 +650,17 @@ public final class Account {
                     leaseListeners.notify(
                             new AccountLease(account.getId(), account.currentLesseeId, account.currentLeasingHeightFrom, height),
                             Event.LEASE_ENDED);
-                    if (account.nextLeasingHeightFrom == Integer.MAX_VALUE) {
-                        account.currentLeasingHeightFrom = Integer.MAX_VALUE;
-                        account.currentLeasingHeightTo = Integer.MAX_VALUE;
+                    if (account.nextLeasingHeightFrom == 0) {
+                        account.currentLeasingHeightFrom = 0;
+                        account.currentLeasingHeightTo = 0;
                         account.currentLesseeId = 0;
                         accountTable.insert(account);
                     } else {
                         account.currentLeasingHeightFrom = account.nextLeasingHeightFrom;
                         account.currentLeasingHeightTo = account.nextLeasingHeightTo;
                         account.currentLesseeId = account.nextLesseeId;
-                        account.nextLeasingHeightFrom = Integer.MAX_VALUE;
-                        account.nextLeasingHeightTo = Integer.MAX_VALUE;
+                        account.nextLeasingHeightFrom = 0;
+                        account.nextLeasingHeightTo = 0;
                         account.nextLesseeId = 0;
                         accountTable.insert(account);
                         if (height == account.currentLeasingHeightFrom) {
@@ -701,10 +701,6 @@ public final class Account {
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
         this.creationHeight = Nxt.getBlockchain().getHeight();
-        currentLeasingHeightFrom = Integer.MAX_VALUE;
-        currentLeasingHeightTo = Integer.MAX_VALUE;
-        nextLeasingHeightFrom = Integer.MAX_VALUE;
-        nextLeasingHeightTo = Integer.MAX_VALUE;
     }
 
     private Account(ResultSet rs) throws SQLException {
@@ -715,15 +711,11 @@ public final class Account {
         this.balanceNQT = rs.getLong("balance");
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
         this.forgedBalanceNQT = rs.getLong("forged_balance");
-        int h = rs.getInt("current_leasing_height_from");
-        this.currentLeasingHeightFrom = h == 0 ? Integer.MAX_VALUE : h;
-        h = rs.getInt("current_leasing_height_to");
-        this.currentLeasingHeightTo = h == 0 ? Integer.MAX_VALUE : h;
+        this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
+        this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
         this.currentLesseeId = rs.getLong("current_lessee_id");
-        h = rs.getInt("next_leasing_height_from");
-        this.nextLeasingHeightFrom = h == 0 ? Integer.MAX_VALUE : h;
-        h = rs.getInt("next_leasing_height_to");
-        this.nextLeasingHeightTo = h == 0 ? Integer.MAX_VALUE : h;
+        this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
+        this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
         this.nextLesseeId = rs.getLong("next_lessee_id");
     }
 
@@ -741,11 +733,11 @@ public final class Account {
             pstmt.setLong(++i, this.balanceNQT);
             pstmt.setLong(++i, this.unconfirmedBalanceNQT);
             pstmt.setLong(++i, this.forgedBalanceNQT);
-            DbUtils.setIntMaxValueToNull(pstmt, ++i, this.currentLeasingHeightFrom);
-            DbUtils.setIntMaxValueToNull(pstmt, ++i, this.currentLeasingHeightTo);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.currentLeasingHeightFrom);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.currentLeasingHeightTo);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.currentLesseeId);
-            DbUtils.setIntMaxValueToNull(pstmt, ++i, this.nextLeasingHeightFrom);
-            DbUtils.setIntMaxValueToNull(pstmt, ++i, this.nextLeasingHeightTo);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.nextLeasingHeightFrom);
+            DbUtils.setIntZeroToNull(pstmt, ++i, this.nextLeasingHeightTo);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.nextLesseeId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -847,7 +839,7 @@ public final class Account {
             }
             return (balanceNQT - receivedInLastBlock) / Constants.ONE_NXT;
         }
-        if (height < currentLeasingHeightFrom) {
+        if (currentLeasingHeightFrom == 0 || height < currentLeasingHeightFrom) {
             return (getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;
         }
         return getLessorsGuaranteedBalanceNQT(height) / Constants.ONE_NXT;
@@ -1039,11 +1031,11 @@ public final class Account {
         Account lessee = Account.getAccount(lesseeId);
         if (lessee != null && lessee.getKeyHeight() > 0) {
             int height = Nxt.getBlockchain().getHeight();
-            if (currentLeasingHeightFrom == Integer.MAX_VALUE) {
+            if (currentLeasingHeightFrom == 0) {
                 currentLeasingHeightFrom = height + Constants.LEASING_DELAY;
                 currentLeasingHeightTo = currentLeasingHeightFrom + period;
                 currentLesseeId = lesseeId;
-                nextLeasingHeightFrom = Integer.MAX_VALUE;
+                nextLeasingHeightFrom = 0;
                 accountTable.insert(this);
                 leaseListeners.notify(
                         new AccountLease(this.getId(), lesseeId, currentLeasingHeightFrom, currentLeasingHeightTo),
