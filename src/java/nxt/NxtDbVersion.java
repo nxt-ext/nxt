@@ -508,8 +508,7 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
             case 201:
-                apply("INSERT INTO public_key (account_id, public_key, height) SELECT id, public_key, min(height) "
-                        + "FROM account WHERE public_key IS NOT NULL GROUP BY id");
+                apply(null);
             case 202:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_idx ON public_key (account_id)");
             case 203:
@@ -748,7 +747,7 @@ class NxtDbVersion extends DbVersion {
             case 308:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_expiration_idx ON tagged_data (transaction_timestamp DESC)");
             case 309:
-                apply("CREATE INDEX IF NOT EXISTS tagged_data_account__height_idx ON tagged_data (account_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_account_id_height_idx ON tagged_data (account_id, height DESC)");
             case 310:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_block_timestamp_height_db_id_idx ON tagged_data (block_timestamp DESC, height DESC, db_id DESC)");
             case 311:
