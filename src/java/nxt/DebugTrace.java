@@ -179,10 +179,10 @@ public final class DebugTrace {
     }
 
     private void trace(Account.AccountLease accountLease, boolean start) {
-        if (! include(accountLease.lesseeId) && ! include(accountLease.lessorId)) {
+        if (! include(accountLease.getCurrentLesseeId()) && ! include(accountLease.getLessorId())) {
             return;
         }
-        log(getValues(accountLease.lessorId, accountLease, start));
+        log(getValues(accountLease.getLessorId(), accountLease, start));
     }
 
     private void traceBeforeAccept(Block block) {
@@ -463,7 +463,7 @@ public final class DebugTrace {
         map.put("event", start ? "lease begin" : "lease end");
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
-        map.put("lessee", Long.toUnsignedString(accountLease.lesseeId));
+        map.put("lessee", Long.toUnsignedString(accountLease.getCurrentLesseeId()));
         return map;
     }
 

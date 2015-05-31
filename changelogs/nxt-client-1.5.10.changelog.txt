@@ -17,6 +17,10 @@ To protect public nodes from unneeded extra load, the getState API does not
 include counts even if includeCounts=true, unless the adminPassword is either
 provided as a parameter, or is not needed.
 
+Added numberOfAccountLeases and numberOfActiveAccountLeases to getState,
+showing the total number of scheduled (first lease only) or currently active
+account balance leases.
+
 Added separate linux and windows build and release scripts.
 
 The account database table columns current_leasing_height_from,

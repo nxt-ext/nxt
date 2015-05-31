@@ -79,6 +79,8 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfPrunableMessages", PrunableMessage.getCount());
             response.put("numberOfTaggedData", TaggedData.getCount());
             response.put("numberOfDataTags", TaggedData.Tag.getTagCount());
+            response.put("numberOfAccountLeases", Account.getAccountLeaseCount());
+            response.put("numberOfActiveAccountLeases", Account.getActiveLeaseCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfActivePeers", Peers.getActivePeers().size());
