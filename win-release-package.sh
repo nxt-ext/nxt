@@ -76,13 +76,3 @@ echo -e "\n\nChange log:\n" >> ${CHANGELOG}
 
 cat changelogs/${CHANGELOG} >> ${CHANGELOG}
 echo >> ${CHANGELOG}
-
-# echo sign package ${PACKAGE}
-# gpg --detach-sign --armour --sign-with lyaffe ${PACKAGE}
-# echo sign change log ${CHANGELOG}
-# gpg --clearsign --sign-with l ${CHANGELOG}
-# rm -f ${CHANGELOG}
-# echo verify signatures
-# gpgv ${PACKAGE}.asc
-# gpgv ${CHANGELOG}.asc
-# sha256sum -c ${CHANGELOG}.asc
