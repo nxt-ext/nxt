@@ -8,7 +8,7 @@ OBFUSCATE=$2
 FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
-FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt README_win.txt USERS-GUIDE.md"
+FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
 FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh verify.sh"
 FILES="${FILES} NXT_Wallet.url"
 FILES="${FILES} setup.xml RegistrySpec.xml shortcutSpec.xml"
@@ -38,6 +38,8 @@ echo javadoc
 ./win-javadoc.sh
 fi
 echo copy resources
+cp installerlib/JavaExe.exe nxt.exe
+cp installerlib/JavaExe.exe nxtservice.exe
 cp -a ${FILES} nxt
 echo gzip
 for f in `find nxt/html -name *.html -o -name *.js -o -name *.css -o -name *.json  -o -name *.ttf -o -name *.svg -o -name *.otf`
@@ -45,9 +47,9 @@ do
 	gzip -9c "$f" > "$f".gz
 done
 cd nxt
-echo jar
+echo generate jar files
 ../jar.sh
-echo package installer Jar
+echo create installer jar
 ../build-installer.sh ../${PACKAGE}
 cd -
 echo create installer exe
