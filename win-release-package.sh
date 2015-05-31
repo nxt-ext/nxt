@@ -55,10 +55,10 @@ echo generate jar files
 ../jar.sh
 echo package installer Jar
 ../installer/build-installer.sh ../${PACKAGE}
-cd -
 echo create installer exe
 ../installer/build-exe.bat ${PACKAGE}
 echo create installer zip
+cd -
 zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
