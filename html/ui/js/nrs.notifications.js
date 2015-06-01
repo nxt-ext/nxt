@@ -207,9 +207,13 @@ var NRS = (function(NRS, $, undefined) {
 						"id": "notification_timestamps"
 					}], function(error, result) {
 						//console.log(result);
-						if (result && result.length > 0) {
-							tsDictString = result[0].contents;
-							NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
+						if (result) {
+							if (result.length > 0) {
+								tsDictString = result[0].contents;
+								NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
+							} else {
+								NRS.loadNotificationsFromTimestamps(response.time, "");
+							}
 						}
 					});
 				} else {
