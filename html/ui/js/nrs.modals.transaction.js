@@ -1342,8 +1342,13 @@ var NRS = (function (NRS, $, undefined) {
     NRS.getTaggedData = function (attachment, subtype) {
         var data = {
             "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle),
-            "hash": attachment.hash
         };
+        if (attachment.hash) {
+            data["hash"] = attachment.hash;
+        }
+        if (attachment.taggedData) {
+            data["taggedData"] = attachment.taggedData;
+        }
         if (attachment.data) {
             data["name"] = attachment.name;
             data["description"] = attachment.description;
