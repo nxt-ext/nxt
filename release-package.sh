@@ -13,8 +13,8 @@ OBFUSCATE=$2
 FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
-FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt README_win.txt USERS-GUIDE.md"
-FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh verify.sh"
+FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh"
 FILES="${FILES} NXT_Wallet.url"
 
 unix2dos *.bat
@@ -48,14 +48,14 @@ do
 	gzip -9c "$f" > "$f".gz
 done
 cd nxt
-echo jar
+echo generate jar files
 ../jar.sh
 echo package installer Jar
 ../installer/build-installer.sh ../${PACKAGE}
-cd -
 #echo create installer exe
 #../installer/build-exe.bat ${PACKAGE}
 echo create installer zip
+cd -
 zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.log \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 

@@ -161,8 +161,6 @@
 			<executable targetfile="${INSTALL_PATH}/javadoc.sh"/>
             <file src="package.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/package.sh"/>
-            <file src="verify.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<executable targetfile="${INSTALL_PATH}/verify.sh"/>
 		</pack>
         <pack name="jre" os="windows" required="yes" uninstall="false">
             <description>Java 32 bit</description>
