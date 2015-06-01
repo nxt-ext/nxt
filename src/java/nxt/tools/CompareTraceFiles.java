@@ -14,7 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.util;
+package nxt.tools;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

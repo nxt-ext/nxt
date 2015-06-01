@@ -14,7 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.util;
+package nxt.tools;
 
 import nxt.Nxt;
 import nxt.env.service.NxtService_ServiceManagement;
