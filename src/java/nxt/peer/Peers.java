@@ -112,6 +112,10 @@ public final class Peers {
     private static final boolean savePeers;
     static final boolean ignorePeerAnnouncedAddress;
     static final boolean cjdnsOnly;
+    static final int MAX_VERSION_LENGTH = 10;
+    static final int MAX_APPLICATION_LENGTH = 20;
+    static final int MAX_PLATFORM_LENGTH = 30;
+    static final int MAX_ANNOUNCED_ADDRESS_LENGTH = 100;
 
 
     static final JSONStreamAware myPeerInfoRequest;
@@ -130,6 +134,9 @@ public final class Peers {
     static {
 
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
+        if (myPlatform.length() > MAX_PLATFORM_LENGTH) {
+            throw new RuntimeException("nxt.myPlatform length exceeds " + MAX_PLATFORM_LENGTH);
+        }
         myAddress = Convert.emptyToNull(Nxt.getStringProperty("nxt.myAddress", "").trim());
         if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
@@ -169,14 +176,19 @@ public final class Peers {
                 URI uri = new URI("http://" + myAddress);
                 String host = uri.getHost();
                 int port = uri.getPort();
+                String announcedAddress;
                 if (!Constants.isTestnet) {
                     if (port >= 0)
-                        json.put("announcedAddress", myAddress);
+                        announcedAddress = myAddress;
                     else
-                        json.put("announcedAddress", host + (myPeerServerPort != DEFAULT_PEER_PORT ? ":" + myPeerServerPort : ""));
+                        announcedAddress = host + (myPeerServerPort != DEFAULT_PEER_PORT ? ":" + myPeerServerPort : "");
                 } else {
-                    json.put("announcedAddress", host);
+                    announcedAddress = host;
                 }
+                if (announcedAddress == null || announcedAddress.length() > MAX_ANNOUNCED_ADDRESS_LENGTH) {
+                    throw new RuntimeException("Invalid announced address length: " + announcedAddress);
+                }
+                json.put("announcedAddress", announcedAddress);
             } catch (URISyntaxException e) {
                 Logger.logMessage("Your announce address is invalid: " + myAddress);
                 throw new RuntimeException(e.toString(), e);
@@ -762,7 +774,9 @@ public final class Peers {
         if (Peers.myAddress != null && Peers.myAddress.equalsIgnoreCase(announcedAddress)) {
             return null;
         }
-
+        if (announcedAddress != null && announcedAddress.length() > MAX_ANNOUNCED_ADDRESS_LENGTH) {
+            return null;
+        }
         peer = new PeerImpl(host, announcedAddress);
         if (Constants.isTestnet && peer.getPort() != TESTNET_PEER_PORT) {
             Logger.logDebugMessage("Peer " + host + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");

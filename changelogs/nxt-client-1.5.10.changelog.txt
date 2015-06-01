@@ -27,6 +27,9 @@ The account database table columns current_leasing_height_from,
 current_leasing_height_to, next_leasing_height_from, next_leasing_height_to
 now store NULL when the corresponding value is Integer.MAX_VALUE.
 
+Limit peer details length to 10 characters for version, 20 for application,
+30 for platform, and 100 for announced address.
+
 Client UI improvements:
 
 Fixed a bug sometimes not showing notification badge after login.
