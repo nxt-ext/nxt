@@ -23,6 +23,10 @@ The account database table columns current_leasing_height_from,
 current_leasing_height_to, next_leasing_height_from, next_leasing_height_to
 now store NULL when the corresponding value is Integer.MAX_VALUE.
 
+Client UI improvements:
+
+Improved Bulgarian and Slovak translations.
+
 This release will perform a full blockchain rescan on first start.
 
 Updated jetty to version 9.2.11. If unpacking on top of existing installation,
