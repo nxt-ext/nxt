@@ -41,6 +41,8 @@ echo javadoc
 ./javadoc.sh
 fi
 echo copy resources
+cp installer/lib/JavaExe.exe nxt.exe
+cp installer/lib/JavaExe.exe nxtservice.exe
 cp -a ${FILES} nxt
 echo gzip
 for f in `find nxt/html -name *.html -o -name *.js -o -name *.css -o -name *.json  -o -name *.ttf -o -name *.svg -o -name *.otf`
