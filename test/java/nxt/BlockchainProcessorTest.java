@@ -67,9 +67,8 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     }
 
     @Test
-    public void fullDownloadAndRescanTest() {
+    public void fullDownloadTest() {
         download(startHeight, maxHeight);
-        rescan(blockchain.getHeight());
     }
 
     @Test

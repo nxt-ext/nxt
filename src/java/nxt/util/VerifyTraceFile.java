@@ -14,9 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt;
-
-import nxt.util.Logger;
+package nxt.util;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -28,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class VerifyTrace {
+public final class VerifyTraceFile {
 
     private static final List<String> balanceHeaders = Arrays.asList("balance", "unconfirmed balance");
     private static final List<String> deltaHeaders = Arrays.asList("transaction amount", "transaction fee", "dividend",
@@ -65,7 +63,7 @@ public final class VerifyTrace {
         String fileName = args.length == 1 ? args[0] : "nxt-trace.csv";
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line = reader.readLine();
-            String[] headers = unquote(line.split(DebugTrace.SEPARATOR));
+            String[] headers = unquote(line.split("\t"));
 
             Map<String,Map<String,Long>> totals = new HashMap<>();
             Map<String,Map<String,Map<String,Long>>> accountAssetTotals = new HashMap<>();
@@ -76,7 +74,7 @@ public final class VerifyTrace {
             Map<String,Long> accountCurrencyUnits = new HashMap<>();
 
             while ((line = reader.readLine()) != null) {
-                String[] values = unquote(line.split(DebugTrace.SEPARATOR));
+                String[] values = unquote(line.split("\t"));
                 Map<String,String> valueMap = new HashMap<>();
                 for (int i = 0; i < headers.length; i++) {
                     valueMap.put(headers[i], values[i]);
@@ -285,12 +283,8 @@ public final class VerifyTrace {
         }
     }
 
-    static {
-        Logger.init();
-    }
-
-    private static final String beginQuote = "^" + DebugTrace.QUOTE;
-    private static final String endQuote = DebugTrace.QUOTE + "$";
+    private static final String beginQuote = "^\"";
+    private static final String endQuote = "\"$";
 
     private static String[] unquote(String[] values) {
         String[] result = new String[values.length];

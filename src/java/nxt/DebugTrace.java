@@ -36,7 +36,7 @@ import java.util.Set;
 
 public final class DebugTrace {
 
-    static final String QUOTE = Nxt.getStringProperty("nxt.debugTraceQuote", "");
+    static final String QUOTE = Nxt.getStringProperty("nxt.debugTraceQuote", "\"");
     static final String SEPARATOR = Nxt.getStringProperty("nxt.debugTraceSeparator", "\t");
     static final boolean LOG_UNCONFIRMED = Nxt.getBooleanProperty("nxt.debugLogUnconfirmed");
 
@@ -357,7 +357,6 @@ public final class DebugTrace {
         map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("event", unconfirmed ? "unconfirmed balance" : "balance");
         map.put("key height", String.valueOf(account != null ? account.getKeyHeight() : 0));
-        map.put("effective balance", String.valueOf(account != null ? account.getEffectiveBalanceNXT() : 0));
         return map;
     }
 
@@ -419,6 +418,7 @@ public final class DebugTrace {
             return Collections.emptyMap();
         }
         Map<String,String> map = getValues(accountId, false);
+        map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
         map.put("generation fee", String.valueOf(fee));
         map.put("block", block.getStringId());
         map.put("event", "block");
