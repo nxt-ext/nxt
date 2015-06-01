@@ -1091,28 +1091,28 @@ var NRS = (function (NRS, $, undefined) {
                 pos += 32;
                 var sha256 = CryptoJS.algo.SHA256.create();
                 var utfBytes = NRS.getUtf8Bytes(data.name);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.description);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.tags);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.type);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.channel);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 var isText = [];
                 if (data.isText == "true") {
                     isText.push(1);
                 } else {
                     isText.push(0);
                 }
-                sha256.update(converters.byteArrayToWordArray(isText));
+                sha256.update(converters.byteArrayToWordArrayEx(isText));
                 var utfBytes = NRS.getUtf8Bytes(data.filename);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 var dataBytes = new Int8Array(data.filebytes);
-                sha256.update(converters.byteArrayToWordArray(dataBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(dataBytes));
                 var hashWords = sha256.finalize();
-                var calculatedHash = converters.wordArrayToByteArrayImpl(hashWords, true);
+                var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
                 if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                     return false;
                 }
@@ -1305,11 +1305,11 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 isText.push(0);
             }
-            sha256.update(converters.byteArrayToWordArray(isText));
+            sha256.update(converters.byteArrayToWordArrayEx(isText));
             var utfBytes = NRS.getUtf8Bytes(data.message);
-            sha256.update(converters.byteArrayToWordArray(utfBytes));
+            sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
             var hashWords = sha256.finalize();
-            var calculatedHash = converters.wordArrayToByteArrayImpl(hashWords, true);
+            var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
             if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                 return false;
             }
@@ -1323,15 +1323,15 @@ var NRS = (function (NRS, $, undefined) {
             pos += 32;
             var sha256 = CryptoJS.algo.SHA256.create();
             if (data.messageToEncryptIsText == "true") {
-                sha256.update(converters.byteArrayToWordArray([1]));
+                sha256.update(converters.byteArrayToWordArrayEx([1]));
             } else {
-                sha256.update(converters.byteArrayToWordArray([0]));
+                sha256.update(converters.byteArrayToWordArrayEx([0]));
             }
-            sha256.update(converters.byteArrayToWordArray([1])); // compression
-            sha256.update(converters.byteArrayToWordArray(converters.hexStringToByteArray(data.encryptedMessageData)));
-            sha256.update(converters.byteArrayToWordArray(converters.hexStringToByteArray(data.encryptedMessageNonce)));
+            sha256.update(converters.byteArrayToWordArrayEx([1])); // compression
+            sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageData)));
+            sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageNonce)));
             var hashWords = sha256.finalize();
-            var calculatedHash = converters.wordArrayToByteArray(hashWords);
+            var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
             if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                 return false;
             }

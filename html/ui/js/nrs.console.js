@@ -51,6 +51,18 @@ var NRS = (function (NRS, $) {
         NRS.logConsole(property + " = " + eval(property.escapeHTML()));
     };
 
+    NRS.logArrayContent = function(array) {
+        var data = '[';
+        for (var i=0; i<array.length; i++) {
+            data += array[i];
+            if (i < array.length - 1) {
+                data += ", ";
+            }
+        }
+        data += ']';
+        NRS.logConsole(data);
+    };
+
     NRS.timeExact = function () {
         return window.performance.now() ||
             window.performance.mozNow() ||
