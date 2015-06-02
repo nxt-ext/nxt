@@ -88,8 +88,7 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_NAME_LENGTH = 100;
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
-    public static final int MAX_DGS_GOODS_LENGTH = 10240;
-    public static final int MAX_DGS_GOODS_LENGTH_2 = 1000;
+    public static final int MAX_DGS_GOODS_LENGTH = 1000;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
@@ -137,9 +136,9 @@ public final class Constants {
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
     public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 436000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 445000;
 
-    public static final int[] MIN_VERSION = isTestnet ? new int[] {1, 5} : new int[] {1, 4};
+    public static final int[] MIN_VERSION = new int[] {1, 5};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

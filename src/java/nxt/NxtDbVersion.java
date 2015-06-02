@@ -568,6 +568,7 @@ class NxtDbVersion extends DbVersion {
             case 230:
                 apply("CREATE INDEX IF NOT EXISTS trade_height_idx ON trade(height)");
             case 231:
+                BlockDb.deleteAll();
                 apply("DROP TABLE IF EXISTS poll");
             case 232:
                 apply("DROP TABLE IF EXISTS vote");

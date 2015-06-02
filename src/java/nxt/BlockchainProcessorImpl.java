@@ -89,7 +89,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     4, -100, -26, 47, 93, 1, -114, 86, -42, 46, -103, 13, 120, 0, 2, 100, -52,
                     -67, 109, -90, 87, 13, 30, -110, -58, -70, -94, 21, 105, -58, 20, 0
             }
-            : null;
+            : new byte[] {
+            -88, -128, 68, -118, 10, -62, 110, 19, -73, 61, 34, -76, 35, 73, -101, 9,
+            33, -111, 40, 114, 27, 105, 54, 0, 16, -97, 115, -12, -110, -88, 1, -15
+    };
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -159,7 +162,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         private void downloadPeer() throws InterruptedException {
             try {
-                int numberOfForkConfirmations = blockchain.getHeight() > Constants.MONETARY_SYSTEM_BLOCK - 720 ?
+                int numberOfForkConfirmations = blockchain.getHeight() > Constants.PHASING_BLOCK - 720 ?
                         defaultNumberOfForkConfirmations : Math.min(1, defaultNumberOfForkConfirmations);
                 connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
                 if (connectedPublicPeers.size() <= numberOfForkConfirmations) {
@@ -383,7 +386,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             // is the common block for that segment.
             //
             List<GetNextBlocks> getList = new ArrayList<>();
-            int segSize = (blockchain.getHeight() >= nxt.Constants.PHASING_BLOCK ? 36 : 720);
+            int segSize = 36;
             int stop = chainBlockIds.size() - 1;
             for (int start = 0; start < stop; start += segSize) {
                 getList.add(new GetNextBlocks(chainBlockIds, start, Math.min(start + segSize, stop)));
@@ -591,16 +594,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             for (int i = start + 1; i <= stop; i++) {
                 idList.add(Long.toUnsignedString(blockIds.get(i)));
             }
-            //
-            // Issue the getNextBlocks request and specify both 'blockIds' and 'blockId'.
-            // This will allow the request to be processed by both old and new nodes.
-            //
             JSONObject request = new JSONObject();
             request.put("requestType", "getNextBlocks");
             request.put("blockIds", idList);
             request.put("blockId", Long.toUnsignedString(blockIds.get(start)));
-            //TODO: after Constants.PHASING_BLOCK has passed, reduce the maxResponseSize
-            JSONObject response = peer.send(JSON.prepareRequest(request), 192 * 1024 * 1024);
+            JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);
             if (response == null) {
                 return null;
             }
@@ -612,7 +610,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             List<JSONObject> nextBlocks = (List<JSONObject>)response.get("nextBlocks");
             if (nextBlocks == null)
                 return null;
-            if (nextBlocks.size() > 720) {
+            if (nextBlocks.size() > 36) {
                 Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlocks, blacklisting");
                 peer.blacklist("Too many nextBlocks");
                 return null;
@@ -760,12 +758,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, Constants.NQT_BLOCK, Constants.MONETARY_SYSTEM_BLOCK)) {
             popOffTo(Constants.NQT_BLOCK);
         }
-        /*
         if (block.getHeight() == Constants.PHASING_BLOCK
                 && ! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
             popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
         }
-        */
     };
 
     private BlockchainProcessorImpl() {
