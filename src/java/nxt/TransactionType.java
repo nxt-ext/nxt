@@ -1013,7 +1013,7 @@ public abstract class TransactionType {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
                     if (poll.getFinishHeight() <= getFinishValidationHeight(transaction) + 1) {
-                        throw new NxtException.NotCurrentlyValidException(String.format("Phased transaction finishes at height %d which is before approval transaction height %d",
+                        throw new NxtException.NotCurrentlyValidException(String.format("Phased transaction finishes at height %d which is not after approval transaction height %d",
                                 poll.getFinishHeight(), getFinishValidationHeight(transaction) + 1));
                     }
                 }
