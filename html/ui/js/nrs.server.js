@@ -696,6 +696,15 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.transactionFullHash !== data.transactionFullHash) {
                     return false;
                 }
+                transaction.revealedSecretLength = converters.byteArrayToSignedInt32(byteArray, pos);
+                pos += 4;
+                if (transaction.revealedSecretLength > 0) {
+                    transaction.revealedSecret = converters.byteArrayToHexString(byteArray.slice(pos, pos + transaction.revealedSecretLength));
+                    pos += transaction.revealedSecretLength;
+                }
+                if (transaction.revealedSecret !== data.revealedSecret) {
+                    return false;
+                }
                 break;
             case "issueAsset":
                 if (transaction.type !== 2 || transaction.subtype !== 0) {
