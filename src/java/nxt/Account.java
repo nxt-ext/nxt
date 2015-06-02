@@ -266,14 +266,6 @@ public final class Account {
             return nextLeasingHeightTo;
         }
 
-        private void save() {
-            if (this.currentLesseeId != 0) {
-                accountLeaseTable.insert(this);
-            } else {
-                accountLeaseTable.delete(this);
-            }
-        }
-
     }
 
     public static final class AccountInfo {
@@ -750,6 +742,7 @@ public final class Account {
                         lease.currentLeasingHeightFrom = 0;
                         lease.currentLeasingHeightTo = 0;
                         lease.currentLesseeId = 0;
+                        accountLeaseTable.delete(lease);
                     } else {
                         lease.currentLeasingHeightFrom = lease.nextLeasingHeightFrom;
                         lease.currentLeasingHeightTo = lease.nextLeasingHeightTo;
@@ -757,12 +750,12 @@ public final class Account {
                         lease.nextLeasingHeightFrom = 0;
                         lease.nextLeasingHeightTo = 0;
                         lease.nextLesseeId = 0;
+                        accountLeaseTable.insert(lease);
                         if (height == lease.currentLeasingHeightFrom) {
                             lessor.activeLesseeId = lease.currentLesseeId;
                             leaseListeners.notify(lease, Event.LEASE_STARTED);
                         }
                     }
-                    lease.save();
                 }
                 accountTable.insert(lessor);
             }
@@ -1088,6 +1081,10 @@ public final class Account {
                         height + Constants.LEASING_DELAY,
                         height + Constants.LEASING_DELAY + period,
                         lesseeId);
+            } else if (accountLease.currentLesseeId == 0) {
+                accountLease.currentLeasingHeightFrom = height + Constants.LEASING_DELAY;
+                accountLease.currentLeasingHeightTo = height + Constants.LEASING_DELAY + period;
+                accountLease.currentLesseeId = lesseeId;
             } else {
                 accountLease.nextLeasingHeightFrom = height + Constants.LEASING_DELAY;
                 if (accountLease.nextLeasingHeightFrom < accountLease.currentLeasingHeightTo) {
@@ -1096,7 +1093,7 @@ public final class Account {
                 accountLease.nextLeasingHeightTo = accountLease.nextLeasingHeightFrom + period;
                 accountLease.nextLesseeId = lesseeId;
             }
-            accountLease.save();
+            accountLeaseTable.insert(accountLease);
             leaseListeners.notify(accountLease, Event.LEASE_SCHEDULED);
         }
     }
