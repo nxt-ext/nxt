@@ -61,6 +61,12 @@ cd -
 zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.log \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
+echo signing zip package
+../jarsigner.sh ${PACKAGE}.zip
+
+echo signing jar package
+../jarsigner.sh ${PACKAGE}.jar
+
 echo creating change log ${CHANGELOG}
 echo -e "Release $1\n" > ${CHANGELOG}
 echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.zip\n" >> ${CHANGELOG}
@@ -95,5 +101,7 @@ gpgv ${PACKAGE}.jar.asc ${PACKAGE}.jar
 #gpgv ${PACKAGE}.exe.asc ${PACKAGE}.exe
 gpgv ${CHANGELOG}.asc
 sha256sum -c ${CHANGELOG}.asc
+jarsigner -verify ${PACKAGE}.zip
+jarsigner -verify ${PACKAGE}.jar
 
 
