@@ -1,10 +1,14 @@
 Create installer package for Windows and Linux using the IzPack installer.
 
-Database performance improvements and optimizations.
+Added separate linux and windows build and release scripts.
 
 Track and log database query execution times. The new properties:
 nxt.statementLogThreshold, nxt.transactionLogThreshold, and
 nxt.transactionLogInterval can be used to configure logging of slow queries.
+
+Database performance improvements and optimizations. The account leasing data
+has been moved from the account table to a separate account_lease table.
+More table indexes have been added or existing ones modified.
 
 Improved JSON encoding performance.
 
@@ -21,20 +25,16 @@ Added numberOfAccountLeases and numberOfActiveAccountLeases to getState,
 showing the total number of scheduled (first lease only) or currently active
 account balance leases.
 
-Added separate linux and windows build and release scripts.
-
-The account database table columns current_leasing_height_from,
-current_leasing_height_to, next_leasing_height_from, next_leasing_height_to
-now store NULL when the corresponding value is Integer.MAX_VALUE.
-
 Limit peer details length to 10 characters for version, 20 for application,
 30 for platform, and 100 for announced address.
+
 
 Client UI improvements:
 
 Fixed a bug sometimes not showing notification badge after login.
 
 Improved Bulgarian and Slovak translations.
+
 
 This release will perform a full blockchain rescan on first start.
 
