@@ -1346,5 +1346,6 @@
   "is_text": "Is Text",
   "filename": "filename",
   "upload_tagged_data": "Upload Tagged Data",
-  "tagged_data": "Tagged Data"
+  "tagged_data": "Tagged Data",
+  "transaction_time": "Transaction Time"
 }
