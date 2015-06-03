@@ -61,8 +61,8 @@ cd -
 zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.log \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
-echo signing zip package
-../jarsigner.sh ${PACKAGE}.zip
+#echo signing zip package
+#../jarsigner.sh ${PACKAGE}.zip
 
 echo signing jar package
 ../jarsigner.sh ${PACKAGE}.jar
@@ -101,7 +101,7 @@ gpgv ${PACKAGE}.jar.asc ${PACKAGE}.jar
 #gpgv ${PACKAGE}.exe.asc ${PACKAGE}.exe
 gpgv ${CHANGELOG}.asc
 sha256sum -c ${CHANGELOG}.asc
-jarsigner -verify ${PACKAGE}.zip
+#jarsigner -verify ${PACKAGE}.zip
 jarsigner -verify ${PACKAGE}.jar
 
 
