@@ -10,7 +10,7 @@ echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
 OBFUSCATE=$2
 
-FILES="changelogs conf html lib resource contrib"
+FILES="changelogs conf html lib resource contrib logs"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"

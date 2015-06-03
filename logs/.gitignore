@@ -1,1 +1,5 @@
+# Ignore everything
 *
+
+# But not these files...
+!placeholder.txt

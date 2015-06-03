@@ -130,6 +130,7 @@
 			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true" excludes=".gitignore"/>
 			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore nxt-private.iml"/>
             <fileset dir="contrib" targetdir="${INSTALL_PATH}/contrib" override="true" excludes=".gitignore"/>
+            <fileset dir="logs" targetdir="${INSTALL_PATH}/logs" override="true" excludes=".gitignore"/>
 		</pack>
         <pack name="server.windows" os="windows" required="yes">
             <description>Windows Specific Resources</description>
