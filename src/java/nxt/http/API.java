@@ -43,6 +43,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,6 +67,7 @@ public final class API {
     static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
 
     private static final Server apiServer;
+    private static URI browserUri;
 
     static {
         List<String> allowedBotHostsList = Nxt.getStringListProperty("nxt.allowedBotHosts");
@@ -136,6 +139,11 @@ public final class API {
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTPS port " + sslPort);
             }
+            try {
+                browserUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "/index.html", null, null);
+            } catch (URISyntaxException e) {
+                Logger.logInfoMessage("Cannot resolve browser URI", e);
+            }
 
             HandlerList apiHandlers = new HandlerList();
 
@@ -148,6 +156,7 @@ public final class API {
                 defaultServletHolder.setInitParameter("welcomeServlets", "true");
                 defaultServletHolder.setInitParameter("redirectWelcome", "true");
                 defaultServletHolder.setInitParameter("gzip", "true");
+                defaultServletHolder.setInitParameter("etags", "true");
                 apiHandler.addServlet(defaultServletHolder, "/*");
                 apiHandler.setWelcomeFiles(new String[]{Nxt.getStringProperty("nxt.apiWelcomeFile")});
             }
@@ -279,6 +288,10 @@ public final class API {
             return hostAddressToCheck.and(netMask).equals(netAddress);
         }
 
+    }
+
+    public static URI getBrowserUri() {
+        return browserUri;
     }
 
     private API() {} // never

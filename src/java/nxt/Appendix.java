@@ -42,8 +42,10 @@ public interface Appendix {
 
     interface Prunable {
         byte[] getHash();
-        default boolean shouldLoadPrunable(Transaction transaction) {
-            return Constants.INCLUDE_EXPIRED_PRUNABLE || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
+        default boolean shouldLoadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            return Constants.INCLUDE_EXPIRED_PRUNABLE ||
+                    Nxt.getEpochTime() - transaction.getTimestamp() <
+                            (includeExpiredPrunable ? Constants.MAX_PRUNABLE_LIFETIME : Constants.MIN_PRUNABLE_LIFETIME);
         }
     }
 
@@ -148,7 +150,11 @@ public interface Appendix {
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-        void loadPrunable(Transaction transaction) {}
+        final void loadPrunable(Transaction transaction) {
+            loadPrunable(transaction, false);
+        }
+
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {}
 
         boolean isPhasable() {
             return true;
@@ -423,8 +429,8 @@ public interface Appendix {
         }
 
         @Override
-        void loadPrunable(Transaction transaction) {
-            if (message == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (message == null && prunableMessage == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
         }
@@ -701,8 +707,8 @@ public interface Appendix {
         }
 
         @Override
-        void loadPrunable(Transaction transaction) {
-            if (encryptedData == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (encryptedData == null && prunableMessage == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
         }
@@ -1166,11 +1172,11 @@ public interface Appendix {
         private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             Account recipientAccount = Account.getAccount(transaction.getRecipientId());
-            for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
+            transaction.getAppendages().forEach(appendage -> {
                 if (appendage.isPhasable()) {
                     appendage.apply(transaction, senderAccount, recipientAccount);
                 }
-            }
+            });
             TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been released");
         }

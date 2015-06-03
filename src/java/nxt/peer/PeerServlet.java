@@ -148,7 +148,7 @@ public final class PeerServlet extends WebSocketServlet {
         //
         resp.setContentType("text/plain; charset=UTF-8");
         try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
-            jsonResponse.writeJSONString(writer);
+            JSON.writeJSONString(jsonResponse, writer);
             long byteCount;
             if (isGzipEnabled)
                 byteCount = ((Response)((CompressedResponseWrapper)resp).getResponse()).getContentCount();
@@ -157,8 +157,17 @@ public final class PeerServlet extends WebSocketServlet {
             if (peer != null)
                 peer.updateUploadedVolume(byteCount);
         } catch (RuntimeException | IOException e) {
-            if (peer != null)
+            if (peer != null) {
+                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
+                    if (e instanceof RuntimeException) {
+                        Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
+                    } else {
+                        Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
+                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                    }
+                }
                 peer.blacklist(e);
+            }
             throw e;
         }
     }
@@ -191,20 +200,22 @@ public final class PeerServlet extends WebSocketServlet {
         //
         try {
             StringWriter writer = new StringWriter(1000);
-            jsonResponse.writeJSONString(writer);
+            JSON.writeJSONString(jsonResponse, writer);
             String response = writer.toString();
             webSocket.sendResponse(requestId, response);
             if (peer != null)
                 peer.updateUploadedVolume(response.length());
         } catch (RuntimeException | IOException e) {
             if (peer != null) {
-                if (e instanceof RuntimeException) {
-                    Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
-                } else {
-                    Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
-                        peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
-                    peer.blacklist(e);
+                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_EXCEPTIONS) != 0) {
+                    if (e instanceof RuntimeException) {
+                        Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
+                    } else {
+                        Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
+                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                    }
                 }
+                peer.blacklist(e);
             }
         }
     }
@@ -237,7 +248,7 @@ public final class PeerServlet extends WebSocketServlet {
                 Logger.logDebugMessage("Unsupported protocol " + request.get("protocol"));
                 return UNSUPPORTED_PROTOCOL;
             }
-            PeerRequestHandler peerRequestHandler = peerRequestHandlers.get(request.get("requestType"));
+            PeerRequestHandler peerRequestHandler = peerRequestHandlers.get((String)request.get("requestType"));
             if (peerRequestHandler == null) {
                 return UNSUPPORTED_REQUEST_TYPE;
             }

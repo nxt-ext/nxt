@@ -56,7 +56,8 @@ var NRS = (function (NRS, $, undefined) {
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
         "GENESIS": "",
-        "GENESIS_RS": ""
+        "GENESIS_RS": "",
+        "EPOCH_BEGINNING": 0
     };
 
     NRS.loadServerConstants = function () {
@@ -68,6 +69,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
                 NRS.constants.GENESIS = response.genesisAccountId;
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
+                NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
             }
         });
     };

@@ -1,22 +1,42 @@
 #!/bin/sh
 VERSION=$1
+if [ -x ${VERSION} ];
+then
+	echo VERSION not defined
+	exit 1
+fi
 PACKAGE=nxt-client-${VERSION}.zip
+echo PACKAGE="${PACKAGE}"
 
-FILES="conf lib html LICENSE.txt 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md USERS-GUIDE.md README.md run.sh run.bat run-tor.sh verify.sh changelogs README.txt README_win.txt NXT_Wallet.url Dockerfile docker_start.sh classes nxt.jar src compile.sh win-compile.sh javadoc.sh package.sh mint.bat mint.sh"
+FILES="changelogs classes conf html lib src"
+FILES="${FILES} nxt.jar nxtservice.jar"
+FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
+FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh"
+FILES="${FILES} NXT_Wallet.url"
+FILES="${FILES} compile.sh javadoc.sh jar.sh package.sh"
+FILES="${FILES} win-compile.sh win-javadoc.sh win-package.sh"
 
+echo compile
 ./compile.sh
+echo jar
 ./jar.sh
+echo javadoc
 rm -rf html/doc/*
 ./javadoc.sh
 
 rm -rf nxt
 rm -rf ${PACKAGE}
 mkdir -p nxt/
+mkdir -p nxt/logs
+echo copy resources
 cp -a ${FILES} nxt
+echo gzip
 for f in `find nxt/html -name *.html -o -name *.js -o -name *.css -o -name *.json -o -name *.ttf -o -name *.svg -o -name *.otf`
 do
-	gzip -9vc "$f" > "$f".gz
+	gzip -9c "$f" > "$f".gz
 done
-zip -X -r ${PACKAGE} nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
+echo zip
+zip -q -X -r ${PACKAGE} nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.log \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
-
+echo done

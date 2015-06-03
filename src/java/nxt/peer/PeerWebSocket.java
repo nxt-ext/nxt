@@ -20,6 +20,7 @@ import nxt.Nxt;
 import nxt.util.Logger;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.UpgradeException;
+import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
@@ -33,6 +34,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ProtocolException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -196,9 +198,10 @@ public class PeerWebSocket {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        Logger.logDebugMessage(String.format("%s WebSocket connection with %s completed",
-                peerServlet != null ? "Inbound" : "Outbound",
-                session.getRemoteAddress().getHostString()));
+        if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0)
+            Logger.logDebugMessage(String.format("%s WebSocket connection with %s completed",
+                    peerServlet != null ? "Inbound" : "Outbound",
+                    session.getRemoteAddress().getHostString()));
     }
 
     /**
@@ -261,6 +264,8 @@ public class PeerWebSocket {
             if (buf.limit() > MAX_MESSAGE_SIZE)
                 throw new ProtocolException("POST request length exceeds max message size");
             session.getRemote().sendBytes(buf);
+        } catch (WebSocketException exc) {
+            throw new SocketException(exc.getMessage());
         } finally {
             lock.unlock();
         }
@@ -273,7 +278,7 @@ public class PeerWebSocket {
             requestMap.put(requestId, postRequest);
             response = postRequest.get(Peers.readTimeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException exc) {
-            throw new IOException("WebSocket POST interrupted", exc);
+            throw new SocketTimeoutException("WebSocket POST interrupted");
         }
         return response;
     }
@@ -313,6 +318,8 @@ public class PeerWebSocket {
                     throw new ProtocolException("POST response length exceeds max message size");
                 session.getRemote().sendBytes(buf);
             }
+        } catch (WebSocketException exc) {
+            throw new SocketException(exc.getMessage());
         } finally {
             lock.unlock();
         }
@@ -375,12 +382,13 @@ public class PeerWebSocket {
         lock.lock();
         try {
             if (session != null) {
-                Logger.logDebugMessage(String.format("%s WebSocket connection with %s closed",
-                                       peerServlet!=null ? "Inbound" : "Outbound",
-                                       session.getRemoteAddress().getHostString()));
+                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0)
+                    Logger.logDebugMessage(String.format("%s WebSocket connection with %s closed",
+                                           peerServlet!=null ? "Inbound" : "Outbound",
+                                           session.getRemoteAddress().getHostString()));
                 session = null;
             }
-            IOException exc = new IOException("WebSocket connection closed");
+            SocketException exc = new SocketException("WebSocket connection closed");
             Set<Map.Entry<Long, PostRequest>> requests = requestMap.entrySet();
             requests.forEach((entry) -> entry.getValue().complete(exc));
             requestMap.clear();
@@ -442,7 +450,7 @@ public class PeerWebSocket {
          */
         public String get(long timeout, TimeUnit unit) throws InterruptedException, IOException {
             if (!latch.await(timeout, unit))
-                throw new IOException("WebSocket read timeout exceeded");
+                throw new SocketTimeoutException("WebSocket read timeout exceeded");
             if (exception != null)
                 throw exception;
             return response;

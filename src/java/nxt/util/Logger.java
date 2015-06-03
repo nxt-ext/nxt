@@ -21,7 +21,6 @@ import nxt.Nxt;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.LogManager;
 
@@ -78,21 +77,11 @@ public final class Logger {
         }
         if (! Boolean.getBoolean("nxt.doNotConfigureLogging")) {
             try {
-                boolean foundProperties = false;
                 Properties loggingProperties = new Properties();
-                try (InputStream is = ClassLoader.getSystemResourceAsStream("logging-default.properties")) {
-                    if (is != null) {
-                        loggingProperties.load(is);
-                        foundProperties = true;
-                    }
-                }
-                try (InputStream is = ClassLoader.getSystemResourceAsStream("logging.properties")) {
-                    if (is != null) {
-                        loggingProperties.load(is);
-                        foundProperties = true;
-                    }
-                }
-                if (foundProperties) {
+                Nxt.loadProperties(loggingProperties, "logging-default.properties", true);
+                Nxt.loadProperties(loggingProperties, "logging.properties", false);
+                Nxt.updateLogFileHandler(loggingProperties);
+                if (loggingProperties.size() > 0) {
                     ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                     loggingProperties.store(outStream, "logging properties");
                     ByteArrayInputStream inStream = new ByteArrayInputStream(outStream.toByteArray());

@@ -199,9 +199,7 @@ public class MintWorker {
     private long solve(Executor executor, Collection<Callable<Long>> solvers) {
         CompletionService<Long> ecs = new ExecutorCompletionService<>(executor);
         List<Future<Long>> futures = new ArrayList<>(solvers.size());
-        for (Callable<Long> solver : solvers) {
-            futures.add(ecs.submit(solver));
-        }
+        solvers.forEach(solver -> futures.add(ecs.submit(solver)));
         try {
             return ecs.take().get();
         } catch (ExecutionException | InterruptedException e) {

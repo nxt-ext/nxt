@@ -50,6 +50,9 @@ var NRS = (function(NRS, $, undefined) {
 		delete blockDetails.generationSignature;
 		delete blockDetails.payloadHash;
 		delete blockDetails.block;
+		if (blockDetails.timestamp) {
+            blockDetails.blockGenerationTime = NRS.formatTimestamp(blockDetails.timestamp);
+        }
 
 		$("#block_info_details_table tbody").empty().append(NRS.createInfoTable(blockDetails));
 		$("#block_info_details_table").show();

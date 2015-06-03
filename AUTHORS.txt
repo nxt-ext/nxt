@@ -32,6 +32,8 @@ kushtech@yahoo.com
 
 Lior Yaffe (lyaffe)
 lyaffe@gmail.com
+GPG key fingerprint: 0560 443B 035C EE08 0EC0  D2DD 275E 94A7 D831 1651
+Nxt account: NXT-HBFW-X8TE-WXPW-DZFAG
 
 
 Holger Drewes (holgerd77)
@@ -42,9 +44,10 @@ Mr V
 mrv777@comcast.net
 
 
-Alex Jones
-alex@jonesnet.tk
-
+Alex Jones (jones)
+alex.theboy.jones@gmail.com
+GPG fingerprint: 500A A4EF ACA7 DF9F 8E5D  A52F E945 DA5E DAC1 EAFC
+Nxt account: NXT-RJU8-JSNR-H9J4-2KWKY
 
 Musa Yassin (mess)
 musa.yassin@gmail.com
@@ -52,5 +55,5 @@ musa.yassin@gmail.com
 
 Petko Petkov
 petkodp@gmail.com
-
-
+GPG key fingerprint: 500B 5FDE ED52 8781 CB54  F588 9F18 A69A C8A1 28C2
+Nxt account: NXT-P6F5-J7VU-RWHZ-9LXN8
