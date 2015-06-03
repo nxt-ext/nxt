@@ -31,7 +31,7 @@ final class GetNextBlocks extends PeerServlet.PeerRequestHandler {
 
     static final GetNextBlocks instance = new GetNextBlocks();
 
-    private static final JSONStreamAware TOO_MANY_BLOCKS_REQUESTED;
+    static final JSONStreamAware TOO_MANY_BLOCKS_REQUESTED;
     static {
         JSONObject response = new JSONObject();
         response.put("error", Errors.TOO_MANY_BLOCKS_REQUESTED);
