@@ -1,6 +1,7 @@
 Create installer package for Windows and Linux using the IzPack installer.
+See https://bitbucket.org/JeanLucPicard/nxt/issue/283
 
-Added separate linux and windows build and release scripts.
+Added separate linux and windows (cygwin) build and release scripts.
 
 Track and log database query execution times. The new properties:
 nxt.statementLogThreshold, nxt.transactionLogThreshold, and
@@ -35,6 +36,7 @@ Fixed a bug sometimes not showing notification badge after login.
 
 Improved Bulgarian and Slovak translations.
 
+Fix local signing of upload tagged data and approve transaction
 
 This release will perform a full blockchain rescan on first start.
 
