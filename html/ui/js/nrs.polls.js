@@ -801,17 +801,12 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.forms.createPollComplete = function(response, data) {
 		if (NRS.currentPage == "polls") {
 			var $table = $("#polls_table tbody");
-
-			var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0)).getTime();
-
-			var now = parseInt(((new Date().getTime()) - date) / 1000, 10);
-
 			var rowToAdd = "<tr class='tentative'>";
 			rowToAdd += "<td>" + String(data.name).escapeHTML() + " - <strong >" + $.t("pending") + "</strong></td>";
 			rowToAdd += "<td>" + String(data.description).escapeHTML() + "</td>";
 			rowToAdd += "<td><a href='#' data-user='" + NRS.getAccountFormatted(NRS.accountRS) + "' class='show_account_modal_action user_info'>";
 			rowToAdd += NRS.getAccountTitle(NRS.accountRS) + "</a></td>";
-			rowToAdd += "<td>" + NRS.formatTimestamp(now) + "</td>";
+			rowToAdd += "<td>" + NRS.formatTimestamp(NRS.toEpochTime()) + "</td>";
 			rowToAdd += "<td>&nbsp;</td>";
 			rowToAdd += "<td>&nbsp;</td>";
 			rowToAdd += "</tr>";
