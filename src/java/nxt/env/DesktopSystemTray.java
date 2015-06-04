@@ -18,6 +18,7 @@ package nxt.env;
 
 import nxt.Block;
 import nxt.Constants;
+import nxt.Db;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.http.API;
@@ -102,8 +103,10 @@ public class DesktopSystemTray {
         status.addActionListener(e -> displayStatus());
 
         shutdown.addActionListener(e -> {
-            Logger.logInfoMessage("Shutdown requested by System Tray");
-            System.exit(0); // Implicitly invokes shutdown using the shutdown hook
+            if(JOptionPane.showConfirmDialog (null, "Are you sure ?", "Confirm Shutdown", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                Logger.logInfoMessage("Shutdown requested by System Tray");
+                System.exit(0); // Implicitly invokes shutdown using the shutdown hook
+            }
         });
     }
 
@@ -130,12 +133,13 @@ public class DesktopSystemTray {
         addLabelRow(statusPanel, "Installation");
         addDataRow(statusPanel, "Application", Nxt.APPLICATION);
         addDataRow(statusPanel, "Version", Nxt.VERSION);
-        addDataRow(statusPanel, "Network", (Constants.isTestnet) ? "test" : "main");
+        addDataRow(statusPanel, "Network", (Constants.isTestnet) ? "TestNet" : "MainNet");
         addDataRow(statusPanel, "Working offline", "" + Constants.isOffline);
         addDataRow(statusPanel, "Wallet", String.valueOf(API.getBrowserUri()));
         addDataRow(statusPanel, "Peer port", String.valueOf(Peers.getDefaultPeerPort()));
         addDataRow(statusPanel, "Program folder", String.valueOf(Paths.get(".").toAbsolutePath().getParent()));
         addDataRow(statusPanel, "User folder", String.valueOf(Paths.get(Nxt.getUserHomeDir()).toAbsolutePath()));
+        addDataRow(statusPanel, "Database URL", Db.db == null ? "unavailable" : Db.db.getUrl());
         addEmptyRow(statusPanel);
 
         if (lastBlock != null) {
