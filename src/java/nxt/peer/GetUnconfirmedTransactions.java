@@ -58,4 +58,9 @@ final class GetUnconfirmedTransactions extends PeerServlet.PeerRequestHandler {
         return response;
     }
 
+    @Override
+    boolean rejectWhileDownloading() {
+        return true;
+    }
+
 }

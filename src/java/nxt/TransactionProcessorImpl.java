@@ -149,6 +149,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         try {
             try {
+                if (Nxt.getBlockchainProcessor().isDownloading() && ! testUnconfirmedTransactions) {
+                    return;
+                }
                 List<UnconfirmedTransaction> expiredTransactions = new ArrayList<>();
                 try (DbIterator<UnconfirmedTransaction> iterator = unconfirmedTransactionTable.getManyBy(
                         new DbClause.IntClause("expiration", DbClause.Op.LT, Nxt.getEpochTime()), 0, -1, "")) {
@@ -188,6 +191,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         try {
             try {
+                if (Nxt.getBlockchainProcessor().isDownloading() && ! testUnconfirmedTransactions) {
+                    return;
+                }
                 List<Transaction> transactionList = new ArrayList<>();
                 int curTime = Nxt.getEpochTime();
                 for (TransactionImpl transaction : broadcastedTransactions) {
@@ -217,6 +223,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
         try {
             try {
+                if (Nxt.getBlockchainProcessor().isDownloading() && ! testUnconfirmedTransactions) {
+                    return;
+                }
                 processWaitingTransactions();
                 Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                 if (peer == null) {
@@ -496,9 +505,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private void processPeerTransactions(JSONArray transactionsData) throws NxtException.NotValidException {
-        if (Nxt.getBlockchain().getLastBlock().getTimestamp() < Nxt.getEpochTime() - 60 * 1440 && ! testUnconfirmedTransactions) {
-            return;
-        }
         if (Nxt.getBlockchain().getHeight() <= Constants.NQT_BLOCK) {
             return;
         }
