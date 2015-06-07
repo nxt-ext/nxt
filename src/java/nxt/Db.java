@@ -29,7 +29,7 @@ public final class Db {
             .dbDir(Nxt.getStringProperty(PREFIX + "Dir"))
             .dbParams(Nxt.getStringProperty(PREFIX + "Params"))
             .dbUsername(Nxt.getStringProperty(PREFIX + "Username"))
-            .dbPassword(Nxt.getStringProperty(PREFIX + "Password"))
+            .dbPassword(Nxt.getStringProperty(PREFIX + "Password", null, true))
             .maxConnections(Nxt.getIntProperty("nxt.maxDbConnections"))
             .loginTimeout(Nxt.getIntProperty("nxt.dbLoginTimeout"))
             .defaultLockTimeout(Nxt.getIntProperty("nxt.dbDefaultLockTimeout") * 1000)
