@@ -32,7 +32,7 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
     static final DumpPeers instance = new DumpPeers();
 
     private DumpPeers() {
-        super(new APITag[] {APITag.DEBUG}, "version", "weight");
+        super(new APITag[] {APITag.DEBUG}, "version", "weight", "connect", "adminPassword");
     }
 
     @Override
@@ -40,6 +40,10 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
 
         String version = Convert.nullToEmpty(req.getParameter("version"));
         int weight = ParameterParser.getInt(req, "weight", 0, (int)Constants.MAX_BALANCE_NXT, false);
+        boolean connect = "true".equalsIgnoreCase(req.getParameter("connect")) && API.checkPassword(req);
+        if (connect) {
+            Peers.getAllPeers().parallelStream().unordered().forEach(Peers::connectPeer);
+        }
         Set<String> addresses = Peers.getAllPeers().parallelStream().unordered()
                 .filter(peer -> peer.getState() == Peer.State.CONNECTED
                         && peer.shareAddress()
@@ -54,7 +58,13 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
         }
         JSONObject response = new JSONObject();
         response.put("peers", buf.toString());
+        response.put("count", addresses.size());
         return response;
+    }
+
+    @Override
+    final boolean requirePost() {
+        return true;
     }
 
 }

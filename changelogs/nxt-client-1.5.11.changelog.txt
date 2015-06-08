@@ -27,6 +27,9 @@ progress, as indicated by the above isDownloading property.
 The timestamp of the last connect attempt to a peer is now included in the peer
 JSON object.
 
+Added a connect parameter to DumpPeers debug API, to force a connection attempt
+to each known peer first, adminPassword required if needed.
+
 The run.bat script on Windows no longer uses the -server flag by default.
 
 Updating nodes of version older than 1.5 to this release will delete blocks
