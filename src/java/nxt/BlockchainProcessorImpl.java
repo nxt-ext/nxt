@@ -89,7 +89,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     4, -100, -26, 47, 93, 1, -114, 86, -42, 46, -103, 13, 120, 0, 2, 100, -52,
                     -67, 109, -90, 87, 13, 30, -110, -58, -70, -94, 21, 105, -58, 20, 0
             }
-            : null;
+            : new byte[] {
+            -88, -128, 68, -118, 10, -62, 110, 19, -73, 61, 34, -76, 35, 73, -101, 9,
+            33, -111, 40, 114, 27, 105, 54, 0, 16, -97, 115, -12, -110, -88, 1, -15
+    };
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -112,6 +115,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile boolean getMoreBlocks = true;
 
     private volatile boolean isScanning;
+    private volatile boolean isDownloading;
     private volatile boolean alreadyInitialized = false;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
@@ -138,12 +142,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 // Download blocks until we are up-to-date
                 //
                 while (true) {
-                    if (!getMoreBlocks)
+                    if (!getMoreBlocks) {
                         return;
+                    }
                     int chainHeight = blockchain.getHeight();
                     downloadPeer();
-                    if (blockchain.getHeight() == chainHeight)
+                    if (blockchain.getHeight() == chainHeight) {
+                        isDownloading = false;
                         break;
+                    }
                 }
             } catch (InterruptedException e) {
                 Logger.logDebugMessage("Blockchain download thread interrupted");
@@ -155,7 +162,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         private void downloadPeer() throws InterruptedException {
             try {
-                int numberOfForkConfirmations = blockchain.getHeight() > Constants.MONETARY_SYSTEM_BLOCK - 720 ?
+                int numberOfForkConfirmations = blockchain.getHeight() > Constants.PHASING_BLOCK - 720 ?
                         defaultNumberOfForkConfirmations : Math.min(1, defaultNumberOfForkConfirmations);
                 connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
                 if (connectedPublicPeers.size() <= numberOfForkConfirmations) {
@@ -196,7 +203,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     return;
                 }
 
-                chainBlockIds = getCommonBlockId(peer, commonMilestoneBlockId, false);
+                chainBlockIds = getBlockIdsAfterCommon(peer, commonMilestoneBlockId, false);
                 if (chainBlockIds.isEmpty() || !peerHasMore) {
                     return;
                 }
@@ -218,6 +225,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
 
+                    isDownloading = true;
                     int confirmations = 0;
                     for (Peer otherPeer : connectedPublicPeers) {
                         if (confirmations >= numberOfForkConfirmations) {
@@ -226,9 +234,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         if (peer.getHost().equals(otherPeer.getHost())) {
                             continue;
                         }
-                        chainBlockIds = getCommonBlockId(otherPeer, commonBlockId, true);
-                        if (chainBlockIds.isEmpty())
+                        chainBlockIds = getBlockIdsAfterCommon(otherPeer, commonBlockId, true);
+                        if (chainBlockIds.isEmpty()) {
                             continue;
+                        }
                         long otherPeerCommonBlockId = chainBlockIds.get(0);
                         if (otherPeerCommonBlockId == blockchain.getLastBlock().getId()) {
                             confirmations++;
@@ -312,7 +321,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         }
 
-        private List<Long> getCommonBlockId(final Peer peer, final long startBlockId, final boolean countFromStart) {
+        private List<Long> getBlockIdsAfterCommon(final Peer peer, final long startBlockId, final boolean countFromStart) {
             long matchId = startBlockId;
             List<Long> blockList = new ArrayList<>(720);
             while (true) {
@@ -348,15 +357,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
                     } else {
                         blockList.add(blockId);
-                        if (blockList.size() >= 720)
+                        if (blockList.size() >= 720) {
                             break;
+                        }
                     }
                     if (countFromStart && ++count >= 720) {
                         break;
                     }
                 }
-                if (!matching || countFromStart)
+                if (!matching || countFromStart) {
                     break;
+                }
             }
             return blockList;
         }
@@ -375,10 +386,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             // is the common block for that segment.
             //
             List<GetNextBlocks> getList = new ArrayList<>();
-            int segSize = (blockchain.getHeight() >= nxt.Constants.PHASING_BLOCK ? 36 : 720);
-            int stop = chainBlockIds.size()-1;
-            for (int start=0; start<stop; start+=segSize)
-                getList.add(new GetNextBlocks(chainBlockIds, start, Math.min(start+segSize, stop)));
+            int segSize = 36;
+            int stop = chainBlockIds.size() - 1;
+            for (int start = 0; start < stop; start += segSize) {
+                getList.add(new GetNextBlocks(chainBlockIds, start, Math.min(start + segSize, stop)));
+            }
             //
             // Issue the getNextBlocks requests and get the results.  We will repeat
             // a request if the peer didn't respond or returned a partial block list.
@@ -395,17 +407,20 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 //
                 for (GetNextBlocks nextBlocks : getList) {
                     Peer peer;
-                    if (nextBlocks.getRequestCount() > 1)
+                    if (nextBlocks.getRequestCount() > 1) {
                         break download;
+                    }
                     if (nextBlocks.getStart() == 0 || nextBlocks.getRequestCount() != 0) {
                         peer = feederPeer;
                     } else {
                         peer = Peers.getWeightedPeer(connectedPublicPeers);
-                        if (peer == null)
+                        if (peer == null) {
                             peer = feederPeer;
+                        }
                     }
-                    if (nextBlocks.getPeer() == peer)
+                    if (nextBlocks.getPeer() == peer) {
                         break download;
+                    }
                     nextBlocks.setPeer(peer);
                     Future<List<BlockImpl>> future = networkService.submit(nextBlocks);
                     nextBlocks.setFuture(future);
@@ -423,20 +438,23 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     } catch (ExecutionException exc) {
                         throw new RuntimeException(exc.getMessage(), exc);
                     }
-                    if (blockList == null)
+                    if (blockList == null) {
                         continue;
+                    }
                     Peer peer = nextBlocks.getPeer();
-                    int index = nextBlocks.getStart()+1;
+                    int index = nextBlocks.getStart() + 1;
                     for (BlockImpl block : blockList) {
-                        if (block.getId() != chainBlockIds.get(index))
+                        if (block.getId() != chainBlockIds.get(index)) {
                             break;
+                        }
                         blockMap.put(block.getId(), new PeerBlock(peer, block));
                         index++;
                     }
-                    if (index > nextBlocks.getStop())
+                    if (index > nextBlocks.getStop()) {
                         it.remove();
-                    else
-                        nextBlocks.setStart(index-1);
+                    } else {
+                        nextBlocks.setStart(index - 1);
+                    }
                 }
             }
             //
@@ -448,8 +466,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             final int startHeight = commonBlock.getHeight();
             for (int index=1; index<chainBlockIds.size() && blockchain.getHeight() - startHeight < 720; index++) {
                 PeerBlock peerBlock = blockMap.get(chainBlockIds.get(index));
-                if (peerBlock == null)
+                if (peerBlock == null) {
                     break;
+                }
                 BlockImpl block = peerBlock.getBlock();
                 if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
                     try {
@@ -572,20 +591,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             // Build the block request list
             //
             JSONArray idList = new JSONArray();
-            for (int i=start+1; i<=stop; i++)
+            for (int i = start + 1; i <= stop; i++) {
                 idList.add(Long.toUnsignedString(blockIds.get(i)));
-            //
-            // Issue the getNextBlocks request and specify both 'blockIds' and 'blockId'.
-            // This will allow the request to be processed by both old and new nodes.
-            //
+            }
             JSONObject request = new JSONObject();
             request.put("requestType", "getNextBlocks");
             request.put("blockIds", idList);
             request.put("blockId", Long.toUnsignedString(blockIds.get(start)));
-            //TODO: after Constants.PHASING_BLOCK has passed, reduce the maxResponseSize
-            JSONObject response = peer.send(JSON.prepareRequest(request), 192 * 1024 * 1024);
-            if (response == null)
+            JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);
+            if (response == null) {
                 return null;
+            }
             //
             // Get the list of blocks.  We will stop parsing blocks if we encounter
             // an invalid block.  We will return the valid blocks and reset the stop
@@ -594,7 +610,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             List<JSONObject> nextBlocks = (List<JSONObject>)response.get("nextBlocks");
             if (nextBlocks == null)
                 return null;
-            if (nextBlocks.size() > 720) {
+            if (nextBlocks.size() > 36) {
                 Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlocks, blacklisting");
                 peer.blacklist("Too many nextBlocks");
                 return null;
@@ -742,12 +758,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, Constants.NQT_BLOCK, Constants.MONETARY_SYSTEM_BLOCK)) {
             popOffTo(Constants.NQT_BLOCK);
         }
-        /*
         if (block.getHeight() == Constants.PHASING_BLOCK
                 && ! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
             popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
         }
-        */
     };
 
     private BlockchainProcessorImpl() {
@@ -866,6 +880,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public boolean isScanning() {
         return isScanning;
+    }
+
+    @Override
+    public boolean isDownloading() {
+        return isDownloading;
     }
 
     @Override
@@ -1248,9 +1267,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private void popOffWithRescan(int height) {
         synchronized (blockchain) {
             try {
-                BlockImpl block = BlockDb.findBlockAtHeight(height);
                 scheduleScan(0, false);
-                BlockDb.deleteBlocksFrom(block.getId());
+                BlockDb.deleteBlocksFrom(BlockDb.findBlockIdAtHeight(height));
                 Logger.logDebugMessage("Deleted blocks starting from height %s", height);
             } finally {
                 scan(0, false);

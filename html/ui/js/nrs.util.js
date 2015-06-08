@@ -613,11 +613,28 @@ var NRS = (function(NRS, $, undefined) {
 		}, no_escaping);
 	};
 
+    NRS.fromEpochTime = function(epochTime) {
+        if (NRS.constants.EPOCH_BEGINNING == 0) {
+            throw "undefined epoch beginning";
+        }
+        return epochTime * 1000 + NRS.constants.EPOCH_BEGINNING - 500;
+    };
+
+    NRS.toEpochTime = function(currentTime) {
+        if (currentTime == undefined) {
+            currentTime = new Date();
+        }
+        if (NRS.constants.EPOCH_BEGINNING == 0) {
+            throw "undefined epoch beginning";
+        }
+        return Math.floor((currentTime - NRS.constants.EPOCH_BEGINNING) / 1000);
+    };
+
 	NRS.formatTimestamp = function(timestamp, date_only) {
 		if (typeof timestamp == "object") {
 			var date = timestamp;
 		} else {
-			var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + timestamp * 1000);
+            var date = new Date(NRS.fromEpochTime(timestamp));
 		}
 
 		if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
@@ -626,7 +643,7 @@ var NRS = (function(NRS, $, undefined) {
 			var M = date.getMonth() + 1;
 			var MM = M < 10 ? '0' + M : M;
 			var yyyy = date.getFullYear();
-			var yy = new String(yyyy).substring(2);
+			var yy = String(yyyy).substring(2);
 
          var res = LOCALE_DATE_FORMAT
 				.replace(/dd/g, dd)
@@ -660,33 +677,6 @@ var NRS = (function(NRS, $, undefined) {
 					res += " " + (originalHours > 12 ? "PM" : "AM");
 				}
 			}
-
-			return res;
-		} else {
-			return date.toLocaleString();
-		}
-	};
-
-	NRS.formatTime = function(timestamp) {
-		var date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + timestamp * 1000);
-
-		if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
-			var res = "";
-
-			var hours = date.getHours();
-			var minutes = date.getMinutes();
-			var seconds = date.getSeconds();
-
-			if (hours < 10) {
-				hours = "0" + hours;
-			}
-			if (minutes < 10) {
-				minutes = "0" + minutes;
-			}
-			if (seconds < 10) {
-				seconds = "0" + seconds;
-			}
-			res += " " + hours + ":" + minutes + ":" + seconds;
 
 			return res;
 		} else {

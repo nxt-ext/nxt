@@ -410,7 +410,7 @@ public final class Peers {
                                     if (peer.getState() == Peer.State.CONNECTED &&
                                             enableHallmarkProtection && peer.getWeight() == 0 &&
                                             hasTooManyOutboundConnections()) {
-                                        Logger.logDebugMessage("Too many outbound connections, deactivating peer "+peer.getHost());
+                                        Logger.logDebugMessage("Too many outbound connections, deactivating peer " + peer.getHost());
                                         peer.deactivate();
                                     }
                                 }

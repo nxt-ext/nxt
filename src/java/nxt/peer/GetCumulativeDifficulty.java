@@ -39,4 +39,9 @@ final class GetCumulativeDifficulty extends PeerServlet.PeerRequestHandler {
         return response;
     }
 
+    @Override
+    boolean rejectWhileDownloading() {
+        return true;
+    }
+
 }

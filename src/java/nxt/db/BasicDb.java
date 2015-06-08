@@ -176,4 +176,8 @@ public class BasicDb {
         return con;
     }
 
+    public String getUrl() {
+        return dbUrl;
+    }
+
 }

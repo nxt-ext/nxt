@@ -759,10 +759,6 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
 
-                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
-                }
-
                 Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation) transaction.getAttachment();
 
                 int optionsCount = attachment.getPollOptions().length;
@@ -853,9 +849,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Voting System not yet enabled at height " + Nxt.getBlockchain().getHeight());
-                }
 
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
                 if (attachment.getPollId() == 0 || attachment.getPollVote() == null
@@ -954,10 +947,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-
-                if (Nxt.getBlockchain().getHeight() < Constants.PHASING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Phasing not yet enabled at height " + Nxt.getBlockchain().getHeight());
-                }
 
                 Attachment.MessagingPhasingVoteCasting attachment = (Attachment.MessagingPhasingVoteCasting) transaction.getAttachment();
                 byte[] revealedSecret = attachment.getRevealedSecret();
@@ -2024,9 +2013,7 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPendingPurchase(attachment.getPurchaseId());
-                int maxGoodsLength = Nxt.getBlockchain().getHeight() > Constants.VOTING_SYSTEM_BLOCK
-                        ? Constants.MAX_DGS_GOODS_LENGTH_2 : Constants.MAX_DGS_GOODS_LENGTH;
-                if (attachment.getGoods().getData().length > maxGoodsLength
+                if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
                         || attachment.getGoods().getData().length == 0
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
@@ -2356,9 +2343,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Prunable Tagged Data not yet enabled");
-                }
                 Attachment.TaggedDataUpload attachment = (Attachment.TaggedDataUpload) transaction.getAttachment();
                 if (attachment.getData() == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                     throw new NxtException.NotCurrentlyValidException("Data has been pruned prematurely");
@@ -2420,9 +2404,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Prunable Tagged Data not yet enabled");
-                }
                 Attachment.TaggedDataExtend attachment = (Attachment.TaggedDataExtend) transaction.getAttachment();
                 if ((attachment.jsonIsPruned() || attachment.getData() == null) && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                     throw new NxtException.NotCurrentlyValidException("Data has been pruned prematurely");

@@ -350,6 +350,7 @@ final class JSONData {
         json.put("platform", peer.getPlatform());
         json.put("blacklisted", peer.isBlacklisted());
         json.put("lastUpdated", peer.getLastUpdated());
+        json.put("lastConnectAttempt", peer.getLastConnectAttempt());
         json.put("inbound", peer.isInbound());
         json.put("inboundWebSocket", peer.isInboundWebSocket());
         json.put("outboundWebSocket", peer.isOutboundWebSocket());

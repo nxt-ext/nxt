@@ -17,6 +17,7 @@
 package nxt;
 
 import nxt.db.DbVersion;
+import nxt.util.Logger;
 
 class NxtDbVersion extends DbVersion {
 
@@ -568,6 +569,14 @@ class NxtDbVersion extends DbVersion {
             case 230:
                 apply("CREATE INDEX IF NOT EXISTS trade_height_idx ON trade(height)");
             case 231:
+                long votingBlockId = 0;
+                try {
+                    votingBlockId = BlockDb.findBlockIdAtHeight(Constants.VOTING_SYSTEM_BLOCK);
+                } catch (RuntimeException ignore) {}
+                if (votingBlockId != 0) {
+                    Logger.logDebugMessage("Deleting blocks starting from height %s", Constants.VOTING_SYSTEM_BLOCK);
+                    BlockDb.deleteBlocksFrom(votingBlockId);
+                }
                 apply("DROP TABLE IF EXISTS poll");
             case 232:
                 apply("DROP TABLE IF EXISTS vote");

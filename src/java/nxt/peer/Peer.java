@@ -65,6 +65,8 @@ public interface Peer extends Comparable<Peer> {
 
     int getLastUpdated();
 
+    int getLastConnectAttempt();
+
     boolean isInbound();
 
     boolean isInboundWebSocket();

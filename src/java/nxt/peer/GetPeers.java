@@ -43,4 +43,9 @@ final class GetPeers extends PeerServlet.PeerRequestHandler {
         return response;
     }
 
+    @Override
+    boolean rejectWhileDownloading() {
+        return false;
+    }
+
 }

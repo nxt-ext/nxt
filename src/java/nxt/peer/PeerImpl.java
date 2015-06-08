@@ -387,7 +387,8 @@ final class PeerImpl implements Peer {
         return blacklistingCause == null ? "unknown" : blacklistingCause;
     }
 
-    int getLastConnectAttempt() {
+    @Override
+    public int getLastConnectAttempt() {
         return lastConnectAttempt;
     }
 
