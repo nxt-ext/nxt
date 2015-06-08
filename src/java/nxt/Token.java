@@ -21,20 +21,22 @@ import nxt.util.Convert;
 
 public final class Token {
 
-    public static String generateToken(String secretPhrase, String websiteString) {
+    public static String generateToken(String secretPhrase, String messageString) {
+        return generateToken(secretPhrase, Convert.toBytes(messageString));
+    }
 
-        byte[] website = Convert.toBytes(websiteString);
-        byte[] data = new byte[website.length + 32 + 4];
-        System.arraycopy(website, 0, data, 0, website.length);
-        System.arraycopy(Crypto.getPublicKey(secretPhrase), 0, data, website.length, 32);
+    public static String generateToken(String secretPhrase, byte[] message) {
+        byte[] data = new byte[message.length + 32 + 4];
+        System.arraycopy(message, 0, data, 0, message.length);
+        System.arraycopy(Crypto.getPublicKey(secretPhrase), 0, data, message.length, 32);
         int timestamp = Nxt.getEpochTime();
-        data[website.length + 32] = (byte)timestamp;
-        data[website.length + 32 + 1] = (byte)(timestamp >> 8);
-        data[website.length + 32 + 2] = (byte)(timestamp >> 16);
-        data[website.length + 32 + 3] = (byte)(timestamp >> 24);
+        data[message.length + 32] = (byte)timestamp;
+        data[message.length + 32 + 1] = (byte)(timestamp >> 8);
+        data[message.length + 32 + 2] = (byte)(timestamp >> 16);
+        data[message.length + 32 + 3] = (byte)(timestamp >> 24);
 
         byte[] token = new byte[100];
-        System.arraycopy(data, website.length, token, 0, 32 + 4);
+        System.arraycopy(data, message.length, token, 0, 32 + 4);
         System.arraycopy(Crypto.sign(data, secretPhrase), 0, token, 32 + 4, 64);
 
         StringBuilder buf = new StringBuilder();
@@ -67,8 +69,10 @@ public final class Token {
     }
 
     public static Token parseToken(String tokenString, String website) {
+        return parseToken(tokenString, Convert.toBytes(website));
+    }
 
-        byte[] websiteBytes = Convert.toBytes(website);
+    public static Token parseToken(String tokenString, byte[] messageBytes) {
         byte[] tokenBytes = new byte[100];
         int i = 0, j = 0;
 
@@ -92,9 +96,9 @@ public final class Token {
         byte[] signature = new byte[64];
         System.arraycopy(tokenBytes, 36, signature, 0, 64);
 
-        byte[] data = new byte[websiteBytes.length + 36];
-        System.arraycopy(websiteBytes, 0, data, 0, websiteBytes.length);
-        System.arraycopy(tokenBytes, 0, data, websiteBytes.length, 36);
+        byte[] data = new byte[messageBytes.length + 36];
+        System.arraycopy(messageBytes, 0, data, 0, messageBytes.length);
+        System.arraycopy(tokenBytes, 0, data, messageBytes.length, 36);
         boolean isValid = Crypto.verify(signature, data, publicKey, true);
 
         return new Token(publicKey, timestamp, isValid);
