@@ -1267,9 +1267,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private void popOffWithRescan(int height) {
         synchronized (blockchain) {
             try {
-                BlockImpl block = BlockDb.findBlockAtHeight(height);
                 scheduleScan(0, false);
-                BlockDb.deleteBlocksFrom(block.getId());
+                BlockDb.deleteBlocksFrom(BlockDb.findBlockIdAtHeight(height));
                 Logger.logDebugMessage("Deleted blocks starting from height %s", height);
             } finally {
                 scan(0, false);
