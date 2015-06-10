@@ -257,17 +257,16 @@ public class APITestServlet extends HttpServlet {
         buf.append("<div class=\"panel-body\">");
         buf.append("<form action=\"/nxt\" method=\"POST\" ");
         if (fileParameter != null) {
-            buf.append("enctype=\"multipart/form-data\">");
-        } else {
-            buf.append(" onsubmit=\"return ATS.submitForm(this);\">");
+            buf.append("enctype=\"multipart/form-data\" ");
         }
+        buf.append("onsubmit=\"return ATS.submitForm(this);\">");
         buf.append("<input type=\"hidden\" name=\"requestType\" value=\"").append(requestType).append("\"/>");
         buf.append("<div class=\"col-xs-12 col-lg-6\" style=\"min-width: 40%;\">");
         buf.append("<table class=\"table\">");
         if (fileParameter != null) {
             buf.append("<tr class=\"api-call-input-tr\">");
             buf.append("<td>").append(fileParameter).append(":</td>");
-            buf.append("<td><input type=\"file\" name=\"").append(fileParameter).append("\" ");
+            buf.append("<td><input type=\"file\" name=\"").append(fileParameter).append("\" id=\"").append(fileParameter).append(requestType).append("\" ");
             buf.append("style=\"width:100%;min-width:200px;\"/></td>");
             buf.append("</tr>");
         }

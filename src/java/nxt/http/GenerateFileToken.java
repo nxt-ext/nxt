@@ -59,7 +59,7 @@ public final class GenerateFileToken extends APIServlet.APIRequestHandler {
             response.put("token", tokenString);
             return response;
         } catch (RuntimeException e) {
-            return INCORRECT_FILE;
+            return INCORRECT_TOKEN;
         }
     }
 

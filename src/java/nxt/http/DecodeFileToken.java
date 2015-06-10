@@ -57,7 +57,7 @@ public final class DecodeFileToken extends APIServlet.APIRequestHandler {
             Token token = Token.parseToken(tokenString, data);
             return JSONData.token(token);
         } catch (RuntimeException e) {
-            return INCORRECT_FILE;
+            return INCORRECT_TOKEN;
         }
     }
 
