@@ -270,7 +270,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         totalBlocks += numBlocks;
                         Logger.logMessage("Downloaded " + numBlocks + " blocks in "
                                 + time / 1000 + " s, " + (totalBlocks * 1000) / totalTime + " per s, "
-                                + totalTime * (lastBlockchainFeederHeight - blockchain.getHeight()) / ((long)totalBlocks * 1000 * 60) + " min left");
+                                + totalTime * (lastBlockchainFeederHeight - blockchain.getHeight()) / ((long) totalBlocks * 1000 * 60) + " min left");
                     } else {
                         Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
                     }
@@ -401,6 +401,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             for (int start = 0; start < stop; start += segSize) {
                 getList.add(new GetNextBlocks(chainBlockIds, start, Math.min(start + segSize, stop)));
             }
+            int nextPeerIndex = ThreadLocalRandom.current().nextInt(connectedPublicPeers.size());
             //
             // Issue the getNextBlocks requests and get the results.  We will repeat
             // a request if the peer didn't respond or returned a partial block list.
@@ -415,7 +416,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 // from another peer.  We will stop the download and process any pending
                 // blocks if we are unable to download a segment from the feeder peer.
                 //
-                int nextPeerIndex = ThreadLocalRandom.current().nextInt(connectedPublicPeers.size());
                 for (GetNextBlocks nextBlocks : getList) {
                     Peer peer;
                     if (nextBlocks.getRequestCount() > 1) {
