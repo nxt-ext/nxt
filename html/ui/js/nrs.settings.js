@@ -64,6 +64,7 @@ var NRS = (function(NRS, $) {
 		"sr": "Српски (Experimental)",   // serbian, cyrillic
 		"sr-cs": "Srpski (Experimental)",// serbian, latin
 		"bg": "Български",               // bulgarian
+		"ro": "Român (Experimental)",    // romanian
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
 		"zh-cn": "中文 simplified",      // chinese simplified
