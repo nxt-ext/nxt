@@ -402,6 +402,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 getList.add(new GetNextBlocks(chainBlockIds, start, Math.min(start + segSize, stop)));
             }
             int nextPeerIndex = ThreadLocalRandom.current().nextInt(connectedPublicPeers.size());
+            long maxResponseTime = 0;
+            Peer slowestPeer = null;
             //
             // Issue the getNextBlocks requests and get the results.  We will repeat
             // a request if the peer didn't respond or returned a partial block list.
@@ -424,10 +426,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (nextBlocks.getStart() == 0 || nextBlocks.getRequestCount() != 0) {
                         peer = feederPeer;
                     } else {
-                        peer = connectedPublicPeers.get(nextPeerIndex++);
                         if (nextPeerIndex >= connectedPublicPeers.size()) {
                             nextPeerIndex = 0;
                         }
+                        peer = connectedPublicPeers.get(nextPeerIndex++);
                     }
                     if (nextBlocks.getPeer() == peer) {
                         break download;
@@ -450,6 +452,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         throw new RuntimeException(exc.getMessage(), exc);
                     }
                     if (blockList == null) {
+                        nextBlocks.getPeer().deactivate();
                         continue;
                     }
                     Peer peer = nextBlocks.getPeer();
@@ -466,7 +469,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     } else {
                         nextBlocks.setStart(index - 1);
                     }
+                    if (nextBlocks.getResponseTime() > maxResponseTime) {
+                        maxResponseTime = nextBlocks.getResponseTime();
+                        slowestPeer = nextBlocks.getPeer();
+                    }
                 }
+
+            }
+            if (slowestPeer != null && connectedPublicPeers.size() >= 20 && chainBlockIds.size() > 360) {
+                Logger.logDebugMessage(slowestPeer.getHost() + " took " + maxResponseTime + " ms, disconnecting");
+                slowestPeer.deactivate();
             }
             //
             // Add the new blocks to the blockchain.  We will stop if we encounter
@@ -576,6 +588,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         /** Request count */
         private int requestCount;
 
+        private long responseTime;
+
         /**
          * Create the callable future
          *
@@ -609,7 +623,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             request.put("requestType", "getNextBlocks");
             request.put("blockIds", idList);
             request.put("blockId", Long.toUnsignedString(blockIds.get(start)));
+            long startTime = System.currentTimeMillis();
             JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);
+            responseTime = System.currentTimeMillis() - startTime;
             if (response == null) {
                 return null;
             }
@@ -712,6 +728,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
          */
         public int getRequestCount() {
             return requestCount;
+        }
+
+        public long getResponseTime() {
+            return responseTime;
         }
     }
 
