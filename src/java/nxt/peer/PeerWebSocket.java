@@ -173,6 +173,12 @@ public class PeerWebSocket {
             }
         } catch (TimeoutException exc) {
             throw new SocketTimeoutException(String.format("WebSocket connection to %s timed out", address));
+        } catch (IllegalStateException exc) {
+            if (! peerClient.isStarted()) {
+                Logger.logDebugMessage("WebSocket client not started or shutting down");
+                throw exc;
+            }
+            Logger.logDebugMessage(String.format("WebSocket connection to %s failed", address), exc);
         } catch (Exception exc) {
             Logger.logDebugMessage(String.format("WebSocket connection to %s failed", address), exc);
         } finally {
