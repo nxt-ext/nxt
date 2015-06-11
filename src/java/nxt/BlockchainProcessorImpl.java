@@ -57,6 +57,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -134,6 +135,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         private boolean peerHasMore;
         private List<Peer> connectedPublicPeers;
         private List<Long> chainBlockIds;
+        private long totalTime = 1;
+        private int totalBlocks;
 
         @Override
         public void run() {
@@ -162,6 +165,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         private void downloadPeer() throws InterruptedException {
             try {
+                long startTime = System.currentTimeMillis();
                 int numberOfForkConfirmations = blockchain.getHeight() > Constants.PHASING_BLOCK - 720 ?
                         defaultNumberOfForkConfirmations : Math.min(1, defaultNumberOfForkConfirmations);
                 connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
@@ -260,7 +264,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     Logger.logDebugMessage("Got " + confirmations + " confirmations");
 
                     if (blockchain.getLastBlock().getId() != lastBlockId) {
-                        Logger.logDebugMessage("Downloaded " + (blockchain.getHeight() - commonBlock.getHeight()) + " blocks");
+                        long time = System.currentTimeMillis() - startTime;
+                        totalTime += time;
+                        int numBlocks = blockchain.getHeight() - commonBlock.getHeight();
+                        totalBlocks += numBlocks;
+                        Logger.logMessage("Downloaded " + numBlocks + " blocks in "
+                                + time / 1000 + " s, " + (totalBlocks * 1000) / totalTime + " per s, "
+                                + totalTime * (lastBlockchainFeederHeight - blockchain.getHeight()) / ((long)totalBlocks * 1000 * 60) + " min left");
                     } else {
                         Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
                     }
@@ -405,6 +415,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 // from another peer.  We will stop the download and process any pending
                 // blocks if we are unable to download a segment from the feeder peer.
                 //
+                int nextPeerIndex = ThreadLocalRandom.current().nextInt(connectedPublicPeers.size());
                 for (GetNextBlocks nextBlocks : getList) {
                     Peer peer;
                     if (nextBlocks.getRequestCount() > 1) {
@@ -413,9 +424,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (nextBlocks.getStart() == 0 || nextBlocks.getRequestCount() != 0) {
                         peer = feederPeer;
                     } else {
-                        peer = Peers.getWeightedPeer(connectedPublicPeers);
-                        if (peer == null) {
-                            peer = feederPeer;
+                        peer = connectedPublicPeers.get(nextPeerIndex++);
+                        if (nextPeerIndex >= connectedPublicPeers.size()) {
+                            nextPeerIndex = 0;
                         }
                     }
                     if (nextBlocks.getPeer() == peer) {
