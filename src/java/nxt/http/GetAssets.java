@@ -25,6 +25,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_ASSET;
+import static nxt.http.JSONResponses.MISSING_ASSET;
 import static nxt.http.JSONResponses.UNKNOWN_ASSET;
 
 public final class GetAssets extends APIServlet.APIRequestHandler {
@@ -39,6 +40,9 @@ public final class GetAssets extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         String[] assets = req.getParameterValues("assets");
+        if (assets == null) {
+            return MISSING_ASSET;
+        }
         boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
