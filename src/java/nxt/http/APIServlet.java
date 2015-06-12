@@ -131,10 +131,12 @@ public final class APIServlet extends HttpServlet {
         map.put("dgsRefund", DGSRefund.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
+        map.put("decodeFileToken", DecodeFileToken.instance);
         map.put("encryptTo", EncryptTo.instance);
         map.put("eventRegister", EventRegister.instance);
         map.put("eventWait", EventWait.instance);
         map.put("generateToken", GenerateToken.instance);
+        map.put("generateFileToken", GenerateFileToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockCount", GetAccountBlockCount.instance);
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
@@ -383,7 +385,9 @@ public final class APIServlet extends HttpServlet {
             if (response != null && (response instanceof JSONObject)) {
                 ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
-
+        } catch (Exception e) {
+            Logger.logErrorMessage("Error processing request", e);
+            response = ERROR_INCORRECT_REQUEST;
         } finally {
             // The response will be null if we created an asynchronous context
             if (response != null) {
