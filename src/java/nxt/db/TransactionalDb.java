@@ -90,13 +90,13 @@ public class TransactionalDb extends BasicDb {
         }
         try {
             con.doCommit();
+            Set<TransactionCallback> callbacks = transactionCallback.get();
+            if (callbacks != null) {
+                callbacks.forEach(TransactionCallback::commit);
+                transactionCallback.set(null);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
-        }
-        Set<TransactionCallback> callbacks = transactionCallback.get();
-        if (callbacks != null) {
-            callbacks.forEach(TransactionCallback::commit);
-            transactionCallback.set(null);
         }
     }
 
@@ -111,11 +111,11 @@ public class TransactionalDb extends BasicDb {
             throw new RuntimeException(e.toString(), e);
         } finally {
             transactionCaches.get().clear();
-        }
-        Set<TransactionCallback> callbacks = transactionCallback.get();
-        if (callbacks != null) {
-            callbacks.forEach(TransactionCallback::rollback);
-            transactionCallback.set(null);
+            Set<TransactionCallback> callbacks = transactionCallback.get();
+            if (callbacks != null) {
+                callbacks.forEach(TransactionCallback::rollback);
+                transactionCallback.set(null);
+            }
         }
     }
 
