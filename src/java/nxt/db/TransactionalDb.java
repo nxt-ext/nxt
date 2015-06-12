@@ -25,7 +25,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class TransactionalDb extends BasicDb {
 
@@ -42,6 +44,7 @@ public class TransactionalDb extends BasicDb {
 
     private final ThreadLocal<DbConnection> localConnection = new ThreadLocal<>();
     private final ThreadLocal<Map<String,Map<DbKey,Object>>> transactionCaches = new ThreadLocal<>();
+    private final ThreadLocal<Set<TransactionCallback>> transactionCallback = new ThreadLocal<>();
     private volatile long txTimes = 0;
     private volatile long txCount = 0;
     private volatile long statsTime = 0;
@@ -87,6 +90,11 @@ public class TransactionalDb extends BasicDb {
         }
         try {
             con.doCommit();
+            Set<TransactionCallback> callbacks = transactionCallback.get();
+            if (callbacks != null) {
+                callbacks.forEach(TransactionCallback::commit);
+                transactionCallback.set(null);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -103,6 +111,11 @@ public class TransactionalDb extends BasicDb {
             throw new RuntimeException(e.toString(), e);
         } finally {
             transactionCaches.get().clear();
+            Set<TransactionCallback> callbacks = transactionCallback.get();
+            if (callbacks != null) {
+                callbacks.forEach(TransactionCallback::rollback);
+                transactionCallback.set(null);
+            }
         }
     }
 
@@ -137,6 +150,15 @@ public class TransactionalDb extends BasicDb {
                                                      (double)times/1000.0/(double)count));
         }
         DbUtils.close(con);
+    }
+
+    public void registerCallback(TransactionCallback callback) {
+        Set<TransactionCallback> callbacks = transactionCallback.get();
+        if (callbacks == null) {
+            callbacks = new HashSet<>();
+            transactionCallback.set(callbacks);
+        }
+        callbacks.add(callback);
     }
 
     Map<DbKey,Object> getCache(String tableName) {
@@ -312,5 +334,21 @@ public class TransactionalDb extends BasicDb {
         public PreparedStatement createPreparedStatement(PreparedStatement stmt, String sql) {
             return new DbPreparedStatement(stmt, sql);
         }
+    }
+
+    /**
+     * Transaction callback interface
+     */
+    public interface TransactionCallback {
+
+        /**
+         * Transaction has been committed
+         */
+        public void commit();
+
+        /**
+         * Transaction has been rolled back
+         */
+        public void rollback();
     }
 }
