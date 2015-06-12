@@ -3290,6 +3290,10 @@ input.masked {
   display:none;
 }
 
+.modal {
+  overflow-y: auto;
+}
+
 .modal-body {
   padding-bottom:8px;
 } 

@@ -3383,6 +3383,11 @@ a.list-group-item.active h4 span {
 	font-family: 'Segoe UI Light','Open Sans',sans-serif;
 	font-size: 18px;
 }
+
+.modal {
+  overflow-y: auto;
+}
+
 .modal-dialog .modal-content {
 	border-radius: 0px;
 	box-shadow: none;
