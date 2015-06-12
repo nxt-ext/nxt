@@ -1192,13 +1192,20 @@ var NRS = (function(NRS, $, undefined) {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
 						if (quantity != "0") {
-							$.growl($.t("you_received_assets", {
-								"asset": String(asset.asset).escapeHTML(),
-								"name": String(asset.name).escapeHTML(),
-								"count": quantity
-							}), {
-								"type": "success"
-							});
+							if (parseInt(quantity) == 1) {
+								$.growl($.t("you_received_assets", {
+									"name": String(asset.name).escapeHTML()
+								}), {
+									"type": "success"
+								});
+							} else {
+								$.growl($.t("you_received_assets_plural", {
+									"name": String(asset.name).escapeHTML(),
+									"count": quantity
+								}), {
+									"type": "success"
+								});
+							}
 							NRS.loadAssetExchangeSidebar();
 						}
 					} else {
@@ -1207,13 +1214,20 @@ var NRS = (function(NRS, $, undefined) {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
 						if (quantity != "0") {
-							$.growl($.t("you_sold_assets", {
-								"asset": String(asset.asset).escapeHTML(),
-								"name": String(asset.name).escapeHTML(),
-								"count": quantity
-							}), {
-								"type": "success"
-							});
+							if (parseInt(quantity) == 1) {
+								$.growl($.t("you_sold_assets", {
+									"name": String(asset.name).escapeHTML()
+								}), {
+									"type": "success"
+								});
+							} else {
+								$.growl($.t("you_sold_assets_plural", {
+									"name": String(asset.name).escapeHTML(),
+									"count": quantity
+								}), {
+									"type": "success"
+								});
+							} 
 							NRS.loadAssetExchangeSidebar();
 						}
 					}

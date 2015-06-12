@@ -25,6 +25,7 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_CURRENCY;
+import static nxt.http.JSONResponses.MISSING_CURRENCY;
 import static nxt.http.JSONResponses.UNKNOWN_CURRENCY;
 
 public final class GetCurrencies extends APIServlet.APIRequestHandler {
@@ -39,6 +40,9 @@ public final class GetCurrencies extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
 
         String[] currencies = req.getParameterValues("currencies");
+        if (currencies == null) {
+            return MISSING_CURRENCY;
+        }
         boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();

@@ -171,7 +171,6 @@ final class BlockchainImpl implements Blockchain {
             List<Long> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
-            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     result.add(rs.getLong("id"));
@@ -190,7 +189,6 @@ final class BlockchainImpl implements Blockchain {
             List<BlockImpl> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
-            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     result.add(BlockDb.loadBlock(con, rs, true));
@@ -211,7 +209,6 @@ final class BlockchainImpl implements Blockchain {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, blockList.size());
-            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 int index = 0;
                 while (rs.next()) {
