@@ -208,7 +208,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
                 chainBlockIds = getBlockIdsAfterCommon(peer, commonMilestoneBlockId, false);
-                if (chainBlockIds.isEmpty() || !peerHasMore) {
+                if (chainBlockIds.size() < 2 || !peerHasMore) {
                     return;
                 }
 
@@ -334,6 +334,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         private List<Long> getBlockIdsAfterCommon(final Peer peer, final long startBlockId, final boolean countFromStart) {
             long matchId = startBlockId;
             List<Long> blockList = new ArrayList<>(720);
+            boolean matched = false;
             while (true) {
                 JSONObject request = new JSONObject();
                 request.put("requestType", "getNextBlockIds");
@@ -341,11 +342,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 request.put("limit", countFromStart ? 720 : 1440);
                 JSONObject response = peer.send(JSON.prepareRequest(request));
                 if (response == null) {
-                    return blockList;
+                    return Collections.emptyList();
                 }
                 JSONArray nextBlockIds = (JSONArray) response.get("nextBlockIds");
                 if (nextBlockIds == null || nextBlockIds.size() == 0) {
-                    return blockList;
+                    break;
                 }
                 // prevent overloading with blockIds
                 if (nextBlockIds.size() > 1440) {
@@ -360,6 +361,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     if (matching) {
                         if (BlockDb.hasBlock(blockId)) {
                             matchId = blockId;
+                            matched = true;
                         } else {
                             blockList.add(matchId);
                             blockList.add(blockId);
@@ -378,6 +380,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (!matching || countFromStart) {
                     break;
                 }
+            }
+            if (blockList.isEmpty() && matched) {
+                blockList.add(matchId);
             }
             return blockList;
         }
