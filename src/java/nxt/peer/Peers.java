@@ -464,7 +464,7 @@ public final class Peers {
                     }
 
                     peers.values().parallelStream().unordered()
-                            .filter(peer -> peer.getLastInboundRequest() != 0 && now - peer.getLastInboundRequest() > 1800)
+                            .filter(peer -> peer.getLastInboundRequest() != 0 && now - peer.getLastInboundRequest() > Peers.webSocketIdleTimeout/1000)
                             .forEach(peer -> {
                                 peer.setLastInboundRequest(0);
                                 notifyListeners(peer, Event.REMOVE_INBOUND);
