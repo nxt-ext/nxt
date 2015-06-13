@@ -231,7 +231,7 @@ public final class Peers {
         pullThreshold = Nxt.getIntProperty("nxt.pullThreshold");
         useWebSockets = Nxt.getBooleanProperty("nxt.useWebSockets");
         webSocketIdleTimeout = Nxt.getIntProperty("nxt.webSocketIdleTimeout");
-        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
+        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod") / 1000;
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
         usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! Constants.isOffline;
@@ -373,7 +373,7 @@ public final class Peers {
         try {
             try {
 
-                long curTime = System.currentTimeMillis();
+                int curTime = Nxt.getEpochTime();
                 for (PeerImpl peer : peers.values()) {
                     peer.updateBlacklistedStatus(curTime);
                 }
