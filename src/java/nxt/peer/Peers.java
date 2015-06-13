@@ -101,7 +101,7 @@ public final class Peers {
     private static final boolean shareMyAddress;
     private static final int maxNumberOfInboundConnections;
     private static final int maxNumberOfOutboundConnections;
-    private static final int maxNumberOfConnectedPublicPeers;
+    public static final int maxNumberOfConnectedPublicPeers;
     private static final int maxNumberOfKnownPeers;
     private static final int minNumberOfKnownPeers;
     private static final boolean enableHallmarkProtection;

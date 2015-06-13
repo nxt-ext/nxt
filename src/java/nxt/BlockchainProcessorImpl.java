@@ -223,7 +223,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
                     long lastBlockId = blockchain.getLastBlock().getId();
-                    downloadBlockchain(peer, commonBlock);
+                    downloadBlockchain(peer, commonBlock, commonBlock.getHeight());
 
                     if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
                         return;
@@ -247,7 +247,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             confirmations++;
                             continue;
                         }
-                        if (blockchain.getHeight() - blockchain.getBlock(otherPeerCommonBlockId).getHeight() >= 720) {
+                        Block otherPeerCommonBlock = blockchain.getBlock(otherPeerCommonBlockId);
+                        if (blockchain.getHeight() - otherPeerCommonBlock.getHeight() >= 720) {
                             continue;
                         }
                         String otherPeerCumulativeDifficulty;
@@ -259,7 +260,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             continue;
                         }
                         Logger.logDebugMessage("Found a peer with better difficulty");
-                        downloadBlockchain(otherPeer, commonBlock); // not otherPeerCommonBlock
+                        downloadBlockchain(otherPeer, otherPeerCommonBlock, commonBlock.getHeight());
                     }
                     Logger.logDebugMessage("Got " + confirmations + " confirmations");
 
@@ -335,11 +336,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             long matchId = startBlockId;
             List<Long> blockList = new ArrayList<>(720);
             boolean matched = false;
+            int limit = countFromStart ? 720 : 1440;
             while (true) {
                 JSONObject request = new JSONObject();
                 request.put("requestType", "getNextBlockIds");
                 request.put("blockId", Long.toUnsignedString(matchId));
-                request.put("limit", countFromStart ? 720 : 1440);
+                request.put("limit", limit);
                 JSONObject response = peer.send(JSON.prepareRequest(request));
                 if (response == null) {
                     return Collections.emptyList();
@@ -349,7 +351,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     break;
                 }
                 // prevent overloading with blockIds
-                if (nextBlockIds.size() > 1440) {
+                if (nextBlockIds.size() > limit) {
                     Logger.logDebugMessage("Obsolete or rogue peer " + peer.getHost() + " sends too many nextBlockIds, blacklisting");
                     peer.blacklist("Too many nextBlockIds");
                     return Collections.emptyList();
@@ -394,7 +396,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
          * @param   commonBlock             Common block
          * @throws  InterruptedException    Download interrupted
          */
-        private void downloadBlockchain(final Peer feederPeer, final Block commonBlock) throws InterruptedException {
+        private void downloadBlockchain(final Peer feederPeer, final Block commonBlock, final int startHeight) throws InterruptedException {
             Map<Long, PeerBlock> blockMap = new HashMap<>();
             //
             // Break the download into multiple segments.  The first block in each segment
@@ -481,7 +483,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
 
             }
-            if (slowestPeer != null && connectedPublicPeers.size() >= 20 && chainBlockIds.size() > 360) {
+            if (slowestPeer != null && connectedPublicPeers.size() >= Peers.maxNumberOfConnectedPublicPeers && chainBlockIds.size() > 360) {
                 Logger.logDebugMessage(slowestPeer.getHost() + " took " + maxResponseTime + " ms, disconnecting");
                 slowestPeer.deactivate();
             }
@@ -491,8 +493,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             // when downloading the blocks)
             //
             List<BlockImpl> forkBlocks = new ArrayList<>();
-            final int startHeight = commonBlock.getHeight();
-            for (int index=1; index<chainBlockIds.size() && blockchain.getHeight() - startHeight < 720; index++) {
+            for (int index = 1; index < chainBlockIds.size() && blockchain.getHeight() - startHeight < 720; index++) {
                 PeerBlock peerBlock = blockMap.get(chainBlockIds.get(index));
                 if (peerBlock == null) {
                     break;
@@ -593,6 +594,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         /** Request count */
         private int requestCount;
 
+        /** Time it took to return getNextBlocks */
         private long responseTime;
 
         /**
@@ -735,6 +737,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             return requestCount;
         }
 
+        /**
+         * Return the response time
+         *
+         * @return                      Response time
+         */
         public long getResponseTime() {
             return responseTime;
         }
