@@ -613,7 +613,7 @@ final class ParameterParser {
             return data;
         }
 
-        public FileData invoke() throws IOException, ServletException, ParameterException {
+        public FileData invoke() throws IOException {
             try (InputStream is = part.getInputStream()) {
                 int nRead;
                 byte[] bytes = new byte[1024];
