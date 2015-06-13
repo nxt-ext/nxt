@@ -153,9 +153,6 @@ final class PeerImpl implements Peer {
         if (version != null && version.length() > Peers.MAX_VERSION_LENGTH) {
             throw new IllegalArgumentException("Invalid version length: " + version.length());
         }
-        if (this.version != null && this.version.equals(version)) {
-            return;
-        }
         this.version = version;
         isOldVersion = false;
         if (Nxt.APPLICATION.equals(application)) {
@@ -325,6 +322,9 @@ final class PeerImpl implements Peer {
     void updateBlacklistedStatus(long curTime) {
         if (blacklistingTime > 0 && blacklistingTime + Peers.blacklistingPeriod <= curTime) {
             unBlacklist();
+        }
+        if (isOldVersion && lastUpdated < curTime - 3600) {
+            isOldVersion = false;
         }
     }
 
