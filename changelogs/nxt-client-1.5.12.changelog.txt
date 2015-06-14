@@ -16,6 +16,9 @@ verifying tokens for files.
 
 Fixed file upload when using the test page.
 
+The maximum file size accepted for upload can be restricted using the new
+nxt.maxUploadFileSize property, default and minimum accepted value is 42 kB.
+
 
 Client UI:
 
