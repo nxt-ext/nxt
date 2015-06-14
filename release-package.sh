@@ -81,6 +81,8 @@ echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >
 #echo -e "sha256:\n" >> ${CHANGELOG}
 #sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
 
+echo -e "The exe and jar packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
+
 if [ "${OBFUSCATE}" == "obfuscate" ];
 then
 echo -e "\n\nThis is a development release for testing only. Source code is not provided." >> ${CHANGELOG}
