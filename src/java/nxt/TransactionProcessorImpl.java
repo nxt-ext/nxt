@@ -297,7 +297,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private List<Long> getAllUnconfirmedTransactionIds() {
         List<Long> result = new ArrayList<>();
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT id FROM unconfirmed_transaction");
+             PreparedStatement pstmt = con.prepareStatement("SELECT id FROM unconfirmed_transaction");
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 result.add(rs.getLong("id"));
