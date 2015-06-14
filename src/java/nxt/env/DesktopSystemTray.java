@@ -36,7 +36,7 @@ import java.util.Date;
 public class DesktopSystemTray {
 
     private SystemTray tray;
-    private JFrame wrapper = new JFrame();
+    private final JFrame wrapper = new JFrame();
     private JDialog statusDialog;
     private JPanel statusPanel;
     private ImageIcon imageIcon;

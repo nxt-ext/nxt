@@ -101,7 +101,7 @@ public final class Peers {
     private static final boolean shareMyAddress;
     private static final int maxNumberOfInboundConnections;
     private static final int maxNumberOfOutboundConnections;
-    private static final int maxNumberOfConnectedPublicPeers;
+    public static final int maxNumberOfConnectedPublicPeers;
     private static final int maxNumberOfKnownPeers;
     private static final int minNumberOfKnownPeers;
     private static final boolean enableHallmarkProtection;
@@ -231,7 +231,7 @@ public final class Peers {
         pullThreshold = Nxt.getIntProperty("nxt.pullThreshold");
         useWebSockets = Nxt.getBooleanProperty("nxt.useWebSockets");
         webSocketIdleTimeout = Nxt.getIntProperty("nxt.webSocketIdleTimeout");
-        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
+        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod") / 1000;
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
         usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! Constants.isOffline;
@@ -373,7 +373,7 @@ public final class Peers {
         try {
             try {
 
-                long curTime = System.currentTimeMillis();
+                int curTime = Nxt.getEpochTime();
                 for (PeerImpl peer : peers.values()) {
                     peer.updateBlacklistedStatus(curTime);
                 }
@@ -464,7 +464,7 @@ public final class Peers {
                     }
 
                     peers.values().parallelStream().unordered()
-                            .filter(peer -> peer.getLastInboundRequest() != 0 && now - peer.getLastInboundRequest() > 1800)
+                            .filter(peer -> peer.getLastInboundRequest() != 0 && now - peer.getLastInboundRequest() > Peers.webSocketIdleTimeout/1000)
                             .forEach(peer -> {
                                 peer.setLastInboundRequest(0);
                                 notifyListeners(peer, Event.REMOVE_INBOUND);

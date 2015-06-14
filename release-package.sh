@@ -77,7 +77,7 @@ echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar\n" >
 echo -e "sha256:\n" >> ${CHANGELOG}
 sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
 
-#echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
+echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
 #echo -e "sha256:\n" >> ${CHANGELOG}
 #sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
 

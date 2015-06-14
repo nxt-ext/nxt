@@ -70,7 +70,7 @@ final class PeerImpl implements Peer {
     private volatile String version;
     private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
-    private volatile long blacklistingTime;
+    private volatile int blacklistingTime;
     private volatile String blacklistingCause;
     private volatile State state;
     private volatile long downloadedVolume;
@@ -152,9 +152,6 @@ final class PeerImpl implements Peer {
     void setVersion(String version) {
         if (version != null && version.length() > Peers.MAX_VERSION_LENGTH) {
             throw new IllegalArgumentException("Invalid version length: " + version.length());
-        }
-        if (this.version != null && this.version.equals(version)) {
-            return;
         }
         this.version = version;
         isOldVersion = false;
@@ -303,7 +300,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public void blacklist(String cause) {
-        blacklistingTime = System.currentTimeMillis();
+        blacklistingTime = Nxt.getEpochTime();
         blacklistingCause = cause;
         setState(State.NON_CONNECTED);
         lastInboundRequest = 0;
@@ -322,9 +319,12 @@ final class PeerImpl implements Peer {
         Peers.notifyListeners(this, Peers.Event.UNBLACKLIST);
     }
 
-    void updateBlacklistedStatus(long curTime) {
+    void updateBlacklistedStatus(int curTime) {
         if (blacklistingTime > 0 && blacklistingTime + Peers.blacklistingPeriod <= curTime) {
             unBlacklist();
+        }
+        if (isOldVersion && lastUpdated < curTime - 3600) {
+            isOldVersion = false;
         }
     }
 
