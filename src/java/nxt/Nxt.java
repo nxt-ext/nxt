@@ -84,7 +84,7 @@ public final class Nxt {
         } else {
             String explicitFileName = System.getProperty("nxt.system." + streamName);
             if (explicitFileName != null) {
-                Paths.get(explicitFileName);
+                path = Paths.get(explicitFileName);
             }
         }
         if (path != null) {
