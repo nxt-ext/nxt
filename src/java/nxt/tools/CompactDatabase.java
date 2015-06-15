@@ -1,0 +1,187 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
+package nxt.tools;
+
+import nxt.Constants;
+import nxt.Nxt;
+import nxt.util.Logger;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+
+/**
+ * Compact and reorganize the NRS database.  The NRS application must not be
+ * running.
+ *
+ * To run the database compact tool on Linux or Mac:
+ *
+ *   java -cp "classes:lib/*:conf" nxt.tools.CompactDatabase
+ *
+ * To run the database compact toon on Windows:
+ *
+ *   java -cp "classes;lib/*;conf" -Dnxt.runtime.mode=desktop nxt.tools.CompactDatabase
+ */
+public class CompactDatabase {
+
+    /**
+     * Compact the NRS database
+     *
+     * @param   args                Command line arguments
+     */
+    public static void main(String[] args) {
+        int exitCode = 0;
+        //
+        // Initialize properties and logging
+        //
+        Logger.init();
+        //
+        // Get the database URL
+        //
+        String dbPrefix = Constants.isTestnet ? "nxt.testDb" : "nxt.db";
+        String dbType = Nxt.getStringProperty(dbPrefix + "Type");
+        if (!"h2".equals(dbType)) {
+            Logger.logErrorMessage("Database type must be 'h2'");
+            System.exit(1);
+        }
+        String dbUrl = Nxt.getStringProperty(dbPrefix + "Url");
+        if (dbUrl == null) {
+            String dbPath = Nxt.getDbDir(Nxt.getStringProperty(dbPrefix + "Dir"));
+            dbUrl = String.format("jdbc:%s:%s", dbType, dbPath);
+        }
+        String dbUsername = Nxt.getStringProperty(dbPrefix + "Username", "sa");
+        String dbPassword = Nxt.getStringProperty(dbPrefix + "Password", "sa", true);
+        //
+        // Get the database path.  This is the third colon-separated operand and is
+        // terminated by a semi-colon or by the end of the string.
+        //
+        int pos = dbUrl.indexOf(':');
+        if (pos >= 0)
+            pos = dbUrl.indexOf(':', pos+1);
+        if (pos < 0) {
+            Logger.logErrorMessage("Malformed database URL: " + dbUrl);
+            System.exit(1);
+        }
+        String dbDir;
+        int startPos = pos + 1;
+        int endPos = dbUrl.indexOf(';', startPos);
+        if (endPos < 0)
+            dbDir = dbUrl.substring(startPos);
+        else
+            dbDir = dbUrl.substring(startPos, endPos);
+        //
+        // Remove the database prefix from the end of the database path.  The path
+        // separator can be either '/' or '\' (Windows will accept either separator
+        // so we can't rely on the system property).
+        //
+        endPos = dbDir.lastIndexOf('\\');
+        pos = dbDir.lastIndexOf('/');
+        if (endPos >= 0) {
+            if (pos >= 0)
+                endPos = Math.max(endPos, pos);
+        } else {
+            endPos = pos;
+        }
+        if (endPos < 0) {
+            Logger.logErrorMessage("Malformed database URL: " + dbUrl);
+            System.exit(1);
+        }
+        dbDir = dbDir.substring(0, endPos);
+        Logger.logInfoMessage("Database directory is '" + dbDir + '"');
+        //
+        // Create our files
+        //
+        int phase = 0;
+        File sqlFile = new File(dbDir + "/backup.sql.gz");
+        File dbFile = new File(dbDir + "/nxt.h2.db");
+        if (!dbFile.exists()) {
+            dbFile = new File(dbDir + "/nxt.mv.db");
+            if (!dbFile.exists()) {
+                Logger.logErrorMessage("NRS database not found");
+                System.exit(1);
+            }
+        }
+        File oldFile = new File(dbFile.getPath() + ".bk");
+        try {
+            //
+            // Create the SQL script
+            //
+            Logger.logInfoMessage("Creating the SQL script");
+            if (sqlFile.exists())
+                sqlFile.delete();
+            try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+                    Statement s = conn.createStatement()) {
+                s.execute("SCRIPT TO '" + sqlFile.getPath() + "' COMPRESSION GZIP CHARSET 'UTF-8'");
+            }
+            //
+            // Create the new database
+            //
+            Logger.logInfoMessage("Creating the new database");
+            dbFile.renameTo(oldFile);
+            phase = 1;
+            try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+                    Statement s = conn.createStatement()) {
+                s.execute("RUNSCRIPT FROm '" + sqlFile.getPath() + "' COMPRESSION GZIP CHARSET 'UTF-8'");
+            }
+            //
+            // New database has been created
+            //
+            phase = 2;
+            Logger.logInfoMessage("Database successfully compacted");
+        } catch (Throwable exc) {
+            Logger.logErrorMessage("Unable to compact the database", exc);
+            exitCode = -1;
+        } finally {
+            switch (phase) {
+                case 0:
+                    //
+                    // We failed while creating the SQL file
+                    //
+                    if (sqlFile.exists())
+                        sqlFile.delete();
+                    break;
+                case 1:
+                    //
+                    // We failed while creating the new database
+                    //
+                    File newFile = new File(dbDir + "/nxt.h2.db");
+                    if (newFile.exists()) {
+                        newFile.delete();
+                    } else {
+                        newFile = new File(dbDir + "/nxt.mv.db");
+                        if (newFile.exists())
+                            newFile.delete();
+                    }
+                    oldFile.renameTo(dbFile);
+                    break;
+                case 2:
+                    //
+                    // New database created
+                    //
+                    sqlFile.delete();
+                    oldFile.delete();
+                    break;
+            }
+        }
+        //
+        // All done
+        //
+        Logger.shutdown();
+        System.exit(exitCode);
+    }
+}
