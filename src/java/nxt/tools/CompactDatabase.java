@@ -45,11 +45,26 @@ public class CompactDatabase {
      * @param   args                Command line arguments
      */
     public static void main(String[] args) {
-        int exitCode = 0;
         //
-        // Initialize properties and logging
+        // Initialize Nxt properties and logging
         //
         Logger.init();
+        //
+        // Compact the database
+        //
+        int exitCode = compactDatabase();
+        //
+        // Shutdown the logger and exit
+        //
+        Logger.shutdown();
+        System.exit(exitCode);
+    }
+
+    /**
+     * Compact the database
+     */
+    private static int compactDatabase() {
+        int exitCode = 0;
         //
         // Get the database URL
         //
@@ -57,7 +72,7 @@ public class CompactDatabase {
         String dbType = Nxt.getStringProperty(dbPrefix + "Type");
         if (!"h2".equals(dbType)) {
             Logger.logErrorMessage("Database type must be 'h2'");
-            System.exit(1);
+            return 1;
         }
         String dbUrl = Nxt.getStringProperty(dbPrefix + "Url");
         if (dbUrl == null) {
@@ -75,7 +90,7 @@ public class CompactDatabase {
             pos = dbUrl.indexOf(':', pos+1);
         if (pos < 0) {
             Logger.logErrorMessage("Malformed database URL: " + dbUrl);
-            System.exit(1);
+            return 1;
         }
         String dbDir;
         int startPos = pos + 1;
@@ -99,7 +114,7 @@ public class CompactDatabase {
         }
         if (endPos < 0) {
             Logger.logErrorMessage("Malformed database URL: " + dbUrl);
-            System.exit(1);
+            return 1;
         }
         dbDir = dbDir.substring(0, endPos);
         Logger.logInfoMessage("Database directory is '" + dbDir + '"');
@@ -113,7 +128,7 @@ public class CompactDatabase {
             dbFile = new File(dbDir + "/nxt.mv.db");
             if (!dbFile.exists()) {
                 Logger.logErrorMessage("NRS database not found");
-                System.exit(1);
+                return 1;
             }
         }
         File oldFile = new File(dbFile.getPath() + ".bk");
@@ -136,7 +151,7 @@ public class CompactDatabase {
             phase = 1;
             try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
                     Statement s = conn.createStatement()) {
-                s.execute("RUNSCRIPT FROm '" + sqlFile.getPath() + "' COMPRESSION GZIP CHARSET 'UTF-8'");
+                s.execute("RUNSCRIPT FROM '" + sqlFile.getPath() + "' COMPRESSION GZIP CHARSET 'UTF-8'");
             }
             //
             // New database has been created
@@ -145,7 +160,7 @@ public class CompactDatabase {
             Logger.logInfoMessage("Database successfully compacted");
         } catch (Throwable exc) {
             Logger.logErrorMessage("Unable to compact the database", exc);
-            exitCode = -1;
+            exitCode = 1;
         } finally {
             switch (phase) {
                 case 0:
@@ -178,10 +193,6 @@ public class CompactDatabase {
                     break;
             }
         }
-        //
-        // All done
-        //
-        Logger.shutdown();
-        System.exit(exitCode);
+        return exitCode;
     }
 }
