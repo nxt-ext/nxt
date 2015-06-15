@@ -200,6 +200,9 @@ var NRS = (function(NRS, $) {
 	NRS.pages.settings = function() {
 
 		for (var style in userStyles) {
+			if (!userStyles.hasOwnProperty(style)) {
+				continue;
+			}
 			var $dropdown = $("#" + style + "_color_scheme");
 
 			$dropdown.empty();
@@ -236,13 +239,17 @@ var NRS = (function(NRS, $) {
 		}
 
 		for (var key in NRS.settings) {
-			if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
-				if ($("#settings_" + key).length) {
-					$("#settings_" + key).val(NRS.convertToNXT(NRS.settings[key]));
+			if (!NRS.settings.hasOwnProperty(key)) {
+				continue;
+			}
+			var setting = $("#settings_" + key);
+            if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
+				if (setting.length) {
+					setting.val(NRS.convertToNXT(NRS.settings[key]));
 				}
 			} else if (!/_color/i.test(key)) {
-				if ($("#settings_" + key).length) {
-					$("#settings_" + key).val(NRS.settings[key]);
+				if (setting.length) {
+					setting.val(NRS.settings[key]);
 				}
 			}
 		}
@@ -278,11 +285,11 @@ var NRS = (function(NRS, $) {
 
 	NRS.updateStyle = function(type, color) {
 		var css = "";
-
+		var colors;
 		if ($.isPlainObject(color)) {
-			var colors = color;
+			colors = color;
 		} else {
-			var colors = userStyles[type][color];
+			colors = userStyles[type][color];
 		}
 
 		if (colors) {
@@ -530,24 +537,26 @@ var NRS = (function(NRS, $) {
 	};
 	NRS.applySettings = function(key) {
 	    if (!key || key == "themeChoice") {
-			if(NRS.settings["themeChoice"] == "default"){
-				var oldlink = document.getElementsByTagName("link").item(3);
-				var newlink = document.createElement("link");
+			var oldlink, newlink;
+			var settingsBox = $("#settings_box");
+            if(NRS.settings["themeChoice"] == "default"){
+				oldlink = document.getElementsByTagName("link").item(3);
+				newlink = document.createElement("link");
         		newlink.setAttribute("rel", "stylesheet");
        			newlink.setAttribute("type", "text/css");
         		newlink.setAttribute("href", 'css/app.css');
 				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
-				$("#settings_box .box-success form .box-body .form-group").css("display", "block");
+				settingsBox.find(".box-success form .box-body .form-group").css("display", "block");
 			}
 			else if (NRS.settings["themeChoice"] != ""){
-				var oldlink = document.getElementsByTagName("link").item(3);
-				var newlink = document.createElement("link");
+				oldlink = document.getElementsByTagName("link").item(3);
+				newlink = document.createElement("link");
         		newlink.setAttribute("rel", "stylesheet");
        			newlink.setAttribute("type", "text/css");
         		newlink.setAttribute("href", "css/" + NRS.settings["themeChoice"] + ".css");
 				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
-				$("#settings_box .box-success form .box-body .form-group").css("display", "none");
-				$("#settings_box .box-success form .box-body .form-group:first-child").css("display", "block");
+				settingsBox.find(".box-success form .box-body .form-group").css("display", "none");
+				settingsBox.find(".box-success form .box-body .form-group:first-child").css("display", "block");
 			}
 			$("#change_theme").val(NRS.settings["themeChoice"]);
 		}
@@ -616,7 +625,7 @@ var NRS = (function(NRS, $) {
 		if (key == "24_hour_format") {
 			var $dashboard_dates = $("#dashboard_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
 
-			$.each($dashboard_dates, function(key, value) {
+			$.each($dashboard_dates, function() {
 				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
 			});
 		}
@@ -664,7 +673,7 @@ var NRS = (function(NRS, $) {
 		NRS.updateSettings(key, value);
 	});
 
-	$("#settings_box input[type=text]").on("input", function(e) {
+	$("#settings_box").find("input[type=text]").on("input", function() {
 		var key = $(this).attr("name");
 		var value = $(this).val();
 
