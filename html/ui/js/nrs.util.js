@@ -240,12 +240,10 @@ var NRS = (function (NRS, $, undefined) {
         if (volume == 0) return '0 B';
         var i = parseInt(Math.floor(Math.log(volume) / Math.log(1024)));
 
-        volume = Math.round(volume / Math.pow(1024, i), 2);
+        volume = Math.round(volume / Math.pow(1024, i));
         var size = sizes[i];
 
-        var digits = [],
-            formattedVolume = "",
-            i;
+        var digits = [], formattedVolume = "";
         do {
             digits[digits.length] = volume % 10;
             volume = Math.floor(volume / 10);
@@ -416,13 +414,14 @@ var NRS = (function (NRS, $, undefined) {
         var amount = parts[0];
 
         //no fractional part
+        var fraction;
         if (parts.length == 1) {
-            var fraction = "00000000";
+            fraction = "00000000";
         } else if (parts.length == 2) {
             if (parts[1].length <= 8) {
-                var fraction = parts[1];
+                fraction = parts[1];
             } else {
-                var fraction = parts[1].substring(0, 8);
+                fraction = parts[1].substring(0, 8);
             }
         } else {
             throw $.t("error_invalid_input");
@@ -493,9 +492,10 @@ var NRS = (function (NRS, $, undefined) {
         var qnt = parts[0];
 
         //no fractional part
+        var i;
         if (parts.length == 1) {
             if (decimals) {
-                for (var i = 0; i < decimals; i++) {
+                for (i = 0; i < decimals; i++) {
                     qnt += "0";
                 }
             }
@@ -506,7 +506,7 @@ var NRS = (function (NRS, $, undefined) {
                     "decimals": decimals
                 });
             } else if (fraction.length < decimals) {
-                for (var i = fraction.length; i < decimals; i++) {
+                for (i = fraction.length; i < decimals; i++) {
                     fraction += "0";
                 }
             }
@@ -531,8 +531,9 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.format = function (params, no_escaping) {
+        var amount;
         if (typeof params != "object") {
-            var amount = String(params);
+            amount = String(params);
             var negative = amount.charAt(0) == "-" ? "-" : "";
             if (negative) {
                 amount = amount.substring(1);
@@ -544,7 +545,7 @@ var NRS = (function (NRS, $, undefined) {
             };
         }
 
-        var amount = String(params.amount);
+        amount = String(params.amount);
 
         var digits = amount.split("").reverse();
         var formattedAmount = "";
@@ -578,7 +579,6 @@ var NRS = (function (NRS, $, undefined) {
 
         var negative = "";
         var afterComma = "";
-        var formattedAmount = "";
 
         if (typeof amount == "object") {
             var params = NRS.convertToNXT(amount, true);
@@ -598,12 +598,11 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             amount = "" + amount;
-
             if (amount.indexOf(".") !== -1) {
-                var afterComma = amount.substr(amount.indexOf("."));
+                afterComma = amount.substr(amount.indexOf("."));
                 amount = amount.replace(afterComma, "");
             } else {
-                var afterComma = "";
+                afterComma = "";
             }
         }
 
@@ -632,10 +631,11 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.formatTimestamp = function (timestamp, date_only) {
+        var date;
         if (typeof timestamp == "object") {
-            var date = timestamp;
+            date = timestamp;
         } else {
-            var date = new Date(NRS.fromEpochTime(timestamp));
+            date = new Date(NRS.fromEpochTime(timestamp));
         }
 
         if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
@@ -717,10 +717,11 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.convertFromHex8 = function (hex) {
-        var hex = hex.toString(); //force conversion
+        var hexStr = hex.toString(); //force conversion
         var str = '';
-        for (var i = 0; i < hex.length; i += 2)
-            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        for (var i = 0; i < hexStr.length; i += 2) {
+            str += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
+        }
         return str;
     };
 
@@ -735,15 +736,11 @@ var NRS = (function (NRS, $, undefined) {
     NRS.getFormData = function ($form, unmodified) {
         var serialized = $form.serializeArray();
         var data = {};
-
-        /*
-         for (var s in serialized) {
-         data[serialized[s]['name']] = serialized[s]['value']
-         }
-         */
-
         var multiValuedFields = ["phasingWhitelisted"];
         for (var s in serialized) {
+            if (!serialized.hasOwnProperty(s)) {
+                continue;
+            }
             if (multiValuedFields.indexOf(serialized[s]["name"]) > -1) {
                 if (serialized[s]['value'] != "") {
                     if (serialized[s]['name'] in data) {
@@ -756,16 +753,12 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 data[serialized[s]['name']] = serialized[s]['value'];
             }
-
         }
-
-
         if (!unmodified) {
             delete data.request_type;
             delete data.converted_account_id;
             delete data.merchant_info;
         }
-
         return data;
     };
 
@@ -855,7 +848,7 @@ var NRS = (function (NRS, $, undefined) {
                 moviePath: "js/3rdparty/zeroclipboard.swf"
             });
 
-            clipboard.on("dataRequested", function (client, args) {
+            clipboard.on("dataRequested", function (client) {
                 client.setText(NRS.getClipboardText($(this).data("type")));
             });
 
@@ -864,14 +857,14 @@ var NRS = (function (NRS, $, undefined) {
                 $el.parent().remove(".dropdown-menu");
             }
 
-            clipboard.on("complete", function (client, args) {
+            clipboard.on("complete", function () {
                 $.growl($.t("success_clipboard_copy"), {
                     "type": "success"
                 });
             });
 
             if (!NRS.getCookie("clipboard_warning_shown")) {
-                clipboard.on("noflash", function (client, args) {
+                clipboard.on("noflash", function () {
                     $("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
                     $("#account_id_dropdown, #asset_id").data("toggle", "");
                     $.growl($.t("error_clipboard_copy_noflash"), {
@@ -881,7 +874,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.setCookie("clipboard_warning_shown", "1", 30);
             }
 
-            clipboard.on("wrongflash", function (client, args) {
+            clipboard.on("wrongflash", function () {
                 $("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
                 $("#account_id_dropdown, #asset_id").data("toggle", "");
                 $.growl($.t("error_clipboard_copy_wrongflash"));
@@ -890,6 +883,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getClipboardText = function (type) {
+        var assetId = $("#asset_id");
         switch (type) {
             case "account_rs":
                 return NRS.accountRS;
@@ -901,10 +895,10 @@ var NRS = (function (NRS, $, undefined) {
                 return document.URL.replace(/#.*$/, "") + "#send:" + encodeURIComponent(NRS.accountRS);
                 break;
             case "asset_id":
-                return $("#asset_id").text();
+                return assetId.text();
                 break;
             case "asset_link":
-                return document.URL.replace(/#.*/, "") + "#asset:" + $("#asset_id").text();
+                return document.URL.replace(/#.*/, "") + "#asset:" + assetId.text();
                 break;
             default:
                 return "";
@@ -983,6 +977,9 @@ var NRS = (function (NRS, $, undefined) {
     NRS.createInfoTable = function (data, fixed) {
         var rows = "";
         for (var key in data) {
+            if (!data.hasOwnProperty(key)) {
+                continue;
+            }
             var value = data[key];
 
             var match = key.match(/(.*)(NQT|QNT|RS)$/);
@@ -1040,17 +1037,13 @@ var NRS = (function (NRS, $, undefined) {
         return t;
     };
 
-    NRS.formatStyledAmount = function (amount, round) {
-        var amount = NRS.formatAmount(amount, round);
-
-        amount = amount.split(".");
+    NRS.formatStyledAmount = function (strAmount, round) {
+        var amount = NRS.formatAmount(strAmount, round).split(".");
         if (amount.length == 2) {
-            amount = amount[0] + "<span style='font-size:12px'>." + amount[1] + "</span>";
+            return amount[0] + "<span style='font-size:12px'>." + amount[1] + "</span>";
         } else {
-            amount = amount[0];
+            return amount[0];
         }
-
-        return amount;
     };
 
     NRS.getUnconfirmedTransactionsFromCache = function (type, subtype, fields, single) {
@@ -1077,6 +1070,9 @@ var NRS = (function (NRS, $, undefined) {
 
             if (fields) {
                 for (var key in fields) {
+                    if (!fields.hasOwnProperty(key)) {
+                        continue;
+                    }
                     if (unconfirmedTransaction[key] == fields[key]) {
                         if (single) {
                             return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
@@ -1187,18 +1183,21 @@ var NRS = (function (NRS, $, undefined) {
         e.preventDefault();
 
         //If window is small enough, enable sidebar push menu
+        var leftSide = $(".left-side");
+        var rightSide = $(".right-side");
         if ($(window).width() <= 992) {
-            $('.row-offcanvas').toggleClass('active');
-            $('.left-side').removeClass("collapse-left");
-            $(".right-side").removeClass("strech");
-            $('.row-offcanvas').toggleClass("relative");
+            var rowOffCanvas = $('.row-offcanvas');
+            rowOffCanvas.toggleClass('active');
+            leftSide.removeClass("collapse-left");
+            rightSide.removeClass("strech");
+            rowOffCanvas.toggleClass("relative");
         } else {
             //Else, enable content streching
-            $('.left-side').toggleClass("collapse-left");
-            $(".right-side").toggleClass("strech");
+            leftSide.toggleClass("collapse-left");
+            rightSide.toggleClass("strech");
         }
 
-        $(".left-side").one($.support.transition.end,
+        leftSide.one($.support.transition.end,
             function () {
                 $(".content.content-stretch:visible").width($(".page:visible").width());
             });
@@ -1237,24 +1236,30 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.setCookie = function (name, value, days) {
         var expires;
-
         if (days) {
             var date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toGMTString();
+            expires = "; expires=" + date.toUTCString();
         } else {
             expires = "";
         }
+        //noinspection JSDeprecatedSymbols
         document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
     };
 
     NRS.getCookie = function (name) {
+        //noinspection JSDeprecatedSymbols
         var nameEQ = escape(name) + "=";
         var ca = document.cookie.split(';');
         for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return unescape(c.substring(nameEQ.length, c.length));
+            while (c.charAt(0) === ' ') {
+                c = c.substring(1, c.length);
+            }
+            if (c.indexOf(nameEQ) === 0) {
+                //noinspection JSDeprecatedSymbols
+                return unescape(c.substring(nameEQ.length, c.length));
+            }
         }
         return null;
     };
@@ -1264,6 +1269,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.translateServerError = function (response) {
+        var match;
         if (!response.errorDescription) {
             if (response.errorMessage) {
                 response.errorDescription = response.errorMessage;
@@ -1392,14 +1398,14 @@ var NRS = (function (NRS, $, undefined) {
                 return response.errorDescription;
                 break;
             case 3:
-                var match = response.errorDescription.match(/"([^"]+)" not specified/i);
+                match = response.errorDescription.match(/"([^"]+)" not specified/i);
                 if (match && match[1]) {
                     return $.t("error_not_specified", {
                         "name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
                     }).capitalize();
                 }
 
-                var match = response.errorDescription.match(/At least one of (.*) must be specified/i);
+                match = response.errorDescription.match(/At least one of (.*) must be specified/i);
                 if (match && match[1]) {
                     var fieldNames = match[1].split(",");
                     var translatedFieldNames = [];
@@ -1419,7 +1425,7 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 break;
             case 4:
-                var match = response.errorDescription.match(/Incorrect "(.*)"(.*)/i);
+                match = response.errorDescription.match(/Incorrect "(.*)"(.*)/i);
                 if (match && match[1] && match[2]) {
                     return $.t("error_incorrect_name", {
                         "name": NRS.getTranslatedFieldName(match[1]).toLowerCase(),
@@ -1430,7 +1436,7 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 break;
             case 5:
-                var match = response.errorDescription.match(/Unknown (.*)/i);
+                match = response.errorDescription.match(/Unknown (.*)/i);
                 if (match && match[1]) {
                     return $.t("error_unknown_name", {
                         "name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
@@ -1594,10 +1600,11 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
         return false;
-    }
+    };
 
     // http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
     NRS.getUtf8Bytes = function (str) {
+        //noinspection JSDeprecatedSymbols
         var utf8 = unescape(encodeURIComponent(str));
         var arr = [];
         for (var i = 0; i < utf8.length; i++) {
