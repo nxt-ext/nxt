@@ -96,14 +96,65 @@ var NRS = (function(NRS, $, undefined) {
 
 	forgingIndicator.hover(
 		function(event) {
-			event.preventDefault();
-			$("#forging_status").attr("title", "" + NRS.isForging);
-		},
+            NRS.updateForgingStatus();
+        },
 		function(event) {
-			event.preventDefault();
 			$("#forging_status").attr("title", "");
 		}
 	);
+
+    NRS.updateForgingStatus = function() {
+        var status;
+        var tooltip;
+        if (!NRS.accountInfo.publicKey) {
+            status = "not_forging";
+            tooltip = $.t("account has no public key");
+        } else if (NRS.accountInfo.effectiveBalanceNXT == 0) {
+            status = "not_forging";
+            tooltip = $.t("effective balance is 0");
+        } else if (NRS.downloadingBlockchain) {
+            status = "not_forging";
+            tooltip = $.t("blockchain currently downloading");
+        } else if (NRS.isLeased) {
+            status = "not_forging";
+            tooltip = $.t("balance leased");
+        } else if (NRS.settings.admin_password == "") {
+            status = "unknown_forging_status";
+            tooltip = $.t("cannot determine forging status") + "\n" +
+                $.t("admin password not specified")
+        } else {
+            NRS.sendRequest("getForging", {
+                "adminPassword": NRS.settings.admin_password
+            }, function (response) {
+                if ("account" in response) {
+                    status = "forging";
+                    tooltip = $.t("account") + " " + response.account + "\n" +
+                        $.t("time [sec]") + " " + response.remaining + "\n" +
+                        $.t("effective balance") + " " + NRS.accountInfo.effectiveBalanceNXT;
+                } else if ("generators" in response) {
+                    status = "forging";
+                    if (response.generators.length == 1) {
+                        tooltip = $.t("account") + " " + response.generators[0].account + "\n" +
+                            $.t("time [sec]") + " " + response.generators[0].remaining + "\n" +
+                            $.t("effective balance") + " " + NRS.accountInfo.effectiveBalanceNXT;
+                    } else {
+                        tooltip = $.t("number of forging accounts") + " " + response.generators.length;
+                    }
+                } else {
+                    status = "not_forging";
+                    tooltip = response.errorDescription;
+                }
+            }, false);
+        }
+        var forgingIndicator = $("#forging_indicator");
+        forgingIndicator.removeClass("forging");
+        forgingIndicator.removeClass("not_forging");
+        forgingIndicator.removeClass("unknown_forging_status");
+        forgingIndicator.addClass(status);
+        forgingIndicator.find("span").html($.t(status)).attr("data-i18n", status);
+        NRS.isForging = (status == "forging");
+        $("#forging_status").attr("title", tooltip);
+    };
 
 	return NRS;
 }(NRS || {}, jQuery));

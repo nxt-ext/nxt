@@ -3022,12 +3022,24 @@ input:invalid {
   border: 1px solid red;
 }
 
+/* Red (not forging) */
 #forging_indicator i, #connected_indicator i {
   color:#a94442;
 }
 
+/* Red (not forging) */
+#forging_indicator.not_forging i {
+  color:#a94442;
+}
+
+/* Green (forging) */
 #forging_indicator.forging i, #connected_indicator.connected i {
   color:#3c763d;
+}
+
+/* Gray (Unknown forging status) */
+#forging_indicator.unknown_forging_status i {
+  color:#cccccc;
 }
 
 #forging_indicator.forging.animated i {
