@@ -97,7 +97,7 @@ var NRS = (function(NRS, $, undefined) {
 	forgingIndicator.hover(
 		function(event) {
 			event.preventDefault();
-			$("#forging_status").attr("title", "test 1234 12341234\n sdfsdhjfhjfshdfhj");
+			$("#forging_status").attr("title", "" + NRS.isForging);
 		},
 		function(event) {
 			event.preventDefault();
