@@ -61,7 +61,8 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-	$("#forging_indicator").click(function(e) {
+	var forgingIndicator = $("#forging_indicator");
+	forgingIndicator.click(function(e) {
 		e.preventDefault();
 
 		if (NRS.downloadingBlockchain) {
@@ -92,6 +93,17 @@ var NRS = (function(NRS, $, undefined) {
 			$("#start_forging_modal").modal("show");
 		}
 	});
+
+	forgingIndicator.hover(
+		function(event) {
+			event.preventDefault();
+			$("#forging_status").attr("title", "test 1234 12341234\n sdfsdhjfhjfshdfhj");
+		},
+		function(event) {
+			event.preventDefault();
+			$("#forging_status").attr("title", "");
+		}
+	);
 
 	return NRS;
 }(NRS || {}, jQuery));
