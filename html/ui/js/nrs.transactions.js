@@ -163,7 +163,10 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getNewTransactions = function() {
 		//check if there is a new transaction..
-		NRS.sendRequest("getBlockchainTransactions", {
+		if (!NRS.blocks[0]) {
+			return;
+		}
+        NRS.sendRequest("getBlockchainTransactions", {
 			"account": NRS.account,
 			"timestamp": NRS.blocks[0].timestamp + 1,
 			"firstIndex": 0,
