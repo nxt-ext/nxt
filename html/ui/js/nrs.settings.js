@@ -474,8 +474,12 @@ var NRS = (function(NRS, $) {
                         if (!NRS.defaultSettings.hasOwnProperty(setting)) {
                             continue;
                         }
-                        var status = (NRS.defaultSettings[setting] !== NRS.settings[setting] ? "modified" : "default");
-                        NRS.logConsole(setting + " = " + NRS.settings[setting] + " [" + status + "]");
+                        var value = NRS.settings[setting];
+                        var status = (NRS.defaultSettings[setting] !== value ? "modified" : "default");
+                        if (setting.search("password") >= 0) {
+                            value = new Array(value.length + 1).join('*');
+                        }
+                        NRS.logConsole(setting + " = " + value + " [" + status + "]");
                     }
                     NRS.applySettings();
                 });
@@ -619,7 +623,7 @@ var NRS = (function(NRS, $) {
 		NRS.applySettings(key);
 	};
 
-	$("#settings_box select, #welcome_panel select[name='language']").on("change", function(e) {
+	$("#settings_box select, #welcome_panel select[name='language'], #settings_admin_password").on("change", function(e) {
 		e.preventDefault();
         NRS.updateSettings($(this).attr("name"), $(this).val());
 	});
