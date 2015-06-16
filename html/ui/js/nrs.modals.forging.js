@@ -119,7 +119,7 @@ var NRS = (function(NRS, $, undefined) {
             status = "not_forging";
             tooltip = $.t("balance leased");
         } else if (NRS.settings.admin_password == "") {
-            status = "unknown_forging_status";
+            status = "unknown";
             tooltip = $.t("cannot determine forging status") + "\n" +
                 $.t("admin password not specified")
         } else {
@@ -149,11 +149,12 @@ var NRS = (function(NRS, $, undefined) {
         var forgingIndicator = $("#forging_indicator");
         forgingIndicator.removeClass("forging");
         forgingIndicator.removeClass("not_forging");
-        forgingIndicator.removeClass("unknown_forging_status");
+        forgingIndicator.removeClass("unknown");
         forgingIndicator.addClass(status);
         forgingIndicator.find("span").html($.t(status)).attr("data-i18n", status);
         NRS.isForging = (status == "forging");
         $("#forging_status").attr("title", tooltip);
+        forgingIndicator.show();
     };
 
 	return NRS;

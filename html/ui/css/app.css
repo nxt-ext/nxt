@@ -3038,7 +3038,7 @@ input:invalid {
 }
 
 /* Gray (Unknown forging status) */
-#forging_indicator.unknown_forging_status i {
+#forging_indicator.unknown i {
   color:#cccccc;
 }
 
