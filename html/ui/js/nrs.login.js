@@ -333,8 +333,8 @@ var NRS = (function(NRS, $, undefined) {
 						} else {
 							NRS.isLeased = false;
 						}
-
-						NRS.updateForgingStatus();
+						NRS.updateForgingTooltip($.t("forging_unknown_tooltip"));
+						NRS.updateForgingStatus(passLogin ? password : null);
 						if (NRS.isLocalHost && passLogin) {
 							var forgingIndicator = $("#forging_indicator");
 							NRS.sendRequest("startForging", {
@@ -343,11 +343,13 @@ var NRS = (function(NRS, $, undefined) {
 								if ("deadline" in response) {
 									forgingIndicator.addClass("forging");
 									forgingIndicator.find("span").html($.t("forging")).attr("data-i18n", "forging");
-									NRS.isForging = true;
+									NRS.forgingStatus = NRS.constants.FORGING;
+									NRS.updateForgingTooltip(NRS.getForgingTooltip);
 								} else {
 									forgingIndicator.removeClass("forging");
 									forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-									NRS.isForging = false;
+									NRS.forgingStatus = NRS.constants.NOT_FORGING;
+									NRS.updateForgingTooltip(response.errorDescription);
 								}
 								forgingIndicator.show();
 							});
@@ -448,7 +450,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#logout_button_container").on("show.bs.dropdown", function(e) {
 		
-		if (!NRS.isForging) {
+		if (NRS.forgingStatus != NRS.constants.FORGING) {
 			//e.preventDefault();
 			$(this).find("[data-i18n='logout_stop_forging']").hide();
 		}
@@ -539,15 +541,8 @@ var NRS = (function(NRS, $, undefined) {
 		$(document.documentElement).scrollTop(0);
 	}
 
-	/*$("#logout_button").click(function(e) {
-		if (!NRS.isForging) {
-			e.preventDefault();
-			NRS.logout();
-		}
-	});*/
-
 	NRS.logout = function(stopForging) {
-		if (stopForging && NRS.isForging) {
+		if (stopForging && NRS.forgingStatus == NRS.constants.FORGING) {
 			$("#stop_forging_modal .show_logout").show();
 			$("#stop_forging_modal").modal("show");
 		} else {

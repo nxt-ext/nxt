@@ -64,7 +64,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.isTestNet = false;
 	NRS.isLocalHost = false;
-	NRS.isForging = false;
+	NRS.forgingStatus = NRS.constants.UNKNOWN;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
 
@@ -1067,14 +1067,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		if (nextLesseeStatus != "") {
 			accountLeasingStatus += "<br>" + nextLesseeStatus;
-		}
-
-		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
-            var forgingIndicator = $("#forging_indicator");
-            forgingIndicator.removeClass("forging");
-			forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-			forgingIndicator.show();
-			NRS.isForging = false;
 		}
 
 		//no reed solomon available? do it myself? todo

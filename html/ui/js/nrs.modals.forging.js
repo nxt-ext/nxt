@@ -18,7 +18,7 @@
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	//todo: use a startForgingError function instead!
 
 	NRS.forms.startForgingComplete = function(response, data) {
@@ -26,12 +26,15 @@ var NRS = (function(NRS, $, undefined) {
             var forgingIndicator = $("#forging_indicator");
             forgingIndicator.addClass("forging");
 			forgingIndicator.find("span").html($.t("forging")).attr("data-i18n", "forging");
-			NRS.isForging = true;
+			NRS.forgingStatus = NRS.constants.FORGING;
+            NRS.updateForgingTooltip(NRS.getForgingTooltip);
+
 			$.growl($.t("success_start_forging"), {
 				type: "success"
 			});
 		} else {
-			NRS.isForging = false;
+			NRS.forgingStatus = NRS.constants.NOT_FORGING;
+            NRS.updateForgingTooltip(response.errorDescription);
 			$.growl($.t("error_start_forging"), {
 				type: 'danger'
 			});
@@ -48,8 +51,8 @@ var NRS = (function(NRS, $, undefined) {
         forgingIndicator.removeClass("forging");
 		forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
 
-		NRS.isForging = false;
-
+		NRS.forgingStatus = NRS.constants.NOT_FORGING;
+        NRS.updateForgingTooltip($.t("forging_stopped_tooltip"));
 		if (response.foundAndStopped) {
 			$.growl($.t("success_stop_forging"), {
 				type: 'success'
@@ -95,66 +98,78 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	forgingIndicator.hover(
-		function(event) {
+		function() {
             NRS.updateForgingStatus();
-        },
-		function(event) {
-			$("#forging_status").attr("title", "");
-		}
+        }
 	);
 
-    NRS.updateForgingStatus = function() {
-        var status;
-        var tooltip;
+    NRS.getForgingTooltip = function() {
+        return $.t("forging_tooltip", { "balance": NRS.accountInfo.effectiveBalanceNXT });
+    };
+
+    NRS.updateForgingTooltip = function(tooltip) {
+        $("#forging_status").attr('title', tooltip).tooltip('fixTitle');
+    };
+
+    NRS.updateForgingStatus = function(secretPhrase) {
+        var status = NRS.forgingStatus;
+        var tooltip = $("#forging_status").attr('title');
         if (!NRS.accountInfo.publicKey) {
-            status = "not_forging";
-            tooltip = $.t("account has no public key");
+            status = NRS.constants.NOT_FORGING;
+            tooltip = $.t("error_forging_no_public_key");
         } else if (NRS.accountInfo.effectiveBalanceNXT == 0) {
-            status = "not_forging";
-            tooltip = $.t("effective balance is 0");
+            status = NRS.constants.NOT_FORGING;
+            tooltip = $.t("error_forging_effective_balance");
         } else if (NRS.downloadingBlockchain) {
-            status = "not_forging";
-            tooltip = $.t("blockchain currently downloading");
+            status = NRS.constants.NOT_FORGING;
+            tooltip = $.t("error_forging_blockchain_downloading");
+        } else if (NRS.state.isScanning) {
+            status = NRS.constants.NOT_FORGING;
+            tooltip = $.t("error_forging_blockchain_rescanning");
         } else if (NRS.isLeased) {
-            status = "not_forging";
-            tooltip = $.t("balance leased");
-        } else if (NRS.settings.admin_password == "") {
-            status = "unknown";
-            tooltip = $.t("cannot determine forging status") + "\n" +
-                $.t("admin password not specified")
+            status = NRS.constants.NOT_FORGING;
+            tooltip = $.t("error_forging_lease");
+        } else if (NRS.settings.admin_password == "" && (!secretPhrase || !NRS.isLocalHost)) {
+            // do not change forging status
         } else {
-            NRS.sendRequest("getForging", {
-                "adminPassword": NRS.settings.admin_password
-            }, function (response) {
+            var params = {};
+            if (NRS.settings.admin_password != "") {
+                params["adminPassword"] = NRS.settings.admin_password;
+            }
+            if (secretPhrase && NRS.settings.admin_password == "") {
+                params["secretPhrase"] = secretPhrase;
+            }
+            NRS.sendRequest("getForging", params, function (response) {
                 if ("account" in response) {
-                    status = "forging";
-                    tooltip = $.t("account") + " " + response.account + "\n" +
-                        $.t("time [sec]") + " " + response.remaining + "\n" +
-                        $.t("effective balance") + " " + NRS.accountInfo.effectiveBalanceNXT;
+                    status = NRS.constants.FORGING;
+                    tooltip = NRS.getForgingTooltip();
                 } else if ("generators" in response) {
-                    status = "forging";
-                    if (response.generators.length == 1) {
-                        tooltip = $.t("account") + " " + response.generators[0].account + "\n" +
-                            $.t("time [sec]") + " " + response.generators[0].remaining + "\n" +
-                            $.t("effective balance") + " " + NRS.accountInfo.effectiveBalanceNXT;
+                    if (response.generators.length == 0) {
+                        status = NRS.constants.NOT_FORGING;
+                        tooltip = $.t("not_forging_not_started_tooltip");
                     } else {
-                        tooltip = $.t("number of forging accounts") + " " + response.generators.length;
+                        status = NRS.constants.FORGING;
+                        if (response.generators.length == 1) {
+                            tooltip = NRS.getForgingTooltip();
+                        } else {
+                            tooltip = $.t("forging_more_than_one_tooltip", { "generators": response.generators.length });
+                        }
                     }
                 } else {
-                    status = "not_forging";
+                    status = NRS.constants.NOT_FORGING;
                     tooltip = response.errorDescription;
                 }
             }, false);
         }
         var forgingIndicator = $("#forging_indicator");
-        forgingIndicator.removeClass("forging");
-        forgingIndicator.removeClass("not_forging");
-        forgingIndicator.removeClass("unknown");
+        forgingIndicator.removeClass(NRS.constants.FORGING);
+        forgingIndicator.removeClass(NRS.constants.NOT_FORGING);
+        forgingIndicator.removeClass(NRS.constants.UNKNOWN);
         forgingIndicator.addClass(status);
         forgingIndicator.find("span").html($.t(status)).attr("data-i18n", status);
-        NRS.isForging = (status == "forging");
-        $("#forging_status").attr("title", tooltip);
         forgingIndicator.show();
+        NRS.forgingStatus = status;
+        NRS.updateForgingTooltip(tooltip);
     };
 
 	return NRS;

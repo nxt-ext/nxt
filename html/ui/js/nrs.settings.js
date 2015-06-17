@@ -597,6 +597,11 @@ var NRS = (function(NRS, $) {
 				NRS.deleteCookie("remember_passphrase");
 			}
 		}
+		if (!key || key == "admin_password") {
+			if (NRS.settings["admin_password"] != "") {
+				NRS.updateForgingStatus();
+			}
+		}
 	};
 
 	NRS.updateSettings = function(key, value) {
