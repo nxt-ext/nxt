@@ -287,6 +287,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		stateInterval = setInterval(function() {
 			NRS.getState();
+			NRS.updateForgingStatus();
 		}, 1000 * seconds);
 	};
 
