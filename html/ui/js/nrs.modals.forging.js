@@ -103,8 +103,11 @@ var NRS = (function(NRS, $) {
         }
 	);
 
-    NRS.getForgingTooltip = function() {
-        return $.t("forging_tooltip", { "balance": NRS.accountInfo.effectiveBalanceNXT });
+    NRS.getForgingTooltip = function(data) {
+        if (!data || data.account == NRS.accountInfo.account) {
+            return $.t("forging_tooltip", {"balance": NRS.accountInfo.effectiveBalanceNXT});
+        }
+        return $.t("forging_another_account_tooltip", {"accountRS": data.accountRS });
     };
 
     NRS.updateForgingTooltip = function(tooltip) {
@@ -142,7 +145,7 @@ var NRS = (function(NRS, $) {
             NRS.sendRequest("getForging", params, function (response) {
                 if ("account" in response) {
                     status = NRS.constants.FORGING;
-                    tooltip = NRS.getForgingTooltip();
+                    tooltip = NRS.getForgingTooltip(response);
                 } else if ("generators" in response) {
                     if (response.generators.length == 0) {
                         status = NRS.constants.NOT_FORGING;
@@ -150,7 +153,7 @@ var NRS = (function(NRS, $) {
                     } else {
                         status = NRS.constants.FORGING;
                         if (response.generators.length == 1) {
-                            tooltip = NRS.getForgingTooltip();
+                            tooltip = NRS.getForgingTooltip(response.generators[0]);
                         } else {
                             tooltip = $.t("forging_more_than_one_tooltip", { "generators": response.generators.length });
                         }
