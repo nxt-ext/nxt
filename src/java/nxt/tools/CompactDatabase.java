@@ -21,6 +21,7 @@ import nxt.Nxt;
 import nxt.util.Logger;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -122,23 +123,25 @@ public class CompactDatabase {
         // Create our files
         //
         int phase = 0;
-        File sqlFile = new File(dbDir + "/backup.sql.gz");
-        File dbFile = new File(dbDir + "/nxt.h2.db");
+        File sqlFile = new File(dbDir, "backup.sql.gz");
+        File dbFile = new File(dbDir, "nxt.h2.db");
         if (!dbFile.exists()) {
-            dbFile = new File(dbDir + "/nxt.mv.db");
+            dbFile = new File(dbDir, "nxt.mv.db");
             if (!dbFile.exists()) {
                 Logger.logErrorMessage("NRS database not found");
                 return 1;
             }
         }
-        File oldFile = new File(dbFile.getPath() + ".bk");
+        File oldFile = new File(dbFile.getPath() + ".bak");
         try {
             //
             // Create the SQL script
             //
             Logger.logInfoMessage("Creating the SQL script");
-            if (sqlFile.exists())
-                sqlFile.delete();
+            if (sqlFile.exists()) {
+                if (!sqlFile.delete())
+                    throw new IOException(String.format("Unable to delete '%s'", sqlFile.getPath()));
+            }
             try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
                     Statement s = conn.createStatement()) {
                 s.execute("SCRIPT TO '" + sqlFile.getPath() + "' COMPRESSION GZIP CHARSET 'UTF-8'");
@@ -147,11 +150,14 @@ public class CompactDatabase {
             // Create the new database
             //
             Logger.logInfoMessage("Creating the new database");
-            dbFile.renameTo(oldFile);
+            if (!dbFile.renameTo(oldFile))
+                throw new IOException(String.format("Unable to rename '%' to '%s'",
+                                                    dbFile.getPath(), oldFile.getPath()));
             phase = 1;
             try (Connection conn = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
                     Statement s = conn.createStatement()) {
                 s.execute("RUNSCRIPT FROM '" + sqlFile.getPath() + "' COMPRESSION GZIP CHARSET 'UTF-8'");
+                s.execute("ANALYZE");
             }
             //
             // New database has been created
@@ -168,28 +174,35 @@ public class CompactDatabase {
                     // We failed while creating the SQL file
                     //
                     if (sqlFile.exists())
-                        sqlFile.delete();
+                        if (!sqlFile.delete())
+                            Logger.logErrorMessage(String.format("Unable to delete '%s'", sqlFile.getPath()));
                     break;
                 case 1:
                     //
                     // We failed while creating the new database
                     //
-                    File newFile = new File(dbDir + "/nxt.h2.db");
+                    File newFile = new File(dbDir, "nxt.h2.db");
                     if (newFile.exists()) {
-                        newFile.delete();
+                        if (!newFile.delete())
+                            Logger.logErrorMessage(String.format("Unable to delete '%s'", newFile.getPath()));
                     } else {
-                        newFile = new File(dbDir + "/nxt.mv.db");
+                        newFile = new File(dbDir, "nxt.mv.db");
                         if (newFile.exists())
-                            newFile.delete();
+                            if (!newFile.delete())
+                                Logger.logErrorMessage(String.format("Unable to delete '%'", newFile.getPath()));
                     }
-                    oldFile.renameTo(dbFile);
+                    if (!oldFile.renameTo(dbFile))
+                        Logger.logErrorMessage(String.format("Unable to rename '%s' to '%s'",
+                                                             oldFile.getPath(), dbFile.getPath()));
                     break;
                 case 2:
                     //
                     // New database created
                     //
-                    sqlFile.delete();
-                    oldFile.delete();
+                    if (!sqlFile.delete())
+                        Logger.logErrorMessage(String.format("Unable to delete '%s'", sqlFile.getPath()));
+                    if (!oldFile.delete())
+                        Logger.logErrorMessage(String.format("Unable to delete '%s'", oldFile.getPath()));
                     break;
             }
         }
