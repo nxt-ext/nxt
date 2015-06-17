@@ -156,7 +156,7 @@ var NRS = (function(NRS, $) {
                         }
                     }
                 } else {
-                    status = NRS.constants.NOT_FORGING;
+                    status = NRS.constants.UNKNOWN;
                     tooltip = response.errorDescription;
                 }
             }, false);
