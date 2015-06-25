@@ -135,25 +135,32 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	$("#add_peer_modal").on("show.bs.modal", function(e) {
-		if (!NRS.needsAdminPassword) {
-			$("#add_peer_admin_password_wrapper").hide();
-		}
+		showAdminPassword("add");
 	});
 
 	$("#connect_peer_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 		$("#connect_peer_address").html($invoker.data("peer"));
 		$("#connect_peer_field_id").val($invoker.data("peer"));
+		showAdminPassword("connect");
 	});
 	
 	$("#blacklist_peer_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 		$("#blacklist_peer_address").html($invoker.data("peer"));
 		$("#blacklist_peer_field_id").val($invoker.data("peer"));
-		if (!NRS.needsAdminPassword) {
-			$("#blacklist_peer_admin_password_wrapper").hide();
-		}
+		showAdminPassword("blacklist");
 	});
+
+	showAdminPassword = function(action) {
+		if (!NRS.needsAdminPassword) {
+			$("#" + action + "_peer_admin_password_wrapper").hide();
+		} else {
+			if (NRS.settings.admin_password != "") {
+				$("#" + action + "_peer_admin_password").val(NRS.settings.admin_password);
+			}
+		}
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));
