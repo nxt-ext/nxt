@@ -260,9 +260,10 @@ var NRS = (function(NRS, $, undefined) {
 		return b.timestamp - a.timestamp;
 	};
 
-	NRS.getTransactionIconHTML = function(type, subType) {
-		var iconHTML = NRS.transactionTypes[type]['iconHTML'] + " " + NRS.transactionTypes[type]['subTypes'][subType]['iconHTML'];
-		return '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>';
+	NRS.getTransactionIconHTML = function(type, subtype) {
+		var iconHTML = NRS.transactionTypes[type]['iconHTML'] + " " + NRS.transactionTypes[type]['subTypes'][subtype]['iconHTML'];
+		var tooltip = $.t(NRS.transactionTypes[type].subTypes[subtype].i18nKeyTitle);
+		return '<span title="' + tooltip + '" class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>';
 	};
 
 	NRS.addPhasedTransactionHTML = function(t) {
