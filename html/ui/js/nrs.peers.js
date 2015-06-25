@@ -17,7 +17,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 
 	NRS.connectPeer = function(peer) {
 		NRS.sendRequest("addPeer", {"peer": peer}, function(response) {
@@ -32,7 +32,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.loadPage("peers");
 		});
-	}
+	};
 	
 	NRS.pages.peers = function() {
 		NRS.sendRequest("getPeers+", {
@@ -76,7 +76,7 @@ var NRS = (function(NRS, $, undefined) {
 					rows += "<td>" + NRS.formatVolume(peer.uploadedVolume) + "</td>";
 					rows += "<td><span class='label label-" + (NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>";
 					rows += (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td>";
-					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>"
+					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>";
 
 					rows += "<td style='text-align:right;'>";
 					rows += "<a class='btn btn-xs btn-default' href='#' ";
@@ -105,13 +105,13 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded();
 			}
 		});
-	}
+	};
 
 	NRS.incoming.peers = function() {
 		NRS.loadPage("peers");
-	}
+	};
 	
-	NRS.forms.addPeerComplete = function(response, data) {
+	NRS.forms.addPeerComplete = function(response) {
 		var message = "success_add_peer";
 		var growlType = "success";
 		if (response.state == 1) {
@@ -125,16 +125,25 @@ var NRS = (function(NRS, $, undefined) {
 			"type": growlType
 		});
 		NRS.loadPage("peers");
-	}
+	};
 	
-	NRS.forms.blacklistPeerComplete = function(response, data) {
-		$.growl($.t("success_blacklist_peer"), {
-			"type": "success"
+	NRS.forms.blacklistPeerComplete = function(response) {
+		var message;
+		var type;
+		if (response.errorCode) {
+			message = response.errorDescription;
+			type = "danger";
+		} else {
+			message = $.t("success_blacklist_peer");
+			type = "success";
+		}
+		$.growl(message, {
+			"type": type
 		});
 		NRS.loadPage("peers");
-	}
+	};
 
-	$("#add_peer_modal").on("show.bs.modal", function(e) {
+	$("#add_peer_modal").on("show.bs.modal", function() {
 		showAdminPassword("add");
 	});
 
@@ -152,7 +161,7 @@ var NRS = (function(NRS, $, undefined) {
 		showAdminPassword("blacklist");
 	});
 
-	showAdminPassword = function(action) {
+	function showAdminPassword(action) {
 		if (!NRS.needsAdminPassword) {
 			$("#" + action + "_peer_admin_password_wrapper").hide();
 		} else {
@@ -160,7 +169,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#" + action + "_peer_admin_password").val(NRS.settings.admin_password);
 			}
 		}
-	};
+	}
 
 	return NRS;
 }(NRS || {}, jQuery));
