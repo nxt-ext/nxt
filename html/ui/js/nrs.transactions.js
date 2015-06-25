@@ -200,7 +200,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 
-	//todo: add to dashboard? 
 	NRS.addUnconfirmedTransaction = function(transactionId, callback) {
 		NRS.sendRequest("getTransaction", {
 			"transaction": transactionId
@@ -263,9 +262,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getTransactionIconHTML = function(type, subType) {
 		var iconHTML = NRS.transactionTypes[type]['iconHTML'] + " " + NRS.transactionTypes[type]['subTypes'][subType]['iconHTML'];
-		var html = '';
-		html += '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>';
-		return html;
+		return '<span class="label label-primary" style="font-size:12px;">' + iconHTML + '</span>';
 	};
 
 	NRS.addPhasedTransactionHTML = function(t) {
