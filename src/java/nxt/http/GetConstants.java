@@ -124,4 +124,9 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         return CONSTANTS;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

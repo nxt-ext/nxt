@@ -47,4 +47,10 @@ public final class TrimDerivedTables extends APIServlet.APIRequestHandler {
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

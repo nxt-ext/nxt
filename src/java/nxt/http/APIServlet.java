@@ -42,6 +42,8 @@ import java.util.Set;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 import static nxt.http.JSONResponses.POST_REQUIRED;
+import static nxt.http.JSONResponses.REQUIRED_BLOCK_NOT_FOUND;
+import static nxt.http.JSONResponses.REQUIRED_LAST_BLOCK_NOT_FOUND;
 
 public final class APIServlet extends HttpServlet {
 
@@ -55,16 +57,17 @@ public final class APIServlet extends HttpServlet {
             this(null, apiTags, parameters);
         }
 
-        APIRequestHandler(String fileParameter, APITag[] apiTags, String... parameters) {
-            List<String> origParameters = Arrays.asList(parameters);
-            if ((requirePassword() || origParameters.contains("lastIndex")) && ! API.disableAdminPassword) {
-                List<String> newParameters = new ArrayList<>(parameters.length + 1);
-                newParameters.add("adminPassword");
-                newParameters.addAll(origParameters);
-                this.parameters = Collections.unmodifiableList(newParameters);
-            } else {
-                this.parameters = origParameters;
+        APIRequestHandler(String fileParameter, APITag[] apiTags, String... origParameters) {
+            List<String> parameters = new ArrayList<>();
+            Collections.addAll(parameters, origParameters);
+            if ((requirePassword() || parameters.contains("lastIndex")) && ! API.disableAdminPassword) {
+                parameters.add("adminPassword");
             }
+            if (allowRequiredBlockParameters()) {
+                parameters.add("requireBlock");
+                parameters.add("requireLastBlock");
+            }
+            this.parameters = Collections.unmodifiableList(parameters);
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
             this.fileParameter = fileParameter;
         }
@@ -97,6 +100,10 @@ public final class APIServlet extends HttpServlet {
 
         boolean requirePassword() {
         	return false;
+        }
+
+        boolean allowRequiredBlockParameters() {
+            return true;
         }
 
     }
@@ -365,7 +372,26 @@ public final class APIServlet extends HttpServlet {
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }
-                response = apiRequestHandler.processRequest(req, resp);
+                long requireBlockId = ParameterParser.getUnsignedLong(req, "requireBlock", false);
+                long requireLastBlockId = ParameterParser.getUnsignedLong(req, "requireLastBlock", false);
+                if (apiRequestHandler.allowRequiredBlockParameters() && requireBlockId != 0 || requireLastBlockId != 0) {
+                    synchronized (Nxt.getBlockchain()) {
+                        if (requireBlockId != 0 && !Nxt.getBlockchain().hasBlock(requireBlockId)) {
+                            response = REQUIRED_BLOCK_NOT_FOUND;
+                            return;
+                        }
+                        if (requireLastBlockId != 0 && requireLastBlockId != Nxt.getBlockchain().getLastBlock().getId()) {
+                            response = REQUIRED_LAST_BLOCK_NOT_FOUND;
+                            return;
+                        }
+                        response = apiRequestHandler.processRequest(req, resp);
+                        if (requireLastBlockId == 0 && response instanceof JSONObject) {
+                            ((JSONObject)response).put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
+                        }
+                    }
+                } else {
+                    response = apiRequestHandler.processRequest(req, resp);
+                }
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
