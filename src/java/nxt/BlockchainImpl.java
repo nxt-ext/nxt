@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 final class BlockchainImpl implements Blockchain {
 
@@ -38,7 +40,26 @@ final class BlockchainImpl implements Blockchain {
 
     private BlockchainImpl() {}
 
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final AtomicReference<BlockImpl> lastBlock = new AtomicReference<>();
+
+    @Override
+    public void readLock() {
+        lock.readLock().lock();
+    }
+
+    @Override
+    public void readUnlock() {
+        lock.readLock().unlock();
+    }
+
+    void writeLock() {
+        lock.writeLock().lock();
+    }
+
+    void writeUnlock() {
+        lock.writeLock().unlock();
+    }
 
     @Override
     public BlockImpl getLastBlock() {

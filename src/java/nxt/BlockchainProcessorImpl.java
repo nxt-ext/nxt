@@ -221,7 +221,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     return;
                 }
 
-                synchronized (blockchain) {
+                blockchain.writeLock();
+                try {
                     if (betterCumulativeDifficulty.compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
                         return;
                     }
@@ -281,7 +282,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     } else {
                         Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
                     }
-                } // synchronized
+                } finally {
+                    blockchain.writeUnlock();
+                }
 
             } catch (NxtException.StopException e) {
                 Logger.logMessage("Blockchain download stopped: " + e.getMessage());
@@ -890,7 +893,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public void trimDerivedTables() {
-        synchronized (blockchain) {
+        blockchain.writeLock();
+        try {
             try {
                 Db.db.beginTransaction();
                 doTrimDerivedTables();
@@ -902,6 +906,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 Db.db.endTransaction();
             }
+        } finally {
+            blockchain.writeUnlock();
         }
     }
 
@@ -950,7 +956,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getPreviousBlockId() == lastBlock.getId()) {
             pushBlock(block);
         } else if (block.getPreviousBlockId() == lastBlock.getPreviousBlockId() && block.getTimestamp() < lastBlock.getTimestamp()) {
-            synchronized (blockchain) {
+            blockchain.writeLock();
+            try {
                 if (lastBlock.getId() != blockchain.getLastBlock().getId()) {
                     return; // blockchain changed, ignore the block
                 }
@@ -965,6 +972,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     pushBlock(lastBlock);
                     TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
                 }
+            } finally {
+                blockchain.writeUnlock();
             }
         } // else ignore the block
     }
@@ -981,7 +990,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public void fullReset() {
-        synchronized (blockchain) {
+        blockchain.writeLock();
+        try {
             try {
                 setGetMoreBlocks(false);
                 scheduleScan(0, false);
@@ -993,6 +1003,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 setGetMoreBlocks(true);
             }
+        } finally {
+            blockchain.writeUnlock();
         }
     }
 
@@ -1055,7 +1067,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
         int curTime = Nxt.getEpochTime();
 
-        synchronized (blockchain) {
+        blockchain.writeLock();
+        try {
             BlockImpl previousLastBlock = null;
             try {
                 Db.db.beginTransaction();
@@ -1093,7 +1106,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 Db.db.endTransaction();
             }
-        } // synchronized
+        } finally {
+            blockchain.writeUnlock();
+        }
 
         if (block.getTimestamp() >= curTime - (Constants.MAX_TIMEDRIFT + Constants.FORGING_DELAY)) {
             Peers.sendToSomePeers(block);
@@ -1258,7 +1273,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private List<BlockImpl> popOffTo(Block commonBlock) {
-        synchronized (blockchain) {
+        blockchain.writeLock();
+        try {
             if (!Db.db.isInTransaction()) {
                 try {
                     Db.db.beginTransaction();
@@ -1299,7 +1315,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 throw e;
             }
             return poppedOffBlocks;
-        } // synchronized
+        } finally {
+            blockchain.writeUnlock();
+        }
     }
 
     private BlockImpl popLastBlock() {
@@ -1316,7 +1334,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void popOffWithRescan(int height) {
-        synchronized (blockchain) {
+        blockchain.writeLock();
+        try {
             try {
                 scheduleScan(0, false);
                 BlockDb.deleteBlocksFrom(BlockDb.findBlockIdAtHeight(height));
@@ -1324,6 +1343,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 scan(0, false);
             }
+        } finally {
+            blockchain.writeUnlock();
         }
     }
 
@@ -1523,7 +1544,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void scan(int height, boolean validate, boolean shutdown) {
-        synchronized (blockchain) {
+        blockchain.writeLock();
+        try {
             if (!Db.db.isInTransaction()) {
                 try {
                     Db.db.beginTransaction();
@@ -1678,6 +1700,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 isScanning = false;
             }
-        } // synchronized
+        } finally {
+            blockchain.writeUnlock();
+        }
     }
 }

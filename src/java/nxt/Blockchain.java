@@ -24,6 +24,10 @@ import java.util.List;
 
 public interface Blockchain {
 
+    void readLock();
+
+    void readUnlock();
+
     Block getLastBlock();
 
     Block getLastBlock(int timestamp);
