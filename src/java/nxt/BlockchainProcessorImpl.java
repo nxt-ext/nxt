@@ -1413,10 +1413,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 try {
                     unconfirmedTransaction.getTransaction().validate();
-                } catch (NxtException.NotCurrentlyValidException e) {
-                    continue;
                 } catch (NxtException.ValidationException e) {
-                    TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
                     continue;
                 }
                 if (unconfirmedTransaction.getPhasing() == null && unconfirmedTransaction.getTransaction().isDuplicate(duplicates)) {
