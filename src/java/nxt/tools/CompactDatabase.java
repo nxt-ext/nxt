@@ -155,7 +155,7 @@ public class CompactDatabase {
             //
             Logger.logInfoMessage("Creating the new database");
             if (!dbFile.renameTo(oldFile)) {
-                throw new IOException(String.format("Unable to rename '%' to '%s'",
+                throw new IOException(String.format("Unable to rename '%s' to '%s'",
                                                     dbFile.getPath(), oldFile.getPath()));
             }
             phase = 1;
@@ -197,7 +197,7 @@ public class CompactDatabase {
                         newFile = new File(dbDir, "nxt.mv.db");
                         if (newFile.exists()) {
                             if (!newFile.delete()) {
-                                Logger.logErrorMessage(String.format("Unable to delete '%'", newFile.getPath()));
+                                Logger.logErrorMessage(String.format("Unable to delete '%s'", newFile.getPath()));
                             }
                         }
                     }

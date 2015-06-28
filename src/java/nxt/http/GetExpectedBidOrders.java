@@ -16,41 +16,47 @@
 
 package nxt.http;
 
+import nxt.Attachment;
 import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
+import nxt.TransactionType;
+import nxt.util.Filter;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
-public final class TrimDerivedTables extends APIServlet.APIRequestHandler {
+public final class GetExpectedBidOrders extends APIServlet.APIRequestHandler {
 
-    static final TrimDerivedTables instance = new TrimDerivedTables();
+    static final GetExpectedBidOrders instance = new GetExpectedBidOrders();
 
-    private TrimDerivedTables() {
-        super(new APITag[] {APITag.DEBUG});
+    private GetExpectedBidOrders() {
+        super(new APITag[] {APITag.AE}, "asset");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+
+        long assetId = ParameterParser.getAsset(req).getId();
+        Filter<Transaction> filter = transaction -> {
+            if (transaction.getType() != TransactionType.ColoredCoins.BID_ORDER_PLACEMENT) {
+                return false;
+            }
+            Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
+            return attachment.getAssetId() == assetId;
+        };
+
+        List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
+
+        JSONArray orders = new JSONArray();
+        transactions.forEach(transaction -> orders.add(JSONData.expectedBidOrder(transaction)));
         JSONObject response = new JSONObject();
-        Nxt.getBlockchainProcessor().trimDerivedTables();
-        response.put("done", true);
+        response.put("bidOrders", orders);
         return response;
-    }
 
-    @Override
-    final boolean requirePost() {
-        return true;
-    }
-
-    @Override
-    boolean requirePassword() {
-        return true;
-    }
-
-    @Override
-    boolean allowRequiredBlockParameters() {
-        return false;
     }
 
 }

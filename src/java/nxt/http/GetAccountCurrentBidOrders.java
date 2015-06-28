@@ -18,7 +18,6 @@ package nxt.http;
 
 import nxt.Order;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -37,12 +36,7 @@ public final class GetAccountCurrentBidOrders extends APIServlet.APIRequestHandl
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         long accountId = ParameterParser.getAccount(req).getId();
-        long assetId = 0;
-        try {
-            assetId = Convert.parseUnsignedLong(req.getParameter("asset"));
-        } catch (RuntimeException e) {
-            // ignore
-        }
+        long assetId = ParameterParser.getUnsignedLong(req, "asset", false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 

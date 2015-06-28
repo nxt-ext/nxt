@@ -95,4 +95,9 @@ public final class GetState extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

@@ -66,4 +66,10 @@ public class BlacklistPeer extends APIRequestHandler {
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

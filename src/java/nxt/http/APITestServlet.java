@@ -64,7 +64,7 @@ public class APITestServlet extends HttpServlet {
             "           <ul class='nav navbar-nav navbar-right'>\n" +
             "               <li><input type='text' class='form-control' id='search' " + 
             "                    placeholder='Search' style='margin-top:8px;'></li>\n" +
-            "               <li><a href='https://wiki.nxtcrypto.org/wiki/Nxt_API' target='_blank' style='margin-left:20px;'>Wiki Docs</a></li>\n" +
+            "               <li><a href='https://wiki.nxtcrypto.org/wiki/The_Nxt_API' target='_blank' style='margin-left:20px;'>Wiki Docs</a></li>\n" +
             "           </ul>\n" +
             "       </div>\n" +
             "   </div>\n" +
@@ -241,7 +241,7 @@ public class APITestServlet extends HttpServlet {
         }
         buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='/doc/");
         buf.append(className.replace('.', '/')).append(".html' target='_blank'>javadoc</a>&nbsp;&nbsp;\n");
-        buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='https://wiki.nxtcrypto.org/wiki/Nxt_API#");
+        buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='https://wiki.nxtcrypto.org/wiki/The_Nxt_API#");
         appendWikiLink(className.substring(className.lastIndexOf('.') + 1), buf);
         buf.append("' target='_blank'>wiki</a>&nbsp;&nbsp;\n");
         buf.append("&nbsp;&nbsp;&nbsp;\n<input type='checkbox' class='api-call-sel-ALL' ");

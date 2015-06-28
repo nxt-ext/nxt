@@ -54,4 +54,10 @@ public final class Shutdown extends APIServlet.APIRequestHandler {
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

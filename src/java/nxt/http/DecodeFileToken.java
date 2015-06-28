@@ -22,10 +22,11 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
-
 import java.io.IOException;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.INCORRECT_FILE;
+import static nxt.http.JSONResponses.INCORRECT_TOKEN;
+import static nxt.http.JSONResponses.MISSING_TOKEN;
 
 public final class DecodeFileToken extends APIServlet.APIRequestHandler {
 
@@ -64,6 +65,11 @@ public final class DecodeFileToken extends APIServlet.APIRequestHandler {
     @Override
     boolean requirePost() {
         return true;
+    }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
     }
 
 }

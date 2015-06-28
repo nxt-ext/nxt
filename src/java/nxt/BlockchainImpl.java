@@ -19,14 +19,19 @@ package nxt;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.util.Convert;
+import nxt.util.Filter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 final class BlockchainImpl implements Blockchain {
 
@@ -38,7 +43,26 @@ final class BlockchainImpl implements Blockchain {
 
     private BlockchainImpl() {}
 
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final AtomicReference<BlockImpl> lastBlock = new AtomicReference<>();
+
+    @Override
+    public void readLock() {
+        lock.readLock().lock();
+    }
+
+    @Override
+    public void readUnlock() {
+        lock.readLock().unlock();
+    }
+
+    void writeLock() {
+        lock.writeLock().lock();
+    }
+
+    void writeUnlock() {
+        lock.writeLock().unlock();
+    }
 
     @Override
     public BlockImpl getLastBlock() {
@@ -411,4 +435,37 @@ final class BlockchainImpl implements Blockchain {
         return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
+    @Override
+    public List<TransactionImpl> getExpectedTransactions(Filter<Transaction> filter) {
+        Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+        BlockchainProcessorImpl blockchainProcessor = BlockchainProcessorImpl.getInstance();
+        List<TransactionImpl> result = new ArrayList<>();
+        readLock();
+        try {
+            if (getHeight() >= Constants.PHASING_BLOCK) {
+                try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(getHeight() + 1)) {
+                    for (TransactionImpl phasedTransaction : phasedTransactions) {
+                        try {
+                            phasedTransaction.validate();
+                            if (!phasedTransaction.isDuplicate(duplicates) && filter.ok(phasedTransaction)) {
+                                result.add(phasedTransaction);
+                            }
+                        } catch (NxtException.ValidationException ignore) {
+                        }
+                    }
+                }
+            }
+            blockchainProcessor.selectUnconfirmedTransactions(duplicates, getLastBlock(), -1).forEach(
+                    unconfirmedTransaction -> {
+                        TransactionImpl transaction = unconfirmedTransaction.getTransaction();
+                        if (transaction.getPhasing() == null && filter.ok(transaction)) {
+                            result.add(transaction);
+                        }
+                    }
+            );
+        } finally {
+            readUnlock();
+        }
+        return result;
+    }
 }

@@ -62,6 +62,11 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
     private static class PluginDirListing extends SimpleFileVisitor<Path> {
 
         private final List<Path> directories = new ArrayList<>();

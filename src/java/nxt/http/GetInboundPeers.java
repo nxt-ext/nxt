@@ -79,4 +79,10 @@ public final class GetInboundPeers extends APIServlet.APIRequestHandler {
         response.put("peers", peersJSON);
         return response;
     }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }
