@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.util;
 
 import nxt.Nxt;
@@ -5,7 +21,6 @@ import nxt.Nxt;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.LogManager;
 
@@ -62,21 +77,11 @@ public final class Logger {
         }
         if (! Boolean.getBoolean("nxt.doNotConfigureLogging")) {
             try {
-                boolean foundProperties = false;
                 Properties loggingProperties = new Properties();
-                try (InputStream is = ClassLoader.getSystemResourceAsStream("logging-default.properties")) {
-                    if (is != null) {
-                        loggingProperties.load(is);
-                        foundProperties = true;
-                    }
-                }
-                try (InputStream is = ClassLoader.getSystemResourceAsStream("logging.properties")) {
-                    if (is != null) {
-                        loggingProperties.load(is);
-                        foundProperties = true;
-                    }
-                }
-                if (foundProperties) {
+                Nxt.loadProperties(loggingProperties, "logging-default.properties", true);
+                Nxt.loadProperties(loggingProperties, "logging.properties", false);
+                Nxt.updateLogFileHandler(loggingProperties);
+                if (loggingProperties.size() > 0) {
                     ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                     loggingProperties.store(outStream, "logging properties");
                     ByteArrayInputStream inStream = new ByteArrayInputStream(outStream.toByteArray());

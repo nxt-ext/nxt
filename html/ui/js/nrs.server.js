@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -220,7 +236,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = ("secretPhrase" in data ? "POST" : "GET");
+        var type = ("secretPhrase" in data || "adminPassword" in data ? "POST" : "GET");
         var url = NRS.server + "/nxt?requestType=" + requestType;
 
         if (type == "GET") {
@@ -684,6 +700,15 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.transactionFullHash !== data.transactionFullHash) {
                     return false;
                 }
+                transaction.revealedSecretLength = converters.byteArrayToSignedInt32(byteArray, pos);
+                pos += 4;
+                if (transaction.revealedSecretLength > 0) {
+                    transaction.revealedSecret = converters.byteArrayToHexString(byteArray.slice(pos, pos + transaction.revealedSecretLength));
+                    pos += transaction.revealedSecretLength;
+                }
+                if (transaction.revealedSecret !== data.revealedSecret) {
+                    return false;
+                }
                 break;
             case "issueAsset":
                 if (transaction.type !== 2 || transaction.subtype !== 0) {
@@ -1079,28 +1104,28 @@ var NRS = (function (NRS, $, undefined) {
                 pos += 32;
                 var sha256 = CryptoJS.algo.SHA256.create();
                 var utfBytes = NRS.getUtf8Bytes(data.name);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.description);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.tags);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.type);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.channel);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 var isText = [];
                 if (data.isText == "true") {
                     isText.push(1);
                 } else {
                     isText.push(0);
                 }
-                sha256.update(converters.byteArrayToWordArray(isText));
+                sha256.update(converters.byteArrayToWordArrayEx(isText));
                 var utfBytes = NRS.getUtf8Bytes(data.filename);
-                sha256.update(converters.byteArrayToWordArray(utfBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 var dataBytes = new Int8Array(data.filebytes);
-                sha256.update(converters.byteArrayToWordArray(dataBytes));
+                sha256.update(converters.byteArrayToWordArrayEx(dataBytes));
                 var hashWords = sha256.finalize();
-                var calculatedHash = converters.wordArrayToByteArrayImpl(hashWords, true);
+                var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
                 if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                     return false;
                 }
@@ -1293,11 +1318,11 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 isText.push(0);
             }
-            sha256.update(converters.byteArrayToWordArray(isText));
+            sha256.update(converters.byteArrayToWordArrayEx(isText));
             var utfBytes = NRS.getUtf8Bytes(data.message);
-            sha256.update(converters.byteArrayToWordArray(utfBytes));
+            sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
             var hashWords = sha256.finalize();
-            var calculatedHash = converters.wordArrayToByteArrayImpl(hashWords, true);
+            var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
             if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                 return false;
             }
@@ -1311,15 +1336,15 @@ var NRS = (function (NRS, $, undefined) {
             pos += 32;
             var sha256 = CryptoJS.algo.SHA256.create();
             if (data.messageToEncryptIsText == "true") {
-                sha256.update(converters.byteArrayToWordArray([1]));
+                sha256.update(converters.byteArrayToWordArrayEx([1]));
             } else {
-                sha256.update(converters.byteArrayToWordArray([0]));
+                sha256.update(converters.byteArrayToWordArrayEx([0]));
             }
-            sha256.update(converters.byteArrayToWordArray([1])); // compression
-            sha256.update(converters.byteArrayToWordArray(converters.hexStringToByteArray(data.encryptedMessageData)));
-            sha256.update(converters.byteArrayToWordArray(converters.hexStringToByteArray(data.encryptedMessageNonce)));
+            sha256.update(converters.byteArrayToWordArrayEx([1])); // compression
+            sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageData)));
+            sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageNonce)));
             var hashWords = sha256.finalize();
-            var calculatedHash = converters.wordArrayToByteArray(hashWords);
+            var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
             if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                 return false;
             }

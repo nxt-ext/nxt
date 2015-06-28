@@ -1,16 +1,37 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.util.Convert;
+import nxt.util.Filter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 final class BlockchainImpl implements Blockchain {
 
@@ -22,7 +43,26 @@ final class BlockchainImpl implements Blockchain {
 
     private BlockchainImpl() {}
 
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final AtomicReference<BlockImpl> lastBlock = new AtomicReference<>();
+
+    @Override
+    public void readLock() {
+        lock.readLock().lock();
+    }
+
+    @Override
+    public void readUnlock() {
+        lock.readLock().unlock();
+    }
+
+    void writeLock() {
+        lock.writeLock().lock();
+    }
+
+    void writeUnlock() {
+        lock.writeLock().unlock();
+    }
 
     @Override
     public BlockImpl getLastBlock() {
@@ -155,7 +195,6 @@ final class BlockchainImpl implements Blockchain {
             List<Long> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
-            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     result.add(rs.getLong("id"));
@@ -174,14 +213,13 @@ final class BlockchainImpl implements Blockchain {
             List<BlockImpl> result = new ArrayList<>();
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
-            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     result.add(BlockDb.loadBlock(con, rs, true));
                 }
             }
             return result;
-        } catch (NxtException.ValidationException|SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
@@ -195,7 +233,6 @@ final class BlockchainImpl implements Blockchain {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, blockList.size());
-            pstmt.setFetchSize(100);
             try (ResultSet rs = pstmt.executeQuery()) {
                 int index = 0;
                 while (rs.next()) {
@@ -206,7 +243,7 @@ final class BlockchainImpl implements Blockchain {
                 }
             }
             return result;
-        } catch (NxtException.ValidationException|SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
     }
@@ -365,7 +402,7 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
             }
-            int prunableExpiration = Constants.INCLUDE_EXPIRED_PRUNABLE ? 0 : Nxt.getEpochTime() - Constants.MIN_PRUNABLE_LIFETIME;
+            int prunableExpiration = Constants.INCLUDE_EXPIRED_PRUNABLE ? 0 : Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME;
             if (withMessage) {
                 pstmt.setInt(++i, prunableExpiration);
             }
@@ -398,4 +435,37 @@ final class BlockchainImpl implements Blockchain {
         return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
+    @Override
+    public List<TransactionImpl> getExpectedTransactions(Filter<Transaction> filter) {
+        Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+        BlockchainProcessorImpl blockchainProcessor = BlockchainProcessorImpl.getInstance();
+        List<TransactionImpl> result = new ArrayList<>();
+        readLock();
+        try {
+            if (getHeight() >= Constants.PHASING_BLOCK) {
+                try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(getHeight() + 1)) {
+                    for (TransactionImpl phasedTransaction : phasedTransactions) {
+                        try {
+                            phasedTransaction.validate();
+                            if (!phasedTransaction.isDuplicate(duplicates) && filter.ok(phasedTransaction)) {
+                                result.add(phasedTransaction);
+                            }
+                        } catch (NxtException.ValidationException ignore) {
+                        }
+                    }
+                }
+            }
+            blockchainProcessor.selectUnconfirmedTransactions(duplicates, getLastBlock(), -1).forEach(
+                    unconfirmedTransaction -> {
+                        TransactionImpl transaction = unconfirmedTransaction.getTransaction();
+                        if (transaction.getPhasing() == null && filter.ok(transaction)) {
+                            result.add(transaction);
+                        }
+                    }
+            );
+        } finally {
+            readUnlock();
+        }
+        return result;
+    }
 }

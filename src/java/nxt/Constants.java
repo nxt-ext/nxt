@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import java.util.Calendar;
@@ -72,8 +88,7 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_NAME_LENGTH = 100;
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
-    public static final int MAX_DGS_GOODS_LENGTH = 10240;
-    public static final int MAX_DGS_GOODS_LENGTH_2 = 1000;
+    public static final int MAX_DGS_GOODS_LENGTH = 1000;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
@@ -118,12 +133,12 @@ public final class Constants {
     public static final int MAX_REFERENCED_TRANSACTION_TIMESPAN = 60 * 1440 * 60;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
-    public static final int PHASING_BLOCK = isTestnet ? 220000 : Integer.MAX_VALUE;
+    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
+    public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 272000 : 414000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 445000;
 
-    public static final int[] MIN_VERSION = isTestnet ? new int[] {1, 5} : new int[] {1, 4};
+    public static final int[] MIN_VERSION = new int[] {1, 5};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
 

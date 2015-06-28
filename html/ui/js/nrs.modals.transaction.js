@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
@@ -93,6 +109,12 @@ var NRS = (function (NRS, $, undefined) {
             }
             if (!transactionDetails.block) {
                 transactionDetails.block = "unconfirmed";
+            }
+            if (transactionDetails.timestamp) {
+                transactionDetails.transactionTime = NRS.formatTimestamp(transactionDetails.timestamp);
+            }
+            if (transactionDetails.blockTimestamp) {
+                transactionDetails.blockGenerationTime = NRS.formatTimestamp(transactionDetails.blockTimestamp);
             }
             if (transactionDetails.height == NRS.constants.MAX_INT_JAVA) {
                 transactionDetails.height = "unknown";
@@ -498,7 +520,7 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getAsset", {
                             "asset": transaction.attachment.asset
                         }, function (asset, input) {
-                            NRS.formatAssetOrder(asset, transaction)
+                            NRS.formatAssetOrder(asset, transaction, isModalVisible)
                         });
                         break;
                     case 4:
@@ -1157,7 +1179,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.formatAssetOrder = function (asset, transaction) {
+    NRS.formatAssetOrder = function (asset, transaction, isModalVisible) {
         var data = {
             "type": (transaction.subtype == 2 ? $.t("ask_order_placement") : $.t("bid_order_placement")),
             "asset_name": asset.name,
@@ -1208,8 +1230,9 @@ var NRS = (function (NRS, $, undefined) {
         var infoTable = $("#transaction_info_table");
         infoTable.find("tbody").append(NRS.createInfoTable(data));
         infoTable.show();
-
-        $("#transaction_info_modal").modal("show");
+        if (!isModalVisible) {
+            $("#transaction_info_modal").modal("show");
+        }
         NRS.fetchingModalData = false;
     };
 
@@ -1340,9 +1363,14 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getTaggedData = function (attachment, subtype) {
         var data = {
-            "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle),
-            "hash": attachment.hash
+            "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle)
         };
+        if (attachment.hash) {
+            data["hash"] = attachment.hash;
+        }
+        if (attachment.taggedData) {
+            data["taggedData"] = attachment.taggedData;
+        }
         if (attachment.data) {
             data["name"] = attachment.name;
             data["description"] = attachment.description;

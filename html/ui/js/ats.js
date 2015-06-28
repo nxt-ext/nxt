@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * JS initialization and core functions for API test servlet
  *
@@ -125,7 +141,7 @@ var ATS = (function(ATS, $, undefined) {
             if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {
                 var key = form.elements[i].name;
                 var value = form.elements[i].value;
-                if(key in params) {
+                if (key in params) {
                     var index = params[key].length;
                     params[key][index] = value;
                 } else {
@@ -136,9 +152,30 @@ var ATS = (function(ATS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
+        var uploadField;
+        if (form.encoding == "multipart/form-data") {
+            uploadField = $('#file' + params["requestType"]);
+        }
         if (params["requestType"] == "downloadTaggedData") {
             window.location = url + "?requestType=downloadTaggedData&transaction=" + params["transaction"];
             return false;
+        } else if (uploadField) {
+            // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
+            contentType = false;
+            processData = false;
+            // TODO works only for new browsers
+            formData = new FormData();
+            for (key in params) {
+                if (!params.hasOwnProperty(key)) {
+                    continue;
+                }
+                formData.append(key, params[key]);
+            }
+            var file = uploadField[0].files[0];
+            formData.append("file", file);
+            if (file && !formData["filename"]) {
+                formData.append("filename", file.name);
+            }
         } else {
             // JQuery defaults
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -199,6 +215,18 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+    NRS.pages.plugins = function() {
+        if (NRS.numRunningPlugins == 1) {
+            var msg = $.t('one_plugin_active_and_running_msg');
+        } else {
+            var msg = $.t('plugins_active_and_running_msg', {
+                'num': String(NRS.numRunningPlugins)
+            });
+        }
+        $('#plugins_page_msg').html(msg);
+        NRS.dataLoaded();
+    }
+
     NRS.loadPlugin = function(pluginId) {
         var plugin = NRS.plugins[pluginId];
         var manifest = NRS.plugins[pluginId]['manifest'];
@@ -212,17 +240,7 @@ var NRS = (function(NRS, $, undefined) {
 
             if (!manifest['sidebarOptOut']) {
                 var sidebarId = 'sidebar_plugins';
-                if ($('#' + sidebarId).length == 0) {
-                    var options = {
-                        "id": sidebarId,
-                        "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
-                        "page": 'plugins',
-                        "desiredPosition": 110
-                    }
-                    NRS.addTreeviewSidebarMenuItem(options);
-                }
-
-                options = {
+                var options = {
                     "titleHTML": manifest['name'].escapeHTML(),
                     "type": 'PAGE',
                     "page": manifest['startPage']
@@ -253,6 +271,17 @@ var NRS = (function(NRS, $, undefined) {
     }
 
     NRS.loadPlugins = function() {
+        var sidebarId = 'sidebar_plugins';
+        if ($('#' + sidebarId).length == 0) {
+            var options = {
+                "id": sidebarId,
+                "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
+                "page": 'plugins',
+                "desiredPosition": 110
+            }
+            NRS.addTreeviewSidebarMenuItem(options);
+        }
+
         $.each(NRS.plugins, function(pluginId, pluginDict) {
             if ((NRS.settings["enable_plugins"] == "0" || NRS.disablePluginsDuringSession) && pluginDict['launch_status'] == NRS.constants.PL_PAUSED) {
                 pluginDict['launch_status'] = NRS.constants.PL_DEACTIVATED;

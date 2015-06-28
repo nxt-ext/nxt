@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -40,14 +56,15 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             response.put("name", Convert.nullToEmpty(accountInfo.getName()));
             response.put("description", Convert.nullToEmpty(accountInfo.getDescription()));
         }
-        if (account.getCurrentLesseeId() != 0) {
-            JSONData.putAccount(response, "currentLessee", account.getCurrentLesseeId());
-            response.put("currentLeasingHeightFrom", account.getCurrentLeasingHeightFrom());
-            response.put("currentLeasingHeightTo", account.getCurrentLeasingHeightTo());
-            if (account.getNextLesseeId() != 0) {
-                JSONData.putAccount(response, "nextLessee", account.getNextLesseeId());
-                response.put("nextLeasingHeightFrom", account.getNextLeasingHeightFrom());
-                response.put("nextLeasingHeightTo", account.getNextLeasingHeightTo());
+        Account.AccountLease accountLease = account.getAccountLease();
+        if (accountLease != null) {
+            JSONData.putAccount(response, "currentLessee", accountLease.getCurrentLesseeId());
+            response.put("currentLeasingHeightFrom", accountLease.getCurrentLeasingHeightFrom());
+            response.put("currentLeasingHeightTo", accountLease.getCurrentLeasingHeightTo());
+            if (accountLease.getNextLesseeId() != 0) {
+                JSONData.putAccount(response, "nextLessee", accountLease.getNextLesseeId());
+                response.put("nextLeasingHeightFrom", accountLease.getNextLeasingHeightFrom());
+                response.put("nextLeasingHeightTo", accountLease.getNextLeasingHeightTo());
             }
         }
 

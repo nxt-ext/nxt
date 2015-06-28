@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -83,18 +99,19 @@ final class JSONData {
 
     static JSONObject lessor(Account account, boolean includeEffectiveBalance) {
         JSONObject json = new JSONObject();
-        if (account.getCurrentLesseeId() != 0) {
-            putAccount(json, "currentLessee", account.getCurrentLesseeId());
-            json.put("currentHeightFrom", String.valueOf(account.getCurrentLeasingHeightFrom()));
-            json.put("currentHeightTo", String.valueOf(account.getCurrentLeasingHeightTo()));
+        Account.AccountLease accountLease = account.getAccountLease();
+        if (accountLease.getCurrentLesseeId() != 0) {
+            putAccount(json, "currentLessee", accountLease.getCurrentLesseeId());
+            json.put("currentHeightFrom", String.valueOf(accountLease.getCurrentLeasingHeightFrom()));
+            json.put("currentHeightTo", String.valueOf(accountLease.getCurrentLeasingHeightTo()));
             if (includeEffectiveBalance) {
                 json.put("effectiveBalanceNXT", String.valueOf(account.getGuaranteedBalanceNQT() / Constants.ONE_NXT));
             }
         }
-        if (account.getNextLesseeId() != 0) {
-            putAccount(json, "nextLessee", account.getNextLesseeId());
-            json.put("nextHeightFrom", String.valueOf(account.getNextLeasingHeightFrom()));
-            json.put("nextHeightTo", String.valueOf(account.getNextLeasingHeightTo()));
+        if (accountLease.getNextLesseeId() != 0) {
+            putAccount(json, "nextLessee", accountLease.getNextLesseeId());
+            json.put("nextHeightFrom", String.valueOf(accountLease.getNextLeasingHeightFrom()));
+            json.put("nextHeightTo", String.valueOf(accountLease.getNextLeasingHeightTo()));
         }
         return json;
     }
@@ -207,6 +224,35 @@ final class JSONData {
         json.put("height", order.getHeight());
         json.put("transactionIndex", order.getTransactionIndex());
         json.put("transactionHeight", order.getTransactionHeight());
+        return json;
+    }
+
+    static JSONObject expectedAskOrder(Transaction transaction) {
+        JSONObject json = expectedOrder(transaction);
+        json.put("type", "ask");
+        return json;
+    }
+
+    static JSONObject expectedBidOrder(Transaction transaction) {
+        JSONObject json = expectedOrder(transaction);
+        json.put("type", "bid");
+        return json;
+    }
+
+    static JSONObject expectedOrder(Transaction transaction) {
+        JSONObject json = new JSONObject();
+        Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
+        json.put("order", transaction.getStringId());
+        json.put("asset", Long.toUnsignedString(attachment.getAssetId()));
+        putAccount(json, "account", transaction.getSenderId());
+        json.put("quantityQNT", String.valueOf(attachment.getQuantityQNT()));
+        json.put("priceNQT", String.valueOf(attachment.getPriceNQT()));
+        json.put("height", Nxt.getBlockchain().getHeight() + 1);
+        json.put("phased", transaction.getPhasing() != null);
+        if (transaction.getBlockId() != 0) { // those values may be wrong for unconfirmed transactions
+            json.put("transactionHeight", transaction.getHeight());
+            json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
+        }
         return json;
     }
 
@@ -333,6 +379,7 @@ final class JSONData {
         json.put("platform", peer.getPlatform());
         json.put("blacklisted", peer.isBlacklisted());
         json.put("lastUpdated", peer.getLastUpdated());
+        json.put("lastConnectAttempt", peer.getLastConnectAttempt());
         json.put("inbound", peer.isInbound());
         json.put("inboundWebSocket", peer.isInboundWebSocket());
         json.put("outboundWebSocket", peer.isOutboundWebSocket());
@@ -629,7 +676,7 @@ final class JSONData {
             json.put("transaction", transaction.getStringId());
         }
         JSONObject attachmentJSON = new JSONObject();
-        for (Appendix appendage : transaction.getAppendages()) {
+        for (Appendix appendage : transaction.getAppendages(true)) {
             attachmentJSON.putAll(appendage.getJSONObject());
         }
         if (! attachmentJSON.isEmpty()) {

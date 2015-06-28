@@ -1,3 +1,19 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
 <div id="settings_page" class="page">
     <section class="content-header"><h1 data-i18n="settings">Settings</h1></section>
     <section class="content" id="settings_box">
@@ -55,6 +71,12 @@
                                     <option value="0" data-i18n="no">No</option>
                                 </select>
                             </div>
+                            <div class="form-group" id="settings_admin_password_div">
+                                <label for="settings_admin_password" data-i18n="admin_password">Server Administration Password</label>
+                                <div class="input-group" style="width:150px">
+                                    <input type="password" name="admin_password" id="settings_admin_password" class="form-control" />
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -75,6 +97,14 @@
                                     <option value="0" data-i18n="no">No</option>
                                 </select>
                                 <p class="help-block" data-i18n="submit_forms_on_enter_help">Be careful when choosing to submit forms via the enter key, submitting can't be undone.</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="settings_marketplace" data-i18n="enable_marketplace_section">Enable Marketplace Section</label>
+                                <select name="marketplace" id="settings_marketplace" class="form-control" style="width:150px">
+                                    <option value="-1" id="settings_marketplace_initial" data-i18n="choose">Choose</option>
+                                    <option value="1" data-i18n="yes">Yes</option>
+                                    <option value="0" data-i18n="no">No</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="settings_news" data-i18n="enable_news_section">Enable News Section</label>

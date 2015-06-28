@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Db;
@@ -26,6 +42,8 @@ import java.util.Set;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 import static nxt.http.JSONResponses.POST_REQUIRED;
+import static nxt.http.JSONResponses.REQUIRED_BLOCK_NOT_FOUND;
+import static nxt.http.JSONResponses.REQUIRED_LAST_BLOCK_NOT_FOUND;
 
 public final class APIServlet extends HttpServlet {
 
@@ -39,16 +57,17 @@ public final class APIServlet extends HttpServlet {
             this(null, apiTags, parameters);
         }
 
-        APIRequestHandler(String fileParameter, APITag[] apiTags, String... parameters) {
-            List<String> origParameters = Arrays.asList(parameters);
-            if ((requirePassword() || origParameters.contains("lastIndex")) && ! API.disableAdminPassword) {
-                List<String> newParameters = new ArrayList<>(parameters.length + 1);
-                newParameters.add("adminPassword");
-                newParameters.addAll(origParameters);
-                this.parameters = Collections.unmodifiableList(newParameters);
-            } else {
-                this.parameters = origParameters;
+        APIRequestHandler(String fileParameter, APITag[] apiTags, String... origParameters) {
+            List<String> parameters = new ArrayList<>();
+            Collections.addAll(parameters, origParameters);
+            if ((requirePassword() || parameters.contains("lastIndex")) && ! API.disableAdminPassword) {
+                parameters.add("adminPassword");
             }
+            if (allowRequiredBlockParameters()) {
+                parameters.add("requireBlock");
+                parameters.add("requireLastBlock");
+            }
+            this.parameters = Collections.unmodifiableList(parameters);
             this.apiTags = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(apiTags)));
             this.fileParameter = fileParameter;
         }
@@ -83,6 +102,10 @@ public final class APIServlet extends HttpServlet {
         	return false;
         }
 
+        boolean allowRequiredBlockParameters() {
+            return true;
+    }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
@@ -115,10 +138,12 @@ public final class APIServlet extends HttpServlet {
         map.put("dgsRefund", DGSRefund.instance);
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
+        map.put("decodeFileToken", DecodeFileToken.instance);
         map.put("encryptTo", EncryptTo.instance);
         map.put("eventRegister", EventRegister.instance);
         map.put("eventWait", EventWait.instance);
         map.put("generateToken", GenerateToken.instance);
+        map.put("generateFileToken", GenerateFileToken.instance);
         map.put("getAccount", GetAccount.instance);
         map.put("getAccountBlockCount", GetAccountBlockCount.instance);
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
@@ -224,6 +249,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrder", GetBidOrder.instance);
         map.put("getBidOrderIds", GetBidOrderIds.instance);
         map.put("getBidOrders", GetBidOrders.instance);
+        map.put("getExpectedAskOrders", GetExpectedAskOrders.instance);
+        map.put("getExpectedBidOrders", GetExpectedBidOrders.instance);
         map.put("getOrderTrades", GetOrderTrades.instance);
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
@@ -347,10 +374,40 @@ public final class APIServlet extends HttpServlet {
                 if (apiRequestHandler.requirePassword()) {
                     API.verifyPassword(req);
                 }
+                final long requireBlockId = apiRequestHandler.allowRequiredBlockParameters() ?
+                        ParameterParser.getUnsignedLong(req, "requireBlock", false) : 0;
+                final long requireLastBlockId = apiRequestHandler.allowRequiredBlockParameters() ?
+                        ParameterParser.getUnsignedLong(req, "requireLastBlock", false) : 0;
+                if (requireBlockId != 0 || requireLastBlockId != 0) {
+                    Nxt.getBlockchain().readLock();
+                }
+                try {
+                    try {
                 if (apiRequestHandler.startDbTransaction()) {
                     Db.db.beginTransaction();
                 }
+                        if (requireBlockId != 0 && !Nxt.getBlockchain().hasBlock(requireBlockId)) {
+                            response = REQUIRED_BLOCK_NOT_FOUND;
+                            return;
+                        }
+                        if (requireLastBlockId != 0 && requireLastBlockId != Nxt.getBlockchain().getLastBlock().getId()) {
+                            response = REQUIRED_LAST_BLOCK_NOT_FOUND;
+                            return;
+                        }
                 response = apiRequestHandler.processRequest(req, resp);
+                        if (requireLastBlockId == 0 && requireBlockId != 0 && response instanceof JSONObject) {
+                            ((JSONObject) response).put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
+                        }
+                    } finally {
+                        if (apiRequestHandler.startDbTransaction()) {
+                            Db.db.endTransaction();
+                        }
+                    }
+                } finally {
+                    if (requireBlockId != 0 || requireLastBlockId != 0) {
+                        Nxt.getBlockchain().readUnlock();
+                    }
+                }
             } catch (ParameterException e) {
                 response = e.getErrorResponse();
             } catch (NxtException |RuntimeException e) {
@@ -361,21 +418,18 @@ public final class APIServlet extends HttpServlet {
             } catch (ExceptionInInitializerError err) {
                 Logger.logErrorMessage("Initialization Error", err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
-            } finally {
-                if (apiRequestHandler.startDbTransaction()) {
-                    Db.db.endTransaction();
                 }
-            }
-
             if (response != null && (response instanceof JSONObject)) {
                 ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
-
+        } catch (Exception e) {
+            Logger.logErrorMessage("Error processing request", e);
+            response = ERROR_INCORRECT_REQUEST;
         } finally {
             // The response will be null if we created an asynchronous context
             if (response != null) {
             try (Writer writer = resp.getWriter()) {
-                response.writeJSONString(writer);
+                    JSON.writeJSONString(response, writer);
             }
         }
         }

@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -18,7 +34,7 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
     static final GetCurrencyTransfers instance = new GetCurrencyTransfers();
 
     private GetCurrencyTransfers() {
-        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "includeCurrencyInfo");
+        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "timestamp", "includeCurrencyInfo");
     }
 
     @Override
@@ -27,7 +43,7 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
         String currencyId = Convert.emptyToNull(req.getParameter("currency"));
         String accountId = Convert.emptyToNull(req.getParameter("account"));
         boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
-
+        int timestamp = ParameterParser.getTimestamp(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
@@ -47,7 +63,11 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
                 transfers = CurrencyTransfer.getAccountCurrencyTransfers(account.getId(), currency.getId(), firstIndex, lastIndex);
             }
             while (transfers.hasNext()) {
-                transfersData.add(JSONData.currencyTransfer(transfers.next(), includeCurrencyInfo));
+                CurrencyTransfer currencyTransfer = transfers.next();
+                if (currencyTransfer.getTimestamp() < timestamp) {
+                    break;
+                }
+                transfersData.add(JSONData.currencyTransfer(currencyTransfer, includeCurrencyInfo));
             }
         } finally {
             DbUtils.close(transfers);

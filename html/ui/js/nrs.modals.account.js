@@ -1,8 +1,24 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	NRS.userInfoModal = {
 		"user": 0
 	};
@@ -28,16 +44,16 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#user_info_modal_account").html(NRS.getAccountFormatted(NRS.userInfoModal.user));
-
+		var accountButton;
 		if (NRS.userInfoModal.user in NRS.contacts) {
-			var accountButton = NRS.contacts[NRS.userInfoModal.user].name.escapeHTML();
+			accountButton = NRS.contacts[NRS.userInfoModal.user].name.escapeHTML();
 			$("#user_info_modal_add_as_contact").hide();
 		} else {
-			var accountButton = NRS.userInfoModal.user;
+			accountButton = NRS.userInfoModal.user;
 			$("#user_info_modal_add_as_contact").show();
 		}
 
-		$("#user_info_modal_actions button").data("account", accountButton);
+		$("#user_info_modal_actions").find("button").data("account", accountButton);
 
 		if (NRS.fetchingModalData) {
 			NRS.sendRequest("getAccount", {
@@ -53,7 +69,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#user_info_modal_transactions").show();
 
 		NRS.userInfoModal.transactions();
-	}
+	};
 
 	NRS.processAccountModalData = function(account) {
 		if (account.unconfirmedBalanceNQT == "0") {
@@ -77,9 +93,10 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#user_info_modal").modal("show");
-	}
+	};
 
-	$("#user_info_modal").on("hidden.bs.modal", function(e) {
+    var userInfoModal = $("#user_info_modal");
+    userInfoModal.on("hidden.bs.modal", function() {
 		$(this).find(".user_info_modal_content").hide();
 		$(this).find(".user_info_modal_content table tbody").empty();
 		$(this).find(".user_info_modal_content:not(.data-loading,.data-never-loading)").addClass("data-loading");
@@ -88,7 +105,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.userInfoModal.user = 0;
 	});
 
-	$("#user_info_modal ul.nav li").click(function(e) {
+	userInfoModal.find("ul.nav li").click(function(e) {
 		e.preventDefault();
 
 		var tab = $(this).data("tab");
@@ -108,19 +125,18 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	/*some duplicate methods here...*/
-	NRS.userInfoModal.transactions = function(type) {
+	NRS.userInfoModal.transactions = function() {
 		NRS.sendRequest("getBlockchainTransactions", {
 			"account": NRS.userInfoModal.user,
 			"firstIndex": 0,
 			"lastIndex": 100
 		}, function(response) {
+            var infoModalTransactionsTable = $("#user_info_modal_transactions_table");
 			if (response.transactions && response.transactions.length) {
 				var rows = "";
-
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
 					var transactionType = $.t(NRS.transactionTypes[transaction.type].subTypes[transaction.subtype].i18nKeyTitle);
-
 					if (transaction.type == NRS.subtype.AliasSell.type && transaction.subtype == NRS.subtype.AliasSell.subtype) {
 								if (transaction.attachment.priceNQT == "0") {
 									if (transaction.sender == transaction.recipient) {
@@ -132,11 +148,11 @@ var NRS = (function(NRS, $, undefined) {
 									transactionType = $.t("alias_sale");
 								}
 						}
-
-					if (/^NXT\-/i.test(NRS.userInfoModal.user)) {
-						var receiving = (transaction.recipientRS == NRS.userInfoModal.user);
+					var receiving;
+					if (/^NXT\-/i.test(String(NRS.userInfoModal.user))) {
+						receiving = (transaction.recipientRS == NRS.userInfoModal.user);
 					} else {
-						var receiving = (transaction.recipient == NRS.userInfoModal.user);
+						receiving = (transaction.recipient == NRS.userInfoModal.user);
 					}
 
 					if (transaction.amountNQT) {
@@ -145,18 +161,24 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					var account = (receiving ? "sender" : "recipient");
-
-					rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td><td>" + transactionType + "</td><td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td><td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td><td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td><td>" + NRS.getAccountTitle(transaction, account) + "</td></tr>";
+					rows += "<tr>" +
+						"<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td>" +
+						"<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "&nbsp" + transactionType + "</td>" +
+						"<td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>" +
+						"<td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td>" +
+						"<td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td>" +
+						"<td>" + NRS.getAccountTitle(transaction, account) + "</td>" +
+					"</tr>";
 				}
 
-				$("#user_info_modal_transactions_table tbody").empty().append(rows);
-				NRS.dataLoadFinished($("#user_info_modal_transactions_table"));
+				infoModalTransactionsTable.find("tbody").empty().append(rows);
+				NRS.dataLoadFinished(infoModalTransactionsTable);
 			} else {
-				$("#user_info_modal_transactions_table tbody").empty();
-				NRS.dataLoadFinished($("#user_info_modal_transactions_table"));
+				infoModalTransactionsTable.find("tbody").empty();
+				NRS.dataLoadFinished(infoModalTransactionsTable);
 			}
 		});
-	}
+	};
 
 	NRS.userInfoModal.aliases = function() {
 		NRS.sendRequest("getAliases", {
@@ -198,10 +220,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			$("#user_info_modal_aliases_table tbody").empty().append(rows);
-			NRS.dataLoadFinished($("#user_info_modal_aliases_table"));
+            var infoModalAliasesTable = $("#user_info_modal_aliases_table");
+            infoModalAliasesTable.find("tbody").empty().append(rows);
+			NRS.dataLoadFinished(infoModalAliasesTable);
 		});
-	}
+	};
 
 	NRS.userInfoModal.marketplace = function() {
 		NRS.sendRequest("getDGSGoods", {
@@ -221,10 +244,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			$("#user_info_modal_marketplace_table tbody").empty().append(rows);
-			NRS.dataLoadFinished($("#user_info_modal_marketplace_table"));
+            var infoModalMarketplaceTable = $("#user_info_modal_marketplace_table");
+            infoModalMarketplaceTable.find("tbody").empty().append(rows);
+			NRS.dataLoadFinished(infoModalMarketplaceTable);
 		});
-	}
+	};
 	
 	NRS.userInfoModal.currencies = function() {
 		NRS.sendRequest("getAccountCurrencies+", {
@@ -235,7 +259,6 @@ var NRS = (function(NRS, $, undefined) {
 				for (var i = 0; i < response.accountCurrencies.length; i++) {
 					var currency = response.accountCurrencies[i];
 					var code = String(currency.code).escapeHTML();
-					var decimals = String(currency.decimals).escapeHTML();
 					rows += "<tr>" +
 						"<td>" +
 							"<a href='#' data-transaction='" + String(currency.currency).escapeHTML() + "' >" + code + "</a>" +
@@ -245,10 +268,11 @@ var NRS = (function(NRS, $, undefined) {
 					"</tr>";
 				}
 			}
-			$("#user_info_modal_currencies_table tbody").empty().append(rows);
-			NRS.dataLoadFinished($("#user_info_modal_currencies_table"));
+            var infoModalCurrenciesTable = $("#user_info_modal_currencies_table");
+            infoModalCurrenciesTable.find("tbody").empty().append(rows);
+			NRS.dataLoadFinished(infoModalCurrenciesTable);
 		});
-	}
+	};
 
 	NRS.userInfoModal.assets = function() {
 		NRS.sendRequest("getAccount", {
@@ -257,7 +281,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.assetBalances && response.assetBalances.length) {
 				var assets = {};
 				var nrAssets = 0;
-				var ignoredAssets = 0;
+				var ignoredAssets = 0; // TODO need to understand the purpose of this variable
 
 				for (var i = 0; i < response.assetBalances.length; i++) {
 					if (response.assetBalances[i].balanceQNT == "0") {
@@ -290,21 +314,17 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.userInfoModal.addIssuedAssets({});
 			}
 		});
-	}
+	};
 
 	NRS.userInfoModal.trade_history = function() {
 		NRS.sendRequest("getTrades", {
 			"account": NRS.userInfoModal.user,
 			"firstIndex": 0,
 			"lastIndex": 100
-		}, function(response, input) {
+		}, function(response) {
 			var rows = "";
-
 			if (response.trades && response.trades.length) {
 				var trades = response.trades;
-
-				var rows = "";
-
 				for (var i = 0; i < trades.length; i++) {
 					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
 					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
@@ -315,11 +335,11 @@ var NRS = (function(NRS, $, undefined) {
 					rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td style='color:" + (type == "buy" ? "green" : "red") + "'>" + $.t(type) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals) + "</td><td style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td></tr>";
 				}
 			}
-
-			$("#user_info_modal_trade_history_table tbody").empty().append(rows);
-			NRS.dataLoadFinished($("#user_info_modal_trade_history_table"));
+            var infoModalTradeHistoryTable = $("#user_info_modal_trade_history_table");
+            infoModalTradeHistoryTable.find("tbody").empty().append(rows);
+			NRS.dataLoadFinished(infoModalTradeHistoryTable);
 		});
-	}
+	};
 
 	NRS.userInfoModal.addIssuedAssets = function(assets) {
 		NRS.sendRequest("getAssetsByIssuer", {
@@ -340,11 +360,12 @@ var NRS = (function(NRS, $, undefined) {
 			} else if (!$.isEmptyObject(assets)) {
 				NRS.userInfoModal.assetsLoaded(assets);
 			} else {
-				$("#user_info_modal_assets_table tbody").empty();
-				NRS.dataLoadFinished($("#user_info_modal_assets_table"));
+                var infoModalAssetsTable = $("#user_info_modal_assets_table");
+                infoModalAssetsTable.find("tbody").empty();
+				NRS.dataLoadFinished(infoModalAssetsTable);
 			}
 		});
-	}
+	};
 
 	NRS.userInfoModal.assetsLoaded = function(assets) {
 		var assetArray = [];
@@ -386,10 +407,10 @@ var NRS = (function(NRS, $, undefined) {
 			rows += "<tr" + (asset.issued ? " class='asset_owner'" : "") + "><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'" + (asset.issued ? " style='font-weight:bold'" : "") + ">" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
 		}
 
-		$("#user_info_modal_assets_table tbody").empty().append(rows);
-
-		NRS.dataLoadFinished($("#user_info_modal_assets_table"));
-	}
+        var infoModalAssetsTable = $("#user_info_modal_assets_table");
+        infoModalAssetsTable.find("tbody").empty().append(rows);
+		NRS.dataLoadFinished(infoModalAssetsTable);
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));

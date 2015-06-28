@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.crypto.Crypto;
@@ -54,7 +70,8 @@ public final class Generator implements Comparable<Generator> {
 
             try {
                 try {
-                    synchronized (Nxt.getBlockchain()) {
+                    BlockchainImpl.getInstance().writeLock();
+                    try {
                         Block lastBlock = Nxt.getBlockchain().getLastBlock();
                         if (lastBlock == null || lastBlock.getHeight() < Constants.LAST_KNOWN_BLOCK) {
                             return;
@@ -87,7 +104,9 @@ public final class Generator implements Comparable<Generator> {
                                 return;
                             }
                         }
-                    } // synchronized
+                    } finally {
+                        BlockchainImpl.getInstance().writeUnlock();
+                    }
                 } catch (Exception e) {
                     Logger.logMessage("Error in block generation thread", e);
                 }
@@ -163,7 +182,8 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public static long getNextHitTime(long lastBlockId, int curTime) {
-        synchronized (Nxt.getBlockchain()) {
+        BlockchainImpl.getInstance().readLock();
+        try {
             if (lastBlockId == Generator.lastBlockId && sortedForgers != null) {
                 for (Generator generator : sortedForgers) {
                     if (generator.getHitTime() >= curTime - Constants.FORGING_DELAY) {
@@ -172,12 +192,17 @@ public final class Generator implements Comparable<Generator> {
                 }
             }
             return 0;
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
     }
 
     static void setDelay(int delay) {
-        synchronized (Nxt.getBlockchain()) {
+        BlockchainImpl.getInstance().readLock();
+        try {
             Generator.delayTime = delay;
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
     }
 

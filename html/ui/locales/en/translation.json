@@ -29,6 +29,7 @@
   "actions": "Actions",
   "active_plugins": "Active Plugins",
   "active_polls": "Active Polls",
+  "plugins_status_page": "Status page",
   "plugins_disabled_for_session_msg": "Plugins have been disabled for current session.",
   "plugins_disabled_for_account_msg": "Plugins are disabled for this account. This behaviour can be changed in the settings.",
   "one_plugin_active_and_running_msg": "1 Plugin active and running.",
@@ -1345,7 +1346,14 @@
   "is_text": "Is Text",
   "filename": "filename",
   "upload_tagged_data": "Upload Tagged Data",
-  "tagged_data": "Tagged Data"
+  "tagged_data": "Tagged Data",
+  "transaction_time": "Transaction Time",
+  "forging_tooltip": "Forging started with balance of __balance__ NXT",
+  "forging_another_account_tooltip": "Forging with account  __accountRS__",
+  "forging_more_than_one_tooltip": "Forging is started with __generators__ accounts",
+  "not_forging_not_started_tooltip": "Forging not started",
+  "forging_unknown_tooltip": "Cannot determine forging status, please define administrator password",
+  "forging_stopped_tooltip": "Forging stopped",
   "phasing_only": "Mandatory Approval",
   "mandatory_approval_info": "All subsequent transactions will be mandatory approved (phased) according to whatever is set below. Once set, this account control can only be removed with the approval of the accounts/stake holders set below.",
   "mandatory_approval_enabled": "Mandatory approval is enabled. The transaction must be approved according to the setup below. Please set Finish Height."

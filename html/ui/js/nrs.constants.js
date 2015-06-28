@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {nrs.js}
  */
@@ -40,7 +56,11 @@ var NRS = (function (NRS, $, undefined) {
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
         "GENESIS": "",
-        "GENESIS_RS": ""
+        "GENESIS_RS": "",
+        "EPOCH_BEGINNING": 0,
+        "FORGING": "forging",
+        "NOT_FORGING": "not_forging",
+        "UNKNOWN": "unknown"
     };
 
     NRS.loadServerConstants = function () {
@@ -52,6 +72,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
                 NRS.constants.GENESIS = response.genesisAccountId;
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
+                NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
             }
         });
     };

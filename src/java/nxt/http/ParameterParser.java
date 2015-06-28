@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Account;
@@ -522,18 +538,15 @@ final class ParameterParser {
                 if (part == null) {
                     throw new ParameterException(INCORRECT_TAGGED_DATA_FILE);
                 }
-                try (InputStream is = part.getInputStream()) {
-                    int nRead;
-                    byte[] bytes = new byte[1024];
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    while ((nRead = is.read(bytes, 0, bytes.length)) != -1) {
-                        baos.write(bytes, 0, nRead);
-                    }
-                    data = baos.toByteArray();
-                    filename = part.getSubmittedFileName();
-                    if (name == null) {
-                        name = filename;
-                    }
+                FileData fileData = new FileData(part).invoke();
+                data = fileData.getData();
+                // Depending on how the client submits the form, the filename, can be a regular parameter
+                // or encoded in the multipart form. If its not a parameter we take from the form
+                if (filename == null) {
+                    filename = fileData.getFilename();
+                }
+                if (name == null) {
+                    name = filename;
                 }
             } catch (IOException | ServletException e) {
                 Logger.logDebugMessage("error in reading file data", e);
@@ -583,4 +596,35 @@ final class ParameterParser {
 
     private ParameterParser() {} // never
 
+    static class FileData {
+        private final Part part;
+        private String filename;
+        private byte[] data;
+
+        public FileData(Part part) {
+            this.part = part;
+        }
+
+        public String getFilename() {
+            return filename;
+        }
+
+        public byte[] getData() {
+            return data;
+        }
+
+        public FileData invoke() throws IOException {
+            try (InputStream is = part.getInputStream()) {
+                int nRead;
+                byte[] bytes = new byte[1024];
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                while ((nRead = is.read(bytes, 0, bytes.length)) != -1) {
+                    baos.write(bytes, 0, nRead);
+                }
+                data = baos.toByteArray();
+                filename = part.getSubmittedFileName();
+            }
+            return this;
+        }
+    }
 }

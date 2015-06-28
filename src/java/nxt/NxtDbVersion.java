@@ -1,6 +1,23 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbVersion;
+import nxt.util.Logger;
 
 class NxtDbVersion extends DbVersion {
 
@@ -9,69 +26,72 @@ class NxtDbVersion extends DbVersion {
             case 1:
                 apply("CREATE TABLE IF NOT EXISTS block (db_id IDENTITY, id BIGINT NOT NULL, version INT NOT NULL, "
                         + "timestamp INT NOT NULL, previous_block_id BIGINT, "
-                        + "FOREIGN KEY (previous_block_id) REFERENCES block (id) ON DELETE CASCADE, total_amount INT NOT NULL, "
-                        + "total_fee INT NOT NULL, payload_length INT NOT NULL, generator_public_key BINARY(32) NOT NULL, "
+                        + "FOREIGN KEY (previous_block_id) REFERENCES block (id) ON DELETE CASCADE, total_amount BIGINT NOT NULL, "
+                        + "total_fee BIGINT NOT NULL, payload_length INT NOT NULL, "
                         + "previous_block_hash BINARY(32), cumulative_difficulty VARBINARY NOT NULL, base_target BIGINT NOT NULL, "
                         + "next_block_id BIGINT, FOREIGN KEY (next_block_id) REFERENCES block (id) ON DELETE SET NULL, "
-                        + "index INT NOT NULL, height INT NOT NULL, generation_signature BINARY(64) NOT NULL, "
-                        + "block_signature BINARY(64) NOT NULL, payload_hash BINARY(32) NOT NULL, generator_account_id BIGINT NOT NULL)");
+                        + "height INT NOT NULL, generation_signature BINARY(64) NOT NULL, "
+                        + "block_signature BINARY(64) NOT NULL, payload_hash BINARY(32) NOT NULL, generator_id BIGINT NOT NULL)");
             case 2:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_id_idx ON block (id)");
             case 3:
                 apply("CREATE TABLE IF NOT EXISTS transaction (db_id IDENTITY, id BIGINT NOT NULL, "
-                        + "deadline SMALLINT NOT NULL, sender_public_key BINARY(32) NOT NULL, recipient_id BIGINT NOT NULL, "
-                        + "amount INT NOT NULL, fee INT NOT NULL, referenced_transaction_id BIGINT, index INT NOT NULL, "
+                        + "deadline SMALLINT NOT NULL, recipient_id BIGINT, "
+                        + "amount BIGINT NOT NULL, fee BIGINT NOT NULL, full_hash BINARY(32) NOT NULL, "
                         + "height INT NOT NULL, block_id BIGINT NOT NULL, FOREIGN KEY (block_id) REFERENCES block (id) ON DELETE CASCADE, "
                         + "signature BINARY(64) NOT NULL, timestamp INT NOT NULL, type TINYINT NOT NULL, subtype TINYINT NOT NULL, "
-                        + "sender_account_id BIGINT NOT NULL, attachment OTHER)");
+                        + "sender_id BIGINT NOT NULL, block_timestamp INT NOT NULL, referenced_transaction_full_hash BINARY(32), "
+                        + "attachment_bytes VARBINARY, version TINYINT NOT NULL, has_message BOOLEAN NOT NULL DEFAULT FALSE, "
+                        + "has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE, has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE, "
+                        + "ec_block_height INT DEFAULT NULL, ec_block_id BIGINT DEFAULT NULL, has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE)");
             case 4:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_id_idx ON transaction (id)");
             case 5:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS block_height_idx ON block (height)");
             case 6:
-                apply("CREATE INDEX IF NOT EXISTS transaction_timestamp_idx ON transaction (timestamp)");
+                apply(null);
             case 7:
-                apply("CREATE INDEX IF NOT EXISTS block_generator_account_id_idx ON block (generator_account_id)");
+                apply("CREATE INDEX IF NOT EXISTS block_generator_id_idx ON block (generator_id)");
             case 8:
-                apply("CREATE INDEX IF NOT EXISTS transaction_sender_account_id_idx ON transaction (sender_account_id)");
+                apply("CREATE INDEX IF NOT EXISTS transaction_sender_id_idx ON transaction (sender_id)");
             case 9:
                 apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
             case 10:
-                apply("ALTER TABLE block ALTER COLUMN generator_account_id RENAME TO generator_id");
+                apply(null);
             case 11:
-                apply("ALTER TABLE transaction ALTER COLUMN sender_account_id RENAME TO sender_id");
+                apply(null);
             case 12:
-                apply("ALTER INDEX block_generator_account_id_idx RENAME TO block_generator_id_idx");
+                apply(null);
             case 13:
-                apply("ALTER INDEX transaction_sender_account_id_idx RENAME TO transaction_sender_id_idx");
+                apply(null);
             case 14:
-                apply("ALTER TABLE block DROP COLUMN IF EXISTS index");
+                apply(null);
             case 15:
-                apply("ALTER TABLE transaction DROP COLUMN IF EXISTS index");
+                apply(null);
             case 16:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS block_timestamp INT");
+                apply(null);
             case 17:
                 apply(null);
             case 18:
-                apply("ALTER TABLE transaction ALTER COLUMN block_timestamp SET NOT NULL");
+                apply(null);
             case 19:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS hash BINARY(32)");
+                apply(null);
             case 20:
                 apply(null);
             case 21:
                 apply(null);
             case 22:
-                apply("CREATE INDEX IF NOT EXISTS transaction_hash_idx ON transaction (hash)");
+                apply(null);
             case 23:
                 apply(null);
             case 24:
-                apply("ALTER TABLE block ALTER COLUMN total_amount BIGINT");
+                apply(null);
             case 25:
-                apply("ALTER TABLE block ALTER COLUMN total_fee BIGINT");
+                apply(null);
             case 26:
-                apply("ALTER TABLE transaction ALTER COLUMN amount BIGINT");
+                apply(null);
             case 27:
-                apply("ALTER TABLE transaction ALTER COLUMN fee BIGINT");
+                apply(null);
             case 28:
                 apply(null);
             case 29:
@@ -93,15 +113,15 @@ class NxtDbVersion extends DbVersion {
             case 37:
                 apply(null);
             case 38:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS full_hash BINARY(32)");
+                apply(null);
             case 39:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_full_hash BINARY(32)");
+                apply(null);
             case 40:
                 apply(null);
             case 41:
-                apply("ALTER TABLE transaction ALTER COLUMN full_hash SET NOT NULL");
+                apply(null);
             case 42:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS transaction_full_hash_idx ON transaction (full_hash)");
+                apply(null);
             case 43:
                 apply(null);
             case 44:
@@ -109,56 +129,55 @@ class NxtDbVersion extends DbVersion {
             case 45:
                 apply(null);
             case 46:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS attachment_bytes VARBINARY");
+                apply(null);
             case 47:
                 apply(null);
             case 48:
-                apply("ALTER TABLE transaction DROP COLUMN attachment");
+                apply(null);
             case 49:
                 apply(null);
             case 50:
-                apply("ALTER TABLE transaction DROP COLUMN referenced_transaction_id");
+                apply(null);
             case 51:
-                apply("ALTER TABLE transaction DROP COLUMN hash");
+                apply(null);
             case 52:
                 apply(null);
             case 53:
-                apply("DROP INDEX transaction_recipient_id_idx");
+                apply(null);
             case 54:
-                apply("ALTER TABLE transaction ALTER COLUMN recipient_id SET NULL");
+                apply(null);
             case 55:
-                BlockDb.deleteAll();
                 apply(null);
             case 56:
-                apply("CREATE INDEX IF NOT EXISTS transaction_recipient_id_idx ON transaction (recipient_id)");
+                apply(null);
             case 57:
                 apply(null);
             case 58:
                 apply(null);
             case 59:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS version TINYINT");
+                apply(null);
             case 60:
-                apply("UPDATE transaction SET version = 0");
+                apply(null);
             case 61:
-                apply("ALTER TABLE transaction ALTER COLUMN version SET NOT NULL");
+                apply(null);
             case 62:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply(null);
             case 63:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply(null);
             case 64:
-                apply("UPDATE transaction SET has_message = TRUE WHERE type = 1 AND subtype = 0");
+                apply(null);
             case 65:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_public_key_announcement BOOLEAN NOT NULL DEFAULT FALSE");
+                apply(null);
             case 66:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_height INT DEFAULT NULL");
+                apply(null);
             case 67:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS ec_block_id BIGINT DEFAULT NULL");
+                apply(null);
             case 68:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_encrypttoself_message BOOLEAN NOT NULL DEFAULT FALSE");
+                apply(null);
             case 69:
                 apply("CREATE INDEX IF NOT EXISTS transaction_block_timestamp_idx ON transaction (block_timestamp DESC)");
             case 70:
-                apply("DROP INDEX transaction_timestamp_idx");
+                apply(null);
             case 71:
                 apply("CREATE TABLE IF NOT EXISTS alias (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "account_id BIGINT NOT NULL, alias_name VARCHAR NOT NULL, "
@@ -191,7 +210,7 @@ class NxtDbVersion extends DbVersion {
                         + "bid_order_height INT NOT NULL, seller_id BIGINT NOT NULL, buyer_id BIGINT NOT NULL, "
                         + "quantity BIGINT NOT NULL, price BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
             case 81:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS trade_ask_bid_idx ON trade (ask_order_id, bid_order_id)");
+                apply(null);
             case 82:
                 apply("CREATE INDEX IF NOT EXISTS trade_asset_id_idx ON trade (asset_id, height DESC)");
             case 83:
@@ -250,16 +269,15 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS purchase_deadline_idx ON purchase (deadline DESC, height DESC)");
             case 102:
                 apply("CREATE TABLE IF NOT EXISTS account (db_id IDENTITY, id BIGINT NOT NULL, creation_height INT NOT NULL, "
-                        + "public_key BINARY(32), key_height INT, balance BIGINT NOT NULL, unconfirmed_balance BIGINT NOT NULL, "
-                        + "forged_balance BIGINT NOT NULL, name VARCHAR, description VARCHAR, current_leasing_height_from INT, "
+                        + "key_height INT, balance BIGINT NOT NULL, unconfirmed_balance BIGINT NOT NULL, "
+                        + "forged_balance BIGINT NOT NULL, current_leasing_height_from INT, "
                         + "current_leasing_height_to INT, current_lessee_id BIGINT NULL, next_leasing_height_from INT, "
                         + "next_leasing_height_to INT, next_lessee_id BIGINT NULL, height INT NOT NULL, "
                         + "latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 103:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_id_height_idx ON account (id, height DESC)");
             case 104:
-                apply("CREATE INDEX IF NOT EXISTS account_current_lessee_id_leasing_height_idx ON account (current_lessee_id, "
-                        + "current_leasing_height_to DESC)");
+                apply(null);
             case 105:
                 apply("CREATE TABLE IF NOT EXISTS account_asset (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "asset_id BIGINT NOT NULL, quantity BIGINT NOT NULL, unconfirmed_quantity BIGINT NOT NULL, height INT NOT NULL, "
@@ -284,13 +302,12 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_id_height_idx ON purchase_public_feedback (id, height DESC)");
             case 113:
                 apply("CREATE TABLE IF NOT EXISTS unconfirmed_transaction (db_id IDENTITY, id BIGINT NOT NULL, expiration INT NOT NULL, "
-                        + "transaction_height INT NOT NULL, fee_per_byte BIGINT NOT NULL, timestamp INT NOT NULL, "
+                        + "transaction_height INT NOT NULL, fee_per_byte BIGINT NOT NULL, "
                         + "transaction_bytes VARBINARY NOT NULL, height INT NOT NULL)");
             case 114:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS unconfirmed_transaction_id_idx ON unconfirmed_transaction (id)");
             case 115:
-                apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_height_fee_timestamp_idx ON unconfirmed_transaction "
-                        + "(transaction_height ASC, fee_per_byte DESC, timestamp ASC)");
+                apply(null);
             case 116:
                 apply("CREATE TABLE IF NOT EXISTS asset_transfer (db_id IDENTITY, id BIGINT NOT NULL, asset_id BIGINT NOT NULL, "
                         + "sender_id BIGINT NOT NULL, recipient_id BIGINT NOT NULL, quantity BIGINT NOT NULL, timestamp INT NOT NULL, "
@@ -341,11 +358,11 @@ class NxtDbVersion extends DbVersion {
             case 138:
                 apply("CREATE TABLE IF NOT EXISTS currency (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
                         + "name VARCHAR NOT NULL, name_lower VARCHAR AS LOWER (name) NOT NULL, code VARCHAR NOT NULL, "
-                        + "description VARCHAR, type INT NOT NULL, initial_supply BIGINT NOT NULL DEFAULT 0, current_supply BIGINT NOT NULL, "
+                        + "description VARCHAR, type INT NOT NULL, initial_supply BIGINT NOT NULL DEFAULT 0, "
                         + "reserve_supply BIGINT NOT NULL, max_supply BIGINT NOT NULL, creation_height INT NOT NULL, issuance_height INT NOT NULL, "
                         + "min_reserve_per_unit_nqt BIGINT NOT NULL, min_difficulty TINYINT NOT NULL, "
                         + "max_difficulty TINYINT NOT NULL, ruleset TINYINT NOT NULL, algorithm TINYINT NOT NULL, "
-                        + "current_reserve_per_unit_nqt BIGINT NOT NULL, decimals TINYINT NOT NULL DEFAULT 0,"
+                        + "decimals TINYINT NOT NULL DEFAULT 0,"
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 139:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS currency_id_height_idx ON currency (id, height DESC)");
@@ -420,9 +437,9 @@ class NxtDbVersion extends DbVersion {
             case 167:
                 apply("CREATE INDEX IF NOT EXISTS sell_offer_rate_height_idx ON sell_offer (rate ASC, creation_height ASC)");
             case 168:
-                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_regex VARCHAR");
+                apply(null);
             case 169:
-                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS message_pattern_flags INT");
+                apply(null);
             case 170:
                 apply("DROP INDEX IF EXISTS unconfirmed_transaction_height_fee_timestamp_idx");
             case 171:
@@ -492,8 +509,7 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE TABLE IF NOT EXISTS public_key (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "public_key BINARY(32), height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
             case 201:
-                apply("INSERT INTO public_key (account_id, public_key, height) SELECT id, public_key, min(height) "
-                        + "FROM account WHERE public_key IS NOT NULL GROUP BY id");
+                apply(null);
             case 202:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_idx ON public_key (account_id)");
             case 203:
@@ -503,56 +519,64 @@ class NxtDbVersion extends DbVersion {
             case 205:
                 apply("ALTER TABLE transaction DROP COLUMN IF EXISTS sender_public_key");
             case 206:
-                apply("CREATE INDEX IF NOT EXISTS account_height_idx ON account(height)");
+                apply(null);
             case 207:
-                apply("CREATE INDEX IF NOT EXISTS account_asset_height_idx ON account_asset(height)");
+                apply(null);
             case 208:
-                apply("CREATE INDEX IF NOT EXISTS account_currency_height_idx ON account_currency(height)");
+                apply(null);
             case 209:
                 apply("CREATE INDEX IF NOT EXISTS account_guaranteed_balance_height_idx ON account_guaranteed_balance(height)");
             case 210:
-                apply("CREATE INDEX IF NOT EXISTS alias_height_idx ON alias(height)");
+                apply(null);
             case 211:
-                apply("CREATE INDEX IF NOT EXISTS alias_offer_height_idx ON alias_offer(height)");
+                apply(null);
             case 212:
-                apply("CREATE INDEX IF NOT EXISTS ask_order_height_idx ON ask_order(height)");
+                apply(null);
             case 213:
                 apply("CREATE INDEX IF NOT EXISTS asset_height_idx ON asset(height)");
             case 214:
                 apply("CREATE INDEX IF NOT EXISTS asset_transfer_height_idx ON asset_transfer(height)");
             case 215:
-                apply("CREATE INDEX IF NOT EXISTS bid_order_height_idx ON bid_order(height)");
+                apply(null);
             case 216:
-                apply("CREATE INDEX IF NOT EXISTS buy_offer_height_idx ON buy_offer(height)");
+                apply(null);
             case 217:
-                apply("CREATE INDEX IF NOT EXISTS currency_height_idx ON currency(height)");
+                apply(null);
             case 218:
-                apply("CREATE INDEX IF NOT EXISTS currency_founder_height_idx ON currency_founder(height)");
+                apply(null);
             case 219:
-                apply("CREATE INDEX IF NOT EXISTS currency_mint_height_idx ON currency_mint(height)");
+                apply(null);
             case 220:
-                apply("CREATE INDEX IF NOT EXISTS currency_supply_height_idx ON currency_supply(height)");
+                apply(null);
             case 221:
                 apply("CREATE INDEX IF NOT EXISTS currency_transfer_height_idx ON currency_transfer(height)");
             case 222:
                 apply("CREATE INDEX IF NOT EXISTS exchange_height_idx ON exchange(height)");
             case 223:
-                apply("CREATE INDEX IF NOT EXISTS goods_height_idx ON goods(height)");
+                apply(null);
             case 224:
-                apply("CREATE INDEX IF NOT EXISTS public_key_height_idx ON public_key(height)");
+                apply(null);
             case 225:
-                apply("CREATE INDEX IF NOT EXISTS purchase_height_idx ON purchase(height)");
+                apply(null);
             case 226:
-                apply("CREATE INDEX IF NOT EXISTS purchase_feedback_height_idx ON purchase_feedback(height)");
+                apply(null);
             case 227:
-                apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_height_idx ON purchase_public_feedback(height)");
+                apply(null);
             case 228:
-                apply("CREATE INDEX IF NOT EXISTS sell_offer_height_idx ON sell_offer(height)");
+                apply(null);
             case 229:
-                apply("CREATE INDEX IF NOT EXISTS tag_height_idx ON tag(height)");
+                apply(null);
             case 230:
                 apply("CREATE INDEX IF NOT EXISTS trade_height_idx ON trade(height)");
             case 231:
+                long votingBlockId = 0;
+                try {
+                    votingBlockId = BlockDb.findBlockIdAtHeight(Constants.VOTING_SYSTEM_BLOCK);
+                } catch (RuntimeException ignore) {}
+                if (votingBlockId != 0) {
+                    Logger.logDebugMessage("Deleting blocks starting from height %s", Constants.VOTING_SYSTEM_BLOCK);
+                    BlockDb.deleteBlocksFrom(votingBlockId);
+                }
                 apply("DROP TABLE IF EXISTS poll");
             case 232:
                 apply("DROP TABLE IF EXISTS vote");
@@ -662,7 +686,7 @@ class NxtDbVersion extends DbVersion {
             case 276:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_info_id_height_idx ON account_info (account_id, height DESC)");
             case 277:
-                apply("CREATE INDEX IF NOT EXISTS account_info_height_idx ON account_info (height)");
+                apply(null);
             case 278:
                 apply("ALTER TABLE account DROP COLUMN IF EXISTS name");
             case 279:
@@ -687,7 +711,7 @@ class NxtDbVersion extends DbVersion {
             case 287:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS prunable_message_id_idx ON prunable_message (id)");
             case 288:
-                apply("CREATE INDEX IF NOT EXISTS prunable_message_height_idx ON prunable_message (height)");
+                apply(null);
             case 289:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_expiration_idx ON prunable_message (expiration DESC)");
             case 290:
@@ -701,11 +725,10 @@ class NxtDbVersion extends DbVersion {
             case 294:
                 apply("CREATE INDEX IF NOT EXISTS prunable_message_recipient_idx ON prunable_message (recipient_id)");
             case 295:
-                apply("CREATE INDEX IF NOT EXISTS prunable_message_timestamp_idx ON prunable_message (timestamp DESC)");
+                apply(null);
             case 296:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_encrypted_message BOOLEAN NOT NULL DEFAULT FALSE");
             case 297:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 298:
                 apply("ALTER TABLE prunable_message ALTER COLUMN expiration RENAME TO transaction_timestamp");
@@ -733,7 +756,7 @@ class NxtDbVersion extends DbVersion {
             case 308:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_expiration_idx ON tagged_data (transaction_timestamp DESC)");
             case 309:
-                apply("CREATE INDEX IF NOT EXISTS tagged_data_account__height_idx ON tagged_data (account_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_account_id_height_idx ON tagged_data (account_id, height DESC)");
             case 310:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_block_timestamp_height_db_id_idx ON tagged_data (block_timestamp DESC, height DESC, db_id DESC)");
             case 311:
@@ -751,37 +774,166 @@ class NxtDbVersion extends DbVersion {
             case 316:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS tagged_data_timestamp_id_height_idx ON tagged_data_timestamp (id, height DESC)");
             case 317:
-                apply("CREATE INDEX IF NOT EXISTS tagged_data_timestamp_height_idx ON tagged_data_timestamp (height)");
+                apply(null);
             case 318:
                 apply(null);
             case 319:
                 apply(null);
             case 320:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
                 apply(null);
             case 321:
                 apply("ALTER TABLE tagged_data ADD COLUMN IF NOT EXISTS channel VARCHAR");
             case 322:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_channel_idx ON tagged_data (channel, height DESC)");
             case 323:
+                apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS last_updated INT");
+            case 324:
+                apply("DROP INDEX IF EXISTS account_current_lessee_id_leasing_height_idx");
+            case 325:
+                apply("TRUNCATE TABLE account");
+            case 326:
+                apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS active_lessee_id BIGINT");
+            case 327:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS current_leasing_height_from");
+            case 328:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS current_leasing_height_to");
+            case 329:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS current_lessee_id");
+            case 330:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS next_leasing_height_from");
+            case 331:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS next_leasing_height_to");
+            case 332:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS next_lessee_id");
+            case 333:
+                apply("CREATE INDEX IF NOT EXISTS account_active_lessee_id_idx ON account (active_lessee_id)");
+            case 334:
+                apply("CREATE TABLE IF NOT EXISTS account_lease (db_id IDENTITY, lessor_id BIGINT NOT NULL, "
+                        + "current_leasing_height_from INT, current_leasing_height_to INT, current_lessee_id BIGINT, "
+                        + "next_leasing_height_from INT, next_leasing_height_to INT, next_lessee_id BIGINT, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 335:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_lease_lessor_id_height_idx ON account_lease (lessor_id, height DESC)");
+            case 336:
+                apply("CREATE INDEX IF NOT EXISTS account_lease_current_leasing_height_from_idx ON account_lease (current_leasing_height_from)");
+            case 337:
+                apply("CREATE INDEX IF NOT EXISTS account_lease_current_leasing_height_to_idx ON account_lease (current_leasing_height_to)");
+            case 338:
+                apply("CREATE INDEX IF NOT EXISTS account_lease_height_id_idx ON account_lease (height, lessor_id)");
+            case 339:
+                apply("CREATE INDEX IF NOT EXISTS account_asset_asset_id_idx ON account_asset (asset_id)");
+            case 340:
+                apply("CREATE INDEX IF NOT EXISTS account_currency_currency_id_idx ON account_currency (currency_id)");
+            case 341:
+                apply("CREATE INDEX IF NOT EXISTS currency_issuance_height_idx ON currency (issuance_height)");
+            case 342:
+                apply("CREATE INDEX IF NOT EXISTS unconfirmed_transaction_expiration_idx ON unconfirmed_transaction (expiration DESC)");
+            case 343:
+                apply("DROP INDEX IF EXISTS account_height_idx");
+            case 344:
+                apply("CREATE INDEX IF NOT EXISTS account_height_id_idx ON account (height, id)");
+            case 345:
+                apply("DROP INDEX IF EXISTS account_asset_height_idx");
+            case 346:
+                apply("CREATE INDEX IF NOT EXISTS account_asset_height_id_idx ON account_asset (height, account_id, asset_id)");
+            case 347:
+                apply("DROP INDEX IF EXISTS account_currency_height_idx");
+            case 348:
+                apply("CREATE INDEX IF NOT EXISTS account_currency_height_id_idx ON account_currency (height, account_id, currency_id)");
+            case 349:
+                apply("DROP INDEX IF EXISTS alias_height_idx");
+            case 350:
+                apply("CREATE INDEX IF NOT EXISTS alias_height_id_idx ON alias (height, id)");
+            case 351:
+                apply("DROP INDEX IF EXISTS alias_offer_height_idx");
+            case 352:
+                apply("CREATE INDEX IF NOT EXISTS alias_offer_height_id_idx ON alias_offer (height, id)");
+            case 353:
+                apply("DROP INDEX IF EXISTS ask_order_height_idx");
+            case 354:
+                apply("CREATE INDEX IF NOT EXISTS ask_order_height_id_idx ON ask_order (height, id)");
+            case 355:
+                apply("DROP INDEX IF EXISTS bid_order_height_idx");
+            case 356:
+                apply("CREATE INDEX IF NOT EXISTS bid_order_height_id_idx ON bid_order (height, id)");
+            case 357:
+                apply("DROP INDEX IF EXISTS buy_offer_height_idx");
+            case 358:
+                apply("CREATE INDEX IF NOT EXISTS buy_offer_height_id_idx ON buy_offer (height, id)");
+            case 359:
+                apply("DROP INDEX IF EXISTS currency_height_idx");
+            case 360:
+                apply("CREATE INDEX IF NOT EXISTS currency_height_id_idx ON currency (height, id)");
+            case 361:
+                apply("DROP INDEX IF EXISTS currency_founder_height_idx");
+            case 362:
+                apply("CREATE INDEX IF NOT EXISTS currency_founder_height_id_idx ON currency_founder (height, currency_id, account_id)");
+            case 363:
+                apply("DROP INDEX IF EXISTS currency_mint_height_idx");
+            case 364:
+                apply("CREATE INDEX IF NOT EXISTS currency_mint_height_id_idx ON currency_mint (height, currency_id, account_id)");
+            case 365:
+                apply("DROP INDEX IF EXISTS currency_supply_height_idx");
+            case 366:
+                apply("CREATE INDEX IF NOT EXISTS currency_supply_height_id_idx ON currency_supply (height, id)");
+            case 367:
+                apply("DROP INDEX IF EXISTS goods_height_idx");
+            case 368:
+                apply("CREATE INDEX IF NOT EXISTS goods_height_id_idx ON goods (height, id)");
+            case 369:
+                apply("DROP INDEX IF EXISTS purchase_height_idx");
+            case 370:
+                apply("CREATE INDEX IF NOT EXISTS purchase_height_id_idx ON purchase (height, id)");
+            case 371:
+                apply("DROP INDEX IF EXISTS purchase_feedback_height_idx");
+            case 372:
+                apply("CREATE INDEX IF NOT EXISTS purchase_feedback_height_id_idx ON purchase_feedback (height, id)");
+            case 373:
+                apply("DROP INDEX IF EXISTS purchase_public_feedback_height_idx");
+            case 374:
+                apply("CREATE INDEX IF NOT EXISTS purchase_public_feedback_height_id_idx ON purchase_public_feedback (height, id)");
+            case 375:
+                apply("DROP INDEX IF EXISTS sell_offer_height_idx");
+            case 376:
+                apply("CREATE INDEX IF NOT EXISTS sell_offer_height_id_idx ON sell_offer (height, id)");
+            case 377:
+                apply("DROP INDEX IF EXISTS tag_height_idx");
+            case 378:
+                apply("CREATE INDEX IF NOT EXISTS tag_height_tag_idx ON tag (height, tag)");
+            case 379:
+                apply("DROP INDEX IF EXISTS account_info_height_idx");
+            case 380:
+                apply("CREATE INDEX IF NOT EXISTS account_info_height_id_idx ON account_info (height, account_id)");
+            case 381:
+                apply("DROP INDEX IF EXISTS tagged_data_timestamp_height_idx");
+            case 382:
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_timestamp_height_id_idx ON tagged_data_timestamp (height, id)");
+            case 383:
+                apply("CREATE INDEX IF NOT EXISTS trade_height_db_id_idx ON trade (height DESC, db_id DESC)");
+            case 384:
+                apply("CREATE INDEX IF NOT EXISTS asset_height_db_id_idx ON asset (height DESC, db_id DESC)");
+            case 385:
+                apply("CREATE INDEX IF NOT EXISTS exchange_height_db_id_idx ON exchange (height DESC, db_id DESC)");
+            case 386:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 387:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "whitelist_size TINYINT NOT NULL DEFAULT 0, "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT, "
                         + "min_balance BIGINT, holding_id BIGINT, min_balance_model TINYINT, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 324:
+            case 388:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing_voter (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
                 
-            case 325:
+            case 389:
                 apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS has_control_phasing BOOLEAN NOT NULL DEFAULT FALSE");
-            case 326:
+            case 390:
                 return;
             default:
-                throw new RuntimeException("Blockchain database inconsistent with code, probably trying to run older code on newer database");
+                throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
         }
     }
 }

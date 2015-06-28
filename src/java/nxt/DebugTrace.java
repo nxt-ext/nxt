@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt;
 
 import nxt.db.DbIterator;
@@ -20,7 +36,7 @@ import java.util.Set;
 
 public final class DebugTrace {
 
-    static final String QUOTE = Nxt.getStringProperty("nxt.debugTraceQuote", "");
+    static final String QUOTE = Nxt.getStringProperty("nxt.debugTraceQuote", "\"");
     static final String SEPARATOR = Nxt.getStringProperty("nxt.debugTraceSeparator", "\t");
     static final boolean LOG_UNCONFIRMED = Nxt.getBooleanProperty("nxt.debugLogUnconfirmed");
 
@@ -163,10 +179,10 @@ public final class DebugTrace {
     }
 
     private void trace(Account.AccountLease accountLease, boolean start) {
-        if (! include(accountLease.lesseeId) && ! include(accountLease.lessorId)) {
+        if (! include(accountLease.getCurrentLesseeId()) && ! include(accountLease.getLessorId())) {
             return;
         }
-        log(getValues(accountLease.lessorId, accountLease, start));
+        log(getValues(accountLease.getLessorId(), accountLease, start));
     }
 
     private void traceBeforeAccept(Block block) {
@@ -341,7 +357,6 @@ public final class DebugTrace {
         map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("event", unconfirmed ? "unconfirmed balance" : "balance");
         map.put("key height", String.valueOf(account != null ? account.getKeyHeight() : 0));
-        map.put("effective balance", String.valueOf(account != null ? account.getEffectiveBalanceNXT() : 0));
         return map;
     }
 
@@ -403,6 +418,7 @@ public final class DebugTrace {
             return Collections.emptyMap();
         }
         Map<String,String> map = getValues(accountId, false);
+        map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
         map.put("generation fee", String.valueOf(fee));
         map.put("block", block.getStringId());
         map.put("event", "block");
@@ -447,7 +463,7 @@ public final class DebugTrace {
         map.put("event", start ? "lease begin" : "lease end");
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
-        map.put("lessee", Long.toUnsignedString(accountLease.lesseeId));
+        map.put("lessee", Long.toUnsignedString(accountLease.getCurrentLesseeId()));
         return map;
     }
 

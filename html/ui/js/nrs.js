@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 /**
  * @depends {3rdparty/jquery-2.1.0.js}
  * @depends {3rdparty/bootstrap.js}
@@ -48,7 +64,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.isTestNet = false;
 	NRS.isLocalHost = false;
-	NRS.isForging = false;
+	NRS.forgingStatus = NRS.constants.UNKNOWN;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
 
@@ -271,6 +287,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		stateInterval = setInterval(function() {
 			NRS.getState();
+			NRS.updateForgingStatus();
 		}, 1000 * seconds);
 	};
 
@@ -1053,14 +1070,6 @@ var NRS = (function(NRS, $, undefined) {
 			accountLeasingStatus += "<br>" + nextLesseeStatus;
 		}
 
-		if (NRS.accountInfo.effectiveBalanceNXT == 0) {
-            var forgingIndicator = $("#forging_indicator");
-            forgingIndicator.removeClass("forging");
-			forgingIndicator.find("span").html($.t("not_forging")).attr("data-i18n", "not_forging");
-			forgingIndicator.show();
-			NRS.isForging = false;
-		}
-
 		//no reed solomon available? do it myself? todo
 		if (NRS.accountInfo.lessors) {
 			if (accountLeasingLabel) {
@@ -1176,13 +1185,20 @@ var NRS = (function(NRS, $, undefined) {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
 						if (quantity != "0") {
-							$.growl($.t("you_received_assets", {
-								"asset": String(asset.asset).escapeHTML(),
-								"name": String(asset.name).escapeHTML(),
-								"count": quantity
-							}), {
-								"type": "success"
-							});
+							if (parseInt(quantity) == 1) {
+								$.growl($.t("you_received_assets", {
+									"name": String(asset.name).escapeHTML()
+								}), {
+									"type": "success"
+								});
+							} else {
+								$.growl($.t("you_received_assets_plural", {
+									"name": String(asset.name).escapeHTML(),
+									"count": quantity
+								}), {
+									"type": "success"
+								});
+							}
 							NRS.loadAssetExchangeSidebar();
 						}
 					} else {
@@ -1191,13 +1207,20 @@ var NRS = (function(NRS, $, undefined) {
 						var quantity = NRS.formatQuantity(asset.difference, asset.decimals)
 
 						if (quantity != "0") {
-							$.growl($.t("you_sold_assets", {
-								"asset": String(asset.asset).escapeHTML(),
-								"name": String(asset.name).escapeHTML(),
-								"count": quantity
-							}), {
-								"type": "success"
-							});
+							if (parseInt(quantity) == 1) {
+								$.growl($.t("you_sold_assets", {
+									"name": String(asset.name).escapeHTML()
+								}), {
+									"type": "success"
+								});
+							} else {
+								$.growl($.t("you_sold_assets_plural", {
+									"name": String(asset.name).escapeHTML(),
+									"count": quantity
+								}), {
+									"type": "success"
+								});
+							} 
 							NRS.loadAssetExchangeSidebar();
 						}
 					}

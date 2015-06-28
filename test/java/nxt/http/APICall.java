@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.util.Logger;
@@ -15,6 +31,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,12 +52,12 @@ public class APICall {
         protected Map<String, List<String>> params = new HashMap<>();
         
         public Builder(String requestType) {
-            params.put("requestType", Arrays.asList(requestType));
-            params.put("deadline", Arrays.asList("1440"));
+            params.put("requestType", Collections.singletonList(requestType));
+            params.put("deadline", Collections.singletonList("1440"));
         }
 
         public Builder param(String key, String value) {
-            params.put(key, Arrays.asList(value));
+            params.put(key, Collections.singletonList(value));
             return this;
         }
 

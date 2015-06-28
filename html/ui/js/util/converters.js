@@ -1,3 +1,19 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 var converters = function() {
 	var charToNibble = {};
 	var nibbleToChar = [];
@@ -242,6 +258,43 @@ var converters = function() {
 		},
 		int32ToBytes: function(x, opt_bigEndian) {
 			return converters.intToBytes_(x, 4, 4294967295, opt_bigEndian);
-		}
+		},
+        /**
+         * Based on https://groups.google.com/d/msg/crypto-js/TOb92tcJlU0/Eq7VZ5tpi-QJ
+         * Converts a word array to a Uint8Array.
+         * @param {WordArray} wordArray The word array.
+         * @return {Uint8Array} The Uint8Array.
+         */
+        wordArrayToByteArrayEx: function (wordArray) {
+            // Shortcuts
+            var words = wordArray.words;
+            var sigBytes = wordArray.sigBytes;
+
+            // Convert
+            var u8 = new Uint8Array(sigBytes);
+            for (var i = 0; i < sigBytes; i++) {
+                var byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+                u8[i]=byte;
+            }
+
+            return u8;
+        },
+        /**
+         * Converts a Uint8Array to a word array.
+         * @param {string} u8Str The Uint8Array.
+         * @return {WordArray} The word array.
+         */
+        byteArrayToWordArrayEx: function (u8arr) {
+            // Shortcut
+            var len = u8arr.length;
+
+            // Convert
+            var words = [];
+            for (var i = 0; i < len; i++) {
+                words[i >>> 2] |= (u8arr[i] & 0xff) << (24 - (i % 4) * 8);
+            }
+
+            return CryptoJS.lib.WordArray.create(words, len);
+        }
 	}
 }();
