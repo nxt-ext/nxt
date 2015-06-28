@@ -1386,13 +1386,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private static final Comparator<UnconfirmedTransaction> transactionArrivalComparator = Comparator
-            .comparingLong(UnconfirmedTransaction::getArrivalTimestamp)
-            .thenComparingInt(UnconfirmedTransaction::getHeight)
-            .thenComparingLong(UnconfirmedTransaction::getId);
-
-    void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
-
+    SortedSet<UnconfirmedTransaction> selectUnconfirmedTransactions(Map<TransactionType, Map<String, Boolean>> duplicates, Block previousBlock, int blockTimestamp) {
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
         try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(
                 TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions(),
@@ -1401,10 +1395,57 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 orderedUnconfirmedTransactions.add(unconfirmedTransaction);
             }
         }
-
-        BlockImpl previousBlock = blockchain.getLastBlock();
-
         SortedSet<UnconfirmedTransaction> sortedTransactions = new TreeSet<>(transactionArrivalComparator);
+        int payloadLength = 0;
+        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH && sortedTransactions.size() <= Constants.MAX_NUMBER_OF_TRANSACTIONS) {
+            int prevNumberOfNewTransactions = sortedTransactions.size();
+            for (UnconfirmedTransaction unconfirmedTransaction : orderedUnconfirmedTransactions) {
+                int transactionLength = unconfirmedTransaction.getTransaction().getFullSize();
+                if (sortedTransactions.contains(unconfirmedTransaction) || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
+                    continue;
+                }
+                if (unconfirmedTransaction.getVersion() != getTransactionVersion(previousBlock.getHeight())) {
+                    continue;
+                }
+                if (blockTimestamp > 0 && (unconfirmedTransaction.getTimestamp() > blockTimestamp + Constants.MAX_TIMEDRIFT
+                        || unconfirmedTransaction.getExpiration() < blockTimestamp)) {
+                    continue;
+                }
+                try {
+                    unconfirmedTransaction.getTransaction().validate();
+                } catch (NxtException.NotCurrentlyValidException e) {
+                    continue;
+                } catch (NxtException.ValidationException e) {
+                    TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
+                    continue;
+                }
+                if (unconfirmedTransaction.getPhasing() == null && unconfirmedTransaction.getTransaction().isDuplicate(duplicates)) {
+                    continue;
+                }
+                /*
+                if (!EconomicClustering.verifyFork(transaction)) {
+                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId()
+                            + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
+                    //continue;
+                }
+                */
+                sortedTransactions.add(unconfirmedTransaction);
+                payloadLength += transactionLength;
+            }
+            if (sortedTransactions.size() == prevNumberOfNewTransactions) {
+                break;
+            }
+        }
+        return sortedTransactions;
+    }
+
+
+    private static final Comparator<UnconfirmedTransaction> transactionArrivalComparator = Comparator
+            .comparingLong(UnconfirmedTransaction::getArrivalTimestamp)
+            .thenComparingInt(UnconfirmedTransaction::getHeight)
+            .thenComparingLong(UnconfirmedTransaction::getId);
+
+    void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
         if (blockchain.getHeight() >= Constants.PHASING_BLOCK) {
@@ -1419,76 +1460,25 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }
 
+        BlockImpl previousBlock = blockchain.getLastBlock();
+        SortedSet<UnconfirmedTransaction> sortedTransactions = selectUnconfirmedTransactions(duplicates, previousBlock, blockTimestamp);
+        List<TransactionImpl> blockTransactions = new ArrayList<>();
+        MessageDigest digest = Crypto.sha256();
         long totalAmountNQT = 0;
         long totalFeeNQT = 0;
         int payloadLength = 0;
-
-        while (payloadLength <= Constants.MAX_PAYLOAD_LENGTH && sortedTransactions.size() <= Constants.MAX_NUMBER_OF_TRANSACTIONS) {
-
-            int prevNumberOfNewTransactions = sortedTransactions.size();
-
-            for (UnconfirmedTransaction unconfirmedTransaction : orderedUnconfirmedTransactions) {
-
-                int transactionLength = unconfirmedTransaction.getTransaction().getFullSize();
-                if (sortedTransactions.contains(unconfirmedTransaction) || payloadLength + transactionLength > Constants.MAX_PAYLOAD_LENGTH) {
-                    continue;
-                }
-
-                if (unconfirmedTransaction.getVersion() != getTransactionVersion(previousBlock.getHeight())) {
-                    continue;
-                }
-
-                if (unconfirmedTransaction.getTimestamp() > blockTimestamp + Constants.MAX_TIMEDRIFT || unconfirmedTransaction.getExpiration() < blockTimestamp) {
-                    continue;
-                }
-
-                try {
-                    unconfirmedTransaction.getTransaction().validate();
-                } catch (NxtException.NotCurrentlyValidException e) {
-                    continue;
-                } catch (NxtException.ValidationException e) {
-                    TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(unconfirmedTransaction.getTransaction());
-                    continue;
-                }
-
-                if (unconfirmedTransaction.getPhasing() == null && unconfirmedTransaction.getTransaction().isDuplicate(duplicates)) {
-                    continue;
-                }
-
-                /*
-                if (!EconomicClustering.verifyFork(transaction)) {
-                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId()
-                            + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
-                    //continue;
-                }
-                */
-
-                sortedTransactions.add(unconfirmedTransaction);
-                payloadLength += transactionLength;
-                totalAmountNQT += unconfirmedTransaction.getAmountNQT();
-                totalFeeNQT += unconfirmedTransaction.getFeeNQT();
-
-            }
-
-            if (sortedTransactions.size() == prevNumberOfNewTransactions) {
-                break;
-            }
-        }
-
-        List<TransactionImpl> blockTransactions = new ArrayList<>();
-
-        MessageDigest digest = Crypto.sha256();
         for (UnconfirmedTransaction unconfirmedTransaction : sortedTransactions) {
-            blockTransactions.add(unconfirmedTransaction.getTransaction());
-            digest.update(unconfirmedTransaction.getTransaction().bytes());
+            TransactionImpl transaction = unconfirmedTransaction.getTransaction();
+            blockTransactions.add(transaction);
+            digest.update(transaction.bytes());
+            totalAmountNQT += transaction.getAmountNQT();
+            totalFeeNQT += transaction.getFeeNQT();
+            payloadLength += transaction.getFullSize();
         }
-
         byte[] payloadHash = digest.digest();
-
         digest.update(previousBlock.getGenerationSignature());
         final byte[] publicKey = Crypto.getPublicKey(secretPhrase);
         byte[] generationSignature = digest.digest(publicKey);
-
         byte[] previousBlockHash = Crypto.sha256().digest(previousBlock.bytes());
 
         BlockImpl block = new BlockImpl(getBlockVersion(previousBlock.getHeight()), blockTimestamp, previousBlock.getId(), totalAmountNQT, totalFeeNQT, payloadLength,

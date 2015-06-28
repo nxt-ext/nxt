@@ -18,7 +18,6 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
-import nxt.db.FilteringIterator;
 import nxt.util.Convert;
 import nxt.util.Filter;
 
@@ -439,7 +438,6 @@ final class BlockchainImpl implements Blockchain {
     @Override
     public List<TransactionImpl> getExpectedTransactions(Filter<Transaction> filter) {
         Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
-        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
         BlockchainProcessorImpl blockchainProcessor = BlockchainProcessorImpl.getInstance();
         List<TransactionImpl> result = new ArrayList<>();
         readLock();
@@ -457,16 +455,14 @@ final class BlockchainImpl implements Blockchain {
                     }
                 }
             }
-            try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(
-                    transactionProcessor.getAllUnconfirmedTransactions(" ORDER BY arrival_timestamp ASC, height ASC, id ASC "),
-                    transaction -> filter.ok(transaction)
-                            && transaction.getPhasing() == null
-                            && blockchainProcessor.hasAllReferencedTransactions(transaction.getTransaction(), transaction.getTimestamp(), 0)
-            )) {
-                for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
-                    result.add(unconfirmedTransaction.getTransaction());
-                }
-            }
+            blockchainProcessor.selectUnconfirmedTransactions(duplicates, getLastBlock(), -1).forEach(
+                    unconfirmedTransaction -> {
+                        TransactionImpl transaction = unconfirmedTransaction.getTransaction();
+                        if (transaction.getPhasing() == null && filter.ok(transaction)) {
+                            result.add(transaction);
+                        }
+                    }
+            );
         } finally {
             readUnlock();
         }
