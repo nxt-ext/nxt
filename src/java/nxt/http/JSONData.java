@@ -227,6 +227,35 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject expectedAskOrder(Transaction transaction) {
+        JSONObject json = expectedOrder(transaction);
+        json.put("type", "ask");
+        return json;
+    }
+
+    static JSONObject expectedBidOrder(Transaction transaction) {
+        JSONObject json = expectedOrder(transaction);
+        json.put("type", "bid");
+        return json;
+    }
+
+    static JSONObject expectedOrder(Transaction transaction) {
+        JSONObject json = new JSONObject();
+        Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
+        json.put("order", transaction.getStringId());
+        json.put("asset", Long.toUnsignedString(attachment.getAssetId()));
+        putAccount(json, "account", transaction.getSenderId());
+        json.put("quantityQNT", String.valueOf(attachment.getQuantityQNT()));
+        json.put("priceNQT", String.valueOf(attachment.getPriceNQT()));
+        json.put("height", Nxt.getBlockchain().getHeight() + 1);
+        json.put("phased", transaction.getPhasing() != null);
+        if (transaction.getBlockId() != 0) { // those values may be wrong for unconfirmed transactions
+            json.put("transactionHeight", transaction.getHeight());
+            json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
+        }
+        return json;
+    }
+
     static JSONObject offer(CurrencyExchangeOffer offer) {
         JSONObject json = new JSONObject();
         json.put("offer", Long.toUnsignedString(offer.getId()));

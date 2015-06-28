@@ -17,6 +17,7 @@
 package nxt;
 
 import nxt.db.DbIterator;
+import nxt.util.Filter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -81,5 +82,7 @@ public interface Blockchain {
                                                       int from, int to);
 
     DbIterator<? extends Transaction> getTransactions(Connection con, PreparedStatement pstmt);
+
+    List<? extends Transaction> getExpectedTransactions(Filter<Transaction> filter);
 
 }

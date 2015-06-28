@@ -18,14 +18,18 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
+import nxt.db.FilteringIterator;
 import nxt.util.Convert;
+import nxt.util.Filter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -432,4 +436,40 @@ final class BlockchainImpl implements Blockchain {
         return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
+    @Override
+    public List<TransactionImpl> getExpectedTransactions(Filter<Transaction> filter) {
+        Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
+        BlockchainProcessorImpl blockchainProcessor = BlockchainProcessorImpl.getInstance();
+        List<TransactionImpl> result = new ArrayList<>();
+        readLock();
+        try {
+            if (getHeight() >= Constants.PHASING_BLOCK) {
+                try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(getHeight() + 1)) {
+                    for (TransactionImpl phasedTransaction : phasedTransactions) {
+                        try {
+                            phasedTransaction.validate();
+                            if (!phasedTransaction.isDuplicate(duplicates) && filter.ok(phasedTransaction)) {
+                                result.add(phasedTransaction);
+                            }
+                        } catch (NxtException.ValidationException ignore) {
+                        }
+                    }
+                }
+            }
+            try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(
+                    transactionProcessor.getAllUnconfirmedTransactions(" ORDER BY arrival_timestamp ASC, height ASC, id ASC "),
+                    transaction -> filter.ok(transaction)
+                            && transaction.getPhasing() == null
+                            && blockchainProcessor.hasAllReferencedTransactions(transaction.getTransaction(), transaction.getTimestamp(), 0)
+            )) {
+                for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
+                    result.add(unconfirmedTransaction.getTransaction());
+                }
+            }
+        } finally {
+            readUnlock();
+        }
+        return result;
+    }
 }

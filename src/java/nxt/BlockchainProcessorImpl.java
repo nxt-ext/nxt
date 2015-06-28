@@ -1394,7 +1394,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
-        try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions(),
+        try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(
+                TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions(),
                 transaction -> hasAllReferencedTransactions(transaction.getTransaction(), transaction.getTimestamp(), 0))) {
             for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
                 orderedUnconfirmedTransactions.add(unconfirmedTransaction);
@@ -1511,7 +1512,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private boolean hasAllReferencedTransactions(TransactionImpl transaction, int timestamp, int count) {
+    boolean hasAllReferencedTransactions(TransactionImpl transaction, int timestamp, int count) {
         if (transaction.referencedTransactionFullHash() == null) {
             return timestamp - transaction.getTimestamp() < Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN && count < 10;
         }
