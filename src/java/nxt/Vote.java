@@ -59,8 +59,6 @@ public final class Vote {
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
-            } finally {
-                clearCache();
             }
         }
     };

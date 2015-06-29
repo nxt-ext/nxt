@@ -344,11 +344,11 @@ public class TransactionalDb extends BasicDb {
         /**
          * Transaction has been committed
          */
-        public void commit();
+        void commit();
 
         /**
          * Transaction has been rolled back
          */
-        public void rollback();
+        void rollback();
     }
 }
