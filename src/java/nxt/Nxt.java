@@ -45,7 +45,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.5.9";
+    public static final String VERSION = "1.5.12";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -84,7 +84,7 @@ public final class Nxt {
         } else {
             String explicitFileName = System.getProperty("nxt.system." + streamName);
             if (explicitFileName != null) {
-                Paths.get(explicitFileName);
+                path = Paths.get(explicitFileName);
             }
         }
         if (path != null) {
@@ -314,6 +314,7 @@ public final class Nxt {
             try {
                 long startTime = System.currentTimeMillis();
                 Logger.init();
+                setSystemProperties();
                 logSystemProperties();
                 runtimeMode.init();
                 setServerStatus("NXT Server - Loading database", null);
@@ -359,6 +360,11 @@ public final class Nxt {
                 long currentTime = System.currentTimeMillis();
                 Logger.logMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
+                Logger.logMessage("Copyright © 2013-2015 The Nxt Core Developers.");
+                Logger.logMessage("Distributed under GPLv2, with ABSOLUTELY NO WARRANTY.");
+                if (API.getBrowserUri() != null) {
+                    Logger.logMessage("Client UI is at " + API.getBrowserUri());
+                }
                 setServerStatus("NXT Server - Online", API.getBrowserUri());
                 if (Constants.isTestnet) {
                     Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
@@ -378,6 +384,21 @@ public final class Nxt {
 
         private Init() {} // never
 
+    }
+
+    private static void setSystemProperties() {
+      // Override system settings that the user has define in nxt.properties file.
+      String[] systemProperties = new String[] {
+        "socksProxyHost",
+        "socksProxyPort",
+      };
+
+      for (String propertyName : systemProperties) {
+        String propertyValue;
+        if ((propertyValue = getStringProperty(propertyName)) != null) {
+          System.setProperty(propertyName, propertyValue);
+        }
+      }
     }
 
     private static void logSystemProperties() {

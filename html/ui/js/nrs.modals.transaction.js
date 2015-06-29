@@ -77,6 +77,12 @@ var NRS = (function (NRS, $, undefined) {
             if (!transactionDetails.block) {
                 transactionDetails.block = "unconfirmed";
             }
+            if (transactionDetails.timestamp) {
+                transactionDetails.transactionTime = NRS.formatTimestamp(transactionDetails.timestamp);
+            }
+            if (transactionDetails.blockTimestamp) {
+                transactionDetails.blockGenerationTime = NRS.formatTimestamp(transactionDetails.blockTimestamp);
+            }
             if (transactionDetails.height == NRS.constants.MAX_INT_JAVA) {
                 transactionDetails.height = "unknown";
             } else {
@@ -510,7 +516,7 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getAsset", {
                             "asset": transaction.attachment.asset
                         }, function (asset, input) {
-                            NRS.formatAssetOrder(asset, transaction)
+                            NRS.formatAssetOrder(asset, transaction, isModalVisible)
                         });
                         break;
                     case 4:
@@ -1158,7 +1164,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.formatAssetOrder = function (asset, transaction) {
+    NRS.formatAssetOrder = function (asset, transaction, isModalVisible) {
         var data = {
             "type": (transaction.subtype == 2 ? $.t("ask_order_placement") : $.t("bid_order_placement")),
             "asset_name": asset.name,
@@ -1209,8 +1215,9 @@ var NRS = (function (NRS, $, undefined) {
         var infoTable = $("#transaction_info_table");
         infoTable.find("tbody").append(NRS.createInfoTable(data));
         infoTable.show();
-
-        $("#transaction_info_modal").modal("show");
+        if (!isModalVisible) {
+            $("#transaction_info_modal").modal("show");
+        }
         NRS.fetchingModalData = false;
     };
 
@@ -1341,9 +1348,14 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getTaggedData = function (attachment, subtype) {
         var data = {
-            "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle),
-            "hash": attachment.hash
+            "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle)
         };
+        if (attachment.hash) {
+            data["hash"] = attachment.hash;
+        }
+        if (attachment.taggedData) {
+            data["taggedData"] = attachment.taggedData;
+        }
         if (attachment.data) {
             data["name"] = attachment.name;
             data["description"] = attachment.description;

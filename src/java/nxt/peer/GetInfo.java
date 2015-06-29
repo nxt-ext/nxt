@@ -93,4 +93,9 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
 
     }
 
+    @Override
+    boolean rejectWhileDownloading() {
+        return false;
+    }
+
 }

@@ -46,4 +46,9 @@ final class AddPeers extends PeerServlet.PeerRequestHandler {
         return JSON.emptyJSON;
     }
 
+    @Override
+    boolean rejectWhileDownloading() {
+        return false;
+    }
+
 }

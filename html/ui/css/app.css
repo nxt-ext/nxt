@@ -455,7 +455,7 @@ body > .header .logo .icon {
 }
 .right-side > .page > .content-header {
   position: relative;
-  padding: 15px 15px 10px 20px;
+  padding: 15px 20px 10px 20px;
   background: #fbfbfb;
   box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
@@ -3022,12 +3022,24 @@ input:invalid {
   border: 1px solid red;
 }
 
+/* Red (not forging) */
 #forging_indicator i, #connected_indicator i {
   color:#a94442;
 }
 
+/* Red (not forging) */
+#forging_indicator.not_forging i {
+  color:#a94442;
+}
+
+/* Green (forging) */
 #forging_indicator.forging i, #connected_indicator.connected i {
   color:#3c763d;
+}
+
+/* Gray (Unknown forging status) */
+#forging_indicator.unknown i {
+  color:#cccccc;
 }
 
 #forging_indicator.forging.animated i {
@@ -3288,6 +3300,10 @@ input.masked {
 
 .optional_message, .optional_note {
   display:none;
+}
+
+.modal {
+  overflow-y: auto;
 }
 
 .modal-body {

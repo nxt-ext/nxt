@@ -50,4 +50,9 @@ final class ProcessBlock extends PeerServlet.PeerRequestHandler {
         return JSON.emptyJSON;
     }
 
+    @Override
+    boolean rejectWhileDownloading() {
+        return true;
+    }
+
 }

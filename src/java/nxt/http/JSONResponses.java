@@ -57,6 +57,7 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_ALIAS = unknown("alias");
     public static final JSONStreamAware UNKNOWN_ASSET = unknown("asset");
     public static final JSONStreamAware INCORRECT_ASSET = incorrect("asset");
+    public static final JSONStreamAware MISSING_ASSET = missing("asset");
     public static final JSONStreamAware MISSING_BLOCK = missing("block");
     public static final JSONStreamAware UNKNOWN_BLOCK = unknown("block");
     public static final JSONStreamAware INCORRECT_BLOCK = incorrect("block");
@@ -146,6 +147,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_TAGGED_DATA_TYPE = incorrect("type", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_TYPE_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_TAGGED_DATA_CHANNEL = incorrect("channel", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_CHANNEL_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_TAGGED_DATA_FILE = incorrect("data", "cannot read file data");
+    public static final JSONStreamAware INCORRECT_FILE = incorrect("file", "cannot read file data");
     public static final JSONStreamAware MISSING_DATA = incorrect("data");
     public static final JSONStreamAware INCORRECT_DATA = incorrect("data", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DATA_LENGTH + " bytes)");
     static final JSONStreamAware MISSING_MESSAGE_ENCRYPTED_MESSAGE = missing("message", "encryptedMessageData");
@@ -317,6 +319,22 @@ public final class JSONResponses {
         response.put("errorCode", 10);
         response.put("errorDescription", "Hashes don't match. You should notify Jeff Garzik.");
         HASHES_MISMATCH = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware REQUIRED_BLOCK_NOT_FOUND;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 13);
+        response.put("errorDescription", "Required block not found in the blockchain");
+        REQUIRED_BLOCK_NOT_FOUND = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware REQUIRED_LAST_BLOCK_NOT_FOUND;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 14);
+        response.put("errorDescription", "Current last block is different");
+        REQUIRED_LAST_BLOCK_NOT_FOUND = JSON.prepare(response);
     }
 
     static JSONStreamAware missing(String... paramNames) {

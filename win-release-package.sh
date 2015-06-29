@@ -1,17 +1,21 @@
 #!/bin/bash
 VERSION=$1
+if [ -x ${VERSION} ];
+then
+	echo VERSION not defined
+	exit 1
+fi
 PACKAGE=nxt-client-${VERSION}
 echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
 OBFUSCATE=$2
 
-FILES="changelogs conf html lib resource"
+FILES="changelogs conf html lib resource contrib logs"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
-FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt README_win.txt USERS-GUIDE.md"
-FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh verify.sh"
-FILES="${FILES} Dockerfile docker_start.sh NXT_Wallet.url"
-FILES="${FILES} setup.xml RegistrySpec.xml shortcutSpec.xml"
+FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh compact.sh compact.bat"
+FILES="${FILES} NXT_Wallet.url"
 
 # unix2dos *.bat
 echo compile
@@ -27,7 +31,7 @@ mkdir -p nxt/logs
 if [ "${OBFUSCATE}" == "obfuscate" ];
 then
 echo obfuscate
-/cygdrive/c/ltc/proguard5.2.1/bin/proguard.bat @nxt.pro
+proguard.bat @nxt.pro
 mv ../nxt.map ../nxt.map.${VERSION}
 mkdir -p nxt/src/
 else
@@ -38,6 +42,8 @@ echo javadoc
 ./win-javadoc.sh
 fi
 echo copy resources
+cp installer/lib/JavaExe.exe nxt.exe
+cp installer/lib/JavaExe.exe nxtservice.exe
 cp -a ${FILES} nxt
 echo gzip
 for f in `find nxt/html -name *.html -o -name *.js -o -name *.css -o -name *.json  -o -name *.ttf -o -name *.svg -o -name *.otf`
@@ -45,15 +51,15 @@ do
 	gzip -9c "$f" > "$f".gz
 done
 cd nxt
-echo jar
+echo generate jar files
 ../jar.sh
 echo package installer Jar
-../build-installer.sh ../${PACKAGE}
-cd -
+../installer/build-installer.sh ../${PACKAGE}
 echo create installer exe
-./build-exe.bat ${PACKAGE}
+../installer/build-exe.bat ${PACKAGE}
 echo create installer zip
-zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml \*.xml nxt/conf/nxt.properties nxt/conf/logging.properties
+cd -
+zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
 echo creating change log ${CHANGELOG}
@@ -74,13 +80,3 @@ echo -e "\n\nChange log:\n" >> ${CHANGELOG}
 
 cat changelogs/${CHANGELOG} >> ${CHANGELOG}
 echo >> ${CHANGELOG}
-
-# echo sign package ${PACKAGE}
-# gpg --detach-sign --armour --sign-with lyaffe ${PACKAGE}
-# echo sign change log ${CHANGELOG}
-# gpg --clearsign --sign-with l ${CHANGELOG}
-# rm -f ${CHANGELOG}
-# echo verify signatures
-# gpgv ${PACKAGE}.asc
-# gpgv ${CHANGELOG}.asc
-# sha256sum -c ${CHANGELOG}.asc

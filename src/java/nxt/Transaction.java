@@ -122,6 +122,8 @@ public interface Transaction {
 
     List<? extends Appendix> getAppendages();
 
+    List<? extends Appendix> getAppendages(boolean includeExpiredPrunable);
+
     int getECBlockHeight();
 
     long getECBlockId();

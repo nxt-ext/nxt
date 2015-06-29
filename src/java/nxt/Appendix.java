@@ -42,8 +42,10 @@ public interface Appendix {
 
     interface Prunable {
         byte[] getHash();
-        default boolean shouldLoadPrunable(Transaction transaction) {
-            return Constants.INCLUDE_EXPIRED_PRUNABLE || Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME;
+        default boolean shouldLoadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            return Constants.INCLUDE_EXPIRED_PRUNABLE ||
+                    Nxt.getEpochTime() - transaction.getTimestamp() <
+                            (includeExpiredPrunable ? Constants.MAX_PRUNABLE_LIFETIME : Constants.MIN_PRUNABLE_LIFETIME);
         }
     }
 
@@ -148,7 +150,11 @@ public interface Appendix {
 
         abstract void apply(Transaction transaction, Account senderAccount, Account recipientAccount);
 
-        void loadPrunable(Transaction transaction) {}
+        final void loadPrunable(Transaction transaction) {
+            loadPrunable(transaction, false);
+        }
+
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {}
 
         boolean isPhasable() {
             return true;
@@ -165,8 +171,7 @@ public interface Appendix {
         private static final String appendixName = "Message";
 
         static Message parse(JSONObject attachmentData) {
-            if (!hasAppendix(appendixName, attachmentData) &&
-                    (attachmentData.get("message") == null || hasAppendix(PrunablePlainMessage.appendixName, attachmentData))) { //TODO: VOTING_SYSTEM_BLOCK
+            if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
             return new Message(attachmentData);
@@ -365,9 +370,6 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Prunable messages not yet enabled");
-            }
             if (transaction.getMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both message and prunable message attachments");
             }
@@ -423,8 +425,8 @@ public interface Appendix {
         }
 
         @Override
-        void loadPrunable(Transaction transaction) {
-            if (message == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (message == null && prunableMessage == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
         }
@@ -491,9 +493,6 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (getVersion() > 1 && Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Uncompressed regular encrypted messages not yet enabled");
-            }
             if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
@@ -629,9 +628,6 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getHeight() < Constants.VOTING_SYSTEM_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Prunable encrypted messages not yet enabled");
-            }
             if (transaction.getEncryptedMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both encrypted and prunable encrypted message attachments");
             }
@@ -701,8 +697,8 @@ public interface Appendix {
         }
 
         @Override
-        void loadPrunable(Transaction transaction) {
-            if (encryptedData == null && prunableMessage == null && shouldLoadPrunable(transaction)) {
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (encryptedData == null && prunableMessage == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
                 prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
             }
         }
@@ -1045,9 +1041,6 @@ public interface Appendix {
         void validate(Transaction transaction) throws NxtException.ValidationException {
 
             int currentHeight = Nxt.getBlockchain().getHeight();
-            if (currentHeight < Constants.PHASING_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Phasing not yet enabled at height " + currentHeight);
-            }
 
             if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
                 throw new NxtException.NotValidException("Whitelist is too big");

@@ -34,7 +34,7 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
     static final GetCurrencyTransfers instance = new GetCurrencyTransfers();
 
     private GetCurrencyTransfers() {
-        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "includeCurrencyInfo");
+        super(new APITag[] {APITag.MS}, "currency", "account", "firstIndex", "lastIndex", "timestamp", "includeCurrencyInfo");
     }
 
     @Override
@@ -43,7 +43,7 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
         String currencyId = Convert.emptyToNull(req.getParameter("currency"));
         String accountId = Convert.emptyToNull(req.getParameter("account"));
         boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
-
+        int timestamp = ParameterParser.getTimestamp(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
@@ -63,7 +63,11 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
                 transfers = CurrencyTransfer.getAccountCurrencyTransfers(account.getId(), currency.getId(), firstIndex, lastIndex);
             }
             while (transfers.hasNext()) {
-                transfersData.add(JSONData.currencyTransfer(transfers.next(), includeCurrencyInfo));
+                CurrencyTransfer currencyTransfer = transfers.next();
+                if (currencyTransfer.getTimestamp() < timestamp) {
+                    break;
+                }
+                transfersData.add(JSONData.currencyTransfer(currencyTransfer, includeCurrencyInfo));
             }
         } finally {
             DbUtils.close(transfers);

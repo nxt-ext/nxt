@@ -51,4 +51,10 @@ public final class RebroadcastUnconfirmedTransactions extends APIServlet.APIRequ
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    final boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

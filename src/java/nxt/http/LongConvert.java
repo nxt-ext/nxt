@@ -58,4 +58,9 @@ public final class LongConvert extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

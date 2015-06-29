@@ -55,4 +55,9 @@ public final class DecodeToken extends APIServlet.APIRequestHandler {
         }
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

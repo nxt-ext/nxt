@@ -18,6 +18,7 @@ package nxt.env;
 
 import nxt.Block;
 import nxt.Constants;
+import nxt.Db;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.http.API;
@@ -27,19 +28,28 @@ import nxt.util.Logger;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Locale;
 
 public class DesktopSystemTray {
 
+    public static final int DELAY = 1000;
+
     private SystemTray tray;
+    private final JFrame wrapper = new JFrame();
+    private JDialog statusDialog;
+    private JPanel statusPanel;
     private ImageIcon imageIcon;
     private TrayIcon trayIcon;
     private MenuItem openWallet;
     private MenuItem viewLog;
     private SystemTrayDataProvider dataProvider;
+    private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.MEDIUM, Locale.getDefault());
 
     void createAndShowGUI() {
         if (!SystemTray.isSupported()) {
@@ -99,9 +109,19 @@ public class DesktopSystemTray {
         status.addActionListener(e -> displayStatus());
 
         shutdown.addActionListener(e -> {
-            Logger.logInfoMessage("Shutdown requested by System Tray");
-            System.exit(0); // Implicitly invokes shutdown using the shutdown hook
+            if(JOptionPane.showConfirmDialog (null, "Are you sure ?", "Confirm Shutdown", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                Logger.logInfoMessage("Shutdown requested by System Tray");
+                System.exit(0); // Implicitly invokes shutdown using the shutdown hook
+            }
         });
+
+        ActionListener statusUpdater = evt -> {
+            if (statusDialog == null || !statusDialog.isVisible()) {
+                return;
+            }
+            displayStatus();
+        };
+        new Timer(DELAY, statusUpdater).start();
     }
 
     private void displayStatus() {
@@ -110,40 +130,103 @@ public class DesktopSystemTray {
 
         StringBuilder generators = new StringBuilder();
         for (Generator generator : allGenerators) {
-            generators.append('\n').append(Convert.rsAccount(generator.getAccountId()));
+            generators.append(Convert.rsAccount(generator.getAccountId())).append(' ');
         }
-        StringBuilder sb = new StringBuilder();
-        String format = "%s: %s\n";
-        sb.append(String.format(format, "Application", Nxt.APPLICATION));
-        sb.append(String.format(format, "Version", Nxt.VERSION));
-        sb.append(String.format(format, "Network", (Constants.isTestnet) ? "test" : "main"));
-        sb.append(Constants.isTestnet ? String.format(format, "Working offline", Constants.isOffline) : "");
-        sb.append(String.format(format, "Wallet", API.getBrowserUri()));
-        sb.append(String.format(format, "Peer port", Peers.getDefaultPeerPort()));
-        sb.append(String.format(format, "Program folder", Paths.get(".").toAbsolutePath().getParent()));
-        sb.append(String.format(format, "User folder", Paths.get(Nxt.getUserHomeDir()).toAbsolutePath()));
+        Object optionPaneBackground = UIManager.get("OptionPane.background");
+        UIManager.put("OptionPane.background", Color.WHITE);
+        Object panelBackground = UIManager.get("Panel.background");
+        UIManager.put("Panel.background", Color.WHITE);
+        Object textFieldBackground = UIManager.get("TextField.background");
+        UIManager.put("TextField.background", Color.WHITE);
+        Container statusPanelParent = null;
+        if (statusDialog != null && statusPanel != null) {
+            statusPanelParent = statusPanel.getParent();
+            statusPanelParent.remove(statusPanel);
+        }
+        statusPanel = new JPanel();
+        statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.Y_AXIS));
+
+        addLabelRow(statusPanel, "Installation");
+        addDataRow(statusPanel, "Application", Nxt.APPLICATION);
+        addDataRow(statusPanel, "Version", Nxt.VERSION);
+        addDataRow(statusPanel, "Network", (Constants.isTestnet) ? "TestNet" : "MainNet");
+        addDataRow(statusPanel, "Working offline", "" + Constants.isOffline);
+        addDataRow(statusPanel, "Wallet", String.valueOf(API.getBrowserUri()));
+        addDataRow(statusPanel, "Peer port", String.valueOf(Peers.getDefaultPeerPort()));
+        addDataRow(statusPanel, "Program folder", String.valueOf(Paths.get(".").toAbsolutePath().getParent()));
+        addDataRow(statusPanel, "User folder", String.valueOf(Paths.get(Nxt.getUserHomeDir()).toAbsolutePath()));
+        addDataRow(statusPanel, "Database URL", Db.db == null ? "unavailable" : Db.db.getUrl());
+        addEmptyRow(statusPanel);
 
         if (lastBlock != null) {
-            sb.append("\nLast Block\n");
-            sb.append(String.format(format, "Height", lastBlock.getHeight()));
-            sb.append(String.format(format, "Timestamp", lastBlock.getTimestamp()));
-            sb.append(String.format(format, "Time", new Date(Convert.fromEpochTime(lastBlock.getTimestamp()))));
-            sb.append(String.format(format, "Seconds passed", Nxt.getEpochTime() - lastBlock.getTimestamp()));
+            addLabelRow(statusPanel, "Last Block");
+            addDataRow(statusPanel, "Height", String.valueOf(lastBlock.getHeight()));
+            addDataRow(statusPanel, "Timestamp", String.valueOf(lastBlock.getTimestamp()));
+            addDataRow(statusPanel, "Time", String.valueOf(new Date(Convert.fromEpochTime(lastBlock.getTimestamp()))));
+            addDataRow(statusPanel, "Seconds passed", String.valueOf(Nxt.getEpochTime() - lastBlock.getTimestamp()));
+            addDataRow(statusPanel, "Forging", String.valueOf(allGenerators.size() > 0));
+            if (allGenerators.size() > 0) {
+                addDataRow(statusPanel, "Forging accounts", generators.toString());
+            }
         }
 
-        sb.append("\n");
-        sb.append(String.format(format, "Forging", allGenerators.size() > 0));
-        if (allGenerators.size() > 0) {
-            sb.append(String.format(format, "Forging accounts", generators.toString()));
+        addEmptyRow(statusPanel);
+        addLabelRow(statusPanel, "Environment");
+        addDataRow(statusPanel, "Number of peers", String.valueOf(Peers.getAllPeers().size()));
+        addDataRow(statusPanel, "Available processors", String.valueOf(Runtime.getRuntime().availableProcessors()));
+        addDataRow(statusPanel, "Max memory", humanReadableByteCount(Runtime.getRuntime().maxMemory()));
+        addDataRow(statusPanel, "Total memory", humanReadableByteCount(Runtime.getRuntime().totalMemory()));
+        addDataRow(statusPanel, "Free memory", humanReadableByteCount(Runtime.getRuntime().freeMemory()));
+        addDataRow(statusPanel, "Process id", Nxt.getProcessId());
+        addEmptyRow(statusPanel);
+        addDataRow(statusPanel, "Updated", dateFormat.format(new Date()));
+        if (statusDialog == null || !statusDialog.isVisible()) {
+            JOptionPane pane = new JOptionPane(statusPanel, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, imageIcon);
+            statusDialog = pane.createDialog(wrapper, "NXT Server Status");
+            statusDialog.setVisible(true);
+            statusDialog.dispose();
+        } else {
+            if (statusPanelParent != null) {
+                statusPanelParent.add(statusPanel);
+                statusPanelParent.revalidate();
+            }
+            statusDialog.getContentPane().validate();
+            statusDialog.getContentPane().repaint();
+            EventQueue.invokeLater(statusDialog::toFront);
         }
-        sb.append("\nEnvironment\n");
-        sb.append(String.format(format, "Number of peers", Peers.getAllPeers().size()));
-        sb.append(String.format(format, "Available processors", Runtime.getRuntime().availableProcessors()));
-        sb.append(String.format(format, "Max memory", humanReadableByteCount(Runtime.getRuntime().maxMemory())));
-        sb.append(String.format(format, "Total memory", humanReadableByteCount(Runtime.getRuntime().totalMemory())));
-        sb.append(String.format(format, "Free memory", humanReadableByteCount(Runtime.getRuntime().freeMemory())));
-        sb.append(String.format(format, "Process id", Nxt.getProcessId()));
-        JOptionPane.showMessageDialog(null, sb.toString(), "NXT Server Status", JOptionPane.INFORMATION_MESSAGE, imageIcon);
+        UIManager.put("OptionPane.background", optionPaneBackground);
+        UIManager.put("Panel.background", panelBackground);
+        UIManager.put("TextField.background", textFieldBackground);
+    }
+
+    private void addDataRow(JPanel parent, String text, String value) {
+        JPanel rowPanel = new JPanel();
+        if (!"".equals(value)) {
+            rowPanel.add(Box.createRigidArea(new Dimension(20, 0)));
+        }
+        rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
+        if (!"".equals(text) && !"".equals(value)) {
+            text += ':';
+        }
+        JLabel textLabel = new JLabel(text);
+        // textLabel.setFont(textLabel.getFont().deriveFont(Font.BOLD));
+        rowPanel.add(textLabel);
+        rowPanel.add(Box.createRigidArea(new Dimension(140 - textLabel.getPreferredSize().width, 0)));
+        JTextField valueField = new JTextField(value);
+        valueField.setEditable(false);
+        valueField.setBorder(BorderFactory.createEmptyBorder());
+        rowPanel.add(valueField);
+        rowPanel.add(Box.createRigidArea(new Dimension(4, 0)));
+        parent.add(rowPanel);
+        parent.add(Box.createRigidArea(new Dimension(0, 4)));
+    }
+
+    private void addLabelRow(JPanel parent, String text) {
+        addDataRow(parent, text, "");
+    }
+
+    private void addEmptyRow(JPanel parent) {
+        addLabelRow(parent, "");
     }
 
     void setToolTip(final SystemTrayDataProvider dataProvider) {

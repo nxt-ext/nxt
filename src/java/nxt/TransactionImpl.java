@@ -460,8 +460,13 @@ final class TransactionImpl implements Transaction {
 
     @Override
     public List<Appendix.AbstractAppendix> getAppendages() {
+        return getAppendages(false);
+    }
+
+    @Override
+    public List<Appendix.AbstractAppendix> getAppendages(boolean includeExpiredPrunable) {
         for (Appendix.AbstractAppendix appendage : appendages) {
-            appendage.loadPrunable(this);
+            appendage.loadPrunable(this, includeExpiredPrunable);
         }
         return appendages;
     }

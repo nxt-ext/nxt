@@ -25,7 +25,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class TransactionalDb extends BasicDb {
 
@@ -42,6 +44,7 @@ public class TransactionalDb extends BasicDb {
 
     private final ThreadLocal<DbConnection> localConnection = new ThreadLocal<>();
     private final ThreadLocal<Map<String,Map<DbKey,Object>>> transactionCaches = new ThreadLocal<>();
+    private final ThreadLocal<Set<TransactionCallback>> transactionCallback = new ThreadLocal<>();
     private volatile long txTimes = 0;
     private volatile long txCount = 0;
     private volatile long statsTime = 0;
@@ -87,6 +90,11 @@ public class TransactionalDb extends BasicDb {
         }
         try {
             con.doCommit();
+            Set<TransactionCallback> callbacks = transactionCallback.get();
+            if (callbacks != null) {
+                callbacks.forEach(TransactionCallback::commit);
+                transactionCallback.set(null);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -103,6 +111,11 @@ public class TransactionalDb extends BasicDb {
             throw new RuntimeException(e.toString(), e);
         } finally {
             transactionCaches.get().clear();
+            Set<TransactionCallback> callbacks = transactionCallback.get();
+            if (callbacks != null) {
+                callbacks.forEach(TransactionCallback::rollback);
+                transactionCallback.set(null);
+            }
         }
     }
 
@@ -133,10 +146,19 @@ public class TransactionalDb extends BasicDb {
                 }
             }
             if (logStats)
-                Logger.logDebugMessage(String.format("Average transaction time is %.3f seconds",
+                Logger.logDebugMessage(String.format("Average database transaction time is %.3f seconds",
                                                      (double)times/1000.0/(double)count));
         }
         DbUtils.close(con);
+    }
+
+    public void registerCallback(TransactionCallback callback) {
+        Set<TransactionCallback> callbacks = transactionCallback.get();
+        if (callbacks == null) {
+            callbacks = new HashSet<>();
+            transactionCallback.set(callbacks);
+        }
+        callbacks.add(callback);
     }
 
     Map<DbKey,Object> getCache(String tableName) {
@@ -234,7 +256,7 @@ public class TransactionalDb extends BasicDb {
             boolean b = super.execute(sql);
             long elapsed = System.currentTimeMillis() - start;
             if (elapsed > stmtThreshold)
-                logThreshold(String.format("SQL statement required %.3f seconds at height %d: %s",
+                logThreshold(String.format("SQL statement required %.3f seconds at height %d:\n%s",
                                            (double)elapsed/1000.0, Nxt.getBlockchain().getHeight(), sql));
             return b;
         }
@@ -245,7 +267,7 @@ public class TransactionalDb extends BasicDb {
             ResultSet r = super.executeQuery(sql);
             long elapsed = System.currentTimeMillis() - start;
             if (elapsed > stmtThreshold)
-                logThreshold(String.format("SQL statement required %.3f seconds at height %d: %s",
+                logThreshold(String.format("SQL statement required %.3f seconds at height %d:\n%s",
                                            (double)elapsed/1000.0, Nxt.getBlockchain().getHeight(), sql));
             return r;
         }
@@ -256,7 +278,7 @@ public class TransactionalDb extends BasicDb {
             int c = super.executeUpdate(sql);
             long elapsed = System.currentTimeMillis() - start;
             if (elapsed > stmtThreshold)
-                logThreshold(String.format("SQL statement required %.3f seconds at height %d: %s",
+                logThreshold(String.format("SQL statement required %.3f seconds at height %d:\n%s",
                                            (double)elapsed/1000.0, Nxt.getBlockchain().getHeight(), sql));
             return c;
         }
@@ -273,7 +295,7 @@ public class TransactionalDb extends BasicDb {
             boolean b = super.execute();
             long elapsed = System.currentTimeMillis() - start;
             if (elapsed > stmtThreshold)
-                logThreshold(String.format("SQL statement required %.3f seconds at height %d: %s",
+                logThreshold(String.format("SQL statement required %.3f seconds at height %d:\n%s",
                                            (double)elapsed/1000.0, Nxt.getBlockchain().getHeight(), getSQL()));
             return b;
         }
@@ -284,7 +306,7 @@ public class TransactionalDb extends BasicDb {
             ResultSet r = super.executeQuery();
             long elapsed = System.currentTimeMillis() - start;
             if (elapsed > stmtThreshold)
-                logThreshold(String.format("SQL statement required %.3f seconds at height %d: %s",
+                logThreshold(String.format("SQL statement required %.3f seconds at height %d:\n%s",
                                            (double)elapsed/1000.0, Nxt.getBlockchain().getHeight(), getSQL()));
             return r;
         }
@@ -295,7 +317,7 @@ public class TransactionalDb extends BasicDb {
             int c = super.executeUpdate();
             long elapsed = System.currentTimeMillis() - start;
             if (elapsed > stmtThreshold)
-                logThreshold(String.format("SQL statement required %.3f seconds at height %d: %s",
+                logThreshold(String.format("SQL statement required %.3f seconds at height %d:\n%s",
                                            (double)elapsed/1000.0, Nxt.getBlockchain().getHeight(), getSQL()));
             return c;
         }
@@ -312,5 +334,21 @@ public class TransactionalDb extends BasicDb {
         public PreparedStatement createPreparedStatement(PreparedStatement stmt, String sql) {
             return new DbPreparedStatement(stmt, sql);
         }
+    }
+
+    /**
+     * Transaction callback interface
+     */
+    public interface TransactionCallback {
+
+        /**
+         * Transaction has been committed
+         */
+        public void commit();
+
+        /**
+         * Transaction has been rolled back
+         */
+        public void rollback();
     }
 }

@@ -32,7 +32,7 @@ public class GetCurrencyPhasedTransactions extends APIServlet.APIRequestHandler 
     static final GetCurrencyPhasedTransactions instance = new GetCurrencyPhasedTransactions();
 
     private GetCurrencyPhasedTransactions() {
-        super(new APITag[]{APITag.AE, APITag.PHASING}, "currency", "account", "withoutWhitelist", "firstIndex", "lastIndex");
+        super(new APITag[]{APITag.MS, APITag.PHASING}, "currency", "account", "withoutWhitelist", "firstIndex", "lastIndex");
     }
 
     @Override

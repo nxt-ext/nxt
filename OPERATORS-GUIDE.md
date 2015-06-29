@@ -26,8 +26,3 @@
   Check [Nxt-Kit's homepage](https://github.com/nxt-ext/nxt-kit) for more information.
 
 ----
-## How to use NRS with Docker? ##
-
-  - [to be filled by Benjamin]
-
-----

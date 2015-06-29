@@ -90,6 +90,7 @@ public final class Peers {
     static final int MAX_RESPONSE_SIZE = 1024 * 1024;
     static final boolean useWebSockets;
     static final int webSocketIdleTimeout;
+    static final boolean useProxy = System.getProperty("socksProxyHost") != null || System.getProperty("http.proxyHost") != null;
 
     private static final int DEFAULT_PEER_PORT = 7874;
     private static final int TESTNET_PEER_PORT = 6874;
@@ -100,7 +101,7 @@ public final class Peers {
     private static final boolean shareMyAddress;
     private static final int maxNumberOfInboundConnections;
     private static final int maxNumberOfOutboundConnections;
-    private static final int maxNumberOfConnectedPublicPeers;
+    public static final int maxNumberOfConnectedPublicPeers;
     private static final int maxNumberOfKnownPeers;
     private static final int minNumberOfKnownPeers;
     private static final boolean enableHallmarkProtection;
@@ -111,6 +112,10 @@ public final class Peers {
     private static final boolean savePeers;
     static final boolean ignorePeerAnnouncedAddress;
     static final boolean cjdnsOnly;
+    static final int MAX_VERSION_LENGTH = 10;
+    static final int MAX_APPLICATION_LENGTH = 20;
+    static final int MAX_PLATFORM_LENGTH = 30;
+    static final int MAX_ANNOUNCED_ADDRESS_LENGTH = 100;
 
 
     static final JSONStreamAware myPeerInfoRequest;
@@ -129,6 +134,9 @@ public final class Peers {
     static {
 
         myPlatform = Nxt.getStringProperty("nxt.myPlatform");
+        if (myPlatform.length() > MAX_PLATFORM_LENGTH) {
+            throw new RuntimeException("nxt.myPlatform length exceeds " + MAX_PLATFORM_LENGTH);
+        }
         myAddress = Convert.emptyToNull(Nxt.getStringProperty("nxt.myAddress", "").trim());
         if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
@@ -168,14 +176,19 @@ public final class Peers {
                 URI uri = new URI("http://" + myAddress);
                 String host = uri.getHost();
                 int port = uri.getPort();
+                String announcedAddress;
                 if (!Constants.isTestnet) {
                     if (port >= 0)
-                        json.put("announcedAddress", myAddress);
+                        announcedAddress = myAddress;
                     else
-                        json.put("announcedAddress", host + (myPeerServerPort != DEFAULT_PEER_PORT ? ":" + myPeerServerPort : ""));
+                        announcedAddress = host + (myPeerServerPort != DEFAULT_PEER_PORT ? ":" + myPeerServerPort : "");
                 } else {
-                    json.put("announcedAddress", host);
+                    announcedAddress = host;
                 }
+                if (announcedAddress == null || announcedAddress.length() > MAX_ANNOUNCED_ADDRESS_LENGTH) {
+                    throw new RuntimeException("Invalid announced address length: " + announcedAddress);
+                }
+                json.put("announcedAddress", announcedAddress);
             } catch (URISyntaxException e) {
                 Logger.logMessage("Your announce address is invalid: " + myAddress);
                 throw new RuntimeException(e.toString(), e);
@@ -218,7 +231,7 @@ public final class Peers {
         pullThreshold = Nxt.getIntProperty("nxt.pullThreshold");
         useWebSockets = Nxt.getBooleanProperty("nxt.useWebSockets");
         webSocketIdleTimeout = Nxt.getIntProperty("nxt.webSocketIdleTimeout");
-        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod");
+        blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod") / 1000;
         communicationLoggingMask = Nxt.getIntProperty("nxt.communicationLoggingMask");
         sendToPeersLimit = Nxt.getIntProperty("nxt.sendToPeersLimit");
         usePeersDb = Nxt.getBooleanProperty("nxt.usePeersDb") && ! Constants.isOffline;
@@ -226,6 +239,9 @@ public final class Peers {
         getMorePeers = Nxt.getBooleanProperty("nxt.getMorePeers");
         cjdnsOnly = Nxt.getBooleanProperty("nxt.cjdnsOnly");
         ignorePeerAnnouncedAddress = Nxt.getBooleanProperty("nxt.ignorePeerAnnouncedAddress");
+        if (useWebSockets && useProxy) {
+            Logger.logMessage("Using a proxy, will not create outbound websockets.");
+        }
 
         final List<Future<String>> unresolvedPeers = Collections.synchronizedList(new ArrayList<>());
 
@@ -357,7 +373,7 @@ public final class Peers {
         try {
             try {
 
-                long curTime = System.currentTimeMillis();
+                int curTime = Nxt.getEpochTime();
                 for (PeerImpl peer : peers.values()) {
                     peer.updateBlacklistedStatus(curTime);
                 }
@@ -394,7 +410,7 @@ public final class Peers {
                                     if (peer.getState() == Peer.State.CONNECTED &&
                                             enableHallmarkProtection && peer.getWeight() == 0 &&
                                             hasTooManyOutboundConnections()) {
-                                        Logger.logDebugMessage("Too many outbound connections, deactivating peer "+peer.getHost());
+                                        Logger.logDebugMessage("Too many outbound connections, deactivating peer " + peer.getHost());
                                         peer.deactivate();
                                     }
                                 }
@@ -448,7 +464,7 @@ public final class Peers {
                     }
 
                     peers.values().parallelStream().unordered()
-                            .filter(peer -> peer.getLastInboundRequest() != 0 && now - peer.getLastInboundRequest() > 1800)
+                            .filter(peer -> peer.getLastInboundRequest() != 0 && now - peer.getLastInboundRequest() > Peers.webSocketIdleTimeout/1000)
                             .forEach(peer -> {
                                 peer.setLastInboundRequest(0);
                                 notifyListeners(peer, Event.REMOVE_INBOUND);
@@ -758,7 +774,9 @@ public final class Peers {
         if (Peers.myAddress != null && Peers.myAddress.equalsIgnoreCase(announcedAddress)) {
             return null;
         }
-
+        if (announcedAddress != null && announcedAddress.length() > MAX_ANNOUNCED_ADDRESS_LENGTH) {
+            return null;
+        }
         peer = new PeerImpl(host, announcedAddress);
         if (Constants.isTestnet && peer.getPort() != TESTNET_PEER_PORT) {
             Logger.logDebugMessage("Peer " + host + " on testnet is not using port " + TESTNET_PEER_PORT + ", ignoring");

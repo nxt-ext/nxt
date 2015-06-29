@@ -26,6 +26,8 @@ final class Errors {
     final static String INVALID_ANNOUNCED_ADDRESS = "Invalid announced address";
     final static String SEQUENCE_ERROR = "Peer request received before 'getInfo' request";
     final static String MAX_INBOUND_CONNECTIONS = "Maximum number of inbound connections exceeded";
+    final static String TOO_MANY_BLOCKS_REQUESTED = "Too many blocks requested";
+    final static String DOWNLOADING = "Blockchain download in progress";
 
     private Errors() {} // never
 }

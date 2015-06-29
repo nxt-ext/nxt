@@ -57,4 +57,9 @@ public final class CalculateFullHash extends APIServlet.APIRequestHandler {
 
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

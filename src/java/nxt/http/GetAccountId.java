@@ -58,8 +58,8 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
-        return true;
+    final boolean allowRequiredBlockParameters() {
+        return false;
     }
 
 }
