@@ -24,14 +24,14 @@ public class TestShuffling extends BlockchainTest {
         tryCancel(shufflingId);
 
         // Verify that only fees were reduced
-        Assert.assertEquals(-4 * Constants.ONE_NXT, testers.get(1).getBalanceDiff());
-        Assert.assertEquals(-4 * Constants.ONE_NXT, testers.get(1).getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(2).getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(2).getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(3).getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(3).getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(4).getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, testers.get(4).getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
     }
 
     private String create() {
@@ -111,7 +111,7 @@ public class TestShuffling extends BlockchainTest {
         APICall apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase1).
-                param("recipient", testers.get(1).getStrId()).
+                param("recipient", ALICE.getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         JSONObject shufflingProcessResponse = apiCall.invoke();
@@ -121,7 +121,7 @@ public class TestShuffling extends BlockchainTest {
         apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase2).
-                param("recipient", testers.get(2).getStrId()).
+                param("recipient", BOB.getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         shufflingProcessResponse = apiCall.invoke();
@@ -131,7 +131,7 @@ public class TestShuffling extends BlockchainTest {
         apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase3).
-                param("recipient", testers.get(3).getStrId()).
+                param("recipient", CHUCK.getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         shufflingProcessResponse = apiCall.invoke();
@@ -141,7 +141,7 @@ public class TestShuffling extends BlockchainTest {
         apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
                 param("secretPhrase", secretPhrase4).
-                param("recipient", testers.get(4).getStrId()).
+                param("recipient", DAVE.getStrId()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         shufflingProcessResponse = apiCall.invoke();
