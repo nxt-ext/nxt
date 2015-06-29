@@ -38,6 +38,7 @@ public class LeaseTest extends BlockchainTest {
                 param("feeNQT", Constants.ONE_NXT).
                 build().invoke();
         Logger.logDebugMessage("leaseBalance: " + response);
+        response = new APICall.Builder("leaseBalance").
                 param("secretPhrase", CHUCK.getSecretPhrase()).
                 param("recipient", ALICE.getStrId()).
                 param("period", "3").
