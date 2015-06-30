@@ -232,7 +232,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = ("secretPhrase" in data ? "POST" : "GET");
+        var type = ("secretPhrase" in data || "adminPassword" in data ? "POST" : "GET");
         var url = NRS.server + "/nxt?requestType=" + requestType;
 
         if (type == "GET") {

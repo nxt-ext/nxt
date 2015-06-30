@@ -14,8 +14,8 @@ FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
-FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh"
-FILES="${FILES} NXT_Wallet.url"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh compact.sh compact.bat"
+FILES="${FILES} NXT_Wallet.url Dockerfile"
 
 unix2dos *.bat
 echo compile
@@ -80,6 +80,8 @@ sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
 echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
 #echo -e "sha256:\n" >> ${CHANGELOG}
 #sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
+
+echo -e "The exe and jar packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
 
 if [ "${OBFUSCATE}" == "obfuscate" ];
 then

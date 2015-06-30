@@ -34,7 +34,7 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
     static final GetPrunableMessages instance = new GetPrunableMessages();
 
     private GetPrunableMessages() {
-        super(new APITag[] {APITag.MESSAGES}, "account", "otherAccount", "secretPhrase", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MESSAGES}, "account", "otherAccount", "secretPhrase", "firstIndex", "lastIndex", "timestamp");
     }
 
     @Override
@@ -43,6 +43,7 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        final int timestamp = ParameterParser.getTimestamp(req);
         long readerAccountId = secretPhrase == null ? 0 : Account.getId(Crypto.getPublicKey(secretPhrase));
         long otherAccountId = ParameterParser.getAccountId(req, "otherAccount", false);
 
@@ -55,7 +56,11 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
 
         try {
             while (messages.hasNext()) {
-                jsonArray.add(JSONData.prunableMessage(messages.next(), readerAccountId, secretPhrase));
+                PrunableMessage prunableMessage = messages.next();
+                if (prunableMessage.getBlockTimestamp() < timestamp) {
+                    break;
+                }
+                jsonArray.add(JSONData.prunableMessage(prunableMessage, readerAccountId, secretPhrase));
             }
         } finally {
             DbUtils.close(messages);

@@ -57,7 +57,10 @@ var NRS = (function (NRS, $, undefined) {
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
         "GENESIS": "",
         "GENESIS_RS": "",
-        "EPOCH_BEGINNING": 0
+        "EPOCH_BEGINNING": 0,
+        "FORGING": "forging",
+        "NOT_FORGING": "not_forging",
+        "UNKNOWN": "unknown"
     };
 
     NRS.loadServerConstants = function () {

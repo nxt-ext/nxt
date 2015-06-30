@@ -90,4 +90,9 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

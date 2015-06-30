@@ -67,4 +67,9 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

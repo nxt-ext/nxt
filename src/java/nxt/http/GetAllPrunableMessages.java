@@ -30,13 +30,14 @@ public final class GetAllPrunableMessages extends APIServlet.APIRequestHandler {
     static final GetAllPrunableMessages instance = new GetAllPrunableMessages();
 
     private GetAllPrunableMessages() {
-        super(new APITag[] {APITag.MESSAGES}, "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.MESSAGES}, "firstIndex", "lastIndex", "timestamp");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        final int timestamp = ParameterParser.getTimestamp(req);
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
@@ -44,7 +45,11 @@ public final class GetAllPrunableMessages extends APIServlet.APIRequestHandler {
 
         try (DbIterator<PrunableMessage> messages = PrunableMessage.getAll(firstIndex, lastIndex)) {
             while (messages.hasNext()) {
-                jsonArray.add(JSONData.prunableMessage(messages.next(), 0, null));
+                PrunableMessage prunableMessage = messages.next();
+                if (prunableMessage.getBlockTimestamp() < timestamp) {
+                    break;
+                }
+                jsonArray.add(JSONData.prunableMessage(prunableMessage, 0, null));
             }
         }
         return response;

@@ -51,4 +51,9 @@ public final class HexConvert extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

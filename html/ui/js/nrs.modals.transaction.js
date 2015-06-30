@@ -516,7 +516,7 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getAsset", {
                             "asset": transaction.attachment.asset
                         }, function (asset, input) {
-                            NRS.formatAssetOrder(asset, transaction)
+                            NRS.formatAssetOrder(asset, transaction, isModalVisible)
                         });
                         break;
                     case 4:
@@ -1164,7 +1164,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.formatAssetOrder = function (asset, transaction) {
+    NRS.formatAssetOrder = function (asset, transaction, isModalVisible) {
         var data = {
             "type": (transaction.subtype == 2 ? $.t("ask_order_placement") : $.t("bid_order_placement")),
             "asset_name": asset.name,
@@ -1215,8 +1215,9 @@ var NRS = (function (NRS, $, undefined) {
         var infoTable = $("#transaction_info_table");
         infoTable.find("tbody").append(NRS.createInfoTable(data));
         infoTable.show();
-
-        $("#transaction_info_modal").modal("show");
+        if (!isModalVisible) {
+            $("#transaction_info_modal").modal("show");
+        }
         NRS.fetchingModalData = false;
     };
 

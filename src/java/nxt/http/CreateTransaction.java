@@ -246,4 +246,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    final boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

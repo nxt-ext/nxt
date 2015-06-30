@@ -19,6 +19,8 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 
+import java.util.Arrays;
+
 public final class Token {
 
     public static String generateToken(String secretPhrase, String messageString) {
@@ -99,7 +101,9 @@ public final class Token {
         byte[] data = new byte[messageBytes.length + 36];
         System.arraycopy(messageBytes, 0, data, 0, messageBytes.length);
         System.arraycopy(tokenBytes, 0, data, messageBytes.length, 36);
-        boolean isValid = Crypto.verify(signature, data, publicKey, true);
+        byte[] announcedPublicKey = Account.getPublicKey(Account.getId(publicKey));
+        boolean isValid = Crypto.verify(signature, data, publicKey, true)
+                && (announcedPublicKey == null || Arrays.equals(publicKey, announcedPublicKey));
 
         return new Token(publicKey, timestamp, isValid);
 

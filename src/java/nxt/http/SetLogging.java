@@ -151,4 +151,9 @@ public class SetLogging extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

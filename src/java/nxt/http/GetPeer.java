@@ -50,4 +50,9 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
 
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

@@ -31,7 +31,7 @@ public final class GetBlocks extends APIServlet.APIRequestHandler {
     static final GetBlocks instance = new GetBlocks();
 
     private GetBlocks() {
-        super(new APITag[] {APITag.BLOCKS}, "firstIndex", "lastIndex", "includeTransactions");
+        super(new APITag[] {APITag.BLOCKS}, "firstIndex", "lastIndex", "timestamp", "includeTransactions");
     }
 
     @Override
@@ -39,13 +39,16 @@ public final class GetBlocks extends APIServlet.APIRequestHandler {
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-
+        final int timestamp = ParameterParser.getTimestamp(req);
         boolean includeTransactions = "true".equalsIgnoreCase(req.getParameter("includeTransactions"));
 
         JSONArray blocks = new JSONArray();
         try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getBlocks(firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Block block = iterator.next();
+                if (block.getTimestamp() < timestamp) {
+                    break;
+                }
                 blocks.add(JSONData.block(block, includeTransactions));
             }
         }

@@ -34,6 +34,8 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     DbIterator<? extends Transaction> getAllUnconfirmedTransactions();
 
+    DbIterator<? extends Transaction> getAllUnconfirmedTransactions(String sort);
+
     Transaction getUnconfirmedTransaction(long transactionId);
 
     Transaction[] getAllWaitingTransactions();

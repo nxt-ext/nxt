@@ -146,7 +146,7 @@ public class TransactionalDb extends BasicDb {
                 }
             }
             if (logStats)
-                Logger.logDebugMessage(String.format("Average transaction time is %.3f seconds",
+                Logger.logDebugMessage(String.format("Average database transaction time is %.3f seconds",
                                                      (double)times/1000.0/(double)count));
         }
         DbUtils.close(con);
@@ -344,11 +344,11 @@ public class TransactionalDb extends BasicDb {
         /**
          * Transaction has been committed
          */
-        public void commit();
+        void commit();
 
         /**
          * Transaction has been rolled back
          */
-        public void rollback();
+        void rollback();
     }
 }

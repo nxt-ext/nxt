@@ -74,4 +74,10 @@ public final class Scan extends APIServlet.APIRequestHandler {
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    final boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

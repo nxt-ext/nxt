@@ -47,4 +47,9 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
 
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }
