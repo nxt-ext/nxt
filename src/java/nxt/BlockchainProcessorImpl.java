@@ -55,6 +55,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
@@ -103,6 +104,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final BlockchainImpl blockchain = BlockchainImpl.getInstance();
 
+    private final ExecutorService blockchainProcessorService = Executors.newSingleThreadExecutor();
     private final List<DerivedDbTable> derivedTables = new CopyOnWriteArrayList<>();
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
     private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
@@ -823,18 +825,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logMessage("processed block " + block.getHeight());
             }
             if (trimDerivedTables && block.getHeight() % trimFrequency == 0) {
-                doTrimDerivedTables();
+                trimDerivedTables();
             }
         }, Event.BLOCK_SCANNED);
 
         blockListeners.addListener(block -> {
-            if (trimDerivedTables && block.getHeight() % trimFrequency == 0) {
-                trimDerivedTables();
+            if (trimDerivedTables && block.getHeight() % trimFrequency == 0 && !isTrimming) {
+                blockchainProcessorService.submit(this::trimDerivedTables);
             }
             if (block.getHeight() % 5000 == 0) {
                 Logger.logMessage("received block " + block.getHeight());
                 if (!isDownloading || block.getHeight() % 50000 == 0) {
-                    Db.db.analyzeTables();
+                    blockchainProcessorService.submit(Db.db::analyzeTables);
                 }
             }
         }, Event.BLOCK_PUSHED);
@@ -891,32 +893,25 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         derivedTables.add(table);
     }
 
+    private volatile boolean isTrimming;
+
     @Override
     public void trimDerivedTables() {
-        blockchain.writeLock();
         try {
-            try {
-                Db.db.beginTransaction();
-                doTrimDerivedTables();
-                Db.db.commitTransaction();
-            } catch (Exception e) {
-                Logger.logMessage(e.toString(), e);
-                Db.db.rollbackTransaction();
-                throw e;
-            } finally {
-                Db.db.endTransaction();
+            synchronized (blockchainProcessorService) {
+                isTrimming = true;
+                lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
+                if (lastTrimHeight > 0) {
+                    for (DerivedDbTable table : derivedTables) {
+                        table.trim(lastTrimHeight);
+                    }
+                }
             }
+        } catch (Exception e) {
+            Logger.logErrorMessage(e.getMessage(), e);
+            throw e;
         } finally {
-            blockchain.writeUnlock();
-        }
-    }
-
-    private void doTrimDerivedTables() {
-        lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
-        if (lastTrimHeight > 0) {
-            for (DerivedDbTable table : derivedTables) {
-                table.trim(lastTrimHeight);
-            }
+            isTrimming = false;
         }
     }
 
@@ -1691,5 +1686,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } finally {
             blockchain.writeUnlock();
         }
+    }
+
+    void shutdown() {
+        ThreadPool.shutdownExecutor("blockchainProcessorService", blockchainProcessorService, 100);
     }
 }
