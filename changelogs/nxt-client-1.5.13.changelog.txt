@@ -1,0 +1,42 @@
+Fixed Token validation to check whether the public key matches the one
+announced in the blockchain for the same account.
+
+Added compact.sh/compact.bat scripts to compact the database, resulting in
+smaller size and possibly better performance. Those should only be run when
+the Nxt server is not running.
+
+Allow setting the admin password in the client UI settings, for those APIs
+that require it when not running locally.
+
+API improvements:
+
+getAllPrunableMessages, getAssetTransfers, getBlocks, getCurrencyTransfers,
+getPolls, getPrunableMessages now allow filtering by block timestamp.
+
+Many APIs now support requireBlock and requireLastBlock optional parameters.
+If either of those is specified, it is guaranteed that the specified block is
+present in the blockchain, or the specified last block is the current last
+block, and the blockchain state does not change, while the API request is
+being executed. An error is returned otherwise.
+
+Added getExpectedAskOrders and getExpectedBidOrders, returning asset orders
+that are expected to be executed in the next blocks, based on the current
+content of the unconfirmed transactions pool, and the phased transactions
+planned to finish in the next block, in the order in which they are expected
+to be executed. It is not guaranteed that the next block will indeed contain
+exactly those transactions and in the same order, as this is up to the block
+forger. It is also not possible to know in advance if the phased transactions
+expected to finish in the next block will be approved or rejected.
+
+getPollVotes and getPollVote now accept includeWeights parameter, default
+false, to calculate and display the weight assigned to each vote in the poll
+results.
+
+For running over tor, or other socks proxy, the socksProxyHost and
+socksProxyPort parameters can now be specified in the nxt.properties file
+instead of having to include them in the command line.
+
+More links to the wiki tutorials in the help menu.
+
+Forging indicator improvements and other UI bugfixes.
+
