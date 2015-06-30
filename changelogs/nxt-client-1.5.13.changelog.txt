@@ -5,9 +5,6 @@ Added compact.sh/compact.bat scripts to compact the database, resulting in
 smaller size and possibly better performance. Those should only be run when
 the Nxt server is not running.
 
-Allow setting the admin password in the client UI settings, for those APIs
-that require it when not running locally.
-
 API improvements:
 
 getAllPrunableMessages, getAssetTransfers, getBlocks, getCurrencyTransfers,
@@ -38,5 +35,27 @@ instead of having to include them in the command line.
 
 More links to the wiki tutorials in the help menu.
 
-Forging indicator improvements and other UI bugfixes.
+System tray status dialog now refreshes every second when visible.
+
+Client UI:
+
+The asset exchange page now displays unconfirmed orders as well as phased 
+orders that are expected to be executed in the next block.
+
+Added "Admin Password" field to the client settings. Set it to the server admin
+password to allow the client to automatically determine its forging status when 
+connected to a remote node.
+
+Peer modal dialogs now use the admin password specified in the client settings 
+as default value.
+
+Forging indicator is displayed in Gray instead of Red when the forging status
+cannot be determined by the client when connecting to a remote node without 
+specifying a correct admin password.
+
+Forging indicator tooltip, now displays further information about the forging 
+status.
+
+Transaction info dialog for asset exchange transactions, correctly follows links 
+between matching bid and ask orders.
 
