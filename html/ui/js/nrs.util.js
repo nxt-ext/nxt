@@ -776,12 +776,16 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.getAccountLink = function (object, acc) {
-        if (typeof object[acc + "RS"] == "undefined") {
-            return "/";
+    NRS.getAccountLink = function (object, accountKey) {
+        var accountRS;
+        if (typeof object[accountKey + "RS"] != "undefined") {
+            accountRS = object[accountKey + "RS"];
+        } else if (typeof object[accountKey] != "undefined") {
+            accountRS = NRS.convertNumericToRSAccountFormat(object[accountKey]);
         } else {
-            return "<a href='#' data-user='" + String(object[acc + "RS"]).escapeHTML() + "' class='show_account_modal_action user-info'>" + NRS.getAccountTitle(object, acc) + "</a>";
+            return '/';
         }
+        return "<a href='#' data-user='" + String(accountRS).escapeHTML() + "' class='show_account_modal_action user-info'>" + NRS.getAccountTitle(object, accountKey) + "</a>";
     };
 
     NRS.getAccountTitle = function (object, acc) {
