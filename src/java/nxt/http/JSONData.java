@@ -471,7 +471,10 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject vote(Vote vote){
+    interface VoteWeighter {
+        long calcWeight(long voterId);
+    }
+    static JSONObject vote(Vote vote, VoteWeighter weighter) {
         JSONObject json = new JSONObject();
         putAccount(json, "voter", vote.getVoterId());
         json.put("transaction", Long.toUnsignedString(vote.getId()));
@@ -484,6 +487,9 @@ final class JSONData {
             }
         }
         json.put("votes", votesJson);
+        if (weighter != null) {
+            json.put("weight", String.valueOf(weighter.calcWeight(vote.getVoterId())));
+        }
         return json;
     }
 

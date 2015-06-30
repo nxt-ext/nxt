@@ -132,8 +132,6 @@ public final class PhasingPoll extends AbstractPoll {
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
-            } finally {
-                clearCache();
             }
         }
     };
