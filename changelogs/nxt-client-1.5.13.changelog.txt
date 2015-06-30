@@ -56,6 +56,6 @@ specifying a correct admin password.
 Forging indicator tooltip, now displays further information about the forging 
 status.
 
-Transaction info dialog for asset exchange transactions, correctly follows links 
-between matching bid and ask orders.
+Transaction info dialog correctly follows links between matching bid and ask 
+orders and links from vote to poll.
 
