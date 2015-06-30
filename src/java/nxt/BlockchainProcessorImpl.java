@@ -830,7 +830,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }, Event.BLOCK_SCANNED);
 
         blockListeners.addListener(block -> {
-            if (trimDerivedTables && block.getHeight() % trimFrequency == 0) {
+            if (trimDerivedTables && block.getHeight() % trimFrequency == 0 && !isTrimming) {
                 blockchainProcessorService.submit(this::trimDerivedTables);
             }
             if (block.getHeight() % 5000 == 0) {
@@ -893,10 +893,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         derivedTables.add(table);
     }
 
+    private volatile boolean isTrimming;
+
     @Override
     public void trimDerivedTables() {
         try {
             synchronized (blockchainProcessorService) {
+                isTrimming = true;
                 lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
                 if (lastTrimHeight > 0) {
                     for (DerivedDbTable table : derivedTables) {
@@ -907,6 +910,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } catch (Exception e) {
             Logger.logErrorMessage(e.getMessage(), e);
             throw e;
+        } finally {
+            isTrimming = false;
         }
     }
 
