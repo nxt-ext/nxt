@@ -21,6 +21,9 @@
 var NRS = (function(NRS, $) {
 	NRS.forms.startForgingComplete = function(response, data) {
 		if ("deadline" in response) {
+            setForgingIndicatorStatus(NRS.constants.FORGING);
+			forgingIndicator.find("span").html($.t(NRS.constants.FORGING)).attr("data-i18n", "forging");
+			NRS.forgingStatus = NRS.constants.FORGING;
             NRS.isAccountForging = true;
 			$.growl($.t("success_start_forging"), {
 				type: "success"
@@ -40,6 +43,10 @@ var NRS = (function(NRS, $) {
 		}
         if (response.foundAndStopped || (response.stopped && response.stopped > 0)) {
             NRS.isAccountForging = false;
+            if (!response.forgersCount || response.forgersCount == 0) {
+                setForgingIndicatorStatus(NRS.constants.NOT_FORGING);
+                forgingIndicator.find("span").html($.t(NRS.constants.NOT_FORGING)).attr("data-i18n", "forging");
+            }
             $.growl($.t("success_stop_forging"), {
 				type: 'success'
 			});
@@ -100,6 +107,15 @@ var NRS = (function(NRS, $) {
     NRS.updateForgingTooltip = function(tooltip) {
         $("#forging_status").attr('title', tooltip).tooltip('fixTitle');
     };
+
+    function setForgingIndicatorStatus(status) {
+        var forgingIndicator = $("#forging_indicator");
+        forgingIndicator.removeClass(NRS.constants.FORGING);
+        forgingIndicator.removeClass(NRS.constants.NOT_FORGING);
+        forgingIndicator.removeClass(NRS.constants.UNKNOWN);
+        forgingIndicator.addClass(status);
+        return forgingIndicator;
+    }
 
     NRS.updateForgingStatus = function(secretPhrase) {
         var status = NRS.forgingStatus;
@@ -163,11 +179,7 @@ var NRS = (function(NRS, $) {
                 }
             }, false);
         }
-        var forgingIndicator = $("#forging_indicator");
-        forgingIndicator.removeClass(NRS.constants.FORGING);
-        forgingIndicator.removeClass(NRS.constants.NOT_FORGING);
-        forgingIndicator.removeClass(NRS.constants.UNKNOWN);
-        forgingIndicator.addClass(status);
+        var forgingIndicator = setForgingIndicatorStatus(status);
         if (status == NRS.constants.NOT_FORGING) {
             NRS.isAccountForging = false;
         }

@@ -173,6 +173,10 @@ public final class Generator implements Comparable<Generator> {
         return generators.get(secretPhrase);
     }
 
+    public static int getGeneratorCount() {
+        return generators.size();
+    }
+
     public static Collection<Generator> getAllGenerators() {
         return allGenerators;
     }

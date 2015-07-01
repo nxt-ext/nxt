@@ -1354,7 +1354,7 @@
   "transaction_time": "Transaction Time",
   "forging_tooltip": "Forging started with balance of __balance__ NXT",
   "forging_another_account_tooltip": "Forging with account  __accountRS__",
-  "forging_more_than_one_tooltip": "Currently forging with __generators__ accounts",
+  "forging_more_than_one_tooltip": "Forging with __generators__ accounts",
   "not_forging_not_started_tooltip": "Forging not started",
   "forging_unknown_tooltip": "Cannot determine forging status, please define administrator password",
   "forging_stopped_tooltip": "Forging stopped",
