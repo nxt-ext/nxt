@@ -132,14 +132,14 @@ var NRS = (function(NRS, $) {
         } else if (NRS.isLeased) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_lease");
-        } else if (NRS.settings.admin_password == "" && (!secretPhrase || !NRS.isLocalHost)) {
+        } else if (NRS.needsAdminPassword && NRS.settings.admin_password == "" && (!secretPhrase || !NRS.isLocalHost)) {
             // do not change forging status
         } else {
             var params = {};
-            if (NRS.settings.admin_password != "") {
+            if (NRS.needsAdminPassword && NRS.settings.admin_password != "") {
                 params["adminPassword"] = NRS.settings.admin_password;
             }
-            if (secretPhrase && NRS.settings.admin_password == "") {
+            if (secretPhrase && NRS.needsAdminPassword && NRS.settings.admin_password == "") {
                 params["secretPhrase"] = secretPhrase;
             }
             NRS.sendRequest("getForging", params, function (response) {
