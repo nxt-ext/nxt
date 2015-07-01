@@ -56,18 +56,18 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
         AbstractBlockchainTest.shutdown();
     }
 
-    @Before
-    public void reset() {
+    public void reset(int height) {
         debugTrace.resetLog();
-        if (blockchain.getHeight() > startHeight) {
-            blockchainProcessor.popOffTo(startHeight);
+        if (blockchain.getHeight() > height) {
+            blockchainProcessor.popOffTo(height);
             Assert.assertEquals(startHeight, blockchain.getHeight());
         }
-        Assert.assertTrue(blockchain.getHeight() <= startHeight);
+        Assert.assertTrue(blockchain.getHeight() <= height);
     }
 
     @Test
     public void fullDownloadAndRescanTest() {
+        reset(startHeight);
         download(startHeight, maxHeight);
         blockchainProcessor.scan(0, true);
         Assert.assertEquals(maxHeight, blockchain.getHeight());
@@ -78,6 +78,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
 
     @Test
     public void multipleRescanTest() {
+        reset(startHeight);
         int start = startHeight;
         int end;
         downloadTo(start);
@@ -96,6 +97,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
 
     @Test
     public void multiplePopOffTest() {
+        reset(startHeight);
         int start = startHeight;
         int end;
         downloadTo(start);
@@ -112,6 +114,7 @@ public class BlockchainProcessorTest extends AbstractBlockchainTest {
     @Test
     public void reprocessTransactionsTest() {
         int start = Constants.LAST_KNOWN_BLOCK - 2000;
+        reset(start);
         int end;
         downloadTo(start);
         while (blockchain.getLastBlock().getTimestamp() < Nxt.getEpochTime() - 7200) {
