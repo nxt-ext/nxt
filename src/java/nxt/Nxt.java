@@ -300,7 +300,6 @@ public final class Nxt {
         Users.shutdown();
         ThreadPool.shutdown();
         Peers.shutdown();
-        BlockchainProcessorImpl.getInstance().shutdown();
         Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
