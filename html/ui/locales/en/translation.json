@@ -1359,5 +1359,13 @@
   "forging_unknown_tooltip": "Cannot determine forging status, please define administrator password",
   "forging_stopped_tooltip": "Forging stopped",
   "forging_current_account_true": "current account is forging",
-  "forging_current_account_false": "current account is not forging"
+  "forging_current_account_false": "current account is not forging",
+  "dgs_welcome": "Welcome to the Marketplace",
+  "dgs_greeting_1": "Here you may find various goods and services at your disposal.",
+  "dgs_greeting_2": "In order to find what you need, you can search through them or use the tags of interest.",
+  "dgs_greeting_3": "You can further open a store to list your goods and services, receive feedback and give a discount.",
+  "dgs_greeting_4": "When using this functionality, please respect the privacy and dignity of other users.",
+  "dgs_greeting_5": "The decentralized nature of the blockchain, allows listing of any inappropriate material.",
+  "dgs_greeting_6": "Please, make sure to comply with local legislation when using the Marketplace.",
+  "accept_dgs": "Accept"
 }

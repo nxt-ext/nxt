@@ -252,6 +252,10 @@ var NRS = (function(NRS, $) {
 			$("#settings_news_initial").remove();
 		}
 
+		if (NRS.settings["marketplace"] != -1) {
+			$("#settings_marketplace_initial").remove();
+		}
+
 		if (NRS.inApp) {
 			$("#settings_console_log_div").hide();
 		}

@@ -59,3 +59,5 @@ status.
 Transaction info dialog correctly follows links between matching bid and ask 
 orders and links from vote to poll.
 
+Marketplace usage warning and a corresponding, Marketplace place enablement
+setting has been implemented.

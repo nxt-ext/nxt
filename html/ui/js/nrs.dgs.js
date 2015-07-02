@@ -286,6 +286,14 @@ var NRS = (function(NRS, $) {
 
 
 	NRS.pages.dgs_search = function(callback) {
+		if (NRS.settings.marketplace != "1") {
+			$("#dgs_disabled").show();
+			$("#dgs_top").hide();
+			$("#dgs_search_center").hide();
+			return;
+		}
+		$("#dgs_disabled").hide();
+		$("#dgs_search_center").show();
 		if (_currentSearch["page"] == "seller") {
 			NRS.dgs_search_seller();
 		} else if (_currentSearch["page"] == "fulltext") {
@@ -1063,6 +1071,12 @@ var NRS = (function(NRS, $) {
 	$("#dgs_clear_results").on("click", function(e) {
 		e.preventDefault();
 		NRS.dgs_search_main();
+	});
+
+	$("#accept_dgs_link").on("click", function(e) {
+		e.preventDefault();
+		NRS.updateSettings("marketplace", "1");
+		NRS.pages.dgs_search();
 	});
 
 	$("#user_info_modal").on("click", "a[data-goto-goods]", function(e) {
