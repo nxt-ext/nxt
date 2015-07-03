@@ -776,7 +776,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.getAccountLink = function (object, accountKey) {
+    NRS.getAccountLink = function (object, accountKey, accountRef, title) {
         var accountRS;
         if (typeof object[accountKey + "RS"] != "undefined") {
             accountRS = object[accountKey + "RS"];
@@ -785,7 +785,14 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             return '/';
         }
-        return "<a href='#' data-user='" + String(accountRS).escapeHTML() + "' class='show_account_modal_action user-info'>" + NRS.getAccountTitle(object, accountKey) + "</a>";
+        var accountTitle;
+        if (accountRef && accountRS == accountRef) {
+            accountTitle = $.t(title);
+        } else {
+            accountTitle = NRS.getAccountTitle(object, accountKey);
+        }
+        return "<a href='#' data-user='" + String(accountRS).escapeHTML() +
+            "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
     };
 
     NRS.getAccountTitle = function (object, acc) {

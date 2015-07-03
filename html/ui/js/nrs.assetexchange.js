@@ -725,10 +725,18 @@ var NRS = (function (NRS, $, undefined) {
                 if (i == 0 && !refresh) {
                     $("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
                 }
+                var statusIcon;
+                if (order.phased == true) {
+                    statusIcon = "<i class='fa fa-gavel' title='phased'></i>";
+                } else if (order.phased == false) {
+                    statusIcon = "<i class='fa fa-circle-o' title='unconfirmed'></i>";
+                } else {
+                    statusIcon = "<i class='fa fa-signal' title='confirmed'></i>";
+                }
                 var className = (order.account == NRS.account ? "your-order" : "");
                 rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(order.order).escapeHTML() + "'>" + order.height + "</a></td>" +
-                    "<td>" + NRS.getAccountLink(order, "account") + "</td>" +
+                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(order.order).escapeHTML() + "'>" + statusIcon + "</a></td>" +
+                    "<td>" + NRS.getAccountLink(order, "account", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                     "<td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
                     "<td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(order.totalNQT) +
@@ -778,21 +786,9 @@ var NRS = (function (NRS, $, undefined) {
             var orders = results[0].concat(results[1]);
             orders.sort(function (a, b) {
                 if (type == "ask") {
-                    if (a.priceNQT > b.priceNQT) {
-                        return 1;
-                    } else if (a.priceNQT < b.priceNQT) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
+                    return a.priceNQT - b.priceNQT;
                 } else {
-                    if (a.priceNQT < b.priceNQT) {
-                        return 1;
-                    } else if (a.priceNQT > b.priceNQT) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
+                    return b.priceNQT - a.priceNQT;
                 }
             });
             processOrders(orders, type, refresh);
@@ -915,15 +911,13 @@ var NRS = (function (NRS, $, undefined) {
 
     $("#asset_exchange_bid_orders_table tbody, #asset_exchange_ask_orders_table tbody").on("click", "td", function (e) {
         var $target = $(e.target);
-
-        if ($target.prop("tagName").toLowerCase() == "a") {
+        var targetClass = $target.prop("class");
+        if ($target.prop("tagName").toLowerCase() == "a" || (targetClass && targetClass.startsWith("fa"))) {
             return;
         }
 
         var type = ($target.closest("table").attr("id") == "asset_exchange_bid_orders_table" ? "sell" : "buy");
-
         var $tr = $target.closest("tr");
-
         try {
             var priceNQT = new BigInteger(String($tr.data("price")));
             var quantityQNT = new BigInteger(String($tr.data("quantity")));
@@ -957,10 +951,10 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var box = $("#" + type + "_asset_box");
-
         if (box.hasClass("collapsed-box")) {
             box.removeClass("collapsed-box");
             box.find(".box-body").slideDown();
+            $("#" + type + "_asset_box .box-header").find(".btn i.fa").removeClass("fa-plus").addClass("fa-minus");
         }
     });
 
