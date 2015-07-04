@@ -29,6 +29,8 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
+import nxt.util.UPnP;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -99,6 +101,7 @@ public final class Peers {
     private static final int myPeerServerPort;
     private static final String myHallmark;
     private static final boolean shareMyAddress;
+    private static final boolean enablePeerUPnP;
     private static final int maxNumberOfInboundConnections;
     private static final int maxNumberOfOutboundConnections;
     public static final int maxNumberOfConnectedPublicPeers;
@@ -146,6 +149,7 @@ public final class Peers {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
         shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress") && ! Constants.isOffline;
+        enablePeerUPnP = Nxt.getBooleanProperty("nxt.enablePeerUPnP");
         myHallmark = Nxt.getStringProperty("nxt.myHallmark");
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
@@ -349,6 +353,13 @@ public final class Peers {
                 peerServer.setStopAtShutdown(true);
                 ThreadPool.runBeforeStart(() -> {
                     try {
+                        if (enablePeerUPnP) {
+                            Connector[] peerConnectors = peerServer.getConnectors();
+                            for (Connector peerConnector : peerConnectors) {
+                                if (peerConnector instanceof ServerConnector)
+                                    UPnP.addPort(((ServerConnector)peerConnector).getPort());
+                            }
+                        }
                         peerServer.start();
                         Logger.logMessage("Started peer networking server at " + host + ":" + port);
                     } catch (Exception e) {
@@ -641,6 +652,13 @@ public final class Peers {
         if (Init.peerServer != null) {
             try {
                 Init.peerServer.stop();
+                if (enablePeerUPnP) {
+                    Connector[] peerConnectors = Init.peerServer.getConnectors();
+                    for (Connector peerConnector : peerConnectors) {
+                        if (peerConnector instanceof ServerConnector)
+                            UPnP.deletePort(((ServerConnector)peerConnector).getPort());
+                    }
+                }
             } catch (Exception e) {
                 Logger.logShutdownMessage("Failed to stop peer server", e);
             }
