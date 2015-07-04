@@ -18,15 +18,15 @@ being executed. An error is returned otherwise.
 
 Added getExpectedAskOrders, getExpectedBidOrders, getExpectedAssetTransfers,
 getExpectedBuyOffers, getExpectedSellOffers, getExpectedCurrencyTransfers,
-getAccountExpectedExchangeRequests. Those returning the corresponding orders,
-transfers, or offers, that are expected to be executed in the next blocks,
-based on the current content of the unconfirmed transactions pool, and the
-phased transactions planned to finish in the next block, in the order in which
-they are expected to be executed. It is not guaranteed that the next block
-will indeed contain exactly those transactions and in the same order, as this
-is up to the block forger. It is also not possible to know in advance if the
-phased transactions expected to finish in the next block will be approved or
-rejected.
+getExpectedExchangeRequests, getExpectedOrderCancellations.
+Those return the corresponding orders, transfers, or offers, that are expected
+to be executed in the next blocks, based on the current content of the
+unconfirmed transactions pool, and the phased transactions planned to finish
+in the next block, in the order in which they are expected to be executed.
+It is not guaranteed that the next block will indeed contain exactly those
+transactions and in the same order, as this is up to the block forger.
+It is also not possible to know in advance if the phased transactions expected
+to finish in the next block will be approved or rejected.
 
 getPollVotes and getPollVote now accept includeWeights parameter, default
 false, to calculate and display the weight assigned to each vote in the poll

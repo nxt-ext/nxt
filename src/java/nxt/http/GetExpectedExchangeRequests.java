@@ -19,6 +19,7 @@ package nxt.http;
 import nxt.Attachment;
 import nxt.MonetarySystem;
 import nxt.Nxt;
+import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Filter;
 import org.json.simple.JSONArray;
@@ -26,52 +27,41 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
-public final class GetExpectedBuyOffers extends APIServlet.APIRequestHandler {
+public final class GetExpectedExchangeRequests extends APIServlet.APIRequestHandler {
 
-    static final GetExpectedBuyOffers instance = new GetExpectedBuyOffers();
+    static final GetExpectedExchangeRequests instance = new GetExpectedExchangeRequests();
 
-    private GetExpectedBuyOffers() {
-        super(new APITag[] {APITag.MS}, "currency", "account", "sortByRate");
+    private GetExpectedExchangeRequests() {
+        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency");
     }
 
-    private final Comparator<Transaction> rateComparator = (o1, o2) -> {
-        Attachment.MonetarySystemPublishExchangeOffer a1 = (Attachment.MonetarySystemPublishExchangeOffer)o1.getAttachment();
-        Attachment.MonetarySystemPublishExchangeOffer a2 = (Attachment.MonetarySystemPublishExchangeOffer)o2.getAttachment();
-        return Long.compare(a2.getBuyRateNQT(), a1.getBuyRateNQT());
-    };
-
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
         long accountId = ParameterParser.getAccountId(req, "account", false);
-        boolean sortByRate = "true".equalsIgnoreCase(req.getParameter("sortByRate"));
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
 
         Filter<Transaction> filter = transaction -> {
-            if (transaction.getType() != MonetarySystem.PUBLISH_EXCHANGE_OFFER) {
+            if (transaction.getType() != MonetarySystem.EXCHANGE_BUY && transaction.getType() != MonetarySystem.EXCHANGE_SELL) {
                 return false;
             }
             if (accountId != 0 && transaction.getSenderId() != accountId) {
                 return false;
             }
-            Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer)transaction.getAttachment();
+            Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
             return currencyId == 0 || attachment.getCurrencyId() == currencyId;
         };
 
         List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
-        if (sortByRate) {
-            Collections.sort(transactions, rateComparator);
-        }
 
+        JSONArray exchangeRequests = new JSONArray();
+        transactions.forEach(transaction -> exchangeRequests.add(JSONData.expectedExchangeRequest(transaction)));
         JSONObject response = new JSONObject();
-        JSONArray offerData = new JSONArray();
-        transactions.forEach(transaction -> offerData.add(JSONData.expectedBuyOffer(transaction)));
-        response.put("offers", offerData);
+        response.put("exchangeRequests", exchangeRequests);
         return response;
+
     }
 
 }

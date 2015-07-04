@@ -64,8 +64,4 @@ public final class GetExpectedAssetTransfers extends APIServlet.APIRequestHandle
         return response;
     }
 
-    @Override
-    boolean startDbTransaction() {
-        return true;
-    }
 }

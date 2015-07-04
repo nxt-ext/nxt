@@ -16,13 +16,10 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Attachment;
-import nxt.Currency;
-import nxt.MonetarySystem;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
+import nxt.TransactionType;
 import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -31,40 +28,24 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-public final class GetAccountExpectedExchangeRequests extends APIServlet.APIRequestHandler {
+public final class GetExpectedOrderCancellations extends APIServlet.APIRequestHandler {
 
-    static final GetAccountExpectedExchangeRequests instance = new GetAccountExpectedExchangeRequests();
+    static final GetExpectedOrderCancellations instance = new GetExpectedOrderCancellations();
 
-    private GetAccountExpectedExchangeRequests() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency");
+    private GetExpectedOrderCancellations() {
+        super(new APITag[] {APITag.AE});
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-
-        Account account = ParameterParser.getAccount(req);
-        Currency currency = ParameterParser.getCurrency(req);
-
-        Filter<Transaction> filter = transaction -> {
-            if (transaction.getType() != MonetarySystem.EXCHANGE_BUY && transaction.getType() != MonetarySystem.EXCHANGE_SELL) {
-                return false;
-            }
-            if (transaction.getSenderId() != account.getId()) {
-                return false;
-            }
-            Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
-            return attachment.getCurrencyId() == currency.getId();
-        };
+        Filter<Transaction> filter = transaction -> transaction.getType() == TransactionType.ColoredCoins.ASK_ORDER_CANCELLATION
+                || transaction.getType() == TransactionType.ColoredCoins.BID_ORDER_CANCELLATION;
 
         List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
-
-        JSONArray exchangeRequests = new JSONArray();
-        transactions.forEach(transaction -> exchangeRequests.add(JSONData.expectedExchangeRequest(transaction)));
+        JSONArray cancellations = new JSONArray();
+        transactions.forEach(transaction -> cancellations.add(JSONData.expectedOrderCancellation(transaction)));
         JSONObject response = new JSONObject();
-        response.put("exchangeRequests", exchangeRequests);
+        response.put("orderCancellations", cancellations);
         return response;
-
-
     }
-
 }

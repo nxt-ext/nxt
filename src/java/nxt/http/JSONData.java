@@ -251,6 +251,15 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject expectedOrderCancellation(Transaction transaction) {
+        JSONObject json = new JSONObject();
+        Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation)transaction.getAttachment();
+        json.put("order", Long.toUnsignedString(attachment.getOrderId()));
+        putAccount(json, "account", transaction.getSenderId());
+        putExpectedTransaction(json, transaction);
+        return json;
+    }
+
     static JSONObject offer(CurrencyExchangeOffer offer) {
         JSONObject json = new JSONObject();
         json.put("offer", Long.toUnsignedString(offer.getId()));
