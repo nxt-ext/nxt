@@ -16,14 +16,22 @@ present in the blockchain, or the specified last block is the current last
 block, and the blockchain state does not change, while the API request is
 being executed. An error is returned otherwise.
 
-Added getExpectedAskOrders and getExpectedBidOrders, returning asset orders
-that are expected to be executed in the next blocks, based on the current
-content of the unconfirmed transactions pool, and the phased transactions
-planned to finish in the next block, in the order in which they are expected
-to be executed. It is not guaranteed that the next block will indeed contain
-exactly those transactions and in the same order, as this is up to the block
-forger. It is also not possible to know in advance if the phased transactions
-expected to finish in the next block will be approved or rejected.
+Added getExpectedAskOrders, getExpectedBidOrders, getExpectedAssetTransfers,
+getExpectedBuyOffers, getExpectedSellOffers, getExpectedCurrencyTransfers,
+getExpectedExchangeRequests, getExpectedOrderCancellations.
+Those return the corresponding orders, transfers, or offers, that are expected
+to be executed in the next blocks, based on the current content of the
+unconfirmed transactions pool, and the phased transactions planned to finish
+in the next block, in the order in which they are expected to be executed.
+It is not guaranteed that the next block will indeed contain exactly those
+transactions and in the same order, as this is up to the block forger.
+It is also not possible to know in advance if the phased transactions expected
+to finish in the next block will be approved or rejected.
+
+getAccountExchangeRequests now excludes the phased exchange requests that have
+not yet finished, or have not been approved, and the timestamp field now
+contains the block timestamp of the block in which the exchange request was
+executed, rather than the transaction timestamp.
 
 getPollVotes and getPollVote now accept includeWeights parameter, default
 false, to calculate and display the weight assigned to each vote in the poll
@@ -61,3 +69,5 @@ orders and links from vote to poll.
 
 Marketplace usage warning and a corresponding, Marketplace place enablement
 setting has been implemented.
+
+This release will perform a rescan on first start.
