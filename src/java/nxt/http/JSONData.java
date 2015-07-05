@@ -711,6 +711,7 @@ final class JSONData {
         json.put("timestamp", transaction.getTimestamp());
         json.put("units", String.valueOf(attachment.getUnits()));
         json.put("rateNQT", String.valueOf(attachment.getRateNQT()));
+        json.put("height", transaction.getHeight());
         if (includeCurrencyInfo) {
             putCurrencyInfo(json, attachment.getCurrencyId());
         }
