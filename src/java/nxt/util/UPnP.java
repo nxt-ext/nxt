@@ -92,6 +92,28 @@ public class UPnP {
     }
 
     /**
+     * Return the local address
+     *
+     * @return                      Local address or null if the address is not available
+     */
+    public static synchronized InetAddress getLocalAddress() {
+        if (!initDone)
+            init();
+        return localAddress;
+    }
+
+    /**
+     * Return the external address
+     *
+     * @return                      External address or null if the address is not available
+     */
+    public static synchronized InetAddress getExternalAddress() {
+        if (!initDone)
+            init();
+        return externalAddress;
+    }
+
+    /**
      * Initialize the UPnP support
      */
     private static void init() {
