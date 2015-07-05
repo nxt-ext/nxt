@@ -1503,7 +1503,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             TransactionProcessorImpl.getInstance().processWaitingTransactions();
             TransactionImpl transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
-            TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(transaction);
+            blockchain.writeLock();
+            try {
+                TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(transaction);
+            } finally {
+                blockchain.writeUnlock();
+            }
             throw e;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
