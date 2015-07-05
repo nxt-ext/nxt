@@ -20,6 +20,8 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
+import nxt.util.UPnP;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -65,6 +67,7 @@ public final class API {
     static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
     static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
+    static final boolean enableAPIUPnP = Nxt.getBooleanProperty("nxt.enableAPIUPnP");
 
     private static final Server apiServer;
     private static URI browserUri;
@@ -199,6 +202,13 @@ public final class API {
 
             ThreadPool.runBeforeStart(() -> {
                 try {
+                    if (enableAPIUPnP) {
+                        Connector[] apiConnectors = apiServer.getConnectors();
+                        for (Connector apiConnector : apiConnectors) {
+                            if (apiConnector instanceof ServerConnector)
+                                UPnP.addPort(((ServerConnector)apiConnector).getPort());
+                        }
+                    }
                     apiServer.start();
                     Logger.logMessage("Started API server at " + host + ":" + port + (enableSSL && port != sslPort ? ", " + host + ":" + sslPort : ""));
                 } catch (Exception e) {
@@ -222,6 +232,13 @@ public final class API {
         if (apiServer != null) {
             try {
                 apiServer.stop();
+                if (enableAPIUPnP) {
+                    Connector[] apiConnectors = apiServer.getConnectors();
+                    for (Connector apiConnector : apiConnectors) {
+                        if (apiConnector instanceof ServerConnector)
+                            UPnP.deletePort(((ServerConnector)apiConnector).getPort());
+                    }
+                }
             } catch (Exception e) {
                 Logger.logShutdownMessage("Failed to stop API server", e);
             }
