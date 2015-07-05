@@ -775,7 +775,11 @@ var NRS = (function (NRS, $, undefined) {
         ],
         // invoked when both the requests above has completed
         // the results array contains both order lists
-        function(err, results){
+        function(err, results) {
+            if (err) {
+                NRS.logConsole(err);
+                return;
+            }
             var orders = results[0].concat(results[1]);
             orders.sort(function (a, b) {
                 if (type == "ask") {

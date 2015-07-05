@@ -82,66 +82,76 @@ var NRS = (function (NRS, $, undefined) {
         $(".currency_code").html(String(currencyCode).escapeHTML());
 
         var currencyId = 0;
-        NRS.sendRequest("getCurrency+", {
-            "code": currencyCode
-        }, function (response) {
-            if (response && !response.errorDescription) {
-                $("#MSnoCode").hide();
-                $("#MScode").show();
-                $("#currency_account").html(String(response.accountRS).escapeHTML());
-                currencyId = response.currency;
-                $("#currency_id").html(String(currencyId).escapeHTML());
-                $("#currency_name").html(String(response.name).escapeHTML());
-                $("#currency_code").html(String(response.code).escapeHTML());
-                $("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
-                $("#currency_max_supply").html(NRS.convertToQNTf(response.maxSupply, response.decimals).escapeHTML());
-                $("#currency_decimals").html(String(response.decimals).escapeHTML());
-                $("#currency_description").html(String(response.description).autoLink());
-                var buyCurrencyButton = $("#buy_currency_button");
-                buyCurrencyButton.data("currency", currencyId);
-                buyCurrencyButton.data("decimals", response.decimals);
-                var sellCurrencyButton = $("#sell_currency_button");
-                sellCurrencyButton.data("currency", currencyId);
-                sellCurrencyButton.data("decimals", response.decimals);
-                if (!refresh) {
-                    var msLinksCallout = $("#ms_links_callout");
-                    msLinksCallout.html("");
-                    msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("transfer") + "</a>");
-                    msLinksCallout.append(" | ");
-                    msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("offer") + "</a>");
-                }
-            } else {
-                $("#MSnoCode").show();
-                $("#MScode").hide();
-                $.growl(response.errorDescription, {
-                    "type": "danger"
+        async.waterfall([
+            function(callback) {
+                NRS.sendRequest("getCurrency+", {
+                    "code": currencyCode
+                }, function (response) {
+                    if (response && !response.errorDescription) {
+                        $("#MSnoCode").hide();
+                        $("#MScode").show();
+                        $("#currency_account").html(String(response.accountRS).escapeHTML());
+                        currencyId = response.currency;
+                        $("#currency_id").html(String(currencyId).escapeHTML());
+                        $("#currency_name").html(String(response.name).escapeHTML());
+                        $("#currency_code").html(String(response.code).escapeHTML());
+                        $("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
+                        $("#currency_max_supply").html(NRS.convertToQNTf(response.maxSupply, response.decimals).escapeHTML());
+                        $("#currency_decimals").html(String(response.decimals).escapeHTML());
+                        $("#currency_description").html(String(response.description).autoLink());
+                        var buyCurrencyButton = $("#buy_currency_button");
+                        buyCurrencyButton.data("currency", currencyId);
+                        buyCurrencyButton.data("decimals", response.decimals);
+                        var sellCurrencyButton = $("#sell_currency_button");
+                        sellCurrencyButton.data("currency", currencyId);
+                        sellCurrencyButton.data("decimals", response.decimals);
+                        if (!refresh) {
+                            var msLinksCallout = $("#ms_links_callout");
+                            msLinksCallout.html("");
+                            msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("transfer") + "</a>");
+                            msLinksCallout.append(" | ");
+                            msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("offer") + "</a>");
+                        }
+                    } else {
+                        $("#MSnoCode").show();
+                        $("#MScode").hide();
+                        $.growl(response.errorDescription, {
+                            "type": "danger"
+                        });
+                    }
+                    callback(null);
                 });
-            }
-        }, false);
 
-        NRS.sendRequest("getAccountCurrencies+", {
-            "account": NRS.accountRS,
-            "currency": currencyId
-        }, function (response) {
-            if (response.unconfirmedUnits) {
-                $("#your_currency_balance").html(NRS.formatQuantity(response.unconfirmedUnits, response.decimals));
-            } else {
-                $("#your_currency_balance").html(0);
+            },
+            function(callback) {
+                NRS.sendRequest("getAccountCurrencies+", {
+                    "account": NRS.accountRS,
+                    "currency": currencyId
+                }, function (response) {
+                    if (response.unconfirmedUnits) {
+                        $("#your_currency_balance").html(NRS.formatQuantity(response.unconfirmedUnits, response.decimals));
+                    } else {
+                        $("#your_currency_balance").html(0);
+                    }
+                    callback(null);
+                });
+            },
+            function(callback) {
+                NRS.loadCurrencyOffers("buy", currencyId, refresh);
+                NRS.loadCurrencyOffers("sell", currencyId, refresh);
+                NRS.getExchangeRequests(currencyId, refresh);
+                NRS.getExchangeHistory(currencyId, refresh);
+                if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
+                    $("#ms_your_nxt_balance").html("0");
+                    $("#buy_automatic_price").addClass("zero").removeClass("nonzero");
+                } else {
+                    $("#ms_your_nxt_balance").html(NRS.formatAmount(NRS.accountInfo.unconfirmedBalanceNQT));
+                    $("#buy_automatic_price").addClass("nonzero").removeClass("zero");
+                }
+                NRS.pageLoaded();
+                callback(null);
             }
-        });
-
-        NRS.loadCurrencyOffers("buy", currencyId, refresh);
-        NRS.loadCurrencyOffers("sell", currencyId, refresh);
-        NRS.getExchangeRequests(currencyId, refresh);
-        NRS.getExchangeHistory(currencyId, refresh);
-        if (NRS.accountInfo.unconfirmedBalanceNQT == "0") {
-            $("#ms_your_nxt_balance").html("0");
-            $("#buy_automatic_price").addClass("zero").removeClass("nonzero");
-        } else {
-            $("#ms_your_nxt_balance").html(NRS.formatAmount(NRS.accountInfo.unconfirmedBalanceNQT));
-            $("#buy_automatic_price").addClass("nonzero").removeClass("zero");
-        }
-        NRS.pageLoaded();
+        ], function (err, result) {});
     });
 
     /* Search on Currencies Page */
@@ -285,7 +295,11 @@ var NRS = (function (NRS, $, undefined) {
         ],
         // invoked when both requests above has completed
         // the results array contains both offer lists
-        function(err, results){
+        function(err, results) {
+            if (err) {
+                NRS.logConsole(err);
+                return;
+            }
             var offers = results[0].concat(results[1]);
             offers.sort(function (a, b) {
                 if (type == "sell") {
@@ -509,7 +523,11 @@ var NRS = (function (NRS, $, undefined) {
         ],
         // invoked when both the requests above has completed
         // the results array contains both requests lists
-        function(err, results){
+        function(err, results) {
+            if (err) {
+                NRS.logConsole(err);
+                return;
+            }
             var exchangeRequests = results[0].concat(results[1]);
             exchangeRequests.sort(function (a, b) {
                 return b.height - a.height;
