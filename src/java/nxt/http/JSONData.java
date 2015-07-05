@@ -31,7 +31,9 @@ import nxt.CurrencyTransfer;
 import nxt.CurrencyType;
 import nxt.DigitalGoodsStore;
 import nxt.Exchange;
+import nxt.ExchangeRequest;
 import nxt.Generator;
+import nxt.MonetarySystem;
 import nxt.Nxt;
 import nxt.Order;
 import nxt.PhasingPoll;
@@ -703,23 +705,30 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject exchangeRequest(Transaction transaction, boolean includeCurrencyInfo) {
+    static JSONObject exchangeRequest(ExchangeRequest exchangeRequest, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
-        json.put("transaction", transaction.getStringId());
-        json.put("subtype", transaction.getType().getSubtype());
-        Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange) transaction.getAttachment();
-        json.put("timestamp", transaction.getTimestamp());
-        json.put("units", String.valueOf(attachment.getUnits()));
-        json.put("rateNQT", String.valueOf(attachment.getRateNQT()));
-        json.put("height", transaction.getHeight());
+        json.put("transaction", Long.toUnsignedString(exchangeRequest.getId()));
+        json.put("subtype", exchangeRequest.isBuy() ? MonetarySystem.EXCHANGE_BUY.getSubtype() : MonetarySystem.EXCHANGE_SELL.getSubtype());
+        json.put("timestamp", exchangeRequest.getTimestamp());
+        json.put("units", String.valueOf(exchangeRequest.getUnits()));
+        json.put("rateNQT", String.valueOf(exchangeRequest.getRate()));
+        json.put("height", exchangeRequest.getHeight());
         if (includeCurrencyInfo) {
-            putCurrencyInfo(json, attachment.getCurrencyId());
+            putCurrencyInfo(json, exchangeRequest.getCurrencyId());
         }
         return json;
     }
 
-    static JSONObject expectedExchangeRequest(Transaction transaction) {
-        JSONObject json = exchangeRequest(transaction, true);
+    static JSONObject expectedExchangeRequest(Transaction transaction, boolean includeCurrencyInfo) {
+        JSONObject json = new JSONObject();
+        json.put("transaction", transaction.getStringId());
+        json.put("subtype", transaction.getType().getSubtype());
+        Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
+        json.put("units", String.valueOf(attachment.getUnits()));
+        json.put("rateNQT", String.valueOf(attachment.getRateNQT()));
+        if (includeCurrencyInfo) {
+            putCurrencyInfo(json, attachment.getCurrencyId());
+        }
         putExpectedTransaction(json, transaction);
         return json;
     }

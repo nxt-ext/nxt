@@ -28,6 +28,11 @@ transactions and in the same order, as this is up to the block forger.
 It is also not possible to know in advance if the phased transactions expected
 to finish in the next block will be approved or rejected.
 
+getAccountExchangeRequests now excludes the phased exchange requests that have
+not yet finished, or have not been approved, and the timestamp field now
+contains the block timestamp of the block in which the exchange request was
+executed, rather than the transaction timestamp.
+
 getPollVotes and getPollVote now accept includeWeights parameter, default
 false, to calculate and display the weight assigned to each vote in the poll
 results.
@@ -64,3 +69,5 @@ orders and links from vote to poll.
 
 Marketplace usage warning and a corresponding, Marketplace place enablement
 setting has been implemented.
+
+This release will perform a rescan on first start.

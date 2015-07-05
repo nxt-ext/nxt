@@ -34,7 +34,7 @@ public final class GetExpectedExchangeRequests extends APIServlet.APIRequestHand
     static final GetExpectedExchangeRequests instance = new GetExpectedExchangeRequests();
 
     private GetExpectedExchangeRequests() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency", "includeCurrencyInfo");
     }
 
     @Override
@@ -42,6 +42,7 @@ public final class GetExpectedExchangeRequests extends APIServlet.APIRequestHand
 
         long accountId = ParameterParser.getAccountId(req, "account", false);
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
 
         Filter<Transaction> filter = transaction -> {
             if (transaction.getType() != MonetarySystem.EXCHANGE_BUY && transaction.getType() != MonetarySystem.EXCHANGE_SELL) {
@@ -57,7 +58,7 @@ public final class GetExpectedExchangeRequests extends APIServlet.APIRequestHand
         List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
 
         JSONArray exchangeRequests = new JSONArray();
-        transactions.forEach(transaction -> exchangeRequests.add(JSONData.expectedExchangeRequest(transaction)));
+        transactions.forEach(transaction -> exchangeRequests.add(JSONData.expectedExchangeRequest(transaction, includeCurrencyInfo)));
         JSONObject response = new JSONObject();
         response.put("exchangeRequests", exchangeRequests);
         return response;
