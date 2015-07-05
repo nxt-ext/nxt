@@ -725,14 +725,7 @@ var NRS = (function (NRS, $, undefined) {
                 if (i == 0 && !refresh) {
                     $("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
                 }
-                var statusIcon;
-                if (order.phased == true) {
-                    statusIcon = "<i class='fa fa-gavel' title='phased'></i>";
-                } else if (order.phased == false) {
-                    statusIcon = "<i class='fa fa-circle-o' title='unconfirmed'></i>";
-                } else {
-                    statusIcon = "<i class='fa fa-signal' title='confirmed'></i>";
-                }
+                var statusIcon = NRS.getTransactionStatusIcon(order);
                 var className = (order.account == NRS.account ? "your-order" : "");
                 rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
                     "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(order.order).escapeHTML() + "'>" + statusIcon + "</a></td>" +
@@ -782,7 +775,11 @@ var NRS = (function (NRS, $, undefined) {
         ],
         // invoked when both the requests above has completed
         // the results array contains both order lists
-        function(err, results){
+        function(err, results) {
+            if (err) {
+                NRS.logConsole(err);
+                return;
+            }
             var orders = results[0].concat(results[1]);
             orders.sort(function (a, b) {
                 if (type == "ask") {

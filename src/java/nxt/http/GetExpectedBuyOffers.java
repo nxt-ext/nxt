@@ -17,10 +17,9 @@
 package nxt.http;
 
 import nxt.Attachment;
+import nxt.MonetarySystem;
 import nxt.Nxt;
-import nxt.NxtException;
 import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -31,43 +30,48 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public final class GetExpectedAskOrders extends APIServlet.APIRequestHandler {
+public final class GetExpectedBuyOffers extends APIServlet.APIRequestHandler {
 
-    static final GetExpectedAskOrders instance = new GetExpectedAskOrders();
+    static final GetExpectedBuyOffers instance = new GetExpectedBuyOffers();
 
-    private GetExpectedAskOrders() {
-        super(new APITag[] {APITag.AE}, "asset", "sortByPrice");
+    private GetExpectedBuyOffers() {
+        super(new APITag[] {APITag.MS}, "currency", "account", "sortByRate");
     }
 
-    private final Comparator<Transaction> priceComparator = (o1, o2) -> {
-        Attachment.ColoredCoinsOrderPlacement a1 = (Attachment.ColoredCoinsOrderPlacement)o1.getAttachment();
-        Attachment.ColoredCoinsOrderPlacement a2 = (Attachment.ColoredCoinsOrderPlacement)o2.getAttachment();
-        return Long.compare(a1.getPriceNQT(), a2.getPriceNQT());
+    private final Comparator<Transaction> rateComparator = (o1, o2) -> {
+        Attachment.MonetarySystemPublishExchangeOffer a1 = (Attachment.MonetarySystemPublishExchangeOffer)o1.getAttachment();
+        Attachment.MonetarySystemPublishExchangeOffer a2 = (Attachment.MonetarySystemPublishExchangeOffer)o2.getAttachment();
+        return Long.compare(a2.getBuyRateNQT(), a1.getBuyRateNQT());
     };
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        long assetId = ParameterParser.getUnsignedLong(req, "asset", false);
-        boolean sortByPrice = "true".equalsIgnoreCase(req.getParameter("sortByPrice"));
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
+        long accountId = ParameterParser.getAccountId(req, "account", false);
+        boolean sortByRate = "true".equalsIgnoreCase(req.getParameter("sortByRate"));
+
         Filter<Transaction> filter = transaction -> {
-            if (transaction.getType() != TransactionType.ColoredCoins.ASK_ORDER_PLACEMENT) {
+            if (transaction.getType() != MonetarySystem.PUBLISH_EXCHANGE_OFFER) {
                 return false;
             }
-            Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
-            return assetId == 0 || attachment.getAssetId() == assetId;
+            if (accountId != 0 && transaction.getSenderId() != accountId) {
+                return false;
+            }
+            Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer)transaction.getAttachment();
+            return currencyId == 0 || attachment.getCurrencyId() == currencyId;
         };
 
         List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
-        if (sortByPrice) {
-            Collections.sort(transactions, priceComparator);
+        if (sortByRate) {
+            Collections.sort(transactions, rateComparator);
         }
-        JSONArray orders = new JSONArray();
-        transactions.forEach(transaction -> orders.add(JSONData.expectedAskOrder(transaction)));
-        JSONObject response = new JSONObject();
-        response.put("askOrders", orders);
-        return response;
 
+        JSONObject response = new JSONObject();
+        JSONArray offerData = new JSONArray();
+        transactions.forEach(transaction -> offerData.add(JSONData.expectedBuyOffer(transaction)));
+        response.put("offers", offerData);
+        return response;
     }
 
 }
