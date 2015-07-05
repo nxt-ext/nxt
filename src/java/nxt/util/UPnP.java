@@ -122,6 +122,7 @@ public class UPnP {
         // Discover the gateway devices on the local network
         //
         try {
+            Logger.logInfoMessage("Looking for UPnP gateway device...");
             GatewayDiscover discover = new GatewayDiscover();
             Map<InetAddress, GatewayDevice> gatewayMap = discover.discover();
             if (gatewayMap == null || gatewayMap.isEmpty()) {
@@ -136,7 +137,7 @@ public class UPnP {
                     localAddress = gateway.getLocalAddress();
                     externalAddress = InetAddress.getByName(gateway.getExternalIPAddress());
                     Logger.logDebugMessage("Using UPnP gateway device on " + localAddress.getHostAddress());
-                    Logger.logDebugMessage("External IP address is " + externalAddress.getHostAddress());
+                    Logger.logInfoMessage("External IP address is " + externalAddress.getHostAddress());
                 }
             }
         } catch (Exception exc) {
