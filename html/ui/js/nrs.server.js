@@ -1249,7 +1249,7 @@ var NRS = (function (NRS, $, undefined) {
                 return false;
             }
             pos += 4;
-            if (String(byteArray[pos]) !== data.phasingVotingModel) {
+            if (byteArray[pos] != (parseInt(data.phasingVotingModel) & 0xFF)) {
                 return false;
             }
             pos++;
