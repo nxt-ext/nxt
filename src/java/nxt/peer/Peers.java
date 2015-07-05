@@ -44,12 +44,16 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -144,6 +148,47 @@ public final class Peers {
         if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
         }
+        String myHost = null;
+        int myPort = -1;
+        if (myAddress != null) {
+            try {
+                URI uri = new URI("http://" + myAddress);
+                myHost = uri.getHost();
+                myPort = (uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort());
+                InetAddress[] myAddrs = InetAddress.getAllByName(myHost);
+                boolean addrValid = false;
+                Enumeration<NetworkInterface> intfs = NetworkInterface.getNetworkInterfaces();
+                chkAddr: while (intfs.hasMoreElements()) {
+                    NetworkInterface intf = intfs.nextElement();
+                    List<InterfaceAddress> intfAddrs = intf.getInterfaceAddresses();
+                    for (InterfaceAddress intfAddr: intfAddrs) {
+                        InetAddress extAddr = intfAddr.getAddress();
+                        for (InetAddress myAddr : myAddrs) {
+                            if (extAddr.equals(myAddr)) {
+                                addrValid = true;
+                                break chkAddr;
+                            }
+                        }
+                    }
+                }
+                if (!addrValid) {
+                    InetAddress extAddr = UPnP.getExternalAddress();
+                    for (InetAddress myAddr : myAddrs) {
+                        if (extAddr.equals(myAddr)) {
+                            addrValid = true;
+                            break;
+                        }
+                    }
+                }
+                if (!addrValid) {
+                    Logger.logWarningMessage("Your announced address does not match your external address");
+                }
+            } catch (SocketException e) {
+                Logger.logErrorMessage("Unable to enumerate the network interfaces :" + e.toString());
+            } catch (URISyntaxException | UnknownHostException e) {
+                Logger.logWarningMessage("Your announced address is not valid: " + e.toString());
+            }
+        }
         myPeerServerPort = Nxt.getIntProperty("nxt.peerServerPort");
         if (myPeerServerPort == TESTNET_PEER_PORT && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
@@ -155,21 +200,18 @@ public final class Peers {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
                 if (!hallmark.isValid()) {
-                    throw new RuntimeException();
+                    throw new RuntimeException("Hallmark is not valid");
                 }
                 if (myAddress != null) {
-                    URI uri = new URI("http://" + myAddress);
-                    String host = uri.getHost();
-                    if (!hallmark.getHost().equals(host)) {
+                    if (!hallmark.getHost().equals(myHost)) {
                         throw new RuntimeException("Invalid hallmark host");
                     }
-                    int myPort = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
                     if (myPort != hallmark.getPort()) {
                         throw new RuntimeException("Invalid hallmark port");
                     }
                 }
-            } catch (RuntimeException | URISyntaxException e) {
-                Logger.logMessage("Your hallmark is invalid: " + Peers.myHallmark + " for your address: " + myAddress);
+            } catch (RuntimeException e) {
+                Logger.logErrorMessage("Your hallmark is invalid: " + Peers.myHallmark + " for your address: " + myAddress);
                 throw new RuntimeException(e.toString(), e);
             }
         }
