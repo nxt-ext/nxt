@@ -1627,11 +1627,11 @@ var NRS = (function (NRS, $, undefined) {
     NRS.getTransactionStatusIcon = function (phasedEntity) {
         var statusIcon;
         if (phasedEntity.phased == true) {
-            statusIcon = "<i class='fa fa-gavel' title='phased'></i>";
+            statusIcon = "<i class='fa fa-gavel' title='" + $.t("phased") + "'></i>";
         } else if (phasedEntity.phased == false) {
-            statusIcon = "<i class='fa fa-circle-o' title='unconfirmed'></i>";
+            statusIcon = "<i class='fa fa-circle-o' title='" + $.t("unconfirmed") + "'></i>";
         } else {
-            statusIcon = "<i class='fa fa-circle' title='confirmed'></i>";
+            statusIcon = "<i class='fa fa-circle' title='" + $.t("confirmed") + "'></i>";
         }
         return statusIcon;
     };
