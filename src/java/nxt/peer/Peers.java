@@ -173,10 +173,12 @@ public final class Peers {
                 }
                 if (!addrValid) {
                     InetAddress extAddr = UPnP.getExternalAddress();
-                    for (InetAddress myAddr : myAddrs) {
-                        if (extAddr.equals(myAddr)) {
-                            addrValid = true;
-                            break;
+                    if (extAddr != null) {
+                        for (InetAddress myAddr : myAddrs) {
+                            if (extAddr.equals(myAddr)) {
+                                addrValid = true;
+                                break;
+                            }
                         }
                     }
                 }
