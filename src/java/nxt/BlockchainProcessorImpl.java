@@ -1576,7 +1576,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
             try (Connection con = Db.db.getConnection();
-                 PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC");
+                 PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block " + (height > 0 ? "WHERE height >= ? " : "") + "ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
                 if (height > blockchain.getHeight() + 1) {
@@ -1614,7 +1614,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }).start();
                     return;
                 }
-                pstmtSelect.setInt(1, height);
+                if (height > 0) {
+                    pstmtSelect.setInt(1, height);
+                }
                 try (ResultSet rs = pstmtSelect.executeQuery()) {
                     while (rs.next()) {
                         try {
