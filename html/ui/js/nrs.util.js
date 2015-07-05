@@ -1624,5 +1624,17 @@ var NRS = (function (NRS, $, undefined) {
         return arr;
     };
 
+    NRS.getTransactionStatusIcon = function (phasedEntity) {
+        var statusIcon;
+        if (phasedEntity.phased == true) {
+            statusIcon = "<i class='fa fa-gavel' title='phased'></i>";
+        } else if (phasedEntity.phased == false) {
+            statusIcon = "<i class='fa fa-circle-o' title='unconfirmed'></i>";
+        } else {
+            statusIcon = "<i class='fa fa-circle' title='confirmed'></i>";
+        }
+        return statusIcon;
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

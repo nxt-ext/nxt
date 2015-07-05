@@ -226,44 +226,75 @@ var NRS = (function (NRS, $, undefined) {
         currenciesTable.find('[data-i18n="units"]').hide();
     };
 
-    NRS.loadCurrencyOffers = function (type, currencyId, refresh) {
-        NRS.sendRequest("get" + type.capitalize() + "Offers+", {
-            "currency": currencyId, "availableOnly": "true",
-            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
-        }, function (response) {
-            if (response.offers && response.offers.length > NRS.itemsPerPage) {
-                NRS.hasMorePages = true;
-                response.offers.pop();
-            }
-            var offersTable = $("#ms_open_" + type + "_orders_table");
-            var offers = response.offers;
-            if (!offers) {
-                offers = [];
-            }
-            if (response.offers && response.offers.length) {
-                var rows = "";
-                var decimals = parseInt($("#currency_decimals").text(), 10);
-                for (i = 0; i < response.offers.length; i++) {
-                    var offer = response.offers[i];
-                    var rateNQT = offer.rateNQT;
-                    if (i == 0 && !refresh) {
-                        $("#" + (type == "sell" ? "buy" : "sell") + "_currency_price").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
-                    }
-                    var accountRS = String(offer.accountRS).escapeHTML();
-                    rows += "<tr>" +
-                    "<td>" + "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(offer.offer).escapeHTML() + "'>" + offer.height + "</a>" + "</td>" +
+    function processOffers(offers, type, refresh) {
+        if (offers && offers.length > NRS.itemsPerPage) {
+            NRS.hasMorePages = true;
+            offers.pop();
+        }
+        var offersTable = $("#ms_open_" + type + "_orders_table");
+        if (offers && offers.length) {
+            var rows = "";
+            var decimals = parseInt($("#currency_decimals").text(), 10);
+            for (i = 0; i < offers.length; i++) {
+                var offer = offers[i];
+                var rateNQT = offer.rateNQT;
+                if (i == 0 && !refresh) {
+                    $("#" + (type == "sell" ? "buy" : "sell") + "_currency_price").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
+                }
+                rows += "<tr>" +
+                    "<td>" + "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(offer.offer).escapeHTML() + "'>" + NRS.getTransactionStatusIcon(offer) + "</a>" + "</td>" +
                     "<td>" + NRS.getAccountLink(offer, "account") + "</td>" +
                     "<td>" + NRS.convertToQNTf(offer.supply, decimals) + "</td>" +
                     "<td>" + NRS.convertToQNTf(offer.limit, decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals) + "</td>" +
                     "</tr>";
-                }
-                offersTable.find("tbody").empty().append(rows);
-            } else {
-                offersTable.find("tbody").empty();
             }
-            NRS.dataLoadFinished(offersTable, !refresh);
+            offersTable.find("tbody").empty().append(rows);
+        } else {
+            offersTable.find("tbody").empty();
+        }
+        NRS.dataLoadFinished(offersTable, !refresh);
+    }
+
+    NRS.loadCurrencyOffers = function (type, currencyId, refresh) {
+        async.parallel([
+            function(callback) {
+                NRS.sendRequest("get" + type.capitalize() + "Offers+", {
+                    "currency": currencyId, "availableOnly": "true",
+                    "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+                    "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+                }, function (response) {
+                    var offers = response["offers"];
+                    if (!offers) {
+                        offers = [];
+                    }
+                    callback(null, offers);
+                })
+            },
+            function(callback) {
+                NRS.sendRequest("getExpected" + type.capitalize() + "Offers", {
+                    "currency": currencyId
+                }, function (response) {
+                    var offers = response["offers"];
+                    if (!offers) {
+                        offers = [];
+                    }
+                    callback(null, offers);
+                })
+            }
+        ],
+        // invoked when both requests above has completed
+        // the results array contains both offer lists
+        function(err, results){
+            var offers = results[0].concat(results[1]);
+            offers.sort(function (a, b) {
+                if (type == "sell") {
+                    return a.rateNQT - b.rateNQT;
+                } else {
+                    return b.rateNQT - a.rateNQT;
+                }
+            });
+            processOffers(offers, type, refresh);
         });
     };
 
@@ -415,49 +446,75 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.getExchangeRequests = function (currencyId, refresh) {
-        NRS.sendRequest("getAccountExchangeRequests+", {
-            "currency": currencyId,
-            "account": NRS.accountRS,
-            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
-        }, function (response) {
-            if (response.exchangeRequests && response.exchangeRequests.length) {
-                if (response.exchangeRequests.length > NRS.itemsPerPage) {
-                    NRS.hasMorePages = true;
-                    response.exchangeRequests.pop();
-                }
+    function processExchangeRequests(exchangeRequests, refresh) {
+        var requestTable = $("#ms_exchange_requests_table");
+        if (exchangeRequests && exchangeRequests.length) {
+            if (exchangeRequests.length > NRS.itemsPerPage) {
+                NRS.hasMorePages = true;
+                exchangeRequests.pop();
             }
-            var requestTable = $("#ms_exchange_requests_table");
-            var exchangeRequests = response.exchangeRequests;
-            if (!exchangeRequests) {
-                exchangeRequests = [];
-            }
-            if (response.exchangeRequests && response.exchangeRequests.length) {
-                if (response.exchangeRequests.length > NRS.itemsPerPage) {
-                    NRS.hasMorePages = true;
-                    response.exchangeRequests.pop();
-                }
-                var rows = "";
-                var decimals = parseInt($("#currency_decimals").text(), 10);
-                for (i = 0; i < response.exchangeRequests.length; i++) {
-                    var exchangeRequest = response.exchangeRequests[i];
-                    var type = exchangeRequest.subtype == 5 ? "buy" : "sell";
-                    rows += "<tr class=confirmed>" +
+            var rows = "";
+            var decimals = parseInt($("#currency_decimals").text(), 10);
+            for (i = 0; i < exchangeRequests.length; i++) {
+                var exchangeRequest = exchangeRequests[i];
+                var type = exchangeRequest.subtype == 5 ? "buy" : "sell";
+                rows += "<tr class=confirmed>" +
                     "<td>" +
-                    "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchangeRequest.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchangeRequest.timestamp) + "</a>" +
+                        "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchangeRequest.transaction).escapeHTML() + "'>" + NRS.getTransactionStatusIcon(exchangeRequest) + "</a>" +
+                    "</td>" +
+                    "<td>" +
+                        "<a href='#' class='block show_block_modal_action' data-block='" + String(exchangeRequest.height).escapeHTML() + "'>" + exchangeRequest.height + "</a>" +
                     "</td>" +
                     "<td>" + type + "</td>" +
                     "<td>" + NRS.convertToQNTf(exchangeRequest.units, decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(exchangeRequest.rateNQT, decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchangeRequest.units, exchangeRequest.rateNQT)) + "</td>" +
                     "</tr>";
-                }
-                requestTable.find("tbody").empty().append(rows);
-            } else {
-                requestTable.find("tbody").empty();
             }
-            NRS.dataLoadFinished(requestTable, !refresh);
+            requestTable.find("tbody").empty().append(rows);
+        } else {
+            requestTable.find("tbody").empty();
+        }
+        NRS.dataLoadFinished(requestTable, !refresh);
+    }
+
+    NRS.getExchangeRequests = function (currencyId, refresh) {
+        async.parallel([
+            function(callback) {
+                NRS.sendRequest("getAccountExchangeRequests+", {
+                    "currency": currencyId,
+                    "account": NRS.accountRS,
+                    "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+                    "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+                }, function (response) {
+                    var requests = response["exchangeRequests"];
+                    if (!requests) {
+                        requests = [];
+                    }
+                    callback(null, requests);
+                });
+            },
+            function(callback) {
+                NRS.sendRequest("getExpectedExchangeRequests", {
+                    "currency": currencyId,
+                    "account": NRS.accountRS
+                }, function (response) {
+                    var requests = response["exchangeRequests"];
+                    if (!requests) {
+                        requests = [];
+                    }
+                    callback(null, requests);
+                });
+            }
+        ],
+        // invoked when both the requests above has completed
+        // the results array contains both requests lists
+        function(err, results){
+            var exchangeRequests = results[0].concat(results[1]);
+            exchangeRequests.sort(function (a, b) {
+                return b.height - a.height;
+            });
+            processExchangeRequests(exchangeRequests, refresh);
         });
     };
 
