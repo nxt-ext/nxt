@@ -93,15 +93,20 @@
                         <label data-i18n="fee">FEE</label>
                         <p id="currency_order_fee_paid"></p>
                     </div>
-                    <div class="form-group secret_phrase">
-                        <label for="currency_order_password" data-i18n="passphrase">PASSPHRASE</label>
-                        <input type="password" name="secretPhrase" id="currency_order_password" class="form-control" placeholder="" tabindex="1">
-                    </div>
-                    <input type="hidden" name="currency_order_type"  id="currency_order_type" />
+                    <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
+                    <input type="hidden" name="currency_order_type" id="currency_order_type" />
                     <input type="hidden" name="request_type" value="orderCurrency" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="currency_order_modal_button" data-i18n="[data-loading-text]submitting"></button>
             </div>
