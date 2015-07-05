@@ -844,7 +844,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (block.getHeight() % 5000 == 0) {
                 Logger.logMessage("received block " + block.getHeight());
                 if (!isDownloading || block.getHeight() % 50000 == 0) {
-                    Db.db.analyzeTables();
+                    networkService.submit(() -> {
+                        Db.db.analyzeTables();
+                    });
                 }
             }
         }, Event.BLOCK_PUSHED);
