@@ -20,6 +20,7 @@ import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.util.Convert;
 import nxt.util.Filter;
+import nxt.util.ReadWriteUpdateLock;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 final class BlockchainImpl implements Blockchain {
 
@@ -43,7 +42,7 @@ final class BlockchainImpl implements Blockchain {
 
     private BlockchainImpl() {}
 
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReadWriteUpdateLock lock = new ReadWriteUpdateLock();
     private final AtomicReference<BlockImpl> lastBlock = new AtomicReference<>();
 
     @Override
@@ -54,6 +53,16 @@ final class BlockchainImpl implements Blockchain {
     @Override
     public void readUnlock() {
         lock.readLock().unlock();
+    }
+
+    @Override
+    public void updateLock() {
+        lock.updateLock().lock();
+    }
+
+    @Override
+    public void updateUnlock() {
+        lock.updateLock().unlock();
     }
 
     void writeLock() {

@@ -41,6 +41,15 @@ For running over tor, or other socks proxy, the socksProxyHost and
 socksProxyPort parameters can now be specified in the nxt.properties file
 instead of having to include them in the command line.
 
+Performance improvements, allowing table trimming to be done in parallel with
+blockchain download.
+
+Added UPnP support, enabled by default for the peer port and disabled for the
+API port, using the nxt.enablePeerUPnP and nxt.enableAPIUPnP properties.
+
+Added a warning on startup if nxt.myAddress is set but does not resolve to any
+of the external addresses found, including those discovered using UPnP.
+
 More links to the wiki tutorials in the help menu.
 
 System tray status dialog now refreshes every second when visible.
