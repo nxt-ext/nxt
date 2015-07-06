@@ -286,14 +286,22 @@ var NRS = (function(NRS, $) {
 
 
 	NRS.pages.dgs_search = function(callback) {
-		if (NRS.settings.marketplace != "1") {
-			$("#dgs_disabled").show();
-			$("#dgs_top").hide();
-			$("#dgs_search_center").hide();
+        var dgsDisabled = $("#dgs_disabled");
+        var topSection = $("#dgs_top");
+        var searchCenter = $("#dgs_search_center");
+        var pagination = $("#dgs_pagination");
+        if (NRS.settings.marketplace != "1") {
+			dgsDisabled.show();
+			topSection.hide();
+			searchCenter.hide();
+			pagination.hide();
 			return;
 		}
-		$("#dgs_disabled").hide();
-		$("#dgs_search_center").show();
+		dgsDisabled.hide();
+		topSection.show();
+		searchCenter.show();
+		pagination.show();
+
 		if (_currentSearch["page"] == "seller") {
 			NRS.dgs_search_seller();
 		} else if (_currentSearch["page"] == "fulltext") {
