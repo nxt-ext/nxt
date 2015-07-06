@@ -131,6 +131,9 @@
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by currency holders with a certain stake" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_currency_tab_help">
                     <a href="#{{name}}_approve_tab_currency_holders" aria-controls="{{name}}_approve_tab_currency_holders" class="at_currency_holders" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-bank"></i></span></a>
                 </li>
+                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction is approved by the inclusion of the specified transaction hash in the blockchain" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_transaction_tab_help">
+                    <a href="#{{name}}_approve_tab_transaction" aria-controls="{{name}}_approve_tab_transaction" class="at_no_approval" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-thumbs-up"></i></span></a>
+                </li>
             </ul>
 
             <!-- Tab panes -->
@@ -259,6 +262,21 @@
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="3" disabled />
+                </div>
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_transaction">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="form-group advanced">
+                        <label for="approved_by_transaction_hash" data-i18n="approved_by_transaction_hash">APPROVED BY TRANSACTION HASH</label>
+                        <input type="text" class="form-control" name="phasingLinkedFullHash" id="approved_by_transaction_hash" placeholder="Approved By Transaction Full Hash" data-i18n="[placeholder]approved_by_transaction_full_hash" spellcheck="false" />
+                    </div>
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="4" disabled />
+                    <input type="hidden" name="phasingQuorum" value="1"/>
+                    <input type="hidden" name="phasingMinBalanceModel" value="0"/>
                 </div>
             </div>
         </div>

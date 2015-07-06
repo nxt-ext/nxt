@@ -384,7 +384,9 @@ var NRS = (function(NRS, $, undefined) {
 						if (vm == 3) {
 							icon = '<i class="fa fa-bank"></i>';
 						}
-
+						if (vm == 4) {
+							icon = '<i class="fa fa-thumbs-up"></i>';
+						}
 						var phasingDiv = "";
 						phasingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
 	 				 	phasingDiv += 'data-toggle="popover" data-container="body">';

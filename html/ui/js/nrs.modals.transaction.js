@@ -162,13 +162,23 @@ var NRS = (function (NRS, $, undefined) {
                     "</tr></thead><tbody>";
                     for (i = 0; i < transaction.attachment.phasingWhitelist.length; i++) {
                         var account = NRS.convertNumericToRSAccountFormat(transaction.attachment.phasingWhitelist[i]);
-                        rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td>";
+                        rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td></tr>";
                     }
                     rows += "</tbody></table>";
                 } else {
                     rows = "-";
                 }
                 phasingDetails.whitelist_formatted_html = rows;
+                if (transaction.attachment.phasingLinkedFullHashes && transaction.attachment.phasingLinkedFullHashes.length > 0) {
+                    rows = "<table class='table table-striped'><tbody>";
+                    for (i = 0; i < transaction.attachment.phasingLinkedFullHashes.length; i++) {
+                        rows += "<tr><td>" + transaction.attachment.phasingLinkedFullHashes[i] + "</td></tr>";
+                    }
+                    rows += "</tbody></table>";
+                } else {
+                    rows = "-";
+                }
+                phasingDetails.full_hash_formatted_html = rows;
                 if (transaction.attachment.phasingHashedSecret) {
                     phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
                     phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
