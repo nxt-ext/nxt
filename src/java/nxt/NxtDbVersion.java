@@ -917,27 +917,41 @@ class NxtDbVersion extends DbVersion {
             case 386:
                 apply(null);
             case 387:
-                apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NULL, "
-                        + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
-                        + "stage TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, "
-                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                apply("CREATE TABLE IF NOT EXISTS exchange_request (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "currency_id BIGINT NOT NULL, units BIGINT NOT NULL, rate BIGINT NOT NULL, is_buy BOOLEAN NOT NULL, "
+                        + "timestamp INT NOT NULL, height INT NOT NULL)");
             case 388:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_idx ON shuffling (id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS exchange_request_id_idx ON exchange_request (id)");
             case 389:
-                apply("CREATE INDEX IF NOT EXISTS shuffling_currency_id_idx ON shuffling (currency_id)");
+                apply("CREATE INDEX IF NOT EXISTS exchange_request_account_currency_idx ON exchange_request (account_id, currency_id, height DESC)");
             case 390:
-                apply("CREATE INDEX IF NOT EXISTS shuffling_stage_idx ON shuffling (stage)");
+                apply("CREATE INDEX IF NOT EXISTS exchange_request_currency_idx ON exchange_request (currency_id, height DESC)");
             case 391:
-                apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, "
-                        + "account_id BIGINT NOT NULL, next_account_id BIGINT NULL, recipient_id BIGINT NOT NULL, "
-                        + "state TINYINT NOT NULL, data VARBINARY, "
-                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+                apply("CREATE INDEX IF NOT EXISTS exchange_request_height_db_id_idx ON exchange_request (height DESC, db_id DESC)");
             case 392:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
+                apply("CREATE INDEX IF NOT EXISTS exchange_request_height_idx ON exchange_request (height)");
             case 393:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 394:
+                apply("CREATE TABLE IF NOT EXISTS shuffling (db_id INT IDENTITY, id BIGINT NOT NULL, currency_id BIGINT NULL, "
+                        + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count BIGINT NOT NULL, cancellation_height INT NOT NULL, "
+                        + "stage TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 395:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_idx ON shuffling (id, height DESC)");
+            case 396:
+                apply("CREATE INDEX IF NOT EXISTS shuffling_currency_id_idx ON shuffling (currency_id)");
+            case 397:
+                apply("CREATE INDEX IF NOT EXISTS shuffling_stage_idx ON shuffling (stage)");
+            case 398:
+                apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, next_account_id BIGINT NULL, recipient_id BIGINT NOT NULL, "
+                        + "state TINYINT NOT NULL, data VARBINARY, "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 399:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
+			case 400:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

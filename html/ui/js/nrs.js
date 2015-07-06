@@ -65,6 +65,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isTestNet = false;
 	NRS.isLocalHost = false;
 	NRS.forgingStatus = NRS.constants.UNKNOWN;
+	NRS.isAccountForging = false;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
 

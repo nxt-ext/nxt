@@ -119,6 +119,9 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     static void trim(final TransactionalDb db, final String table, final int height, final DbKey.Factory dbKeyFactory) {
+        if (!db.isInTransaction()) {
+            throw new IllegalStateException("Not in transaction");
+        }
         try (Connection con = db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getPKColumns() + ", MAX(height) AS max_height"
                      + " FROM " + table + " WHERE height < ? GROUP BY " + dbKeyFactory.getPKColumns() + " HAVING COUNT(DISTINCT height) > 1");

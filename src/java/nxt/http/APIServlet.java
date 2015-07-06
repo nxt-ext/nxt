@@ -229,7 +229,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getAllTrades", GetAllTrades.instance);
         map.put("getAllExchanges", GetAllExchanges.instance);
         map.put("getAssetTransfers", GetAssetTransfers.instance);
+        map.put("getExpectedAssetTransfers", GetExpectedAssetTransfers.instance);
         map.put("getCurrencyTransfers", GetCurrencyTransfers.instance);
+        map.put("getExpectedCurrencyTransfers", GetExpectedCurrencyTransfers.instance);
         map.put("getTransaction", GetTransaction.instance);
         map.put("getTransactionBytes", GetTransactionBytes.instance);
         map.put("getUnconfirmedTransactionIds", GetUnconfirmedTransactionIds.instance);
@@ -241,7 +243,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getAllOpenAskOrders", GetAllOpenAskOrders.instance);
         map.put("getAllOpenBidOrders", GetAllOpenBidOrders.instance);
         map.put("getBuyOffers", GetBuyOffers.instance);
+        map.put("getExpectedBuyOffers", GetExpectedBuyOffers.instance);
         map.put("getSellOffers", GetSellOffers.instance);
+        map.put("getExpectedSellOffers", GetExpectedSellOffers.instance);
         map.put("getOffer", GetOffer.instance);
         map.put("getAskOrder", GetAskOrder.instance);
         map.put("getAskOrderIds", GetAskOrderIds.instance);
@@ -251,8 +255,10 @@ public final class APIServlet extends HttpServlet {
         map.put("getBidOrders", GetBidOrders.instance);
         map.put("getExpectedAskOrders", GetExpectedAskOrders.instance);
         map.put("getExpectedBidOrders", GetExpectedBidOrders.instance);
+        map.put("getExpectedOrderCancellations", GetExpectedOrderCancellations.instance);
         map.put("getOrderTrades", GetOrderTrades.instance);
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
+        map.put("getExpectedExchangeRequests", GetExpectedExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
         map.put("getShuffling", GetShuffling.instance);
         map.put("getShufflingParticipants", GetShufflingParticipants.instance);

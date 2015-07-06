@@ -17,55 +17,50 @@
 package nxt.http;
 
 import nxt.Attachment;
+import nxt.MonetarySystem;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
-public final class GetExpectedAskOrders extends APIServlet.APIRequestHandler {
+public final class GetExpectedExchangeRequests extends APIServlet.APIRequestHandler {
 
-    static final GetExpectedAskOrders instance = new GetExpectedAskOrders();
+    static final GetExpectedExchangeRequests instance = new GetExpectedExchangeRequests();
 
-    private GetExpectedAskOrders() {
-        super(new APITag[] {APITag.AE}, "asset", "sortByPrice");
+    private GetExpectedExchangeRequests() {
+        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency", "includeCurrencyInfo");
     }
-
-    private final Comparator<Transaction> priceComparator = (o1, o2) -> {
-        Attachment.ColoredCoinsOrderPlacement a1 = (Attachment.ColoredCoinsOrderPlacement)o1.getAttachment();
-        Attachment.ColoredCoinsOrderPlacement a2 = (Attachment.ColoredCoinsOrderPlacement)o2.getAttachment();
-        return Long.compare(a1.getPriceNQT(), a2.getPriceNQT());
-    };
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long assetId = ParameterParser.getUnsignedLong(req, "asset", false);
-        boolean sortByPrice = "true".equalsIgnoreCase(req.getParameter("sortByPrice"));
+        long accountId = ParameterParser.getAccountId(req, "account", false);
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
+
         Filter<Transaction> filter = transaction -> {
-            if (transaction.getType() != TransactionType.ColoredCoins.ASK_ORDER_PLACEMENT) {
+            if (transaction.getType() != MonetarySystem.EXCHANGE_BUY && transaction.getType() != MonetarySystem.EXCHANGE_SELL) {
                 return false;
             }
-            Attachment.ColoredCoinsOrderPlacement attachment = (Attachment.ColoredCoinsOrderPlacement)transaction.getAttachment();
-            return assetId == 0 || attachment.getAssetId() == assetId;
+            if (accountId != 0 && transaction.getSenderId() != accountId) {
+                return false;
+            }
+            Attachment.MonetarySystemExchange attachment = (Attachment.MonetarySystemExchange)transaction.getAttachment();
+            return currencyId == 0 || attachment.getCurrencyId() == currencyId;
         };
 
         List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
-        if (sortByPrice) {
-            Collections.sort(transactions, priceComparator);
-        }
-        JSONArray orders = new JSONArray();
-        transactions.forEach(transaction -> orders.add(JSONData.expectedAskOrder(transaction)));
+
+        JSONArray exchangeRequests = new JSONArray();
+        transactions.forEach(transaction -> exchangeRequests.add(JSONData.expectedExchangeRequest(transaction, includeCurrencyInfo)));
         JSONObject response = new JSONObject();
-        response.put("askOrders", orders);
+        response.put("exchangeRequests", exchangeRequests);
         return response;
 
     }
