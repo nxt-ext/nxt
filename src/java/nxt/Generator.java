@@ -70,7 +70,7 @@ public final class Generator implements Comparable<Generator> {
 
             try {
                 try {
-                    BlockchainImpl.getInstance().writeLock();
+                    BlockchainImpl.getInstance().updateLock();
                     try {
                         Block lastBlock = Nxt.getBlockchain().getLastBlock();
                         if (lastBlock == null || lastBlock.getHeight() < Constants.LAST_KNOWN_BLOCK) {
@@ -105,7 +105,7 @@ public final class Generator implements Comparable<Generator> {
                             }
                         }
                     } finally {
-                        BlockchainImpl.getInstance().writeUnlock();
+                        BlockchainImpl.getInstance().updateUnlock();
                     }
                 } catch (Exception e) {
                     Logger.logMessage("Error in block generation thread", e);
@@ -173,6 +173,10 @@ public final class Generator implements Comparable<Generator> {
         return generators.get(secretPhrase);
     }
 
+    public static int getGeneratorCount() {
+        return generators.size();
+    }
+
     public static Collection<Generator> getAllGenerators() {
         return allGenerators;
     }
@@ -198,12 +202,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
     static void setDelay(int delay) {
-        BlockchainImpl.getInstance().readLock();
-        try {
-            Generator.delayTime = delay;
-        } finally {
-            BlockchainImpl.getInstance().readUnlock();
-        }
+        Generator.delayTime = delay;
     }
 
     static boolean verifyHit(BigInteger hit, BigInteger effectiveBalance, Block previousBlock, int timestamp) {

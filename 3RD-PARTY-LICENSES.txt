@@ -50,3 +50,9 @@ SLF4J:
 SLF4J http://www.slf4j.org/ is licensed under the MIT license:
 http://www.slf4j.org/license.html
 
+
+Weupnp:
+
+Weupnp http://github.com/bitletorg/weupnp is licensed under the Lesser GPL 2.1 license:
+http://www.gnu.org/licenses/lgpl-2.1.html
+

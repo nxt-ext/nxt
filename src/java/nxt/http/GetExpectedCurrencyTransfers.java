@@ -16,42 +16,51 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Currency;
-import nxt.ExchangeRequest;
+import nxt.Attachment;
+import nxt.MonetarySystem;
+import nxt.Nxt;
 import nxt.NxtException;
-import nxt.db.DbIterator;
+import nxt.Transaction;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
-public final class GetAccountExchangeRequests extends APIServlet.APIRequestHandler {
+public final class GetExpectedCurrencyTransfers extends APIServlet.APIRequestHandler {
 
-    static final GetAccountExchangeRequests instance = new GetAccountExchangeRequests();
+    static final GetExpectedCurrencyTransfers instance = new GetExpectedCurrencyTransfers();
 
-    private GetAccountExchangeRequests() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.MS}, "account", "currency", "firstIndex", "lastIndex");
+    private GetExpectedCurrencyTransfers() {
+        super(new APITag[]{APITag.MS}, "currency", "account");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
-        Currency currency = ParameterParser.getCurrency(req);
-        int firstIndex = ParameterParser.getFirstIndex(req);
-        int lastIndex = ParameterParser.getLastIndex(req);
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
+        long accountId = ParameterParser.getAccountId(req, "account", false);
 
-        JSONArray jsonArray = new JSONArray();
-        try (DbIterator<ExchangeRequest> exchangeRequests = ExchangeRequest.getAccountCurrencyExchangeRequests(account.getId(), currency.getId(),
-                firstIndex, lastIndex)) {
-            while (exchangeRequests.hasNext()) {
-                jsonArray.add(JSONData.exchangeRequest(exchangeRequests.next(), true));
+        Filter<Transaction> filter = transaction -> {
+            if (transaction.getType() != MonetarySystem.CURRENCY_TRANSFER) {
+                return false;
             }
-        }
+            if (accountId != 0 && transaction.getSenderId() != accountId && transaction.getRecipientId() != accountId) {
+                return false;
+            }
+            Attachment.MonetarySystemCurrencyTransfer attachment = (Attachment.MonetarySystemCurrencyTransfer)transaction.getAttachment();
+            return currencyId == 0 || attachment.getCurrencyId() == currencyId;
+        };
+
+        List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
+
         JSONObject response = new JSONObject();
-        response.put("exchangeRequests", jsonArray);
+        JSONArray transfersData = new JSONArray();
+        transactions.forEach(transaction -> transfersData.add(JSONData.expectedCurrencyTransfer(transaction)));
+        response.put("transfers", transfersData);
+
         return response;
     }
 

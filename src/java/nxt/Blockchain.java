@@ -29,6 +29,10 @@ public interface Blockchain {
 
     void readUnlock();
 
+    void updateLock();
+
+    void updateUnlock();
+
     Block getLastBlock();
 
     Block getLastBlock(int timestamp);

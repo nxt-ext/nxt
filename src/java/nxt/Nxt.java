@@ -300,7 +300,6 @@ public final class Nxt {
         Users.shutdown();
         ThreadPool.shutdown();
         Peers.shutdown();
-        BlockchainProcessorImpl.getInstance().shutdown();
         Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
         Logger.shutdown();
@@ -343,6 +342,7 @@ public final class Nxt {
                 CurrencyMint.init();
                 CurrencyTransfer.init();
                 Exchange.init();
+                ExchangeRequest.init();
                 PrunableMessage.init();
                 TaggedData.init();
                 Peers.init();

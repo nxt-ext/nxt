@@ -776,13 +776,24 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
-    NRS.getAccountLink = function (object, acc) {
-		if (typeof object[acc + "RS"] == "undefined") {
-			return "/";
-		} else {
-			return "<a href='#' data-user='" + String(object[acc + "RS"]).escapeHTML() + "' class='show_account_modal_action user-info'>" + NRS.getAccountTitle(object, acc) + "</a>";
-		}
-	};
+    NRS.getAccountLink = function (object, accountKey, accountRef, title) {
+        var accountRS;
+        if (typeof object[accountKey + "RS"] != "undefined") {
+            accountRS = object[accountKey + "RS"];
+        } else if (typeof object[accountKey] != "undefined") {
+            accountRS = NRS.convertNumericToRSAccountFormat(object[accountKey]);
+        } else {
+            return '/';
+        }
+        var accountTitle;
+        if (accountRef && accountRS == accountRef) {
+            accountTitle = $.t(title);
+        } else {
+            accountTitle = NRS.getAccountTitle(object, accountKey);
+        }
+        return "<a href='#' data-user='" + String(accountRS).escapeHTML() +
+            "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
+    };
 
     NRS.getAccountTitle = function (object, acc) {
 		var type = typeof object;
@@ -1605,13 +1616,25 @@ var NRS = (function (NRS, $, undefined) {
 	// http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
     NRS.getUtf8Bytes = function (str) {
         //noinspection JSDeprecatedSymbols
-	    var utf8 = unescape(encodeURIComponent(str));
-	    var arr = [];
-	    for (var i = 0; i < utf8.length; i++) {
-			arr[i] = utf8.charCodeAt(i);
-		}
-	    return arr;
-	};
+        var utf8 = unescape(encodeURIComponent(str));
+        var arr = [];
+        for (var i = 0; i < utf8.length; i++) {
+            arr[i] = utf8.charCodeAt(i);
+        }
+        return arr;
+    };
 
-	return NRS;
+    NRS.getTransactionStatusIcon = function (phasedEntity) {
+        var statusIcon;
+        if (phasedEntity.phased == true) {
+            statusIcon = "<i class='fa fa-gavel' title='" + $.t("phased") + "'></i>";
+        } else if (phasedEntity.phased == false) {
+            statusIcon = "<i class='fa fa-circle-o' title='" + $.t("unconfirmed") + "'></i>";
+        } else {
+            statusIcon = "<i class='fa fa-circle' title='" + $.t("confirmed") + "'></i>";
+        }
+        return statusIcon;
+    };
+
+    return NRS;
 }(NRS || {}, jQuery));

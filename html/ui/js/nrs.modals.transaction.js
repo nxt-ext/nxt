@@ -1170,7 +1170,9 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             if (!async) {
-                $("#transaction_info_modal").modal("show");
+                if (!isModalVisible) {
+                    $("#transaction_info_modal").modal("show");
+                }
                 NRS.fetchingModalData = false;
             }
         } catch (e) {
