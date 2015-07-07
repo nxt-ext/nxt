@@ -24,8 +24,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class DumpPeers extends APIServlet.APIRequestHandler {
 
@@ -42,16 +42,18 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
         int weight = ParameterParser.getInt(req, "weight", 0, (int)Constants.MAX_BALANCE_NXT, false);
         boolean connect = "true".equalsIgnoreCase(req.getParameter("connect")) && API.checkPassword(req);
         if (connect) {
-            Peers.getAllPeers().parallelStream().unordered().forEach(Peers::connectPeer);
+            Peers.getAllPeers().forEach(Peers::connectPeer);
         }
-        Set<String> addresses = Peers.getAllPeers().parallelStream().unordered()
-                .filter(peer -> peer.getState() == Peer.State.CONNECTED
-                        && peer.shareAddress()
-                        && !peer.isBlacklisted()
-                        && peer.getVersion() != null && peer.getVersion().startsWith(version)
-                        && (weight == 0 || peer.getWeight() > weight))
-                .map(Peer::getAnnouncedAddress)
-                .collect(Collectors.toSet());
+        Set<String> addresses = new HashSet<>();
+        Peers.getAllPeers().forEach(peer -> {
+                    if (peer.getState() == Peer.State.CONNECTED
+                            && peer.shareAddress()
+                            && !peer.isBlacklisted()
+                            && peer.getVersion() != null && peer.getVersion().startsWith(version)
+                            && (weight == 0 || peer.getWeight() > weight)) {
+                        addresses.add(peer.getAnnouncedAddress());
+                    }
+                });
         StringBuilder buf = new StringBuilder();
         for (String address : addresses) {
             buf.append(address).append("; ");

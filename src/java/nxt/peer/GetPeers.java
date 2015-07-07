@@ -20,8 +20,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.util.stream.Collectors;
-
 final class GetPeers extends PeerServlet.PeerRequestHandler {
 
     static final GetPeers instance = new GetPeers();
@@ -31,15 +29,15 @@ final class GetPeers extends PeerServlet.PeerRequestHandler {
 
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
-
         JSONObject response = new JSONObject();
-
-        response.put("peers", Peers.getAllPeers().parallelStream().unordered()
-                .filter(otherPeer -> ! otherPeer.isBlacklisted() && otherPeer.getAnnouncedAddress() != null
-                        && otherPeer.getState() == Peer.State.CONNECTED && otherPeer.shareAddress())
-                .map(Peer::getAnnouncedAddress)
-                .collect(Collectors.toCollection(JSONArray::new)));
-
+        JSONArray jsonArray = new JSONArray();
+        Peers.getAllPeers().forEach(otherPeer -> {
+            if (!otherPeer.isBlacklisted() && otherPeer.getAnnouncedAddress() != null
+                    && otherPeer.getState() == Peer.State.CONNECTED && otherPeer.shareAddress()) {
+                jsonArray.add(otherPeer.getAnnouncedAddress());
+            }
+        });
+        response.put("peers", jsonArray);
         return response;
     }
 
