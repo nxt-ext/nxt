@@ -76,11 +76,7 @@ public class TaggedData {
                             Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
                             for (Object tag : array) {
                                 Integer count = expiredTags.get(tag);
-                                if (count == null) {
-                                    expiredTags.put((String)tag, 1);
-                                } else {
-                                    expiredTags.put((String)tag, count + 1);
-                                }
+                                expiredTags.put((String)tag, count != null ? count + 1 : 1);
                             }
                         }
                     }

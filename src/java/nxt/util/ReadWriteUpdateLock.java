@@ -48,7 +48,7 @@ public class ReadWriteUpdateLock {
     private final ReentrantLock mutexLock = new ReentrantLock();
 
     /** Lock counts */
-    private final ThreadLocal<LockCount> lockCount = ThreadLocal.withInitial(() -> new LockCount());
+    private final ThreadLocal<LockCount> lockCount = ThreadLocal.withInitial(LockCount::new);
 
     /** Read lock */
     private final ReadLock readLock = new ReadLock();
@@ -94,19 +94,19 @@ public class ReadWriteUpdateLock {
         /**
          * Obtain the lock
          */
-        public void lock();
+        void lock();
 
         /**
          * Release the lock
          */
-        public void unlock();
+        void unlock();
 
         /**
          * Check if the thread holds the lock
          *
          * @return                  TRUE if the thread holds the lock
          */
-        public boolean hasLock();
+        boolean hasLock();
     }
 
     /**
@@ -156,10 +156,12 @@ public class ReadWriteUpdateLock {
         @Override
         public void lock() {
             LockCount counts = lockCount.get();
-            if (counts.readCount != 0)
+            if (counts.readCount != 0) {
                 throw new IllegalStateException("Update lock cannot be obtained while holding the read lock");
-            if (counts.writeCount != 0)
+            }
+            if (counts.writeCount != 0) {
                 throw new IllegalStateException("Update lock cannot be obtained while holding the write lock");
+            }
             mutexLock.lock();
             counts.updateCount++;
         }
@@ -197,8 +199,9 @@ public class ReadWriteUpdateLock {
         @Override
         public void lock() {
             LockCount counts = lockCount.get();
-            if (counts.readCount != 0)
+            if (counts.readCount != 0) {
                 throw new IllegalStateException("Write lock cannot be obtained while holding the read lock");
+            }
             boolean lockObtained = false;
             try {
                 mutexLock.lock();
