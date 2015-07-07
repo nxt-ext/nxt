@@ -40,6 +40,7 @@ public final class StopForging extends APIServlet.APIRequestHandler {
         if (secretPhrase != null) {
             Generator generator = Generator.stopForging(secretPhrase);
             response.put("foundAndStopped", generator != null);
+            response.put("forgersCount", Generator.getGeneratorCount());
         } else {
             API.verifyPassword(req);
             int count = Generator.stopForging();

@@ -286,6 +286,23 @@ var NRS = (function(NRS, $) {
 
 
 	NRS.pages.dgs_search = function(callback) {
+        var dgsDisabled = $("#dgs_disabled");
+        var topSection = $("#dgs_top");
+        var searchCenter = $("#dgs_search_center");
+        var pagination = $("#dgs_pagination");
+        if (NRS.settings.marketplace != "1") {
+			dgsDisabled.show();
+			topSection.hide();
+			searchCenter.hide();
+			pagination.hide();
+            $("#dgs_search_results").hide();
+            return;
+		}
+		dgsDisabled.hide();
+		topSection.show();
+		searchCenter.show();
+		pagination.show();
+
 		if (_currentSearch["page"] == "seller") {
 			NRS.dgs_search_seller();
 		} else if (_currentSearch["page"] == "fulltext") {
@@ -1063,6 +1080,12 @@ var NRS = (function(NRS, $) {
 	$("#dgs_clear_results").on("click", function(e) {
 		e.preventDefault();
 		NRS.dgs_search_main();
+	});
+
+	$("#accept_dgs_link").on("click", function(e) {
+		e.preventDefault();
+		NRS.updateSettings("marketplace", "1");
+		NRS.pages.dgs_search();
 	});
 
 	$("#user_info_modal").on("click", "a[data-goto-goods]", function(e) {

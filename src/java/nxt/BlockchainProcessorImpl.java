@@ -55,7 +55,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
@@ -104,7 +103,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final BlockchainImpl blockchain = BlockchainImpl.getInstance();
 
-    private final ExecutorService blockchainProcessorService = Executors.newSingleThreadExecutor();
+    private final ExecutorService networkService = new ThreadPoolExecutor(0, 20 + 1, 60L, TimeUnit.SECONDS,
+                                                                          new LinkedBlockingQueue<>());
     private final List<DerivedDbTable> derivedTables = new CopyOnWriteArrayList<>();
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
     private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
@@ -117,14 +117,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile int lastBlockchainFeederHeight;
     private volatile boolean getMoreBlocks = true;
 
+    private volatile boolean isTrimming;
     private volatile boolean isScanning;
     private volatile boolean isDownloading;
     private volatile boolean alreadyInitialized = false;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
-
-        private final ExecutorService networkService = new ThreadPoolExecutor(0, 20, 60L, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>());
 
         private final JSONStreamAware getCumulativeDifficultyRequest;
 
@@ -223,7 +221,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     return;
                 }
 
-                blockchain.writeLock();
+                blockchain.updateLock();
                 try {
                     if (betterCumulativeDifficulty.compareTo(blockchain.getLastBlock().getCumulativeDifficulty()) <= 0) {
                         return;
@@ -285,7 +283,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         Logger.logDebugMessage("Did not accept peer's blocks, back to our own fork");
                     }
                 } finally {
-                    blockchain.writeUnlock();
+                    blockchain.updateUnlock();
                 }
 
             } catch (NxtException.StopException e) {
@@ -503,30 +501,36 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             // a missing block (this will happen if an invalid block is encountered
             // when downloading the blocks)
             //
-            List<BlockImpl> forkBlocks = new ArrayList<>();
-            for (int index = 1; index < chainBlockIds.size() && blockchain.getHeight() - startHeight < 720; index++) {
-                PeerBlock peerBlock = blockMap.get(chainBlockIds.get(index));
-                if (peerBlock == null) {
-                    break;
-                }
-                BlockImpl block = peerBlock.getBlock();
-                if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
-                    try {
-                        pushBlock(block);
-                    } catch (BlockNotAcceptedException e) {
-                        peerBlock.getPeer().blacklist(e);
+            blockchain.writeLock();
+            try {
+                List<BlockImpl> forkBlocks = new ArrayList<>();
+                for (int index = 1; index < chainBlockIds.size() && blockchain.getHeight() - startHeight < 720; index++) {
+                    PeerBlock peerBlock = blockMap.get(chainBlockIds.get(index));
+                    if (peerBlock == null) {
+                        break;
                     }
-                } else {
-                    forkBlocks.add(block);
+                    BlockImpl block = peerBlock.getBlock();
+                    if (blockchain.getLastBlock().getId() == block.getPreviousBlockId()) {
+                        try {
+                            pushBlock(block);
+                        } catch (BlockNotAcceptedException e) {
+                            peerBlock.getPeer().blacklist(e);
+                        }
+                    } else {
+                        forkBlocks.add(block);
+                    }
                 }
+                //
+                // Process a fork
+                //
+                if (!forkBlocks.isEmpty() && blockchain.getHeight() - startHeight < 720) {
+                    Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
+                    processFork(feederPeer, forkBlocks, commonBlock);
+                }
+            } finally {
+                blockchain.writeUnlock();
             }
-            //
-            // Process a fork
-            //
-            if (!forkBlocks.isEmpty() && blockchain.getHeight() - startHeight < 720) {
-                Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
-                processFork(feederPeer, forkBlocks, commonBlock);
-            }
+
         }
 
         private void processFork(final Peer peer, final List<BlockImpl> forkBlocks, final Block commonBlock) {
@@ -825,18 +829,24 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logMessage("processed block " + block.getHeight());
             }
             if (trimDerivedTables && block.getHeight() % trimFrequency == 0) {
-                trimDerivedTables();
+                doTrimDerivedTables();
             }
         }, Event.BLOCK_SCANNED);
 
         blockListeners.addListener(block -> {
-            if (trimDerivedTables && block.getHeight() % trimFrequency == 0) {
-                blockchainProcessorService.submit(this::trimDerivedTables);
+            if (trimDerivedTables && block.getHeight() % trimFrequency == 0 && !isTrimming) {
+                isTrimming = true;
+                networkService.submit(() -> {
+                    trimDerivedTables();
+                    isTrimming = false;
+                });
             }
             if (block.getHeight() % 5000 == 0) {
                 Logger.logMessage("received block " + block.getHeight());
                 if (!isDownloading || block.getHeight() % 50000 == 0) {
-                    blockchainProcessorService.submit(Db.db::analyzeTables);
+                    networkService.submit(() -> {
+                        Db.db.analyzeTables();
+                    });
                 }
             }
         }, Event.BLOCK_PUSHED);
@@ -895,18 +905,30 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public void trimDerivedTables() {
+        blockchain.readLock();
         try {
-            synchronized (blockchainProcessorService) {
-                lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
-                if (lastTrimHeight > 0) {
-                    for (DerivedDbTable table : derivedTables) {
-                        table.trim(lastTrimHeight);
-                    }
-                }
+            try {
+                Db.db.beginTransaction();
+                doTrimDerivedTables();
+                Db.db.commitTransaction();
+            } catch (Exception e) {
+                Logger.logMessage(e.toString(), e);
+                Db.db.rollbackTransaction();
+                throw e;
+            } finally {
+                Db.db.endTransaction();
             }
-        } catch (Exception e) {
-            Logger.logErrorMessage(e.getMessage(), e);
-            throw e;
+        } finally {
+            blockchain.readUnlock();
+        }
+    }
+
+    private void doTrimDerivedTables() {
+        lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
+        if (lastTrimHeight > 0) {
+            for (DerivedDbTable table : derivedTables) {
+                table.trim(lastTrimHeight);
+            }
         }
     }
 
@@ -1481,7 +1503,12 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             TransactionProcessorImpl.getInstance().processWaitingTransactions();
             TransactionImpl transaction = e.getTransaction();
             Logger.logDebugMessage("Removing invalid transaction: " + transaction.getStringId());
-            TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(transaction);
+            blockchain.writeLock();
+            try {
+                TransactionProcessorImpl.getInstance().removeUnconfirmedTransaction(transaction);
+            } finally {
+                blockchain.writeUnlock();
+            }
             throw e;
         } catch (BlockNotAcceptedException e) {
             Logger.logDebugMessage("Generate block failed: " + e.getMessage());
@@ -1554,7 +1581,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
             try (Connection con = Db.db.getConnection();
-                 PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE height >= ? ORDER BY db_id ASC");
+                 PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block " + (height > 0 ? "WHERE height >= ? " : "") + "ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
                 if (height > blockchain.getHeight() + 1) {
@@ -1592,7 +1619,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }).start();
                     return;
                 }
-                pstmtSelect.setInt(1, height);
+                if (height > 0) {
+                    pstmtSelect.setInt(1, height);
+                }
                 try (ResultSet rs = pstmtSelect.executeQuery()) {
                     while (rs.next()) {
                         try {
@@ -1681,9 +1710,5 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } finally {
             blockchain.writeUnlock();
         }
-    }
-
-    void shutdown() {
-        ThreadPool.shutdownExecutor("blockchainProcessorService", blockchainProcessorService, 100);
     }
 }
