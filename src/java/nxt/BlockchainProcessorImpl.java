@@ -928,6 +928,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (lastTrimHeight > 0) {
             for (DerivedDbTable table : derivedTables) {
                 table.trim(lastTrimHeight);
+                Db.db.commitTransaction();
             }
         }
     }
