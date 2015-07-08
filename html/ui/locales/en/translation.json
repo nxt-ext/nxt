@@ -1377,5 +1377,10 @@
   "approved_by_transaction_full_hash": "Full Hash of Transaction",
   "approved_by_hashed_secret": "Approved By Hashed Secret",
   "approved_by_hashed_secret_placeholder": "hash of secret",
-  "hash_algorithms": "Hash Algorithms"
+  "hash_algorithm": "Hash Algorithm",
+  "calculate_hash": "Calculate Hash",
+  "hash_calculation": "Hash Calculation",
+  "data_to_hash": "Data To Hash",
+  "calculate": "Calculate",
+  "calculated_hash_is": "Calculated hash is"
 }
