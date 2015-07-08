@@ -1161,9 +1161,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getVersion() != getBlockVersion(previousLastBlock.getHeight())) {
             throw new BlockNotAcceptedException("Invalid version " + block.getVersion(), block);
         }
-        if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
+        if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT) {
+            Logger.logWarningMessage("Received a block from the future, block timestamp is " + block.getTimestamp()
+                    + ", current time is " + curTime + ", system clock may be off");
             throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
-                    + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp(), block);
+                    + " current time is " + curTime, block);
+        }
+        if (block.getTimestamp() <= previousLastBlock.getTimestamp()) {
+            throw new BlockNotAcceptedException("Block timestamp " + block.getTimestamp() + " is before previous block timestamp "
+                    + previousLastBlock.getTimestamp(), block);
         }
         if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.bytes()), block.getPreviousBlockHash())) {
             throw new BlockNotAcceptedException("Previous block hash doesn't match", block);
