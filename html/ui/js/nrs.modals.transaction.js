@@ -181,7 +181,7 @@ var NRS = (function (NRS, $, undefined) {
                 phasingDetails.full_hash_formatted_html = rows;
                 if (transaction.attachment.phasingHashedSecret) {
                     phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
-                    phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
+                    phasingDetails.hashAlgorithm = NRS.getHashAlgorithm(transaction.attachment.phasingHashedSecretAlgorithm);
                 }
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();

@@ -37,6 +37,10 @@ getPollVotes and getPollVote now accept includeWeights parameter, default
 false, to calculate and display the weight assigned to each vote in the poll
 results.
 
+Added Hash API, for calculating the hash of a secret using any of the
+supported hash functions, which can be used for deriving the hash in by-hash
+phasing. See getConstants for the list of supported hash functions.
+
 For running over tor, or other socks proxy, the socksProxyHost and
 socksProxyPort parameters can now be specified in the nxt.properties file
 instead of having to include them in the command line.

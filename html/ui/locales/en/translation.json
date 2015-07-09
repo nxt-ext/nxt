@@ -1372,6 +1372,10 @@
   "send_money_submitted": "Send money request has been submitted",
   "approve_modal_phased_no_approval_tab_help": "Transaction execution is delayed, transaction don't need further approval to become valid",
   "approve_modal_by_transaction_tab_help": "Transaction is approved by the inclusion of the specified transaction hash in the blockchain",
+  "approve_modal_by_hash_tab_help": "Transaction is approved by revealing a hashed secret message",
   "approved_by_transaction_hash": "Approved By Transaction Hash",
-  "approved_by_transaction_full_hash": "Full Hash of Transaction"
+  "approved_by_transaction_full_hash": "Full Hash of Transaction",
+  "approved_by_hashed_secret": "Approved By Hashed Secret",
+  "approved_by_hashed_secret_placeholder": "hash of secret",
+  "hash_algorithms": "Hash Algorithms"
 }
