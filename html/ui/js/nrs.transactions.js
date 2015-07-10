@@ -480,15 +480,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-    NRS.getPhasingFee = function(transaction) {
-        if (transaction.attachment.phasingWhitelist &&
-            transaction.attachment.phasingWhitelist.length > 0 ||
-            transaction.attachment.phasingVotingModel == 0) {
-            return 1;
-        } else {
-            return 2;
-        }
-    };
+    NRS.getPhasingFee = 1;
 
     NRS.getTransactionRowHTML = function(t, actions) {
 		var transactionType = $.t(NRS.transactionTypes[t.type]['subTypes'][t.subtype]['i18nKeyTitle']);
