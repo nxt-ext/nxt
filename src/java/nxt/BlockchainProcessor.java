@@ -40,6 +40,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     boolean isDownloading();
 
+    boolean isProcessingBlock();
+
     int getMinRollbackHeight();
 
     void processPeerBlock(JSONObject request) throws NxtException;

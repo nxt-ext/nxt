@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.AccountLedger.LedgerEvent;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -175,6 +176,8 @@ public abstract class TransactionType {
 
     public abstract byte getSubtype();
 
+    public abstract LedgerEvent getLedgerEvent();
+
     abstract Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException;
 
     abstract Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException;
@@ -196,9 +199,9 @@ public abstract class TransactionType {
                 && !(transaction.getTimestamp() == 0 && Arrays.equals(senderAccount.getPublicKey(), Genesis.CREATOR_PUBLIC_KEY))) {
             return false;
         }
-        senderAccount.addToUnconfirmedBalanceNQT(-totalAmountNQT);
+        senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalAmountNQT);
         if (!applyAttachmentUnconfirmed(transaction, senderAccount)) {
-            senderAccount.addToUnconfirmedBalanceNQT(totalAmountNQT);
+            senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalAmountNQT);
             return false;
         }
         return true;
@@ -209,12 +212,12 @@ public abstract class TransactionType {
     final void apply(TransactionImpl transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
         if (transaction.getPhasing() == null || !isPhasable()) {
-            senderAccount.addToBalanceNQT(-Math.addExact(amount, transaction.getFeeNQT()));
+            senderAccount.addToBalanceNQT(getLedgerEvent(), transaction.getId(), -Math.addExact(amount, transaction.getFeeNQT()));
         } else {
-            senderAccount.addToBalanceNQT(-amount);
+            senderAccount.addToBalanceNQT(getLedgerEvent(), transaction.getId(), -amount);
         }
         if (recipientAccount != null) {
-            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
+            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), amount);
         }
         applyAttachment(transaction, senderAccount, recipientAccount);
     }
@@ -223,10 +226,12 @@ public abstract class TransactionType {
 
     final void undoUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         undoAttachmentUnconfirmed(transaction, senderAccount);
-        senderAccount.addToUnconfirmedBalanceNQT(Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT()));
+        senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+                                                 Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT()));
         if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+            senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+                                                     Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
     }
 
@@ -326,6 +331,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public final LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ORDINARY_PAYMENT;
+            }
+
+            @Override
             public String getName() {
                 return "OrdinaryPayment";
             }
@@ -375,6 +385,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ARBITRARY_MESSAGE;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ARBITRARY_MESSAGE;
             }
 
             @Override
@@ -429,6 +444,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ALIAS_ASSIGNMENT;
             }
 
             @Override
@@ -497,6 +517,10 @@ public abstract class TransactionType {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_SELL;
             }
 
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ALIAS_SELL;
+            }
             @Override
             public String getName() {
                 return "AliasSell";
@@ -585,6 +609,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ALIAS_BUY;
+            }
+
+            @Override
             public String getName() {
                 return "AliasBuy";
             }
@@ -662,6 +691,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ALIAS_DELETE;
+            }
+
+            @Override
             public String getName() {
                 return "AliasDelete";
             }
@@ -728,6 +762,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_POLL_CREATION;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.POLL_CREATION;
             }
 
             @Override
@@ -827,6 +866,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.VOTE_CASTING;
+            }
+
+            @Override
             public String getName() {
                 return "VoteCasting";
             }
@@ -918,6 +962,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_PHASING_VOTE_CASTING;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.PHASING_VOTE_CASTING;
             }
 
             @Override
@@ -1032,6 +1081,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.HUB_ANNOUNCEMENT;
+            }
+
+            @Override
             public String getName() {
                 return "HubAnnouncement";
             }
@@ -1088,6 +1142,11 @@ public abstract class TransactionType {
             @Override
             public byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_INFO;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ACCOUNT_INFO;
             }
 
             @Override
@@ -1153,6 +1212,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_ISSUANCE;
+            }
+
+            @Override
             public String getName() {
                 return "AssetIssuance";
             }
@@ -1182,7 +1246,7 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance) transaction.getAttachment();
                 long assetId = transaction.getId();
                 Asset.addAsset(transaction, attachment);
-                senderAccount.addToAssetAndUnconfirmedAssetBalanceQNT(assetId, attachment.getQuantityQNT());
+                senderAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), assetId, assetId, attachment.getQuantityQNT());
             }
 
             @Override
@@ -1229,6 +1293,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_TRANSFER;
+            }
+
+            @Override
             public String getName() {
                 return "AssetTransfer";
             }
@@ -1248,7 +1317,8 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
                 long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
                 if (unconfirmedAssetBalance >= 0 && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
-                    senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
+                    senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                  attachment.getAssetId(), -attachment.getQuantityQNT());
                     return true;
                 }
                 return false;
@@ -1257,15 +1327,18 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
-                senderAccount.addToAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
-                recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
+                senderAccount.addToAssetBalanceQNT(getLedgerEvent(), transaction.getId(), attachment.getAssetId(),
+                                                   -attachment.getQuantityQNT());
+                recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                         attachment.getAssetId(), attachment.getQuantityQNT());
                 AssetTransfer.addAssetTransfer(transaction, attachment);
             }
 
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
-                senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
+                senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                              attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
             @Override
@@ -1341,6 +1414,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_ASK_ORDER_PLACEMENT;
+            }
+
+            @Override
             public String getName() {
                 return "AskOrderPlacement";
             }
@@ -1360,7 +1438,8 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
                 long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
                 if (unconfirmedAssetBalance >= 0 && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
-                    senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), -attachment.getQuantityQNT());
+                    senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                  attachment.getAssetId(), -attachment.getQuantityQNT());
                     return true;
                 }
                 return false;
@@ -1375,7 +1454,8 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
-                senderAccount.addToUnconfirmedAssetBalanceQNT(attachment.getAssetId(), attachment.getQuantityQNT());
+                senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                              attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
         };
@@ -1385,6 +1465,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_BID_ORDER_PLACEMENT;
             }
 
             @Override
@@ -1406,7 +1491,9 @@ public abstract class TransactionType {
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
                 if (senderAccount.getUnconfirmedBalanceNQT() >= Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT())) {
-                    senderAccount.addToUnconfirmedBalanceNQT(-Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT()));
+                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+                                                             -Math.multiplyExact(attachment.getQuantityQNT(),
+                                                             attachment.getPriceNQT()));
                     return true;
                 }
                 return false;
@@ -1421,7 +1508,8 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
-                senderAccount.addToUnconfirmedBalanceNQT(Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT()));
+                senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+                                                         Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT()));
             }
 
         };
@@ -1457,6 +1545,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_ASK_ORDER_CANCELLATION;
+            }
+
+            @Override
             public String getName() {
                 return "AskOrderCancellation";
             }
@@ -1477,7 +1570,8 @@ public abstract class TransactionType {
                 Order order = Order.Ask.getAskOrder(attachment.getOrderId());
                 Order.Ask.removeOrder(attachment.getOrderId());
                 if (order != null) {
-                    senderAccount.addToUnconfirmedAssetBalanceQNT(order.getAssetId(), order.getQuantityQNT());
+                    senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                  order.getAssetId(), order.getQuantityQNT());
                 }
             }
 
@@ -1504,6 +1598,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_BID_ORDER_CANCELLATION;
+            }
+
+            @Override
             public String getName() {
                 return "BidOrderCancellation";
             }
@@ -1524,7 +1623,8 @@ public abstract class TransactionType {
                 Order order = Order.Bid.getBidOrder(attachment.getOrderId());
                 Order.Bid.removeOrder(attachment.getOrderId());
                 if (order != null) {
-                    senderAccount.addToUnconfirmedBalanceNQT(Math.multiplyExact(order.getQuantityQNT(), order.getPriceNQT()));
+                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+                                                             Math.multiplyExact(order.getQuantityQNT(), order.getPriceNQT()));
                 }
             }
 
@@ -1551,6 +1651,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_DIVIDEND_PAYMENT;
+            }
+
+            @Override
             public String getName() {
                 return "DividendPayment";
             }
@@ -1573,7 +1678,7 @@ public abstract class TransactionType {
                         - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
-                    senderAccount.addToUnconfirmedBalanceNQT(-totalDividendPayment);
+                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalDividendPayment);
                     return true;
                 }
                 return false;
@@ -1592,7 +1697,7 @@ public abstract class TransactionType {
                         - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
                         - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
-                senderAccount.addToUnconfirmedBalanceNQT(totalDividendPayment);
+                senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalDividendPayment);
             }
 
             @Override
@@ -1664,6 +1769,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_LISTING;
+            }
+
+            @Override
             public String getName() {
                 return "DigitalGoodsListing";
             }
@@ -1714,6 +1824,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_DELISTING;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_DELISTING;
             }
 
             @Override
@@ -1776,6 +1891,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_PRICE_CHANGE;
+            }
+
+            @Override
             public String getName() {
                 return "DigitalGoodsPriceChange";
             }
@@ -1834,6 +1954,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_QUANTITY_CHANGE;
             }
 
             @Override
@@ -1899,6 +2024,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_PURCHASE;
+            }
+
+            @Override
             public String getName() {
                 return "DigitalGoodsPurchase";
             }
@@ -1917,7 +2047,8 @@ public abstract class TransactionType {
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
                 if (senderAccount.getUnconfirmedBalanceNQT() >= Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT())) {
-                    senderAccount.addToUnconfirmedBalanceNQT(-Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
+                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+                                -Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
                     return true;
                 }
                 return false;
@@ -1926,7 +2057,8 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
-                senderAccount.addToUnconfirmedBalanceNQT(Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
+                senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+                                Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
             }
 
             @Override
@@ -1986,6 +2118,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_DELIVERY;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_DELIVERY;
             }
 
             @Override
@@ -2055,6 +2192,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_FEEDBACK;
+            }
+
+            @Override
             public String getName() {
                 return "DigitalGoodsFeedback";
             }
@@ -2118,6 +2260,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.DIGITAL_GOODS_REFUND;
+            }
+
+            @Override
             public String getName() {
                 return "DigitalGoodsRefund";
             }
@@ -2136,7 +2283,7 @@ public abstract class TransactionType {
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
                 if (senderAccount.getUnconfirmedBalanceNQT() >= attachment.getRefundNQT()) {
-                    senderAccount.addToUnconfirmedBalanceNQT(-attachment.getRefundNQT());
+                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -attachment.getRefundNQT());
                     return true;
                 }
                 return false;
@@ -2145,14 +2292,14 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
-                senderAccount.addToUnconfirmedBalanceNQT(attachment.getRefundNQT());
+                senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), attachment.getRefundNQT());
             }
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
-                DigitalGoodsStore.refund(transaction.getSenderId(), attachment.getPurchaseId(),
-                        attachment.getRefundNQT(), transaction.getEncryptedMessage());
+                DigitalGoodsStore.refund(getLedgerEvent(), transaction.getId(), transaction.getSenderId(),
+                            attachment.getPurchaseId(), attachment.getRefundNQT(), transaction.getEncryptedMessage());
             }
 
             @Override
@@ -2217,6 +2364,11 @@ public abstract class TransactionType {
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING;
             }
 
             @Override
@@ -2332,6 +2484,11 @@ public abstract class TransactionType {
             }
 
             @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.TAGGED_DATA_UPLOAD;
+            }
+
+            @Override
             Attachment.TaggedDataUpload parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
                 return new Attachment.TaggedDataUpload(buffer, transactionVersion);
             }
@@ -2390,6 +2547,11 @@ public abstract class TransactionType {
             @Override
             public byte getSubtype() {
                 return SUBTYPE_DATA_TAGGED_DATA_EXTEND;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.TAGGED_DATA_EXTEND;
             }
 
             @Override

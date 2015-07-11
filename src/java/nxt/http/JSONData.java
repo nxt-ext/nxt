@@ -17,6 +17,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.AccountLedger.LedgerEntry;
 import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
@@ -51,6 +52,7 @@ import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -909,6 +911,25 @@ final class JSONData {
         if (transaction.getBlockId() != 0) { // those values may be wrong for unconfirmed transactions
             json.put("transactionHeight", transaction.getHeight());
             json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
+        }
+    }
+
+    static void ledgerEntry(JSONObject json, LedgerEntry entry, boolean includeTransactions) {
+        putAccount(json, "account", entry.getAccountId());
+        json.put("ledgerId", Long.toUnsignedString(entry.getLedgerId()));
+        json.put("height", entry.getHeight());
+        json.put("eventType", entry.getEvent().name());
+        json.put("eventId", Long.toUnsignedString(entry.getEventId()));
+        json.put("change", String.valueOf(entry.getChange()));
+        json.put("balance", String.valueOf(entry.getBalance()));
+        if (entry.getHolding() != null) {
+            json.put("holdingType", entry.getHolding().name());
+            if (entry.getHoldingId() != null)
+                json.put("holdingId", Long.toUnsignedString(entry.getHoldingId()));
+        }
+        if (includeTransactions && entry.getEvent().isTransaction()) {
+            Transaction transaction = Nxt.getBlockchain().getTransaction(entry.getEventId());
+            json.put("transaction", JSONData.transaction(transaction));
         }
     }
 

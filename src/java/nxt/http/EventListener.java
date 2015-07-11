@@ -16,6 +16,8 @@
 
 package nxt.http;
 
+import nxt.AccountLedger;
+import nxt.AccountLedger.LedgerEntry;
 import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Db;
@@ -25,6 +27,7 @@ import nxt.TransactionProcessor;
 import nxt.db.TransactionalDb;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -50,7 +53,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * EventListener listens for peer, block and transaction events as
+ * EventListener listens for peer, block, transaction and account ledger events as
  * specified by the EventRegister API.  Events are held until
  * an EventWait API request is received.  All pending events
  * are then returned to the application.
@@ -84,7 +87,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
                     }
                 });
             }
-        }, eventTimeout*500, eventTimeout*500);
+        }, eventTimeout*1000/2, eventTimeout*1000/2);
     }
 
     /** Thread pool for asynchronous completions */
@@ -123,6 +126,12 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
         txEvents.add(TransactionProcessor.Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
     }
 
+    /** Account ledger events - update API comments for EventRegister and EventWait if changed */
+    static final List<AccountLedger.Event> ledgerEvents = new ArrayList<>();
+    static {
+        ledgerEvents.add(AccountLedger.Event.ADD_ENTRY);
+    }
+
     /** Application IP address */
     private final String address;
 
@@ -150,6 +159,9 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     /** Transaction event listeners */
     private final List<TransactionEventListener> txListeners = new ArrayList<>();
 
+    /** Account ledger event listeners */
+    private final List<LedgerEventListener> ledgerListeners = new ArrayList<>();
+
     /** Pending events */
     private final List<PendingEvent> pendingEvents = new ArrayList<>();
 
@@ -176,10 +188,12 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
      * @param   peerEvents              Peer event list
      * @param   blockEvents             Block event list
      * @param   txEvents                Transaction event list
+     * @param   ledgerEvents            Account ledger event list
      * @throws  EventListenerException  Unable to activate event listeners
      */
     void activateListener(List<Peers.Event> peerEvents, List<BlockchainProcessor.Event> blockEvents,
-                                        List<TransactionProcessor.Event> txEvents)
+                                        List<TransactionProcessor.Event> txEvents,
+                                        List<LedgerEventRegistration> ledgerEvents)
                                         throws EventListenerException {
         if (deactivated)
             throw new EventListenerException("Event listener deactivated");
@@ -188,7 +202,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
         //
         // Start listening for events
         //
-        addEvents(peerEvents, blockEvents, txEvents);
+        addEvents(peerEvents, blockEvents, txEvents, ledgerEvents);
         //
         // Add this event listener to the active list
         //
@@ -205,9 +219,11 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
      * @param   peerEvents              Peer event list
      * @param   blockEvents             Block event list
      * @param   txEvents                Transaction event list
+     * @param   ledgerEvents            Account ledger event list
      */
     void addEvents(List<Peers.Event> peerEvents, List<BlockchainProcessor.Event> blockEvents,
-                                        List<TransactionProcessor.Event> txEvents) {
+                                        List<TransactionProcessor.Event> txEvents,
+                                        List<LedgerEventRegistration> ledgerEvents) {
         BlockchainProcessor blockProcessor = Nxt.getBlockchainProcessor();
         TransactionProcessor txProcessor = Nxt.getTransactionProcessor();
         lock.lock();
@@ -235,6 +251,33 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
                     txProcessor.addListener(listener, event);
                 }
             });
+            ledgerEvents.forEach(event -> {
+                //
+                // A listener with account identifier 0 accepts events for all accounts.
+                // This supercedes listeners for a single account.
+                //
+                boolean addListener = true;
+                Iterator<LedgerEventListener> it = ledgerListeners.iterator();
+                while (it.hasNext()) {
+                    LedgerEventListener listener = it.next();
+                    if (listener.getEvent() == event.getEvent()) {
+                        long accountId = listener.getAccountId();
+                        if (accountId == event.getAccountId() || accountId == 0) {
+                            addListener = false;
+                            break;
+                        }
+                        if (event.getAccountId() == 0) {
+                            AccountLedger.removeListener(listener, listener.getEvent());
+                            it.remove();
+                        }
+                    }
+                }
+                if (addListener) {
+                    LedgerEventListener listener = new LedgerEventListener(event);
+                    ledgerListeners.add(listener);
+                    AccountLedger.addListener(listener, event.getEvent());
+                }
+            });
         } finally {
             lock.unlock();
         }
@@ -246,9 +289,11 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
      * @param   peerEvents              Peer event list
      * @param   blockEvents             Block event list
      * @param   txEvents                Transaction event list
+     * @param   ledgerEvents            Account ledger event list
      */
     void removeEvents(List<Peers.Event> peerEvents, List<BlockchainProcessor.Event> blockEvents,
-                                        List<TransactionProcessor.Event> txEvents) {
+                                        List<TransactionProcessor.Event> txEvents,
+                                        List<LedgerEventRegistration> ledgerEvents) {
         BlockchainProcessor blockProcessor = Nxt.getBlockchainProcessor();
         TransactionProcessor txProcessor = Nxt.getTransactionProcessor();
         lock.lock();
@@ -262,6 +307,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
                     if (peerListener.getEvent() == event) {
                         Peers.removeListener(peerListener, event);
                         peerIt.remove();
+                        break;
                     }
                 }
             });
@@ -272,6 +318,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
                     if (blockListener.getEvent() == event) {
                         blockProcessor.removeListener(blockListener, event);
                         blockIt.remove();
+                        break;
                     }
                 }
             });
@@ -282,13 +329,30 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
                     if (txListener.getEvent() == event) {
                         txProcessor.removeListener(txListener, event);
                         txIt.remove();
+                        break;
+                    }
+                }
+            });
+            ledgerEvents.forEach(event -> {
+                //
+                // Specifying an account identifier of 0 results in removing all
+                // listeners for the specified event.  Otherwise, only the listener
+                // for the specified account is removed.
+                //
+                Iterator<LedgerEventListener> ledgerIt = ledgerListeners.iterator();
+                while (ledgerIt.hasNext()) {
+                    LedgerEventListener ledgerListener = ledgerIt.next();
+                    if (ledgerListener.getEvent() == event.getEvent() &&
+                            (ledgerListener.getAccountId() == event.getAccountId() || event.getAccountId() == 0)) {
+                        AccountLedger.removeListener(ledgerListener, event.getEvent());
+                        ledgerIt.remove();
                     }
                 }
             });
             //
             // Deactivate the listeners if there are no events remaining
             //
-            if (peerListeners.isEmpty() && blockListeners.isEmpty() && txListeners.isEmpty())
+            if (peerListeners.isEmpty() && blockListeners.isEmpty() && txListeners.isEmpty() && ledgerListeners.isEmpty())
                 deactivateListener();
         } finally {
             lock.unlock();
@@ -323,6 +387,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
             peerListeners.forEach(listener -> Peers.removeListener(listener, listener.getEvent()));
             blockListeners.forEach(listener -> blockProcessor.removeListener(listener, listener.getEvent()));
             txListeners.forEach(listener -> txProcessor.removeListener(listener, listener.getEvent()));
+            ledgerListeners.forEach(listener -> AccountLedger.removeListener(listener, listener.getEvent()));
         } finally {
             lock.unlock();
         }
@@ -540,7 +605,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     /**
      * Pending event
      */
-    class PendingEvent {
+    static class PendingEvent {
 
         /** Event name */
         private final String name;
@@ -847,9 +912,148 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     }
 
     /**
+     * Ledger event listener
+     */
+    private class LedgerEventListener implements Listener<LedgerEntry> {
+
+        /** Owning event listener */
+        private final EventListener owner;
+
+        /** Account identifier */
+        private final long accountId;
+
+        /** Event */
+        private final AccountLedger.Event event;
+
+        /**
+         * Create the ledger event listener
+         *
+         * @param   event           Ledger event registration
+         */
+        public LedgerEventListener(LedgerEventRegistration event) {
+            this.owner = EventListener.this;
+            this.event = event.getEvent();
+            this.accountId = event.getAccountId();
+        }
+
+        /**
+         * Return the event for this listener
+         *
+         * @return                  Ledger event
+         */
+        public AccountLedger.Event getEvent() {
+            return event;
+        }
+
+        /**
+         * Return the account identifier for this listener
+         *
+         * @return                  Account identifier
+         */
+        public long getAccountId() {
+            return accountId;
+        }
+
+        /**
+         * Event notification
+         *
+         * @param   entry           Ledger entry
+         */
+        @Override
+        public void notify(LedgerEntry entry) {
+            if (entry.getAccountId() != accountId && accountId != 0)
+                return;
+            lock.lock();
+            try {
+                PendingEvent pendingEvent = new PendingEvent(String.format("Ledger.%s.%s",
+                        event.name(), Convert.rsAccount(entry.getAccountId())),
+                        Long.toUnsignedString(entry.getLedgerId()));
+                if (Db.db.isInTransaction()) {
+                    pendingEvent.setThread(Thread.currentThread());
+                    dbEvents.add(pendingEvent);
+                    Db.db.registerCallback(EventListener.this);
+                } else {
+                    pendingEvents.add(pendingEvent);
+                    if (!pendingWaits.isEmpty() && !dispatched) {
+                        dispatched = true;
+                        threadPool.submit(EventListener.this);
+                    }
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        /**
+         * Return the hash code for this event listener
+         *
+         * @return                  Hash code
+         */
+        @Override
+        public int hashCode() {
+            return event.hashCode();
+        }
+
+        /**
+         * Check if two events listeners are equal
+         *
+         * @param   obj             Comparison listener
+         * @return                  TRUE if the listeners are equal
+         */
+        @Override
+        public boolean equals(Object obj) {
+            return (obj!=null && (obj instanceof LedgerEventListener) &&
+                                    owner==((LedgerEventListener)obj).owner &&
+                                    event==((LedgerEventListener)obj).event &&
+                                    accountId==((LedgerEventListener)obj).accountId);
+        }
+    }
+
+    /**
+     * Account ledger event registration
+     */
+    static class LedgerEventRegistration {
+
+        /** Ledger event */
+        private final AccountLedger.Event event;
+
+        /** Account identifier */
+        private final long accountId;
+
+        /**
+         * Create the ledger event registration
+         *
+         * @param   event           Ledger event
+         * @param   accountId       Account identifier
+         */
+        LedgerEventRegistration(AccountLedger.Event event, long accountId) {
+            this.event = event;
+            this.accountId = accountId;
+        }
+
+        /**
+         * Return the account ledger event
+         *
+         * @return                  Account ledger event
+         */
+        public AccountLedger.Event getEvent() {
+            return event;
+        }
+
+        /**
+         * Return the account identifier
+         *
+         * @return                  Account identifier
+         */
+        public long getAccountId() {
+            return accountId;
+        }
+    }
+
+    /**
      * Event exception
      */
-    class EventListenerException extends Exception {
+    static class EventListenerException extends Exception {
 
         /**
          * Create an event exception with a message

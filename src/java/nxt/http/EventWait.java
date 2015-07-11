@@ -67,6 +67,8 @@ import java.util.List;
  * <li>Block.BLOCK_GENERATED</li>
  * <li>Block.BLOCK_POPPED</li>
  * <li>Block.BLOCK_PUSHED</li>
+ * <li>Ledger.ADD_ENTRY.account - The account suffix will be Reed-Solomon identifier
+ * of the account associated with the ledger entry.</li>
  * <li>Peer.ADD_INBOUND</li>
  * <li>Peer.ADDED_ACTIVE_PEER</li>
  * <li>Peer.BLACKLIST</li>
@@ -168,6 +170,16 @@ public class EventWait extends APIServlet.APIRequestHandler {
     @Override
     final boolean requirePost() {
         return true;
+    }
+
+    /**
+     * No required block parameters
+     *
+     * @return                      FALSE to disable the required block parameters
+     */
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
     }
 
     /**

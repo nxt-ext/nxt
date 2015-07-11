@@ -16,6 +16,9 @@
 
 package nxt;
 
+import nxt.AccountLedger.LedgerEntry;
+import nxt.AccountLedger.LedgerEvent;
+import nxt.AccountLedger.LedgerHolding;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbClause;
@@ -1122,7 +1125,7 @@ public final class Account {
         }
     }
 
-    void addToAssetBalanceQNT(long assetId, long quantityQNT) {
+    void addToAssetBalanceQNT(LedgerEvent event, long eventId, long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -1138,9 +1141,11 @@ public final class Account {
         accountAsset.save();
         listeners.notify(this, Event.ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.ASSET_BALANCE, assetId,
+                                               quantityQNT, assetBalance));
     }
 
-    void addToUnconfirmedAssetBalanceQNT(long assetId, long quantityQNT) {
+    void addToUnconfirmedAssetBalanceQNT(LedgerEvent event, long eventId, long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -1156,9 +1161,12 @@ public final class Account {
         accountAsset.save();
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                                               LedgerHolding.UNCONFIRMED_ASSET_BALANCE, assetId,
+                                               quantityQNT, unconfirmedAssetBalance));
     }
 
-    void addToAssetAndUnconfirmedAssetBalanceQNT(long assetId, long quantityQNT) {
+    void addToAssetAndUnconfirmedAssetBalanceQNT(LedgerEvent event, long eventId, long assetId, long quantityQNT) {
         if (quantityQNT == 0) {
             return;
         }
@@ -1179,9 +1187,14 @@ public final class Account {
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                                               LedgerHolding.UNCONFIRMED_ASSET_BALANCE, assetId,
+                                               quantityQNT, unconfirmedAssetBalance));
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, getId(), LedgerHolding.ASSET_BALANCE, assetId,
+                                               quantityQNT, assetBalance));
     }
 
-    void addToCurrencyUnits(long currencyId, long units) {
+    void addToCurrencyUnits(LedgerEvent event, long eventId, long currencyId, long units) {
         if (units == 0) {
             return;
         }
@@ -1197,9 +1210,11 @@ public final class Account {
         accountCurrency.save();
         listeners.notify(this, Event.CURRENCY_BALANCE);
         currencyListeners.notify(accountCurrency, Event.CURRENCY_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.CURRENCY_BALANCE, currencyId,
+                                               units, currencyUnits));
     }
 
-    void addToUnconfirmedCurrencyUnits(long currencyId, long units) {
+    void addToUnconfirmedCurrencyUnits(LedgerEvent event, long eventId, long currencyId, long units) {
         if (units == 0) {
             return;
         }
@@ -1214,9 +1229,12 @@ public final class Account {
         accountCurrency.save();
         listeners.notify(this, Event.UNCONFIRMED_CURRENCY_BALANCE);
         currencyListeners.notify(accountCurrency, Event.UNCONFIRMED_CURRENCY_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                                               LedgerHolding.UNCONFIRMED_CURRENCY_BALANCE, currencyId,
+                                               units, unconfirmedCurrencyUnits));
     }
 
-    void addToCurrencyAndUnconfirmedCurrencyUnits(long currencyId, long units) {
+    void addToCurrencyAndUnconfirmedCurrencyUnits(LedgerEvent event, long eventId, long currencyId, long units) {
         if (units == 0) {
             return;
         }
@@ -1237,9 +1255,14 @@ public final class Account {
         listeners.notify(this, Event.UNCONFIRMED_CURRENCY_BALANCE);
         currencyListeners.notify(accountCurrency, Event.CURRENCY_BALANCE);
         currencyListeners.notify(accountCurrency, Event.UNCONFIRMED_CURRENCY_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                                               LedgerHolding.UNCONFIRMED_CURRENCY_BALANCE, currencyId,
+                                               units, unconfirmedCurrencyUnits));
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.CURRENCY_BALANCE, currencyId,
+                                               units, currencyUnits));
     }
 
-    void addToBalanceNQT(long amountNQT) {
+    void addToBalanceNQT(LedgerEvent event, long eventId, long amountNQT) {
         if (amountNQT == 0) {
             return;
         }
@@ -1248,9 +1271,11 @@ public final class Account {
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.NXT_BALANCE,
+                                               null, amountNQT, this.balanceNQT));
     }
 
-    void addToUnconfirmedBalanceNQT(long amountNQT) {
+    void addToUnconfirmedBalanceNQT(LedgerEvent event, long eventId, long amountNQT) {
         if (amountNQT == 0) {
             return;
         }
@@ -1258,9 +1283,11 @@ public final class Account {
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.UNCONFIRMED_NXT_BALANCE, null,
+                                               amountNQT, this.unconfirmedBalanceNQT));
     }
 
-    void addToBalanceAndUnconfirmedBalanceNQT(long amountNQT) {
+    void addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent event, long eventId, long amountNQT) {
         if (amountNQT == 0) {
             return;
         }
@@ -1271,6 +1298,10 @@ public final class Account {
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.UNCONFIRMED_NXT_BALANCE, null,
+                                               amountNQT, this.unconfirmedBalanceNQT));
+        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.NXT_BALANCE, null,
+                                               amountNQT, this.balanceNQT));
     }
 
     void addToForgedBalanceNQT(long amountNQT) {
@@ -1334,11 +1365,12 @@ public final class Account {
         for (final AccountAsset accountAsset : accountAssets) {
             if (accountAsset.getAccountId() != this.id && accountAsset.getAccountId() != Genesis.CREATOR_ID && accountAsset.getQuantityQNT() != 0) {
                 long dividend = Math.multiplyExact(accountAsset.getQuantityQNT(), amountNQTPerQNT);
-                Account.getAccount(accountAsset.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(dividend);
+                Account.getAccount(accountAsset.getAccountId())
+                        .addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, dividend);
                 totalDividend += dividend;
             }
         }
-        this.addToBalanceNQT(-totalDividend);
+        this.addToBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, -totalDividend);
     }
 
     @Override

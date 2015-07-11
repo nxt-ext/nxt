@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.AccountLedger.LedgerEvent;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -656,7 +657,7 @@ public interface Appendix {
         @Override
         void validateAtFinish(Transaction transaction) {
         }
-        
+
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             PrunableMessage.add(transaction, this);
@@ -1171,8 +1172,10 @@ public interface Appendix {
         void reject(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
-            senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
-            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
+            senderAccount.addToUnconfirmedBalanceNQT(LedgerEvent.REJECT_PHASED_TRANSACTION, transaction.getId(),
+                                                     transaction.getAmountNQT());
+            TransactionProcessorImpl.getInstance()
+                    .notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been rejected");
         }
 

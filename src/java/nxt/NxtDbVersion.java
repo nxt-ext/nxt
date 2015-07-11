@@ -934,6 +934,14 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 394:
+                apply("CREATE TABLE IF NOT EXISTS account_ledger (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "event_type TINYINT NOT NULL, event_id BIGINT NOT NULL, holding_type TINYINT NOT NULL, "
+                        + "holding_id BIGINT, change BIGINT NOT NULL, balance BIGINT NOT NULL, height INT NOT NULL");
+            case 395:
+                apply("CREATE INDEX IF NOT EXISTS account_ledger_id_idx ON account_ledger(account_id, db_id)");
+            case 396:
+                apply("CREATE INDEX IF NOT EXISTS account_ledger_height_idx ON account_ledger(height)");
+            case 397:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

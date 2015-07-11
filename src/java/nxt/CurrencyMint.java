@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.AccountLedger.LedgerEvent;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -132,7 +133,8 @@ public final class CurrencyMint {
         return counter;
     }
 
-    static void mintCurrency(final Account account, final Attachment.MonetarySystemCurrencyMinting attachment) {
+    static void mintCurrency(LedgerEvent event, long eventId, final Account account,
+                             final Attachment.MonetarySystemCurrencyMinting attachment) {
         CurrencyMint currencyMint = currencyMintTable.get(currencyMintDbKeyFactory.newKey(attachment.getCurrencyId(), account.getId()));
         if (currencyMint != null && attachment.getCounter() <= currencyMint.getCounter()) {
             return;
@@ -146,7 +148,7 @@ public final class CurrencyMint {
             }
             currencyMintTable.insert(currencyMint);
             long units = Math.min(attachment.getUnits(), currency.getMaxSupply() - currency.getCurrentSupply());
-            account.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
+            account.addToCurrencyAndUnconfirmedCurrencyUnits(event, eventId, currency.getId(), units);
             currency.increaseSupply(units);
             listeners.notify(new Mint(account.getId(), currency.getId(), units), Event.CURRENCY_MINT);
         }

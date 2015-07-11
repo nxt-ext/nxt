@@ -120,6 +120,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile boolean isTrimming;
     private volatile boolean isScanning;
     private volatile boolean isDownloading;
+    private volatile boolean isProcessingBlock;
     private volatile boolean alreadyInitialized = false;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
@@ -958,6 +959,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
+    public boolean isProcessingBlock() {
+        return isProcessingBlock;
+    }
+
+    @Override
     public int getMinRollbackHeight() {
         return trimDerivedTables ? (lastTrimHeight > 0 ? lastTrimHeight : Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0)) : 0;
     }
@@ -1264,30 +1270,35 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void accept(BlockImpl block, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions) throws TransactionNotAcceptedException {
-        for (TransactionImpl transaction : block.getTransactions()) {
-            if (! transaction.applyUnconfirmed()) {
-                throw new TransactionNotAcceptedException("Double spending", transaction);
+        try {
+            isProcessingBlock = true;
+            for (TransactionImpl transaction : block.getTransactions()) {
+                if (! transaction.applyUnconfirmed()) {
+                    throw new TransactionNotAcceptedException("Double spending", transaction);
+                }
             }
-        }
-        blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
-        block.apply();
-        for (TransactionImpl transaction : validPhasedTransactions) {
-            transaction.getPhasing().countVotes(transaction);
-        }
-        for (TransactionImpl transaction : invalidPhasedTransactions) {
-            transaction.getPhasing().reject(transaction);
-        }
-        for (TransactionImpl transaction : block.getTransactions()) {
-            try {
-                transaction.apply();
-            } catch (RuntimeException e) {
-                Logger.logErrorMessage(e.toString(), e);
-                throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
+            blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
+            block.apply();
+            for (TransactionImpl transaction : validPhasedTransactions) {
+                transaction.getPhasing().countVotes(transaction);
             }
-        }
-        blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
-        if (block.getTransactions().size() > 0) {
-            TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
+            for (TransactionImpl transaction : invalidPhasedTransactions) {
+                transaction.getPhasing().reject(transaction);
+            }
+            for (TransactionImpl transaction : block.getTransactions()) {
+                try {
+                    transaction.apply();
+                } catch (RuntimeException e) {
+                    Logger.logErrorMessage(e.toString(), e);
+                    throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
+                }
+            }
+            blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
+            if (block.getTransactions().size() > 0) {
+                TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
+            }
+        } finally {
+            isProcessingBlock = false;
         }
     }
 

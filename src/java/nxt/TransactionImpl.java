@@ -1000,6 +1000,7 @@ final class TransactionImpl implements Transaction {
     }
 
     void apply() {
+
         Account senderAccount = Account.getAccount(getSenderId());
         senderAccount.apply(getSenderPublicKey());
         Account recipientAccount = Account.getAccount(recipientId);
@@ -1008,10 +1009,10 @@ final class TransactionImpl implements Transaction {
         }
         if (referencedTransactionFullHash != null
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+            senderAccount.addToUnconfirmedBalanceNQT(getType().getLedgerEvent(), getId(), Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (phasing != null && type.isPhasable()) {
-            senderAccount.addToBalanceNQT(-feeNQT);
+            senderAccount.addToBalanceNQT(getType().getLedgerEvent(), getId(), -feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {
             if (phasing == null || !appendage.isPhasable()) {

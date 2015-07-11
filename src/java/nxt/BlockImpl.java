@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.AccountLedger.LedgerEvent;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -388,7 +389,7 @@ final class BlockImpl implements Block {
     void apply() {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(getGeneratorPublicKey());
-        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(totalFeeNQT);
+        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.BLOCK_GENERATED, getId(), totalFeeNQT);
         generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
     }
 

@@ -1,0 +1,197 @@
+/******************************************************************************
+ * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
+package nxt.http;
+
+import nxt.AccountLedger;
+import nxt.AccountLedger.LedgerEntry;
+import nxt.NxtException;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
+
+/**
+ * <p>
+ * The GetAccountLedgerEntry API will return an entry from the account ledger.  The
+ * account ledger tracks all account changes as determined by the nxt.ledgerAccounts,
+ * nxt.ledgerLogUnconfirmed and nxt.ledgerTrimKeep properties.
+ * </p>
+ * <table>
+ *   <caption><b>Request parameters</b></caption>
+ *   <thead>
+ *     <tr>
+ *       <th>Name</th>
+ *       <th>Description</th>
+ *     </tr>
+ *   </thead>
+ *   <tbody>
+ *     <tr>
+ *       <td>ledgerId</td>
+ *       <td>The ledger entry identifier.  This is a required parameter.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>includeTransaction</td>
+ *       <td>Specify TRUE to include the transaction associated with the ledger entry.  The default is FALSE.</td>
+ *     </tr>
+ *   </tbody>
+ * </table>
+ * <br>
+ * <table>
+ *   <caption><b>Ledger entry fields</b></caption>
+ *   <thead>
+ *     <tr>
+ *       <th>Name</th>
+ *       <th>Description</th>
+ *     </tr>
+ *   </thead>
+ *   <tbody>
+ *     <tr>
+ *       <td>account</td>
+ *       <td>Account identifier.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>accountRS</td>
+ *       <td>Account Reed-Solomon identifier.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>balance</td>
+ *       <td>Update balance for the holding identified by 'holdingType'.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>change</td>
+ *       <td>Change in the balance for the holding identified by 'holdingType'.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>eventId</td>
+ *       <td>The block or transaction associated with the event.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>eventType</td>
+ *       <td>Event causing the account change.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>height</td>
+ *       <td>The block height associated with the event.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>holdingId</td>
+ *       <td>The item identifier for an asset or currency balance.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>holdingType</td>
+ *       <td>The item being changed (account balance, asset balance or currency balance).</td>
+ *     </tr>
+ *     <tr>
+ *       <td>ledgerId</td>
+ *       <td>The ledger entry identifier.  This is a counter that is incremented each time
+ *           a new entry is added to the account ledger.
+ *       </td>
+ *     </tr>
+ *     <tr>
+ *       <td>transaction</td>
+ *       <td>Transaction associated with the event if 'includeTransaction' is TRUE.</td>
+ *     </tr>
+ *   </tbody>
+ * </table>
+ * <br>
+ * <table>
+ *   <caption><b>Values returned for 'holdingType'</b></caption>
+ *   <thead>
+ *     <tr>
+ *       <th>Name</th>
+ *       <th>Description</th>
+ *     </tr>
+ *   </thead>
+ *   <tbody>
+ *     <tr>
+ *       <td>ASSET_BALANCE</td>
+ *       <td>Change in the asset balance.  The asset identifier is the 'holdingId'.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>CURRENCY_BALANCE</td>
+ *       <td>Change in the currency balance.  The currency identifier is the 'holdingId'.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>NXT_BALANCE</td>
+ *       <td>Change in the NXT balance for the account.  There is no 'holdingId'.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>UNCONFIRMED_ASSET_BALANCE</td>
+ *       <td>Change in the unconfirmed asset balance.  The asset identifier is the 'holdingId'.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>UNCONFIRMED_CURRENCY_BALANCE</td>
+ *       <td>Change in the unconfirmed currency balance.  The currency identifier is the 'holdingId'.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>UNCONFIRMED_NXT_BALANCE</td>
+ *       <td>Change in the unconfirmed NXT balance for the account.  There is no 'holdingId'.</td>
+ *     </tr>
+ *   </tbody>
+ * </table>
+ */
+public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
+
+    /** GetAccountLedgerEntry instance */
+    static final GetAccountLedgerEntry instance = new GetAccountLedgerEntry();
+
+    /**
+     * Create the GetAccountLedgerEntry instance
+     */
+    private GetAccountLedgerEntry() {
+        super(new APITag[] {APITag.ACCOUNTS}, "ledgerId", "includeTransaction");
+    }
+
+    /**
+     * Process the GetAccountLedgerEntry API request
+     *
+     * @param   req                 API request
+     * @return                      API response
+     * @throws  NxtException        Invalid request
+     */
+    @Override
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        //
+        // Process the request parameters
+        //
+        long ledgerId = ParameterParser.getUnsignedLong(req, "ledgerId", true);
+        boolean includeTransaction = "true".equalsIgnoreCase(req.getParameter("includeTransaction"));
+        //
+        // Get the ledger entry
+        //
+        LedgerEntry ledgerEntry = AccountLedger.getEntry(ledgerId);
+        if (ledgerEntry == null)
+            return JSONResponses.UNKNOWN_ENTRY;
+        //
+        // Return the response
+        //
+        JSONObject response = new JSONObject();
+        JSONData.ledgerEntry(response, ledgerEntry, includeTransaction);
+        return response;
+    }
+
+    /**
+     * No required block parameters
+     *
+     * @return                      FALSE to disable the required block parameters
+     */
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+}

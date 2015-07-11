@@ -16,10 +16,14 @@
 
 package nxt.http;
 
+import nxt.AccountLedger;
 import nxt.BlockchainProcessor;
 import nxt.TransactionProcessor;
 import nxt.http.EventListener.EventListenerException;
+import nxt.http.EventListener.LedgerEventRegistration;
 import nxt.peer.Peers;
+import nxt.util.Convert;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -79,6 +83,11 @@ import java.util.List;
  * <li>Block.BLOCK_GENERATED</li>
  * <li>Block.BLOCK_POPPED</li>
  * <li>Block.BLOCK_PUSHED</li>
+ * <li>Ledger.ADD_ENTRY - Changes to all accounts will be reported.</li>
+ * <li>Ledger.ADD_ENTRY.account - Only changes to the specified account will be reported.  'account'
+ * may be the numeric identifier or the Reed-Solomon identifier
+ * of the account to monitor for updates.  Specifying an account identifier of 0 is the same as
+ * not specifying an account.</li>
  * <li>Peer.ADD_INBOUND</li>
  * <li>Peer.ADDED_ACTIVE_PEER</li>
  * <li>Peer.BLACKLIST</li>
@@ -163,19 +172,31 @@ public class EventRegister extends APIServlet.APIRequestHandler {
         List<Peers.Event> peerEvents = new ArrayList<>();
         List<BlockchainProcessor.Event> blockEvents = new ArrayList<>();
         List<TransactionProcessor.Event> txEvents = new ArrayList<>();
+        List<LedgerEventRegistration> ledgerEvents = new ArrayList<>();
         String[] params = req.getParameterValues("event");
         if (params == null) {
             peerEvents.addAll(EventListener.peerEvents);
             blockEvents.addAll(EventListener.blockEvents);
             txEvents.addAll(EventListener.txEvents);
+            EventListener.ledgerEvents.forEach(event -> ledgerEvents.add(new LedgerEventRegistration(event, 0)));
         } else {
             for (String param : params) {
-                String[] parts = param.split("\\.");
-                if (parts.length != 2) {
-                    response = incorrectEvent;
-                    break;
-                }
+                long accountId = 0;
                 boolean eventAdded = false;
+                String[] parts = param.split("\\.");
+                if (parts[0].equals("Ledger")) {
+                    if (parts.length == 3) {
+                        try {
+                            accountId = Convert.parseAccountId(parts[2]);
+                        } catch (RuntimeException e) {
+                            return incorrectEvent;
+                        }
+                    } else if (parts.length != 2) {
+                        return incorrectEvent;
+                    }
+                } else if (parts.length != 2) {
+                    return incorrectEvent;
+                }
                 switch (parts[0]) {
                     case "Block":
                         for (BlockchainProcessor.Event event : EventListener.blockEvents) {
@@ -204,39 +225,44 @@ public class EventRegister extends APIServlet.APIRequestHandler {
                             }
                         }
                         break;
+                    case "Ledger":
+                        for (AccountLedger.Event event : EventListener.ledgerEvents) {
+                            if (event.name().equals(parts[1])) {
+                                ledgerEvents.add(new LedgerEventRegistration(event, accountId));
+                                eventAdded = true;
+                                break;
+                            }
+                        }
                 }
                 if (!eventAdded) {
-                    response = unknownEvent;
-                    break;
+                    return unknownEvent;
                 }
             }
         }
         //
         // Register the event listener
         //
-        if (response == null) {
-            try {
-                if (addEvents || removeEvents) {
-                    EventListener listener = EventListener.eventListeners.get(req.getRemoteAddr());
-                    if (listener != null) {
-                        if (addEvents)
-                            listener.addEvents(peerEvents, blockEvents, txEvents);
-                        else
-                            listener.removeEvents(peerEvents, blockEvents, txEvents);
-                        response = eventsRegistered;
-                    } else {
-                        response = noEventsRegistered;
-                    }
-                } else {
-                    EventListener listener = new EventListener(req.getRemoteAddr());
-                    listener.activateListener(peerEvents, blockEvents, txEvents);
+        try {
+            if (addEvents || removeEvents) {
+                EventListener listener = EventListener.eventListeners.get(req.getRemoteAddr());
+                if (listener != null) {
+                    if (addEvents)
+                        listener.addEvents(peerEvents, blockEvents, txEvents, ledgerEvents);
+                    else
+                        listener.removeEvents(peerEvents, blockEvents, txEvents, ledgerEvents);
                     response = eventsRegistered;
+                } else {
+                    response = noEventsRegistered;
                 }
-            } catch (EventListenerException exc) {
-                response = new JSONObject();
-                response.put("errorCode", 7);
-                response.put("errorDescription", "Unable to register events: "+exc.getMessage());
+            } else {
+                EventListener listener = new EventListener(req.getRemoteAddr());
+                listener.activateListener(peerEvents, blockEvents, txEvents, ledgerEvents);
+                response = eventsRegistered;
             }
+        } catch (EventListenerException exc) {
+            response = new JSONObject();
+            response.put("errorCode", 7);
+            response.put("errorDescription", "Unable to register events: "+exc.getMessage());
         }
         //
         // Return the response
@@ -249,4 +275,13 @@ public class EventRegister extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    /**
+     * No required block parameters
+     *
+     * @return                      FALSE to disable the required block parameters
+     */
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
 }
