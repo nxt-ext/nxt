@@ -14,36 +14,44 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.peer;
+/**
+ * @depends {nrs.js}
+ * @depends {nrs.modals.js}
+ */
+var NRS = (function(NRS, $, undefined) {
+	$("#hash_modal").on("show.bs.modal", function(e) {
+		$("#hash_calculation_output").html("").hide();
+		$("#hash_modal_button").data("form", "calculate_hash_form");
+	});
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
+	NRS.forms.hash = function($modal) {
+		var data = $.trim($("#calculate_hash_data").val());
+		if (!data) {
+			$("#hash_calculation_output").html("").hide();
+			return {
+				"error": "Data is a required field."
+			};
+		} else {
+			return {};
+		}
+	};
 
-final class GetPeers extends PeerServlet.PeerRequestHandler {
+	NRS.forms.hashComplete = function(response, data) {
+		$("#hash_modal").find(".error_message").hide();
 
-    static final GetPeers instance = new GetPeers();
+		if (response.hash) {
+			$("#hash_calculation_output").html($.t("calculated_hash_is") + "<br/><br/>" +
+				"<textarea style='width:100%' rows='3'>" + String(response.hash).escapeHTML() + "</textarea>").show();
+		} else {
+			$.growl($.t("error_calculate_hash"), {
+				"type": "danger"
+			});
+		}
+	};
 
-    private GetPeers() {}
+	NRS.forms.hashError = function() {
+		$("#hash_calculation_output").hide();
+	};
 
-
-    @Override
-    JSONStreamAware processRequest(JSONObject request, Peer peer) {
-        JSONObject response = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        Peers.getAllPeers().forEach(otherPeer -> {
-            if (!otherPeer.isBlacklisted() && otherPeer.getAnnouncedAddress() != null
-                    && otherPeer.getState() == Peer.State.CONNECTED && otherPeer.shareAddress()) {
-                jsonArray.add(otherPeer.getAnnouncedAddress());
-            }
-        });
-        response.put("peers", jsonArray);
-        return response;
-    }
-
-    @Override
-    boolean rejectWhileDownloading() {
-        return false;
-    }
-
-}
+	return NRS;
+}(NRS || {}, jQuery));

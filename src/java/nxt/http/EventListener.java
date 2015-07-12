@@ -78,12 +78,11 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
             @Override
             public void run() {
                 long oldestTime = System.currentTimeMillis() - eventTimeout*1000;
-                //TODO: why not directly do eventListeners().values().stream(), or parallelStream() ?
-                List<EventListener>listeners = new ArrayList<>();
-                listeners.addAll(eventListeners.values());
-                listeners.stream()
-                         .filter(listener -> listener.getTimestamp() < oldestTime)
-                         .forEach(EventListener::deactivateListener);
+                eventListeners.values().forEach(listener -> {
+                    if (listener.getTimestamp() < oldestTime) {
+                        listener.deactivateListener();
+                    }
+                });
             }
         }, eventTimeout*500, eventTimeout*500);
     }

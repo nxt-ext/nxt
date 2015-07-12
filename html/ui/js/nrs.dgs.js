@@ -295,7 +295,8 @@ var NRS = (function(NRS, $) {
 			topSection.hide();
 			searchCenter.hide();
 			pagination.hide();
-			return;
+            $("#dgs_search_results").hide();
+            return;
 		}
 		dgsDisabled.hide();
 		topSection.show();

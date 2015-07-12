@@ -565,7 +565,7 @@ final class ParameterParser {
                 data = fileData.getData();
                 // Depending on how the client submits the form, the filename, can be a regular parameter
                 // or encoded in the multipart form. If its not a parameter we take from the form
-                if (filename == null) {
+                if (filename.equals("")) {
                     filename = fileData.getFilename();
                 }
                 if (name == null) {

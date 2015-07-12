@@ -332,6 +332,7 @@ public final class APIServlet extends HttpServlet {
         map.put("setLogging", SetLogging.instance);
         map.put("shutdown", Shutdown.instance);
         map.put("trimDerivedTables", TrimDerivedTables.instance);
+        map.put("hash", Hash.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }

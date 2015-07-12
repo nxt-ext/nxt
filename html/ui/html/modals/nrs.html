@@ -349,6 +349,36 @@
     </div>
 </div>
 
+<div class="modal fade modal-no-hide" id="hash_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="hash_calculation">HASH CALCULATION</h4>
+            </div>
+            <div class="modal-body">
+                <div id="hash_modal_calculate_hash" class="hash_modal_content">
+                    <form role="form" id="calculate_hash_form" autocomplete="off">
+                        <div class="callout callout-danger error_message" style="display:none"></div>
+                        <div class="form-group">
+                            <label for="calculate_hash_data" data-i18n="data">DATA</label>
+                            <textarea class="form-control" name="secret" id="calculate_hash_data" placeholder="DATA TO HASH" data-i18n="[placeholder]data_to_hash" tabindex="1" rows="3"></textarea>
+                        </div>
+                        <div class="form-group hash_algorithm_model_group" data-modal-ui-element="hash_algorithm_model_modal_ui_element"></div>
+                        <div class="callout callout-info" id="hash_calculation_output" style="display:none;"></div>
+                        <input type="hidden" name="request_type" value="hash" />
+                        <input type="hidden" name="secretIsText" value="true" />
+                    </form>
+                 </div>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="hash_modal_button" data-i18n="calculate">Calculate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="block_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-wide">
         <div class="modal-content">

@@ -139,8 +139,9 @@ public class PeerWebSocket {
      * @throws  IOException         I/O error occurred
      */
     public boolean startClient(URI uri) throws IOException {
-        if (peerClient == null)
+        if (peerClient == null) {
             return false;
+        }
         String address = String.format("%s:%d", uri.getHost(), uri.getPort());
         boolean useWebSocket = false;
         //
@@ -182,8 +183,9 @@ public class PeerWebSocket {
         } catch (Exception exc) {
             Logger.logDebugMessage(String.format("WebSocket connection to %s failed", address), exc);
         } finally {
-            if (!useWebSocket)
+            if (!useWebSocket) {
                 close();
+            }
             lock.unlock();
         }
         return useWebSocket;
@@ -197,10 +199,11 @@ public class PeerWebSocket {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0)
+        if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0) {
             Logger.logDebugMessage(String.format("%s WebSocket connection with %s completed",
                     peerServlet != null ? "Inbound" : "Outbound",
                     session.getRemoteAddress().getHostString()));
+        }
     }
 
     /**
@@ -239,8 +242,9 @@ public class PeerWebSocket {
         //
         lock.lock();
         try {
-            if (session == null || !session.isOpen())
+            if (session == null || !session.isOpen()) {
                 throw new IOException("WebSocket session is not open");
+            }
             requestId = nextRequestId++;
             byte[] requestBytes = request.getBytes("UTF-8");
             int requestLength = requestBytes.length;
@@ -260,8 +264,9 @@ public class PeerWebSocket {
                .putInt(requestLength)
                .put(requestBytes)
                .flip();
-            if (buf.limit() > MAX_MESSAGE_SIZE)
+            if (buf.limit() > MAX_MESSAGE_SIZE) {
                 throw new ProtocolException("POST request length exceeds max message size");
+            }
             session.getRemote().sendBytes(buf);
         } catch (WebSocketException exc) {
             throw new SocketException(exc.getMessage());
@@ -306,15 +311,16 @@ public class PeerWebSocket {
                     }
                     responseBytes = outStream.toByteArray();
                 }
-                ByteBuffer buf = ByteBuffer.allocate(responseBytes.length+20);
+                ByteBuffer buf = ByteBuffer.allocate(responseBytes.length + 20);
                 buf.putInt(version)
                    .putLong(requestId)
                    .putInt(flags)
                    .putInt(responseLength)
                    .put(responseBytes)
                    .flip();
-                if (buf.limit() > MAX_MESSAGE_SIZE)
+                if (buf.limit() > MAX_MESSAGE_SIZE) {
                     throw new ProtocolException("POST response length exceeds max message size");
+                }
                 session.getRemote().sendBytes(buf);
             }
         } catch (WebSocketException exc) {
@@ -348,9 +354,10 @@ public class PeerWebSocket {
                     msgBytes = new byte[length];
                     int offset = 0;
                     while (offset < msgBytes.length) {
-                        int count = gzipStream.read(msgBytes, offset, msgBytes.length-offset);
-                        if (count < 0)
+                        int count = gzipStream.read(msgBytes, offset, msgBytes.length - offset);
+                        if (count < 0) {
                             throw new EOFException("End-of-data reading compressed data");
+                        }
                         offset += count;
                     }
                 }
@@ -360,8 +367,9 @@ public class PeerWebSocket {
                 threadPool.execute(() -> peerServlet.doPost(this, requestId, message));
             } else {
                 PostRequest postRequest = requestMap.remove(requestId);
-                if (postRequest != null)
+                if (postRequest != null) {
                     postRequest.complete(message);
+                }
             }
         } catch (Exception exc) {
             Logger.logDebugMessage("Exception while processing WebSocket message", exc);
@@ -381,10 +389,11 @@ public class PeerWebSocket {
         lock.lock();
         try {
             if (session != null) {
-                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0)
+                if ((Peers.communicationLoggingMask & Peers.LOGGING_MASK_200_RESPONSES) != 0) {
                     Logger.logDebugMessage(String.format("%s WebSocket connection with %s closed",
-                                           peerServlet!=null ? "Inbound" : "Outbound",
-                                           session.getRemoteAddress().getHostString()));
+                            peerServlet != null ? "Inbound" : "Outbound",
+                            session.getRemoteAddress().getHostString()));
+                }
                 session = null;
             }
             SocketException exc = new SocketException("WebSocket connection closed");
@@ -402,8 +411,9 @@ public class PeerWebSocket {
     public void close() {
         lock.lock();
         try {
-            if (session != null && session.isOpen())
+            if (session != null && session.isOpen()) {
                 session.close();
+            }
         } catch (Exception exc) {
             Logger.logDebugMessage("Exception while closing WebSocket", exc);
         } finally {
@@ -443,10 +453,12 @@ public class PeerWebSocket {
          * @throws  IOException             I/O error occurred
          */
         public String get(long timeout, TimeUnit unit) throws InterruptedException, IOException {
-            if (!latch.await(timeout, unit))
+            if (!latch.await(timeout, unit)) {
                 throw new SocketTimeoutException("WebSocket read timeout exceeded");
-            if (exception != null)
+            }
+            if (exception != null) {
                 throw exception;
+            }
             return response;
         }
 

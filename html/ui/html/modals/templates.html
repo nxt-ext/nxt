@@ -113,10 +113,10 @@
         <div role="tabpanel" class="approve_tab_panel">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs approve_tab_list" role="tablist">
-                <li role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="top" data-content="Transaction don't need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_no_approval_tab_help">
+                <li role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="top" data-content="Transaction does not need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_no_approval_tab_help">
                     <a href="#{{name}}_approve_tab_no_approval" aria-controls="{{name}}_approve_tab_no_approval" class="at_no_approval" role="tab" data-fee-nxt-approval-addition="0" data-toggle="tab"><span class="label label-default"><i class="ion-close-circled"></i></span></a>
                 </li>
-                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction execution is delayed, transaction don't need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_phased_no_approval_tab_help">
+                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction execution is delayed, transaction does not need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_phased_no_approval_tab_help">
                     <a href="#{{name}}_approve_tab_phased_no_approval" aria-controls="{{name}}_approve_tab_phased_no_approval" class="at_no_approval" role="tab" data-fee-nxt-approval-addition="0" data-toggle="tab"><span class="label label-warning"><i class="ion-load-a"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by a certain number of accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
@@ -131,6 +131,12 @@
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by currency holders with a certain stake" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_currency_tab_help">
                     <a href="#{{name}}_approve_tab_currency_holders" aria-controls="{{name}}_approve_tab_currency_holders" class="at_currency_holders" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-bank"></i></span></a>
                 </li>
+                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction is approved by the inclusion of the specified transaction hash in the blockchain" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_transaction_tab_help">
+                    <a href="#{{name}}_approve_tab_transaction" aria-controls="{{name}}_approve_tab_transaction" class="at_transaction" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-thumbs-up"></i></span></a>
+                </li>
+                <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction is approved by revealing a hashed secret message" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_hash_tab_help">
+                    <a href="#{{name}}_approve_tab_hash" aria-controls="{{name}}_approve_tab_hash" class="at_hash" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-question"></i></span></a>
+                </li>
             </ul>
 
             <!-- Tab panes -->
@@ -140,16 +146,16 @@
                     <input type="hidden" name="phased" value="false" />
                 </div>
 
-                <div role="tabpanel" class="tab-pane tab_pane_approve active" id="{{name}}_approve_tab_phased_no_approval">
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_phased_no_approval">
                     <div class="row">
                         <div class="col-xs-6">
                             <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
-                    <input type="hidden" name="phased" value="true"/>
-                    <input type="hidden" name="phasingVotingModel" value="-1"/>
-                    <input type="hidden" name="phasingQuorum" value="0"/>
-                    <input type="hidden" name="phasingMinBalanceModel" value="0"/>
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="-1" disabled />
+                    <input type="hidden" name="phasingQuorum" value="0" disabled />
+                    <input type="hidden" name="phasingMinBalanceModel" value="0" disabled />
                 </div>
 
                 <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_accounts">
@@ -201,6 +207,7 @@
                             <div class="form-group approve_min_balance_model_group approve_mb_balance" data-modal-ui-element="min_balance_model_modal_ui_element"></div>
                         </div>
                         <div class="col-xs-6">
+                            <div class="form-group approve_mb_model_1 approve_min_balance_nxt" data-modal-ui-element="simple_input_with_addon_modal_ui_element"></div>
                         </div>
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
@@ -259,6 +266,41 @@
                     </div>
                     <input type="hidden" name="phased" value="true" disabled />
                     <input type="hidden" name="phasingVotingModel" value="3" disabled />
+                </div>
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_transaction">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="form-group advanced">
+                        <label for="approved_by_transaction_hash" data-i18n="approved_by_transaction_hash">APPROVED BY TRANSACTION HASH</label>
+                        <input type="text" class="form-control" name="phasingLinkedFullHash" id="approved_by_transaction_hash" placeholder="Approved By Transaction Full Hash" data-i18n="[placeholder]approved_by_transaction_full_hash" spellcheck="false" />
+                    </div>
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="4" disabled />
+                    <input type="hidden" name="phasingQuorum" value="1" disabled />
+                    <input type="hidden" name="phasingMinBalanceModel" value="0" disabled />
+                </div>
+                <div role="tabpanel" class="tab-pane tab_pane_approve" id="{{name}}_approve_tab_hash">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group phasing_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <div class="form-group advanced">
+                        <label for="approved_by_hashed_secret" data-i18n="approved_by_hashed_secret">APPROVED BY HASHED SECRET</label>
+                        <input type="text" class="form-control" name="phasingHashedSecret" id="approved_by_hashed_secret" placeholder="Hashed Secret" data-i18n="[placeholder]approved_by_hashed_secret_placeholder" spellcheck="false" />
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group hash_algorithm_model_group" data-modal-ui-element="hash_algorithm_model_modal_ui_element"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="phased" value="true" disabled />
+                    <input type="hidden" name="phasingVotingModel" value="5" disabled />
+                    <input type="hidden" name="phasingQuorum" value="1" disabled />
+                    <input type="hidden" name="phasingMinBalanceModel" value="0" disabled />
                 </div>
             </div>
         </div>

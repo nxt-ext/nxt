@@ -173,7 +173,7 @@ public enum CurrencyType {
                 Attachment.MonetarySystemCurrencyIssuance issuanceAttachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 try {
                     HashFunction hashFunction = HashFunction.getHashFunction(issuanceAttachment.getAlgorithm());
-                    if (!acceptedHashFunctions.contains(hashFunction)) {
+                    if (!CurrencyMinting.acceptedHashFunctions.contains(hashFunction)) {
                         throw new NxtException.NotValidException("Invalid minting algorithm " + hashFunction);
                     }
                 } catch (IllegalArgumentException e) {
@@ -222,8 +222,6 @@ public enum CurrencyType {
             }
         }
     };
-
-    private static final EnumSet<HashFunction> acceptedHashFunctions = EnumSet.of(HashFunction.SHA256, HashFunction.SHA3, HashFunction.SCRYPT, HashFunction.Keccak25);
 
     private final int code;
 

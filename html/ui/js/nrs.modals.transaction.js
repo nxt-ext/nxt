@@ -123,7 +123,6 @@ var NRS = (function (NRS, $, undefined) {
                 approveTransactionButton.data("transaction", transaction.transaction);
                 approveTransactionButton.data("fullhash", transaction.fullHash);
                 approveTransactionButton.data("timestamp", transaction.timestamp);
-                approveTransactionButton.data("fee", NRS.getPhasingFee(transaction));
                 approveTransactionButton.data("minBalanceFormatted", "");
                 approveTransactionButton.data("votingmodel", transaction.attachment.phasingVotingModel);
             }
@@ -162,16 +161,26 @@ var NRS = (function (NRS, $, undefined) {
                     "</tr></thead><tbody>";
                     for (i = 0; i < transaction.attachment.phasingWhitelist.length; i++) {
                         var account = NRS.convertNumericToRSAccountFormat(transaction.attachment.phasingWhitelist[i]);
-                        rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td>";
+                        rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td></tr>";
                     }
                     rows += "</tbody></table>";
                 } else {
                     rows = "-";
                 }
                 phasingDetails.whitelist_formatted_html = rows;
+                if (transaction.attachment.phasingLinkedFullHashes && transaction.attachment.phasingLinkedFullHashes.length > 0) {
+                    rows = "<table class='table table-striped'><tbody>";
+                    for (i = 0; i < transaction.attachment.phasingLinkedFullHashes.length; i++) {
+                        rows += "<tr><td>" + transaction.attachment.phasingLinkedFullHashes[i] + "</td></tr>";
+                    }
+                    rows += "</tbody></table>";
+                } else {
+                    rows = "-";
+                }
+                phasingDetails.full_hash_formatted_html = rows;
                 if (transaction.attachment.phasingHashedSecret) {
                     phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
-                    phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
+                    phasingDetails.hashAlgorithm = NRS.getHashAlgorithm(transaction.attachment.phasingHashedSecretAlgorithm);
                 }
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();
@@ -1397,8 +1406,6 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             revealSecretDiv.hide();
         }
-        approveTransactionModal.find('.advanced_fee').html($(this).data("fee") + " NXT");
-        approveTransactionModal.find('input[name="feeNXT"]').val($(this).data("fee"));
     });
 
     $("#approve_transaction_button").on("click", function (e) {
