@@ -71,6 +71,12 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     /** Event registration timeout (seconds) */
     static final int eventTimeout = Math.max(Nxt.getIntProperty("nxt.apiEventTimeout"), 15);
 
+    /** Blockchain processor */
+    static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
+
+    /** Transaction processor */
+    static final TransactionProcessor transactionProcessor = Nxt.getTransactionProcessor();
+
     /** Active event users */
     static final Map<String, EventListener> eventListeners = new ConcurrentHashMap<>();
 
@@ -150,17 +156,8 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     /** Event thread dispatched */
     private boolean dispatched;
 
-    /** Peer event listeners */
-    private final List<PeerEventListener> peerListeners = new ArrayList<>();
-
-    /** Block event listeners */
-    private final List<BlockEventListener> blockListeners = new ArrayList<>();
-
-    /** Transaction event listeners */
-    private final List<TransactionEventListener> txListeners = new ArrayList<>();
-
-    /** Account ledger event listeners */
-    private final List<LedgerEventListener> ledgerListeners = new ArrayList<>();
+    /** Nxt event listeners */
+    private final List<NxtEventListener> nxtEventListeners = new ArrayList<>();
 
     /** Pending events */
     private final List<PendingEvent> pendingEvents = new ArrayList<>();
@@ -183,18 +180,12 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     /**
      * Activate the event listener
      *
-     * Event listeners will be added for the specified peer, block and transaction events.
+     * Nxt event listeners will be added for the specified events
      *
-     * @param   peerEvents              Peer event list
-     * @param   blockEvents             Block event list
-     * @param   txEvents                Transaction event list
-     * @param   ledgerEvents            Account ledger event list
+     * @param   eventRegistrations      List of Nxt event registrations
      * @throws  EventListenerException  Unable to activate event listeners
      */
-    void activateListener(List<Peers.Event> peerEvents, List<BlockchainProcessor.Event> blockEvents,
-                                        List<TransactionProcessor.Event> txEvents,
-                                        List<LedgerEventRegistration> ledgerEvents)
-                                        throws EventListenerException {
+    void activateListener(List<EventRegistration> eventRegistrations) throws EventListenerException {
         if (deactivated)
             throw new EventListenerException("Event listener deactivated");
         if (eventListeners.size() >= maxEventUsers && eventListeners.get(address) == null)
@@ -202,64 +193,36 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
         //
         // Start listening for events
         //
-        addEvents(peerEvents, blockEvents, txEvents, ledgerEvents);
+        addEvents(eventRegistrations);
         //
         // Add this event listener to the active list
         //
-        EventListener oldListener = eventListeners.get(address);
+        EventListener oldListener = eventListeners.put(address, this);
         if (oldListener != null)
             oldListener.deactivateListener();
-        eventListeners.put(address, this);
         Logger.logDebugMessage(String.format("Event listener activated for %s", address));
     }
 
     /**
      * Add events to the event list
      *
-     * @param   peerEvents              Peer event list
-     * @param   blockEvents             Block event list
-     * @param   txEvents                Transaction event list
-     * @param   ledgerEvents            Account ledger event list
+     * @param   eventRegistrations      Nxt event registrations
+     * @throws  EventListenerException  Invalid Nxt event
      */
-    void addEvents(List<Peers.Event> peerEvents, List<BlockchainProcessor.Event> blockEvents,
-                                        List<TransactionProcessor.Event> txEvents,
-                                        List<LedgerEventRegistration> ledgerEvents) {
-        BlockchainProcessor blockProcessor = Nxt.getBlockchainProcessor();
-        TransactionProcessor txProcessor = Nxt.getTransactionProcessor();
+    void addEvents(List<EventRegistration> eventRegistrations) throws EventListenerException {
         lock.lock();
         try {
             if (deactivated)
                 return;
-            peerEvents.forEach(event -> {
-                PeerEventListener listener = new PeerEventListener(event);
-                if (!peerListeners.contains(listener)) {
-                    peerListeners.add(listener);
-                    Peers.addListener(listener, event);
-                }
-            });
-            blockEvents.forEach(event -> {
-                BlockEventListener listener = new BlockEventListener(event);
-                if (!blockListeners.contains(listener)) {
-                    blockListeners.add(listener);
-                    blockProcessor.addListener(listener, event);
-                }
-            });
-            txEvents.forEach(event -> {
-                TransactionEventListener listener = new TransactionEventListener(event);
-                if (!txListeners.contains(listener)) {
-                    txListeners.add(listener);
-                    txProcessor.addListener(listener, event);
-                }
-            });
-            ledgerEvents.forEach(event -> {
-                //
-                // A listener with account identifier 0 accepts events for all accounts.
-                // This supercedes listeners for a single account.
-                //
+            //
+            // A listener with account identifier 0 accepts events for all accounts.
+            // This listener superceds listeners for a single account.
+            //
+            for (EventRegistration event : eventRegistrations) {
                 boolean addListener = true;
-                Iterator<LedgerEventListener> it = ledgerListeners.iterator();
+                Iterator<NxtEventListener> it = nxtEventListeners.iterator();
                 while (it.hasNext()) {
-                    LedgerEventListener listener = it.next();
+                    NxtEventListener listener = it.next();
                     if (listener.getEvent() == event.getEvent()) {
                         long accountId = listener.getAccountId();
                         if (accountId == event.getAccountId() || accountId == 0) {
@@ -267,17 +230,17 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
                             break;
                         }
                         if (event.getAccountId() == 0) {
-                            AccountLedger.removeListener(listener, listener.getEvent());
+                            listener.removeListener();
                             it.remove();
                         }
                     }
                 }
                 if (addListener) {
-                    LedgerEventListener listener = new LedgerEventListener(event);
-                    ledgerListeners.add(listener);
-                    AccountLedger.addListener(listener, event.getEvent());
+                    NxtEventListener listener = new NxtEventListener(event);
+                    listener.addListener();
+                    nxtEventListeners.add(listener);
                 }
-            });
+            }
         } finally {
             lock.unlock();
         }
@@ -286,73 +249,33 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     /**
      * Remove events from the event list
      *
-     * @param   peerEvents              Peer event list
-     * @param   blockEvents             Block event list
-     * @param   txEvents                Transaction event list
-     * @param   ledgerEvents            Account ledger event list
+     * @param   eventRegistrations      Nxt event registrations
      */
-    void removeEvents(List<Peers.Event> peerEvents, List<BlockchainProcessor.Event> blockEvents,
-                                        List<TransactionProcessor.Event> txEvents,
-                                        List<LedgerEventRegistration> ledgerEvents) {
-        BlockchainProcessor blockProcessor = Nxt.getBlockchainProcessor();
-        TransactionProcessor txProcessor = Nxt.getTransactionProcessor();
+    void removeEvents(List<EventRegistration> eventRegistrations) {
         lock.lock();
         try {
             if (deactivated)
                 return;
-            peerEvents.forEach(event -> {
-                Iterator<PeerEventListener> peerIt = peerListeners.iterator();
-                while (peerIt.hasNext()) {
-                    PeerEventListener peerListener = peerIt.next();
-                    if (peerListener.getEvent() == event) {
-                        Peers.removeListener(peerListener, event);
-                        peerIt.remove();
-                        break;
+            //
+            // Specifying an account identifier of 0 results in removing all
+            // listeners for the specified event.  Otherwise, only the listener
+            // for the specified account is removed.
+            //
+            for (EventRegistration event : eventRegistrations) {
+                Iterator<NxtEventListener> it = nxtEventListeners.iterator();
+                while (it.hasNext()) {
+                    NxtEventListener listener = it.next();
+                    if (listener.getEvent() == event.getEvent() &&
+                            (listener.getAccountId() == event.getAccountId() || event.getAccountId() == 0)) {
+                        listener.removeListener();
+                        it.remove();
                     }
                 }
-            });
-            blockEvents.forEach(event -> {
-                Iterator<BlockEventListener> blockIt = blockListeners.iterator();
-                while (blockIt.hasNext()) {
-                    BlockEventListener blockListener = blockIt.next();
-                    if (blockListener.getEvent() == event) {
-                        blockProcessor.removeListener(blockListener, event);
-                        blockIt.remove();
-                        break;
-                    }
-                }
-            });
-            txEvents.forEach(event -> {
-                Iterator<TransactionEventListener> txIt = txListeners.iterator();
-                while (txIt.hasNext()) {
-                    TransactionEventListener txListener = txIt.next();
-                    if (txListener.getEvent() == event) {
-                        txProcessor.removeListener(txListener, event);
-                        txIt.remove();
-                        break;
-                    }
-                }
-            });
-            ledgerEvents.forEach(event -> {
-                //
-                // Specifying an account identifier of 0 results in removing all
-                // listeners for the specified event.  Otherwise, only the listener
-                // for the specified account is removed.
-                //
-                Iterator<LedgerEventListener> ledgerIt = ledgerListeners.iterator();
-                while (ledgerIt.hasNext()) {
-                    LedgerEventListener ledgerListener = ledgerIt.next();
-                    if (ledgerListener.getEvent() == event.getEvent() &&
-                            (ledgerListener.getAccountId() == event.getAccountId() || event.getAccountId() == 0)) {
-                        AccountLedger.removeListener(ledgerListener, event.getEvent());
-                        ledgerIt.remove();
-                    }
-                }
-            });
+            }
             //
             // Deactivate the listeners if there are no events remaining
             //
-            if (peerListeners.isEmpty() && blockListeners.isEmpty() && txListeners.isEmpty() && ledgerListeners.isEmpty())
+            if (nxtEventListeners.isEmpty())
                 deactivateListener();
         } finally {
             lock.unlock();
@@ -363,8 +286,6 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
      * Deactivate the event listener
      */
     void deactivateListener() {
-        BlockchainProcessor blockProcessor = Nxt.getBlockchainProcessor();
-        TransactionProcessor txProcessor = Nxt.getTransactionProcessor();
         lock.lock();
         try {
             if (deactivated)
@@ -384,10 +305,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
             //
             // Stop listening for events
             //
-            peerListeners.forEach(listener -> Peers.removeListener(listener, listener.getEvent()));
-            blockListeners.forEach(listener -> blockProcessor.removeListener(listener, listener.getEvent()));
-            txListeners.forEach(listener -> txProcessor.removeListener(listener, listener.getEvent()));
-            ledgerListeners.forEach(listener -> AccountLedger.removeListener(listener, listener.getEvent()));
+            nxtEventListeners.forEach(NxtEventListener::removeListener);
         } finally {
             lock.unlock();
         }
@@ -611,6 +529,9 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
         private final String name;
 
         /** Event identifier */
+        private final String id;
+
+        /** Event identifier list */
         private final List<String> idList;
 
         /** Database thread */
@@ -624,8 +545,8 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
          */
         public PendingEvent(String name, String id) {
             this.name = name;
-            this.idList = new ArrayList<>(1);
-            idList.add(id);
+            this.id = id;
+            this.idList = null;
         }
 
         /**
@@ -637,6 +558,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
         public PendingEvent(String name, List<String> idList) {
             this.name = name;
             this.idList = idList;
+            this.id = null;
         }
 
         /**
@@ -649,9 +571,27 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
         }
 
         /**
-         * Return the event identifier list
+         * Check if the identifier is a list
+         *
+         * @return                  TRUE if the identifier is a list
+         */
+        public boolean isList() {
+            return (idList != null);
+        }
+
+        /**
+         * Return the event identifier
          *
          * @return                  Event identifier
+         */
+        public String getId() {
+            return id;
+        }
+
+        /**
+         * Return the event identifier list
+         *
+         * @return                  Event identifier list
          */
         public List<String> getIdList() {
             return idList;
@@ -677,366 +617,405 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     }
 
     /**
-     * Peer event listener
+     * Nxt event listener
      */
-    private class PeerEventListener implements Listener<Peer> {
+    private class NxtEventListener {
 
-        /** Owning event listener */
-        private final EventListener owner;
-
-        /** Peer event */
-        private final Peers.Event event;
+        /** Event handler */
+        private final NxtEventHandler eventHandler;
 
         /**
-         * Create the peer event listener
+         * Create the Nxt event listener
          *
-         * @param   event           Peer event
+         * @param   eventRegistration           Event registration
+         * @throws  EventListenerException      Invalid event
          */
-        public PeerEventListener(Peers.Event event) {
-            this.owner = EventListener.this;
-            this.event = event;
-        }
-
-        /**
-         * Return the event for this listener
-         *
-         * @return                  Peer event
-         */
-        public Peers.Event getEvent() {
-            return event;
-        }
-
-        /**
-         * Event notification
-         *
-         * @param   peer            Peer
-         */
-        @Override
-        public void notify(Peer peer) {
-            lock.lock();
-            try {
-                pendingEvents.add(new PendingEvent("Peer."+event.name(), peer.getHost()));
-                if (!pendingWaits.isEmpty() && !dispatched) {
-                    dispatched = true;
-                    threadPool.submit(EventListener.this);
-                }
-            } finally {
-                lock.unlock();
+        public NxtEventListener(EventRegistration eventRegistration) throws EventListenerException {
+            Enum<? extends Enum> event = eventRegistration.getEvent();
+            if (event instanceof Peers.Event) {
+                eventHandler = new PeerEventHandler(eventRegistration);
+            } else if (event instanceof BlockchainProcessor.Event) {
+                eventHandler = new BlockEventHandler(eventRegistration);
+            } else if (event instanceof TransactionProcessor.Event) {
+                eventHandler = new TransactionEventHandler(eventRegistration);
+            } else if (event instanceof AccountLedger.Event) {
+                eventHandler = new LedgerEventHandler(eventRegistration);
+            } else {
+                throw new EventListenerException("Unsupported listener event");
             }
         }
 
         /**
-         * Return the hash code for this event listener
+         * Return the Nxt event
          *
-         * @return                  Hash code
+         * @return                  Nxt event
          */
-        @Override
-        public int hashCode() {
-            return event.hashCode();
+        public Enum<? extends Enum> getEvent() {
+            return eventHandler.getEvent();
         }
 
         /**
-         * Check if two events listeners are equal
-         *
-         * @param   obj             Comparison listener
-         * @return                  TRUE if the listeners are equal
-         */
-        @Override
-        public boolean equals(Object obj) {
-            return (obj!=null && (obj instanceof PeerEventListener) &&
-                                    owner==((PeerEventListener)obj).owner &&
-                                    event==((PeerEventListener)obj).event);
-        }
-    }
-
-    /**
-     * Block event listener
-     */
-    private class BlockEventListener implements Listener<Block> {
-
-        /** Owning event listener */
-        private final EventListener owner;
-
-        /** Event */
-        private final BlockchainProcessor.Event event;
-
-        /**
-         * Create the block event listener
-         *
-         * @param   event           Block event
-         */
-        public BlockEventListener(BlockchainProcessor.Event event) {
-            this.owner = EventListener.this;
-            this.event = event;
-        }
-
-        /**
-         * Return the event for this listener
-         *
-         * @return                  Block event
-         */
-        public BlockchainProcessor.Event getEvent() {
-            return event;
-        }
-
-        /**
-         * Event notification
-         *
-         * @param   block           Block
-         */
-        @Override
-        public void notify(Block block) {
-            lock.lock();
-            try {
-                PendingEvent pendingEvent = new PendingEvent("Block."+event.name(), block.getStringId());
-                if (Db.db.isInTransaction()) {
-                    pendingEvent.setThread(Thread.currentThread());
-                    dbEvents.add(pendingEvent);
-                    Db.db.registerCallback(EventListener.this);
-                } else {
-                    pendingEvents.add(pendingEvent);
-                    if (!pendingWaits.isEmpty() && !dispatched) {
-                        dispatched = true;
-                        threadPool.submit(EventListener.this);
-                    }
-                }
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        /**
-         * Return the hash code for this event listener
-         *
-         * @return                  Hash code
-         */
-        @Override
-        public int hashCode() {
-            return event.hashCode();
-        }
-
-        /**
-         * Check if two events listeners are equal
-         *
-         * @param   obj             Comparison listener
-         * @return                  TRUE if the listeners are equal
-         */
-        @Override
-        public boolean equals(Object obj) {
-            return (obj!=null && (obj instanceof BlockEventListener) &&
-                                    owner==((BlockEventListener)obj).owner &&
-                                    event==((BlockEventListener)obj).event);
-        }
-    }
-
-    /**
-     * Transaction event listener
-     */
-    private class TransactionEventListener implements Listener<List<? extends Transaction>> {
-
-        /** Owning event listener */
-        private final EventListener owner;
-
-        /** Event */
-        private final TransactionProcessor.Event event;
-
-        /**
-         * Create the transaction event listener
-         *
-         * @param   event           Transaction event
-         */
-        public TransactionEventListener(TransactionProcessor.Event event) {
-            this.owner = EventListener.this;
-            this.event = event;
-        }
-
-        /**
-         * Return the event for this listener
-         *
-         * @return                  Transaction event
-         */
-        public TransactionProcessor.Event getEvent() {
-            return event;
-        }
-
-        /**
-         * Event notification
-         *
-         * @param   txList          Transaction list
-         */
-        @Override
-        public void notify(List<? extends Transaction> txList) {
-            List<String> idList = new ArrayList<>();
-            txList.forEach((tx) -> idList.add(tx.getStringId()));
-            lock.lock();
-            try {
-                PendingEvent pendingEvent = new PendingEvent("Transaction."+event.name(), idList);
-                if (Db.db.isInTransaction()) {
-                    pendingEvent.setThread(Thread.currentThread());
-                    dbEvents.add(pendingEvent);
-                    Db.db.registerCallback(EventListener.this);
-                } else {
-                    pendingEvents.add(pendingEvent);
-                    if (!pendingWaits.isEmpty() && !dispatched) {
-                        dispatched = true;
-                        threadPool.submit(EventListener.this);
-                    }
-                }
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        /**
-         * Return the hash code for this event listener
-         *
-         * @return                  Hash code
-         */
-        @Override
-        public int hashCode() {
-            return event.hashCode();
-        }
-
-        /**
-         * Check if two events listeners are equal
-         *
-         * @param   obj             Comparison listener
-         * @return                  TRUE if the listeners are equal
-         */
-        @Override
-        public boolean equals(Object obj) {
-            return (obj!=null && (obj instanceof TransactionEventListener) &&
-                                    owner==((TransactionEventListener)obj).owner &&
-                                    event==((TransactionEventListener)obj).event);
-        }
-    }
-
-    /**
-     * Ledger event listener
-     */
-    private class LedgerEventListener implements Listener<LedgerEntry> {
-
-        /** Owning event listener */
-        private final EventListener owner;
-
-        /** Account identifier */
-        private final long accountId;
-
-        /** Event */
-        private final AccountLedger.Event event;
-
-        /**
-         * Create the ledger event listener
-         *
-         * @param   event           Ledger event registration
-         */
-        public LedgerEventListener(LedgerEventRegistration event) {
-            this.owner = EventListener.this;
-            this.event = event.getEvent();
-            this.accountId = event.getAccountId();
-        }
-
-        /**
-         * Return the event for this listener
-         *
-         * @return                  Ledger event
-         */
-        public AccountLedger.Event getEvent() {
-            return event;
-        }
-
-        /**
-         * Return the account identifier for this listener
+         * Return the account identifier
          *
          * @return                  Account identifier
          */
         public long getAccountId() {
-            return accountId;
+            return eventHandler.getAccountId();
         }
 
         /**
-         * Event notification
-         *
-         * @param   entry           Ledger entry
+         * Add the Nxt listener for this event
          */
-        @Override
-        public void notify(LedgerEntry entry) {
-            if (entry.getAccountId() != accountId && accountId != 0)
-                return;
-            lock.lock();
-            try {
-                PendingEvent pendingEvent = new PendingEvent(String.format("Ledger.%s.%s",
-                        event.name(), Convert.rsAccount(entry.getAccountId())),
-                        Long.toUnsignedString(entry.getLedgerId()));
-                if (Db.db.isInTransaction()) {
-                    pendingEvent.setThread(Thread.currentThread());
-                    dbEvents.add(pendingEvent);
-                    Db.db.registerCallback(EventListener.this);
-                } else {
-                    pendingEvents.add(pendingEvent);
-                    if (!pendingWaits.isEmpty() && !dispatched) {
-                        dispatched = true;
-                        threadPool.submit(EventListener.this);
-                    }
-                }
-            } finally {
-                lock.unlock();
-            }
+        public void addListener() {
+            eventHandler.addListener();
         }
 
         /**
-         * Return the hash code for this event listener
+         * Remove the Nxt listener for this event
+         */
+        public void removeListener() {
+            eventHandler.removeListener();
+        }
+
+        /**
+         * Return the hash code for this Nxt event listener
          *
          * @return                  Hash code
          */
         @Override
         public int hashCode() {
-            return event.hashCode();
+            return eventHandler.hashCode();
         }
 
         /**
-         * Check if two events listeners are equal
+         * Check if two Nxt events listeners are equal
          *
          * @param   obj             Comparison listener
          * @return                  TRUE if the listeners are equal
          */
         @Override
         public boolean equals(Object obj) {
-            return (obj!=null && (obj instanceof LedgerEventListener) &&
-                                    owner==((LedgerEventListener)obj).owner &&
-                                    event==((LedgerEventListener)obj).event &&
-                                    accountId==((LedgerEventListener)obj).accountId);
+            return (obj != null && (obj instanceof NxtEventListener) &&
+                    eventHandler.equals(((NxtEventListener)obj).eventHandler));
+        }
+
+        /**
+         * Nxt listener event handler
+         */
+        private abstract class NxtEventHandler {
+
+            /** Owning event listener */
+            protected final EventListener owner;
+
+            /** Account identifier */
+            protected final long accountId;
+
+            /** Nxt listener event */
+            protected final Enum<? extends Enum> event;
+
+            /**
+             * Create the Nxt event handler
+             *
+             * @param   eventRegistration   Event registration
+             */
+            public NxtEventHandler(EventRegistration eventRegistration) {
+                this.owner = EventListener.this;
+                this.accountId = eventRegistration.getAccountId();
+                this.event = eventRegistration.getEvent();
+            }
+
+            /**
+             * Return the Nxt event
+             *
+             * @return                  Nxt event
+             */
+            public Enum<? extends Enum> getEvent() {
+                return event;
+            }
+
+            /**
+             * Return the account identifier
+             *
+             * @return                  Account identifier
+             */
+            public long getAccountId() {
+                return accountId;
+            }
+
+            /**
+             * Add the Nxt listener for this event
+             */
+            public abstract void addListener();
+
+            /**
+             * Remove the Nxt listener for this event
+             */
+            public abstract void removeListener();
+
+            /**
+             * Check if need to wait for end of transaction
+             *
+             * @return                  TRUE if need to wait for transaction to commit/rollback
+             */
+            protected boolean waitTransaction() {
+                return true;
+            }
+
+            /**
+             * Dispatch the event
+             */
+            protected void dispatch(PendingEvent pendingEvent) {
+                lock.lock();
+                try {
+                    if (waitTransaction() && Db.db.isInTransaction()) {
+                        pendingEvent.setThread(Thread.currentThread());
+                        dbEvents.add(pendingEvent);
+                        Db.db.registerCallback(owner);
+                    } else {
+                        pendingEvents.add(pendingEvent);
+                        if (!pendingWaits.isEmpty() && !dispatched) {
+                            dispatched = true;
+                            threadPool.submit(owner);
+                        }
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            }
+
+            /**
+             * Return the hash code for this event listener
+             *
+             * @return                  Hash code
+             */
+            @Override
+            public int hashCode() {
+                return event.hashCode();
+            }
+
+            /**
+             * Check if two events listeners are equal
+             *
+             * @param   obj             Comparison listener
+             * @return                  TRUE if the listeners are equal
+             */
+            @Override
+            public boolean equals(Object obj) {
+                return (obj != null && (obj instanceof NxtEventHandler) &&
+                                        owner == ((NxtEventHandler)obj).owner &&
+                                        accountId == ((NxtEventHandler)obj).accountId &&
+                                        event == ((NxtEventHandler)obj).event);
+            }
+        }
+
+        /**
+         * Peer event handler
+         */
+        private class PeerEventHandler extends NxtEventHandler implements Listener<Peer> {
+
+            /**
+             * Create the peer event handler
+             *
+             * @param   eventRegistration   Event registration
+             */
+            public PeerEventHandler(EventRegistration eventRegistration) {
+                super(eventRegistration);
+            }
+
+            /**
+             * Add the Nxt listener for this event
+             */
+            @Override
+            public void addListener() {
+                Peers.addListener(this, (Peers.Event)event);
+            }
+
+            /**
+             * Remove the Nxt listener for this event
+             */
+            @Override
+            public void removeListener() {
+                Peers.removeListener(this, (Peers.Event)event);
+            }
+
+            /**
+             * Event notification
+             *
+             * @param   peer        Peer
+             */
+            @Override
+            public void notify(Peer peer) {
+                dispatch(new PendingEvent("Peer." + event.name(), peer.getHost()));
+            }
+
+            /**
+             * Check if need to wait for end of transaction
+             *
+             * @return                  TRUE if need to wait for transaction to commit/rollback
+             */
+            @Override
+            protected boolean waitTransaction() {
+                return false;
+            }
+        }
+
+        /**
+         * Blockchain processor event handler
+         */
+        private class BlockEventHandler extends NxtEventHandler implements Listener<Block> {
+
+            /**
+             * Create the blockchain processor event handler
+             *
+             * @param   eventRegistration   Event registration
+             */
+            public BlockEventHandler(EventRegistration eventRegistration) {
+                super(eventRegistration);
+            }
+
+            /**
+             * Add the Nxt listener for this event
+             */
+            @Override
+            public void addListener() {
+                blockchainProcessor.addListener(this, (BlockchainProcessor.Event)event);
+            }
+
+            /**
+             * Remove the Nxt listener for this event
+             */
+            @Override
+            public void removeListener() {
+                blockchainProcessor.removeListener(this, (BlockchainProcessor.Event)event);
+            }
+
+            /**
+             * Event notification
+             *
+             * @param   block       Block
+             */
+            @Override
+            public void notify(Block block) {
+                dispatch(new PendingEvent("Block." + event.name(), block.getStringId()));
+            }
+        }
+
+        /**
+         * Transaction processor event handler
+         */
+        private class TransactionEventHandler extends NxtEventHandler implements Listener<List<? extends Transaction>> {
+
+            /**
+             * Create the transaction processor event handler
+             *
+             * @param   eventRegistration   Event registration
+             */
+            public TransactionEventHandler(EventRegistration eventRegistration) {
+                super(eventRegistration);
+            }
+
+            /**
+             * Add the Nxt listener for this event
+             */
+            @Override
+            public void addListener() {
+                transactionProcessor.addListener(this, (TransactionProcessor.Event)event);
+            }
+
+            /**
+             * Remove the Nxt listener for this event
+             */
+            @Override
+            public void removeListener() {
+                transactionProcessor.removeListener(this, (TransactionProcessor.Event)event);
+            }
+
+            /**
+             * Event notification
+             *
+             * @param   txList      Transaction list
+             */
+            @Override
+            public void notify(List<? extends Transaction> txList) {
+                List<String> idList = new ArrayList<>();
+                txList.forEach((tx) -> idList.add(tx.getStringId()));
+                dispatch(new PendingEvent("Transaction." + event.name(), idList));
+            }
+        }
+
+        /**
+         * Account ledger event handler
+         */
+        private class LedgerEventHandler extends NxtEventHandler implements Listener<LedgerEntry> {
+
+            /**
+             * Create the account ledger event handler
+             *
+             * @param   eventRegistration   Event registration
+             */
+            public LedgerEventHandler(EventRegistration eventRegistration) {
+                super(eventRegistration);
+            }
+
+            /**
+             * Add the Nxt listener for this event
+             */
+            @Override
+            public void addListener() {
+                AccountLedger.addListener(this, (AccountLedger.Event)event);
+            }
+
+            /**
+             * Remove the Nxt listener for this event
+             */
+            @Override
+            public void removeListener() {
+                AccountLedger.removeListener(this, (AccountLedger.Event)event);
+            }
+
+            /**
+             * Event notification
+             *
+             * @param   entry       Ledger entry
+             */
+            @Override
+            public void notify(LedgerEntry entry) {
+                if (entry.getAccountId() == accountId || accountId == 0)
+                    dispatch(new PendingEvent(String.format("Ledger.%s.%s",
+                                event.name(), Convert.rsAccount(entry.getAccountId())),
+                                Long.toUnsignedString(entry.getLedgerId())));
+            }
         }
     }
 
     /**
-     * Account ledger event registration
+     * Event registration
      */
-    static class LedgerEventRegistration {
+    static class EventRegistration {
 
-        /** Ledger event */
-        private final AccountLedger.Event event;
+        /** Nxt listener event */
+        private final Enum<? extends Enum> event;
 
         /** Account identifier */
         private final long accountId;
 
         /**
-         * Create the ledger event registration
+         * Create the event registration
          *
-         * @param   event           Ledger event
+         * @param   event           Nxt listener event
          * @param   accountId       Account identifier
          */
-        LedgerEventRegistration(AccountLedger.Event event, long accountId) {
+        EventRegistration(Enum<? extends Enum> event, long accountId) {
             this.event = event;
             this.accountId = accountId;
         }
 
         /**
-         * Return the account ledger event
+         * Return the Nxt listener event
          *
-         * @return                  Account ledger event
+         * @return                  Nxt listener event
          */
-        public AccountLedger.Event getEvent() {
+        public Enum<? extends Enum> getEvent() {
             return event;
         }
 

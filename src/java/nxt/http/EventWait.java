@@ -192,7 +192,10 @@ public class EventWait extends APIServlet.APIRequestHandler {
         JSONArray eventsJSON = new JSONArray();
         events.forEach(event -> {
             JSONArray idsJSON = new JSONArray();
-            idsJSON.addAll(event.getIdList());
+            if (event.isList())
+                idsJSON.addAll(event.getIdList());
+            else
+                idsJSON.add(event.getId());
             JSONObject eventJSON = new JSONObject();
             eventJSON.put("name", event.getName());
             eventJSON.put("ids", idsJSON);
