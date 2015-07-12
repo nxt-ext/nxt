@@ -118,7 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 		$elems.each(function(e) {
 			var $mbGroup = $(this).closest('div.approve_min_balance_model_group');
 			if ($mbGroup.hasClass("approve_mb_balance")) {
-				$mbGroup.find('option[value="1"], option[value="2"], option[value="3"]').remove();
+				$mbGroup.find('option[value="2"], option[value="3"]').remove();
 			}
 			if ($mbGroup.hasClass("approve_mb_asset")) {
 				$mbGroup.find('option[value="1"], option[value="3"]').remove();
