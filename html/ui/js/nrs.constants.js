@@ -51,7 +51,7 @@ var NRS = (function (NRS, $, undefined) {
 
         'VOTING_MODELS': {},
         'MIN_BALANCE_MODELS': {},
-        'HASH_ALGORITHMS': {},
+        "PHASING_HASH_ALGORITHMS": {},
 
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
@@ -63,19 +63,21 @@ var NRS = (function (NRS, $, undefined) {
         'UNKNOWN': 'unknown'
     };
 
+    NRS.loadAlgorithmList = function (algorithmSelect) {
+        for (var key in NRS.constants.PHASING_HASH_ALGORITHMS) {
+            if (NRS.constants.PHASING_HASH_ALGORITHMS.hasOwnProperty(key)) {
+                algorithmSelect.append($("<option />").val(NRS.constants.PHASING_HASH_ALGORITHMS[key]).text(key));
+            }
+        }
+    };
+
     NRS.loadServerConstants = function () {
         NRS.sendRequest("getConstants", {}, function (response) {
             if (response.genesisAccountId) {
                 NRS.constants.SERVER = response;
                 NRS.constants.VOTING_MODELS = response.votingModels;
                 NRS.constants.MIN_BALANCE_MODELS = response.minBalanceModels;
-                NRS.constants.HASH_ALGORITHMS = response.hashAlgorithms;
-                var algorithms = $("#hash_algorithms_template");
-                for (var key in NRS.constants.HASH_ALGORITHMS) {
-                    if (NRS.constants.HASH_ALGORITHMS.hasOwnProperty(key)) {
-                        algorithms.append($("<option />").val(NRS.constants.HASH_ALGORITHMS[key]).text(key));
-                    }
-                }
+                NRS.constants.PHASING_HASH_ALGORITHMS = response.phasingHashAlgorithms;
                 NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
                 NRS.constants.GENESIS = response.genesisAccountId;
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
@@ -112,7 +114,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getHashAlgorithm = function (code) {
-        return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
+        return getKeyByValue(NRS.constants.PHASING_HASH_ALGORITHMS, code);
     };
 
     return NRS;
