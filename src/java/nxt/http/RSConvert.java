@@ -52,4 +52,9 @@ public final class RSConvert extends APIServlet.APIRequestHandler {
         }
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

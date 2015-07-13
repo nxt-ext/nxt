@@ -550,7 +550,7 @@ final class PeerImpl implements Peer {
                     URI uri = new URI("http://" + announcedAddress);
                     InetAddress inetAddress = InetAddress.getByName(uri.getHost());
                     if (!inetAddress.equals(InetAddress.getByName(host))) {
-                        Logger.logDebugMessage("Announced address " + announcedAddress + " now points to " + inetAddress.getHostAddress() + ", replacing peer " + host);
+                        Logger.logDebugMessage("Connect: announced address " + announcedAddress + " now points to " + inetAddress.getHostAddress() + ", replacing peer " + host);
                         Peers.removePeer(this);
                         PeerImpl newPeer = Peers.findOrCreatePeer(inetAddress, announcedAddress, true);
                         if (newPeer != null) {

@@ -61,4 +61,9 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
         }
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

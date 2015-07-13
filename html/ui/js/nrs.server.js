@@ -232,7 +232,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = ("secretPhrase" in data ? "POST" : "GET");
+        var type = ("secretPhrase" in data || "adminPassword" in data || requestType == "getForging" ? "POST" : "GET");
         var url = NRS.server + "/nxt?requestType=" + requestType;
 
         if (type == "GET") {
@@ -264,7 +264,8 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        if (!NRS.isLocalHost && type == "POST" && requestType != "startForging" && requestType != "stopForging") {
+        if (!NRS.isLocalHost && type == "POST" &&
+            requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
             } else {
@@ -702,7 +703,8 @@ var NRS = (function (NRS, $, undefined) {
                     transaction.revealedSecret = converters.byteArrayToHexString(byteArray.slice(pos, pos + transaction.revealedSecretLength));
                     pos += transaction.revealedSecretLength;
                 }
-                if (transaction.revealedSecret !== data.revealedSecret) {
+                if (transaction.revealedSecret !== data.revealedSecret &&
+                    transaction.revealedSecret !== converters.byteArrayToHexString(NRS.getUtf8Bytes(data.revealedSecretText))) {
                     return false;
                 }
                 break;
@@ -1248,7 +1250,7 @@ var NRS = (function (NRS, $, undefined) {
                 return false;
             }
             pos += 4;
-            if (String(byteArray[pos]) !== data.phasingVotingModel) {
+            if (byteArray[pos] != (parseInt(data.phasingVotingModel) & 0xFF)) {
                 return false;
             }
             pos++;
@@ -1289,6 +1291,7 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
             var hashedSecretLength = byteArray[pos];
+            pos++;
             if (hashedSecretLength > 0 && converters.byteArrayToHexString(byteArray.slice(pos, pos + hashedSecretLength)) !== data.phasingHashedSecret) {
                 return false;
             }

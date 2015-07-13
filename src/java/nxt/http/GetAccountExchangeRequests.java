@@ -18,10 +18,9 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Currency;
-import nxt.Exchange;
+import nxt.ExchangeRequest;
 import nxt.NxtException;
-import nxt.Transaction;
-import nxt.db.FilteringIterator;
+import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -44,19 +43,16 @@ public final class GetAccountExchangeRequests extends APIServlet.APIRequestHandl
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
-        JSONArray exchangeRequests = new JSONArray();
-        try (FilteringIterator<? extends Transaction> transactions = Exchange.getAccountCurrencyExchangeRequests(account.getId(), currency.getId(),
+        JSONArray jsonArray = new JSONArray();
+        try (DbIterator<ExchangeRequest> exchangeRequests = ExchangeRequest.getAccountCurrencyExchangeRequests(account.getId(), currency.getId(),
                 firstIndex, lastIndex)) {
-            for (Transaction transaction : transactions) {
-                exchangeRequests.add(JSONData.exchangeRequest(transaction, true));
+            while (exchangeRequests.hasNext()) {
+                jsonArray.add(JSONData.exchangeRequest(exchangeRequests.next(), true));
             }
         }
-
         JSONObject response = new JSONObject();
-        response.put("exchangeRequests", exchangeRequests);
+        response.put("exchangeRequests", jsonArray);
         return response;
-
-
     }
 
 }

@@ -32,7 +32,7 @@ public class GetPolls extends APIServlet.APIRequestHandler {
     static final GetPolls instance = new GetPolls();
 
     private GetPolls() {
-        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "account", "firstIndex", "lastIndex", "includeFinished");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "account", "firstIndex", "lastIndex", "timestamp", "includeFinished");
     }
 
     @Override
@@ -41,6 +41,7 @@ public class GetPolls extends APIServlet.APIRequestHandler {
         boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        final int timestamp = ParameterParser.getTimestamp(req);
 
         JSONArray pollsJson = new JSONArray();
         DbIterator<Poll> polls = null;
@@ -56,7 +57,11 @@ public class GetPolls extends APIServlet.APIRequestHandler {
             }
 
             while (polls.hasNext()) {
-                pollsJson.add(JSONData.poll(polls.next()));
+                Poll poll = polls.next();
+                if (poll.getTimestamp() < timestamp) {
+                    break;
+                }
+                pollsJson.add(JSONData.poll(poll));
             }
         } finally {
             DbUtils.close(polls);

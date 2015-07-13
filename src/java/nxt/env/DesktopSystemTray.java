@@ -28,12 +28,17 @@ import nxt.util.Logger;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Locale;
 
 public class DesktopSystemTray {
+
+    public static final int DELAY = 1000;
 
     private SystemTray tray;
     private final JFrame wrapper = new JFrame();
@@ -44,6 +49,7 @@ public class DesktopSystemTray {
     private MenuItem openWallet;
     private MenuItem viewLog;
     private SystemTrayDataProvider dataProvider;
+    private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.MEDIUM, Locale.getDefault());
 
     void createAndShowGUI() {
         if (!SystemTray.isSupported()) {
@@ -108,6 +114,14 @@ public class DesktopSystemTray {
                 System.exit(0); // Implicitly invokes shutdown using the shutdown hook
             }
         });
+
+        ActionListener statusUpdater = evt -> {
+            if (statusDialog == null || !statusDialog.isVisible()) {
+                return;
+            }
+            displayStatus();
+        };
+        new Timer(DELAY, statusUpdater).start();
     }
 
     private void displayStatus() {
@@ -116,7 +130,7 @@ public class DesktopSystemTray {
 
         StringBuilder generators = new StringBuilder();
         for (Generator generator : allGenerators) {
-            generators.append('\n').append(Convert.rsAccount(generator.getAccountId()));
+            generators.append(Convert.rsAccount(generator.getAccountId())).append(' ');
         }
         Object optionPaneBackground = UIManager.get("OptionPane.background");
         UIManager.put("OptionPane.background", Color.WHITE);
@@ -124,8 +138,10 @@ public class DesktopSystemTray {
         UIManager.put("Panel.background", Color.WHITE);
         Object textFieldBackground = UIManager.get("TextField.background");
         UIManager.put("TextField.background", Color.WHITE);
+        Container statusPanelParent = null;
         if (statusDialog != null && statusPanel != null) {
-            statusDialog.getContentPane().remove(statusPanel);
+            statusPanelParent = statusPanel.getParent();
+            statusPanelParent.remove(statusPanel);
         }
         statusPanel = new JPanel();
         statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.Y_AXIS));
@@ -162,13 +178,21 @@ public class DesktopSystemTray {
         addDataRow(statusPanel, "Total memory", humanReadableByteCount(Runtime.getRuntime().totalMemory()));
         addDataRow(statusPanel, "Free memory", humanReadableByteCount(Runtime.getRuntime().freeMemory()));
         addDataRow(statusPanel, "Process id", Nxt.getProcessId());
+        addEmptyRow(statusPanel);
+        addDataRow(statusPanel, "Updated", dateFormat.format(new Date()));
         if (statusDialog == null || !statusDialog.isVisible()) {
             JOptionPane pane = new JOptionPane(statusPanel, JOptionPane.PLAIN_MESSAGE, JOptionPane.DEFAULT_OPTION, imageIcon);
             statusDialog = pane.createDialog(wrapper, "NXT Server Status");
             statusDialog.setVisible(true);
             statusDialog.dispose();
         } else {
-            java.awt.EventQueue.invokeLater(statusDialog::toFront);
+            if (statusPanelParent != null) {
+                statusPanelParent.add(statusPanel);
+                statusPanelParent.revalidate();
+            }
+            statusDialog.getContentPane().validate();
+            statusDialog.getContentPane().repaint();
+            EventQueue.invokeLater(statusDialog::toFront);
         }
         UIManager.put("OptionPane.background", optionPaneBackground);
         UIManager.put("Panel.background", panelBackground);

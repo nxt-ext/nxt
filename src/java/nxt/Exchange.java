@@ -21,7 +21,6 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.EntityDbTable;
-import nxt.db.FilteringIterator;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -121,26 +120,6 @@ public final class Exchange {
         }
     }
 
-    public static FilteringIterator<? extends Transaction> getAccountCurrencyExchangeRequests(final long accountId, final long currencyId, int from, int to) {
-        Connection con = null;
-        try {
-            con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction where sender_id = ? AND type = ? AND (subtype = ? OR subtype = ?) " +
-                    " ORDER BY block_timestamp DESC, transaction_index DESC ");
-            int i = 0;
-            pstmt.setLong(++i, accountId);
-            pstmt.setByte(++i, MonetarySystem.EXCHANGE_BUY.getType());
-            pstmt.setByte(++i, MonetarySystem.EXCHANGE_BUY.getSubtype());
-            pstmt.setByte(++i, MonetarySystem.EXCHANGE_SELL.getSubtype());
-            return new FilteringIterator<>(BlockchainImpl.getInstance().getTransactions(con, pstmt),
-                    transaction -> ((Attachment.MonetarySystemAttachment)transaction.getAttachment()).getCurrencyId() == currencyId,
-                    from, to);
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
     public static DbIterator<Exchange> getExchanges(long transactionId) {
         return exchangeTable.getManyBy(new DbClause.LongClause("transaction_id", transactionId), 0, -1);
     }
@@ -226,9 +205,13 @@ public final class Exchange {
         return transactionId;
     }
 
-    public long getBlockId() { return blockId; }
+    public long getBlockId() {
+        return blockId;
+    }
 
-    public long getOfferId() { return offerId; }
+    public long getOfferId() {
+        return offerId;
+    }
 
     public long getSellerId() {
         return sellerId;
@@ -238,13 +221,21 @@ public final class Exchange {
         return buyerId;
     }
 
-    public long getUnits() { return units; }
+    public long getUnits() {
+        return units;
+    }
 
-    public long getRate() { return rate; }
+    public long getRate() {
+        return rate;
+    }
     
-    public long getCurrencyId() { return currencyId; }
+    public long getCurrencyId() {
+        return currencyId;
+    }
     
-    public int getTimestamp() { return timestamp; }
+    public int getTimestamp() {
+        return timestamp;
+    }
 
     public int getHeight() {
         return height;

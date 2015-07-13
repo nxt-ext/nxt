@@ -51,4 +51,9 @@ public final class DecodeHallmark extends APIServlet.APIRequestHandler {
         }
     }
 
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

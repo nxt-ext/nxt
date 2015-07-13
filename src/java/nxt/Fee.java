@@ -22,7 +22,7 @@ public interface Fee {
 
     Fee DEFAULT_FEE = new Fee.ConstantFee(Constants.ONE_NXT);
 
-    Fee NONE = (transaction, appendage) -> 0;
+    Fee NONE = new Fee.ConstantFee(0L);
 
     final class ConstantFee implements Fee {
 

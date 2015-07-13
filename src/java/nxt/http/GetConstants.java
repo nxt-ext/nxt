@@ -17,8 +17,10 @@
 package nxt.http;
 
 import nxt.Constants;
+import nxt.CurrencyMinting;
 import nxt.CurrencyType;
 import nxt.Genesis;
+import nxt.PhasingPoll;
 import nxt.TransactionType;
 import nxt.VoteWeighting;
 import nxt.crypto.HashFunction;
@@ -101,6 +103,18 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
             }
             response.put("hashAlgorithms", hashFunctions);
 
+            JSONObject phasingHashFunctions = new JSONObject();
+            for (HashFunction hashFunction : PhasingPoll.acceptedHashFunctions) {
+                phasingHashFunctions.put(hashFunction.toString(), hashFunction.getId());
+            }
+            response.put("phasingHashAlgorithms", phasingHashFunctions);
+
+            JSONObject mintingHashFunctions = new JSONObject();
+            for (HashFunction hashFunction : CurrencyMinting.acceptedHashFunctions) {
+                mintingHashFunctions.put(hashFunction.toString(), hashFunction.getId());
+            }
+            response.put("mintingHashAlgorithms", mintingHashFunctions);
+
             JSONObject peerStates = new JSONObject();
             for (Peer.State peerState : Peer.State.values()) {
                 peerStates.put(peerState.toString(), peerState.ordinal());
@@ -122,6 +136,11 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) {
         return CONSTANTS;
+    }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
     }
 
 }

@@ -140,6 +140,7 @@
             <file src="nxtservice.jar" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="run.bat" targetdir="${INSTALL_PATH}" override="false"/>
             <file src="mint.bat" targetdir="${INSTALL_PATH}" override="false"/>
+            <file src="compact.bat" targetdir="${INSTALL_PATH}" override="false"/>
             <parsable targetfile="${INSTALL_PATH}/run.bat"/>
 			<singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
 			<singlefile src="resource/nxtservice.properties" target="${INSTALL_PATH}/resource/nxtservice.properties" override="true"/>
@@ -162,6 +163,8 @@
 			<executable targetfile="${INSTALL_PATH}/javadoc.sh"/>
             <file src="package.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/package.sh"/>
+            <file src="compact.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/compact.sh"/>
 		</pack>
         <pack name="jre" os="windows" required="yes" uninstall="false">
             <description>Java 32 bit</description>

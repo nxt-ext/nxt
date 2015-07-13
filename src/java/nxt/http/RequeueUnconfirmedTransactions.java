@@ -51,4 +51,10 @@ public final class RequeueUnconfirmedTransactions extends APIServlet.APIRequestH
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    final boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

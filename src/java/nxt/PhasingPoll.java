@@ -32,11 +32,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Set;
 
 public final class PhasingPoll extends AbstractPoll {
 
-    private static final EnumSet<HashFunction> acceptedHashFunctions = EnumSet.of(HashFunction.SHA256, HashFunction.RIPEMD160, HashFunction.RIPEMD160_SHA256);
+    public static final Set<HashFunction> acceptedHashFunctions =
+            Collections.unmodifiableSet(EnumSet.of(HashFunction.SHA256, HashFunction.RIPEMD160, HashFunction.RIPEMD160_SHA256));
 
     public static HashFunction getHashFunction(byte code) {
         try {
@@ -132,8 +135,6 @@ public final class PhasingPoll extends AbstractPoll {
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
-            } finally {
-                clearCache();
             }
         }
     };

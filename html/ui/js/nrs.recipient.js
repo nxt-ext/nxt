@@ -120,7 +120,7 @@ var NRS = (function(NRS, $, undefined) {
 				"type": "success"
 			});
 		} else {
-			$.growl($.t("success_send_money"), {
+			$.growl($.t("send_money_submitted"), {
 				"type": "success"
 			});
 		}

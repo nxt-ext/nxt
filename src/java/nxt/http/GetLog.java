@@ -99,4 +99,10 @@ public final class GetLog extends APIServlet.APIRequestHandler {
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

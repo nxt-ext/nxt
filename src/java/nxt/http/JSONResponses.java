@@ -317,6 +317,22 @@ public final class JSONResponses {
         HASHES_MISMATCH = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware REQUIRED_BLOCK_NOT_FOUND;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 13);
+        response.put("errorDescription", "Required block not found in the blockchain");
+        REQUIRED_BLOCK_NOT_FOUND = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware REQUIRED_LAST_BLOCK_NOT_FOUND;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 14);
+        response.put("errorDescription", "Current last block is different");
+        REQUIRED_LAST_BLOCK_NOT_FOUND = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
