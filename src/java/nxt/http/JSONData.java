@@ -748,8 +748,9 @@ final class JSONData {
         }
         json.put("amountNQT", String.valueOf(transaction.getAmountNQT()));
         json.put("feeNQT", String.valueOf(transaction.getFeeNQT()));
-        if (transaction.getReferencedTransactionFullHash() != null) {
-            json.put("referencedTransactionFullHash", transaction.getReferencedTransactionFullHash());
+        String referencedTransactionFullHash = transaction.getReferencedTransactionFullHash();
+        if (referencedTransactionFullHash != null) {
+            json.put("referencedTransactionFullHash", referencedTransactionFullHash);
         }
         byte[] signature = Convert.emptyToNull(transaction.getSignature());
         if (signature != null) {

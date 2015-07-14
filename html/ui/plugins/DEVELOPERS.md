@@ -11,8 +11,8 @@ a look at the client source code and documentation to get an overview
 about the various javascript APIs and best practices and examples how to
 use them.
 
-For a plugin to be valid is has to be delivered with a minimum set of files
-and come with a ``manifest.json`` plugin manifest file being compatibel with
+For a plugin to be valid it has to be delivered with a minimum set of files
+and come with a ``manifest.json`` plugin manifest file being compatible with
 the current major plugin version and providing some meta information about
 the plugin. 
 
@@ -68,7 +68,7 @@ Hint: Don't use comments in your own ``JSON`` file!
 Plugins are compatible when the manifest file is written for the same
 major plugin version supported by the installed client.
 
-Mayor plugin versions won't change very often, minor plugin version releases will
+Major plugin versions won't change very often, minor plugin version releases will
 remain compatible within the major version.
 
 After a detected plugin is determined as compatible the NRS client will be validating the

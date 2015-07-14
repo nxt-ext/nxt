@@ -490,16 +490,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-    NRS.getPhasingFee = function(transaction) {
-        if (transaction.attachment.phasingWhitelist &&
-            transaction.attachment.phasingWhitelist.length > 0 ||
-            transaction.attachment.phasingVotingModel == 0) {
-            return 1;
-        } else {
-            return 2;
-        }
-    };
-
     NRS.getTransactionRowHTML = function(t, actions) {
 		var transactionType = $.t(NRS.transactionTypes[t.type]['subTypes'][t.subtype]['i18nKeyTitle']);
 
@@ -553,11 +543,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (actions && actions.length != undefined) {
 			html += '<td class="td_transaction_actions" style="vertical-align:middle;text-align:right;">';
 			if (actions.indexOf('approve') > -1) {
-                var fee = NRS.getPhasingFee(t);
                 html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
 				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-fullhash='" + String(t.fullHash).escapeHTML() + "' ";
 				html += "data-timestamp='" + t.timestamp + "' " + "data-votingmodel='" + t.attachment.phasingVotingModel + "' ";
-				html += "data-fee='" + fee + "' data-min-balance-formatted=''>" + $.t('approve') + "</a>";
 			}
 			html += "</td>";
 		}
