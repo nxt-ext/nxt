@@ -49,18 +49,34 @@ var NRS = (function (NRS, $, undefined) {
         'PNC_COMPATIBILITY_UNKNOWN': 301,
         'PNC_COMPATIBILITY_CLIENT_VERSION_TOO_OLD': 302,
 
-        "VOTING_MODELS": {},
-
+        'VOTING_MODELS': {},
         'MIN_BALANCE_MODELS': {},
+        "HASH_ALGORITHMS": {},
+        "PHASING_HASH_ALGORITHMS": {},
+        "MINTING_HASH_ALGORITHMS": {},
 
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
-        "GENESIS": "",
-        "GENESIS_RS": "",
-        "EPOCH_BEGINNING": 0,
-        "FORGING": "forging",
-        "NOT_FORGING": "not_forging",
-        "UNKNOWN": "unknown"
+        'GENESIS': '',
+        'GENESIS_RS': '',
+        'EPOCH_BEGINNING': 0,
+        'FORGING': 'forging',
+        'NOT_FORGING': 'not_forging',
+        'UNKNOWN': 'unknown'
+    };
+
+    NRS.loadAlgorithmList = function (algorithmSelect, isPhasingHash) {
+        var hashAlgorithms;
+        if (isPhasingHash) {
+            hashAlgorithms = NRS.constants.PHASING_HASH_ALGORITHMS;
+        } else {
+            hashAlgorithms = NRS.constants.HASH_ALGORITHMS;
+        }
+        for (var key in hashAlgorithms) {
+            if (hashAlgorithms.hasOwnProperty(key)) {
+                algorithmSelect.append($("<option />").val(hashAlgorithms[key]).text(key));
+            }
+        }
     };
 
     NRS.loadServerConstants = function () {
@@ -69,6 +85,9 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.constants.SERVER = response;
                 NRS.constants.VOTING_MODELS = response.votingModels;
                 NRS.constants.MIN_BALANCE_MODELS = response.minBalanceModels;
+                NRS.constants.HASH_ALGORITHMS = response.hashAlgorithms;
+                NRS.constants.PHASING_HASH_ALGORITHMS = response.phasingHashAlgorithms;
+                NRS.constants.MINTING_HASH_ALGORITHMS = response.mintingHashAlgorithms;
                 NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
                 NRS.constants.GENESIS = response.genesisAccountId;
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
@@ -102,6 +121,10 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getMinBalanceModelCode = function (name) {
         return NRS.constants.MIN_BALANCE_MODELS[name];
+    };
+
+    NRS.getHashAlgorithm = function (code) {
+        return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
     };
 
     return NRS;

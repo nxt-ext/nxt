@@ -1626,7 +1626,9 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getTransactionStatusIcon = function (phasedEntity) {
         var statusIcon;
-        if (phasedEntity.phased == true) {
+        if (phasedEntity.expectedCancellation == true) {
+            statusIcon = "<i class='fa fa-ban' title='" + $.t("cancelled") + "'></i>";
+        } else if (phasedEntity.phased == true) {
             statusIcon = "<i class='fa fa-gavel' title='" + $.t("phased") + "'></i>";
         } else if (phasedEntity.phased == false) {
             statusIcon = "<i class='fa fa-circle-o' title='" + $.t("unconfirmed") + "'></i>";

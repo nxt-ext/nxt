@@ -707,7 +707,8 @@ var NRS = (function (NRS, $, undefined) {
                     transaction.revealedSecret = converters.byteArrayToHexString(byteArray.slice(pos, pos + transaction.revealedSecretLength));
                     pos += transaction.revealedSecretLength;
                 }
-                if (transaction.revealedSecret !== data.revealedSecret) {
+                if (transaction.revealedSecret !== data.revealedSecret &&
+                    transaction.revealedSecret !== converters.byteArrayToHexString(NRS.getUtf8Bytes(data.revealedSecretText))) {
                     return false;
                 }
                 break;
@@ -1294,6 +1295,7 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
             var hashedSecretLength = byteArray[pos];
+            pos++;
             if (hashedSecretLength > 0 && converters.byteArrayToHexString(byteArray.slice(pos, pos + hashedSecretLength)) !== data.phasingHashedSecret) {
                 return false;
             }

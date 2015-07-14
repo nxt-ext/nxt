@@ -37,6 +37,10 @@ getPollVotes and getPollVote now accept includeWeights parameter, default
 false, to calculate and display the weight assigned to each vote in the poll
 results.
 
+Added Hash API, for calculating the hash of a secret using any of the
+supported hash functions, which can be used for deriving the hash in by-hash
+phasing. See getConstants for the list of supported hash functions.
+
 For running over tor, or other socks proxy, the socksProxyHost and
 socksProxyPort parameters can now be specified in the nxt.properties file
 instead of having to include them in the command line.
@@ -59,6 +63,16 @@ Client UI:
 The asset exchange page now displays unconfirmed orders as well as phased 
 orders that are expected to be executed in the next block.
 
+The monetary system page now displays unconfirmed exchange requests and offers
+as well as phased requests and offers that are expected to be executed in the 
+next block.
+
+Phasing modals "None", "By Transaction" and "By Hash" were implemented as part
+of the advanced section of transaction modals.
+
+Calculate hash modal is now available in the settings menu. Use it to calculate
+hash values for "By Hash" phasing model. 
+
 Added "Admin Password" field to the client settings. Set it to the server admin
 password to allow the client to automatically determine its forging status when 
 connected to a remote node.
@@ -76,7 +90,7 @@ status.
 Transaction info dialog correctly follows links between matching bid and ask 
 orders and links from vote to poll.
 
-Marketplace usage warning and a corresponding, Marketplace place enablement
+Marketplace usage warning and a corresponding, marketplace enablement
 setting has been implemented.
 
 This release will perform a rescan on first start.

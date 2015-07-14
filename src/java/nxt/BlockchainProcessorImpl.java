@@ -928,6 +928,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (lastTrimHeight > 0) {
             for (DerivedDbTable table : derivedTables) {
                 table.trim(lastTrimHeight);
+                Db.db.commitTransaction();
             }
         }
     }
@@ -1160,9 +1161,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getVersion() != getBlockVersion(previousLastBlock.getHeight())) {
             throw new BlockNotAcceptedException("Invalid version " + block.getVersion(), block);
         }
-        if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT || block.getTimestamp() <= previousLastBlock.getTimestamp()) {
+        if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT) {
+            Logger.logWarningMessage("Received a block from the future, block timestamp is " + block.getTimestamp()
+                    + ", current time is " + curTime + ", system clock may be off");
             throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
-                    + " current time is " + curTime + ", previous block timestamp is " + previousLastBlock.getTimestamp(), block);
+                    + " current time is " + curTime, block);
+        }
+        if (block.getTimestamp() <= previousLastBlock.getTimestamp()) {
+            throw new BlockNotAcceptedException("Block timestamp " + block.getTimestamp() + " is before previous block timestamp "
+                    + previousLastBlock.getTimestamp(), block);
         }
         if (block.getVersion() != 1 && !Arrays.equals(Crypto.sha256().digest(previousLastBlock.bytes()), block.getPreviousBlockHash())) {
             throw new BlockNotAcceptedException("Previous block hash doesn't match", block);
@@ -1203,7 +1210,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (TransactionDb.hasTransaction(transaction.getId(), previousLastBlock.getHeight())) {
                 throw new TransactionNotAcceptedException("Transaction is already in the blockchain", transaction);
             }
-            //TODO: check that referenced transaction, if phased, has been applied?
             if (transaction.referencedTransactionFullHash() != null) {
                 if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
                         && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.referencedTransactionFullHash()), previousLastBlock.getHeight()))

@@ -118,7 +118,7 @@ var NRS = (function(NRS, $, undefined) {
 		$elems.each(function(e) {
 			var $mbGroup = $(this).closest('div.approve_min_balance_model_group');
 			if ($mbGroup.hasClass("approve_mb_balance")) {
-				$mbGroup.find('option[value="1"], option[value="2"], option[value="3"]').remove();
+				$mbGroup.find('option[value="2"], option[value="3"]').remove();
 			}
 			if ($mbGroup.hasClass("approve_mb_asset")) {
 				$mbGroup.find('option[value="1"], option[value="3"]').remove();
@@ -182,7 +182,14 @@ var NRS = (function(NRS, $, undefined) {
 		$elems.find('input').prop("disabled", true);
 		$elems = NRS.initModalUIElement($modal, '.approve_holding_currency_optional', 'add_currency_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
-		$elems.hide();
+
+		var selectName = $modal.attr('id') == "hash_modal" ? "hashAlgorithm" : "phasingHashedSecretAlgorithm";
+		var context = {
+			labelText: "HASH ALGORITHM",
+			labelI18n: "hash_algorithm",
+			selectName: selectName
+		}
+		NRS.initModalUIElement($modal, '.hash_algorithm_model_group', 'hash_algorithm_model_modal_ui_element', context);
 
 		_setMandatoryApproval($modal);
 		_setApprovalFeeAddition($modal);

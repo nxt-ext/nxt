@@ -755,6 +755,7 @@ var NRS = (function (NRS, $, undefined) {
         };
         async.parallel([
             function(callback) {
+                params["showExpectedCancellations"] = "true";
                 NRS.sendRequest("get" + type.capitalize() + "Orders+" + assetId, params, function (response) {
                     var orders = response[type + "Orders"];
                     if (!orders) {
@@ -817,6 +818,7 @@ var NRS = (function (NRS, $, undefined) {
                     trade.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trade.priceNQT, trade.quantityQNT));
                     rows += "<tr>" +
                         "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(trade.bidOrder).escapeHTML() + "'>" + NRS.formatTimestamp(trade.timestamp) + "</a></td>" +
+                        "<td>" + $.t(trade.tradeType) + "</td>" +
                         "<td>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
                         "<td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals) + "</td>" +
                         "<td style='color:";

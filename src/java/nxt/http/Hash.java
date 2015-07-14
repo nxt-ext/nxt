@@ -16,57 +16,48 @@
 
 package nxt.http;
 
-import nxt.Constants;
-import nxt.peer.Peer;
-import nxt.peer.Peers;
+import nxt.crypto.HashFunction;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashSet;
-import java.util.Set;
 
-public final class DumpPeers extends APIServlet.APIRequestHandler {
+public final class Hash extends APIServlet.APIRequestHandler {
 
-    static final DumpPeers instance = new DumpPeers();
+    static final Hash instance = new Hash();
 
-    private DumpPeers() {
-        super(new APITag[] {APITag.DEBUG}, "version", "weight", "connect", "adminPassword");
+    private Hash() {
+        super(new APITag[] {APITag.UTILS}, "hashAlgorithm", "secret", "secretIsText");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        String version = Convert.nullToEmpty(req.getParameter("version"));
-        int weight = ParameterParser.getInt(req, "weight", 0, (int)Constants.MAX_BALANCE_NXT, false);
-        boolean connect = "true".equalsIgnoreCase(req.getParameter("connect")) && API.checkPassword(req);
-        if (connect) {
-            Peers.getAllPeers().parallelStream().unordered().forEach(Peers::connectPeer);
+        byte algorithm = ParameterParser.getByte(req, "hashAlgorithm", (byte) 0, Byte.MAX_VALUE, false);
+        HashFunction hashFunction = null;
+        try {
+            hashFunction = HashFunction.getHashFunction(algorithm);
+        } catch (IllegalArgumentException ignore) {}
+        if (hashFunction == null) {
+            return JSONResponses.incorrect("hashAlgorithm");
         }
-        Set<String> addresses = new HashSet<>();
-        Peers.getAllPeers().forEach(peer -> {
-                    if (peer.getState() == Peer.State.CONNECTED
-                            && peer.shareAddress()
-                            && !peer.isBlacklisted()
-                            && peer.getVersion() != null && peer.getVersion().startsWith(version)
-                            && (weight == 0 || peer.getWeight() > weight)) {
-                        addresses.add(peer.getAnnouncedAddress());
-                    }
-                });
-        StringBuilder buf = new StringBuilder();
-        for (String address : addresses) {
-            buf.append(address).append("; ");
-        }
-        JSONObject response = new JSONObject();
-        response.put("peers", buf.toString());
-        response.put("count", addresses.size());
-        return response;
-    }
 
-    @Override
-    final boolean requirePost() {
-        return true;
+        boolean secretIsText = "true".equalsIgnoreCase(req.getParameter("secretIsText"));
+        byte[] secret;
+        try {
+            secret = secretIsText ? Convert.toBytes(req.getParameter("secret"))
+                    : Convert.parseHexString(req.getParameter("secret"));
+        } catch (RuntimeException e) {
+            return JSONResponses.incorrect("secret");
+        }
+        if (secret == null || secret.length == 0) {
+            return JSONResponses.missing("secret");
+        }
+
+        JSONObject response = new JSONObject();
+        response.put("hash", Convert.toHexString(hashFunction.hash(secret)));
+        return response;
     }
 
     @Override

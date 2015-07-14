@@ -16,21 +16,28 @@
 
 package nxt.http;
 
+import nxt.Attachment;
+import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Order;
+import nxt.Transaction;
+import nxt.TransactionType;
 import nxt.db.DbIterator;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 public final class GetAskOrders extends APIServlet.APIRequestHandler {
 
     static final GetAskOrders instance = new GetAskOrders();
 
     private GetAskOrders() {
-        super(new APITag[] {APITag.AE}, "asset", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.AE}, "asset", "firstIndex", "lastIndex", "showExpectedCancellations");
     }
 
     @Override
@@ -39,11 +46,29 @@ public final class GetAskOrders extends APIServlet.APIRequestHandler {
         long assetId = ParameterParser.getAsset(req).getId();
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
+        boolean showExpectedCancellations = "true".equalsIgnoreCase(req.getParameter("showExpectedCancellations"));
+
+        long[] cancellations = null;
+        if (showExpectedCancellations) {
+            Filter<Transaction> filter = transaction -> transaction.getType() == TransactionType.ColoredCoins.ASK_ORDER_CANCELLATION;
+            List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
+            cancellations = new long[transactions.size()];
+            for (int i = 0; i < transactions.size(); i++) {
+                Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation) transactions.get(i).getAttachment();
+                cancellations[i] = attachment.getOrderId();
+            }
+            Arrays.sort(cancellations);
+        }
 
         JSONArray orders = new JSONArray();
         try (DbIterator<Order.Ask> askOrders = Order.Ask.getSortedOrders(assetId, firstIndex, lastIndex)) {
             while (askOrders.hasNext()) {
-                orders.add(JSONData.askOrder(askOrders.next()));
+                Order.Ask order = askOrders.next();
+                JSONObject orderJSON = JSONData.askOrder(order);
+                if (showExpectedCancellations && Arrays.binarySearch(cancellations, order.getId()) >= 0) {
+                    orderJSON.put("expectedCancellation", Boolean.TRUE);
+                }
+                orders.add(orderJSON);
             }
         }
 
