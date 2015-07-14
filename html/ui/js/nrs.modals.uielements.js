@@ -64,7 +64,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 		var $algorithm = $(this).find('div[data-modal-ui-element="hash_algorithm_model_modal_ui_element"]');
 		var $algoSelect = $algorithm.find('select');
-		NRS.loadAlgorithmList($algoSelect);
+		NRS.loadAlgorithmList($algoSelect, ($(this).attr('id') != 'hash_modal'));
 	});
 	$('body').on('keyup', '.modal div[data-modal-ui-element="block_height_modal_ui_element"] .bhm_ue_time_input', function(e) {
 		var $bhmElem = $(this).closest('div[data-modal-ui-element="block_height_modal_ui_element"]');

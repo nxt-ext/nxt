@@ -1210,7 +1210,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (TransactionDb.hasTransaction(transaction.getId(), previousLastBlock.getHeight())) {
                 throw new TransactionNotAcceptedException("Transaction is already in the blockchain", transaction);
             }
-            //TODO: check that referenced transaction, if phased, has been applied?
             if (transaction.referencedTransactionFullHash() != null) {
                 if ((previousLastBlock.getHeight() < Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK
                         && !TransactionDb.hasTransaction(Convert.fullHashToId(transaction.referencedTransactionFullHash()), previousLastBlock.getHeight()))

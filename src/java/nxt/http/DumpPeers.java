@@ -42,7 +42,7 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
         int weight = ParameterParser.getInt(req, "weight", 0, (int)Constants.MAX_BALANCE_NXT, false);
         boolean connect = "true".equalsIgnoreCase(req.getParameter("connect")) && API.checkPassword(req);
         if (connect) {
-            Peers.getAllPeers().forEach(Peers::connectPeer);
+            Peers.getAllPeers().parallelStream().unordered().forEach(Peers::connectPeer);
         }
         Set<String> addresses = new HashSet<>();
         Peers.getAllPeers().forEach(peer -> {
