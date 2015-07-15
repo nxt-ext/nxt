@@ -40,7 +40,7 @@ public final class GetShufflingParticipants extends APIServlet.APIRequestHandler
         JSONObject response = new JSONObject();
         JSONArray participantsJSONArray = new JSONArray();
         response.put("participants", participantsJSONArray);
-        try(DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId())) {
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId())) {
             for (ShufflingParticipant participant : participants) {
                 participantsJSONArray.add(JSONData.participant(participant));
             }

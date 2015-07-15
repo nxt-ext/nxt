@@ -229,17 +229,7 @@ final class ParameterParser {
     }
 
     static Shuffling getShuffling(HttpServletRequest req) throws ParameterException {
-        String shufflingValue = Convert.emptyToNull(req.getParameter("shuffling"));
-        if (shufflingValue == null) {
-            throw new ParameterException(MISSING_SHUFFLING);
-        }
-        Shuffling shuffling;
-        try {
-            long shufflingId = Convert.parseUnsignedLong(shufflingValue);
-            shuffling = Shuffling.getShuffling(shufflingId);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_SHUFFLING);
-        }
+        Shuffling shuffling = Shuffling.getShuffling(getUnsignedLong(req, "shuffling", true));
         if (shuffling == null) {
             throw new ParameterException(UNKNOWN_SHUFFLING);
         }

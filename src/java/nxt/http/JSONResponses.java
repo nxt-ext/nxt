@@ -133,7 +133,6 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SHUFFLING = missing("shuffling");
     public static final JSONStreamAware UNKNOWN_SHUFFLING = unknown("shuffling");
     public static final JSONStreamAware INCORRECT_SHUFFLING = incorrect("shuffling");
-    public static final JSONStreamAware INCORRECT_SHUFFLING_STATE = incorrect("shuffling");
     public static final JSONStreamAware RESPONSE_STREAM_ERROR = responseError("responseOutputStream");
     public static final JSONStreamAware RESPONSE_WRITE_ERROR = responseError("responseWrite");
     public static final JSONStreamAware MISSING_TRANSACTION_FULL_HASH = missing("transactionFullHash");

@@ -310,9 +310,9 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("shuffling", Long.toUnsignedString(shuffling.getId()));
         putAccount(json, "issuer", shuffling.getIssuerId());
-        json.put("currency", shuffling.getCurrencyId());
+        json.put("currency", Long.toUnsignedString(shuffling.getCurrencyId()));
         putAccount(json, "assignee", shuffling.getAssigneeAccountId());
-        json.put("amount", shuffling.getAmount());
+        json.put("amount", String.valueOf(shuffling.getAmount()));
         json.put("cancellationHeight", shuffling.getCancellationHeight());
         json.put("participantCount", shuffling.getParticipantCount());
         json.put("stage", shuffling.getStage().getCode());
