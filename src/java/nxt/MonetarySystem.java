@@ -654,9 +654,6 @@ public abstract class MonetarySystem extends TransactionType {
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-            if (!currency.isActive()) {
-                throw new NxtException.NotCurrentlyValidException("Currency not currently active " + attachment.getJSONObject());
-            }
             CurrencyType.validate(currency, transaction);
             if (attachment.getUnits() <= 0) {
                 throw new NxtException.NotValidException("Invalid number of units: " + attachment.getUnits());
