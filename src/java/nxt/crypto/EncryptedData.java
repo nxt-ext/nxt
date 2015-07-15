@@ -26,19 +26,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public final class EncryptedData {
-
-    private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
-        @Override
-        protected SecureRandom initialValue() {
-            return new SecureRandom();
-        }
-    };
 
     public static final EncryptedData EMPTY_DATA = new EncryptedData(new byte[0], new byte[0]);
 
@@ -47,7 +38,7 @@ public final class EncryptedData {
             return EMPTY_DATA;
         }
         byte[] nonce = new byte[32];
-        secureRandom.get().nextBytes(nonce);
+        Crypto.getSecureRandom().nextBytes(nonce);
         byte[] data = Crypto.aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce);
         return new EncryptedData(data, nonce);
     }
@@ -93,28 +84,6 @@ public final class EncryptedData {
         } catch (NxtException.NotValidException e) {
             throw new RuntimeException(e.toString(), e); // never
         }
-    }
-
-    private final byte[] data;
-    private final byte[] nonce;
-
-    public EncryptedData(byte[] data, byte[] nonce) {
-        this.data = data;
-        this.nonce = nonce;
-    }
-
-    /*
-    public EncryptedData(byte[] data, long nonce) {
-        this.data = data;
-        this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
-    }
-    */
-
-    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
-        if (data.length == 0) {
-            return data;
-        }
-        return Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
     }
 
     public static byte[] marshalData(EncryptedData encryptedData) {
@@ -178,6 +147,28 @@ public final class EncryptedData {
         return inputDataList;
     }
 
+    private final byte[] data;
+    private final byte[] nonce;
+
+    public EncryptedData(byte[] data, byte[] nonce) {
+        this.data = data;
+        this.nonce = nonce;
+    }
+
+    /*
+    public EncryptedData(byte[] data, long nonce) {
+        this.data = data;
+        this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
+    }
+    */
+
+    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
+        if (data.length == 0) {
+            return data;
+        }
+        return Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
+    }
+
     public byte[] getData() {
         return data;
     }
@@ -188,10 +179,6 @@ public final class EncryptedData {
 
     public int getSize() {
         return data.length + nonce.length;
-    }
-
-    public static Random getSecureRandom() {
-        return secureRandom.get();
     }
 
     public byte[] getBytes() {

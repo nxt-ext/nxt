@@ -43,6 +43,10 @@ public final class Crypto {
 
     private Crypto() {} //never
 
+    public static SecureRandom getSecureRandom() {
+        return secureRandom.get();
+    }
+
     public static MessageDigest getMessageDigest(String algorithm) {
         try {
             return MessageDigest.getInstance(algorithm);

@@ -21,6 +21,7 @@ import nxt.Attachment;
 import nxt.NxtException;
 import nxt.Shuffling;
 import nxt.ShufflingParticipant;
+import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
@@ -171,7 +172,7 @@ public final class ShufflingProcess extends CreateTransaction {
         outputDataList.add(encryptedData);
 
         // Shuffle the tokens and save the shuffled tokens as the participant data
-        Collections.shuffle(outputDataList, EncryptedData.getSecureRandom());
+        Collections.shuffle(outputDataList, Crypto.getSecureRandom());
         ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(bytesStream);
         for (EncryptedData outputData : outputDataList) {
