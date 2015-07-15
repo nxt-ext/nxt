@@ -18,12 +18,6 @@ package nxt.http;
 
 import nxt.BlockchainTest;
 import nxt.Constants;
-import nxt.Nxt;
-import nxt.util.Logger;
-import org.json.simple.JSONObject;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.junit.Assert;

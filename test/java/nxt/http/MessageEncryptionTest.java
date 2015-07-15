@@ -18,7 +18,6 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.BlockchainTest;
-import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;

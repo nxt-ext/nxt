@@ -19,15 +19,12 @@ package nxt.http;
 import nxt.Account;
 import nxt.BlockchainTest;
 import nxt.Constants;
-import nxt.Nxt;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class SendMessageTest extends BlockchainTest {

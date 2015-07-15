@@ -23,8 +23,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 public abstract class BlockchainTest extends AbstractBlockchainTest {
