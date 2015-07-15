@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URLEncoder;
 
 public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
 
@@ -43,7 +44,8 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
         } else {
             response.setContentType("application/octet-stream");
         }
-        response.setHeader("Content-Disposition", "attachment; filename=" + taggedData.getFilename());
+        String encodedFilename = URLEncoder.encode(taggedData.getFilename());
+        response.setHeader("Content-Disposition", "attachment; filename=" + encodedFilename + "; filename*=utf-8''" + encodedFilename);
         response.setContentLength(data.length);
         try (OutputStream out = response.getOutputStream()) {
             try {
