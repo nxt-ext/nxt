@@ -803,6 +803,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
+            }
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
             if (attachment.isCurrency()) {
                 Currency currency = Currency.getCurrency(attachment.getCurrencyId());
@@ -896,6 +899,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
+            }
             Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling == null) {
@@ -979,6 +985,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
+            }
             Attachment.MonetarySystemShufflingProcessing attachment = (Attachment.MonetarySystemShufflingProcessing)transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling == null) {
@@ -1041,6 +1050,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
+            }
             Attachment.MonetarySystemShufflingVerification attachment = (Attachment.MonetarySystemShufflingVerification) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling == null) {
@@ -1114,6 +1126,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
+            }
             Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling == null) {
@@ -1184,6 +1199,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
+            }
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling == null) {
