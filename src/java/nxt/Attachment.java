@@ -2437,7 +2437,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingCreation extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemShufflingCreation extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long currencyId;
         private final long amount;
@@ -2457,7 +2457,7 @@ public interface Attachment extends Appendix {
             this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
             this.amount = Convert.parseLong(attachmentData.get("amount"));
             this.participantCount = ((Long)attachmentData.get("participantCount")).byteValue();
-            this.cancellationHeight = ((Long)attachmentData.get("cancellationHeight")).shortValue();
+            this.cancellationHeight = ((Long)attachmentData.get("cancellationHeight")).intValue();
         }
 
         public MonetarySystemShufflingCreation(long currencyId, long amount, byte participantCount, int cancellationHeight) {
@@ -2514,11 +2514,11 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingRegistration extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemShufflingRegistration extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
-        MonetarySystemShufflingRegistration(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        MonetarySystemShufflingRegistration(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
         }
@@ -2562,15 +2562,16 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
         private final byte[] data;
 
-        public MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        public MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
             int size = buffer.getInt();
+            //TODO: enforce size limit to prevent OOM attack
             this.data = new byte[size];
             buffer.get(data);
         }
@@ -2623,7 +2624,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingDistribution extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemShufflingDistribution extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
@@ -2671,7 +2672,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    public final static class MonetarySystemShufflingVerification extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemShufflingVerification extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
@@ -2719,8 +2720,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-
-    public final static class MonetarySystemShufflingCancellation extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemShufflingCancellation extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 

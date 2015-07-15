@@ -51,7 +51,7 @@ public final class ShufflingProcess extends CreateTransaction {
 
     private ShufflingProcess() {
         super(new APITag[]{APITag.SHUFFLING, APITag.CREATE_TRANSACTION},
-                "shuffling", "secretPhrase", "recipient");
+                "shuffling", "secretPhrase", "recipient"); //TODO: need recipientSecretPhrase or recipientPublicKey, not recipient
     }
 
     @Override
@@ -78,6 +78,7 @@ public final class ShufflingProcess extends CreateTransaction {
         }
         long recipientId = ParameterParser.getAccountId(req, "recipient", true);
 
+        //TODO: there is too much logic here, must be moved to a core class such as Shuffling
         // Read the participant list for the shuffling
         DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId());
         Map<Long, Long> mapping = new HashMap<>();

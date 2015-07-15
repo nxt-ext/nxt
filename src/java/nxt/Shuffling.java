@@ -17,6 +17,7 @@
 package nxt;
 
 import nxt.crypto.EncryptedData;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -35,11 +36,11 @@ import java.util.List;
 
 public final class Shuffling {
 
-    public static enum Event {
+    public enum Event {
         SHUFFLING_CREATED, SHUFFLING_CANCELLED, SHUFFLING_DONE
     }
 
-    public static enum Stage {
+    public enum Stage {
         REGISTRATION((byte)1),
         PROCESSING((byte)2),
         VERIFICATION((byte)3),
@@ -84,6 +85,7 @@ public final class Shuffling {
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
+                //TODO: optimize, use cancellation_height and avoid table scan
                 Connection con = null;
                 try {
                     con = Db.db.getConnection();
@@ -117,6 +119,7 @@ public final class Shuffling {
 
     };
 
+    //TODO: trim completed shufflings after 1440 blocks?
     private static final VersionedEntityDbTable<Shuffling> shufflingTable = new VersionedEntityDbTable<Shuffling>("shuffling", shufflingDbKeyFactory) {
 
         @Override
@@ -177,7 +180,7 @@ public final class Shuffling {
         }
     }
 
-    public static void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
+    static void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
         long shufflingId = attachment.getShufflingId();
         long participantId = transaction.getSenderId();
         byte[] data = attachment.getData();
@@ -239,19 +242,19 @@ public final class Shuffling {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, currency_id, "
-                + "issuer_id, amount, participant_count, cancellation_height, stage, assignee_account_Id,"
+                + "issuer_id, amount, participant_count, cancellation_height, stage, assignee_account_id, "
                 + "height, latest) "
-                + "KEY (id, height)"
+                + "KEY (id, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getId());
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.getCurrencyId());
-            pstmt.setLong(++i, this.getIssuerId());
-            pstmt.setLong(++i, this.getAmount());
-            pstmt.setLong(++i, this.getParticipantCount());
-            pstmt.setInt(++i, this.getCancellationHeight());
+            pstmt.setLong(++i, this.id);
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.currencyId);
+            pstmt.setLong(++i, this.issuerId);
+            pstmt.setLong(++i, this.amount);
+            pstmt.setLong(++i, this.participantCount);
+            pstmt.setInt(++i, this.cancellationHeight);
             pstmt.setByte(++i, this.getStage().getCode());
-            pstmt.setLong(++i, this.getAssigneeAccountId());
+            pstmt.setLong(++i, this.assigneeAccountId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -287,7 +290,7 @@ public final class Shuffling {
         return stage;
     }
 
-    public void setStage(Stage stage) {
+    private void setStage(Stage stage) {
         this.stage = stage;
         shufflingTable.insert(this);
     }
@@ -296,7 +299,7 @@ public final class Shuffling {
         return assigneeAccountId;
     }
 
-    public void setAssigneeAccountId(long assigneeAccountId) {
+    private void setAssigneeAccountId(long assigneeAccountId) {
         this.assigneeAccountId = assigneeAccountId;
         shufflingTable.insert(this);
     }
@@ -393,22 +396,13 @@ public final class Shuffling {
         return ShufflingParticipant.getParticipant(id, senderId).isProcessingComplete();
     }
 
-    public static void cancelShuffling(long currencyId) {
-        Connection con = null;
-        try {
-            con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE currency_id = ? AND latest = TRUE");
-            int i = 0;
-            pstmt.setLong(++i, currencyId);
-            DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(con, pstmt, false);
+    static void cancelShuffling(long currencyId) {
+        try (DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1)) {
             for (Shuffling shuffling : shufflings) {
                 if (shuffling.getStage().isCancellationAllowed()) {
                     shuffling.cancel();
-                }
+                } //TODO: else? prevent deletion of currencies with shuffling in non-cancelable state?
             }
-        } catch (SQLException e) {
-            DbUtils.close(con);
-            throw new RuntimeException(e.toString(), e);
         }
     }
 }

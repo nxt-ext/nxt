@@ -34,7 +34,7 @@ import java.sql.SQLException;
 
 public final class ShufflingParticipant {
 
-    public static enum State {
+    public enum State {
         REGISTERED((byte)0),
         PROCESSED((byte)1),
         VERIFIED((byte)2);
@@ -59,7 +59,7 @@ public final class ShufflingParticipant {
         }
     }
 
-    public static enum Event {
+    public enum Event {
         PARTICIPANT_ADDED, RECIPIENT_ADDED
     }
 
@@ -75,6 +75,7 @@ public final class ShufflingParticipant {
 
     };
 
+    //TODO: trim participants 1440 blocks after shuffle completion?
     private static final VersionedEntityDbTable<ShufflingParticipant> shufflingParticipantTable = new VersionedEntityDbTable<ShufflingParticipant>("shuffling_participant", shufflingParticipantDbKeyFactory) {
 
         @Override
@@ -89,24 +90,15 @@ public final class ShufflingParticipant {
 
     };
 
-    static int getCount(long shufflingId) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM Shuffling_participant WHERE shuffling_id = ? AND latest = TRUE")) {
-            pstmt.setLong(1, shufflingId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
+    public static int getCount(long shufflingId) {
+        return shufflingParticipantTable.getCount(new DbClause.LongClause("shuffling_id", shufflingId));
     }
 
-    static boolean addListener(Listener<ShufflingParticipant> listener, Event eventType) {
+    public static boolean addListener(Listener<ShufflingParticipant> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
 
-    static boolean removeListener(Listener<ShufflingParticipant> listener, Event eventType) {
+    public static boolean removeListener(Listener<ShufflingParticipant> listener, Event eventType) {
         return listeners.removeListener(listener, eventType);
     }
 
@@ -114,7 +106,7 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.getManyBy(new DbClause.LongClause("shuffling_id", shufflingId), 0, -1);
     }
 
-    static ShufflingParticipant getParticipant(long shufflingId, long accountId) {
+    public static ShufflingParticipant getParticipant(long shufflingId, long accountId) {
         return shufflingParticipantTable.get(shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId));
     }
 
@@ -161,15 +153,15 @@ public final class ShufflingParticipant {
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
                 + "account_id, next_account_id, recipient_id, state, data, height, latest) "
-                + "KEY (shuffling_id, account_id, height)"
+                + "KEY (shuffling_id, account_id, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
-            pstmt.setLong(++i, this.getShufflingId());
-            pstmt.setLong(++i, this.getAccountId());
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.getNextAccountId());
-            pstmt.setLong(++i, this.getRecipientId());
+            pstmt.setLong(++i, this.shufflingId);
+            pstmt.setLong(++i, this.accountId);
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.nextAccountId);
+            pstmt.setLong(++i, this.recipientId);
             pstmt.setByte(++i, this.getState().getCode());
-            pstmt.setBytes(++i, this.getData());
+            pstmt.setBytes(++i, this.data);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -233,7 +225,7 @@ public final class ShufflingParticipant {
         return state == State.PROCESSED;
     }
 
-    public void setProcessingComplete() {
+    void setProcessingComplete() {
         state = State.PROCESSED;
     }
 
