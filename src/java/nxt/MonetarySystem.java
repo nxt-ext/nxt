@@ -732,7 +732,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
-            Attachment.MonetarySystemAttachment attachment = (Attachment.MonetarySystemAttachment) transaction.getAttachment();
+            Attachment.MonetarySystemCurrencyDeletion attachment = (Attachment.MonetarySystemCurrencyDeletion) transaction.getAttachment();
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
             String nameLower = currency.getName().toLowerCase();
             String codeLower = currency.getCode().toLowerCase();
@@ -821,11 +821,6 @@ public abstract class MonetarySystem extends TransactionType {
                     throw new NxtException.NotValidException("Invalid NQT amount " + attachment.getAmount());
                 }
             }
-            //TODO: why is this needed? by submitting this transaction, the sender also publishes his public key
-            if (Account.getAccount(transaction.getSenderId()).getPublicKey() == null) {
-                throw new NxtException.NotCurrentlyValidException(String.format("Account %s without public key cannot create shuffling",
-                        Convert.rsAccount(transaction.getSenderId())));
-            }
             if (attachment.getParticipantCount() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS
                     || attachment.getParticipantCount() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS) {
                 throw new NxtException.NotValidException(String.format("Number of participants %d is not between %d and %d",
@@ -912,11 +907,6 @@ public abstract class MonetarySystem extends TransactionType {
             if (!shuffling.isRegistrationAllowed()) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling registration has ended for " + Long.toUnsignedString(attachment.getShufflingId()));
             }
-            //TODO: remove?
-            if (Account.getAccount(transaction.getSenderId()).getPublicKey() == null) {
-                throw new NxtException.NotCurrentlyValidException(String.format("Account %s without public key cannot register for shuffling",
-                        Convert.rsAccount(transaction.getSenderId())));
-            }
             if (shuffling.isParticipant(transaction.getSenderId())) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is already registered for shuffling %s",
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
@@ -983,7 +973,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
+        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemShufflingProcessing(buffer, transactionVersion);
         }
 

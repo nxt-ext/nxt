@@ -2514,37 +2514,62 @@ public interface Attachment extends Appendix {
         }
     }
 
-    final class MonetarySystemShufflingRegistration extends AbstractAttachment implements MonetarySystemAttachment {
+    abstract class MonetarySystemShuffling extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
 
-        MonetarySystemShufflingRegistration(ByteBuffer buffer, byte transactionVersion) {
+        private MonetarySystemShuffling(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
         }
 
-        MonetarySystemShufflingRegistration(JSONObject attachmentData) {
+        private MonetarySystemShuffling(JSONObject attachmentData) {
             super(attachmentData);
             this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
         }
 
-        public MonetarySystemShufflingRegistration(long shufflingId) {
+        private MonetarySystemShuffling(long shufflingId) {
             this.shufflingId = shufflingId;
         }
 
         @Override
-        int getMySize() {
+        final int getMySize() {
             return 8;
         }
 
         @Override
-        void putMyBytes(ByteBuffer buffer) {
+        final void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(shufflingId);
         }
 
         @Override
-        void putMyJSON(JSONObject attachment) {
+        final void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Long.toUnsignedString(shufflingId));
+        }
+
+        public final long getShufflingId() {
+            return shufflingId;
+        }
+
+        @Override
+        public final long getCurrencyId() {
+            return Shuffling.getShuffling(shufflingId).getCurrencyId();
+        }
+
+    }
+
+    final class MonetarySystemShufflingRegistration extends MonetarySystemShuffling {
+
+        MonetarySystemShufflingRegistration(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        MonetarySystemShufflingRegistration(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public MonetarySystemShufflingRegistration(long shufflingId) {
+            super(shufflingId);
         }
 
         @Override
@@ -2552,14 +2577,6 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_REGISTRATION;
         }
 
-        public long getShufflingId() {
-            return shufflingId;
-        }
-
-        @Override
-        public long getCurrencyId() {
-            return Shuffling.getShuffling(shufflingId).getCurrencyId();
-        }
     }
 
     final class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
@@ -2567,11 +2584,13 @@ public interface Attachment extends Appendix {
         private final long shufflingId;
         private final byte[] data;
 
-        public MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) {
+        MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
             int size = buffer.getInt();
-            //TODO: enforce size limit to prevent OOM attack
+            if (size > Constants.MAX_PAYLOAD_LENGTH) { //TODO: improve
+                throw new NxtException.NotValidException("Invalid data size " + size);
+            }
             this.data = new byte[size];
             buffer.get(data);
         }
@@ -2624,37 +2643,18 @@ public interface Attachment extends Appendix {
         }
     }
 
-    final class MonetarySystemShufflingDistribution extends AbstractAttachment implements MonetarySystemAttachment {
-
-        private final long shufflingId;
+    final class MonetarySystemShufflingDistribution extends MonetarySystemShuffling {
 
         MonetarySystemShufflingDistribution(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.shufflingId = buffer.getLong();
         }
 
         MonetarySystemShufflingDistribution(JSONObject attachmentData) {
             super(attachmentData);
-            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
         }
 
         public MonetarySystemShufflingDistribution(long shufflingId) {
-            this.shufflingId = shufflingId;
-        }
-
-        @Override
-        int getMySize() {
-            return 8;
-        }
-
-        @Override
-        void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(shufflingId);
-        }
-
-        @Override
-        void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling",Long.toUnsignedString(shufflingId));
+            super(shufflingId);
         }
 
         @Override
@@ -2662,47 +2662,20 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_DISTRIBUTION;
         }
 
-        public long getShufflingId() {
-            return shufflingId;
-        }
-
-        @Override
-        public long getCurrencyId() {
-            return Shuffling.getShuffling(shufflingId).getCurrencyId();
-        }
     }
 
-    final class MonetarySystemShufflingVerification extends AbstractAttachment implements MonetarySystemAttachment {
-
-        private final long shufflingId;
+    final class MonetarySystemShufflingVerification extends MonetarySystemShuffling {
 
         MonetarySystemShufflingVerification(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.shufflingId = buffer.getLong();
         }
 
         MonetarySystemShufflingVerification(JSONObject attachmentData) {
             super(attachmentData);
-            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
         }
 
         public MonetarySystemShufflingVerification(long shufflingId) {
-            this.shufflingId = shufflingId;
-        }
-
-        @Override
-        int getMySize() {
-            return 8;
-        }
-
-        @Override
-        void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(shufflingId);
-        }
-
-        @Override
-        void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
+            super(shufflingId);
         }
 
         @Override
@@ -2710,47 +2683,20 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_VERIFICATION;
         }
 
-        public long getShufflingId() {
-            return shufflingId;
-        }
-
-        @Override
-        public long getCurrencyId() {
-            return Shuffling.getShuffling(shufflingId).getCurrencyId();
-        }
     }
 
-    final class MonetarySystemShufflingCancellation extends AbstractAttachment implements MonetarySystemAttachment {
-
-        private final long shufflingId;
+    final class MonetarySystemShufflingCancellation extends MonetarySystemShuffling {
 
         MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.shufflingId = buffer.getLong();
         }
 
         MonetarySystemShufflingCancellation(JSONObject attachmentData) {
             super(attachmentData);
-            this.shufflingId = Convert.parseUnsignedLong((String) attachmentData.get("shuffling"));
         }
 
         public MonetarySystemShufflingCancellation(long shufflingId) {
-            this.shufflingId = shufflingId;
-        }
-
-        @Override
-        int getMySize() {
-            return 8;
-        }
-
-        @Override
-        void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(shufflingId);
-        }
-
-        @Override
-        void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
+            super(shufflingId);
         }
 
         @Override
@@ -2758,14 +2704,6 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_CANCELLATION;
         }
 
-        public long getShufflingId() {
-            return shufflingId;
-        }
-
-        @Override
-        public long getCurrencyId() {
-            return Shuffling.getShuffling(shufflingId).getCurrencyId();
-        }
     }
 
     abstract class TaggedDataAttachment extends AbstractAttachment implements Prunable {
