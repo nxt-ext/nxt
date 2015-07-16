@@ -1382,5 +1382,6 @@
   "hash_calculation": "Hash Calculation",
   "data_to_hash": "Data To Hash",
   "calculate": "Calculate",
-  "calculated_hash_is": "Calculated hash is"
+  "calculated_hash_is": "Calculated hash is",
+  "cancelled": "Cancelled"
 }

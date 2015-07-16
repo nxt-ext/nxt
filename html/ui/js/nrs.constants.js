@@ -51,7 +51,9 @@ var NRS = (function (NRS, $, undefined) {
 
         'VOTING_MODELS': {},
         'MIN_BALANCE_MODELS': {},
+        "HASH_ALGORITHMS": {},
         "PHASING_HASH_ALGORITHMS": {},
+        "MINTING_HASH_ALGORITHMS": {},
 
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
@@ -63,10 +65,16 @@ var NRS = (function (NRS, $, undefined) {
         'UNKNOWN': 'unknown'
     };
 
-    NRS.loadAlgorithmList = function (algorithmSelect) {
-        for (var key in NRS.constants.PHASING_HASH_ALGORITHMS) {
-            if (NRS.constants.PHASING_HASH_ALGORITHMS.hasOwnProperty(key)) {
-                algorithmSelect.append($("<option />").val(NRS.constants.PHASING_HASH_ALGORITHMS[key]).text(key));
+    NRS.loadAlgorithmList = function (algorithmSelect, isPhasingHash) {
+        var hashAlgorithms;
+        if (isPhasingHash) {
+            hashAlgorithms = NRS.constants.PHASING_HASH_ALGORITHMS;
+        } else {
+            hashAlgorithms = NRS.constants.HASH_ALGORITHMS;
+        }
+        for (var key in hashAlgorithms) {
+            if (hashAlgorithms.hasOwnProperty(key)) {
+                algorithmSelect.append($("<option />").val(hashAlgorithms[key]).text(key));
             }
         }
     };
@@ -77,7 +85,9 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.constants.SERVER = response;
                 NRS.constants.VOTING_MODELS = response.votingModels;
                 NRS.constants.MIN_BALANCE_MODELS = response.minBalanceModels;
+                NRS.constants.HASH_ALGORITHMS = response.hashAlgorithms;
                 NRS.constants.PHASING_HASH_ALGORITHMS = response.phasingHashAlgorithms;
+                NRS.constants.MINTING_HASH_ALGORITHMS = response.mintingHashAlgorithms;
                 NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
                 NRS.constants.GENESIS = response.genesisAccountId;
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
@@ -114,7 +124,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getHashAlgorithm = function (code) {
-        return getKeyByValue(NRS.constants.PHASING_HASH_ALGORITHMS, code);
+        return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
     };
 
     return NRS;

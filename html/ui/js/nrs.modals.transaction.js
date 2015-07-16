@@ -540,6 +540,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }, function (asset) {
                                     var data = {
                                         "type": $.t("ask_order_cancellation"),
+                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -548,7 +549,6 @@ var NRS = (function (NRS, $, undefined) {
                                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                                     $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                                     $("#transaction_info_table").show();
-
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
                                 });
@@ -560,7 +560,6 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 5:
                         async = true;
-
                         NRS.sendRequest("getTransaction", {
                             "transaction": transaction.attachment.order
                         }, function (transaction) {
@@ -570,6 +569,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }, function (asset) {
                                     var data = {
                                         "type": $.t("bid_order_cancellation"),
+                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -578,7 +578,6 @@ var NRS = (function (NRS, $, undefined) {
                                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                                     $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                                     $("#transaction_info_table").show();
-
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
                                 });
