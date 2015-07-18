@@ -324,7 +324,8 @@ final class JSONData {
         json.put("shuffling", Long.toUnsignedString(participant.getShufflingId()));
         putAccount(json, "account", participant.getAccountId());
         putAccount(json, "nextAccount", participant.getNextAccountId());
-        putAccount(json, "recipient", participant.getRecipientId());
+        json.put("recipientPublicKey", Convert.toHexString(participant.getRecipientPublicKey()));
+        putAccount(json, "recipient", Account.getId(participant.getRecipientPublicKey()));
         json.put("state", participant.getState().getCode());
         return json;
     }

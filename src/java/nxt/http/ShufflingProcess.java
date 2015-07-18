@@ -43,6 +43,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
+import static nxt.http.JSONResponses.MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY;
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
 public final class ShufflingProcess extends CreateTransaction {
@@ -51,7 +53,7 @@ public final class ShufflingProcess extends CreateTransaction {
 
     private ShufflingProcess() {
         super(new APITag[]{APITag.SHUFFLING, APITag.CREATE_TRANSACTION},
-                "shuffling", "secretPhrase", "recipient"); //TODO: need recipientSecretPhrase or recipientPublicKey, not recipient
+                "shuffling", "recipientSecretPhrase", "recipientPublicKey");
     }
 
     @Override
@@ -72,11 +74,21 @@ public final class ShufflingProcess extends CreateTransaction {
             return JSON.prepare(response);
         }
 
-        String secretPhrase = req.getParameter("secretPhrase");
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
+        String secretPhrase = ParameterParser.getSecretPhrase(req);
+
+        String recipientSecretPhrase = Convert.emptyToNull(req.getParameter("recipientSecretPhrase"));
+        byte[] recipientPublicKey;
+        if (recipientSecretPhrase == null) {
+            recipientPublicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter("recipientPublicKey")));
+            if (recipientPublicKey == null) {
+                return MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY;
+            }
+        } else {
+            recipientPublicKey = Crypto.getPublicKey(recipientSecretPhrase);
         }
-        long recipientId = ParameterParser.getAccountId(req, "recipient", true);
+        if (Account.getAccount(recipientPublicKey) != null) {
+            return INCORRECT_PUBLIC_KEY; // do not allow existing account to be used as recipient
+        }
 
         //TODO: there is too much logic here, must be moved to a core class such as Shuffling
         // Read the participant list for the shuffling
@@ -153,7 +165,7 @@ public final class ShufflingProcess extends CreateTransaction {
 
         // Calculate the token for the current sender by iteratively encrypting it using the public key of all the participants
         // which did not perform shuffle processing yet
-        EncryptedData encryptedData = new EncryptedData(Convert.toBytes(Long.toUnsignedString(recipientId)), new byte[]{});
+        EncryptedData encryptedData = new EncryptedData(recipientPublicKey, new byte[]{});
         byte[] bytesToEncrypt = EncryptedData.marshalData(encryptedData);
         // If we are that last participant to process then we do not encrypt our recipient
         while (id != senderAccount.getId() && id != 0) {

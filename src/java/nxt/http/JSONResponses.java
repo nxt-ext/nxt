@@ -142,6 +142,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_HASH_ALGORITHM = incorrect("hashAlgorithm");
     public static final JSONStreamAware MISSING_SECRET = missing("secret");
     public static final JSONStreamAware INCORRECT_SECRET = incorrect("secret");
+    public static final JSONStreamAware MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY = missing("recipientSecretPhrase", "recipientPublicKey");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

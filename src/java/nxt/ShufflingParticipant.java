@@ -128,7 +128,7 @@ public final class ShufflingParticipant {
     private final DbKey dbKey;
 
     private long nextAccountId; // pointer to the next shuffling participant updated during registration
-    private long recipientId; // decrypted account id updated after the shuffling process is complete
+    private byte[] recipientPublicKey; // decrypted recipient public key (shuffled) updated after the shuffling process is complete
     private State state; // tracks the state of the participant in the process
     private byte[] data; // encrypted data saved as intermediate result in the shuffling process
 
@@ -145,21 +145,21 @@ public final class ShufflingParticipant {
         this.accountId = rs.getLong("account_id");
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
         this.nextAccountId = rs.getLong("next_account_id");
-        this.recipientId = rs.getLong("recipient_id");
+        this.recipientPublicKey = rs.getBytes("recipient_public_key");
         this.state = State.get(rs.getByte("state"));
         this.data = rs.getBytes("data");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
-                + "account_id, next_account_id, recipient_id, state, data, height, latest) "
+                + "account_id, next_account_id, recipient_public_key, state, data, height, latest) "
                 + "KEY (shuffling_id, account_id, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.shufflingId);
             pstmt.setLong(++i, this.accountId);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.nextAccountId);
-            pstmt.setLong(++i, this.recipientId);
+            pstmt.setBytes(++i, this.recipientPublicKey);
             pstmt.setByte(++i, this.getState().getCode());
             pstmt.setBytes(++i, this.data);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -184,12 +184,12 @@ public final class ShufflingParticipant {
         shufflingParticipantTable.insert(this);
     }
 
-    public long getRecipientId() {
-        return recipientId;
+    public byte[] getRecipientPublicKey() {
+        return recipientPublicKey;
     }
 
-    void setRecipientId(long recipientId) {
-        this.recipientId = recipientId;
+    void setRecipientPublicKey(byte[] recipientPublicKey) {
+        this.recipientPublicKey = recipientPublicKey;
         shufflingParticipantTable.insert(this);
         listeners.notify(this, Event.RECIPIENT_ADDED);
     }

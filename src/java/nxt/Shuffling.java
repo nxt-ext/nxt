@@ -197,8 +197,7 @@ public final class Shuffling {
             List<EncryptedData> unmarshaledDataList = EncryptedData.getUnmarshaledDataList(data);
             Deque<EncryptedData> stack = new ArrayDeque<>(unmarshaledDataList);
             for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(shufflingId)) {
-                long recipientId = Convert.parseUnsignedLong(Convert.toString(stack.pop().getData()));
-                participant.setRecipientId(recipientId);
+                participant.setRecipientPublicKey(stack.pop().getData());
             }
         }
     }
@@ -310,8 +309,12 @@ public final class Shuffling {
 
     void distribute() {
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
-            updateBalance(participant.getRecipientId(), amount);
-            updateUnconfirmedBalance(participant.getRecipientId(), amount);
+            long recipientId = Account.getId(participant.getRecipientPublicKey());
+            Account recipientAccount = Account.addOrGetAccount(recipientId);
+            //TODO: distribution must fail if somebody created the same account with a different public key in the meantime, should check in validate
+            recipientAccount.apply(participant.getRecipientPublicKey());
+            updateBalance(recipientId, amount);
+            updateUnconfirmedBalance(recipientId, amount);
             updateBalance(participant.getAccountId(), -amount);
         }
         setStage(Stage.DONE);
