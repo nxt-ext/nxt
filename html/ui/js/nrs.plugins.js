@@ -230,41 +230,49 @@ var NRS = (function(NRS, $, undefined) {
         var plugin = NRS.plugins[pluginId];
         var manifest = NRS.plugins[pluginId]['manifest'];
         var pluginPath = 'plugins/' + pluginId + '/';
-
-        $.ajaxSetup({async:false});
-        $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js').done(function() {
-            NRS.loadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
-            NRS.loadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
-
-            if (!manifest['sidebarOptOut']) {
-                var sidebarId = 'sidebar_plugins';
-                var options = {
-                    "titleHTML": manifest['name'].escapeHTML(),
-                    "type": 'PAGE',
-                    "page": manifest['startPage']
-                };
-                NRS.appendMenuItemToTSMenuItem(sidebarId, options);
-                $(".sidebar .treeview").tree();
+        async.series([
+            function(callback){
+                NRS.asyncLoadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
+                callback(null);
+            },
+            function(callback){
+                NRS.asyncLoadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
+                callback(null);
+            },
+            function(callback){
+                $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js').done(function() {
+                    if (!manifest['sidebarOptOut']) {
+                        var sidebarId = 'sidebar_plugins';
+                        var options = {
+                            "titleHTML": manifest['name'].escapeHTML(),
+                            "type": 'PAGE',
+                            "page": manifest['startPage']
+                        };
+                        NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+                        $(".sidebar .treeview").tree();
+                    }
+                    var cssURL = pluginPath + 'css/' + pluginId + '.css';
+                    if (document.createStyleSheet) {
+                        document.createStyleSheet(cssURL);
+                    } else {
+                        $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
+                    }
+                    plugin['launch_status'] = NRS.constants.PL_RUNNING;
+                    plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
+                    if(manifest['startPage'] && manifest['startPage'] in NRS.setup) {
+                        NRS.setup[manifest['startPage']]();
+                    }
+                    NRS.numRunningPlugins += 1;
+                    callback(null);
+                }).fail(function() {
+                    plugin['launch_status'] = NRS.constants.PL_HALTED;
+                    plugin['launch_status_msg'] = $.t('plugin_halted', 'Halted');
+                    plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
+                    plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
+                    callback(null);
+                })
             }
-            var cssURL = pluginPath + 'css/' + pluginId + '.css';
-            if (document.createStyleSheet) {
-                document.createStyleSheet(cssURL);
-            } else {
-                $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
-            }
-            plugin['launch_status'] = NRS.constants.PL_RUNNING;
-            plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
-            if(manifest['startPage'] && manifest['startPage'] in NRS.setup) {
-                NRS.setup[manifest['startPage']]();
-            }
-            NRS.numRunningPlugins += 1;
-        }).fail(function() {
-            plugin['launch_status'] = NRS.constants.PL_HALTED;
-            plugin['launch_status_msg'] = $.t('plugin_halted', 'Halted');
-            plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
-            plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
-        });
-        $.ajaxSetup({async:true});
+        ])
     };
 
     NRS.loadPlugins = function() {
