@@ -401,22 +401,23 @@ var NRS = (function(NRS, $, undefined) {
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link a').addClass("ignore").click();
 
-					if ($("#remember_account").is(":checked")) {
+					if ($("#remember_account").is(":checked") || NRS.newlyCreatedAccount) {
 						var accountExists = 0;
-						if (NRS.getCookie("savedNxtAccounts")){
+						if (NRS.getCookie("savedNxtAccounts")) {
 							var accounts = NRS.getCookie("savedNxtAccounts").split(";");
 							$.each(accounts, function(index, account) {
-								if (account == NRS.accountRS)
-									accountExists = 1;
+								if (account == NRS.accountRS) {
+                                    accountExists = 1;
+                                }
 							});
 						}
 						if (!accountExists){
-							if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
-								var accounts=NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
+							if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts") != ""){
+								var accounts = NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
 								NRS.setCookie("savedNxtAccounts",accounts,30);
-							}
-							else
-								NRS.setCookie("savedNxtAccounts",NRS.accountRS + ";",30);
+							} else {
+                                NRS.setCookie("savedNxtAccounts", NRS.accountRS + ";", 30);
+                            }
 						}
 					}
 
