@@ -35,7 +35,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.login(true,password);
 			}
 		});
-	}
+	};
 
 	NRS.showLoginOrWelcomeScreen = function() {
 		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
@@ -43,7 +43,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			NRS.showWelcomeScreen();
 		}
-	}
+	};
 
 	NRS.showLoginScreen = function() {
 		$("#account_phrase_custom_panel, #account_phrase_generator_panel, #welcome_panel, #custom_passphrase_link").hide();
@@ -55,12 +55,12 @@ var NRS = (function(NRS, $, undefined) {
 		setTimeout(function() {
 			$("#login_password").focus()
 		}, 10);
-	}
+	};
 
 	NRS.showWelcomeScreen = function() {
 		$("#login_panel, #account_phrase_generator_panel, #account_phrase_custom_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#welcome_panel").show();
-	}
+	};
 
 	NRS.registerUserDefinedAccount = function() {
 		$("#account_phrase_generator_panel, #login_panel, #welcome_panel, #custom_passphrase_link").hide();
@@ -68,7 +68,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_generator_panel :input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_custom_panel").show();
 		$("#registration_password").focus();
-	}
+	};
 
 	NRS.registerAccount = function() {
 		$("#login_panel, #welcome_panel").hide();
@@ -103,7 +103,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			PassPhraseGenerator.generatePassPhrase("#account_phrase_generator_panel");
 		}
-	}
+	};
 
 	NRS.verifyGeneratedPassphrase = function() {
 		var password = $.trim($("#account_phrase_generator_panel .step_3 textarea").val());
@@ -117,10 +117,10 @@ var NRS = (function(NRS, $, undefined) {
 			$("#account_phrase_generator_panel textarea").val("");
 			$("#account_phrase_generator_panel .step_3 .callout").hide();
 		}
-	}
+	};
 
 	$("#account_phrase_custom_panel form").submit(function(event) {
-		event.preventDefault()
+		event.preventDefault();
 
 		var password = $("#registration_password").val();
 		var repeat = $("#registration_password_repeat").val();
@@ -177,7 +177,7 @@ var NRS = (function(NRS, $, undefined) {
 			$('#login_account_container').hide();
 			$('#login_account_container_other').show();
 		}
-	}
+	};
 	
 	NRS.switchAccount = function(account) {
 		NRS.setDecryptionPassword("");
@@ -185,7 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 		var url = window.location.pathname;    
 		url += '?account='+account;
 		window.location.href = url;
-	}
+	};
 	
 	$("#loginButtons").on('click',function(e) {
 		e.preventDefault();
@@ -213,7 +213,7 @@ var NRS = (function(NRS, $, undefined) {
 		else 
 			NRS.setCookie("savedNxtAccounts",accounts,30);
 		NRS.listAccounts();
-	}
+	};
 
 	NRS.login = function(passLogin, password, callback) {
 		if (passLogin){
@@ -302,10 +302,10 @@ var NRS = (function(NRS, $, undefined) {
 						$(".hide_secret_phrase").show();
 					}
 					if ($("#disable_all_plugins").length == 1 && !($("#disable_all_plugins").is(":checked"))) {
-						NRS.disablePluginsDuringSession = false;
-					} else {
-						NRS.disablePluginsDuringSession = true;
-					}
+                        NRS.disablePluginsDuringSession = false;
+                    } else {
+                        NRS.disablePluginsDuringSession = true;
+                    }
 
 					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
 
@@ -426,7 +426,7 @@ var NRS = (function(NRS, $, undefined) {
 					/* Add accounts to dropdown for quick switching */
 					$("#account_id_dropdown .dropdown-menu .switchAccount").remove();
 					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
-						$("#account_id_dropdown .dropdown-menu").append("<li class='switchAccount' style='padding-left:2px;'><b>Switch Account to</b></li>")
+						$("#account_id_dropdown .dropdown-menu").append("<li class='switchAccount' style='padding-left:2px;'><b>Switch Account to</b></li>");
 						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
 						$.each(accounts, function(index, account) {
 							if (account != ''){
@@ -447,7 +447,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			});
 		});
-	}
+	};
 
 	$("#logout_button_container").on("show.bs.dropdown", function(e) {
 		
@@ -502,7 +502,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#lockscreen_active_plugins_warning").hide();
 		}
-	}
+	};
 
 	NRS.showLockscreen = function() {
 		NRS.listAccounts();
@@ -513,7 +513,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#center").show();
-	}
+	};
 
 	NRS.unlock = function() {
 		if (NRS.hasLocalStorage && !localStorage.getItem("logged_in")) {
@@ -540,7 +540,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#login_error").html("").hide();
 
 		$(document.documentElement).scrollTop(0);
-	}
+	};
 
 	NRS.logout = function(stopForging) {
 		if (stopForging && NRS.forgingStatus == NRS.constants.FORGING) {
@@ -552,7 +552,7 @@ var NRS = (function(NRS, $, undefined) {
 			//window.location.reload();
 			window.location.href = window.location.pathname;    
 		}
-	}
+	};
 
 	$("#logout_clear_user_data_confirm_btn").click(function(e) {
 		e.preventDefault();
@@ -572,11 +572,11 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.logout();
-	})
+	});
 
 	NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
-	}
+	};
 	return NRS;
 }(NRS || {}, jQuery));
