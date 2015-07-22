@@ -55,11 +55,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
@@ -103,8 +101,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private final BlockchainImpl blockchain = BlockchainImpl.getInstance();
 
-    private final ExecutorService networkService = new ThreadPoolExecutor(0, 20 + 1, 60L, TimeUnit.SECONDS,
-                                                                          new LinkedBlockingQueue<>());
+    private final ExecutorService networkService = Executors.newCachedThreadPool();
     private final List<DerivedDbTable> derivedTables = new CopyOnWriteArrayList<>();
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
     private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
@@ -844,9 +841,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (block.getHeight() % 5000 == 0) {
                 Logger.logMessage("received block " + block.getHeight());
                 if (!isDownloading || block.getHeight() % 50000 == 0) {
-                    networkService.submit(() -> {
-                        Db.db.analyzeTables();
-                    });
+                    networkService.submit(Db.db::analyzeTables);
                 }
             }
         }, Event.BLOCK_PUSHED);
