@@ -103,6 +103,11 @@ public class CompactDatabase {
             dbDir = dbUrl.substring(startPos, endPos);
         }
         //
+        // Remove the optional 'file' operand
+        //
+        if (dbDir.startsWith("file:"))
+            dbDir = dbDir.substring(5);
+        //
         // Remove the database prefix from the end of the database path.  The path
         // separator can be either '/' or '\' (Windows will accept either separator
         // so we can't rely on the system property).

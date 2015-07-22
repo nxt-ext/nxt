@@ -630,10 +630,12 @@ var NRS = (function (NRS, $, undefined) {
         return Math.floor((currentTime - NRS.constants.EPOCH_BEGINNING) / 1000);
     };
 
-    NRS.formatTimestamp = function (timestamp, date_only) {
+    NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
         var date;
         if (typeof timestamp == "object") {
             date = timestamp;
+        } else if (isAbsoluteTime) {
+            date = new Date(timestamp);
         } else {
             date = new Date(NRS.fromEpochTime(timestamp));
         }

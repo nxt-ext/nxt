@@ -20,7 +20,6 @@ import nxt.db.DbIterator;
 import nxt.util.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

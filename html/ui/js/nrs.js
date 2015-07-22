@@ -809,7 +809,7 @@ var NRS = (function(NRS, $, undefined) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
                         if (NRS.publicKey == "") {
-                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk", {
+                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk_v2", {
                                 "account_id": String(NRS.accountRS).escapeHTML()
                             })).show();
                         } else {

@@ -17,12 +17,11 @@
 package nxt.util;
 
 import nxt.Nxt;
+import org.bitlet.weupnp.GatewayDevice;
+import org.bitlet.weupnp.GatewayDiscover;
 
 import java.net.InetAddress;
 import java.util.Map;
-
-import org.bitlet.weupnp.GatewayDevice;
-import org.bitlet.weupnp.GatewayDiscover;
 
 /**
  * Forward ports using the UPnP protocol.

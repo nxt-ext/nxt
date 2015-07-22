@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
 
@@ -34,7 +36,7 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException  {
+    JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
         long transactionId = ParameterParser.getUnsignedLong(request, "transaction", true);
         TaggedData taggedData = TaggedData.getData(transactionId);
         byte[] data = taggedData.getData();
@@ -43,7 +45,12 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
         } else {
             response.setContentType("application/octet-stream");
         }
-        response.setHeader("Content-Disposition", "attachment; filename=" + taggedData.getFilename());
+        try {
+            String encodedFilename = URLEncoder.encode(taggedData.getFilename(), "UTF-8");
+            response.setHeader("Content-Disposition", "attachment; filename=" + encodedFilename + "; filename*=utf-8''" + encodedFilename);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e.toString(), e); // can't happen, UTF-8 should always be supported
+        }
         response.setContentLength(data.length);
         try (OutputStream out = response.getOutputStream()) {
             try {
