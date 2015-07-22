@@ -40,7 +40,7 @@ public final class Hash extends APIServlet.APIRequestHandler {
             hashFunction = HashFunction.getHashFunction(algorithm);
         } catch (IllegalArgumentException ignore) {}
         if (hashFunction == null) {
-            return JSONResponses.incorrect("hashAlgorithm");
+            return JSONResponses.INCORRECT_HASH_ALGORITHM;
         }
 
         boolean secretIsText = "true".equalsIgnoreCase(req.getParameter("secretIsText"));
@@ -49,10 +49,10 @@ public final class Hash extends APIServlet.APIRequestHandler {
             secret = secretIsText ? Convert.toBytes(req.getParameter("secret"))
                     : Convert.parseHexString(req.getParameter("secret"));
         } catch (RuntimeException e) {
-            return JSONResponses.incorrect("secret");
+            return JSONResponses.INCORRECT_SECRET;
         }
         if (secret == null || secret.length == 0) {
-            return JSONResponses.missing("secret");
+            return JSONResponses.MISSING_SECRET;
         }
 
         JSONObject response = new JSONObject();

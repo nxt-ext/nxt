@@ -47,8 +47,12 @@ var NRS = (function(NRS, $, undefined) {
 
     NRS.loadPageHTML = function(path, options) {
     	jQuery.ajaxSetup({ async: false });
-    	$.get(path, '', function (data) { $("#content").append(data); });
+        NRS.asyncLoadPageHTML(path);
     	jQuery.ajaxSetup({ async: true });
+    }
+
+    NRS.asyncLoadPageHTML = function(path) {
+    	$.get(path, '', function (data) { $("#content").append(data); });
     }
 
     NRS.loadModalHTML = function(path, options) {

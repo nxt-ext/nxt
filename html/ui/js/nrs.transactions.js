@@ -546,6 +546,7 @@ var NRS = (function(NRS, $, undefined) {
                 html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
 				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-fullhash='" + String(t.fullHash).escapeHTML() + "' ";
 				html += "data-timestamp='" + t.timestamp + "' " + "data-votingmodel='" + t.attachment.phasingVotingModel + "' ";
+				html += "data-fee='1' data-min-balance-formatted=''>" + $.t('approve') + "</a>";
 			}
 			html += "</td>";
 		}
