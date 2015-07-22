@@ -517,10 +517,13 @@ var NRS = (function(NRS, $, undefined) {
     	var color = d3.scale.category20();
     	var content = [];
     	for(var i=0; i<resultsdata.results.length; i++) {
-    		var result = resultsdata.results[i];
+    		var result = resultsdata.results[i].result;
+			if (result == "") {
+				continue;
+			}
     		content.push({
     			"label": resultsdata.options[i],
-    			"value": parseInt(result["result"]),
+    			"value": parseInt(result),
     			"color": color(i)
     		});
     	}
