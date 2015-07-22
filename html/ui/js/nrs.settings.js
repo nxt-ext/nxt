@@ -47,7 +47,7 @@ var NRS = (function(NRS, $) {
 		"de": "Deutsch",                 // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
-		"ca": "Català (Experimental)",   // catalan
+		"ca": "Català",                  // catalan
 		"fi": "Suomi (Experimental)",    // finnish
 		"fr": "Français",                // french
 		"gl": "Galego (Experimental)",   // galician
@@ -66,7 +66,8 @@ var NRS = (function(NRS, $) {
 		"sr": "Српски (Experimental)",   // serbian, cyrillic
 		"sr-cs": "Srpski (Experimental)",// serbian, latin
 		"bg": "Български",               // bulgarian
-		"ro": "Român (Experimental)",    // romanian
+		"ro": "Român",                   // romanian
+		"tr": "Türk (Experimental)",     // turkish
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
 		"zh-cn": "中文 simplified",      // chinese simplified

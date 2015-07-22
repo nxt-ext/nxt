@@ -755,6 +755,7 @@ var NRS = (function (NRS, $, undefined) {
         };
         async.parallel([
             function(callback) {
+                params["showExpectedCancellations"] = "true";
                 NRS.sendRequest("get" + type.capitalize() + "Orders+" + assetId, params, function (response) {
                     var orders = response[type + "Orders"];
                     if (!orders) {

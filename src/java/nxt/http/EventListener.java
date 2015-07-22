@@ -44,9 +44,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -88,8 +87,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
     }
 
     /** Thread pool for asynchronous completions */
-    private static final ThreadPoolExecutor threadPool =
-            new ThreadPoolExecutor(0, 4, 2, TimeUnit.MINUTES, new LinkedBlockingQueue<>());
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     /** Peer events - update API comments for EventRegister and EventWait if changed */
     static final List<Peers.Event> peerEvents = new ArrayList<>();

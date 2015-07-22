@@ -630,10 +630,12 @@ var NRS = (function (NRS, $, undefined) {
         return Math.floor((currentTime - NRS.constants.EPOCH_BEGINNING) / 1000);
     };
 
-    NRS.formatTimestamp = function (timestamp, date_only) {
+    NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
         var date;
         if (typeof timestamp == "object") {
             date = timestamp;
+        } else if (isAbsoluteTime) {
+            date = new Date(timestamp);
         } else {
             date = new Date(NRS.fromEpochTime(timestamp));
         }
@@ -1626,7 +1628,9 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getTransactionStatusIcon = function (phasedEntity) {
         var statusIcon;
-        if (phasedEntity.phased == true) {
+        if (phasedEntity.expectedCancellation == true) {
+            statusIcon = "<i class='fa fa-ban' title='" + $.t("cancelled") + "'></i>";
+        } else if (phasedEntity.phased == true) {
             statusIcon = "<i class='fa fa-gavel' title='" + $.t("phased") + "'></i>";
         } else if (phasedEntity.phased == false) {
             statusIcon = "<i class='fa fa-circle-o' title='" + $.t("unconfirmed") + "'></i>";
