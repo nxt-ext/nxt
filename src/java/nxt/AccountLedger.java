@@ -587,29 +587,8 @@ public class AccountLedger {
         /** Blockchain height */
         private final int height;
 
-        /**
-         * Create a ledger entry
-         *
-         * @param   event                   Event
-         * @param   eventId                 Event identifier
-         * @param   accountId               Account identifier
-         * @param   holding                 Holding or null
-         * @param   holdingId               Holding identifier or null
-         * @param   change                  Change in balance
-         * @param   balance                 New balance
-         * @param   height                  Height
-         */
-        public LedgerEntry(LedgerEvent event, long eventId, long accountId, LedgerHolding holding, Long holdingId,
-                                            long change, long balance, int height) {
-            this.event = event;
-            this.eventId = eventId;
-            this.accountId = accountId;
-            this.holding = holding;
-            this.holdingId = holdingId;
-            this.change = change;
-            this.balance = balance;
-            this.height = height;
-        }
+        /** Block timestamp */
+        private final int timestamp;
 
         /**
          * Create a ledger entry
@@ -624,7 +603,15 @@ public class AccountLedger {
          */
         public LedgerEntry(LedgerEvent event, long eventId, long accountId, LedgerHolding holding, Long holdingId,
                                             long change, long balance) {
-            this(event, eventId, accountId, holding, holdingId, change, balance, blockchain.getHeight());
+            this.event = event;
+            this.eventId = eventId;
+            this.accountId = accountId;
+            this.holding = holding;
+            this.holdingId = holdingId;
+            this.change = change;
+            this.balance = balance;
+            this.height = blockchain.getHeight();
+            this.timestamp = blockchain.getLastBlockTimestamp();
         }
 
         /**
@@ -637,7 +624,7 @@ public class AccountLedger {
          * @param   balance                 New balance
          */
         public LedgerEntry(LedgerEvent event, long eventId, long accountId, long change, long balance) {
-            this(event, eventId, accountId, null, null, change, balance, blockchain.getHeight());
+            this(event, eventId, accountId, null, null, change, balance);
         }
 
         /**
@@ -664,6 +651,7 @@ public class AccountLedger {
             change = rs.getLong("change");
             balance = rs.getLong("balance");
             height = rs.getInt("height");
+            timestamp = rs.getInt("timestamp");
         }
 
         /**
@@ -748,6 +736,15 @@ public class AccountLedger {
         }
 
         /**
+         * Return the timestamp
+         *
+         * @return                          Timestamp
+         */
+        public int getTimestamp() {
+            return timestamp;
+        }
+
+        /**
          * Save the ledger entry
          *
          * @param   con                     Database connection
@@ -755,8 +752,9 @@ public class AccountLedger {
          */
         private void save(Connection con) throws SQLException {
             try (PreparedStatement stmt = con.prepareStatement("INSERT INTO account_ledger "
-                    + "(account_id, event_type, event_id, holding_type, holding_id, change, balance, height) "
-                    + "VALUES(?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                    + "(account_id, event_type, event_id, holding_type, holding_id, change, balance, "
+                    + "height, timestamp) "
+                    + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setLong(1, accountId);
                 stmt.setByte(2, (byte)event.getCode());
                 stmt.setLong(3, eventId);
@@ -772,6 +770,7 @@ public class AccountLedger {
                 stmt.setLong(6, change);
                 stmt.setLong(7, balance);
                 stmt.setInt(8, height);
+                stmt.setInt(9, timestamp);
                 stmt.executeUpdate();
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next())

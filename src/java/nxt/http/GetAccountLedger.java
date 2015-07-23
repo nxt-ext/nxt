@@ -161,6 +161,10 @@ import org.json.simple.JSONStreamAware;
  *       </td>
  *     </tr>
  *     <tr>
+ *       <td>timestamp</td>
+ *       <td>The block timestamp associated with the event.</td>
+ *     </tr>
+ *     <tr>
  *       <td>transaction</td>
  *       <td>Transaction associated with the event if 'includeTransactions' is TRUE.</td>
  *     </tr>

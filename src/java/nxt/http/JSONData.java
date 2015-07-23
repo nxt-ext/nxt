@@ -919,6 +919,7 @@ final class JSONData {
         putAccount(json, "account", entry.getAccountId());
         json.put("ledgerId", Long.toUnsignedString(entry.getLedgerId()));
         json.put("height", entry.getHeight());
+        json.put("timestamp", entry.getTimestamp());
         json.put("eventType", entry.getEvent().name());
         json.put("eventId", Long.toUnsignedString(entry.getEventId()));
         json.put("change", String.valueOf(entry.getChange()));
