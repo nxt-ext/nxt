@@ -519,26 +519,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.hasLocalStorage && !localStorage.getItem("logged_in")) {
 			localStorage.setItem("logged_in", true);
 		}
-
-		var userStyles = ["header", "sidebar", "boxes"];
-
-		for (var i = 0; i < userStyles.length; i++) {
-			var color = NRS.settings[userStyles[i] + "_color"];
-			if (color) {
-				NRS.updateStyle(userStyles[i], color);
-			}
-		}
-
-		var contentHeaderHeight = $(".content-header").height();
-		var navBarHeight = $("nav.navbar").height();
-
-		//	$(".content-splitter-right").css("bottom", (contentHeaderHeight + navBarHeight + 10) + "px");
-
 		$("#lockscreen").hide();
 		$("body, html").removeClass("lockscreen");
-
 		$("#login_error").html("").hide();
-
 		$(document.documentElement).scrollTop(0);
 	};
 
