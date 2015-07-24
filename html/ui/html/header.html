@@ -28,10 +28,13 @@
             <span class="icon-bar"></span> 
         </a>
         <div class="navbar-right">
-            <ul class="nav navbar-nav">
+            <ul class="nav navbar-nav sends">
                 <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
                 <li class="dropdown"><a href="#" data-toggle="modal" data-target="#transfer_currency_modal" data-i18n="send_currency">Send Currency</a></li>
                 <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
+
+            </ul>
+            <ul class="nav navbar-nav">
                 <li><a href="#" id="unconfirmed_notification_menu" class="goto-page" data-page="transactions" data-subpage="unconfirmed" style="padding-top:13px;padding-bottom:13px;display:none;">
                     <span class="badge nm_outer2" style="background-color: #fff;padding:3px;">
                         <span class="badge nm_inner_subtype" style="background-color: #fff;">
@@ -41,7 +44,7 @@
                     </span>
                     </a>
                 </li>
-                <li><a href="#" id="phasing_notification_menu" class="goto-page" data-page="transactions" data-subpage="phasing" style="padding-top:13px;padding-bottom:13px;display:none;">
+                <li style="display:none;"><a href="#" id="phasing_notification_menu" class="goto-page" data-page="transactions" data-subpage="phasing">
                     <span class="badge nm_outer2" style="background-color: #fff;padding:3px;">
                         <span class="badge nm_inner_subtype" style="background-color: #fff;">
                             <span style="color:#337ab7;"><i class="fa fa-gavel"></i> </span>
@@ -90,7 +93,7 @@
                         <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Asset_Exchange" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_asset_exchange_tutorial">Asset Exchange Tutorial</span></a></li>
                     </ul>
                 </li>
-                <li class="dropdown" id="logout_button_container" style="margin-right:20px;">
+                <li class="dropdown" id="logout_button_container">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
                         <i class="fa fa-power-off"></i>
                     </a>
