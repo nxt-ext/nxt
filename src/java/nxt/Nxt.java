@@ -45,7 +45,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.5.12";
+    public static final String VERSION = "1.5.14";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -314,6 +314,7 @@ public final class Nxt {
             try {
                 long startTime = System.currentTimeMillis();
                 Logger.init();
+                setSystemProperties();
                 logSystemProperties();
                 runtimeMode.init();
                 setServerStatus("NXT Server - Loading database", null);
@@ -340,6 +341,7 @@ public final class Nxt {
                 CurrencyMint.init();
                 CurrencyTransfer.init();
                 Exchange.init();
+                ExchangeRequest.init();
                 PrunableMessage.init();
                 TaggedData.init();
                 Peers.init();
@@ -381,6 +383,21 @@ public final class Nxt {
 
         private Init() {} // never
 
+    }
+
+    private static void setSystemProperties() {
+      // Override system settings that the user has define in nxt.properties file.
+      String[] systemProperties = new String[] {
+        "socksProxyHost",
+        "socksProxyPort",
+      };
+
+      for (String propertyName : systemProperties) {
+        String propertyValue;
+        if ((propertyValue = getStringProperty(propertyName)) != null) {
+          System.setProperty(propertyName, propertyValue);
+        }
+      }
     }
 
     private static void logSystemProperties() {

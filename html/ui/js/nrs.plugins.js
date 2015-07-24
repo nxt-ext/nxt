@@ -19,15 +19,13 @@
  */
 var NRS = (function(NRS, $, undefined) {
 
-	NRS.plugins = {}
+	NRS.plugins = {};
     NRS.disablePluginsDuringSession = true;
 	NRS.activePlugins = false;
     NRS.numRunningPlugins = 0;
 
-
 	NRS.checkForPluginManifest = function(pluginId) {
 		var manifest = undefined;
-
 		jQuery.ajaxSetup({ async: false });
     	$.ajax({
     		url: 'plugins/' + pluginId + '/manifest.json',
@@ -37,9 +35,8 @@ var NRS = (function(NRS, $, undefined) {
     		}
 		});
     	jQuery.ajaxSetup({ async: true });
-
     	return manifest;
-	}
+	};
 
 	NRS.checkPluginValidity = function(pluginId, manifest) {
 		var plugin = NRS.plugins[pluginId];
@@ -73,8 +70,8 @@ var NRS = (function(NRS, $, undefined) {
     		["infoUrl", 200],
     		["startPage", 50],
     		["nrsVersion", 20]
-    	]
-    	for (var i=0; i<lengthRestrictions.length; i++) {
+    	];
+    	for (i=0; i<lengthRestrictions.length; i++) {
     		if (manifest[lengthRestrictions[i][0]].length > lengthRestrictions[i][1]) {
     			plugin['validity'] = NRS.constants.PV_INVALID_MANIFEST_FILE;
     			plugin['validity_msg'] = invalidManifestFileMsg;
@@ -118,9 +115,9 @@ var NRS = (function(NRS, $, undefined) {
     		pluginPath + 'html/modals/' + pluginId + '.html',
     		pluginPath + 'js/nrs.' + pluginId + '.js',
     		pluginPath + 'css/' + pluginId + '.css'
-    	]
+    	];
     	jQuery.ajaxSetup({ async: false });
-    	for (var i=0; i<mandatoryFiles.length; i++) {
+    	for (i=0; i<mandatoryFiles.length; i++) {
 			$.ajax({
     			url: mandatoryFiles[i],
     			type: 'HEAD',
@@ -129,7 +126,8 @@ var NRS = (function(NRS, $, undefined) {
     				//nothing to do
     			},
     			error: function(data) {
-    				notFound = mandatoryFiles[i];
+                    NRS.logConsole(data.statusText + " error loading plugin file " + this.url);
+    				notFound = this.url;
     			}
 			});
     	}
@@ -145,7 +143,7 @@ var NRS = (function(NRS, $, undefined) {
     	plugin['validity'] = NRS.constants.PV_VALID;
     	plugin['validity_msg'] = $.t('pv_valid_msg', 'Plugin is valid');
     	return true;
-	}
+	};
 
 	NRS.checkPluginNRSCompatibility = function(pluginId) {
 		var plugin = NRS.plugins[pluginId];
@@ -171,7 +169,7 @@ var NRS = (function(NRS, $, undefined) {
                 }
             }
 		}
-	}
+	};
 
 	NRS.determinePluginLaunchStatus = function(pluginId) {
 		var plugin = NRS.plugins[pluginId];
@@ -185,7 +183,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.activePlugins = true;
 			}
 		}
-	}
+	};
 
 	NRS.initializePlugins = function() {
 		NRS.sendRequest("getPlugins", {}, function (response) {
@@ -201,7 +199,7 @@ var NRS = (function(NRS, $, undefined) {
 							'launch_status': NRS.constants.PL_HALTED,
 							'launch_status_msg': $.t('plugin_halted', 'Halted'),
 							'manifest': undefined
-						}
+						};
 						if (NRS.checkPluginValidity(response.plugins[i], manifest)) {
 							NRS.plugins[response.plugins[i]]['manifest'] = manifest;
 							NRS.checkPluginNRSCompatibility(response.plugins[i]);
@@ -213,62 +211,69 @@ var NRS = (function(NRS, $, undefined) {
             NRS.initPluginWarning();
             $('#login_password').prop("disabled", false);
 		});
-	}
+	};
 
     NRS.pages.plugins = function() {
+        var msg;
         if (NRS.numRunningPlugins == 1) {
-            var msg = $.t('one_plugin_active_and_running_msg');
+            msg = $.t('one_plugin_active_and_running_msg');
         } else {
-            var msg = $.t('plugins_active_and_running_msg', {
+            msg = $.t('plugins_active_and_running_msg', {
                 'num': String(NRS.numRunningPlugins)
             });
         }
         $('#plugins_page_msg').html(msg);
         NRS.dataLoaded();
-    }
+    };
 
     NRS.loadPlugin = function(pluginId) {
         var plugin = NRS.plugins[pluginId];
         var manifest = NRS.plugins[pluginId]['manifest'];
         var pluginPath = 'plugins/' + pluginId + '/';
-
-        $.ajaxSetup({async:false});
-        $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js')
-        .done(function(script, textStatus) {
-            NRS.loadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
-            NRS.loadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
-
-            if (!manifest['sidebarOptOut']) {
-                var sidebarId = 'sidebar_plugins';
-                var options = {
-                    "titleHTML": manifest['name'].escapeHTML(),
-                    "type": 'PAGE',
-                    "page": manifest['startPage']
-                }
-                NRS.appendMenuItemToTSMenuItem(sidebarId, options);
-                $(".sidebar .treeview").tree();
+        async.series([
+            function(callback){
+                NRS.asyncLoadPageHTML(pluginPath + 'html/pages/' + pluginId + '.html');
+                callback(null);
+            },
+            function(callback){
+                NRS.asyncLoadPageHTML(pluginPath + 'html/modals/' + pluginId + '.html');
+                callback(null);
+            },
+            function(callback){
+                $.getScript(pluginPath + 'js/nrs.' + pluginId + '.js').done(function() {
+                    if (!manifest['sidebarOptOut']) {
+                        var sidebarId = 'sidebar_plugins';
+                        var options = {
+                            "titleHTML": manifest['name'].escapeHTML(),
+                            "type": 'PAGE',
+                            "page": manifest['startPage']
+                        };
+                        NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+                        $(".sidebar .treeview").tree();
+                    }
+                    var cssURL = pluginPath + 'css/' + pluginId + '.css';
+                    if (document.createStyleSheet) {
+                        document.createStyleSheet(cssURL);
+                    } else {
+                        $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
+                    }
+                    plugin['launch_status'] = NRS.constants.PL_RUNNING;
+                    plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
+                    if(manifest['startPage'] && manifest['startPage'] in NRS.setup) {
+                        NRS.setup[manifest['startPage']]();
+                    }
+                    NRS.numRunningPlugins += 1;
+                    callback(null);
+                }).fail(function() {
+                    plugin['launch_status'] = NRS.constants.PL_HALTED;
+                    plugin['launch_status_msg'] = $.t('plugin_halted', 'Halted');
+                    plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
+                    plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
+                    callback(null);
+                })
             }
-            var cssURL = pluginPath + 'css/' + pluginId + '.css';
-            if (document.createStyleSheet) {
-                document.createStyleSheet(cssURL);
-            } else {
-                $('<link rel="stylesheet" type="text/css" href="' + cssURL + '" />').appendTo('head');
-            }
-            plugin['launch_status'] = NRS.constants.PL_RUNNING;
-            plugin['launch_status_msg'] = $.t('plugin_running', 'Running');
-            if(manifest['startPage'] && manifest['startPage'] in NRS.setup) {
-                NRS.setup[manifest['startPage']]();
-            }
-            NRS.numRunningPlugins += 1;
-        })
-        .fail(function(jqxhr, settings, exception) {
-            plugin['launch_status'] = NRS.constants.PL_HALTED;
-            plugin['launch_status_msg'] = $.t('plugin_halted', 'Halted');
-            plugin['validity'] = NRS.constants.PV_INVALID_JAVASCRIPT_FILE;
-            plugin['validity_msg'] = $.t('plugin_invalid_javascript_file', 'Invalid javascript file');
-        });
-        $.ajaxSetup({async:true});
-    }
+        ])
+    };
 
     NRS.loadPlugins = function() {
         var sidebarId = 'sidebar_plugins';
@@ -278,7 +283,7 @@ var NRS = (function(NRS, $, undefined) {
                 "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
                 "page": 'plugins',
                 "desiredPosition": 110
-            }
+            };
             NRS.addTreeviewSidebarMenuItem(options);
         }
 
@@ -300,10 +305,11 @@ var NRS = (function(NRS, $, undefined) {
                 "type": "warning"
             });
         } else {
+            var msg;
             if (NRS.numRunningPlugins == 1) {
-                var msg = $.t('one_plugin_active_and_running_msg');
+                msg = $.t('one_plugin_active_and_running_msg');
             } else {
-                var msg = $.t('plugins_active_and_running_msg', {
+                msg = $.t('plugins_active_and_running_msg', {
                     'num': String(NRS.numRunningPlugins)
                 });
             }
@@ -314,7 +320,7 @@ var NRS = (function(NRS, $, undefined) {
 
         NRS.loadPageHTMLTemplates();
         NRS.loadModalHTMLTemplates();
-    }
+    };
 
     NRS.getPluginRowHTML = function(pluginId) {
         var plugin = NRS.plugins[pluginId];
@@ -322,14 +328,13 @@ var NRS = (function(NRS, $, undefined) {
 
         var html = "";
         html += "<tr>";
-
+        var nameHTML;
         if (manifest) {
-            var nameHTML = String(manifest['name']).escapeHTML();
+            nameHTML = String(manifest['name']).escapeHTML();
         } else {
-            var nameHTML = String(pluginId).escapeHTML();
+            nameHTML = String(pluginId).escapeHTML();
         }
         html += "<td>" + nameHTML + "</td>";
-
         html += "<td>" + ((manifest) ? String(manifest['myVersion']).escapeHTML() : "&nbsp;") + "</td>";
 
         var websiteHTML = "&nbsp;";
@@ -339,32 +344,35 @@ var NRS = (function(NRS, $, undefined) {
         html += "<td>" + websiteHTML + "</td>";
 
         var validityPopoverHTML = "data-content='" + plugin['validity_msg'].escapeHTML() + "' data-placement='top'";
+        var validityText;
+        var validityHTML;
         if (100 <= plugin['validity'] && plugin['validity'] < 200) {
-            var validityText = $.t('valid', 'Valid');
-            var validityHTML = "<span class='label label-success show_popover' " + validityPopoverHTML + " style='display:inline-block;min-width:85px;'>";
+            validityText = $.t('valid', 'Valid');
+            validityHTML = "<span class='label label-success show_popover' " + validityPopoverHTML + " style='display:inline-block;min-width:85px;'>";
             validityHTML += validityText + " <i class='fa fa-check'></i></span>";
         } else {
-            var validityText = $.t('invalid', 'Invalid');
-            var validityHTML = "<span class='label label-danger show_popover' " + validityPopoverHTML + " style='display:inline-block;min-width:85px;'>";
+            validityText = $.t('invalid', 'Invalid');
+            validityHTML = "<span class='label label-danger show_popover' " + validityPopoverHTML + " style='display:inline-block;min-width:85px;'>";
             validityHTML += validityText + " <i class='fa fa-times-circle'></i></span>";
         }
         html += "<td style='text-align:center;'>" + validityHTML + "</td>";
 
+        var compatibilityHTML;
         if (manifest) {
             var compatibilityPopoverHTML = "data-content='" + plugin['nrs_compatibility_msg'].escapeHTML() + "' data-placement='top'";
             var compatibilityText = manifest['nrsVersion'].escapeHTML();
             if (100 <= plugin['nrs_compatibility'] && plugin['nrs_compatibility'] < 200) {
-                var compatibilityHTML = "<span class='label label-success show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
+                compatibilityHTML = "<span class='label label-success show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
                 compatibilityHTML += compatibilityText + "</span>";
             } else if (200 <= plugin['nrs_compatibility'] && plugin['nrs_compatibility'] < 300) {
-                var compatibilityHTML = "<span class='label label-warning show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
+                compatibilityHTML = "<span class='label label-warning show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
                 compatibilityHTML += compatibilityText + "</span>";
             } else {
-                var compatibilityHTML = "<span class='label label-danger show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
+                compatibilityHTML = "<span class='label label-danger show_popover' " + compatibilityPopoverHTML + " style='display:inline-block;min-width:70px;'>";
                 compatibilityHTML += compatibilityText + "</span>";
             }
         } else {
-            var compatibilityHTML = "&nbsp;";
+            compatibilityHTML = "&nbsp;";
         }
         html += "<td style='text-align:center;'>" + compatibilityHTML + "</td>";
 
@@ -385,16 +393,16 @@ var NRS = (function(NRS, $, undefined) {
         html += "</tr>";
 
         return html;
-    }
+    };
 
     NRS.pages.plugins_overview = function() {
         var rows = "";
         
-        $.each(NRS.plugins, function(pluginId, pluginDict) {
+        $.each(NRS.plugins, function(pluginId) {
             rows += NRS.getPluginRowHTML(pluginId);
         });
         NRS.dataLoaded(rows);
-    }
+    };
 
 
 	return NRS;

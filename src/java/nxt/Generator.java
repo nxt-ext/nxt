@@ -70,7 +70,8 @@ public final class Generator implements Comparable<Generator> {
 
             try {
                 try {
-                    synchronized (Nxt.getBlockchain()) {
+                    BlockchainImpl.getInstance().updateLock();
+                    try {
                         Block lastBlock = Nxt.getBlockchain().getLastBlock();
                         if (lastBlock == null || lastBlock.getHeight() < Constants.LAST_KNOWN_BLOCK) {
                             return;
@@ -103,7 +104,9 @@ public final class Generator implements Comparable<Generator> {
                                 return;
                             }
                         }
-                    } // synchronized
+                    } finally {
+                        BlockchainImpl.getInstance().updateUnlock();
+                    }
                 } catch (Exception e) {
                     Logger.logMessage("Error in block generation thread", e);
                 }
@@ -170,6 +173,10 @@ public final class Generator implements Comparable<Generator> {
         return generators.get(secretPhrase);
     }
 
+    public static int getGeneratorCount() {
+        return generators.size();
+    }
+
     public static Collection<Generator> getAllGenerators() {
         return allGenerators;
     }
@@ -179,7 +186,8 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public static long getNextHitTime(long lastBlockId, int curTime) {
-        synchronized (Nxt.getBlockchain()) {
+        BlockchainImpl.getInstance().readLock();
+        try {
             if (lastBlockId == Generator.lastBlockId && sortedForgers != null) {
                 for (Generator generator : sortedForgers) {
                     if (generator.getHitTime() >= curTime - Constants.FORGING_DELAY) {
@@ -188,13 +196,13 @@ public final class Generator implements Comparable<Generator> {
                 }
             }
             return 0;
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
     }
 
     static void setDelay(int delay) {
-        synchronized (Nxt.getBlockchain()) {
-            Generator.delayTime = delay;
-        }
+        Generator.delayTime = delay;
     }
 
     static boolean verifyHit(BigInteger hit, BigInteger effectiveBalance, Block previousBlock, int timestamp) {

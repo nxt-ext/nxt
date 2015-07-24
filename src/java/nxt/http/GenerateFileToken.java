@@ -25,7 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
 import java.io.IOException;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.INCORRECT_FILE;
+import static nxt.http.JSONResponses.INCORRECT_TOKEN;
+import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
 
 public final class GenerateFileToken extends APIServlet.APIRequestHandler {

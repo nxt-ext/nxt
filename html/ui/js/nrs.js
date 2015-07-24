@@ -65,6 +65,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isTestNet = false;
 	NRS.isLocalHost = false;
 	NRS.forgingStatus = NRS.constants.UNKNOWN;
+	NRS.isAccountForging = false;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
 
@@ -808,7 +809,7 @@ var NRS = (function(NRS, $, undefined) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 					} else {
                         if (NRS.publicKey == "") {
-                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk", {
+                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk_v2", {
                                 "account_id": String(NRS.accountRS).escapeHTML()
                             })).show();
                         } else {

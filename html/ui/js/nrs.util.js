@@ -630,10 +630,12 @@ var NRS = (function (NRS, $, undefined) {
         return Math.floor((currentTime - NRS.constants.EPOCH_BEGINNING) / 1000);
     };
 
-    NRS.formatTimestamp = function (timestamp, date_only) {
+    NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
         var date;
         if (typeof timestamp == "object") {
             date = timestamp;
+        } else if (isAbsoluteTime) {
+            date = new Date(timestamp);
         } else {
             date = new Date(NRS.fromEpochTime(timestamp));
         }
@@ -776,12 +778,23 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.getAccountLink = function (object, acc) {
-        if (typeof object[acc + "RS"] == "undefined") {
-            return "/";
+    NRS.getAccountLink = function (object, accountKey, accountRef, title) {
+        var accountRS;
+        if (typeof object[accountKey + "RS"] != "undefined") {
+            accountRS = object[accountKey + "RS"];
+        } else if (typeof object[accountKey] != "undefined") {
+            accountRS = NRS.convertNumericToRSAccountFormat(object[accountKey]);
         } else {
-            return "<a href='#' data-user='" + String(object[acc + "RS"]).escapeHTML() + "' class='show_account_modal_action user-info'>" + NRS.getAccountTitle(object, acc) + "</a>";
+            return '/';
         }
+        var accountTitle;
+        if (accountRef && accountRS == accountRef) {
+            accountTitle = $.t(title);
+        } else {
+            accountTitle = NRS.getAccountTitle(object, accountKey);
+        }
+        return "<a href='#' data-user='" + String(accountRS).escapeHTML() +
+            "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
     };
 
     NRS.getAccountTitle = function (object, acc) {
@@ -1611,6 +1624,20 @@ var NRS = (function (NRS, $, undefined) {
             arr[i] = utf8.charCodeAt(i);
         }
         return arr;
+    };
+
+    NRS.getTransactionStatusIcon = function (phasedEntity) {
+        var statusIcon;
+        if (phasedEntity.expectedCancellation == true) {
+            statusIcon = "<i class='fa fa-ban' title='" + $.t("cancelled") + "'></i>";
+        } else if (phasedEntity.phased == true) {
+            statusIcon = "<i class='fa fa-gavel' title='" + $.t("phased") + "'></i>";
+        } else if (phasedEntity.phased == false) {
+            statusIcon = "<i class='fa fa-circle-o' title='" + $.t("unconfirmed") + "'></i>";
+        } else {
+            statusIcon = "<i class='fa fa-circle' title='" + $.t("confirmed") + "'></i>";
+        }
+        return statusIcon;
     };
 
     return NRS;

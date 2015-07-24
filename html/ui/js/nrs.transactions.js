@@ -319,11 +319,11 @@ var NRS = (function(NRS, $, undefined) {
 						var minBalanceFormatted = "";
                         var finished = attachment.phasingFinishHeight <= NRS.lastBlockHeight;
 						var finishHeightFormatted = String(attachment.phasingFinishHeight);
-						var percentageFormatted = NRS.calculatePercentage(responsePoll.result, attachment.phasingQuorum, 0) + "%";
-						var percentageProgressBar = Math.round(responsePoll.result * 100 / attachment.phasingQuorum);
+						var percentageFormatted = attachment.phasingQuorum > 0 ? NRS.calculatePercentage(responsePoll.result, attachment.phasingQuorum, 0) + "%" : "";
+						var percentageProgressBar = attachment.phasingQuorum > 0 ? Math.round(responsePoll.result * 100 / attachment.phasingQuorum) : 0;
 						var progressBarWidth = Math.round(percentageProgressBar / 2);
                         var approvedFormatted;
-						if (responsePoll.approved) {
+						if (responsePoll.approved || attachment.phasingQuorum == 0) {
 							approvedFormatted = "Yes";
 						} else {
 							approvedFormatted = "No";
@@ -369,6 +369,9 @@ var NRS = (function(NRS, $, undefined) {
 							"template": template
 						};
 
+						if (vm == -1) {
+							icon = '<i class="fa ion-load-a"></i>';
+						}
 						if (vm == 0) {
 							icon = '<i class="fa fa-group"></i>';
 						}
@@ -381,13 +384,20 @@ var NRS = (function(NRS, $, undefined) {
 						if (vm == 3) {
 							icon = '<i class="fa fa-bank"></i>';
 						}
-
+						if (vm == 4) {
+							icon = '<i class="fa fa-thumbs-up"></i>';
+						}
+						if (vm == 5) {
+							icon = '<i class="fa fa-question"></i>';
+						}
 						var phasingDiv = "";
 						phasingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
 	 				 	phasingDiv += 'data-toggle="popover" data-container="body">';
 						phasingDiv += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
 						
-						if (vm == 0) {
+						if (vm == -1) {
+							phasingDiv += '<span style="color:' + color + '">' + $.t("none") + '</span>';
+						} else if (vm == 0) {
 							phasingDiv += '<span style="color:' + color + '">' + String(responsePoll.result) + '</span> / <span>' + String(attachment.phasingQuorum) + '</span>';
 						} else {
 							phasingDiv += '<div class="progress" style="display:inline-block;height:10px;width: 50px;">';
@@ -480,8 +490,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-    NRS.getPhasingFee = 1;
-
     NRS.getTransactionRowHTML = function(t, actions) {
 		var transactionType = $.t(NRS.transactionTypes[t.type]['subTypes'][t.subtype]['i18nKeyTitle']);
 
@@ -535,11 +543,10 @@ var NRS = (function(NRS, $, undefined) {
 		if (actions && actions.length != undefined) {
 			html += '<td class="td_transaction_actions" style="vertical-align:middle;text-align:right;">';
 			if (actions.indexOf('approve') > -1) {
-                var fee = NRS.getPhasingFee(t);
                 html += "<a class='btn btn-xs btn-default approve_transaction_btn' href='#' data-toggle='modal' data-target='#approve_transaction_modal' ";
 				html += "data-transaction='" + String(t.transaction).escapeHTML() + "' data-fullhash='" + String(t.fullHash).escapeHTML() + "' ";
 				html += "data-timestamp='" + t.timestamp + "' " + "data-votingmodel='" + t.attachment.phasingVotingModel + "' ";
-				html += "data-fee='" + fee + "' data-min-balance-formatted=''>" + $.t('approve') + "</a>";
+				html += "data-fee='1' data-min-balance-formatted=''>" + $.t('approve') + "</a>";
 			}
 			html += "</td>";
 		}

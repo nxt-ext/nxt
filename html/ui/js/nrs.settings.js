@@ -47,7 +47,7 @@ var NRS = (function(NRS, $) {
 		"de": "Deutsch",                 // german
 		"en": "English",                 // english
 		"es-es": "Español",              // spanish
-		"ca": "Català (Experimental)",   // catalan
+		"ca": "Català",                  // catalan
 		"fi": "Suomi (Experimental)",    // finnish
 		"fr": "Français",                // french
 		"gl": "Galego (Experimental)",   // galician
@@ -66,7 +66,8 @@ var NRS = (function(NRS, $) {
 		"sr": "Српски (Experimental)",   // serbian, cyrillic
 		"sr-cs": "Srpski (Experimental)",// serbian, latin
 		"bg": "Български",               // bulgarian
-		"ro": "Român (Experimental)",    // romanian
+		"ro": "Român",                   // romanian
+		"tr": "Türk (Experimental)",     // turkish
 		"uk": "Yкраiнска",               // ukrainian
 		"ru": "Русский",                 // russian
 		"zh-cn": "中文 simplified",      // chinese simplified
@@ -250,6 +251,10 @@ var NRS = (function(NRS, $) {
 
 		if (NRS.settings["news"] != -1) {
 			$("#settings_news_initial").remove();
+		}
+
+		if (NRS.settings["marketplace"] != -1) {
+			$("#settings_marketplace_initial").remove();
 		}
 
 		if (NRS.inApp) {
@@ -456,42 +461,57 @@ var NRS = (function(NRS, $) {
 			NRS.createLangSelect();
 			NRS.applySettings();
 		} else {
-			if (NRS.databaseSupport) {
-                NRS.database.select("data", [{
-                    "id": "settings"
-                }], function(error, result) {
-                    if (result && result.length) {
-                        NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
-                    } else {
-                        NRS.database.insert("data", {
-                            id: "settings",
-                            contents: "{}"
+            async.waterfall([
+                function (callback) {
+                    if (NRS.databaseSupport) {
+                        NRS.database.select("data", [{
+                            "id": "settings"
+                        }], function (error, result) {
+                            if (result && result.length) {
+                                NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
+                            } else {
+                                NRS.database.insert("data", {
+                                    id: "settings",
+                                    contents: "{}"
+                                });
+                                NRS.settings = NRS.defaultSettings;
+                            }
+                            NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
+                            for (var setting in NRS.defaultSettings) {
+                                if (!NRS.defaultSettings.hasOwnProperty(setting)) {
+                                    continue;
+                                }
+                                var value = NRS.settings[setting];
+                                var status = (NRS.defaultSettings[setting] !== value ? "modified" : "default");
+                                if (setting.search("password") >= 0) {
+                                    value = new Array(value.length + 1).join('*');
+                                }
+                                NRS.logConsole(setting + " = " + value + " [" + status + "]");
+                            }
+                            NRS.applySettings();
+                            callback(null);
                         });
-                        NRS.settings = NRS.defaultSettings;
-                    }
-                    NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
-                    for (var setting in NRS.defaultSettings) {
-                        if (!NRS.defaultSettings.hasOwnProperty(setting)) {
-                            continue;
+                    } else {
+                        if (NRS.hasLocalStorage) {
+                            NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+                            NRS.logConsole("Loading settings from local storage");
+                        } else {
+                            NRS.settings = NRS.defaultSettings;
                         }
-                        var value = NRS.settings[setting];
-                        var status = (NRS.defaultSettings[setting] !== value ? "modified" : "default");
-                        if (setting.search("password") >= 0) {
-                            value = new Array(value.length + 1).join('*');
-                        }
-                        NRS.logConsole(setting + " = " + value + " [" + status + "]");
+                        NRS.applySettings();
+                        callback(null);
                     }
-                    NRS.applySettings();
-                });
-			} else {
-				if (NRS.hasLocalStorage) {
-					NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
-                    NRS.logConsole("Loading settings from local storage");
-				} else {
-					NRS.settings = NRS.defaultSettings;
-				}
-				NRS.applySettings();
-			}
+                },
+                function (callback) {
+                    for (var schema in NRS.defaultColors) {
+                        var color = NRS.settings[schema + "_color"];
+                        if (color) {
+                            NRS.updateStyle(schema, color);
+                        }
+                    }
+                }
+            ], function (err, result) {});
+
 		}
 	};
 
@@ -607,7 +627,7 @@ var NRS = (function(NRS, $) {
 	NRS.updateSettings = function(key, value) {
 		if (key) {
 			NRS.settings[key] = value;
-			
+
 			if (key == "themeChoice") {
 				NRS.setCookie("themeChoice", value, 1000);
 			}

@@ -11,6 +11,11 @@
 FROM phusion/baseimage
 # start off with standard ubuntu images
 
+# Set local and enable UTF-8
+ENV LANG C.UTF-8
+ENV LANGUAGE C
+ENV LC_ALL C.UTF-8
+
 #java8
 RUN sed 's/main$/main universe/' -i /etc/apt/sources.list
 RUN apt-get update && apt-get install -y software-properties-common python-software-properties
@@ -24,10 +29,10 @@ RUN apt-get install -y oracle-java8-installer
 RUN mkdir /nxt
 ADD . /nxt
 # repo has
-ADD docker_start.sh /docker_start.sh
-+# set nxt to listen on all interfaces
-+RUN echo 'nxt.allowedBotHosts=*' >> /nxt/conf/nxt.properties
-+RUN echo 'nxt.apiServerHost=0.0.0.0' >> /nxt/conf/nxt.properties
+ADD contrib/docker_start.sh /docker_start.sh
+# set nxt to listen on all interfaces
+RUN echo 'nxt.allowedBotHosts=*' >> /nxt/conf/nxt.properties
+RUN echo 'nxt.apiServerHost=0.0.0.0' >> /nxt/conf/nxt.properties
 RUN chmod +x /docker_start.sh
 
 RUN cd /nxt; ./compile.sh

@@ -123,7 +123,6 @@ var NRS = (function (NRS, $, undefined) {
                 approveTransactionButton.data("transaction", transaction.transaction);
                 approveTransactionButton.data("fullhash", transaction.fullHash);
                 approveTransactionButton.data("timestamp", transaction.timestamp);
-                approveTransactionButton.data("fee", NRS.getPhasingFee(transaction));
                 approveTransactionButton.data("minBalanceFormatted", "");
                 approveTransactionButton.data("votingmodel", transaction.attachment.phasingVotingModel);
             }
@@ -162,16 +161,26 @@ var NRS = (function (NRS, $, undefined) {
                     "</tr></thead><tbody>";
                     for (i = 0; i < transaction.attachment.phasingWhitelist.length; i++) {
                         var account = NRS.convertNumericToRSAccountFormat(transaction.attachment.phasingWhitelist[i]);
-                        rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td>";
+                        rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td></tr>";
                     }
                     rows += "</tbody></table>";
                 } else {
                     rows = "-";
                 }
                 phasingDetails.whitelist_formatted_html = rows;
+                if (transaction.attachment.phasingLinkedFullHashes && transaction.attachment.phasingLinkedFullHashes.length > 0) {
+                    rows = "<table class='table table-striped'><tbody>";
+                    for (i = 0; i < transaction.attachment.phasingLinkedFullHashes.length; i++) {
+                        rows += "<tr><td>" + transaction.attachment.phasingLinkedFullHashes[i] + "</td></tr>";
+                    }
+                    rows += "</tbody></table>";
+                } else {
+                    rows = "-";
+                }
+                phasingDetails.full_hash_formatted_html = rows;
                 if (transaction.attachment.phasingHashedSecret) {
                     phasingDetails.hashedSecret = transaction.attachment.phasingHashedSecret;
-                    phasingDetails.hashAlgorithm = transaction.attachment.phasingHashedSecretAlgorithm;
+                    phasingDetails.hashAlgorithm = NRS.getHashAlgorithm(transaction.attachment.phasingHashedSecretAlgorithm);
                 }
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();
@@ -516,7 +525,7 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getAsset", {
                             "asset": transaction.attachment.asset
                         }, function (asset, input) {
-                            NRS.formatAssetOrder(asset, transaction)
+                            NRS.formatAssetOrder(asset, transaction, isModalVisible)
                         });
                         break;
                     case 4:
@@ -531,6 +540,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }, function (asset) {
                                     var data = {
                                         "type": $.t("ask_order_cancellation"),
+                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -539,7 +549,6 @@ var NRS = (function (NRS, $, undefined) {
                                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                                     $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                                     $("#transaction_info_table").show();
-
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
                                 });
@@ -551,7 +560,6 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 5:
                         async = true;
-
                         NRS.sendRequest("getTransaction", {
                             "transaction": transaction.attachment.order
                         }, function (transaction) {
@@ -561,6 +569,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }, function (asset) {
                                     var data = {
                                         "type": $.t("bid_order_cancellation"),
+                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -569,7 +578,6 @@ var NRS = (function (NRS, $, undefined) {
                                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                                     $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                                     $("#transaction_info_table").show();
-
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
                                 });
@@ -1155,7 +1163,9 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             if (!async) {
-                $("#transaction_info_modal").modal("show");
+                if (!isModalVisible) {
+                    $("#transaction_info_modal").modal("show");
+                }
                 NRS.fetchingModalData = false;
             }
         } catch (e) {
@@ -1164,7 +1174,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.formatAssetOrder = function (asset, transaction) {
+    NRS.formatAssetOrder = function (asset, transaction, isModalVisible) {
         var data = {
             "type": (transaction.subtype == 2 ? $.t("ask_order_placement") : $.t("bid_order_placement")),
             "asset_name": asset.name,
@@ -1215,8 +1225,9 @@ var NRS = (function (NRS, $, undefined) {
         var infoTable = $("#transaction_info_table");
         infoTable.find("tbody").append(NRS.createInfoTable(data));
         infoTable.show();
-
-        $("#transaction_info_modal").modal("show");
+        if (!isModalVisible) {
+            $("#transaction_info_modal").modal("show");
+        }
         NRS.fetchingModalData = false;
     };
 
@@ -1394,8 +1405,6 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             revealSecretDiv.hide();
         }
-        approveTransactionModal.find('.advanced_fee').html($(this).data("fee") + " NXT");
-        approveTransactionModal.find('input[name="feeNXT"]').val($(this).data("fee"));
     });
 
     $("#approve_transaction_button").on("click", function (e) {

@@ -28,19 +28,19 @@ var NRS = (function(NRS, $, undefined) {
 	})();
 
 	//block_height_modal_ui_element
-	function _updateBlockHeightEstimates($bhmElem) {
-			var $input = $bhmElem.find(' .bhm_ue_time_input');
-			var blockHeight = $input.val();
-			var output = "<i class='fa fa-clock-o'></i> ";
-			if (blockHeight) {
-				var blockDiff = blockHeight - NRS.lastBlockHeight;
-				var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
-				output += moment().add(diffSecs, 'seconds').format("YYYY/MM/DD hh:mm a") + " ";
+	function _updateBlockHeightEstimates($bhmElem) {
+		var $input = $bhmElem.find(' .bhm_ue_time_input');
+		var blockHeight = $input.val();
+		var output = "<i class='fa fa-clock-o'></i> ";
+		if (blockHeight) {
+			var blockDiff = blockHeight - NRS.lastBlockHeight;
+			var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
+			output += moment().add(diffSecs, 'seconds').format("YYYY/MM/DD hh:mm a") + " ";
 
-			} else {
-				output += '-';
-			}
-			$bhmElem.find(".bhm_ue_time_estimate").html(output);
+		} else {
+			output += '-';
+		}
+		$bhmElem.find(".bhm_ue_time_estimate").html(output);
 	}
 
 	function _changeBlockHeightFromButton($btn, add) {
@@ -62,6 +62,9 @@ var NRS = (function(NRS, $, undefined) {
 			$(bhmElem).find(".bhm_ue_current_block_height").html(String(NRS.lastBlockHeight));
 			$(bhmElem).find(".bhm_ue_use_current_block_height").data('CurrentBlockHeight', NRS.lastBlockHeight);
 		});
+		var $algorithm = $(this).find('div[data-modal-ui-element="hash_algorithm_model_modal_ui_element"]');
+		var $algoSelect = $algorithm.find('select');
+		NRS.loadAlgorithmList($algoSelect, ($(this).attr('id') != 'hash_modal'));
 	});
 	$('body').on('keyup', '.modal div[data-modal-ui-element="block_height_modal_ui_element"] .bhm_ue_time_input', function(e) {
 		var $bhmElem = $(this).closest('div[data-modal-ui-element="block_height_modal_ui_element"]');

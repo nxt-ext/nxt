@@ -82,4 +82,9 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
         return true;
     }
 
+    @Override
+    final boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }

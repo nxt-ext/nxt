@@ -44,9 +44,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -78,19 +77,17 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
             @Override
             public void run() {
                 long oldestTime = System.currentTimeMillis() - eventTimeout*1000;
-                //TODO: why not directly do eventListeners().values().stream(), or parallelStream() ?
-                List<EventListener>listeners = new ArrayList<>();
-                listeners.addAll(eventListeners.values());
-                listeners.stream()
-                         .filter(listener -> listener.getTimestamp() < oldestTime)
-                         .forEach(EventListener::deactivateListener);
+                eventListeners.values().forEach(listener -> {
+                    if (listener.getTimestamp() < oldestTime) {
+                        listener.deactivateListener();
+                    }
+                });
             }
         }, eventTimeout*500, eventTimeout*500);
     }
 
     /** Thread pool for asynchronous completions */
-    private static final ThreadPoolExecutor threadPool =
-            new ThreadPoolExecutor(0, 4, 2, TimeUnit.MINUTES, new LinkedBlockingQueue<>());
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     /** Peer events - update API comments for EventRegister and EventWait if changed */
     static final List<Peers.Event> peerEvents = new ArrayList<>();
