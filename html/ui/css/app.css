@@ -3496,7 +3496,7 @@ body > .header .navbar {
     }
 
     .navbar .navbar-right > .nav.sends { 
-      height: 32px; 
+      height: 31px; 
       display: flex;
       justify-content: space-around;
       margin: 0;
@@ -3510,7 +3510,7 @@ body > .header .navbar {
         padding: 0;
         display: block;
         width: 100%; 
-        line-height: 14px; 
+        line-height: 13px; 
         font-weight: normal;
       }
   
