@@ -28,12 +28,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 
-public final class SignTransaction {
+public final class SignTransactions {
 
     public static void main(String[] args) {
         try {
             if (args.length != 2) {
-                System.out.println("Usage: SignTransaction <unsigned transaction bytes file> <signed transaction bytes file>");
+                System.out.println("Usage: SignTransactions <unsigned transaction bytes file> <signed transaction bytes file>");
                 System.exit(1);
             }
             File unsigned = new File(args[0]);
