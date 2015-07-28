@@ -82,6 +82,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).closest("form").find(".optional_do_not_sign").fadeIn();
 		} else {
 			$(this).closest("form").find(".optional_do_not_sign").hide();
+            $(this).closest("form").find(".optional_do_not_sign input").prop("checked", false);
 		}
 	});
 

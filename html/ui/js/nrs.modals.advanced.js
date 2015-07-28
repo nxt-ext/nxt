@@ -21,7 +21,13 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.showRawTransactionModal = function(transaction) {
 		$("#raw_transaction_modal_unsigned_transaction_bytes").val(transaction.unsignedTransactionBytes);
-		$("#raw_transaction_modal_transaction_bytes").val(transaction.transactionBytes);
+
+		if (transaction.transactionBytes) {
+            $("#raw_transaction_modal_transaction_bytes").val(transaction.transactionBytes);
+            $("#raw_transaction_modal_transaction_bytes_container").show();
+        } else {
+            $("#raw_transaction_modal_transaction_bytes_container").hide();
+        }
 
 		if (transaction.fullHash) {
 			$("#raw_transaction_modal_full_hash").val(transaction.fullHash);
