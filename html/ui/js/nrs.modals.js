@@ -77,6 +77,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
+	$(".do_not_broadcast").on("change", function() {
+		if ($(this).is(":checked")) {
+			$(this).closest("form").find(".optional_do_not_sign").fadeIn();
+		} else {
+			$(this).closest("form").find(".optional_do_not_sign").hide();
+		}
+	});
+
 	//hide modal when another one is activated.
     var modal = $(".modal");
     modal.on("show.bs.modal", function() {
@@ -159,7 +167,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
 		$(this).find(".advanced").hide();
 		$(this).find(".recipient_public_key").hide();
-		$(this).find(".optional_message, .optional_note").hide();
+		$(this).find(".optional_message, .optional_note, .optional_do_not_sign").hide();
 		$(this).find(".advanced_info a").text($.t("advanced"));
 		$(this).find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
@@ -218,7 +226,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $modal = $(this).closest(".modal");
 		var text = $(this).text().toLowerCase();
 		if (text == $.t("advanced")) {
-			var not = ".optional_note";
+			var not = ".optional_note, .optional_do_not_sign";
 			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
