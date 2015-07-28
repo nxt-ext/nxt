@@ -8,7 +8,7 @@ fi
 PACKAGE=nxt-client-${VERSION}.zip
 echo PACKAGE="${PACKAGE}"
 
-FILES="changelogs classes conf html lib src"
+FILES="changelogs classes conf html lib src resource"
 FILES="${FILES} nxt.jar nxtservice.jar"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
