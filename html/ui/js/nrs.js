@@ -893,9 +893,11 @@ var NRS = (function(NRS, $, undefined) {
 				if (response.assetBalances) {
                     var assets = [];
                     var assetBalances = response.assetBalances;
+                    var assetBalancesMap = {};
                     for (var i = 0; i < assetBalances.length; i++) {
                         if (assetBalances[i].balanceQNT != "0") {
                             assets.push(assetBalances[i].asset);
+                            assetBalancesMap[assetBalances[i].asset] = assetBalances[i].balanceQNT;
                         }
                     }
                     NRS.sendRequest("getLastTrades", {
@@ -905,7 +907,7 @@ var NRS = (function(NRS, $, undefined) {
                             var assetTotal = 0;
                             for (i=0; i < response.trades.length; i++) {
                                 var trade = response.trades[i];
-                                assetTotal += assetBalances[i].balanceQNT * trade.priceNQT / 100000000;
+                                assetTotal += assetBalancesMap[trade.asset] * trade.priceNQT / 100000000;
                             }
                             $("#account_assets_balance").html(NRS.formatStyledAmount(new Big(assetTotal).toFixed(8)));
                             $("#account_nr_assets").html(response.trades.length);
