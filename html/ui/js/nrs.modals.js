@@ -77,22 +77,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-	$(".issue_currency_reservable").on("change", function() {
-		if ($(this).is(":checked")) {
-			$(this).closest("form").find(".optional_reserve").fadeIn();
-		} else {
-			$(this).closest("form").find(".optional_reserve").hide();
-		}
-	});
-
-	$(".issue_currency_mintable").on("change", function() {
-		if ($(this).is(":checked")) {
-			$(this).closest("form").find(".optional_mint").fadeIn();
-		} else {
-			$(this).closest("form").find(".optional_mint").hide();
-		}
-	});
-
 	//hide modal when another one is activated.
     var modal = $(".modal");
     modal.on("show.bs.modal", function() {
