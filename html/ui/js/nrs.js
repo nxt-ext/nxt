@@ -793,7 +793,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currency_count, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
+				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
 				
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
@@ -921,13 +921,38 @@ var NRS = (function(NRS, $, undefined) {
                     $("#account_nr_assets").html(0);
                 }
 
-				if (NRS.accountInfo.accountCurrencies && NRS.accountInfo.accountCurrencies.length) {
-					$("#account_currency_count").empty().append(NRS.accountInfo.accountCurrencies.length);
-				} else {
-					$("#account_currency_count").empty().append("0");
-				}
+				if (response.accountCurrencies) {
+                    var currencies = [];
+                    var currencyBalances = response.accountCurrencies;
+                    var currencyBalancesMap = {};
+                    for (var i = 0; i < currencyBalances.length; i++) {
+                        if (currencyBalances[i].units != "0") {
+                            currencies.push(currencyBalances[i].currency);
+                            currencyBalancesMap[currencyBalances[i].currency] = currencyBalances[i].units;
+                        }
+                    }
+                    NRS.sendRequest("getLastExchanges", {
+                        "currencies": currencies
+                    }, function(response) {
+                        if (response.exchanges && response.exchanges.length) {
+                            var currencyTotal = 0;
+                            for (i=0; i < response.exchanges.length; i++) {
+                                var exchange = response.exchanges[i];
+                                currencyTotal += currencyBalancesMap[exchange.currency] * exchange.rateNQT / 100000000;
+                            }
+                            $("#account_currencies_balance").html(NRS.formatStyledAmount(new Big(currencyTotal).toFixed(8)));
+                            $("#account_nr_currencies").html(response.exchanges.length);
+                        } else {
+                            $("#account_currencies_balance").html(0);
+                            $("#account_nr_currencies").html(0);
+                        }
+                    });
+                } else {
+                    $("#account_currencies_balance").html(0);
+                    $("#account_nr_currencies").html(0);
+                }
 
-				/* Display message count in top and limit to 100 for now because of possible performance issues*/	
+				/* Display message count in top and limit to 100 for now because of possible performance issues*/
 				NRS.sendRequest("getBlockchainTransactions+", {
 					"account": NRS.account,
 					"type": 1,
@@ -1006,7 +1031,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currency_count, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
+				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
 			}
 
 			if (callback) {

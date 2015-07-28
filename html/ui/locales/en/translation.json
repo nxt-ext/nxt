@@ -1385,5 +1385,7 @@
   "calculated_hash_is": "Calculated hash is",
   "cancelled": "Cancelled",
   "status_new_account_no_pk_v2": "Welcome to your new NXT account. Your account ID is __account_id__ - When funding your account for the first time, you can increase security by also providing your public key. To determine your public key, login using your passphrase.",
-  "lessee": "Lessee"
+  "lessee": "Lessee",
+  "currencies_value": "Currencies Value",
+  "currencies_owned": "Currencies Owned"
 }
