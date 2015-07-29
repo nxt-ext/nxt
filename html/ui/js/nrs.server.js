@@ -384,6 +384,14 @@ var NRS = (function (NRS, $, undefined) {
                     callback(response, data);
                 } else {
                     if (response.broadcasted == false) {
+                        if (!NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes),
+                                requestType, data)) {
+                            callback({
+                                "errorCode": 1,
+                                "errorDescription": $.t("error_bytes_validation_server")
+                            }, data);
+                            return;
+                        }
                         NRS.showRawTransactionModal(response);
                     } else {
                         if (extra) {
@@ -472,7 +480,7 @@ var NRS = (function (NRS, $, undefined) {
             transaction.ecBlockId = String(converters.byteArrayToBigInteger(byteArray, 168));
         }
 
-        if (transaction.publicKey != NRS.accountInfo.publicKey) {
+        if (transaction.publicKey != NRS.accountInfo.publicKey && transaction.publicKey != data.publicKey) {
             return false;
         }
 
