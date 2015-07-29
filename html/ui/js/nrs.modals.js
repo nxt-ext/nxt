@@ -83,6 +83,17 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$(this).closest("form").find(".optional_do_not_sign").hide();
             $(this).closest("form").find(".optional_do_not_sign input").prop("checked", false);
+            $(this).closest("form").find(".secret_phrase input").prop("disabled", false);
+		}
+	});
+
+	$(".do_not_sign").on("change", function() {
+        var passphrase = $(this).closest("form").find(".secret_phrase input");
+        if ($(this).is(":checked")) {
+            passphrase.val("");
+            passphrase.prop("disabled", true);
+        } else {
+            passphrase.prop("disabled", false);
 		}
 	});
 
