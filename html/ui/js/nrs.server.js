@@ -276,7 +276,7 @@ var NRS = (function (NRS, $, undefined) {
 
             if (NRS.accountInfo && NRS.accountInfo.publicKey) {
                 data.publicKey = NRS.accountInfo.publicKey;
-            } else {
+            } else if (!data.doNotSign) {
                 data.publicKey = NRS.generatePublicKey(secretPhrase);
                 NRS.accountInfo.publicKey = data.publicKey;
             }

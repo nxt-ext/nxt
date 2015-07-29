@@ -82,6 +82,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).closest("form").find(".optional_do_not_sign").fadeIn();
 		} else {
 			$(this).closest("form").find(".optional_do_not_sign").hide();
+			$(this).closest("form").find(".optional_public_key").hide();
             $(this).closest("form").find(".optional_do_not_sign input").prop("checked", false);
             $(this).closest("form").find(".secret_phrase input").prop("disabled", false);
 		}
@@ -92,8 +93,12 @@ var NRS = (function(NRS, $, undefined) {
         if ($(this).is(":checked")) {
             passphrase.val("");
             passphrase.prop("disabled", true);
+            if (!NRS.accountInfo || !NRS.accountInfo.publicKey) {
+                $(this).closest("form").find(".optional_public_key").fadeIn();
+            }
         } else {
             passphrase.prop("disabled", false);
+            $(this).closest("form").find(".optional_public_key").hide();
 		}
 	});
 
@@ -180,7 +185,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
 		$(this).find(".advanced").hide();
 		$(this).find(".recipient_public_key").hide();
-		$(this).find(".optional_message, .optional_note, .optional_do_not_sign").hide();
+		$(this).find(".optional_message, .optional_note, .optional_do_not_sign, .optional_public_key").hide();
 		$(this).find(".advanced_info a").text($.t("advanced"));
 		$(this).find(".advanced_extend").each(function(index, obj) {
 			var normalSize = $(obj).data("normal");
@@ -239,7 +244,7 @@ var NRS = (function(NRS, $, undefined) {
 		var $modal = $(this).closest(".modal");
 		var text = $(this).text().toLowerCase();
 		if (text == $.t("advanced")) {
-			var not = ".optional_note, .optional_do_not_sign";
+			var not = ".optional_note, .optional_do_not_sign, .optional_public_key";
 			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();

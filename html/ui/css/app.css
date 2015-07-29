@@ -3298,7 +3298,7 @@ input.masked {
   display:none;
 }
 
-.optional_message, .optional_note, .optional_do_not_sign {
+.optional_message, .optional_note, .optional_do_not_sign, .optional_public_key {
   display:none;
 }
 
