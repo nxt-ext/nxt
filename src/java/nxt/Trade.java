@@ -28,6 +28,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Trade {
 
@@ -82,6 +84,24 @@ public final class Trade {
 
     public static DbIterator<Trade> getAssetTrades(long assetId, int from, int to) {
         return tradeTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
+    }
+
+    public static List<Trade> getLastTrades(long[] assetIds) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE asset_id = ? ORDER BY height DESC, db_id DESC LIMIT 1")) {
+            List<Trade> result = new ArrayList<>();
+            for (long assetId : assetIds) {
+                pstmt.setLong(1, assetId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        result.add(new Trade(rs));
+                    }
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public static DbIterator<Trade> getAccountTrades(long accountId, int from, int to) {

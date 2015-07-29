@@ -123,6 +123,9 @@ var NRS = (function(NRS, $) {
         if (!NRS.accountInfo.publicKey) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_no_public_key");
+        } else if (NRS.isLeased) {
+            status = NRS.constants.NOT_FORGING;
+            tooltip = $.t("error_forging_lease");
         } else if (NRS.accountInfo.effectiveBalanceNXT == 0) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_effective_balance");
@@ -132,9 +135,6 @@ var NRS = (function(NRS, $) {
         } else if (NRS.state.isScanning) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_blockchain_rescanning");
-        } else if (NRS.isLeased) {
-            status = NRS.constants.NOT_FORGING;
-            tooltip = $.t("error_forging_lease");
         } else if (NRS.needsAdminPassword && NRS.settings.admin_password == "" && (!secretPhrase || !NRS.isLocalHost)) {
             // do not change forging status
         } else {

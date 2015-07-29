@@ -520,6 +520,27 @@ var NRS = (function(NRS, $) {
 				}
 			}
 
+			if ("decimals" in data) {
+                try {
+                    var decimals = parseInt(data.decimals);
+				} catch (err) {
+                    decimals = 0;
+				}
+
+				if (decimals < 2 || decimals > 6) {
+					NRS.showedFormWarning = true;
+                    var entity = (requestType == 'issueCurrency' ? 'currency' : 'asset');
+					$form.find(".error_message").html($.t("error_decimal_positions_warning", {
+                        "entity": entity
+                    })).show();
+					if (formErrorFunction) {
+						formErrorFunction(false, data);
+					}
+					NRS.unlockForm($modal, $btn);
+					return;
+				}
+			}
+
 			var convertNXTFields = ["phasingQuorumNXT", "phasingMinBalanceNXT"];
 			$.each(convertNXTFields, function(key, field) {
 				if (field in data) {

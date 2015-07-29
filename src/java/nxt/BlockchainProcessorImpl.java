@@ -1163,7 +1163,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new BlockNotAcceptedException("Invalid version " + block.getVersion(), block);
         }
         if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT) {
-            Logger.logWarningMessage("Received a block from the future, block timestamp is " + block.getTimestamp()
+            Logger.logWarningMessage("Received block " + block.getStringId() + " from the future, block timestamp is " + block.getTimestamp()
                     + ", current time is " + curTime + ", system clock may be off");
             throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                     + " current time is " + curTime, block);

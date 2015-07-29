@@ -1384,5 +1384,10 @@
   "calculate": "Calculate",
   "calculated_hash_is": "Calculated hash is",
   "cancelled": "Cancelled",
-  "status_new_account_no_pk_v2": "Welcome to your new NXT account. Your account ID is __account_id__ - When funding your account for the first time, you can increase security by also providing your public key. To determine your public key, login using your passphrase."
+  "status_new_account_no_pk_v2": "Welcome to your new NXT account. Your account ID is __account_id__ - When funding your account for the first time, you can increase security by also providing your public key. To determine your public key, login using your passphrase.",
+  "lessee": "Lessee",
+  "currencies_value": "Currencies Value",
+  "currencies_owned": "Currencies Owned",
+  "error_decimal_positions_warning": "Warning: using less than 2 decimal positions or more than 6 decimal positions may reduce the usability of your __entity__",
+  "public_key_not_announced_warning": "Warning: your account public key __public_key__ has not been published to the blockchain. This means it is not as protected as other accounts. You must make an outgoing transaction to fix this issue."
 }
