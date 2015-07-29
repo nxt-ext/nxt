@@ -232,7 +232,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = ("secretPhrase" in data || "adminPassword" in data || requestType == "getForging" ? "POST" : "GET");
+        var type = ("secretPhrase" in data || data.doNotSign || "adminPassword" in data || requestType == "getForging" ? "POST" : "GET");
         var url = NRS.server + "/nxt?requestType=" + requestType;
 
         if (type == "GET") {
@@ -264,7 +264,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        if ((!NRS.isLocalHost || data.doNotSign == "1") && type == "POST" &&
+        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" &&
             requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
@@ -355,7 +355,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
             addAddressData(data);
-            if (secretPhrase && response.unsignedTransactionBytes && data.doNotSign != "1" && !response.errorCode && !response.error) {
+            if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error) {
                 var publicKey = NRS.generatePublicKey(secretPhrase);
                 var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
