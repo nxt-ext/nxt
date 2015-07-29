@@ -21,11 +21,19 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.showRawTransactionModal = function(transaction) {
 		$("#raw_transaction_modal_unsigned_transaction_bytes").val(transaction.unsignedTransactionBytes);
-        $("#raw_transaction_modal_unsigned_bytes_qr_code").empty().qrcode({
-            "text": transaction.unsignedTransactionBytes,
-            "width": 384,
-            "height": 384
-        });
+
+        if (transaction.unsignedTransactionBytes && !transaction.transactionBytes) {
+            $("#raw_transaction_modal_unsigned_bytes_qr_code").empty().qrcode({
+                "text": transaction.unsignedTransactionBytes,
+                "width": 384,
+                "height": 384
+            });
+            $("#raw_transaction_modal_unsigned_bytes_qr_code_container").show();
+        } else {
+            $("#raw_transaction_modal_unsigned_bytes_qr_code_container").hide();
+        }
+
+        $("#raw_transaction_modal_unsigned_transaction_json").val(JSON.stringify(transaction.transactionJSON));
 
 		if (transaction.transactionBytes) {
             $("#raw_transaction_modal_transaction_bytes").val(transaction.transactionBytes);
