@@ -131,6 +131,7 @@ var NRS = (function(NRS, $, undefined) {
             	"html": true
             }); 
         });
+        $(this).find("input[name=secretPhrase]").prop("disabled", false);
 	});
 
 	modal.on("shown.bs.modal", function() {
