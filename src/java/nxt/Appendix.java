@@ -43,10 +43,12 @@ public interface Appendix {
 
     interface Prunable {
         byte[] getHash();
+        boolean hasPrunableData();
+        void restorePrunableData(Transaction transaction, int blockTimestamp, int height);
         default boolean shouldLoadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
-            return Constants.INCLUDE_EXPIRED_PRUNABLE ||
-                    Nxt.getEpochTime() - transaction.getTimestamp() <
-                            (includeExpiredPrunable ? Constants.MAX_PRUNABLE_LIFETIME : Constants.MIN_PRUNABLE_LIFETIME);
+            return Nxt.getEpochTime() - transaction.getTimestamp() <
+                    (includeExpiredPrunable && Constants.INCLUDE_EXPIRED_PRUNABLE ?
+                            Constants.MAX_PRUNABLE_LIFETIME : Constants.MIN_PRUNABLE_LIFETIME);
         }
     }
 
@@ -436,6 +438,16 @@ public interface Appendix {
         public boolean isPhasable() {
             return false;
         }
+
+        @Override
+        public boolean hasPrunableData() {
+            return (prunableMessage != null || message != null);
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            PrunableMessage.add(transaction, this, blockTimestamp, height);
+        }
     }
 
     abstract class AbstractEncryptedMessage extends AbstractAppendix {
@@ -709,6 +721,15 @@ public interface Appendix {
             return false;
         }
 
+        @Override
+        public boolean hasPrunableData() {
+            return (prunableMessage != null || encryptedData != null);
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            PrunableMessage.add(transaction, this, blockTimestamp, height);
+        }
     }
 
     class EncryptedMessage extends AbstractEncryptedMessage {

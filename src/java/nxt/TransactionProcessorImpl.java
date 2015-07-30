@@ -643,4 +643,51 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
+    /**
+     * Restore expired prunable data
+     *
+     * @param   transactions                        Transactions containing prunable data
+     * @return                                      Processed transactions
+     * @throws  NxtException.ValidationException    Transaction is not valid
+     */
+    @Override
+    public List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException {
+        List<Transaction> processed = new ArrayList<>();
+        Nxt.getBlockchain().readLock();
+        try {
+            Db.db.beginTransaction();
+            try {
+                for (Object transactionJSON : transactions) {
+                    TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject)transactionJSON);
+                    TransactionImpl myTransaction = TransactionDb.findTransaction(transaction.getId());
+                    if (myTransaction != null) {
+                        boolean foundData = false;
+                        for (Appendix.AbstractAppendix appendage : transaction.getAppendages(true)) {
+                            if ((appendage instanceof Appendix.Prunable) &&
+                                    ((Appendix.Prunable)appendage).hasPrunableData()) {
+                                foundData = true;
+                                Logger.logDebugMessage(String.format("Loading prunable data for transaction %s %s appendage",
+                                       Long.toUnsignedString(transaction.getId()), appendage.getAppendixName()));
+                                ((Appendix.Prunable)appendage).restorePrunableData(transaction,
+                                        myTransaction.getBlockTimestamp(), myTransaction.getHeight());
+                            }
+                        }
+                        if (foundData) {
+                            processed.add(transaction);
+                        }
+                    }
+                }
+                Db.db.commitTransaction();
+            } catch (Exception e) {
+                Db.db.rollbackTransaction();
+                processed.clear();
+                throw e;
+            } finally {
+                Db.db.endTransaction();
+            }
+        } finally {
+            Nxt.getBlockchain().readUnlock();
+        }
+        return processed;
+    }
 }

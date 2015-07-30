@@ -21,6 +21,7 @@ import nxt.Nxt;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import nxt.util.UPnP;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -32,12 +33,12 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
-import org.eclipse.jetty.servlets.GzipFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import javax.servlet.MultipartConfigElement;
@@ -158,7 +159,7 @@ public final class API {
                 defaultServletHolder.setInitParameter("resourceBase", apiResourceBase);
                 defaultServletHolder.setInitParameter("welcomeServlets", "true");
                 defaultServletHolder.setInitParameter("redirectWelcome", "true");
-                defaultServletHolder.setInitParameter("gzip", "true");
+                //defaultServletHolder.setInitParameter("gzip", "true");
                 defaultServletHolder.setInitParameter("etags", "true");
                 apiHandler.addServlet(defaultServletHolder, "/*");
                 apiHandler.setWelcomeFiles(new String[]{Nxt.getStringProperty("nxt.apiWelcomeFile")});
@@ -178,11 +179,14 @@ public final class API {
             ServletHolder servletHolder = apiHandler.addServlet(APIServlet.class, "/nxt");
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
-            if (Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
-                FilterHolder gzipFilterHolder = apiHandler.addFilter(GzipFilter.class, "/nxt", null);
-                gzipFilterHolder.setInitParameter("methods", "GET,POST");
-                gzipFilterHolder.setAsyncSupported(true);
+
+            GzipHandler gzipHandler = new GzipHandler();
+            if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
+                gzipHandler.setExcludedPaths("/nxt");
             }
+            gzipHandler.setIncludedMethods("GET", "POST");
+            gzipHandler.setMinGzipSize(nxt.peer.Peers.MIN_COMPRESS_SIZE);
+            apiHandler.setGzipHandler(gzipHandler);
 
             apiHandler.addServlet(APITestServlet.class, "/test");
 

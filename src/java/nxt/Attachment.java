@@ -2609,6 +2609,11 @@ public interface Attachment extends Appendix {
             }
         }
 
+        @Override
+        public boolean hasPrunableData() {
+            return (taggedData != null || data != null);
+        }
+
         abstract long getTaggedDataId(Transaction transaction);
 
     }
@@ -2681,6 +2686,11 @@ public interface Attachment extends Appendix {
         @Override
         long getTaggedDataId(Transaction transaction) {
             return transaction.getId();
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            TaggedData.add(transaction, this, blockTimestamp, height);
         }
 
     }
@@ -2761,6 +2771,11 @@ public interface Attachment extends Appendix {
 
         boolean jsonIsPruned() {
             return jsonIsPruned;
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            TaggedData.extend(transaction, this, blockTimestamp, height);
         }
 
     }

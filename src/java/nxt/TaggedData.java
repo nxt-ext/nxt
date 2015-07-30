@@ -95,17 +95,20 @@ public class TaggedData {
         private final long id;
         private final DbKey dbKey;
         private int timestamp;
+        private int height;
 
-        private Timestamp(long id, int timestamp) {
+        private Timestamp(long id, int timestamp, int height) {
             this.id = id;
             this.dbKey = timestampKeyFactory.newKey(this.id);
             this.timestamp = timestamp;
+            this.height = height;
         }
 
         private Timestamp(ResultSet rs) throws SQLException {
             this.id = rs.getLong("id");
             this.dbKey = timestampKeyFactory.newKey(this.id);
             this.timestamp = rs.getInt("timestamp");
+            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -114,7 +117,7 @@ public class TaggedData {
                 int i = 0;
                 pstmt.setLong(++i, this.id);
                 pstmt.setInt(++i, this.timestamp);
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.setInt(++i, this.height);
                 pstmt.executeUpdate();
             }
         }
@@ -189,11 +192,11 @@ public class TaggedData {
 
         private static void init() {}
 
-        private static void add(TaggedData taggedData) {
+        private static void add(TaggedData taggedData, int height) {
             for (String tagValue : taggedData.getParsedTags()) {
                 Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
                 if (tag == null) {
-                    tag = new Tag(tagValue);
+                    tag = new Tag(tagValue, height);
                 }
                 tag.count += 1;
                 tagTable.insert(tag);
@@ -221,17 +224,20 @@ public class TaggedData {
 
         private final String tag;
         private final DbKey dbKey;
+        private final int height;
         private int count;
 
-        private Tag(String tag) {
+        private Tag(String tag, int height) {
             this.tag = tag;
             this.dbKey = tagDbKeyFactory.newKey(this.tag);
+            this.height = height;
         }
 
         private Tag(ResultSet rs) throws SQLException {
             this.tag = rs.getString("tag");
             this.dbKey = tagDbKeyFactory.newKey(this.tag);
             this.count = rs.getInt("tag_count");
+            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -240,7 +246,7 @@ public class TaggedData {
                 int i = 0;
                 pstmt.setString(++i, this.tag);
                 pstmt.setInt(++i, this.count);
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.setInt(++i, this.height);
                 pstmt.executeUpdate();
             }
         }
@@ -251,6 +257,10 @@ public class TaggedData {
 
         public int getCount() {
             return count;
+        }
+
+        public int getHeight() {
+            return height;
         }
 
     }
@@ -310,8 +320,13 @@ public class TaggedData {
     private final String filename;
     private int transactionTimestamp;
     private int blockTimestamp;
+    private int height;
 
     public TaggedData(Transaction transaction, Attachment.TaggedDataAttachment attachment) {
+        this(transaction, attachment, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
+    }
+
+    private TaggedData(Transaction transaction, Attachment.TaggedDataAttachment attachment, int blockTimestamp, int height) {
         this.id = transaction.getId();
         this.dbKey = taggedDataKeyFactory.newKey(this.id);
         this.accountId = transaction.getSenderId();
@@ -324,8 +339,9 @@ public class TaggedData {
         this.channel = attachment.getChannel();
         this.isText = attachment.isText();
         this.filename = attachment.getFilename();
-        this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+        this.blockTimestamp = blockTimestamp;
         this.transactionTimestamp = transaction.getTimestamp();
+        this.height = height;
     }
 
     private TaggedData(ResultSet rs) throws SQLException {
@@ -344,6 +360,7 @@ public class TaggedData {
         this.filename = rs.getString("filename");
         this.blockTimestamp = rs.getInt("block_timestamp");
         this.transactionTimestamp = rs.getInt("transaction_timestamp");
+        this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
@@ -364,7 +381,7 @@ public class TaggedData {
             pstmt.setString(++i, this.filename);
             pstmt.setInt(++i, this.blockTimestamp);
             pstmt.setInt(++i, this.transactionTimestamp);
-            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.setInt(++i, height);
             pstmt.executeUpdate();
         }
     }
@@ -421,33 +438,47 @@ public class TaggedData {
         return blockTimestamp;
     }
 
+    public int getHeight() {
+        return height;
+    }
+
     static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
+        add(transaction, attachment, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
+    }
+
+    static void add(Transaction transaction, Attachment.TaggedDataUpload attachment, int blockTimestamp, int height) {
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId()));
             if (taggedData == null && attachment.getData() != null) {
-                taggedData = new TaggedData(transaction, attachment);
+                taggedData = new TaggedData(transaction, attachment, blockTimestamp, height);
                 taggedDataTable.insert(taggedData);
-                Tag.add(taggedData);
+                Tag.add(taggedData, height);
             }
         }
-        Timestamp timestamp = new Timestamp(transaction.getId(), transaction.getTimestamp());
+        Timestamp timestamp = new Timestamp(transaction.getId(), transaction.getTimestamp(), height);
         timestampTable.insert(timestamp);
     }
 
     static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment) {
+        extend(transaction, attachment, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
+    }
+
+    static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment, int blockTimestamp, int height) {
         Timestamp timestamp = timestampTable.get(timestampKeyFactory.newKey(attachment.getTaggedDataId()));
         timestamp.timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, transaction.getTimestamp() - timestamp.timestamp);
+        timestamp.height = height;
         timestampTable.insert(timestamp);
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(attachment.getTaggedDataId()));
             if (taggedData == null && attachment.getData() != null) {
                 TransactionImpl uploadTransaction = TransactionDb.findTransaction(attachment.getTaggedDataId());
-                taggedData = new TaggedData(uploadTransaction, attachment);
-                Tag.add(taggedData);
+                taggedData = new TaggedData(uploadTransaction, attachment, blockTimestamp, height);
+                Tag.add(taggedData, height);
             }
             if (taggedData != null) {
                 taggedData.transactionTimestamp = timestamp.timestamp;
-                taggedData.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+                taggedData.blockTimestamp = blockTimestamp;
+                taggedData.height = height;
                 taggedDataTable.insert(taggedData);
             }
         }

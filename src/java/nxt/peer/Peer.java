@@ -25,6 +25,23 @@ public interface Peer extends Comparable<Peer> {
         NON_CONNECTED, CONNECTED, DISCONNECTED
     }
 
+    enum Service {
+        HALLMARK(1),                    // Hallmarked node
+        PRUNABLE(2);                    // Stores expired prunable messages
+
+        private final long code;        // Service code - must be a power of 2
+
+        private Service(int code) {
+            this.code = code;
+        }
+
+        public long getCode() {
+            return code;
+        }
+    }
+
+    boolean providesService(Service service);
+
     String getHost();
 
     int getPort();

@@ -37,8 +37,16 @@ final class TransactionDb {
     }
 
     static TransactionImpl findTransaction(long transactionId, int height) {
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return transaction.getHeight() <= height ? transaction : null;
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
+                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next() && rs.getInt("height") <= height) {
@@ -58,9 +66,19 @@ final class TransactionDb {
     }
 
     static TransactionImpl findTransactionByFullHash(byte[] fullHash, int height) {
+        long transactionId = Convert.fullHashToId(fullHash);
+        // Check the cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return (transaction.getHeight() <= height &&
+                        Arrays.equals(transaction.fullHash(), fullHash) ? transaction : null);
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
-            pstmt.setLong(1, Convert.fullHashToId(fullHash));
+                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height) {
                     return loadTransaction(con, rs);
@@ -80,8 +98,16 @@ final class TransactionDb {
     }
 
     static boolean hasTransaction(long transactionId, int height) {
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return (transaction.getHeight() <= height);
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT height FROM transaction WHERE id = ?")) {
+                PreparedStatement pstmt = con.prepareStatement("SELECT height FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 return rs.next() && rs.getInt("height") <= height;
@@ -96,9 +122,19 @@ final class TransactionDb {
     }
 
     static boolean hasTransactionByFullHash(byte[] fullHash, int height) {
+        long transactionId = Convert.fullHashToId(fullHash);
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return (transaction.getHeight() <= height &&
+                        Arrays.equals(transaction.fullHash(), fullHash));
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT full_hash, height FROM transaction WHERE id = ?")) {
-            pstmt.setLong(1, Convert.fullHashToId(fullHash));
+                PreparedStatement pstmt = con.prepareStatement("SELECT full_hash, height FROM transaction WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height;
             }
@@ -108,8 +144,16 @@ final class TransactionDb {
     }
 
     static byte[] getFullHash(long transactionId) {
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return transaction.fullHash();
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT full_hash FROM transaction WHERE id = ?")) {
+                PreparedStatement pstmt = con.prepareStatement("SELECT full_hash FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 return rs.next() ? rs.getBytes("full_hash") : null;
@@ -190,7 +234,7 @@ final class TransactionDb {
             if (rs.getBoolean("has_prunable_encrypted_message")) {
                 builder.appendix(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
-           
+
             return builder.build();
 
         } catch (SQLException e) {
@@ -199,6 +243,14 @@ final class TransactionDb {
     }
 
     static List<TransactionImpl> findBlockTransactions(long blockId) {
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            BlockImpl block = BlockDb.blockCache.get(blockId);
+            if (block != null) {
+                return block.getTransactions();
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection()) {
             return findBlockTransactions(con, blockId);
         } catch (SQLException e) {

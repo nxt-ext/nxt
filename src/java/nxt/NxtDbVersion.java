@@ -943,6 +943,8 @@ class NxtDbVersion extends DbVersion {
             case 396:
                 apply("CREATE INDEX IF NOT EXISTS account_ledger_height_idx ON account_ledger(height)");
             case 397:
+                apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS services BIGINT");
+            case 398:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

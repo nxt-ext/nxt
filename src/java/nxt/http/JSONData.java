@@ -423,6 +423,13 @@ final class JSONData {
         if (peer.isBlacklisted()) {
             json.put("blacklistingCause", peer.getBlacklistingCause());
         }
+        JSONArray servicesArray = new JSONArray();
+        for (Peer.Service service : Peer.Service.values()) {
+            if (peer.providesService(service)) {
+                servicesArray.add(service.name());
+            }
+        }
+        json.put("services", servicesArray);
         return json;
     }
 
