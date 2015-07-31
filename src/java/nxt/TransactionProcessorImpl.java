@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 final class TransactionProcessorImpl implements TransactionProcessor {
@@ -62,6 +64,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     static TransactionProcessorImpl getInstance() {
         return instance;
     }
+
+    private final Map<Long, UnconfirmedTransaction> transactionCache = new HashMap<>();
+    private volatile boolean cacheInitialized = false;
 
     final DbKey.LongKeyFactory<UnconfirmedTransaction> unconfirmedTransactionDbKeyFactory = new DbKey.LongKeyFactory<UnconfirmedTransaction>("id") {
 
@@ -83,6 +88,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         @Override
         protected void save(Connection con, UnconfirmedTransaction unconfirmedTransaction) throws SQLException {
             unconfirmedTransaction.save(con);
+            if (transactionCache.size() < maxUnconfirmedTransactions) {
+                transactionCache.put(unconfirmedTransaction.getId(), unconfirmedTransaction);
+            }
         }
 
         @Override
@@ -92,7 +100,9 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
-                        waitingTransactions.add(load(con, rs));
+                        UnconfirmedTransaction unconfirmedTransaction = load(con, rs);
+                        waitingTransactions.add(unconfirmedTransaction);
+                        transactionCache.remove(unconfirmedTransaction.getId());
                     }
                 }
             } catch (SQLException e) {
@@ -405,6 +415,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             unconfirmedDuplicates.clear();
             waitingTransactions.clear();
             broadcastedTransactions.clear();
+            transactionCache.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
@@ -441,6 +452,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             unconfirmedTransactionTable.truncate();
             unconfirmedDuplicates.clear();
+            transactionCache.clear();
             transactionListeners.notify(removed, Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
@@ -486,6 +498,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             int deleted = pstmt.executeUpdate();
             if (deleted > 0) {
                 transaction.undoUnconfirmed();
+                transactionCache.remove(transaction.getId());
                 transactionListeners.notify(Collections.singletonList(transaction), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
             }
         } catch (SQLException e) {
@@ -641,6 +654,55 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
         }
+    }
+
+    /**
+     * Get the cached unconfirmed transactions
+     */
+    @Override
+    public SortedSet<? extends Transaction> getCachedUnconfirmedTransactions() {
+        SortedSet<UnconfirmedTransaction> transactionSet = new TreeSet<>(
+            (UnconfirmedTransaction t1, UnconfirmedTransaction t2) -> {
+                int compare;
+                // Sort by transaction_height ASC
+                compare = Integer.compare(t1.getHeight(), t2.getHeight());
+                if (compare != 0)
+                    return compare;
+                // Sort by fee_per_byte DESC
+                compare = Long.compare(t1.getFeePerByte(), t2.getFeePerByte());
+                if (compare != 0)
+                    return -compare;
+                // Sort by arrival_timestamp ASC
+                compare = Long.compare(t1.getArrivalTimestamp(), t2.getArrivalTimestamp());
+                if (compare != 0)
+                    return compare;
+                // Sort by transaction ID ASC
+                return Long.compare(t1.getId(), t2.getId());
+            }
+        );
+        Nxt.getBlockchain().readLock();
+        try {
+            //
+            // Initialize the unconfirmed transaction cache if it hasn't been done yet
+            //
+            synchronized(transactionCache) {
+                if (!cacheInitialized) {
+                    DbIterator<UnconfirmedTransaction> it = getAllUnconfirmedTransactions();
+                    while (it.hasNext()) {
+                        UnconfirmedTransaction unconfirmedTransaction = it.next();
+                        transactionCache.put(unconfirmedTransaction.getId(), unconfirmedTransaction);
+                    }
+                    cacheInitialized = true;
+                }
+            }
+            //
+            // Build the result set
+            //
+            transactionCache.values().forEach(transaction -> transactionSet.add(transaction));
+        } finally {
+            Nxt.getBlockchain().readUnlock();
+        }
+        return transactionSet;
     }
 
     /**

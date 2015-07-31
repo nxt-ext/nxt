@@ -26,6 +26,7 @@ import org.json.simple.JSONStreamAware;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
 
 final class GetUnconfirmedTransactions extends PeerServlet.PeerRequestHandler {
 
@@ -42,16 +43,14 @@ final class GetUnconfirmedTransactions extends PeerServlet.PeerRequestHandler {
             return JSON.emptyJSON;
         }
 
+        SortedSet<? extends Transaction> transactionSet = Nxt.getTransactionProcessor().getCachedUnconfirmedTransactions();
         JSONArray transactionsData = new JSONArray();
-        try (DbIterator<? extends Transaction> transactions = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
-            while (transactions.hasNext()) {
-                if (transactionsData.size() >= 100) {
-                    break;
-                }
-                Transaction transaction = transactions.next();
-                if (Collections.binarySearch(exclude, transaction.getStringId()) < 0) {
-                    transactionsData.add(transaction.getJSONObject());
-                }
+        for (Transaction transaction : transactionSet) {
+            if (transactionsData.size() >= 100) {
+                break;
+            }
+            if (Collections.binarySearch(exclude, transaction.getStringId()) < 0) {
+                transactionsData.add(transaction.getJSONObject());
             }
         }
         JSONObject response = new JSONObject();

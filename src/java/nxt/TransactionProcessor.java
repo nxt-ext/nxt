@@ -23,6 +23,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.List;
+import java.util.SortedSet;
 
 public interface TransactionProcessor extends Observable<List<? extends Transaction>,TransactionProcessor.Event> {
 
@@ -53,6 +54,8 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
     void broadcast(Transaction transaction) throws NxtException.ValidationException;
 
     void processPeerTransactions(JSONObject request) throws NxtException.ValidationException;
+
+    SortedSet<? extends Transaction> getCachedUnconfirmedTransactions();
 
     List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException;
 }
