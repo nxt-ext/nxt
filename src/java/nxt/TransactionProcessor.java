@@ -55,7 +55,7 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     void processPeerTransactions(JSONObject request) throws NxtException.ValidationException;
 
-    SortedSet<? extends Transaction> getCachedUnconfirmedTransactions();
+    SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude);
 
     List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException;
 }

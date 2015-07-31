@@ -43,15 +43,13 @@ final class GetUnconfirmedTransactions extends PeerServlet.PeerRequestHandler {
             return JSON.emptyJSON;
         }
 
-        SortedSet<? extends Transaction> transactionSet = Nxt.getTransactionProcessor().getCachedUnconfirmedTransactions();
+        SortedSet<? extends Transaction> transactionSet = Nxt.getTransactionProcessor().getCachedUnconfirmedTransactions(exclude);
         JSONArray transactionsData = new JSONArray();
         for (Transaction transaction : transactionSet) {
             if (transactionsData.size() >= 100) {
                 break;
             }
-            if (Collections.binarySearch(exclude, transaction.getStringId()) < 0) {
-                transactionsData.add(transaction.getJSONObject());
-            }
+            transactionsData.add(transaction.getJSONObject());
         }
         JSONObject response = new JSONObject();
         response.put("unconfirmedTransactions", transactionsData);

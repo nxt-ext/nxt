@@ -658,9 +658,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     /**
      * Get the cached unconfirmed transactions
+     *
+     * @param   exclude                 List of transaction identifiers to exclude
      */
     @Override
-    public SortedSet<? extends Transaction> getCachedUnconfirmedTransactions() {
+    public SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude) {
         SortedSet<UnconfirmedTransaction> transactionSet = new TreeSet<>(
             (UnconfirmedTransaction t1, UnconfirmedTransaction t2) -> {
                 int compare;
@@ -698,7 +700,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             //
             // Build the result set
             //
-            transactionCache.values().forEach(transaction -> transactionSet.add(transaction));
+            transactionCache.values().forEach(transaction -> {
+                if (Collections.binarySearch(exclude, transaction.getStringId()) < 0) {
+                    transactionSet.add(transaction);
+                }
+            });
         } finally {
             Nxt.getBlockchain().readUnlock();
         }
