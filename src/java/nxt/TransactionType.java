@@ -1332,15 +1332,9 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
                 senderAccount.addToAssetBalanceQNT(getLedgerEvent(), transaction.getId(), attachment.getAssetId(),
                                                    -attachment.getQuantityQNT());
-                if (recipientAccount.getId() == Genesis.CREATOR_ID) {
-                    // Delete an asset transferred to the genesis account - compatibility with back-level peers
-                    Asset.deleteAsset(transaction.getSenderId(), attachment.getAssetId(), attachment.getQuantityQNT());
-                } else {
-                    // Add asset to the recipient acount
-                    recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                             attachment.getAssetId(), attachment.getQuantityQNT());
-                    AssetTransfer.addAssetTransfer(transaction, attachment);
-                }
+                recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                         attachment.getAssetId(), attachment.getQuantityQNT());
+                AssetTransfer.addAssetTransfer(transaction, attachment);
             }
 
             @Override
@@ -1352,6 +1346,9 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() >= Constants.ASSET_DELETE_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset transfer to genesis block not allowed at height " + Nxt.getBlockchain().getHeight());
+                }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0
                         || attachment.getComment() != null && attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH
