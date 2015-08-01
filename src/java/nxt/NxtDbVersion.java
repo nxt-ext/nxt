@@ -945,6 +945,15 @@ class NxtDbVersion extends DbVersion {
             case 397:
                 apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS services BIGINT");
             case 398:
+                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS latest BOOLEAN NOT NULL DEFAULT TRUE");
+            case 399:
+                apply("DROP INDEX IF EXISTS asset_id_idx");
+            case 400:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset(id, height)");
+            case 401:
+                Asset.deleteGenesisAssets();
+                apply(null);
+            case 402:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

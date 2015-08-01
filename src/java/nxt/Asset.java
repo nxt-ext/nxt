@@ -19,7 +19,8 @@ package nxt;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
-import nxt.db.EntityDbTable;
+import nxt.db.VersionedEntityDbTable;
+import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,7 +38,8 @@ public final class Asset {
 
     };
 
-    private static final EntityDbTable<Asset> assetTable = new EntityDbTable<Asset>("asset", assetDbKeyFactory, "name,description") {
+    private static final VersionedEntityDbTable<Asset> assetTable =
+                new VersionedEntityDbTable<Asset>("asset", assetDbKeyFactory, "name,description") {
 
         @Override
         protected Asset load(Connection con, ResultSet rs) throws SQLException {
@@ -75,6 +77,17 @@ public final class Asset {
         assetTable.insert(new Asset(transaction, attachment));
     }
 
+    static void deleteAsset(long senderId, long assetId, long quantityQNT) {
+        Asset asset = getAsset(assetId);
+        if (asset == null) {
+            return;
+        }
+        asset.quantityQNT = Math.max(0, asset.quantityQNT - quantityQNT);
+        asset.save();
+        Logger.logDebugMessage(String.format("Deleted %d units of asset %s from account %s",
+                               quantityQNT, Long.toUnsignedString(assetId), Long.toUnsignedString(senderId)));
+    }
+
     static void init() {}
 
 
@@ -83,7 +96,7 @@ public final class Asset {
     private final long accountId;
     private final String name;
     private final String description;
-    private final long quantityQNT;
+    private long quantityQNT;
     private final byte decimals;
 
     private Asset(Transaction transaction, Attachment.ColoredCoinsAssetIssuance attachment) {
@@ -107,8 +120,10 @@ public final class Asset {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO asset (id, account_id, name, "
-                + "description, quantity, decimals, height) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO asset "
+                + "(id, account_id, name, description, quantity, decimals, height, latest) "
+                + "KEY(id, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.assetId);
             pstmt.setLong(++i, this.accountId);
@@ -118,6 +133,14 @@ public final class Asset {
             pstmt.setByte(++i, this.decimals);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
+        }
+    }
+
+    private void save() {
+        if (this.quantityQNT > 0) {
+            assetTable.insert(this);
+        } else {
+            assetTable.delete(this);
         }
     }
 
@@ -161,4 +184,43 @@ public final class Asset {
         return AssetTransfer.getAssetTransfers(this.assetId, from, to);
     }
 
+    /**
+     * Delete assets owned by the genesis account and the associated asset transfer entries
+     */
+    static void deleteGenesisAssets() {
+        nxt.util.ThreadPool.runAfterStart(() -> {
+            BlockchainImpl.getInstance().writeLock();
+            try {
+                Db.db.beginTransaction();
+                try {
+                    Account genesisAccount = Account.getAccount(Genesis.CREATOR_ID);
+                    try (DbIterator<Account.AccountAsset> it = genesisAccount.getAssets(0, -1)) {
+                        while (it.hasNext()) {
+                            Account.AccountAsset accountAsset = it.next();
+                            long quantityQNT = accountAsset.getUnconfirmedQuantityQNT();
+                            genesisAccount.addToAssetAndUnconfirmedAssetBalanceQNT(
+                                    AccountLedger.LedgerEvent.ASSET_TRANSFER, 0,
+                                    accountAsset.getAssetId(), -quantityQNT);
+                            Asset asset = getAsset(accountAsset.getAssetId());
+                            if (asset != null) {
+                                asset.quantityQNT = Math.max(0, asset.quantityQNT - quantityQNT);
+                                asset.save();
+                                Logger.logDebugMessage(String.format("Deleted %d units of asset %s from genesis account",
+                                            quantityQNT, Long.toUnsignedString(asset.getId())));
+                            }
+                        }
+                    }
+                    AssetTransfer.deleteGenesisTransfers();
+                    Db.db.commitTransaction();
+                } catch (RuntimeException exc) {
+                    Logger.logErrorMessage("Unable to delete genesis account assets", exc);
+                    Db.db.rollbackTransaction();
+                } finally {
+                    Db.db.endTransaction();
+                }
+            } finally {
+                BlockchainImpl.getInstance().writeUnlock();
+            }
+        });
+    }
 }

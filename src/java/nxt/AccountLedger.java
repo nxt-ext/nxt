@@ -394,6 +394,7 @@ public class AccountLedger {
             ASSET_ISSUANCE(19, true),
             ASSET_TRADE(20, true),
             ASSET_TRANSFER(21, true),
+            ASSET_DELETE(49, true),
         // TYPE_DIGITAL_GOODS
             DIGITAL_GOODS_DELISTED(22, true),
             DIGITAL_GOODS_DELISTING(23, true),

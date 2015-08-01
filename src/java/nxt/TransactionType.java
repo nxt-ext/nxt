@@ -57,6 +57,7 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
     private static final byte SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
     private static final byte SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT = 6;
+    private static final byte SUBTYPE_COLORED_COINS_ASSET_DELETE = 7;
 
     private static final byte SUBTYPE_DIGITAL_GOODS_LISTING = 0;
     private static final byte SUBTYPE_DIGITAL_GOODS_DELISTING = 1;
@@ -122,6 +123,8 @@ public abstract class TransactionType {
                         return ColoredCoins.BID_ORDER_CANCELLATION;
                     case SUBTYPE_COLORED_COINS_DIVIDEND_PAYMENT:
                         return ColoredCoins.DIVIDEND_PAYMENT;
+                    case SUBTYPE_COLORED_COINS_ASSET_DELETE:
+                        return ColoredCoins.ASSET_DELETE;
                     default:
                         return null;
                 }
@@ -1329,9 +1332,15 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
                 senderAccount.addToAssetBalanceQNT(getLedgerEvent(), transaction.getId(), attachment.getAssetId(),
                                                    -attachment.getQuantityQNT());
-                recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                         attachment.getAssetId(), attachment.getQuantityQNT());
-                AssetTransfer.addAssetTransfer(transaction, attachment);
+                if (recipientAccount.getId() == Genesis.CREATOR_ID) {
+                    // Delete an asset transferred to the genesis account - compatibility with back-level peers
+                    Asset.deleteAsset(transaction.getSenderId(), attachment.getAssetId(), attachment.getQuantityQNT());
+                } else {
+                    // Add asset to the recipient acount
+                    recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                             attachment.getAssetId(), attachment.getQuantityQNT());
+                    AssetTransfer.addAssetTransfer(transaction, attachment);
+                }
             }
 
             @Override
@@ -1366,6 +1375,91 @@ public abstract class TransactionType {
             @Override
             public boolean canHaveRecipient() {
                 return true;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
+        };
+
+        public static final TransactionType ASSET_DELETE = new ColoredCoins() {
+
+            @Override
+            public final byte getSubtype() {
+                return TransactionType.SUBTYPE_COLORED_COINS_ASSET_DELETE;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ASSET_DELETE;
+            }
+
+            @Override
+            public String getName() {
+                return "AssetDelete";
+            }
+
+            @Override
+            Attachment.ColoredCoinsAssetDelete parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.ColoredCoinsAssetDelete(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.ColoredCoinsAssetDelete parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.ColoredCoinsAssetDelete(attachmentData);
+            }
+
+            @Override
+            boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
+                long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
+                if (unconfirmedAssetBalance >= 0 && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
+                    senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                  attachment.getAssetId(), -attachment.getQuantityQNT());
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
+                senderAccount.addToAssetBalanceQNT(getLedgerEvent(), transaction.getId(), attachment.getAssetId(),
+                                                   -attachment.getQuantityQNT());
+                Asset.deleteAsset(transaction.getSenderId(), attachment.getAssetId(), attachment.getQuantityQNT());
+            }
+
+            @Override
+            void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+                Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
+                senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                              attachment.getAssetId(), attachment.getQuantityQNT());
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.ASSET_DELETE_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset delete not yet enabled at height " + Nxt.getBlockchain().getHeight());
+                }
+                Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
+                if (transaction.getAmountNQT() != 0 || attachment.getAssetId() == 0) {
+                    throw new NxtException.NotValidException("Invalid asset delete amount or asset identifier: " + attachment.getJSONObject());
+                }
+                Asset asset = Asset.getAsset(attachment.getAssetId());
+                if (attachment.getQuantityQNT() <= 0 || (asset != null && attachment.getQuantityQNT() > asset.getQuantityQNT())) {
+                    throw new NxtException.NotValidException("Invalid asset delete asset or quantity: " + attachment.getJSONObject());
+                }
+                if (asset == null) {
+                    throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
+                            " does not exist yet");
+                }
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
             }
 
             @Override

@@ -128,6 +128,7 @@ public final class APIServlet extends HttpServlet {
         map.put("currencyReserveClaim", CurrencyReserveClaim.instance);
         map.put("currencyMint", CurrencyMint.instance);
         map.put("decryptFrom", DecryptFrom.instance);
+        map.put("deleteAsset", DeleteAsset.instance);
         map.put("dgsListing", DGSListing.instance);
         map.put("dgsDelisting", DGSDelisting.instance);
         map.put("dgsDelivery", DGSDelivery.instance);

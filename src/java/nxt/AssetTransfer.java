@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public final class AssetTransfer {
 
@@ -129,6 +130,15 @@ public final class AssetTransfer {
         assetTransferTable.insert(assetTransfer);
         listeners.notify(assetTransfer, Event.ASSET_TRANSFER);
         return assetTransfer;
+    }
+
+    static void deleteGenesisTransfers() {
+        try (Connection con = Db.db.getConnection();
+                Statement stmt = con.createStatement()) {
+            stmt.execute("DELETE FROM asset_transfer WHERE recipient_id = " + Genesis.CREATOR_ID);
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     static void init() {}
