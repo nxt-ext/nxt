@@ -142,8 +142,21 @@ var NRS = (function (NRS, $, undefined) {
                 var phasingDetails = {};
                 phasingDetails.finishHeight = finishHeight;
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
-                phasingDetails.quorum = transaction.attachment.phasingQuorum;
-                phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
+
+                if (transaction.attachment.asset > 0) {
+                  NRS.sendRequest("getAsset", { "asset": transaction.attachment.asset }, function(response) {
+                    phasingDetails.quorum = transaction.attachment.phasingQuorum / Math.pow(10, response.decimals);
+                    phasingDetails.quorum = phasingDetails.quorum.toFixed(2);
+
+                    phasingDetails.minBalance = transaction.attachment.phasingMinBalance / Math.pow(10, response.decimals);
+                    phasingDetails.minBalance = phasingDetails.minBalance.toFixed(2);
+                  }, false);
+
+                } else {
+                  phasingDetails.quorum = transaction.attachment.phasingQuorum;
+                  phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
+                }
+
                 var votingModel = NRS.getVotingModelName(parseInt(transaction.attachment.phasingVotingModel));
                 phasingDetails.votingModel = $.t(votingModel);
                 var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
