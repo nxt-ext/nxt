@@ -1244,6 +1244,7 @@ public interface Attachment extends Appendix {
         private final long assetId;
         private final int height;
         private final long amountNQTPerQNT;
+        private long unconfirmedAmountNQT;
 
         ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -1301,6 +1302,14 @@ public interface Attachment extends Appendix {
             return amountNQTPerQNT;
         }
 
+        public long getUnconfirmedAmountNQT() {
+            return unconfirmedAmountNQT;
+        }
+
+        public void setUnconfirmedAmountNQT(long unconfirmedAmountNQT) {
+            this.unconfirmedAmountNQT = unconfirmedAmountNQT;
+        }
+        
     }
 
     final class DigitalGoodsListing extends AbstractAttachment {

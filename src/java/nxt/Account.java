@@ -1354,7 +1354,7 @@ public final class Account {
         }
     }
 
-    void payDividends(final long assetId, final int height, final long amountNQTPerQNT) {
+    void payDividends(final long assetId, final int height, final long amountNQTPerQNT, final long unconfirmedAmountNQT) {
         long totalDividend = 0;
         List<AccountAsset> accountAssets = new ArrayList<>();
         try (DbIterator<AccountAsset> iterator = getAssetAccounts(assetId, height, 0, -1)) {
@@ -1371,6 +1371,10 @@ public final class Account {
             }
         }
         this.addToBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, -totalDividend);
+        if (totalDividend != unconfirmedAmountNQT) {
+            throw new RuntimeException(String.format("Total dividend %d at height %d does not match unconfirmed total %d for asset %s",
+                                       totalDividend, height, unconfirmedAmountNQT, Long.toUnsignedString(assetId)));
+        }
     }
 
     @Override
