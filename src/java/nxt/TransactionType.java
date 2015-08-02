@@ -1350,9 +1350,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() >= Constants.ASSET_DELETE_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset transfer to genesis block not allowed at height " + Nxt.getBlockchain().getHeight());
-                }
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
                 if (transaction.getAmountNQT() != 0
                         || attachment.getComment() != null && attachment.getComment().length() > Constants.MAX_ASSET_TRANSFER_COMMENT_LENGTH
