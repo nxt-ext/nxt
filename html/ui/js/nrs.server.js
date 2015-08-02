@@ -236,7 +236,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = ("secretPhrase" in data || "adminPassword" in data || requestType == "getForging" ? "POST" : "GET");
+        var type = ("secretPhrase" in data || data.doNotSign || "adminPassword" in data || requestType == "getForging" ? "POST" : "GET");
         var url = NRS.server + "/nxt?requestType=" + requestType;
 
         if (type == "GET") {
@@ -268,7 +268,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        if (!NRS.isLocalHost && type == "POST" &&
+        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" &&
             requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
@@ -280,7 +280,7 @@ var NRS = (function (NRS, $, undefined) {
 
             if (NRS.accountInfo && NRS.accountInfo.publicKey) {
                 data.publicKey = NRS.accountInfo.publicKey;
-            } else {
+            } else if (!data.doNotSign) {
                 data.publicKey = NRS.generatePublicKey(secretPhrase);
                 NRS.accountInfo.publicKey = data.publicKey;
             }
@@ -359,7 +359,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
             addAddressData(data);
-            if (secretPhrase && response.unsignedTransactionBytes && !response.errorCode && !response.error) {
+            if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error) {
                 var publicKey = NRS.generatePublicKey(secretPhrase);
                 var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
@@ -388,6 +388,14 @@ var NRS = (function (NRS, $, undefined) {
                     callback(response, data);
                 } else {
                     if (response.broadcasted == false) {
+                        if (!NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes),
+                                requestType, data)) {
+                            callback({
+                                "errorCode": 1,
+                                "errorDescription": $.t("error_bytes_validation_server")
+                            }, data);
+                            return;
+                        }
                         NRS.showRawTransactionModal(response);
                     } else {
                         if (extra) {
@@ -476,7 +484,7 @@ var NRS = (function (NRS, $, undefined) {
             transaction.ecBlockId = String(converters.byteArrayToBigInteger(byteArray, 168));
         }
 
-        if (transaction.publicKey != NRS.accountInfo.publicKey) {
+        if (transaction.publicKey != NRS.accountInfo.publicKey && transaction.publicKey != data.publicKey) {
             return false;
         }
 

@@ -923,7 +923,8 @@ var NRS = (function (NRS, $, undefined) {
                     case 0:
                         var data = {
                             "type": $.t("balance_leasing"),
-                            "period": transaction.attachment.period
+                            "period": transaction.attachment.period,
+                            "lessee": transaction.recipientRS ? transaction.recipientRS : transaction.recipient
                         };
 
                         $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));

@@ -28,6 +28,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Exchange {
 
@@ -78,6 +80,24 @@ public final class Exchange {
 
     public static DbIterator<Exchange> getCurrencyExchanges(long currencyId, int from, int to) {
         return exchangeTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), from, to);
+    }
+
+    public static List<Exchange> getLastExchanges(long[] currencyIds) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM exchange WHERE currency_id = ? ORDER BY height DESC, db_id DESC LIMIT 1")) {
+            List<Exchange> result = new ArrayList<>();
+            for (long currencyId : currencyIds) {
+                pstmt.setLong(1, currencyId);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
+                        result.add(new Exchange(rs));
+                    }
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     public static DbIterator<Exchange> getAccountExchanges(long accountId, int from, int to) {

@@ -1004,39 +1004,39 @@ var NRS = (function (NRS, $, undefined) {
 			}
 
             key = key.replace(/\s+/g, "").replace(/([A-Z])/g, function ($1) {
-				return "_" + $1.toLowerCase();
-			});
+                return "_" + $1.toLowerCase();
+            });
 
-			//no need to mess with input, already done if Formatted is at end of key
-			if (/_formatted_html$/i.test(key)) {
-				key = key.replace("_formatted_html", "");
-				value = String(value);
-			} else if (/_formatted$/i.test(key)) {
-				key = key.replace("_formatted", "");
-				value = String(value).escapeHTML();
-			} else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
-				key == "total_buy_limit" || key == "total_sell_limit" || key == "units_exchanged" || key == "total_exchanged" ||
-				key == "initial_units" || key == "reserve_units" || key == "max_units" || key == "quantity_traded") && $.isArray(value)) {
-				if ($.isArray(value)) {
-					value = NRS.formatQuantity(value[0], value[1]);
-				} else {
-					value = NRS.formatQuantity(value, 0);
-				}
-			} else if (key == "price" || key == "total" || key == "amount" || key == "fee" || key == "refund" || key == "discount") {
-				value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
-			} else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer") {
-				value = "<a href='#' data-user='" + String(value).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(value) + "</a>";
-			} else if (key == "request_processing_time") { /* Skip from displaying request processing time */
-				continue;
-			} else {
-				value = String(value).escapeHTML().nl2br();
-			}
+            //no need to mess with input, already done if Formatted is at end of key
+            if (/_formatted_html$/i.test(key)) {
+                key = key.replace("_formatted_html", "");
+                value = String(value);
+            } else if (/_formatted$/i.test(key)) {
+                key = key.replace("_formatted", "");
+                value = String(value).escapeHTML();
+            } else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
+                key == "total_buy_limit" || key == "total_sell_limit" || key == "units_exchanged" || key == "total_exchanged" ||
+                key == "initial_units" || key == "reserve_units" || key == "max_units" || key == "quantity_traded") && $.isArray(value)) {
+                if ($.isArray(value)) {
+                    value = NRS.formatQuantity(value[0], value[1]);
+                } else {
+                    value = NRS.formatQuantity(value, 0);
+                }
+            } else if (key == "price" || key == "total" || key == "amount" || key == "fee" || key == "refund" || key == "discount") {
+                value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
+            } else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer" || key == "lessee") {
+                value = "<a href='#' data-user='" + String(value).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(value) + "</a>";
+            } else if (key == "request_processing_time") { /* Skip from displaying request processing time */
+                continue;
+            } else {
+                value = String(value).escapeHTML().nl2br();
+            }
 
-			rows += "<tr><td style='font-weight:bold" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
-		}
+            rows += "<tr><td style='font-weight:bold" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";
+        }
 
-		return rows;
-	};
+        return rows;
+    };
 
     NRS.getSelectedText = function () {
 		var t = "";
