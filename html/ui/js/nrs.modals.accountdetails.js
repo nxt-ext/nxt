@@ -53,7 +53,8 @@ var NRS = (function(NRS, $, undefined) {
 
 				if (!NRS.accountInfo.publicKey) {
 					$("#account_balance_public_key").html("/");
-					$("#account_balance_warning").html($.t("no_public_key_warning") + " " + $.t("public_key_actions")).show();
+                    var warning = NRS.publicKey != 'undefined' ? $.t("public_key_not_announced_warning", { "public_key": NRS.publicKey }) : $.t("no_public_key_warning");
+					$("#account_balance_warning").html(warning + " " + $.t("public_key_actions")).show();
 				}
 			}
 		}
