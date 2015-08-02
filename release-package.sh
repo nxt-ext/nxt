@@ -92,11 +92,11 @@ echo -e "\n\nChange log:\n" >> ${CHANGELOG}
 cat changelogs/${CHANGELOG} >> ${CHANGELOG}
 echo >> ${CHANGELOG}
 
-gpg --detach-sign --armour --sign-with jlp666@yandex.ru ${PACKAGE}.zip
-gpg --detach-sign --armour --sign-with jlp666@yandex.ru ${PACKAGE}.jar
-#gpg --detach-sign --armour --sign-with jlp666@yandex.ru ${PACKAGE}.exe
+gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.zip
+gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.jar
+#gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.exe
 
-gpg --clearsign --sign-with jlp666@yandex.ru ${CHANGELOG}
+gpg --clearsign --sign-with 0x811D6940E1E4240C ${CHANGELOG}
 rm -f ${CHANGELOG}
 gpgv ${PACKAGE}.zip.asc ${PACKAGE}.zip
 gpgv ${PACKAGE}.jar.asc ${PACKAGE}.jar

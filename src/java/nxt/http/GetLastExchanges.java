@@ -16,39 +16,30 @@
 
 package nxt.http;
 
-import nxt.PhasingPoll;
+import nxt.Exchange;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
-public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
+public final class GetLastExchanges extends APIServlet.APIRequestHandler {
 
-    static final GetPhasingPolls instance = new GetPhasingPolls();
+    static final GetLastExchanges instance = new GetLastExchanges();
 
-    private GetPhasingPolls() {
-        super(new APITag[] {APITag.PHASING}, "transaction", "transaction", "transaction", "countVotes"); // limit to 3 for testing
+    private GetLastExchanges() {
+        super(new APITag[] {APITag.MS}, "currencies", "currencies", "currencies"); // limit to 3 for testing
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        long[] transactionIds = ParameterParser.getUnsignedLongs(req, "transaction");
-        boolean countVotes = "true".equalsIgnoreCase(req.getParameter("countVotes"));
+        long[] currencyIds = ParameterParser.getUnsignedLongs(req, "currencies");
+        JSONArray exchangesJSON = new JSONArray();
+        List<Exchange> exchanges = Exchange.getLastExchanges(currencyIds);
+        exchanges.forEach(exchange -> exchangesJSON.add(JSONData.exchange(exchange, false)));
         JSONObject response = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        response.put("polls", jsonArray);
-        for (long transactionId : transactionIds) {
-            PhasingPoll poll = PhasingPoll.getPoll(transactionId);
-            if (poll != null) {
-                jsonArray.add(JSONData.phasingPoll(poll, countVotes));
-            } else {
-                PhasingPoll.PhasingPollResult pollResult = PhasingPoll.getResult(transactionId);
-                if (pollResult != null) {
-                    jsonArray.add(JSONData.phasingPollResult(pollResult));
-                }
-            }
-        }
+        response.put("exchanges", exchangesJSON);
         return response;
     }
 
