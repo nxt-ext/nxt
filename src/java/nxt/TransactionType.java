@@ -1332,9 +1332,13 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
                 senderAccount.addToAssetBalanceQNT(getLedgerEvent(), transaction.getId(), attachment.getAssetId(),
                                                    -attachment.getQuantityQNT());
-                recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                         attachment.getAssetId(), attachment.getQuantityQNT());
-                AssetTransfer.addAssetTransfer(transaction, attachment);
+                if (recipientAccount.getId() == Genesis.CREATOR_ID) {
+                    Asset.deleteAsset(senderAccount.getId(), attachment.getAssetId(), attachment.getQuantityQNT());
+                } else {
+                    recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
+                                                                             attachment.getAssetId(), attachment.getQuantityQNT());
+                    AssetTransfer.addAssetTransfer(transaction, attachment);
+                }
             }
 
             @Override
@@ -1764,7 +1768,7 @@ public abstract class TransactionType {
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT()
+                long quantityQNT = Asset.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
                         - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
                         - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
@@ -1784,7 +1788,7 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                long quantityQNT = Asset.getAsset(attachment.getAssetId()).getQuantityQNT()
+                long quantityQNT = Asset.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
                         - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight())
                         - Account.getAssetBalanceQNT(Genesis.CREATOR_ID, attachment.getAssetId(), attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);

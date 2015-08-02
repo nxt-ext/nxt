@@ -51,6 +51,21 @@ public final class Asset {
             asset.save(con);
         }
 
+        @Override
+        public void trim(int height) {
+            super.trim(Math.max(0, height - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK));
+        }
+
+        @Override
+        public void checkAvailable(int height) {
+            if (height + Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
+                throw new IllegalArgumentException("Historical data as of height " + height +" not available.");
+            }
+            if (height > Nxt.getBlockchain().getHeight()) {
+                throw new IllegalArgumentException("Height " + height + " exceeds blockchain height " + Nxt.getBlockchain().getHeight());
+            }
+        }
+
     };
 
     public static DbIterator<Asset> getAllAssets(int from, int to) {
@@ -63,6 +78,11 @@ public final class Asset {
 
     public static Asset getAsset(long id) {
         return assetTable.get(assetDbKeyFactory.newKey(id));
+    }
+
+    public static long getAssetBalanceQNT(long id, int height) {
+        Asset asset = assetTable.get(assetDbKeyFactory.newKey(id), height);
+        return (asset == null ? 0 : asset.quantityQNT);
     }
 
     public static DbIterator<Asset> getAssetsIssuedBy(long accountId, int from, int to) {
@@ -83,9 +103,7 @@ public final class Asset {
             return;
         }
         asset.quantityQNT = Math.max(0, asset.quantityQNT - quantityQNT);
-        asset.save();
-        Logger.logDebugMessage(String.format("Deleted %d units of asset %s from account %s",
-                               quantityQNT, Long.toUnsignedString(assetId), Long.toUnsignedString(senderId)));
+        assetTable.insert(asset);
     }
 
     static void init() {}
@@ -133,14 +151,6 @@ public final class Asset {
             pstmt.setByte(++i, this.decimals);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
-        }
-    }
-
-    private void save() {
-        if (this.quantityQNT > 0) {
-            assetTable.insert(this);
-        } else {
-            assetTable.delete(this);
         }
     }
 
@@ -204,7 +214,7 @@ public final class Asset {
                             Asset asset = getAsset(accountAsset.getAssetId());
                             if (asset != null) {
                                 asset.quantityQNT = Math.max(0, asset.quantityQNT - quantityQNT);
-                                asset.save();
+                                assetTable.insert(asset);
                                 Logger.logDebugMessage(String.format("Deleted %d units of asset %s from genesis account",
                                             quantityQNT, Long.toUnsignedString(asset.getId())));
                             }
