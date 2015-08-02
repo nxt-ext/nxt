@@ -126,6 +126,7 @@ final class JSONData {
         json.put("name", asset.getName());
         json.put("description", asset.getDescription());
         json.put("decimals", asset.getDecimals());
+        json.put("initialQuantityQNT", String.valueOf(asset.getInitialQuantityQNT()));
         json.put("quantityQNT", String.valueOf(asset.getQuantityQNT()));
         json.put("asset", Long.toUnsignedString(asset.getId()));
         if (includeCounts) {

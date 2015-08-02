@@ -951,9 +951,15 @@ class NxtDbVersion extends DbVersion {
             case 400:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset(id, height)");
             case 401:
+                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS initial_quantity BIGINT");
+            case 402:
+                apply("UPDATE asset SET initial_quantity = quantity WHERE initial_quantity IS NULL");
+            case 403:
+                apply("ALTER TABLE asset ALTER COLUMN initial_quantity BIGINT NOT NULL");                
+            case 404:
                 Asset.deleteGenesisAssets();
                 apply(null);
-            case 402:
+            case 405:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

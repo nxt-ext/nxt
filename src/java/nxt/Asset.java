@@ -114,6 +114,7 @@ public final class Asset {
     private final long accountId;
     private final String name;
     private final String description;
+    private final long initialQuantityQNT;
     private long quantityQNT;
     private final byte decimals;
 
@@ -124,6 +125,7 @@ public final class Asset {
         this.name = attachment.getName();
         this.description = attachment.getDescription();
         this.quantityQNT = attachment.getQuantityQNT();
+        this.initialQuantityQNT = this.quantityQNT;
         this.decimals = attachment.getDecimals();
     }
 
@@ -133,20 +135,22 @@ public final class Asset {
         this.accountId = rs.getLong("account_id");
         this.name = rs.getString("name");
         this.description = rs.getString("description");
+        this.initialQuantityQNT = rs.getLong("initial_quantity");
         this.quantityQNT = rs.getLong("quantity");
         this.decimals = rs.getByte("decimals");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO asset "
-                + "(id, account_id, name, description, quantity, decimals, height, latest) "
+                + "(id, account_id, name, description, initial_quantity, quantity, decimals, height, latest) "
                 + "KEY(id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.assetId);
             pstmt.setLong(++i, this.accountId);
             pstmt.setString(++i, this.name);
             pstmt.setString(++i, this.description);
+            pstmt.setLong(++i, this.initialQuantityQNT);
             pstmt.setLong(++i, this.quantityQNT);
             pstmt.setByte(++i, this.decimals);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -168,6 +172,10 @@ public final class Asset {
 
     public String getDescription() {
         return description;
+    }
+
+    public long getInitialQuantityQNT() {
+        return initialQuantityQNT;
     }
 
     public long getQuantityQNT() {
