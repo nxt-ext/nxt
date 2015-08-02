@@ -131,6 +131,28 @@ final class ParameterParser {
         }
     }
 
+    static long[] getUnsignedLongs(HttpServletRequest req, String name) throws ParameterException {
+        String[] paramValues = req.getParameterValues(name);
+        if (paramValues == null || paramValues.length == 0) {
+            throw new ParameterException(missing(name));
+        }
+        long[] values = new long[paramValues.length];
+        try {
+            for (int i = 0; i < paramValues.length; i++) {
+                if (paramValues[i] == null || paramValues[i].isEmpty()) {
+                    continue;
+                }
+                values[i] = Long.parseUnsignedLong(paramValues[i]);
+                if (values[i] == 0) {
+                    throw new ParameterException(incorrect(name));
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new ParameterException(incorrect(name));
+        }
+        return values;
+    }
+
     static long getAccountId(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {

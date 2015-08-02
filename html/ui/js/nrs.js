@@ -793,7 +793,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currency_count, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
+				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
 				
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
@@ -835,7 +835,8 @@ var NRS = (function(NRS, $, undefined) {
 				} else if (NRS.state && NRS.state.isScanning) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 				} else if (!NRS.accountInfo.publicKey) {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("no_public_key_warning") + " " + $.t("public_key_actions")).show();
+                    var warning = NRS.publicKey != 'undefined' ? $.t("public_key_not_announced_warning", { "public_key": NRS.publicKey }) : $.t("no_public_key_warning");
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(warning + " " + $.t("public_key_actions")).show();
 				} else {
 					$("#dashboard_message").hide();
 				}
@@ -890,53 +891,69 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_balance, #account_balance_sidebar").html(NRS.formatStyledAmount(response.unconfirmedBalanceNQT));
 				$("#account_forged_balance").html(NRS.formatStyledAmount(response.forgedBalanceNQT));
 
-				/*** Need to clean up and optimize code if possible ***/
-				var nr_assets = 0;
-				var assets = {
-					"asset": [],
-					"quantity": {},
-					"trades": {}
-				};
-				var tradeNum = 0;
-				var assets_LastTrade = [];
 				if (response.assetBalances) {
-					for (var i = 0; i < response.assetBalances.length; i++) {
-						if (response.assetBalances[i].balanceQNT != "0") {
-							nr_assets++;
-							assets.quantity[response.assetBalances[i].asset] = response.assetBalances[i].balanceQNT;
-							assets.asset.push(response.assetBalances[i].asset);
-							NRS.sendRequest("getTrades", {
-								"asset": response.assetBalances[i].asset,
-								"firstIndex": 0,
-								"lastIndex": 0
-							}, function(responseTrade, input) {
-								if (responseTrade.trades && responseTrade.trades.length) {
-									assets.trades[input.asset] = responseTrade.trades[0].priceNQT/100000000;
-								}
-								else{
-									assets.trades[input.asset] = 0;
-								}
-								if (tradeNum == nr_assets-1)
-									NRS.updateAssetsValue(assets);
-								else
-									tradeNum++;
-							});
-							
-						}
-					}
-				}
-				else {
-					$("#account_assets_balance").html(0);
-				}								
-				$("#account_nr_assets").html(nr_assets);
+                    var assets = [];
+                    var assetBalances = response.assetBalances;
+                    var assetBalancesMap = {};
+                    for (var i = 0; i < assetBalances.length; i++) {
+                        if (assetBalances[i].balanceQNT != "0") {
+                            assets.push(assetBalances[i].asset);
+                            assetBalancesMap[assetBalances[i].asset] = assetBalances[i].balanceQNT;
+                        }
+                    }
+                    NRS.sendRequest("getLastTrades", {
+                        "assets": assets
+                    }, function(response) {
+                        if (response.trades && response.trades.length) {
+                            var assetTotal = 0;
+                            for (i=0; i < response.trades.length; i++) {
+                                var trade = response.trades[i];
+                                assetTotal += assetBalancesMap[trade.asset] * trade.priceNQT / 100000000;
+                            }
+                            $("#account_assets_balance").html(NRS.formatStyledAmount(new Big(assetTotal).toFixed(8)));
+                            $("#account_nr_assets").html(response.trades.length);
+                        } else {
+                            $("#account_assets_balance").html(0);
+                            $("#account_nr_assets").html(0);
+                        }
+                    });
+                } else {
+                    $("#account_assets_balance").html(0);
+                    $("#account_nr_assets").html(0);
+                }
 
-				if (NRS.accountInfo.accountCurrencies && NRS.accountInfo.accountCurrencies.length) {
-					$("#account_currency_count").empty().append(NRS.accountInfo.accountCurrencies.length);
-				} else {
-					$("#account_currency_count").empty().append("0");
-				}
+				if (response.accountCurrencies) {
+                    var currencies = [];
+                    var currencyBalances = response.accountCurrencies;
+                    var currencyBalancesMap = {};
+                    for (var i = 0; i < currencyBalances.length; i++) {
+                        if (currencyBalances[i].units != "0") {
+                            currencies.push(currencyBalances[i].currency);
+                            currencyBalancesMap[currencyBalances[i].currency] = currencyBalances[i].units;
+                        }
+                    }
+                    NRS.sendRequest("getLastExchanges", {
+                        "currencies": currencies
+                    }, function(response) {
+                        if (response.exchanges && response.exchanges.length) {
+                            var currencyTotal = 0;
+                            for (i=0; i < response.exchanges.length; i++) {
+                                var exchange = response.exchanges[i];
+                                currencyTotal += currencyBalancesMap[exchange.currency] * exchange.rateNQT / 100000000;
+                            }
+                            $("#account_currencies_balance").html(NRS.formatStyledAmount(new Big(currencyTotal).toFixed(8)));
+                            $("#account_nr_currencies").html(response.exchanges.length);
+                        } else {
+                            $("#account_currencies_balance").html(0);
+                            $("#account_nr_currencies").html(0);
+                        }
+                    });
+                } else {
+                    $("#account_currencies_balance").html(0);
+                    $("#account_nr_currencies").html(0);
+                }
 
-				/* Display message count in top and limit to 100 for now because of possible performance issues*/	
+				/* Display message count in top and limit to 100 for now because of possible performance issues*/
 				NRS.sendRequest("getBlockchainTransactions+", {
 					"account": NRS.account,
 					"type": 1,
@@ -1015,23 +1032,13 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currency_count, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
+				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
 			}
 
 			if (callback) {
 				callback();
 			}
 		});
-	};
-
-	NRS.updateAssetsValue = function(assets) {
-		var assetTotal = 0;
-		for (var i = 0; i < assets.asset.length; i++) {
-			if (assets.quantity[assets.asset[i]] && assets.trades[assets.asset[i]])
-				assetTotal += assets.quantity[assets.asset[i]]*assets.trades[assets.asset[i]];
-		}
-		
-		$("#account_assets_balance").html(NRS.formatStyledAmount(new Big(assetTotal).toFixed(8)));
 	};
 
 	NRS.updateAccountLeasingStatus = function() {
