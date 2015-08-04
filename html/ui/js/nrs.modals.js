@@ -84,20 +84,15 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).closest("form").find(".optional_do_not_sign").hide();
 			$(this).closest("form").find(".optional_public_key").hide();
             $(this).closest("form").find(".optional_do_not_sign input").prop("checked", false);
-            $(this).closest("form").find(".secret_phrase input").prop("disabled", false);
 		}
 	});
 
 	$(".do_not_sign").on("change", function() {
-        var passphrase = $(this).closest("form").find(".secret_phrase input");
         if ($(this).is(":checked")) {
-            passphrase.val("");
-            passphrase.prop("disabled", true);
             if (!NRS.accountInfo || !NRS.accountInfo.publicKey) {
                 $(this).closest("form").find(".optional_public_key").fadeIn();
             }
         } else {
-            passphrase.prop("disabled", false);
             $(this).closest("form").find(".optional_public_key").hide();
 		}
 	});
