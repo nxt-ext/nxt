@@ -12,7 +12,7 @@ come-from-beyond@mail.ru
 
 Jean-Luc Picard
 jlp666@yandex.ru
-GPG key fingerprint: B88D C0A6 2ECD DDD1 643A  28FD CEF1 F4A9 FF2A 19FA
+GPG key fingerprint: 263A 9EB0 29CF C77A 3D06  FD13 811D 6940 E1E4 240C
 Nxt account: NXT-X4LF-9A4G-WN9Z-2R322
 
 
