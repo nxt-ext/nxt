@@ -142,23 +142,29 @@ var NRS = (function (NRS, $, undefined) {
                 var phasingDetails = {};
                 phasingDetails.finishHeight = finishHeight;
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
-
-                if (transaction.attachment.asset > 0) {
-                  NRS.sendRequest("getAsset", { "asset": transaction.attachment.asset }, function(response) {
-                    phasingDetails.quorum = transaction.attachment.phasingQuorum / Math.pow(10, response.decimals);
-                    phasingDetails.quorum = phasingDetails.quorum.toFixed(2);
-
-                    phasingDetails.minBalance = transaction.attachment.phasingMinBalance / Math.pow(10, response.decimals);
-                    phasingDetails.minBalance = phasingDetails.minBalance.toFixed(2);
-                  }, false);
-
-                } else {
-                  phasingDetails.quorum = transaction.attachment.phasingQuorum;
-                  phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
-                }
-
                 var votingModel = NRS.getVotingModelName(parseInt(transaction.attachment.phasingVotingModel));
                 phasingDetails.votingModel = $.t(votingModel);
+
+                switch (votingModel) {
+                  case 'ASSET':
+                    NRS.sendRequest("getAsset", { "asset": transaction.attachment.phasingHolding }, function(response) {
+                      phasingDetails.quorum = NRS.convertToQNTf(transaction.attachment.phasingQuorum, response.decimals);
+                      phasingDetails.minBalance = NRS.convertToQNTf(transaction.attachment.phasingMinBalance, response.decimals);
+                    }, false);
+                    break;
+                    
+                  case 'CURRENCY':
+                    NRS.sendRequest("getCurrency", { "currency": transaction.attachment.phasingHolding }, function(response) {
+                      phasingDetails.quorum = NRS.convertToQNTf(transaction.attachment.phasingQuorum, response.decimals);
+                      phasingDetails.minBalance = NRS.convertToQNTf(transaction.attachment.phasingMinBalance, response.decimals);
+                    }, false);
+                    break;
+                    
+                  default:
+                    phasingDetails.quorum = transaction.attachment.phasingQuorum;
+                    phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
+                }
+
                 var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
                 if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
                     phasingDetails.asset_formatted_html = phasingTransactionLink;
