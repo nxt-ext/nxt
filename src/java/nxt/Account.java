@@ -1371,7 +1371,7 @@ public final class Account {
             }
         }
         this.addToBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, -totalDividend);
-        if (totalDividend != unconfirmedAmountNQT) {
+        if (totalDividend != unconfirmedAmountNQT && unconfirmedAmountNQT != 0) {
             throw new RuntimeException(String.format("Total dividend %d at height %d does not match unconfirmed total %d for asset %s",
                                        totalDividend, height, unconfirmedAmountNQT, Long.toUnsignedString(assetId)));
         }
