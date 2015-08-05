@@ -339,9 +339,9 @@ class NxtDbVersion extends DbVersion {
             case 129:
                 apply("ALTER TABLE goods ADD COLUMN IF NOT EXISTS parsed_tags ARRAY");
             case 130:
-                apply("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\"");
+                apply(null);
             case 131:
-                apply("CALL FTL_INIT()");
+                apply(null);
             case 132:
                 apply(null);
             case 133:
@@ -760,7 +760,7 @@ class NxtDbVersion extends DbVersion {
             case 310:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_block_timestamp_height_db_id_idx ON tagged_data (block_timestamp DESC, height DESC, db_id DESC)");
             case 311:
-                apply("CALL FTL_CREATE_INDEX('PUBLIC', 'TAGGED_DATA', 'NAME,DESCRIPTION,TAGS')");
+                apply(null);
             case 312:
                 apply("CREATE TABLE IF NOT EXISTS data_tag (db_id IDENTITY, tag VARCHAR NOT NULL, tag_count INT NOT NULL, "
                         + "height INT NOT NULL, FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -934,6 +934,9 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 394:
+                nxt.db.FullTextTrigger.init();
+                apply(null);
+            case 395:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
