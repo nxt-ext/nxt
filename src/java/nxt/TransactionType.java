@@ -2231,6 +2231,9 @@ public abstract class TransactionType {
 
             @Override
             Attachment.DigitalGoodsDelivery parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                if (attachmentData.get("goodsData") == null) {
+                    return new Attachment.UnencryptedDigitalGoodsDelivery(attachmentData);
+                }
                 return new Attachment.DigitalGoodsDelivery(attachmentData);
             }
 
@@ -2244,6 +2247,9 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPendingPurchase(attachment.getPurchaseId());
+                if (attachment.getGoods() == null) {
+                    throw new NxtException.NotYetEncryptedException("Goods data not yet encrypted");
+                }
                 if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
                         || attachment.getGoods().getData().length == 0
                         || attachment.getGoods().getNonce().length != 32

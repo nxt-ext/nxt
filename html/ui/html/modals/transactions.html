@@ -67,7 +67,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <!-- todo -->
                 <h4 class="modal-title"><span data-i18n="transaction">Transaction</span> <strong><span id="transaction_info_modal_transaction"></span></strong> <span data-i18n="info">Info</span></h4>
             </div>
             <div class="modal-body">
@@ -136,42 +135,53 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="raw_transaction_details">Raw Transaction Details</h4>
             </div>
-            <div class="modal-body">    
-                <label data-i18n="unsigned_transaction_bytes">UNSIGNED TRANSACTION BYTES</label>
-                <div class="form-group">
-                    <textarea class="form-control" id="raw_transaction_modal_unsigned_transaction_bytes" rows="6"></textarea>
-                </div>
-                <div id="raw_transaction_modal_unsigned_bytes_qr_code_container">
-                    <label data-i18n="unsigned_bytes_qr_codes">UNSIGNED BYTES QR CODE</label>
+            <div class="modal-body">
+                <form role="form" id="raw_transaction_form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <label for="raw_transaction_modal_unsigned_transaction_bytes" data-i18n="unsigned_transaction_bytes">UNSIGNED TRANSACTION BYTES</label>
                     <div class="form-group">
-                        <div id="raw_transaction_modal_unsigned_bytes_qr_code"></div>
+                        <textarea class="form-control" id="raw_transaction_modal_unsigned_transaction_bytes" rows="6" readonly></textarea>
                     </div>
-                </div>
-                <label data-i18n="unsigned_transaction_json">UNSIGNED TRANSACTION JSON</label>
-                <div class="form-group">
-                    <textarea class="form-control" id="raw_transaction_modal_unsigned_transaction_json" rows="9"></textarea>
-                </div>
-                <div id="raw_transaction_modal_transaction_bytes_container">
-                    <label data-i18n="signed_transaction_bytes">SIGNED TRANSACTION BYTES</label>
+                    <div id="raw_transaction_modal_unsigned_bytes_qr_code_container">
+                        <label data-i18n="unsigned_bytes_qr_codes">UNSIGNED BYTES QR CODE</label>
+                        <div class="form-group">
+                            <div id="raw_transaction_modal_unsigned_bytes_qr_code"></div>
+                        </div>
+                    </div>
+                    <label for="raw_transaction_modal_unsigned_transaction_json" id="raw_transaction_modal_unsigned_transaction_json_label"></label>
                     <div class="form-group">
-                        <textarea class="form-control" id="raw_transaction_modal_transaction_bytes" rows="6"></textarea>
+                        <textarea name="transactionJSON" class="form-control" id="raw_transaction_modal_unsigned_transaction_json" rows="9" readonly></textarea>
                     </div>
-                </div>
-                <div id="raw_transaction_modal_full_hash_container">
-                    <label data-i18n="full_transaction_hash">FULL TRANSACTION HASH</label>
-                    <div class="form-group">
-                        <textarea class="form-control" id="raw_transaction_modal_full_hash" rows="1"></textarea>
+                    <div id="raw_transaction_modal_signature_container" class="form-group">
+                        <label for="raw_transaction_modal_signature" data-i18n="signature">SIGNATURE</label>
+                        <a href="#" id="raw_transaction_modal_signature_reader_link" data-i18n="scan_qr_code">SCAN QR CODE</a>
+                        <textarea name="signature" class="form-control" tabindex="1" id="raw_transaction_modal_signature" rows="2" readonly></textarea>
+                        <div id="raw_transaction_modal_signature_reader" style="width:384px;height:384px;"></div>
                     </div>
-                </div>
-                <div id="raw_transaction_modal_signature_hash_container">
-                    <label data-i18n="signature_hash">SIGNATURE HASH</label>
-                    <div class="form-group">
-                        <textarea class="form-control" id="raw_transaction_modal_signature_hash" rows="1"></textarea>
+                    <div id="raw_transaction_modal_transaction_bytes_container">
+                        <label for="raw_transaction_modal_transaction_bytes" data-i18n="signed_transaction_bytes">SIGNED TRANSACTION BYTES</label>
+                        <div class="form-group">
+                            <textarea class="form-control" id="raw_transaction_modal_transaction_bytes" rows="6" readonly></textarea>
+                        </div>
                     </div>
-                </div>
+                    <div id="raw_transaction_modal_full_hash_container">
+                        <label for="raw_transaction_modal_full_hash" data-i18n="full_transaction_hash">FULL TRANSACTION HASH</label>
+                        <div class="form-group">
+                            <textarea class="form-control" id="raw_transaction_modal_full_hash" rows="1" readonly></textarea>
+                        </div>
+                    </div>
+                    <div id="raw_transaction_modal_signature_hash_container">
+                        <label for="raw_transaction_modal_signature_hash" data-i18n="signature_hash">SIGNATURE HASH</label>
+                        <div class="form-group">
+                            <textarea class="form-control" id="raw_transaction_modal_signature_hash" rows="1" readonly></textarea>
+                        </div>
+                    </div>
+                    <input type="hidden" name="request_type" value="broadcastTransaction"/>
+                </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+                <button type="button" class="btn" data-dismiss="modal" data-i18n="close">Close</button>
+                <button type="button" id="raw_transaction_broadcast" class="btn btn-primary" data-i18n="broadcast">Broadcast</button>
             </div>
         </div>
     </div>

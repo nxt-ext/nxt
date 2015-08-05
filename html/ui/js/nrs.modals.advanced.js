@@ -33,7 +33,22 @@ var NRS = (function(NRS, $, undefined) {
             $("#raw_transaction_modal_unsigned_bytes_qr_code_container").hide();
         }
 
-        $("#raw_transaction_modal_unsigned_transaction_json").val(JSON.stringify(transaction.transactionJSON));
+        if (transaction.transactionJSON) {
+            if (transaction.transactionBytes) {
+                $("#raw_transaction_modal_unsigned_transaction_json_label").html($.t("signed_transaction_json"));
+            } else {
+                $("#raw_transaction_modal_unsigned_transaction_json_label").html($.t("unsigned_transaction_json"));
+            }
+            $("#raw_transaction_modal_unsigned_transaction_json").val(JSON.stringify(transaction.transactionJSON));
+        }
+
+        if (transaction.unsignedTransactionBytes && !transaction.transactionBytes) {
+            $('#raw_transaction_modal_signature_reader').hide();
+            $("#raw_transaction_modal_signature_container").show();
+        } else {
+            $("#raw_transaction_modal_signature").val("");
+            $("#raw_transaction_modal_signature_container").hide();
+        }
 
 		if (transaction.transactionBytes) {
             $("#raw_transaction_modal_transaction_bytes").val(transaction.transactionBytes);
@@ -58,6 +73,39 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#raw_transaction_modal").modal("show");
 	}
+
+    $("#raw_transaction_modal_signature_reader_link").click(function(e) {
+        var reader = $('#raw_transaction_modal_signature_reader');
+        reader.show();
+        reader.html5_qrcode(
+            function (data) {
+                console.log(data);
+                $("#raw_transaction_modal_signature").val(data);
+                reader.html5_qrcode_stop();
+                reader.hide();
+            },
+            function (error) {},
+            function (videoError) {
+                console.log(videoError);
+                reader.html5_qrcode_stop();
+                reader.hide();
+            }
+        );
+    });
+
+    NRS.forms.broadcastTransaction = function(modal) {
+        var data = NRS.getFormData(modal.find("form:first"));
+        if (data.transactionJSON) {
+            var signature = data.signature;
+            var transactionJSON = JSON.parse(data.transactionJSON);
+            if (!transactionJSON.signature) {
+                transactionJSON.signature = signature;
+            }
+            data.transactionJSON = JSON.stringify(transactionJSON);
+            delete data.signature;
+        }
+        return { data: data };
+    }
 
 	NRS.initAdvancedModalFormValues = function($modal) {
 		$(".phasing_number_accounts_group").find("input[name=phasingQuorum]").val(1);

@@ -384,6 +384,7 @@ var NRS = (function (NRS, $, undefined) {
                     callback(response, data);
                 } else {
                     if (response.broadcasted == false) {
+                        addMissingData(data);
                         if (!NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes),
                                 requestType, data)) {
                             callback({
@@ -444,6 +445,7 @@ var NRS = (function (NRS, $, undefined) {
         var payload = transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
         if (data.broadcast == "false") {
             response.transactionBytes = payload;
+            response.transactionJSON.signature = signature;
             NRS.showRawTransactionModal(response);
         } else {
             if (extra) {

@@ -505,17 +505,24 @@ final class PeerImpl implements Peer {
             // Check for an error response
             //
             if (response != null && response.get("error") != null) {
-                Logger.logDebugMessage("Peer " + host + " version " + version + " returned error: " +
-                        response.toJSONString() + ", request was: " + JSON.toString(request) +
-                        ", disconnecting");
                 deactivate();
-                if (connection != null)
-                    connection.disconnect();
+                if (Errors.SEQUENCE_ERROR.equals(response.get("error")) && request != Peers.myPeerInfoRequest) {
+                    Logger.logDebugMessage("Sequence error, reconnecting to " + host);
+                    connect();
+                } else {
+                    Logger.logDebugMessage("Peer " + host + " version " + version + " returned error: " +
+                            response.toJSONString() + ", request was: " + JSON.toString(request) +
+                            ", disconnecting");
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
             }
         } catch (NxtException.NxtIOException e) {
             blacklist(e);
-            if (connection != null)
+            if (connection != null) {
                 connection.disconnect();
+            }
         } catch (RuntimeException|ParseException|IOException e) {
             if (!(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
                                         e instanceof SocketException || Errors.END_OF_FILE.equals(e.getMessage()))) {
@@ -527,11 +534,13 @@ final class PeerImpl implements Peer {
                 showLog = true;
             }
             deactivate();
-            if (connection != null)
+            if (connection != null) {
                 connection.disconnect();
+            }
         }
-        if (showLog)
+        if (showLog) {
             Logger.logMessage(log + "\n");
+        }
 
         return response;
     }

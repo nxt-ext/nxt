@@ -305,6 +305,9 @@ final class TransactionImpl implements Transaction {
         this.appendages = Collections.unmodifiableList(list);
         int appendagesSize = 0;
         for (Appendix appendage : appendages) {
+            if (secretPhrase != null && appendage instanceof Appendix.Encryptable) {
+                ((Appendix.Encryptable)appendage).encrypt(secretPhrase);
+            }
             appendagesSize += appendage.getSize();
         }
         this.appendagesSize = appendagesSize;
@@ -622,7 +625,9 @@ final class TransactionImpl implements Transaction {
                 }
                 bytes = buffer.array();
             } catch (RuntimeException e) {
-                Logger.logDebugMessage("Failed to get transaction bytes for transaction: " + getJSONObject().toJSONString());
+                if (signature != null) {
+                    Logger.logDebugMessage("Failed to get transaction bytes for transaction: " + getJSONObject().toJSONString());
+                }
                 throw e;
             }
         }
