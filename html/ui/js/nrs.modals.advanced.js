@@ -85,14 +85,16 @@ var NRS = (function(NRS, $, undefined) {
             function (data) {
                 console.log(data);
                 $("#raw_transaction_modal_signature").val(data);
-                reader.html5_qrcode_stop();
                 reader.hide();
+                reader.empty();
+                reader.html5_qrcode_stop();
             },
             function (error) {},
             function (videoError) {
                 console.log(videoError);
-                reader.html5_qrcode_stop();
                 reader.hide();
+                reader.empty();
+                reader.html5_qrcode_stop();
             }
         );
     });
