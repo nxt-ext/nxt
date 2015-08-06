@@ -100,7 +100,7 @@ import org.h2.tools.SimpleResultSet;
 public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCallback {
 
     /** NRS is active */
-    private static volatile boolean isActive;
+    private static volatile boolean isActive = false;
 
     /** Index triggers */
     private static final ConcurrentHashMap<String, FullTextTrigger> indexTriggers = new ConcurrentHashMap<>();
@@ -130,7 +130,7 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
     private static final Analyzer analyzer = new StandardAnalyzer();
 
     /** Index trigger is enabled */
-    private boolean isEnabled;
+    private volatile boolean isEnabled = false;
 
     /** Table name (schema.table) */
     private String tableName;
@@ -477,9 +477,9 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
     public void init(Connection conn, String schema, String trigger, String table, boolean before, int type)
                                     throws SQLException {
         //
-        // Ignore the trigger if NRS is not active
+        // Ignore the trigger if NRS is not active or this is a temporary table copy
         //
-        if (!isActive) {
+        if (!isActive || table.contains("_COPY_")) {
             return;
         }
         //
@@ -492,7 +492,6 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
         // Get table and index information
         //
         tableName = schema + "." + table;
-        isEnabled = true;
         try (Statement stmt = conn.createStatement()) {
             //
             // Get the table column information
@@ -514,7 +513,6 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
                 }
             }
             if (dbColumn < 0) {
-                isEnabled = false;
                 Logger.logErrorMessage("DB_ID column not found for table " + tableName);
                 return;
             }
@@ -543,13 +541,13 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
                 }
             }
             if (indexColumns.isEmpty()) {
-                isEnabled = false;
                 Logger.logErrorMessage("No indexed columns found for table " + tableName);
                 return;
             }
             //
             // Trigger is enabled
             //
+            isEnabled = true;
             indexTriggers.put(tableName, this);
         } catch (SQLException exc) {
             Logger.logErrorMessage("Unable to get table information", exc);
@@ -563,7 +561,7 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
      */
     @Override
     public void close() throws SQLException {
-        if (isActive) {
+        if (isEnabled) {
             isEnabled = false;
             indexTriggers.remove(tableName);
         }
@@ -576,7 +574,7 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
      */
     @Override
     public void remove() throws SQLException {
-        if (isActive) {
+        if (isEnabled) {
             isEnabled = false;
             indexTriggers.remove(tableName);
         }
