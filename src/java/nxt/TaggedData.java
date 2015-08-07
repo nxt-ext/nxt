@@ -22,6 +22,7 @@ import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
 import nxt.db.VersionedPersistentDbTable;
 import nxt.db.VersionedPrunableDbTable;
+import nxt.db.VersionedValuesDbTable;
 import nxt.util.Logger;
 import nxt.util.Search;
 
@@ -31,6 +32,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TaggedData {
@@ -266,6 +268,35 @@ public class TaggedData {
 
     }
 
+    private static final DbKey.LongKeyFactory<Long> extendDbKeyFactory = new DbKey.LongKeyFactory<Long>("id") {
+
+        @Override
+        public DbKey newKey(Long taggedDataId) {
+            return newKey(taggedDataId.longValue());
+        }
+
+    };
+
+    private static final VersionedValuesDbTable<Long, Long> extendTable = new VersionedValuesDbTable<Long, Long>("tagged_data_extend", extendDbKeyFactory) {
+
+        @Override
+        protected Long load(Connection con, ResultSet rs) throws SQLException {
+            return rs.getLong("extend_id");
+        }
+
+        @Override
+        protected void save(Connection con, Long taggedDataId, Long extendId) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO tagged_data_extend (id, extend_id, "
+                    + "height, latest) VALUES (?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, taggedDataId);
+                pstmt.setLong(++i, extendId);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+    };
 
     public static int getCount() {
         return taggedDataTable.getCount();
@@ -277,6 +308,10 @@ public class TaggedData {
 
     public static TaggedData getData(long transactionId) {
         return taggedDataTable.get(taggedDataKeyFactory.newKey(transactionId));
+    }
+
+    public static List<Long> getExtendTransactionIds(long taggedDataId) {
+        return extendTable.get(extendDbKeyFactory.newKey(taggedDataId));
     }
 
     public static DbIterator<TaggedData> getData(String channel, long accountId, int from, int to) {
@@ -466,14 +501,18 @@ public class TaggedData {
     }
 
     static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment, int blockTimestamp, int height) {
-        Timestamp timestamp = timestampTable.get(timestampKeyFactory.newKey(attachment.getTaggedDataId()));
+        long taggedDataId = attachment.getTaggedDataId();
+        Timestamp timestamp = timestampTable.get(timestampKeyFactory.newKey(taggedDataId));
         timestamp.timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, transaction.getTimestamp() - timestamp.timestamp);
         timestamp.height = height;
         timestampTable.insert(timestamp);
+        List<Long> extendTransactionIds = extendTable.get(extendDbKeyFactory.newKey(taggedDataId));
+        extendTransactionIds.add(transaction.getId());
+        extendTable.insert(taggedDataId, extendTransactionIds);
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
-            TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(attachment.getTaggedDataId()));
+            TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(taggedDataId));
             if (taggedData == null && attachment.getData() != null) {
-                TransactionImpl uploadTransaction = TransactionDb.findTransaction(attachment.getTaggedDataId());
+                TransactionImpl uploadTransaction = TransactionDb.findTransaction(taggedDataId);
                 taggedData = new TaggedData(uploadTransaction, attachment, blockTimestamp, height);
                 Tag.add(taggedData, height);
             }

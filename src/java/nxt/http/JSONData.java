@@ -52,6 +52,7 @@ import nxt.crypto.EncryptedData;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -743,6 +744,10 @@ final class JSONData {
     }
 
     static JSONObject unconfirmedTransaction(Transaction transaction) {
+        return unconfirmedTransaction(transaction, null);
+    }
+
+    static JSONObject unconfirmedTransaction(Transaction transaction, Filter<Appendix> filter) {
         JSONObject json = new JSONObject();
         json.put("type", transaction.getType().getType());
         json.put("subtype", transaction.getType().getSubtype());
@@ -767,8 +772,14 @@ final class JSONData {
             json.put("transaction", transaction.getStringId());
         }
         JSONObject attachmentJSON = new JSONObject();
-        for (Appendix appendage : transaction.getAppendages(true)) {
-            attachmentJSON.putAll(appendage.getJSONObject());
+        if (filter == null) {
+            for (Appendix appendage : transaction.getAppendages(true)) {
+                attachmentJSON.putAll(appendage.getJSONObject());
+            }
+        } else {
+            for (Appendix appendage : transaction.getAppendages(filter, true)) {
+                attachmentJSON.putAll(appendage.getJSONObject());
+            }
         }
         if (! attachmentJSON.isEmpty()) {
             for (Map.Entry entry : (Iterable<Map.Entry>) attachmentJSON.entrySet()) {
@@ -790,7 +801,11 @@ final class JSONData {
     }
 
     static JSONObject transaction(Transaction transaction) {
-        JSONObject json = unconfirmedTransaction(transaction);
+        return transaction(transaction, null);
+    }
+
+    static JSONObject transaction(Transaction transaction, Filter<Appendix> filter) {
+        JSONObject json = unconfirmedTransaction(transaction, filter);
         json.put("block", Long.toUnsignedString(transaction.getBlockId()));
         json.put("confirmations", Nxt.getBlockchain().getHeight() - transaction.getHeight());
         json.put("blockTimestamp", transaction.getBlockTimestamp());

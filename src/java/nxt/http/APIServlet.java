@@ -312,6 +312,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDataTagCount", GetDataTagCount.instance);
         map.put("getDataTagsLike", GetDataTagsLike.instance);
         map.put("verifyTaggedData", VerifyTaggedData.instance);
+        map.put("getTaggedDataExtendTransactions", GetTaggedDataExtendTransactions.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
         map.put("requeueUnconfirmedTransactions", RequeueUnconfirmedTransactions.instance);
         map.put("rebroadcastUnconfirmedTransactions", RebroadcastUnconfirmedTransactions.instance);
