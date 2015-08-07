@@ -958,7 +958,6 @@ class NxtDbVersion extends DbVersion {
             case 403:
                 apply("ALTER TABLE asset ALTER COLUMN initial_quantity BIGINT NOT NULL");                
             case 404:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 405:
                 apply("CREATE TABLE IF NOT EXISTS tagged_data_extend (db_id IDENTITY, id BIGINT NOT NULL, "
@@ -968,6 +967,9 @@ class NxtDbVersion extends DbVersion {
             case 407:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_extend_height_id_idx ON tagged_data_extend(height, id)");
             case 408:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 409:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
