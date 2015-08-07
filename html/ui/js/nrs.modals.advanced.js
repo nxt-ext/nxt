@@ -103,7 +103,11 @@ var NRS = (function(NRS, $, undefined) {
         var data = NRS.getFormData(modal.find("form:first"));
         if (data.transactionJSON) {
             var signature = data.signature;
-            var transactionJSON = JSON.parse(data.transactionJSON);
+            try {
+                var transactionJSON = JSON.parse(data.transactionJSON);
+            } catch (e) {
+                return { errorMessage: "Invalid Transaction JSON" }
+            }
             if (!transactionJSON.signature) {
                 transactionJSON.signature = signature;
             }
@@ -347,6 +351,36 @@ var NRS = (function(NRS, $, undefined) {
 		$("#transaction_operations_modal_" + tab).show();
 	});
 
+    var transactionJSONModal = $("#transaction_json_modal");
+    transactionJSONModal.on("show.bs.modal", function() {
+		$(this).find(".output_table tbody").empty();
+		$(this).find(".output").hide();
+		$(this).find(".tab_content:first").show();
+		$("#transaction_json_modal_button").text($.t("broadcast")).data("resetText", $.t("broadcast")).data("form", "broadcast_json_form");
+	});
+
+    transactionJSONModal.on("hidden.bs.modal", function() {
+		$(this).find(".tab_content").hide();
+		$(this).find("ul.nav li.active").removeClass("active");
+		$(this).find("ul.nav li:first").addClass("active");
+		$(this).find(".output_table tbody").empty();
+		$(this).find(".output").hide();
+	});
+
+    transactionJSONModal.find("ul.nav li").click(function(e) {
+		e.preventDefault();
+		var tab = $(this).data("tab");
+		$(this).siblings().removeClass("active");
+		$(this).addClass("active");
+		$(this).closest(".modal").find(".tab_content").hide();
+		if (tab == "broadcast_json") {
+			$("#transaction_json_modal_button").text($.t("broadcast")).data("resetText", $.t("broadcast")).data("form", "broadcast_json_form");
+		} else {
+			$("#transaction_json_modal_button").text($.t("sign_transaction")).data("resetText", $.t("sign_transaction")).data("form", "sign_transaction_form");
+		}
+		$("#transaction_json_modal_" + tab).show();
+	});
+
 	NRS.forms.broadcastTransactionComplete = function() {
 		$("#parse_transaction_form").find(".error_message").hide();
 		$("#transaction_operations_modal").modal("hide");
@@ -373,6 +407,37 @@ var NRS = (function(NRS, $, undefined) {
 		$("#calculate_full_hash_output_table").find("tbody").empty();
 		$("#calculate_full_hash_output").hide();
 	};
+
+    NRS.forms.broadcastTransactionComplete = function() {
+   		$("#parse_transaction_form").find(".error_message").hide();
+   		$("#transaction_operations_modal").modal("hide");
+   		$("#transaction_json_modal").modal("hide");
+   	};
+
+    NRS.forms.signTransactionComplete = function(response) {
+        $("#sign_transaction_form").find(".error_message").hide();
+        var signedTransactionJson = $("#signed_transaction_json");
+        signedTransactionJson.val(JSON.stringify(response.transactionJSON));
+        $("#signed_json_output").show();
+        delete response.transactionJSON;
+        var signedPrunableTransactionJson = $("#signed_prunable_transaction_json");
+        if (response.prunableAttachmentJSON) {
+            signedPrunableTransactionJson.val(JSON.stringify(response.prunableAttachmentJSON));
+            $("#signed_prunable_json_output").show();
+            delete response.prunableAttachmentJSON;
+        } else {
+            signedPrunableTransactionJson.val("");
+            $("#signed_prunable_json_output").hide();
+        }
+        $("#signed_transaction_json_table").find("tbody").empty().append(NRS.createInfoTable(response, true));
+        $("#sign_transaction_output").show();
+    };
+
+    NRS.forms.signTransaction = function() {
+        var data = NRS.getFormData($("#sign_transaction_form"));
+        data.validate = (data.validate ? "true" : "false");
+        return { data: data };
+    };
 
 	return NRS;
 }(NRS || {}, jQuery));
