@@ -385,8 +385,7 @@ var NRS = (function (NRS, $, undefined) {
                 } else {
                     if (response.broadcasted == false) {
                         addMissingData(data);
-                        if (!NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes),
-                                requestType, data)) {
+                        if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data)) {
                             callback({
                                 "errorCode": 1,
                                 "errorDescription": $.t("error_bytes_validation_server")
