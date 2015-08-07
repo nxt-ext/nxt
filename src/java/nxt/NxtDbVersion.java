@@ -931,7 +931,6 @@ class NxtDbVersion extends DbVersion {
             case 392:
                 apply("CREATE INDEX IF NOT EXISTS exchange_request_height_idx ON exchange_request (height)");
             case 393:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 394:
                 apply("CREATE TABLE IF NOT EXISTS account_ledger (db_id IDENTITY, account_id BIGINT NOT NULL, "
@@ -959,9 +958,7 @@ class NxtDbVersion extends DbVersion {
             case 403:
                 apply("ALTER TABLE asset ALTER COLUMN initial_quantity BIGINT NOT NULL");                
             case 404:
-                //TODO: this will not work reliably (if it fails, it won't run the next time after a restart),
-                // let's just force a rescan instead
-                Asset.deleteGenesisAssets();
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 405:
                 return;

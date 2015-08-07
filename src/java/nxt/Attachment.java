@@ -1244,7 +1244,6 @@ public interface Attachment extends Appendix {
         private final long assetId;
         private final int height;
         private final long amountNQTPerQNT;
-        private long unconfirmedAmountNQT;
 
         ColoredCoinsDividendPayment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -1302,16 +1301,6 @@ public interface Attachment extends Appendix {
             return amountNQTPerQNT;
         }
 
-        //TODO: it is not safe to rely on passing unconfirmedAmountNQT like this because it will not be preserved if the transaction is
-        // saved to the db and read again, or somehow a different transaction object gets used in applyAttachment and applyAttachmentUnconfirmed
-        long getUnconfirmedAmountNQT() {
-            return unconfirmedAmountNQT;
-        }
-
-        void setUnconfirmedAmountNQT(long unconfirmedAmountNQT) {
-            this.unconfirmedAmountNQT = unconfirmedAmountNQT;
-        }
-        
     }
 
     final class DigitalGoodsListing extends AbstractAttachment {

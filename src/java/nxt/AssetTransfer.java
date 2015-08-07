@@ -132,15 +132,6 @@ public final class AssetTransfer {
         return assetTransfer;
     }
 
-    static void deleteGenesisTransfers() {
-        try (Connection con = Db.db.getConnection();
-                Statement stmt = con.createStatement()) {
-            stmt.execute("DELETE FROM asset_transfer WHERE recipient_id = " + Genesis.CREATOR_ID);
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
     static void init() {}
 
 

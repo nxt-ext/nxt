@@ -80,10 +80,8 @@ public final class Asset {
         return assetTable.get(assetDbKeyFactory.newKey(id));
     }
 
-    //TODO: can't be null anymore?
-    public static long getAssetBalanceQNT(long id, int height) {
-        Asset asset = assetTable.get(assetDbKeyFactory.newKey(id), height);
-        return (asset == null ? 0 : asset.quantityQNT);
+    public static Asset getAsset(long id, int height) {
+        return assetTable.get(assetDbKeyFactory.newKey(id), height);
     }
 
     public static DbIterator<Asset> getAssetsIssuedBy(long accountId, int from, int to) {
@@ -203,46 +201,4 @@ public final class Asset {
         return AssetTransfer.getAssetTransfers(this.assetId, from, to);
     }
 
-    /**
-     * Delete assets owned by the genesis account and the associated asset transfer entries
-     */
-    //TODO: let's do it with a rescan instead
-    static void deleteGenesisAssets() {
-        nxt.util.ThreadPool.runAfterStart(() -> {
-            BlockchainImpl.getInstance().writeLock();
-            try {
-                Db.db.beginTransaction();
-                try {
-                    Account genesisAccount = Account.getAccount(Genesis.CREATOR_ID);
-                    try (DbIterator<Account.AccountAsset> it = genesisAccount.getAssets(0, -1)) {
-                        while (it.hasNext()) {
-                            Account.AccountAsset accountAsset = it.next();
-                            long quantityQNT = accountAsset.getUnconfirmedQuantityQNT();
-                            genesisAccount.addToAssetAndUnconfirmedAssetBalanceQNT(
-                                    AccountLedger.LedgerEvent.ASSET_TRANSFER, 0,
-                                    accountAsset.getAssetId(), -quantityQNT);
-                            Asset asset = getAsset(accountAsset.getAssetId());
-                            if (asset != null) {
-                                asset.quantityQNT = Math.max(0, asset.quantityQNT - quantityQNT);
-                                //TODO: this will get recorded at current blockchain height,
-                                // but a rollback will erase the change
-                                assetTable.insert(asset);
-                                Logger.logDebugMessage(String.format("Deleted %d units of asset %s from genesis account",
-                                            quantityQNT, Long.toUnsignedString(asset.getId())));
-                            }
-                        }
-                    }
-                    AssetTransfer.deleteGenesisTransfers();
-                    Db.db.commitTransaction();
-                } catch (RuntimeException exc) {
-                    Logger.logErrorMessage("Unable to delete genesis account assets", exc);
-                    Db.db.rollbackTransaction();
-                } finally {
-                    Db.db.endTransaction();
-                }
-            } finally {
-                BlockchainImpl.getInstance().writeUnlock();
-            }
-        });
-    }
 }

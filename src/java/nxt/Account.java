@@ -1354,7 +1354,7 @@ public final class Account {
         }
     }
 
-    void payDividends(final long assetId, final int height, final long amountNQTPerQNT, final long unconfirmedAmountNQT) {
+    void payDividends(final long assetId, final int height, final long amountNQTPerQNT) {
         long totalDividend = 0;
         List<AccountAsset> accountAssets = new ArrayList<>();
         try (DbIterator<AccountAsset> iterator = getAssetAccounts(assetId, height, 0, -1)) {
@@ -1363,7 +1363,7 @@ public final class Account {
             }
         }
         for (final AccountAsset accountAsset : accountAssets) {
-            if (accountAsset.getAccountId() != this.id && accountAsset.getAccountId() != Genesis.CREATOR_ID && accountAsset.getQuantityQNT() != 0) {
+            if (accountAsset.getAccountId() != this.id && accountAsset.getQuantityQNT() != 0) {
                 long dividend = Math.multiplyExact(accountAsset.getQuantityQNT(), amountNQTPerQNT);
                 Account.getAccount(accountAsset.getAccountId())
                         .addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, dividend);
@@ -1371,11 +1371,6 @@ public final class Account {
             }
         }
         this.addToBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, -totalDividend);
-        //TODO: this should not happen, but how could unconfirmedAmountNQT be 0, unless the Transaction object changed in between?
-        if (totalDividend != unconfirmedAmountNQT && unconfirmedAmountNQT != 0) {
-            throw new RuntimeException(String.format("Total dividend %d at height %d does not match unconfirmed total %d for asset %s",
-                                       totalDividend, height, unconfirmedAmountNQT, Long.toUnsignedString(assetId)));
-        }
     }
 
     @Override
