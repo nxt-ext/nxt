@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.db.DbUtils;
 import nxt.db.DerivedDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -27,7 +28,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -123,9 +123,10 @@ public class AccountLedger {
             if (trimKeep <= 0)
                 return;
             try (Connection con = db.getConnection();
-                    Statement stmt = con.createStatement()) {
+                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_ledger WHERE height <= ?")) {
                 int trimHeight = Math.max(blockchain.getHeight() - trimKeep, 0);
-                stmt.executeUpdate("DELETE FROM " + table + " WHERE height <= " + trimHeight);
+                pstmt.setInt(1, trimHeight);
+                pstmt.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
@@ -190,6 +191,7 @@ public class AccountLedger {
             return;
         // Log unconfirmed changes only when processing a block and logUnconfirmed does not equal 0
         // Log confirmed changes unless logUnconfirmed equals 2
+        //TODO: what should the default be, isn't logUnconfirmed=1 better?
         if (ledgerEntry.getHolding() != null &&
                     (ledgerEntry.getHolding().isUnconfirmed() &&
                         (!blockchainProcessor.isProcessingBlock() || logUnconfirmed == 0)) ||
@@ -206,6 +208,7 @@ public class AccountLedger {
      * @param   ledgerId                    Ledger entry identifier
      * @return                              Ledger entry or null if entry not found
      */
+    //TODO: db_id is not stable to be used as identifier from the API, e.g. it will change after a pop-off and push of the same block
     public static LedgerEntry getEntry(long ledgerId) {
         if (!ledgerEnabled)
             return null;
@@ -428,13 +431,15 @@ public class AccountLedger {
             TAGGED_DATA_EXTEND(48, true),
         // UNKNOWN
             UNKNOWN(127, false);
+        //TODO: why do we need the UNKNOWN event?
 
         /** Event code mapping */
         private static final Map<Integer, LedgerEvent> eventMap = new HashMap<>();
         static {
             for (LedgerEvent event : values()) {
-                if (eventMap.put(event.code, event) != null)
-                    Logger.logErrorMessage("LedgerEvent code " + event.code + " reused");
+                if (eventMap.put(event.code, event) != null) {
+                    throw new RuntimeException("LedgerEvent code " + event.code + " reused");
+                }
             }
         }
 
@@ -499,13 +504,15 @@ public class AccountLedger {
         UNCONFIRMED_CURRENCY_BALANCE(5, true),
         CURRENCY_BALANCE(6, false),
         UNKNOWN(127, false);
+        //TODO: why do we need UNKNOWN?
 
         /** Holding code mapping */
         private static final Map<Integer, LedgerHolding> holdingMap = new HashMap<>();
         static {
             for (LedgerHolding holding : values()) {
-                if (holdingMap.put(holding.code, holding) != null)
-                    Logger.logErrorMessage("LedgerHolding code " + holding.code + " reused");
+                if (holdingMap.put(holding.code, holding) != null) {
+                    throw new RuntimeException("LedgerHolding code " + holding.code + " reused");
+                }
             }
         }
 
@@ -757,17 +764,14 @@ public class AccountLedger {
                     + "height, timestamp) "
                     + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setLong(1, accountId);
-                stmt.setByte(2, (byte)event.getCode());
+                stmt.setByte(2, (byte) event.getCode());
                 stmt.setLong(3, eventId);
                 if (holding != null) {
                     stmt.setByte(4, (byte)holding.getCode());
                 } else {
                     stmt.setByte(4, (byte)-1);
                 }
-                if (holdingId != null)
-                    stmt.setLong(5, holdingId);
-                else
-                    stmt.setNull(5, Types.BIGINT);
+                DbUtils.setLong(stmt, 5, holdingId);
                 stmt.setLong(6, change);
                 stmt.setLong(7, balance);
                 stmt.setInt(8, height);

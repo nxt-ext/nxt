@@ -51,6 +51,7 @@ public final class PrunableMessage {
             prunableMessage.save(con);
         }
 
+        //TODO: sorting by db_id should not be used for prunable_message anymore, since restorePrunableData may end up inserting records in arbitrary order
         @Override
         protected String defaultSort() {
             return " ORDER BY block_timestamp DESC, db_id DESC ";

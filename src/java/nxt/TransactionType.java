@@ -214,13 +214,14 @@ public abstract class TransactionType {
 
     final void apply(TransactionImpl transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
+        long transactionId = transaction.getId();
         if (transaction.getPhasing() == null || !isPhasable()) {
-            senderAccount.addToBalanceNQT(getLedgerEvent(), transaction.getId(), -Math.addExact(amount, transaction.getFeeNQT()));
+            senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -Math.addExact(amount, transaction.getFeeNQT()));
         } else {
-            senderAccount.addToBalanceNQT(getLedgerEvent(), transaction.getId(), -amount);
+            senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -amount);
         }
         if (recipientAccount != null) {
-            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), amount);
+            recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(getLedgerEvent(), transactionId, amount);
         }
         applyAttachment(transaction, senderAccount, recipientAccount);
     }
@@ -230,11 +231,11 @@ public abstract class TransactionType {
     final void undoUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         undoAttachmentUnconfirmed(transaction, senderAccount);
         senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                                                 Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT()));
+                Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT()));
         if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
             senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                                                     Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+                    Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
     }
 
@@ -837,7 +838,7 @@ public abstract class TransactionType {
                 }
 
                 if (attachment.getFinishHeight() <= getFinishValidationHeight(transaction) + 1
-                    || attachment.getFinishHeight() >= getFinishValidationHeight(transaction) + Constants.MAX_POLL_DURATION) {
+                        || attachment.getFinishHeight() >= getFinishValidationHeight(transaction) + Constants.MAX_POLL_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
@@ -1321,7 +1322,7 @@ public abstract class TransactionType {
                 long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
                 if (unconfirmedAssetBalance >= 0 && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                  attachment.getAssetId(), -attachment.getQuantityQNT());
+                            attachment.getAssetId(), -attachment.getQuantityQNT());
                     return true;
                 }
                 return false;
@@ -1331,12 +1332,12 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
                 senderAccount.addToAssetBalanceQNT(getLedgerEvent(), transaction.getId(), attachment.getAssetId(),
-                                                   -attachment.getQuantityQNT());
+                        -attachment.getQuantityQNT());
                 if (recipientAccount.getId() == Genesis.CREATOR_ID) {
                     Asset.deleteAsset(senderAccount.getId(), attachment.getAssetId(), attachment.getQuantityQNT());
                 } else {
                     recipientAccount.addToAssetAndUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                             attachment.getAssetId(), attachment.getQuantityQNT());
+                            attachment.getAssetId(), attachment.getQuantityQNT());
                     AssetTransfer.addAssetTransfer(transaction, attachment);
                 }
             }
@@ -1345,7 +1346,7 @@ public abstract class TransactionType {
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer) transaction.getAttachment();
                 senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                              attachment.getAssetId(), attachment.getQuantityQNT());
+                        attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
             @Override
@@ -1356,6 +1357,7 @@ public abstract class TransactionType {
                         || attachment.getAssetId() == 0) {
                     throw new NxtException.NotValidException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
+                //TODO: after Constants.ASSET_DELETE_BLOCK, no longer allow genesis as recipient
                 if (transaction.getVersion() > 0 && attachment.getComment() != null) {
                     throw new NxtException.NotValidException("Asset transfer comments no longer allowed, use message " +
                             "or encrypted message appendix instead");
@@ -1415,7 +1417,7 @@ public abstract class TransactionType {
                 long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
                 if (unconfirmedAssetBalance >= 0 && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                  attachment.getAssetId(), -attachment.getQuantityQNT());
+                            attachment.getAssetId(), -attachment.getQuantityQNT());
                     return true;
                 }
                 return false;
@@ -1425,7 +1427,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
                 senderAccount.addToAssetBalanceQNT(getLedgerEvent(), transaction.getId(), attachment.getAssetId(),
-                                                   -attachment.getQuantityQNT());
+                        -attachment.getQuantityQNT());
                 Asset.deleteAsset(transaction.getSenderId(), attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
@@ -1433,7 +1435,7 @@ public abstract class TransactionType {
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
                 senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                              attachment.getAssetId(), attachment.getQuantityQNT());
+                        attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
             @Override
@@ -1442,8 +1444,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset delete not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
                 Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
-                if (transaction.getAmountNQT() != 0 || attachment.getAssetId() == 0) {
-                    throw new NxtException.NotValidException("Invalid asset delete amount or asset identifier: " + attachment.getJSONObject());
+                if (attachment.getAssetId() == 0) {
+                    throw new NxtException.NotValidException("Invalid asset identifier: " + attachment.getJSONObject());
                 }
                 Asset asset = Asset.getAsset(attachment.getAssetId());
                 if (attachment.getQuantityQNT() <= 0 || (asset != null && attachment.getQuantityQNT() > asset.getInitialQuantityQNT())) {
@@ -1531,7 +1533,7 @@ public abstract class TransactionType {
                 long unconfirmedAssetBalance = senderAccount.getUnconfirmedAssetBalanceQNT(attachment.getAssetId());
                 if (unconfirmedAssetBalance >= 0 && unconfirmedAssetBalance >= attachment.getQuantityQNT()) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                  attachment.getAssetId(), -attachment.getQuantityQNT());
+                            attachment.getAssetId(), -attachment.getQuantityQNT());
                     return true;
                 }
                 return false;
@@ -1547,7 +1549,7 @@ public abstract class TransactionType {
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsAskOrderPlacement attachment = (Attachment.ColoredCoinsAskOrderPlacement) transaction.getAttachment();
                 senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                              attachment.getAssetId(), attachment.getQuantityQNT());
+                        attachment.getAssetId(), attachment.getQuantityQNT());
             }
 
         };
@@ -1584,8 +1586,8 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
                 if (senderAccount.getUnconfirmedBalanceNQT() >= Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT())) {
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                                                             -Math.multiplyExact(attachment.getQuantityQNT(),
-                                                             attachment.getPriceNQT()));
+                            -Math.multiplyExact(attachment.getQuantityQNT(),
+                                    attachment.getPriceNQT()));
                     return true;
                 }
                 return false;
@@ -1601,7 +1603,7 @@ public abstract class TransactionType {
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
                 senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                                                         Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT()));
+                        Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT()));
             }
 
         };
@@ -1663,7 +1665,7 @@ public abstract class TransactionType {
                 Order.Ask.removeOrder(attachment.getOrderId());
                 if (order != null) {
                     senderAccount.addToUnconfirmedAssetBalanceQNT(getLedgerEvent(), transaction.getId(),
-                                                                  order.getAssetId(), order.getQuantityQNT());
+                            order.getAssetId(), order.getQuantityQNT());
                 }
             }
 
@@ -1716,7 +1718,7 @@ public abstract class TransactionType {
                 Order.Bid.removeOrder(attachment.getOrderId());
                 if (order != null) {
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                                                             Math.multiplyExact(order.getQuantityQNT(), order.getPriceNQT()));
+                            Math.multiplyExact(order.getQuantityQNT(), order.getPriceNQT()));
                 }
             }
 
@@ -2142,7 +2144,7 @@ public abstract class TransactionType {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
                 if (senderAccount.getUnconfirmedBalanceNQT() >= Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT())) {
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                                -Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
+                            -Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
                     return true;
                 }
                 return false;
@@ -2152,7 +2154,7 @@ public abstract class TransactionType {
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.DigitalGoodsPurchase attachment = (Attachment.DigitalGoodsPurchase) transaction.getAttachment();
                 senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                                Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
+                        Math.multiplyExact((long) attachment.getQuantity(), attachment.getPriceNQT()));
             }
 
             @Override
@@ -2399,7 +2401,7 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
                 DigitalGoodsStore.refund(getLedgerEvent(), transaction.getId(), transaction.getSenderId(),
-                            attachment.getPurchaseId(), attachment.getRefundNQT(), transaction.getEncryptedMessage());
+                        attachment.getPurchaseId(), attachment.getRefundNQT(), transaction.getEncryptedMessage());
             }
 
             @Override

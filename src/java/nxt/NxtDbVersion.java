@@ -941,6 +941,7 @@ class NxtDbVersion extends DbVersion {
             case 395:
                 apply("CREATE INDEX IF NOT EXISTS account_ledger_id_idx ON account_ledger(account_id, db_id)");
             case 396:
+                //TODO: height DESC?
                 apply("CREATE INDEX IF NOT EXISTS account_ledger_height_idx ON account_ledger(height)");
             case 397:
                 apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS services BIGINT");
@@ -949,6 +950,7 @@ class NxtDbVersion extends DbVersion {
             case 399:
                 apply("DROP INDEX IF EXISTS asset_id_idx");
             case 400:
+                //TODO: (id, height DESC)?
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset(id, height)");
             case 401:
                 apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS initial_quantity BIGINT");
@@ -957,6 +959,8 @@ class NxtDbVersion extends DbVersion {
             case 403:
                 apply("ALTER TABLE asset ALTER COLUMN initial_quantity BIGINT NOT NULL");                
             case 404:
+                //TODO: this will not work reliably (if it fails, it won't run the next time after a restart),
+                // let's just force a rescan instead
                 Asset.deleteGenesisAssets();
                 apply(null);
             case 405:

@@ -18,7 +18,6 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.util.Observable;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 

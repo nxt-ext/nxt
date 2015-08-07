@@ -31,7 +31,6 @@ import nxt.util.Logger;
 import nxt.util.QueuedThreadPool;
 import nxt.util.ThreadPool;
 import nxt.util.UPnP;
-
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -45,7 +44,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.DispatcherType;
-
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
@@ -56,8 +54,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.EnumSet;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -132,7 +130,7 @@ public final class Peers {
 
     static final JSONStreamAware myPeerInfoRequest;
     static final JSONStreamAware myPeerInfoResponse;
-    private static final List<Peer.Service> myServices = new ArrayList<>();
+    private static final List<Peer.Service> myServices;
 
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
 
@@ -223,7 +221,7 @@ public final class Peers {
                 throw new RuntimeException(e.toString(), e);
             }
         }
-
+        List<Peer.Service> servicesList = new ArrayList<>();
         JSONObject json = new JSONObject();
         if (myAddress != null) {
             try {
@@ -250,20 +248,21 @@ public final class Peers {
         }
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             json.put("hallmark", Peers.myHallmark);
-            myServices.add(Peer.Service.HALLMARK);
+            servicesList.add(Peer.Service.HALLMARK);
         }
         json.put("application", Nxt.APPLICATION);
         json.put("version", Nxt.VERSION);
         json.put("platform", Peers.myPlatform);
         json.put("shareAddress", Peers.shareMyAddress);
         if (!Constants.ENABLE_PRUNING && Constants.INCLUDE_EXPIRED_PRUNABLE) {
-            myServices.add(Peer.Service.PRUNABLE);
+            servicesList.add(Peer.Service.PRUNABLE);
         }
         long services = 0;
-        for (Peer.Service service : myServices) {
+        for (Peer.Service service : servicesList) {
             services |= service.getCode();
         }
         json.put("services", Long.toUnsignedString(services));
+        myServices = Collections.unmodifiableList(servicesList);
         Logger.logDebugMessage("My peer info:\n" + json.toJSONString());
         myPeerInfoResponse = JSON.prepare(json);
         json.put("requestType", "getInfo");
@@ -360,7 +359,7 @@ public final class Peers {
                     Thread.currentThread().interrupt();
                 } catch (ExecutionException e) {
                     Logger.logDebugMessage("Failed to add peer", e);
-                } catch (TimeoutException e) {
+                } catch (TimeoutException ignore) {
                 }
             }
             Logger.logDebugMessage("Known peers: " + peers.size());
@@ -392,7 +391,7 @@ public final class Peers {
 
                 if (Nxt.getBooleanProperty("nxt.enablePeerServerDoSFilter")) {
                     FilterHolder dosFilterHolder = ctxHandler.addFilter(DoSFilter.class, "/*",
-                                                                        EnumSet.of(DispatcherType.REQUEST));
+                            EnumSet.of(DispatcherType.REQUEST));
                     dosFilterHolder.setInitParameter("maxRequestsPerSec", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestsPerSec"));
                     dosFilterHolder.setInitParameter("delayMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.delayMs"));
                     dosFilterHolder.setInitParameter("maxRequestMs", Nxt.getStringProperty("nxt.peerServerDoSFilter.maxRequestMs"));
@@ -635,7 +634,7 @@ public final class Peers {
                                 && !addedAddresses.contains(myPeer.getAnnouncedAddress())
                                 && !myPeer.getAnnouncedAddress().equals(peer.getAnnouncedAddress())) {
                             myPeers.add(myPeer.getAnnouncedAddress());
-                            myServices.add(Long.toUnsignedString(((PeerImpl)myPeer).getServices()));
+                            myServices.add(Long.toUnsignedString(((PeerImpl) myPeer).getServices()));
                         }
                     });
                     if (myPeers.size() > 0) {

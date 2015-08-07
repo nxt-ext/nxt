@@ -18,13 +18,11 @@ package nxt.peer;
 
 import nxt.Nxt;
 import nxt.Transaction;
-import nxt.db.DbIterator;
 import nxt.util.JSON;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 

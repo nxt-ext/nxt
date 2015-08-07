@@ -32,7 +32,6 @@ import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -114,11 +113,6 @@ public final class PeerServlet extends WebSocketServlet {
 
     private static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
 
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-    }
-
     /**
      * Configure the WebSocket factory
      *
@@ -158,6 +152,8 @@ public final class PeerServlet extends WebSocketServlet {
         try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
             JSON.writeJSONString(jsonResponse, writer);
             if (peer != null) {
+                //TODO: is it no longer possible to get content count when gzip is enabled?
+                // if so, is that at least consistent with how download volume is counted?
                 peer.updateUploadedVolume(writer.getCount());
             }
         } catch (RuntimeException | IOException e) {
@@ -167,7 +163,7 @@ public final class PeerServlet extends WebSocketServlet {
                         Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
                     } else {
                         Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
-                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                            peer.getHost(), e.getMessage() != null ? e.getMessage() : e.toString()));
                     }
                 }
                 peer.blacklist(e);
@@ -218,7 +214,7 @@ public final class PeerServlet extends WebSocketServlet {
                         Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
                     } else {
                         Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
-                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                            peer.getHost(), e.getMessage() != null ? e.getMessage() : e.toString()));
                     }
                 }
                 peer.blacklist(e);

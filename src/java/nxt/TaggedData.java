@@ -57,6 +57,7 @@ public class TaggedData {
             taggedData.save(con);
         }
 
+        //TODO: do not rely on db_id sort anymore as records may be inserted out of order
         @Override
         protected String defaultSort() {
             return " ORDER BY block_timestamp DESC, height DESC, db_id DESC ";
@@ -285,6 +286,7 @@ public class TaggedData {
         return taggedDataTable.getManyBy(getDbClause(channel, accountId), from, to);
     }
 
+    //TODO: sort by db_id no longer accurate
     public static DbIterator<TaggedData> searchData(String query, String channel, long accountId, int from, int to) {
         return taggedDataTable.search(query, getDbClause(channel, accountId), from, to,
                 " ORDER BY ft.score DESC, tagged_data.block_timestamp DESC, tagged_data.db_id DESC ");

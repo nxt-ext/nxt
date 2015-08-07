@@ -19,7 +19,6 @@ package nxt.http;
 import nxt.http.EventListener.EventListenerException;
 import nxt.http.EventListener.EventRegistration;
 import nxt.util.Convert;
-
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 

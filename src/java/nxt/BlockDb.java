@@ -41,13 +41,13 @@ final class BlockDb {
     static final Blockchain blockchain = Nxt.getBlockchain();
     static {
         Nxt.getBlockchainProcessor().addListener((block) -> {
-            synchronized(blockCache) {
+            synchronized (blockCache) {
                 int height = block.getHeight();
                 Iterator<BlockImpl> it = blockCache.values().iterator();
                 while (it.hasNext()) {
                     Block cacheBlock = it.next();
                     int cacheHeight = cacheBlock.getHeight();
-                    if (cacheHeight <= height-BLOCK_CACHE_SIZE || cacheHeight >= height) {
+                    if (cacheHeight <= height - BLOCK_CACHE_SIZE || cacheHeight >= height) {
                         cacheBlock.getTransactions().forEach((tx) -> transactionCache.remove(tx.getId()));
                         heightMap.remove(cacheHeight);
                         it.remove();
@@ -62,7 +62,7 @@ final class BlockDb {
 
     static BlockImpl findBlock(long blockId) {
         // Check the block cache
-        synchronized(blockCache) {
+        synchronized (blockCache) {
             BlockImpl block = blockCache.get(blockId);
             if (block != null) {
                 return block;
@@ -70,7 +70,7 @@ final class BlockDb {
         }
         // Search the database
         try (Connection con = Db.db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 BlockImpl block = null;
@@ -98,7 +98,7 @@ final class BlockDb {
         }
         // Search the database
         try (Connection con = Db.db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT height FROM block WHERE id = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT height FROM block WHERE id = ?")) {
             pstmt.setLong(1, blockId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 return rs.next() && rs.getInt("height") <= height;
@@ -118,7 +118,7 @@ final class BlockDb {
         }
         // Search the database
         try (Connection con = Db.db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
             pstmt.setInt(1, height);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (!rs.next()) {
@@ -141,7 +141,7 @@ final class BlockDb {
         }
         // Search the database
         try (Connection con = Db.db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE height = ?")) {
             pstmt.setInt(1, height);
             try (ResultSet rs = pstmt.executeQuery()) {
                 BlockImpl block;
@@ -270,6 +270,7 @@ final class BlockDb {
             }
             return;
         }
+        //TODO: also remove deleted blocks from the cache
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE timestamp >= "
                      + "(SELECT timestamp FROM block WHERE id = ?) ORDER BY timestamp DESC");
@@ -307,6 +308,7 @@ final class BlockDb {
             }
             return;
         }
+        //TODO: also clear block cache
         Logger.logMessage("Deleting blockchain...");
         try (Connection con = Db.db.getConnection();
              Statement stmt = con.createStatement()) {

@@ -109,10 +109,10 @@ public abstract class CurrencyExchangeOffer {
             counterAccount.addToUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, offer.getId(), currencyId, excess);
             Exchange.addExchange(transaction, currencyId, offer, account.getId(), offer.getAccountId(), curUnits);
         }
-
-        account.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transaction.getId(), extraAmountNQT);
-        account.addToCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transaction.getId(), currencyId, -(units - remainingUnits));
-        account.addToUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transaction.getId(), currencyId, remainingUnits);
+        long transactionId = transaction.getId();
+        account.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId, extraAmountNQT);
+        account.addToCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transactionId, currencyId, -(units - remainingUnits));
+        account.addToUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transactionId, currencyId, remainingUnits);
     }
 
     static void exchangeNXTForCurrency(Transaction transaction, Account account, final long currencyId, final long rateNQT, long units) {
@@ -150,12 +150,12 @@ public abstract class CurrencyExchangeOffer {
             counterAccount.addToCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, offer.getId(), currencyId, -curUnits);
             Exchange.addExchange(transaction, currencyId, offer, offer.getAccountId(), account.getId(), curUnits);
         }
-
-        account.addToCurrencyAndUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transaction.getId(),
+        long transactionId = transaction.getId();
+        account.addToCurrencyAndUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transactionId,
                                                          currencyId, extraUnits);
-        account.addToBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transaction.getId(),
+        account.addToBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId,
                                 -(Math.multiplyExact(units, rateNQT) - remainingAmountNQT));
-        account.addToUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transaction.getId(), remainingAmountNQT);
+        account.addToUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId, remainingAmountNQT);
     }
 
     static void removeOffer(LedgerEvent event, long eventId, CurrencyBuyOffer buyOffer) {

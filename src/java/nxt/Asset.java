@@ -80,6 +80,7 @@ public final class Asset {
         return assetTable.get(assetDbKeyFactory.newKey(id));
     }
 
+    //TODO: can't be null anymore?
     public static long getAssetBalanceQNT(long id, int height) {
         Asset asset = assetTable.get(assetDbKeyFactory.newKey(id), height);
         return (asset == null ? 0 : asset.quantityQNT);
@@ -205,6 +206,7 @@ public final class Asset {
     /**
      * Delete assets owned by the genesis account and the associated asset transfer entries
      */
+    //TODO: let's do it with a rescan instead
     static void deleteGenesisAssets() {
         nxt.util.ThreadPool.runAfterStart(() -> {
             BlockchainImpl.getInstance().writeLock();
@@ -222,6 +224,8 @@ public final class Asset {
                             Asset asset = getAsset(accountAsset.getAssetId());
                             if (asset != null) {
                                 asset.quantityQNT = Math.max(0, asset.quantityQNT - quantityQNT);
+                                //TODO: this will get recorded at current blockchain height,
+                                // but a rollback will erase the change
                                 assetTable.insert(asset);
                                 Logger.logDebugMessage(String.format("Deleted %d units of asset %s from genesis account",
                                             quantityQNT, Long.toUnsignedString(asset.getId())));

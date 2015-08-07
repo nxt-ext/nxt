@@ -1005,7 +1005,6 @@ final class TransactionImpl implements Transaction {
     }
 
     void apply() {
-
         Account senderAccount = Account.getAccount(getSenderId());
         senderAccount.apply(getSenderPublicKey());
         Account recipientAccount = Account.getAccount(recipientId);

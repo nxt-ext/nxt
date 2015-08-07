@@ -659,8 +659,7 @@ final class PeerImpl implements Peer {
             int announcedPort = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
             if (hallmark != null && announcedPort != hallmark.getPort()) {
                 Logger.logDebugMessage("Announced port " + announcedPort + " does not match hallmark " + hallmark.getPort() + ", ignoring hallmark for " + host);
-                removeService(Service.HALLMARK, false);
-                hallmark = null;
+                unsetHallmark();
             }
             InetAddress address = InetAddress.getByName(host);
             for (InetAddress inetAddress : InetAddress.getAllByName(uri.getHost())) {
@@ -687,8 +686,7 @@ final class PeerImpl implements Peer {
         }
 
         if (hallmarkString == null) {
-            removeService(Service.HALLMARK, false);
-            this.hallmark = null;
+            unsetHallmark();
             return true;
         }
 
@@ -697,8 +695,7 @@ final class PeerImpl implements Peer {
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
             if (!hallmark.isValid()) {
                 Logger.logDebugMessage("Invalid hallmark " + hallmarkString + " for " + host);
-                removeService(Service.HALLMARK, false);
-                this.hallmark = null;
+                unsetHallmark();
                 return false;
             }
             if (!hallmark.getHost().equals(host)) {
@@ -712,13 +709,11 @@ final class PeerImpl implements Peer {
                 }
                 if (!validHost) {
                     Logger.logDebugMessage("Hallmark host " + hallmark.getHost() + " doesn't match " + host);
-                    removeService(Service.HALLMARK, false);
-                    this.hallmark = null;
+                    unsetHallmark();
                     return false;
                 }
             }
-            this.hallmark = hallmark;
-            addService(Service.HALLMARK, false);
+            setHallmark(hallmark);
             long accountId = Account.getId(hallmark.getPublicKey());
             List<PeerImpl> groupedPeers = new ArrayList<>();
             int mostRecentDate = 0;
@@ -749,8 +744,7 @@ final class PeerImpl implements Peer {
         } catch (RuntimeException e) {
             Logger.logDebugMessage("Failed to analyze hallmark for peer " + host + ", " + e.toString(), e);
         }
-        removeService(Service.HALLMARK, false);
-        this.hallmark = null;
+        unsetHallmark();
         return false;
 
     }
@@ -762,9 +756,19 @@ final class PeerImpl implements Peer {
         return hallmark.getWeight();
     }
 
+    private void unsetHallmark() {
+        removeService(Service.HALLMARK, false);
+        this.hallmark = null;
+    }
+
+    private void setHallmark(Hallmark hallmark) {
+        this.hallmark = hallmark;
+        addService(Service.HALLMARK, false);
+    }
+
     void addService(Service service, boolean doNotify) {
         boolean notifyListeners;
-        synchronized(this) {
+        synchronized (this) {
             notifyListeners = ((services & service.getCode()) == 0);
             services |= service.getCode();
         }
@@ -775,7 +779,7 @@ final class PeerImpl implements Peer {
 
     void removeService(Service service, boolean doNotify) {
         boolean notifyListeners;
-        synchronized(this) {
+        synchronized (this) {
             notifyListeners = ((services & service.getCode()) != 0);
             services &= (~service.getCode());
         }
@@ -785,13 +789,13 @@ final class PeerImpl implements Peer {
     }
 
     long getServices() {
-        synchronized(this) {
+        synchronized (this) {
             return services;
         }
     }
 
     void setServices(long services) {
-        synchronized(this) {
+        synchronized (this) {
             this.services = services;
         }
     }
@@ -799,7 +803,7 @@ final class PeerImpl implements Peer {
     @Override
     public boolean providesService(Service service) {
         boolean isProvided;
-        synchronized(this) {
+        synchronized (this) {
             isProvided = ((services & service.getCode()) != 0);
         }
         return isProvided;

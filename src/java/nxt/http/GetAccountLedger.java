@@ -22,13 +22,12 @@ import nxt.AccountLedger.LedgerEvent;
 import nxt.AccountLedger.LedgerHolding;
 import nxt.NxtException;
 import nxt.util.Convert;
-
-import java.util.List;
-import javax.servlet.http.HttpServletRequest;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * <p>
@@ -58,11 +57,11 @@ import org.json.simple.JSONStreamAware;
  *       </td>
  *     </tr>
  *     <tr>
- *       <td>eventId</td>
+ *       <td>event</td>
  *       <td>Event identifier.
  *           The event identifier is ignored unless 'eventType' is also specified.
  *           This is an optional parameter and restricts the search to entries matching both 'eventType'
- *           and 'eventId'.  Note that the asset identifier, currency identifier or digital goods identifier
+ *           and 'event'.  Note that the asset identifier, currency identifier or digital goods identifier
  *           is the same as the transaction identifier of the creating transaction.
  *       </td>
  *     </tr>
@@ -73,11 +72,11 @@ import org.json.simple.JSONStreamAware;
  *       </td>
  *     </tr>
  *     <tr>
- *       <td>holdingId</td>
+ *       <td>holding</td>
  *       <td>Holding identifier.
  *           The holding identifier is ignored unless 'holdingType' is also specified.
  *           This is an optional parameter and restricts the search to entries matching both 'holdingType'
- *           and 'holdingId'.
+ *           and 'holding'.
  *       </td>
  *     </tr>
  *     <tr>
@@ -135,7 +134,7 @@ import org.json.simple.JSONStreamAware;
  *       <td>Change in the balance for the holding identified by 'holdingType'.</td>
  *     </tr>
  *     <tr>
- *       <td>eventId</td>
+ *       <td>event</td>
  *       <td>The block or transaction associated with the event.</td>
  *     </tr>
  *     <tr>
@@ -147,7 +146,7 @@ import org.json.simple.JSONStreamAware;
  *       <td>The block height associated with the event.</td>
  *     </tr>
  *     <tr>
- *       <td>holdingId</td>
+ *       <td>holding</td>
  *       <td>The item identifier for an asset or currency balance.</td>
  *     </tr>
  *     <tr>
@@ -182,27 +181,27 @@ import org.json.simple.JSONStreamAware;
  *   <tbody>
  *     <tr>
  *       <td>ASSET_BALANCE</td>
- *       <td>Change in the asset balance.  The asset identifier is the 'holdingId'.</td>
+ *       <td>Change in the asset balance.  The asset identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>CURRENCY_BALANCE</td>
- *       <td>Change in the currency balance.  The currency identifier is the 'holdingId'.</td>
+ *       <td>Change in the currency balance.  The currency identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>NXT_BALANCE</td>
- *       <td>Change in the NXT balance for the account.  There is no 'holdingId'.</td>
+ *       <td>Change in the NXT balance for the account.  There is no 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>UNCONFIRMED_ASSET_BALANCE</td>
- *       <td>Change in the unconfirmed asset balance.  The asset identifier is the 'holdingId'.</td>
+ *       <td>Change in the unconfirmed asset balance.  The asset identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>UNCONFIRMED_CURRENCY_BALANCE</td>
- *       <td>Change in the unconfirmed currency balance.  The currency identifier is the 'holdingId'.</td>
+ *       <td>Change in the unconfirmed currency balance.  The currency identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>UNCONFIRMED_NXT_BALANCE</td>
- *       <td>Change in the unconfirmed NXT balance for the account.  There is no 'holdingId'.</td>
+ *       <td>Change in the unconfirmed NXT balance for the account.  There is no 'holding'.</td>
  *     </tr>
  *   </tbody>
  * </table>
@@ -217,7 +216,7 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
      */
     private GetAccountLedger() {
         super(new APITag[] {APITag.ACCOUNTS}, "account", "firstIndex", "lastIndex",
-                "eventType", "eventId", "holdingType", "holdingId", "includeTransactions");
+                "eventType", "event", "holdingType", "holding", "includeTransactions");
     }
 
     /**
@@ -241,7 +240,7 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
         if (eventType != null) {
             try {
                 event = LedgerEvent.valueOf(eventType);
-                eventId = ParameterParser.getUnsignedLong(req, "eventId", false);
+                eventId = ParameterParser.getUnsignedLong(req, "event", false);
             } catch (RuntimeException e) {
                 throw new ParameterException(JSONResponses.incorrect("eventType"));
             }
@@ -252,7 +251,7 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
         if (holdingType != null) {
             try {
                 holding = LedgerHolding.valueOf(holdingType);
-                holdingId = ParameterParser.getUnsignedLong(req, "holdingId", false);
+                holdingId = ParameterParser.getUnsignedLong(req, "holding", false);
             } catch (RuntimeException e) {
                 throw new ParameterException(JSONResponses.incorrect("holdingType"));
             }
@@ -282,6 +281,7 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
      *
      * @return                      FALSE to disable the required block parameters
      */
+    //TODO: why false, for account ledger it would be useful to be able to enforce that the blockchain state is what you expected it to be
     @Override
     boolean allowRequiredBlockParameters() {
         return false;

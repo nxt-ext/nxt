@@ -19,11 +19,10 @@ package nxt.http;
 import nxt.AccountLedger;
 import nxt.AccountLedger.LedgerEntry;
 import nxt.NxtException;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * <p>
@@ -77,7 +76,7 @@ import org.json.simple.JSONStreamAware;
  *       <td>Change in the balance for the holding identified by 'holdingType'.</td>
  *     </tr>
  *     <tr>
- *       <td>eventId</td>
+ *       <td>event</td>
  *       <td>The block or transaction associated with the event.</td>
  *     </tr>
  *     <tr>
@@ -89,7 +88,7 @@ import org.json.simple.JSONStreamAware;
  *       <td>The block height associated with the event.</td>
  *     </tr>
  *     <tr>
- *       <td>holdingId</td>
+ *       <td>holding</td>
  *       <td>The item identifier for an asset or currency balance.</td>
  *     </tr>
  *     <tr>
@@ -124,31 +123,32 @@ import org.json.simple.JSONStreamAware;
  *   <tbody>
  *     <tr>
  *       <td>ASSET_BALANCE</td>
- *       <td>Change in the asset balance.  The asset identifier is the 'holdingId'.</td>
+ *       <td>Change in the asset balance.  The asset identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>CURRENCY_BALANCE</td>
- *       <td>Change in the currency balance.  The currency identifier is the 'holdingId'.</td>
+ *       <td>Change in the currency balance.  The currency identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>NXT_BALANCE</td>
- *       <td>Change in the NXT balance for the account.  There is no 'holdingId'.</td>
+ *       <td>Change in the NXT balance for the account.  There is no 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>UNCONFIRMED_ASSET_BALANCE</td>
- *       <td>Change in the unconfirmed asset balance.  The asset identifier is the 'holdingId'.</td>
+ *       <td>Change in the unconfirmed asset balance.  The asset identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>UNCONFIRMED_CURRENCY_BALANCE</td>
- *       <td>Change in the unconfirmed currency balance.  The currency identifier is the 'holdingId'.</td>
+ *       <td>Change in the unconfirmed currency balance.  The currency identifier is the 'holding'.</td>
  *     </tr>
  *     <tr>
  *       <td>UNCONFIRMED_NXT_BALANCE</td>
- *       <td>Change in the unconfirmed NXT balance for the account.  There is no 'holdingId'.</td>
+ *       <td>Change in the unconfirmed NXT balance for the account.  There is no 'holding'.</td>
  *     </tr>
  *   </tbody>
  * </table>
  */
+//TODO: I suggest disabling this API for now
 public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
 
     /** GetAccountLedgerEntry instance */

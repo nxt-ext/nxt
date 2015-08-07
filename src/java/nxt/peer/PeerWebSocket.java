@@ -45,8 +45,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
@@ -86,7 +84,7 @@ public class PeerWebSocket {
     /** Thread pool for server request processing */
     private static final ExecutorService threadPool = new QueuedThreadPool(
                 Runtime.getRuntime().availableProcessors(),
-                Runtime.getRuntime().availableProcessors()*4);
+                Runtime.getRuntime().availableProcessors() * 4);
 
     /** WebSocket session */
     private volatile Session session;
@@ -146,11 +144,11 @@ public class PeerWebSocket {
         try {
             if (session != null) {
                 useWebSocket = true;
-            } else if (System.currentTimeMillis() > connectTime+10*1000) {
+            } else if (System.currentTimeMillis() > connectTime + 10 * 1000) {
                 connectTime = System.currentTimeMillis();
                 ClientUpgradeRequest req = new ClientUpgradeRequest();
                 Future<Session> conn = peerClient.connect(this, uri, req);
-                conn.get(Peers.connectTimeout+100, TimeUnit.MILLISECONDS);
+                conn.get(Peers.connectTimeout + 100, TimeUnit.MILLISECONDS);
                 useWebSocket = true;
             }
         } catch (ExecutionException exc) {
@@ -240,7 +238,7 @@ public class PeerWebSocket {
             byte[] requestBytes = request.getBytes("UTF-8");
             int requestLength = requestBytes.length;
             int flags = 0;
-            if (Peers.isGzipEnabled && requestLength>=Peers.MIN_COMPRESS_SIZE) {
+            if (Peers.isGzipEnabled && requestLength >= Peers.MIN_COMPRESS_SIZE) {
                 flags |= FLAG_COMPRESSED;
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream(requestLength);
                 try (GZIPOutputStream gzipStream = new GZIPOutputStream(outStream)) {
@@ -248,7 +246,7 @@ public class PeerWebSocket {
                 }
                 requestBytes = outStream.toByteArray();
             }
-            ByteBuffer buf = ByteBuffer.allocate(requestBytes.length+20);
+            ByteBuffer buf = ByteBuffer.allocate(requestBytes.length + 20);
             buf.putInt(version)
                .putLong(requestId)
                .putInt(flags)
@@ -294,7 +292,7 @@ public class PeerWebSocket {
                 byte[] responseBytes = response.getBytes("UTF-8");
                 int responseLength = responseBytes.length;
                 int flags = 0;
-                if (Peers.isGzipEnabled && responseLength>=Peers.MIN_COMPRESS_SIZE) {
+                if (Peers.isGzipEnabled && responseLength >= Peers.MIN_COMPRESS_SIZE) {
                     flags |= FLAG_COMPRESSED;
                     ByteArrayOutputStream outStream = new ByteArrayOutputStream(responseLength);
                     try (GZIPOutputStream gzipStream = new GZIPOutputStream(outStream)) {

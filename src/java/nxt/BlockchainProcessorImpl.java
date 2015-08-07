@@ -162,9 +162,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 //
                 // Restore prunable data
                 //
+                //TODO: how do we restore prunable transactions without going through a full blockchain download again?
                 if (!isRestoring && !prunableTransactions.isEmpty() &&
                             System.currentTimeMillis() - lastRestoreTime > 60*60*1000L) {
                     isRestoring = true;
+                    //TODO: use epoch time?
                     lastRestoreTime = System.currentTimeMillis();
                     networkService.submit(new RestorePrunableDataTask());
                 }
@@ -847,7 +849,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 // retry later using a different archive peer
                 //
                 List<Long> processing;
-                synchronized(prunableTransactions) {
+                synchronized (prunableTransactions) {
                     processing = new ArrayList<>(prunableTransactions.size());
                     processing.addAll(prunableTransactions);
                 }
@@ -860,7 +862,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     //
                     JSONObject request = new JSONObject();
                     JSONArray requestList = new JSONArray();
-                    synchronized(prunableTransactions) {
+                    synchronized (prunableTransactions) {
                         Iterator<Long> it = processing.iterator();
                         while (it.hasNext()) {
                             long id = it.next();
@@ -894,6 +896,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
             } catch (NxtException.ValidationException e) {
                 Logger.logErrorMessage("Peer " + peer.getHost() + " returned invalid prunable transaction", e);
+                peer.blacklist(e);
             } catch (RuntimeException e) {
                 Logger.logErrorMessage("Unable to restore prunable data", e);
             } finally {

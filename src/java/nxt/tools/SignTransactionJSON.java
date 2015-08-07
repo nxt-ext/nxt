@@ -18,7 +18,6 @@ package nxt.tools;
 
 import nxt.Nxt;
 import nxt.Transaction;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 

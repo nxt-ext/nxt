@@ -58,7 +58,7 @@ final class PeerDb {
 
         @Override
         public boolean equals(Object obj) {
-            return (obj!=null && (obj instanceof Entry) && address.equals(((Entry)obj).address));
+            return (obj != null && (obj instanceof Entry) && address.equals(((Entry)obj).address));
         }
     }
 
