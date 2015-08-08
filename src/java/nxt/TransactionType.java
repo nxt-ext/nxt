@@ -1357,7 +1357,10 @@ public abstract class TransactionType {
                         || attachment.getAssetId() == 0) {
                     throw new NxtException.NotValidException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
-                //TODO: after Constants.ASSET_DELETE_BLOCK, no longer allow genesis as recipient
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.ASSET_DELETE_BLOCK) {
+                    throw new NxtException.NotValidException("Asset transfer to Genesis no longer allowed, "
+                            + "use asset delete attachment instead");
+                }
                 if (transaction.getVersion() > 0 && attachment.getComment() != null) {
                     throw new NxtException.NotValidException("Asset transfer comments no longer allowed, use message " +
                             "or encrypted message appendix instead");
