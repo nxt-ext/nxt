@@ -1796,8 +1796,10 @@ public abstract class TransactionType {
             @Override
             void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                long quantityQNT = Asset.getAsset(attachment.getAssetId(), attachment.getHeight()).getQuantityQNT()
-                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight());
+                long assetId = attachment.getAssetId();
+                Asset asset = Asset.getAsset(assetId, attachment.getHeight());
+                long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
+                        - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalDividendPayment);
             }
