@@ -1776,7 +1776,7 @@ public abstract class TransactionType {
                         - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
-                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalDividendPayment);
+                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), assetId, -totalDividendPayment);
                     return true;
                 }
                 return false;
