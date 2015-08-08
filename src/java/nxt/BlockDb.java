@@ -278,7 +278,6 @@ final class BlockDb {
             }
             return;
         }
-        clearBlockCache();
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE timestamp >= "
                      + "(SELECT timestamp FROM block WHERE id = ?) ORDER BY timestamp DESC");
@@ -299,6 +298,8 @@ final class BlockDb {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        } finally {
+            clearBlockCache();
         }
     }
 
@@ -317,7 +318,6 @@ final class BlockDb {
             return;
         }
         Logger.logMessage("Deleting blockchain...");
-        clearBlockCache();
         try (Connection con = Db.db.getConnection();
              Statement stmt = con.createStatement()) {
             try {
@@ -339,6 +339,8 @@ final class BlockDb {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        } finally {
+            clearBlockCache();
         }
     }
 
