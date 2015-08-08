@@ -1770,8 +1770,10 @@ public abstract class TransactionType {
             @Override
             boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                long quantityQNT = Asset.getAsset(attachment.getAssetId(), attachment.getHeight()).getQuantityQNT()
-                        - senderAccount.getAssetBalanceQNT(attachment.getAssetId(), attachment.getHeight());
+                long assetId = attachment.getAssetId();
+                Asset asset = Asset.getAsset(assetId, attachment.getHeight());
+                long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
+                        - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalDividendPayment);
@@ -1783,8 +1785,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                senderAccount.payDividends(attachment.getAssetId(), attachment.getHeight(),
-                        attachment.getAmountNQTPerQNT());
+                senderAccount.payDividends(attachment.getAssetId(), attachment.getHeight(), attachment.getAmountNQTPerQNT());
             }
 
             @Override
@@ -1799,7 +1800,12 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                Asset asset = Asset.getAsset(attachment.getAssetId());
+                Asset asset;
+                if (Nxt.getBlockchain().getHeight() > Constants.ASSET_DELETE_BLOCK) {
+                    asset = Asset.getAsset(attachment.getAssetId(), attachment.getHeight());
+                } else {
+                    asset = Asset.getAsset(attachment.getAssetId());
+                }
                 if (asset == null) {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId())
                             + "for dividend payment doesn't exist yet");
