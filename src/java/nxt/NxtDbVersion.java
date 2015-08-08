@@ -969,9 +969,11 @@ class NxtDbVersion extends DbVersion {
             case 409:
                 apply("ALTER TABLE account DROP COLUMN IF EXISTS creation_height");
             case 410:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS key_height");
+            case 411:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
-            case 411:
+            case 412:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
