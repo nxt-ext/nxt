@@ -60,6 +60,14 @@ final class BlockDb {
         }, BlockchainProcessor.Event.BLOCK_PUSHED);
     }
 
+    static private void clearBlockCache() {
+        synchronized (blockCache) {
+            blockCache.clear();
+            heightMap.clear();
+            transactionCache.clear();
+        }
+    }
+
     static BlockImpl findBlock(long blockId) {
         // Check the block cache
         synchronized (blockCache) {
@@ -270,7 +278,7 @@ final class BlockDb {
             }
             return;
         }
-        //TODO: also remove deleted blocks from the cache
+        clearBlockCache();
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE timestamp >= "
                      + "(SELECT timestamp FROM block WHERE id = ?) ORDER BY timestamp DESC");
@@ -308,8 +316,8 @@ final class BlockDb {
             }
             return;
         }
-        //TODO: also clear block cache
         Logger.logMessage("Deleting blockchain...");
+        clearBlockCache();
         try (Connection con = Db.db.getConnection();
              Statement stmt = con.createStatement()) {
             try {
