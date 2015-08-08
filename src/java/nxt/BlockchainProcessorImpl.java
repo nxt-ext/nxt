@@ -108,7 +108,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
 
     private volatile int lastTrimHeight;
-    private volatile long lastRestoreTime = 0;
+    private volatile int lastRestoreTime = 0;
     private final List<Long> prunableTransactions = new ArrayList<>();
 
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
@@ -162,12 +162,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 //
                 // Restore prunable data
                 //
-                //TODO: how do we restore prunable transactions without going through a full blockchain download again?
-                if (!isRestoring && !prunableTransactions.isEmpty() &&
-                            System.currentTimeMillis() - lastRestoreTime > 60*60*1000L) {
+                int now = Nxt.getEpochTime();
+                if (!isRestoring && !prunableTransactions.isEmpty() && now - lastRestoreTime > 60 * 60) {
                     isRestoring = true;
-                    //TODO: use epoch time?
-                    lastRestoreTime = System.currentTimeMillis();
+                    lastRestoreTime = now;
                     networkService.submit(new RestorePrunableDataTask());
                 }
             } catch (InterruptedException e) {
@@ -874,7 +872,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     request.put("requestType", "getTransactions");
                     request.put("transactionIds", requestList);
-                    request.put("includeExpiredPrunable", true);
                     JSONObject response = peer.send(JSON.prepareRequest(request));
                     if (response == null) {
                         return;
@@ -890,7 +887,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     //
                     // Remove transactions that have been successfully processed
                     //
-                    synchronized(prunableTransactions) {
+                    synchronized (prunableTransactions) {
                         processed.forEach(transaction -> prunableTransactions.remove(transaction.getId()));
                     }
                 }
@@ -1391,7 +1388,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         for (Appendix.AbstractAppendix appendage : transaction.getAppendages(true)) {
                             if ((appendage instanceof Appendix.Prunable) &&
                                         !((Appendix.Prunable)appendage).hasPrunableData()) {
-                                synchronized(prunableTransactions) {
+                                synchronized (prunableTransactions) {
                                     prunableTransactions.add(transaction.getId());
                                 }
                                 lastRestoreTime = 0;

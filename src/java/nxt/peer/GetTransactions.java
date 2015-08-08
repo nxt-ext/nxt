@@ -37,10 +37,6 @@ public class GetTransactions extends PeerServlet.PeerRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray transactionArray = new JSONArray();
         JSONArray transactionIds = (JSONArray)request.get("transactionIds");
-        //TODO: what is the use case for setting includeExpiredPrunable=false, isn't this request only used
-        // for getting the missing prunable parts?
-        boolean includeExpiredPrunable = (request.get("includeExpiredPrunable") != null ?
-                (Boolean)request.get("includeExpiredPrunable") : false);
         Blockchain blockchain = Nxt.getBlockchain();
         //
         // Return the transactions to the caller
@@ -50,7 +46,7 @@ public class GetTransactions extends PeerServlet.PeerRequestHandler {
                 long id = Long.parseUnsignedLong((String)transactionId);
                 Transaction transaction = blockchain.getTransaction(id);
                 if (transaction != null) {
-                    transaction.getAppendages(includeExpiredPrunable);
+                    transaction.getAppendages(true);
                     JSONObject transactionJSON = transaction.getJSONObject();
                     transactionArray.add(transactionJSON);
                 }
@@ -62,7 +58,6 @@ public class GetTransactions extends PeerServlet.PeerRequestHandler {
 
     @Override
     boolean rejectWhileDownloading() {
-        //TODO: may be better to reject, to avoid extra load
-        return false;
+        return true;
     }
 }

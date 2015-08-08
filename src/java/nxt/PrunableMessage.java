@@ -51,10 +51,9 @@ public final class PrunableMessage {
             prunableMessage.save(con);
         }
 
-        //TODO: sorting by db_id should not be used for prunable_message anymore, since restorePrunableData may end up inserting records in arbitrary order
         @Override
         protected String defaultSort() {
-            return " ORDER BY block_timestamp DESC, db_id DESC ";
+            return " ORDER BY block_timestamp DESC ";
         }
 
     };
@@ -76,7 +75,7 @@ public final class PrunableMessage {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM prunable_message WHERE sender_id = ?"
-                    + " UNION ALL SELECT * FROM prunable_message WHERE recipient_id = ? AND sender_id <> ? ORDER BY block_timestamp DESC, db_id DESC "
+                    + " UNION ALL SELECT * FROM prunable_message WHERE recipient_id = ? AND sender_id <> ? ORDER BY block_timestamp DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -96,7 +95,7 @@ public final class PrunableMessage {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM prunable_message WHERE sender_id = ? AND recipient_id = ? "
                     + "UNION ALL SELECT * FROM prunable_message WHERE sender_id = ? AND recipient_id = ? AND sender_id <> recipient_id "
-                    + "ORDER BY block_timestamp DESC, db_id DESC "
+                    + "ORDER BY block_timestamp DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);

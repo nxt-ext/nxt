@@ -663,7 +663,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
      */
     @Override
     public SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude) {
-        //TODO: shouldn't this reuse the same comparator used in the waitingTransactions queue?
         SortedSet<UnconfirmedTransaction> transactionSet = new TreeSet<>(
             (UnconfirmedTransaction t1, UnconfirmedTransaction t2) -> {
                 int compare;
@@ -726,25 +725,58 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         try {
             Db.db.beginTransaction();
             try {
+                //
+                // Check each transaction returned by the archive peer
+                //
                 for (Object transactionJSON : transactions) {
                     TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject)transactionJSON);
-                    // use full hash lookup to avoid malleability tricks
                     TransactionImpl myTransaction = TransactionDb.findTransactionByFullHash(transaction.fullHash());
                     if (myTransaction != null) {
-                        boolean foundData = false;
-                        //TODO: what about a special case of transaction with more than one prunable data, only one of which is present,
-                        // it will incorrectly be considered processed?
-                        for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
-                        // no need to try load prunable parts, must be present already
-                            if ((appendage instanceof Appendix.Prunable) &&
-                                    ((Appendix.Prunable)appendage).hasPrunableData()) {
-                                foundData = true;
-                                Logger.logDebugMessage(String.format("Loading prunable data for transaction %s %s appendage",
-                                       Long.toUnsignedString(transaction.getId()), appendage.getAppendixName()));
-                                //NOTE: this relies on the fact that all Prunable attachments are also not phasable,
-                                // otherwise finish height would need to be used it transaction was phased
-                                ((Appendix.Prunable)appendage).restorePrunableData(transaction,
-                                        myTransaction.getBlockTimestamp(), myTransaction.getHeight());
+                        boolean foundData = true;
+                        //
+                        // Process each prunable appendage
+                        //
+                        appendageLoop: for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
+                            if ((appendage instanceof Appendix.Prunable)) {
+                                //
+                                // Don't load the prunable data if we already have the data
+                                //
+                                for (Appendix.AbstractAppendix myAppendage : myTransaction.getAppendages()) {
+                                    if (myAppendage.getClass() == appendage.getClass()) {
+                                        myAppendage.loadPrunable(myTransaction, true);
+                                        if (((Appendix.Prunable)myAppendage).hasPrunableData()) {
+                                            Logger.logDebugMessage("Already have prunable data for transaction " + myTransaction.getStringId());
+                                            continue appendageLoop;
+                                        }
+                                        break;
+                                    }
+                                }
+                                //
+                                // Load the prunable data
+                                //
+                                if (((Appendix.Prunable)appendage).hasPrunableData()) {
+                                    Logger.logDebugMessage(String.format("Loading prunable data for transaction %s %s appendage",
+                                            Long.toUnsignedString(transaction.getId()), appendage.getAppendixName()));
+                                    Appendix.Phasing phasing = myTransaction.getPhasing();
+                                    int blockTimestamp;
+                                    int height;
+                                    if (phasing != null && myTransaction.getType().isPhasable()) {
+                                        height = phasing.getFinishHeight();
+                                        Block finishBlock = Nxt.getBlockchain().getBlockAtHeight(height);
+                                        if (finishBlock == null) {
+                                            throw new NxtException.NotValidException(
+                                                    "Transaction " + myTransaction.getStringId()
+                                                    + " prunable data finish block at height " + height + " not found");
+                                        }
+                                        blockTimestamp = finishBlock.getTimestamp();
+                                    } else {
+                                        blockTimestamp = myTransaction.getBlockTimestamp();
+                                        height = myTransaction.getHeight();
+                                    }
+                                    ((Appendix.Prunable)appendage).restorePrunableData(transaction, blockTimestamp, height);
+                                } else {
+                                    foundData = false;
+                                }
                             }
                         }
                         if (foundData) {
