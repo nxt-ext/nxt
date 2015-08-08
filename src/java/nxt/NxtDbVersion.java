@@ -935,12 +935,11 @@ class NxtDbVersion extends DbVersion {
             case 394:
                 apply("CREATE TABLE IF NOT EXISTS account_ledger (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "event_type TINYINT NOT NULL, event_id BIGINT NOT NULL, holding_type TINYINT NOT NULL, "
-                        + "holding_id BIGINT, change BIGINT NOT NULL, balance BIGINT NOT NULL, height INT NOT NULL, "
-                        + "timestamp INT NOT NULL)");
+                        + "holding_id BIGINT, change BIGINT NOT NULL, balance BIGINT NOT NULL, "
+                        + "block_id BIGINT NOT NULL, height INT NOT NULL, timestamp INT NOT NULL)");
             case 395:
                 apply("CREATE INDEX IF NOT EXISTS account_ledger_id_idx ON account_ledger(account_id, db_id)");
             case 396:
-                //TODO: height DESC?
                 apply("CREATE INDEX IF NOT EXISTS account_ledger_height_idx ON account_ledger(height)");
             case 397:
                 apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS services BIGINT");
@@ -949,14 +948,13 @@ class NxtDbVersion extends DbVersion {
             case 399:
                 apply("DROP INDEX IF EXISTS asset_id_idx");
             case 400:
-                //TODO: (id, height DESC)?
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset(id, height)");
             case 401:
                 apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS initial_quantity BIGINT");
             case 402:
                 apply("UPDATE asset SET initial_quantity = quantity WHERE initial_quantity IS NULL");
             case 403:
-                apply("ALTER TABLE asset ALTER COLUMN initial_quantity BIGINT NOT NULL");                
+                apply("ALTER TABLE asset ALTER COLUMN initial_quantity BIGINT NOT NULL");
             case 404:
                 apply(null);
             case 405:
