@@ -72,6 +72,12 @@ import javax.servlet.http.HttpServletRequest;
  *       <td>Update balance for the holding identified by 'holdingType'.</td>
  *     </tr>
  *     <tr>
+ *       <td>block</td>
+ *       <td>Block that created the ledger entry.  The current ledger entry will be removed if the block is
+ *           removed from the blockchain.  A new ledger entry will be created when either the block is
+ *           added to the blockchain again or the transaction is included in a different block.</td>
+ *     </tr>
+ *     <tr>
  *       <td>change</td>
  *       <td>Change in the balance for the holding identified by 'holdingType'.</td>
  *     </tr>
@@ -96,9 +102,11 @@ import javax.servlet.http.HttpServletRequest;
  *       <td>The item being changed (account balance, asset balance or currency balance).</td>
  *     </tr>
  *     <tr>
- *       <td>ledgerId</td>
  *       <td>The ledger entry identifier.  This is a counter that is incremented each time
- *           a new entry is added to the account ledger.
+ *           a new entry is added to the account ledger.  The ledger entry identifier is unique
+ *           to the peer returning the ledger entry and will be different for each peer in the
+ *           network.  A new ledger entry identifier will be assigned if a ledger entry is removed
+ *           and then added again.
  *       </td>
  *     </tr>
  *     <tr>
@@ -148,7 +156,6 @@ import javax.servlet.http.HttpServletRequest;
  *   </tbody>
  * </table>
  */
-//TODO: I suggest disabling this API for now
 public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
 
     /** GetAccountLedgerEntry instance */

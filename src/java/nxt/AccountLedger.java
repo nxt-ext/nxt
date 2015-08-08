@@ -84,8 +84,8 @@ public class AccountLedger {
         } else {
             Logger.logInfoMessage("Account ledger is not enabled");
         }
-        int temp = Nxt.getIntProperty("nxt.ledgerLogUnconfirmed", 2);
-        logUnconfirmed = (temp >= 0 && temp <= 2 ? temp : 2);
+        int temp = Nxt.getIntProperty("nxt.ledgerLogUnconfirmed", 1);
+        logUnconfirmed = (temp >= 0 && temp <= 2 ? temp : 1);
     }
 
     /**
@@ -191,7 +191,6 @@ public class AccountLedger {
             return;
         // Log unconfirmed changes only when processing a block and logUnconfirmed does not equal 0
         // Log confirmed changes unless logUnconfirmed equals 2
-        //TODO: what should the default be, isn't logUnconfirmed=1 better?
         if (ledgerEntry.getHolding() != null &&
                     (ledgerEntry.getHolding().isUnconfirmed() &&
                         (!blockchainProcessor.isProcessingBlock() || logUnconfirmed == 0)) ||
@@ -208,7 +207,6 @@ public class AccountLedger {
      * @param   ledgerId                    Ledger entry identifier
      * @return                              Ledger entry or null if entry not found
      */
-    //TODO: db_id is not stable to be used as identifier from the API, e.g. it will change after a pop-off and push of the same block
     public static LedgerEntry getEntry(long ledgerId) {
         if (!ledgerEnabled)
             return null;
@@ -249,8 +247,9 @@ public class AccountLedger {
                                                 LedgerHolding holding, long holdingId,
                                                 int firstIndex, int lastIndex) {
         List<LedgerEntry> entryList = new ArrayList<>();
-        if (!ledgerEnabled)
+        if (!ledgerEnabled) {
             return entryList;
+        }
         int startIndex = Math.max(firstIndex, 0);
         int stopIndex = Math.max(lastIndex, startIndex);
         //
@@ -299,8 +298,9 @@ public class AccountLedger {
                 stopIndex = Math.min(stopIndex, dbIdList.size()-1);
                 Long[] dbIds = new Long[stopIndex - startIndex + 1];
                 int index = 0;
-                for (int i=startIndex; i<=stopIndex; i++)
+                for (int i=startIndex; i<=stopIndex; i++) {
                     dbIds[index++] = dbIdList.get(i);
+                }
                 //
                 // Search based on the database identifier list
                 //
@@ -308,13 +308,15 @@ public class AccountLedger {
                 int i = 1;
                 if (event != null) {
                     stmt2.setByte(++i, (byte)event.getCode());
-                    if (eventId != 0)
+                    if (eventId != 0) {
                         stmt2.setLong(++i, eventId);
+                    }
                 }
                 if (holding != null) {
                     stmt2.setByte(++i, (byte)holding.getCode());
-                    if (holdingId != 0)
+                    if (holdingId != 0) {
                         stmt2.setLong(++i, holdingId);
+                    }
                 }
                 try (ResultSet rs = stmt2.executeQuery()) {
                     while (rs.next()) {
@@ -330,7 +332,7 @@ public class AccountLedger {
             sb.append("ORDER BY db_id DESC");
             blockchain.readLock();
             try (Connection con = Db.db.getConnection();
-                    PreparedStatement stmt = con.prepareStatement(sb.toString())) {
+                 PreparedStatement stmt = con.prepareStatement(sb.toString())) {
                 int height = blockchain.getHeight();
                 int highHeight = Math.max(height - startIndex, 0);
                 int lowHeight = Math.max(height - stopIndex, 0);
@@ -342,13 +344,15 @@ public class AccountLedger {
                 int i = 2;
                 if (event != null) {
                     stmt.setByte(++i, (byte)event.getCode());
-                    if (eventId != 0)
+                    if (eventId != 0) {
                         stmt.setLong(++i, eventId);
+                    }
                 }
                 if (holding != null) {
                     stmt.setByte(++i, (byte)holding.getCode());
-                    if (holdingId != 0)
+                    if (holdingId != 0) {
                         stmt.setLong(++i, holdingId);
+                    }
                 }
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
@@ -428,10 +432,7 @@ public class AccountLedger {
             CURRENCY_UNDO_CROWDFUNDING(46, false),
         // TYPE_DATA
             TAGGED_DATA_UPLOAD(47, true),
-            TAGGED_DATA_EXTEND(48, true),
-        // UNKNOWN
-            UNKNOWN(127, false);
-        //TODO: why do we need the UNKNOWN event?
+            TAGGED_DATA_EXTEND(48, true);
 
         /** Event code mapping */
         private static final Map<Integer, LedgerEvent> eventMap = new HashMap<>();
@@ -486,7 +487,10 @@ public class AccountLedger {
          */
         public static LedgerEvent fromCode(int code) {
             LedgerEvent event = eventMap.get(code);
-            return (event != null ? event : LedgerEvent.UNKNOWN);
+            if (event == null) {
+                throw new RuntimeException("LedgerEvent code " + code + " is unknown");
+            }
+            return event;
         }
     }
 
@@ -502,9 +506,7 @@ public class AccountLedger {
         UNCONFIRMED_ASSET_BALANCE(3, true),
         ASSET_BALANCE(4, false),
         UNCONFIRMED_CURRENCY_BALANCE(5, true),
-        CURRENCY_BALANCE(6, false),
-        UNKNOWN(127, false);
-        //TODO: why do we need UNKNOWN?
+        CURRENCY_BALANCE(6, false);
 
         /** Holding code mapping */
         private static final Map<Integer, LedgerHolding> holdingMap = new HashMap<>();
@@ -559,7 +561,10 @@ public class AccountLedger {
          */
         public static LedgerHolding fromCode(int code) {
             LedgerHolding holding = holdingMap.get(code);
-            return (holding != null ? holding : LedgerHolding.UNKNOWN);
+            if (holding == null) {
+                throw new RuntimeException("LedgerHolding code " + code + " is unknown");
+            }
+            return holding;
         }
     }
 
@@ -592,6 +597,9 @@ public class AccountLedger {
         /** New balance */
         private final long balance;
 
+        /** Block identifier */
+        private final long blockId;
+
         /** Blockchain height */
         private final int height;
 
@@ -618,8 +626,10 @@ public class AccountLedger {
             this.holdingId = holdingId;
             this.change = change;
             this.balance = balance;
-            this.height = blockchain.getHeight();
-            this.timestamp = blockchain.getLastBlockTimestamp();
+            Block block = blockchain.getLastBlock();
+            this.blockId = block.getId();
+            this.height = block.getHeight();
+            this.timestamp = block.getTimestamp();
         }
 
         /**
@@ -658,6 +668,7 @@ public class AccountLedger {
                 holdingId = id;
             change = rs.getLong("change");
             balance = rs.getLong("balance");
+            blockId = rs.getLong("block_id");
             height = rs.getInt("height");
             timestamp = rs.getInt("timestamp");
         }
@@ -735,6 +746,15 @@ public class AccountLedger {
         }
 
         /**
+         * Return the block identifier
+         *
+         * @return                          Block identifier
+         */
+        public long getBlockId() {
+            return blockId;
+        }
+
+        /**
          * Return the height
          *
          * @return                          Height
@@ -761,25 +781,28 @@ public class AccountLedger {
         private void save(Connection con) throws SQLException {
             try (PreparedStatement stmt = con.prepareStatement("INSERT INTO account_ledger "
                     + "(account_id, event_type, event_id, holding_type, holding_id, change, balance, "
-                    + "height, timestamp) "
-                    + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
-                stmt.setLong(1, accountId);
-                stmt.setByte(2, (byte) event.getCode());
-                stmt.setLong(3, eventId);
+                    + "block_id, height, timestamp) "
+                    + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                int i=0;
+                stmt.setLong(++i, accountId);
+                stmt.setByte(++i, (byte) event.getCode());
+                stmt.setLong(++i, eventId);
                 if (holding != null) {
-                    stmt.setByte(4, (byte)holding.getCode());
+                    stmt.setByte(++i, (byte)holding.getCode());
                 } else {
-                    stmt.setByte(4, (byte)-1);
+                    stmt.setByte(++i, (byte)-1);
                 }
-                DbUtils.setLong(stmt, 5, holdingId);
-                stmt.setLong(6, change);
-                stmt.setLong(7, balance);
-                stmt.setInt(8, height);
-                stmt.setInt(9, timestamp);
+                DbUtils.setLong(stmt, ++i, holdingId);
+                stmt.setLong(++i, change);
+                stmt.setLong(++i, balance);
+                stmt.setLong(++i, blockId);
+                stmt.setInt(++i, height);
+                stmt.setInt(++i, timestamp);
                 stmt.executeUpdate();
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next())
+                    if (rs.next()) {
                         ledgerId = rs.getLong(1);
+                    }
                 }
             }
         }

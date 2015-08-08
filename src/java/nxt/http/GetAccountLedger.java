@@ -130,6 +130,12 @@ import java.util.List;
  *       <td>Update balance for the holding identified by 'holdingType'.</td>
  *     </tr>
  *     <tr>
+ *       <td>block</td>
+ *       <td>Block that created the ledger entry.  The current ledger entry will be removed if the block is
+ *           removed from the blockchain.  A new ledger entry will be created when either the block is
+ *           added to the blockchain again or the transaction is included in a different block.</td>
+ *     </tr>
+ *     <tr>
  *       <td>change</td>
  *       <td>Change in the balance for the holding identified by 'holdingType'.</td>
  *     </tr>
@@ -156,7 +162,10 @@ import java.util.List;
  *     <tr>
  *       <td>ledgerId</td>
  *       <td>The ledger entry identifier.  This is a counter that is incremented each time
- *           a new entry is added to the account ledger.
+ *           a new entry is added to the account ledger.  The ledger entry identifier is unique
+ *           to the peer returning the ledger entry and will be different for each peer in the
+ *           network.  A new ledger entry identifier will be assigned if a ledger entry is removed
+ *           and then added again.
  *       </td>
  *     </tr>
  *     <tr>
@@ -274,16 +283,5 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         response.put("entries", responseEntries);
         return response;
-    }
-
-    /**
-     * No required block parameters
-     *
-     * @return                      FALSE to disable the required block parameters
-     */
-    //TODO: why false, for account ledger it would be useful to be able to enforce that the blockchain state is what you expected it to be
-    @Override
-    boolean allowRequiredBlockParameters() {
-        return false;
     }
 }

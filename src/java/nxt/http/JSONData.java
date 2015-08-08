@@ -940,6 +940,7 @@ final class JSONData {
     static void ledgerEntry(JSONObject json, LedgerEntry entry, boolean includeTransactions) {
         putAccount(json, "account", entry.getAccountId());
         json.put("ledgerId", Long.toUnsignedString(entry.getLedgerId()));
+        json.put("block", Long.toUnsignedString(entry.getBlockId()));
         json.put("height", entry.getHeight());
         json.put("timestamp", entry.getTimestamp());
         json.put("eventType", entry.getEvent().name());
@@ -948,11 +949,11 @@ final class JSONData {
         json.put("balance", String.valueOf(entry.getBalance()));
         if (entry.getHolding() != null) {
             json.put("holdingType", entry.getHolding().name());
-            if (entry.getHoldingId() != null)
+            if (entry.getHoldingId() != null) {
                 json.put("holding", Long.toUnsignedString(entry.getHoldingId()));
+            }
         }
         if (includeTransactions && entry.getEvent().isTransaction()) {
-            //TODO: is it also useful to include block, if entry is a block?
             Transaction transaction = Nxt.getBlockchain().getTransaction(entry.getEventId());
             json.put("transaction", JSONData.transaction(transaction));
         }
