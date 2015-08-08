@@ -771,7 +771,6 @@ public final class Account {
 
     private final long id;
     private final DbKey dbKey;
-    private final int creationHeight;
     private volatile byte[] publicKey;
     private int keyHeight;
     private long balanceNQT;
@@ -785,13 +784,11 @@ public final class Account {
         }
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
-        this.creationHeight = Nxt.getBlockchain().getHeight();
     }
 
     private Account(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
         this.dbKey = accountDbKeyFactory.newKey(this.id);
-        this.creationHeight = rs.getInt("creation_height");
         this.keyHeight = rs.getInt("key_height");
         this.balanceNQT = rs.getLong("balance");
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
@@ -800,13 +797,12 @@ public final class Account {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, creation_height, "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, "
                 + "key_height, balance, unconfirmed_balance, forged_balance, "
                 + "active_lessee_id, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
-            pstmt.setInt(++i, this.creationHeight);
             pstmt.setInt(++i, this.keyHeight);
             pstmt.setLong(++i, this.balanceNQT);
             pstmt.setLong(++i, this.unconfirmedBalanceNQT);
@@ -847,10 +843,6 @@ public final class Account {
             this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
         }
         return publicKey;
-    }
-
-    private int getCreationHeight() {
-        return creationHeight;
     }
 
     int getKeyHeight() {
@@ -900,13 +892,9 @@ public final class Account {
                 && (keyHeight == 0 || height - keyHeight <= 1440)) {
             return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
         }
-        if (height < Constants.TRANSPARENT_FORGING_BLOCK_3
-                && this.creationHeight < Constants.TRANSPARENT_FORGING_BLOCK_2) {
-            if (this.creationHeight == 0) {
+        if (height < Constants.TRANSPARENT_FORGING_BLOCK_3) {
+            if (Arrays.binarySearch(Genesis.GENESIS_RECIPIENTS, id) >= 0) {
                 return balanceNQT / Constants.ONE_NXT;
-            }
-            if (height - this.creationHeight < 1440) {
-                return 0;
             }
             long receivedInLastBlock = 0;
             for (Transaction transaction : Nxt.getBlockchain().getBlockAtHeight(height).getTransactions()) {
