@@ -1364,7 +1364,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.ASSET_DELETE_BLOCK) {
-                    throw new NxtException.NotValidException("Asset transfer to Genesis no longer allowed, "
+                    throw new NxtException.NotCurrentlyValidException("Asset transfer to Genesis no longer allowed, "
                             + "use asset delete attachment instead");
                 }
                 if (transaction.getVersion() > 0 && attachment.getComment() != null) {
@@ -1815,7 +1815,7 @@ public abstract class TransactionType {
                 }
                 if (asset == null) {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId())
-                            + "for dividend payment doesn't exist yet");
+                            + " for dividend payment doesn't exist yet");
                 }
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());

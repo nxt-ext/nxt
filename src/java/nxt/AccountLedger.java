@@ -536,7 +536,7 @@ public class AccountLedger {
         public static LedgerEvent fromCode(int code) {
             LedgerEvent event = eventMap.get(code);
             if (event == null) {
-                throw new RuntimeException("LedgerEvent code " + code + " is unknown");
+                throw new IllegalArgumentException("LedgerEvent code " + code + " is unknown");
             }
             return event;
         }
@@ -610,7 +610,7 @@ public class AccountLedger {
         public static LedgerHolding fromCode(int code) {
             LedgerHolding holding = holdingMap.get(code);
             if (holding == null) {
-                throw new RuntimeException("LedgerHolding code " + code + " is unknown");
+                throw new IllegalArgumentException("LedgerHolding code " + code + " is unknown");
             }
             return holding;
         }
