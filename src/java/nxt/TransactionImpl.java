@@ -19,6 +19,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.db.DbKey;
 import nxt.util.Convert;
+import nxt.util.Filter;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
@@ -472,6 +473,18 @@ final class TransactionImpl implements Transaction {
             appendage.loadPrunable(this, includeExpiredPrunable);
         }
         return appendages;
+    }
+
+    @Override
+    public List<Appendix> getAppendages(Filter<Appendix> filter, boolean includeExpiredPrunable) {
+        List<Appendix> result = new ArrayList<>();
+        appendages.forEach(appendix -> {
+            if (filter.ok(appendix)) {
+                appendix.loadPrunable(this, includeExpiredPrunable);
+                result.add(appendix);
+            }
+        });
+        return result;
     }
 
     @Override
