@@ -152,8 +152,6 @@ public final class PeerServlet extends WebSocketServlet {
         try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
             JSON.writeJSONString(jsonResponse, writer);
             if (peer != null) {
-                //TODO: is it no longer possible to get content count when gzip is enabled?
-                // if so, is that at least consistent with how download volume is counted?
                 peer.updateUploadedVolume(writer.getCount());
             }
         } catch (RuntimeException | IOException e) {
