@@ -944,34 +944,30 @@ class NxtDbVersion extends DbVersion {
             case 397:
                 apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS services BIGINT");
             case 398:
-                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS latest BOOLEAN NOT NULL DEFAULT TRUE");
+                apply("TRUNCATE TABLE asset");
             case 399:
-                apply("DROP INDEX IF EXISTS asset_id_idx");
+                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS latest BOOLEAN NOT NULL DEFAULT TRUE");
             case 400:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset(id, height)");
+                apply("DROP INDEX IF EXISTS asset_id_idx");
             case 401:
-                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS initial_quantity BIGINT");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset(id, height)");
             case 402:
-                apply("UPDATE asset SET initial_quantity = quantity WHERE initial_quantity IS NULL");
+                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS initial_quantity BIGINT NOT NULL");
             case 403:
-                apply("ALTER TABLE asset ALTER COLUMN initial_quantity BIGINT NOT NULL");
-            case 404:
-                apply(null);
-            case 405:
                 apply("CREATE TABLE IF NOT EXISTS tagged_data_extend (db_id IDENTITY, id BIGINT NOT NULL, "
                         + "extend_id BIGINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 406:
+            case 404:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_extend_id_height_idx ON tagged_data_extend(id, height DESC)");
-            case 407:
+            case 405:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_extend_height_id_idx ON tagged_data_extend(height, id)");
-            case 408:
+            case 406:
                 apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_attachment BOOLEAN NOT NULL DEFAULT FALSE");
-            case 409:
+            case 407:
                 apply("UPDATE transaction SET has_prunable_attachment = TRUE WHERE type = 6");
-            case 410:
+            case 408:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
-            case 411:
+            case 409:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
