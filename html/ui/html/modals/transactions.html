@@ -145,7 +145,7 @@
                         </div>
                     </div>
                     <div id="raw_transaction_modal_unsigned_bytes_qr_code_container">
-                        <label data-i18n="unsigned_bytes_qr_codes">UNSIGNED BYTES QR CODE</label>
+                        <label data-i18n="unsigned_bytes_qr_code">UNSIGNED BYTES QR CODE</label>
                         <div class="form-group">
                             <div id="raw_transaction_modal_unsigned_bytes_qr_code"></div>
                         </div>
@@ -156,8 +156,10 @@
                     </div>
                     <div id="raw_transaction_modal_signature_container" class="form-group">
                         <label for="raw_transaction_modal_signature" data-i18n="signature">SIGNATURE</label>
-                        <a href="#" id="raw_transaction_modal_signature_reader_link" data-i18n="scan_qr_code">SCAN QR CODE</a>
-                        <textarea name="signature" class="form-control" tabindex="1" id="raw_transaction_modal_signature" rows="2" readonly></textarea>
+                        <a href="#" id="raw_transaction_modal_signature_reader_link">
+                            <i class="fa fa-video-camera"></i>
+                        </a>
+                        <textarea name="signature" class="form-control" tabindex="1" id="raw_transaction_modal_signature" rows="2"></textarea>
                         <div id="raw_transaction_modal_signature_reader" style="width:384px;height:384px;"></div>
                     </div>
                     <div id="raw_transaction_modal_transaction_bytes_container">
@@ -268,20 +270,9 @@
             </div>
             <div class="modal-body">
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
-                    <li class="active" id="broadcast_json_transaction_nav" data-tab="broadcast_json"><a href="#" data-i18n="broadcast_transaction">Broadcast Transaction</a></li>
-                    <li data-tab="sign_transaction"><a href="#" data-i18n="sign_transaction">Sign Transaction</a></li>
+                    <li class="active" id="broadcast_json_transaction_nav" data-tab="sign_transaction"><a href="#" data-i18n="sign_transaction">Sign Transaction</a></li>
+                    <li data-tab="broadcast_json"><a href="#" data-i18n="broadcast_transaction">Broadcast Transaction</a></li>
                 </ul>
-
-                <div id="transaction_json_modal_broadcast_json" class="tab_content" style="display:none">
-                    <form role="form" id="broadcast_json_form" autocomplete="off">
-                        <div class="callout callout-danger error_message" style="display:none"></div>
-                        <div class="form-group">
-                            <label for="broadcast_transaction_json" data-i18n="transaction_json">TRANSACTION JSON</label>
-                            <textarea class="form-control" name="transactionJSON" id="broadcast_transaction_json" rows="10" placeholder="Signed Transaction JSON" data-i18n="[placeholder]signed_transaction_json"></textarea>
-                        </div>
-                        <input type="hidden" name="request_type" value="broadcastTransaction" />
-                    </form>
-                 </div>
 
                 <div id="transaction_json_modal_sign_transaction" class="tab_content" style="display:none">
                     <form role="form" id="sign_transaction_form" autocomplete="off">
@@ -302,6 +293,14 @@
                             <label for="sign_transaction_password" data-i18n="phrase">PASSPHRASE</label>
                             <input type="password" name="secretPhrase" id="sign_transaction_password" class="form-control" placeholder="" tabindex="4">
                         </div>
+                        <div id="signature_output" class="output">
+                            <label for="transaction_signature" data-i18n="signature">SIGNATURE</label>
+                            <textarea class="form-control" id="transaction_signature" readonly rows="2"></textarea>
+                            <label data-i18n="transaction_signature_qr_code">SIGNATURE QR CODE</label>
+                            <div class="form-group">
+                                <div id="transaction_signature_qr_code"></div>
+                            </div>
+                        </div>
                         <div id="signed_json_output" class="output">
                             <label for="signed_transaction_json" data-i18n="signed_transaction_json">SIGNED TRANSACTION JSON</label>
                             <textarea class="form-control" id="signed_transaction_json" readonly rows="10"></textarea>
@@ -310,14 +309,20 @@
                             <label for="signed_prunable_transaction_json" data-i18n="signed_prunable_transaction_json">SIGNED PRUNABLE TRANSACTION JSON</label>
                             <textarea class="form-control" id="signed_prunable_transaction_json" readonly rows="4"></textarea>
                         </div>
-                        <div id="sign_transaction_output" class="output" style="max-height:350px;overflow:auto">
-                            <table class="table table-striped output_table" id="signed_transaction_json_table" style="margin-bottom:0;table-layout:fixed">
-                                <tbody></tbody>
-                            </table>
-                        </div>
                         <input type="hidden" name="request_type" value="signTransaction" />
                     </form>
                 </div>
+
+                <div id="transaction_json_modal_broadcast_json" class="tab_content" style="display:none">
+                    <form role="form" id="broadcast_json_form" autocomplete="off">
+                        <div class="callout callout-danger error_message" style="display:none"></div>
+                        <div class="form-group">
+                            <label for="broadcast_transaction_json" data-i18n="transaction_json">TRANSACTION JSON</label>
+                            <textarea class="form-control" name="transactionJSON" id="broadcast_transaction_json" rows="10" placeholder="Signed Transaction JSON" data-i18n="[placeholder]signed_transaction_json"></textarea>
+                        </div>
+                        <input type="hidden" name="request_type" value="broadcastTransaction" />
+                    </form>
+                 </div>
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>

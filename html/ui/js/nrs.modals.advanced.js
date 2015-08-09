@@ -80,6 +80,9 @@ var NRS = (function(NRS, $, undefined) {
     $("#raw_transaction_modal_signature_reader_link").click(function(e) {
         e.preventDefault();
         var reader = $('#raw_transaction_modal_signature_reader');
+        if (reader.is(':visible')) {
+            return;
+        }
         reader.show();
         reader.html5_qrcode(
             function (data) {
@@ -94,13 +97,21 @@ var NRS = (function(NRS, $, undefined) {
                 console.log(videoError);
                 reader.hide();
                 reader.empty();
-                reader.html5_qrcode_stop();
+                if (reader.data('stream')) {
+                    reader.html5_qrcode_stop();
+                }
             }
         );
     });
 
     NRS.forms.broadcastTransaction = function(modal) {
-        var data = NRS.getFormData(modal.find("form:first"));
+        // The problem is that broadcastTransaction is invoked by different modals
+        // We need to find the correct form in case the modal has more than one
+        if (modal.attr('id') == "transaction_json_modal") {
+            var data = NRS.getFormData($("#broadcast_json_form"));
+        } else {
+            var data = NRS.getFormData(modal.find("form:first"));
+        }
         if (data.transactionJSON) {
             var signature = data.signature;
             try {
@@ -353,17 +364,15 @@ var NRS = (function(NRS, $, undefined) {
 
     var transactionJSONModal = $("#transaction_json_modal");
     transactionJSONModal.on("show.bs.modal", function() {
-		$(this).find(".output_table tbody").empty();
 		$(this).find(".output").hide();
 		$(this).find(".tab_content:first").show();
-		$("#transaction_json_modal_button").text($.t("broadcast")).data("resetText", $.t("broadcast")).data("form", "broadcast_json_form");
+        $("#transaction_json_modal_button").text($.t("sign_transaction")).data("resetText", $.t("sign_transaction")).data("form", "sign_transaction_form");
 	});
 
     transactionJSONModal.on("hidden.bs.modal", function() {
 		$(this).find(".tab_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$(this).find("ul.nav li:first").addClass("active");
-		$(this).find(".output_table tbody").empty();
 		$(this).find(".output").hide();
 	});
 
@@ -419,18 +428,21 @@ var NRS = (function(NRS, $, undefined) {
         var signedTransactionJson = $("#signed_transaction_json");
         signedTransactionJson.val(JSON.stringify(response.transactionJSON));
         $("#signed_json_output").show();
-        delete response.transactionJSON;
         var signedPrunableTransactionJson = $("#signed_prunable_transaction_json");
         if (response.prunableAttachmentJSON) {
             signedPrunableTransactionJson.val(JSON.stringify(response.prunableAttachmentJSON));
             $("#signed_prunable_json_output").show();
-            delete response.prunableAttachmentJSON;
         } else {
             signedPrunableTransactionJson.val("");
             $("#signed_prunable_json_output").hide();
         }
-        $("#signed_transaction_json_table").find("tbody").empty().append(NRS.createInfoTable(response, true));
-        $("#sign_transaction_output").show();
+        $("#transaction_signature").val(response.transactionJSON.signature);
+        $("#transaction_signature_qr_code").empty().qrcode({
+            "text": response.transactionJSON.signature,
+            "width": 256,
+            "height": 256
+        });
+        $("#signature_output").show();
     };
 
     NRS.forms.signTransaction = function() {
