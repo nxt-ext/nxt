@@ -1156,6 +1156,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 }
             });
+            if (!prunableTransactions.isEmpty()) {
+                lastRestoreTime = 0;
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } finally {
