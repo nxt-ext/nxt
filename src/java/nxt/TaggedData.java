@@ -523,4 +523,29 @@ public class TaggedData {
         }
     }
 
+    static boolean isPruned(long transactionId, boolean extendTransaction) {
+        boolean isPruned = false;
+        try (Connection con = Db.db.getConnection();
+                PreparedStatement pstmt1 = con.prepareStatement("SELECT id from tagged_data_extend WHERE extend_id = ?");
+                PreparedStatement pstmt2 = con.prepareStatement("SELECT 1 FROM tagged_data WHERE id = ?")) {
+            if (extendTransaction) {
+                pstmt1.setLong(1, transactionId);
+                try (ResultSet rs = pstmt1.executeQuery()) {
+                    if (!rs.next()) {
+                        return true;
+                    }
+                    pstmt2.setLong(1, rs.getLong(1));
+                }
+            } else {
+                pstmt2.setLong(1, transactionId);
+            }
+            try (ResultSet rs = pstmt2.executeQuery()) {
+                isPruned = !rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+        return isPruned;
+    }
+
 }

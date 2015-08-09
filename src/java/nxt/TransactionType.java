@@ -263,6 +263,10 @@ public abstract class TransactionType {
         return hasExclusive || exclusive;
     }
 
+    boolean isPruned(long transactionId) {
+        return false;
+    }
+
     final int getFinishValidationHeight(Transaction transaction) {
         return transaction.getPhasing() == null ? Nxt.getBlockchain().getHeight() : (transaction.getPhasing().getFinishHeight() - 1);
     }
@@ -2648,6 +2652,11 @@ public abstract class TransactionType {
                 return "TaggedDataUpload";
             }
 
+            @Override
+            boolean isPruned(long id) {
+                return TaggedData.isPruned(id, false);
+            }
+
         };
 
         public static final TransactionType TAGGED_DATA_EXTEND = new Data() {
@@ -2704,6 +2713,11 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "TaggedDataExtend";
+            }
+
+            @Override
+            boolean isPruned(long id) {
+                return TaggedData.isPruned(id, true);
             }
 
         };

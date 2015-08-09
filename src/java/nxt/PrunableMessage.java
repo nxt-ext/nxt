@@ -266,4 +266,18 @@ public final class PrunableMessage {
         }
     }
 
+    static boolean isPruned(long transactionId) {
+        boolean isPruned = false;
+        try (Connection con = Db.db.getConnection();
+                PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM prunable_message WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                isPruned = !rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+        return isPruned;
+    }
+
 }

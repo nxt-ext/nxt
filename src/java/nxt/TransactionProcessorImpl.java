@@ -745,7 +745,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                     if (myAppendage.getClass() == appendage.getClass()) {
                                         myAppendage.loadPrunable(myTransaction, true);
                                         if (((Appendix.Prunable)myAppendage).hasPrunableData()) {
-                                            Logger.logDebugMessage("Already have prunable data for transaction " + myTransaction.getStringId());
+                                            Logger.logDebugMessage(String.format("Already have prunable data for transaction %s %s appendage",
+                                                    myTransaction.getStringId(), myAppendage.getAppendixName()));
                                             continue appendageLoop;
                                         }
                                         break;

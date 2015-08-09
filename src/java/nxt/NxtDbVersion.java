@@ -965,9 +965,13 @@ class NxtDbVersion extends DbVersion {
             case 407:
                 apply("CREATE INDEX IF NOT EXISTS tagged_data_extend_height_id_idx ON tagged_data_extend(height, id)");
             case 408:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_attachment BOOLEAN NOT NULL DEFAULT FALSE");
+            case 409:
+                apply("UPDATE transaction SET has_prunable_attachment = TRUE WHERE type = 6");
+            case 410:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
-            case 409:
+            case 411:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

@@ -46,9 +46,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -109,7 +111,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     private volatile int lastTrimHeight;
     private volatile int lastRestoreTime = 0;
-    private final List<Long> prunableTransactions = new ArrayList<>();
+    private final Set<Long> prunableTransactions = new HashSet<>();
 
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
@@ -846,9 +848,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 // as we process them while still retaining the entry if we need to
                 // retry later using a different archive peer
                 //
-                List<Long> processing;
+                Set<Long> processing;
                 synchronized (prunableTransactions) {
-                    processing = new ArrayList<>(prunableTransactions.size());
+                    processing = new HashSet<>(prunableTransactions.size());
                     processing.addAll(prunableTransactions);
                 }
                 //
@@ -1126,6 +1128,39 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public void setGetMoreBlocks(boolean getMoreBlocks) {
         this.getMoreBlocks = getMoreBlocks;
+    }
+
+    @Override
+    public void restorePrunedData() {
+        Db.db.beginTransaction();
+        try (Connection con = Db.db.getConnection()) {
+            int now = Nxt.getEpochTime();
+            int minTimestamp = Math.max(1, now - Constants.MAX_PRUNABLE_LIFETIME);
+            int maxTimestamp = Math.max(minTimestamp, now - Constants.MIN_PRUNABLE_LIFETIME) - 1;
+            List<TransactionDb.PrunableTransaction> transactionList =
+                    TransactionDb.findPrunableTransactions(con, minTimestamp, maxTimestamp);
+            transactionList.forEach(prunableTransaction -> {
+                long id = prunableTransaction.getId();
+                if (prunableTransaction.hasPrunableAttachment()) {
+                    if (prunableTransaction.getTransactionType().isPruned(id)) {
+                        synchronized (prunableTransactions) {
+                            prunableTransactions.add(id);
+                        }
+                    }
+                }
+                if (prunableTransaction.hasPrunableMessage()) {
+                    if (PrunableMessage.isPruned(id)) {
+                        synchronized (prunableTransactions) {
+                            prunableTransactions.add(id);
+                        }
+                    }
+                }
+            });
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } finally {
+            Db.db.endTransaction();
+        }
     }
 
     private void addBlock(BlockImpl block) {

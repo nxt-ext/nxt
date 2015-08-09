@@ -60,6 +60,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     void trimDerivedTables();
 
+    void restorePrunedData();
+
     class BlockNotAcceptedException extends NxtException {
 
         private final BlockImpl block;
