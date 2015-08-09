@@ -81,22 +81,24 @@ var NRS = (function(NRS, $, undefined) {
         e.preventDefault();
         var reader = $('#raw_transaction_modal_signature_reader');
         if (reader.is(':visible')) {
+            reader.hide();
+            if (reader.data('stream')) {
+                reader.html5_qrcode_stop();
+            }
             return;
         }
+        reader.empty();
         reader.show();
         reader.html5_qrcode(
             function (data) {
                 console.log(data);
                 $("#raw_transaction_modal_signature").val(data);
                 reader.hide();
-                reader.empty();
                 reader.html5_qrcode_stop();
             },
             function (error) {},
             function (videoError) {
-                console.log(videoError);
                 reader.hide();
-                reader.empty();
                 if (reader.data('stream')) {
                     reader.html5_qrcode_stop();
                 }
