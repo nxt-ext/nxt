@@ -971,9 +971,15 @@ class NxtDbVersion extends DbVersion {
             case 410:
                 apply("ALTER TABLE account DROP COLUMN IF EXISTS key_height");
             case 411:
+                apply("DROP INDEX IF EXISTS public_key_account_id_idx");
+            case 412:
+                apply("ALTER TABLE public_key ADD COLUMN IF NOT EXISTS latest BOOLEAN NOT NULL DEFAULT TRUE");
+            case 413:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_height_idx ON public_key (account_id, height DESC)");
+            case 414:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
-            case 412:
+            case 415:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

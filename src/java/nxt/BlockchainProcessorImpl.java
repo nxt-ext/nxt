@@ -1483,6 +1483,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 for (DerivedDbTable table : derivedTables) {
                     table.rollback(commonBlock.getHeight());
                 }
+                Db.db.clearCache();
                 Db.db.commitTransaction();
             } catch (RuntimeException e) {
                 Logger.logErrorMessage("Error popping off to " + commonBlock.getHeight() + ", " + e.toString());
@@ -1767,6 +1768,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         table.rollback(height - 1);
                     }
                 }
+                Db.db.clearCache();
                 Db.db.commitTransaction();
                 Logger.logDebugMessage("Rolled back derived tables");
                 BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
@@ -1827,6 +1829,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             blockchain.setLastBlock(currentBlock);
                             accept(currentBlock, validPhasedTransactions, invalidPhasedTransactions);
                             currentBlockId = currentBlock.getNextBlockId();
+                            Db.db.clearCache();
                             Db.db.commitTransaction();
                         } catch (NxtException | RuntimeException e) {
                             Db.db.rollbackTransaction();

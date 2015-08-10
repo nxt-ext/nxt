@@ -320,8 +320,7 @@ final class BlockImpl implements Block {
     }
 
     boolean verifyBlockSignature() {
-        Account account = Account.getAccount(getGeneratorId());
-        return account != null && checkSignature() && account.setOrVerify(getGeneratorPublicKey());
+        return checkSignature() && Account.setOrVerify(getGeneratorId(), getGeneratorPublicKey());
     }
 
     private volatile boolean hasValidSignature = false;

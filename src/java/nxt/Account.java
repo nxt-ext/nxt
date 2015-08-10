@@ -28,6 +28,7 @@ import nxt.db.DbUtils;
 import nxt.db.DerivedDbTable;
 import nxt.db.PersistentDbTable;
 import nxt.db.VersionedEntityDbTable;
+import nxt.db.VersionedPersistentDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
@@ -331,14 +332,13 @@ public final class Account {
 
         private final long accountId;
         private final DbKey dbKey;
-        private final byte[] publicKey;
+        private byte[] publicKey;
         private int height;
 
         private PublicKey(long accountId, byte[] publicKey) {
             this.accountId = accountId;
             this.dbKey = publicKeyDbKeyFactory.newKey(accountId);
             this.publicKey = publicKey;
-            this.height = 0;
         }
 
         private PublicKey(ResultSet rs) throws SQLException {
@@ -349,12 +349,12 @@ public final class Account {
         }
 
         private void save(Connection con) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO public_key (account_id, public_key, height) "
-                    + "KEY (account_id) VALUES (?, ?, ?)")) {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO public_key (account_id, public_key, height, latest) "
+                    + "KEY (account_id, height) VALUES (?, ?, ?, TRUE)")) {
                 int i = 0;
-                pstmt.setLong(++i, Account.getId(publicKey));
+                pstmt.setLong(++i, accountId);
                 pstmt.setBytes(++i, publicKey);
-                pstmt.setInt(++i, height);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -386,6 +386,11 @@ public final class Account {
         @Override
         public DbKey newKey(Account account) {
             return account.dbKey;
+        }
+
+        @Override
+        public Account newEntity(DbKey dbKey) {
+            return new Account(((DbKey.LongKey)dbKey).getId());
         }
 
     };
@@ -459,9 +464,14 @@ public final class Account {
             return publicKey.dbKey;
         }
 
+        @Override
+        public PublicKey newEntity(DbKey dbKey) {
+            return new PublicKey(((DbKey.LongKey)dbKey).getId(), null);
+        }
+
     };
 
-    private static final PersistentDbTable<PublicKey> publicKeyTable = new PersistentDbTable<PublicKey>("public_key", publicKeyDbKeyFactory) {
+    private static final VersionedPersistentDbTable<PublicKey> publicKeyTable = new VersionedPersistentDbTable<PublicKey>("public_key", publicKeyDbKeyFactory) {
 
         @Override
         protected PublicKey load(Connection con, ResultSet rs) throws SQLException {
@@ -602,12 +612,8 @@ public final class Account {
         return leaseListeners.removeListener(listener, eventType);
     }
 
-    public static DbIterator<Account> getAllAccounts(int from, int to) {
-        return accountTable.getAll(from, to);
-    }
-
     public static int getCount() {
-        return accountTable.getCount();
+        return publicKeyTable.getCount();
     }
 
     public static int getAssetAccountCount(long assetId) {
@@ -651,23 +657,49 @@ public final class Account {
     }
 
     public static Account getAccount(long id) {
-        return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id));
+        if (id == 0) {
+            return null;
+        }
+        DbKey dbKey = accountDbKeyFactory.newKey(id);
+        Account account = accountTable.get(dbKey);
+        if (account == null) {
+            PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id));
+            if (publicKey != null) {
+                account = accountTable.newEntity(dbKey);
+                account.publicKey = publicKey;
+            }
+        }
+        return account;
     }
 
     public static Account getAccount(long id, int height) {
-        return id == 0 ? null : accountTable.get(accountDbKeyFactory.newKey(id), height);
+        if (id == 0) {
+            return null;
+        }
+        DbKey dbKey = accountDbKeyFactory.newKey(id);
+        Account account = accountTable.get(dbKey, height);
+        if (account == null) {
+            PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id), height);
+            if (publicKey != null) {
+                account = accountTable.newEntity(dbKey);
+                account.publicKey = publicKey;
+            }
+        }
+        return account;
     }
 
     public static Account getAccount(byte[] publicKey) {
-        Account account = accountTable.get(accountDbKeyFactory.newKey(getId(publicKey)));
+        long accountId = getId(publicKey);
+        Account account = getAccount(accountId);
         if (account == null) {
             return null;
         }
-        if (account.getPublicKey() == null || Arrays.equals(account.getPublicKey(), publicKey)) {
+        byte[] accountPublicKey = account.getPublicKey();
+        if (accountPublicKey == null || Arrays.equals(accountPublicKey, publicKey)) {
             return account;
         }
-        throw new RuntimeException("DUPLICATE KEY for account " + Long.toUnsignedString(account.getId())
-                + " existing key " + Convert.toHexString(account.getPublicKey()) + " new key " + Convert.toHexString(publicKey));
+        throw new RuntimeException("DUPLICATE KEY for account " + Long.toUnsignedString(accountId)
+                + " existing key " + Convert.toHexString(accountPublicKey) + " new key " + Convert.toHexString(publicKey));
     }
 
     public static long getId(byte[] publicKey) {
@@ -684,10 +716,17 @@ public final class Account {
         if (id == 0) {
             throw new IllegalArgumentException("Invalid accountId 0");
         }
-        Account account = accountTable.get(accountDbKeyFactory.newKey(id));
+        DbKey accountDbKey = accountDbKeyFactory.newKey(id);
+        Account account = accountTable.get(accountDbKey);
         if (account == null) {
-            account = new Account(id);
-            accountTable.insert(account);
+            account = accountTable.newEntity(accountDbKey);
+            DbKey pkDbKey = publicKeyDbKeyFactory.newKey(id);
+            PublicKey publicKey = publicKeyTable.get(pkDbKey);
+            if (publicKey == null) {
+                publicKey = publicKeyTable.newEntity(pkDbKey);
+                publicKeyTable.insert(publicKey);
+            }
+            account.publicKey = publicKey;
         }
         return account;
     }
@@ -774,7 +813,7 @@ public final class Account {
                 }
             }
             for (AccountLease lease : changingLeases) {
-                Account lessor = accountTable.get(accountDbKeyFactory.newKey(lease.lessorId));
+                Account lessor = Account.getAccount(lease.lessorId);
                 if (height == lease.currentLeasingHeightFrom) {
                     lessor.activeLesseeId = lease.currentLesseeId;
                     leaseListeners.notify(lease, Event.LEASE_STARTED);
@@ -800,7 +839,7 @@ public final class Account {
                         }
                     }
                 }
-                accountTable.insert(lessor);
+                lessor.save();
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
@@ -850,6 +889,14 @@ public final class Account {
         }
     }
 
+    private void save() {
+        if (balanceNQT == 0 && unconfirmedBalanceNQT == 0 && forgedBalanceNQT == 0 && activeLesseeId == 0) {
+            accountTable.delete(this, true);
+        } else {
+            accountTable.insert(this);
+        }
+    }
+
     public long getId() {
         return id;
     }
@@ -886,7 +933,7 @@ public final class Account {
         if (this.publicKey == null) {
             this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
         }
-        return publicKey == null ? 0 : publicKey.height;
+        return publicKey == null || publicKey.publicKey == null ? 0 : publicKey.height;
     }
 
     public EncryptedData encryptTo(byte[] data, String senderSecretPhrase, boolean compress) {
@@ -1130,26 +1177,37 @@ public final class Account {
         }
     }
 
-    // returns true iff:
-    // this.publicKey is set to null (in which case this.publicKey also gets set to key)
-    // or
-    // this.publicKey is already set to an array equal to key
-    boolean setOrVerify(byte[] key) {
-        if (this.getPublicKey() == null) {
-            this.publicKey = new PublicKey(this.id, key);
-            return true;
-        } else {
-            return Arrays.equals(this.publicKey.publicKey, key);
+    static boolean setOrVerify(long accountId, byte[] key) {
+        DbKey dbKey = publicKeyDbKeyFactory.newKey(accountId);
+        PublicKey publicKey = publicKeyTable.get(dbKey);
+        if (publicKey == null) {
+            publicKey = publicKeyTable.newEntity(dbKey);
         }
+        if (publicKey.publicKey == null) {
+            publicKey.publicKey = key;
+            return true;
+        }
+        return Arrays.equals(publicKey.publicKey, key);
     }
 
     void apply(byte[] key) {
-        if (! setOrVerify(key)) {
+        DbKey dbKey = publicKeyDbKeyFactory.newKey(id);
+        PublicKey publicKey = publicKeyTable.get(dbKey);
+        if (publicKey == null) {
+            publicKey = publicKeyTable.newEntity(dbKey);
+            publicKey.publicKey = key;
+            publicKeyTable.insert(publicKey);
+        } else if (publicKey.publicKey == null) {
+            publicKey.publicKey = key;
+            publicKeyTable.insert(publicKey);
+        } else if (Arrays.equals(publicKey.publicKey, key)) {
+            PublicKey dbPublicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id), false);
+            if (dbPublicKey == null || dbPublicKey.publicKey == null) {
+                publicKey.publicKey = key;
+                publicKeyTable.insert(publicKey);
+            }
+        } else {
             throw new IllegalStateException("Public key mismatch");
-        }
-        if (this.publicKey.height == 0) {
-            this.publicKey.height = Nxt.getBlockchain().getHeight();
-            publicKeyTable.insert(this.publicKey);
         }
     }
 
@@ -1302,7 +1360,7 @@ public final class Account {
         this.balanceNQT = Math.addExact(this.balanceNQT, totalAmountNQT);
         addToGuaranteedBalanceNQT(totalAmountNQT);
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
-        accountTable.insert(this);
+        save();
         listeners.notify(this, Event.BALANCE);
         if (feeNQT != 0) {
             AccountLedger.logEntry(new LedgerEntry(LedgerEvent.TRANSACTION_FEE, eventId, this.id,
@@ -1325,7 +1383,7 @@ public final class Account {
         long totalAmountNQT = Math.addExact(amountNQT, feeNQT);
         this.unconfirmedBalanceNQT = Math.addExact(this.unconfirmedBalanceNQT, totalAmountNQT);
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
-        accountTable.insert(this);
+        save();
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
         if (feeNQT != 0) {
             AccountLedger.logEntry(new LedgerEntry(LedgerEvent.TRANSACTION_FEE, eventId, this.id,
@@ -1350,7 +1408,7 @@ public final class Account {
         this.unconfirmedBalanceNQT = Math.addExact(this.unconfirmedBalanceNQT, totalAmountNQT);
         addToGuaranteedBalanceNQT(totalAmountNQT);
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
-        accountTable.insert(this);
+        save();
         listeners.notify(this, Event.BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
         if (feeNQT != 0) {
@@ -1372,7 +1430,7 @@ public final class Account {
             return;
         }
         this.forgedBalanceNQT = Math.addExact(this.forgedBalanceNQT, amountNQT);
-        accountTable.insert(this);
+        save();
     }
 
     private static void checkBalance(long accountId, long confirmed, long unconfirmed) {

@@ -57,7 +57,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     protected void clearCache() {
-        db.getCache(table).clear();
+        db.clearCache(table);
     }
 
     public void checkAvailable(int height) {
@@ -69,8 +69,24 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
-    public final T get(DbKey dbKey) {
+    public final T newEntity(DbKey dbKey) {
         if (db.isInTransaction()) {
+            T t = (T) db.getCache(table).get(dbKey);
+            if (t != null) {
+                return t;
+            }
+        }
+        T t = dbKeyFactory.newEntity(dbKey);
+        db.getCache(table).put(dbKey, t);
+        return t;
+    }
+
+    public final T get(DbKey dbKey) {
+        return get(dbKey, true);
+    }
+
+    public final T get(DbKey dbKey, boolean cache) {
+        if (cache && db.isInTransaction()) {
             T t = (T) db.getCache(table).get(dbKey);
             if (t != null) {
                 return t;
@@ -80,7 +96,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
              + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
             dbKey.setPK(pstmt);
-            return get(con, pstmt, true);
+            return get(con, pstmt, cache);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -388,6 +404,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         if (cachedT == null) {
             db.getCache(table).put(dbKey, t);
         } else if (t != cachedT) { // not a bug
+            Logger.logDebugMessage("In cache : " + cachedT.toString() + ", inserting " + t.toString());
             throw new IllegalStateException("Different instance found in Db cache, perhaps trying to save an object "
                     + "that was read outside the current transaction");
         }
@@ -411,7 +428,6 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             VersionedEntityDbTable.rollback(db, table, height, dbKeyFactory);
         } else {
             super.rollback(height);
-            db.getCache(table).clear();
         }
     }
 
@@ -422,12 +438,6 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         } else {
             super.trim(height);
         }
-    }
-
-    @Override
-    public void truncate() {
-        super.truncate();
-        db.getCache(table).clear();
     }
 
     @Override

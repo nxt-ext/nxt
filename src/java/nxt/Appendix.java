@@ -1122,7 +1122,7 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            if (recipientAccount.setOrVerify(publicKey)) {
+            if (Account.setOrVerify(recipientAccount.getId(), publicKey)) {
                 recipientAccount.apply(this.publicKey);
             }
         }

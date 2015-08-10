@@ -37,8 +37,7 @@ public final class Asset {
 
     };
 
-    private static final VersionedEntityDbTable<Asset> assetTable =
-                new VersionedEntityDbTable<Asset>("asset", assetDbKeyFactory, "name,description") {
+    private static final VersionedEntityDbTable<Asset> assetTable = new VersionedEntityDbTable<Asset>("asset", assetDbKeyFactory, "name,description") {
 
         @Override
         protected Asset load(Connection con, ResultSet rs) throws SQLException {

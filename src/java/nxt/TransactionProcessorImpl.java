@@ -77,8 +77,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final EntityDbTable<UnconfirmedTransaction> unconfirmedTransactionTable =
-            new EntityDbTable<UnconfirmedTransaction>("unconfirmed_transaction", unconfirmedTransactionDbKeyFactory) {
+    private final EntityDbTable<UnconfirmedTransaction> unconfirmedTransactionTable = new EntityDbTable<UnconfirmedTransaction>("unconfirmed_transaction", unconfirmedTransactionDbKeyFactory) {
 
         @Override
         protected UnconfirmedTransaction load(Connection con, ResultSet rs) throws SQLException {
@@ -110,6 +109,12 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             super.rollback(height);
             unconfirmedDuplicates.clear();
+        }
+
+        @Override
+        public void truncate() {
+            super.truncate();
+            clearCache();
         }
 
         @Override
@@ -149,7 +154,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             }
             if (size() > maxUnconfirmedTransactions) {
                 UnconfirmedTransaction removed = remove();
-                Logger.logDebugMessage("Dropped unconfirmed transaction " + removed.getJSONObject().toJSONString());
+                //Logger.logDebugMessage("Dropped unconfirmed transaction " + removed.getJSONObject().toJSONString());
             }
             return true;
         }
