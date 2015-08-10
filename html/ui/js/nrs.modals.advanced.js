@@ -77,9 +77,12 @@ var NRS = (function(NRS, $, undefined) {
 		$("#raw_transaction_modal").modal("show");
 	};
 
-    $("#raw_transaction_modal_signature_reader_link").click(function(e) {
+    $(".qr_code_reader_link").click(function(e) {
         e.preventDefault();
-        var reader = $('#raw_transaction_modal_signature_reader');
+        var id = $(this).attr("id");
+        var readerId = id.substring(0, id.lastIndexOf("_"));
+        var outputId = readerId.substring(0, readerId.lastIndexOf("_"));
+        var reader = $("#" + readerId);
         if (reader.is(':visible')) {
             reader.hide();
             if (reader.data('stream')) {
@@ -92,7 +95,7 @@ var NRS = (function(NRS, $, undefined) {
         reader.html5_qrcode(
             function (data) {
                 console.log(data);
-                $("#raw_transaction_modal_signature").val(data);
+                $("#" + outputId).val(data);
                 reader.hide();
                 reader.html5_qrcode_stop();
             },
@@ -367,6 +370,7 @@ var NRS = (function(NRS, $, undefined) {
     var transactionJSONModal = $("#transaction_json_modal");
     transactionJSONModal.on("show.bs.modal", function() {
 		$(this).find(".output").hide();
+		$(this).find("#unsigned_transaction_bytes_reader").hide();
 		$(this).find(".tab_content:first").show();
         $("#transaction_json_modal_button").text($.t("sign_transaction")).data("resetText", $.t("sign_transaction")).data("form", "sign_transaction_form");
 	});
