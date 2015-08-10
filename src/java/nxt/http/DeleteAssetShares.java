@@ -29,11 +29,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.NOT_ENOUGH_ASSETS;
 
-public final class DeleteAsset extends CreateTransaction {
+public final class DeleteAssetShares extends CreateTransaction {
 
-    static final DeleteAsset instance = new DeleteAsset();
+    static final DeleteAssetShares instance = new DeleteAssetShares();
 
-    private DeleteAsset() {
+    private DeleteAssetShares() {
         super(new APITag[] {APITag.AE, APITag.CREATE_TRANSACTION}, "asset", "quantityQNT");
     }
 
