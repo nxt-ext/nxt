@@ -102,6 +102,11 @@ import javax.servlet.http.HttpServletRequest;
  *       <td>The item being changed (account balance, asset balance or currency balance).</td>
  *     </tr>
  *     <tr>
+ *       <td>isTransactionEvent</td>
+ *       <td>TRUE if the event is associated with a transaction and FALSE if it is associated with a block.</td>
+ *     </tr>
+ *     <tr>
+ *       <td>ledgerId</td>
  *       <td>The ledger entry identifier.  This is a counter that is incremented each time
  *           a new entry is added to the account ledger.  The ledger entry identifier is unique
  *           to the peer returning the ledger entry and will be different for each peer in the

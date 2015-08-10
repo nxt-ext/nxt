@@ -945,6 +945,7 @@ final class JSONData {
         json.put("timestamp", entry.getTimestamp());
         json.put("eventType", entry.getEvent().name());
         json.put("event", Long.toUnsignedString(entry.getEventId()));
+        json.put("isTransactionEvent", entry.getEvent().isTransaction());
         json.put("change", String.valueOf(entry.getChange()));
         json.put("balance", String.valueOf(entry.getBalance()));
         if (entry.getHolding() != null) {
