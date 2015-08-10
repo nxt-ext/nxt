@@ -1443,8 +1443,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (block.getTransactions().size() > 0) {
                 TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
             }
+            AccountLedger.commitEntries();
         } finally {
             isProcessingBlock = false;
+            AccountLedger.clearEntries();
         }
     }
 

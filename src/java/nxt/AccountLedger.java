@@ -61,6 +61,9 @@ public class AccountLedger {
     /** Blockchain processor */
     private static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
 
+    /** Pending ledger entries */
+    private static final List<LedgerEntry> pendingEntries = new ArrayList<>();
+
     /**
      * Process nxt.ledgerAccounts
      */
@@ -184,21 +187,48 @@ public class AccountLedger {
      */
     static void logEntry(LedgerEntry ledgerEntry) {
         // Must be in a database transaction
-        if (!Db.db.isInTransaction())
+        if (!Db.db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
+        }
         // Must be tracking this account
-        if (!ledgerEnabled || (!trackAllAccounts && !trackAccounts.contains(ledgerEntry.getAccountId())))
+        if (!ledgerEnabled || (!trackAllAccounts && !trackAccounts.contains(ledgerEntry.getAccountId()))) {
             return;
+        }
         // Log unconfirmed changes only when processing a block and logUnconfirmed does not equal 0
         // Log confirmed changes unless logUnconfirmed equals 2
         if (ledgerEntry.getHolding() != null &&
                     (ledgerEntry.getHolding().isUnconfirmed() &&
                         (!blockchainProcessor.isProcessingBlock() || logUnconfirmed == 0)) ||
-                    (!ledgerEntry.getHolding().isUnconfirmed() && logUnconfirmed == 2))
+                    (!ledgerEntry.getHolding().isUnconfirmed() && logUnconfirmed == 2)) {
             return;
-        // Log the ledger entry and notify our listeners
-        accountLedgerTable.insert(ledgerEntry);
-        listeners.notify(ledgerEntry, Event.ADD_ENTRY);
+        }
+        // Combine multiple ledger entries
+        int index = pendingEntries.indexOf(ledgerEntry);
+        if (index >= 0) {
+            LedgerEntry existingEntry = pendingEntries.get(index);
+            existingEntry.updateChange(ledgerEntry.getChange());
+            existingEntry.setBalance(ledgerEntry.getBalance());
+        } else {
+            pendingEntries.add(ledgerEntry);
+        }
+    }
+
+    /**
+     * Commit pending ledger entries
+     */
+    static void commitEntries() {
+        for (LedgerEntry ledgerEntry : pendingEntries) {
+            accountLedgerTable.insert(ledgerEntry);
+            listeners.notify(ledgerEntry, Event.ADD_ENTRY);
+        }
+        pendingEntries.clear();
+    }
+
+    /**
+     * Clear pending ledger entries
+     */
+    static void clearEntries() {
+        pendingEntries.clear();
     }
 
     /**
@@ -592,10 +622,10 @@ public class AccountLedger {
         private final Long holdingId;
 
         /** Change in balance */
-        private final long change;
+        private long change;
 
         /** New balance */
-        private final long balance;
+        private long balance;
 
         /** Block identifier */
         private final long blockId;
@@ -657,15 +687,17 @@ public class AccountLedger {
             eventId = rs.getLong("event_id");
             accountId = rs.getLong("account_id");
             int holdingType = rs.getByte("holding_type");
-            if (holdingType >= 0)
+            if (holdingType >= 0) {
                 holding = LedgerHolding.fromCode(holdingType);
-            else
+            } else {
                 holding = null;
+            }
             long id = rs.getLong("holding_id");
-            if (rs.wasNull())
+            if (rs.wasNull()) {
                 holdingId = null;
-            else
+            } else {
                 holdingId = id;
+            }
             change = rs.getLong("change");
             balance = rs.getLong("balance");
             blockId = rs.getLong("block_id");
@@ -728,12 +760,30 @@ public class AccountLedger {
         }
 
         /**
+         * Update the balance change
+         *
+         * @param   amount                  Change amount
+         */
+        private void updateChange(long amount) {
+            change += amount;
+        }
+
+        /**
          * Return the balance change
          *
          * @return                          Balance changes
          */
         public long getChange() {
             return change;
+        }
+
+        /**
+         * Set the new balance
+         *
+         * @param balance                   New balance
+         */
+        private void setBalance(long balance) {
+            this.balance = balance;
         }
 
         /**
@@ -770,6 +820,31 @@ public class AccountLedger {
          */
         public int getTimestamp() {
             return timestamp;
+        }
+
+        /**
+         * Return the hash code
+         *
+         * @return                          Hash code
+         */
+        @Override
+        public int hashCode() {
+            return (Long.hashCode(accountId) ^ Long.hashCode(eventId) ^ Long.hashCode(holdingId) ^ event.getCode() ^
+                    (holding != null ? holding.getCode() : 0));
+        }
+
+        /**
+         * Check if two ledger events are equal
+         *
+         * @param   obj                     Ledger event to check
+         * @return                          TRUE if the ledger events are the same
+         */
+        @Override
+        public boolean equals(Object obj) {
+            return (obj != null && (obj instanceof LedgerEntry) && accountId == ((LedgerEntry)obj).accountId &&
+                    event == ((LedgerEntry)obj).event && eventId == ((LedgerEntry)obj).eventId &&
+                    holding == ((LedgerEntry)obj).holding &&
+                    (holdingId != null ? holdingId.equals(((LedgerEntry)obj).holdingId) : ((LedgerEntry)obj).holdingId == null));
         }
 
         /**
