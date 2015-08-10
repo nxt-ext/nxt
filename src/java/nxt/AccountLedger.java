@@ -829,8 +829,8 @@ public class AccountLedger {
          */
         @Override
         public int hashCode() {
-            return (Long.hashCode(accountId) ^ Long.hashCode(eventId) ^ Long.hashCode(holdingId) ^ event.getCode() ^
-                    (holding != null ? holding.getCode() : 0));
+            return (Long.hashCode(accountId) ^ event.getCode() ^ Long.hashCode(eventId) ^
+                    (holding != null ? holding.getCode() : 0) ^ (holdingId != null ? Long.hashCode(holdingId) : 0));
         }
 
         /**
