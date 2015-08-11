@@ -120,7 +120,7 @@ var NRS = (function(NRS, $, undefined) {
         );
     });
 
-    $("#broadcast_transaction_json_file").change(function(e) {
+    $("#broadcast_transaction_json_file, #unsigned_transaction_json_file").change(function(e) {
         e.preventDefault();
         var fileInputId = $(this).attr('id');
         var textAreaId = fileInputId.substring(0, fileInputId.lastIndexOf("_"));
@@ -462,7 +462,16 @@ var NRS = (function(NRS, $, undefined) {
     NRS.forms.signTransactionComplete = function(response) {
         $("#sign_transaction_form").find(".error_message").hide();
         var signedTransactionJson = $("#signed_transaction_json");
-        signedTransactionJson.val(JSON.stringify(response.transactionJSON));
+        var jsonStr = JSON.stringify(response.transactionJSON);
+        signedTransactionJson.val(jsonStr);
+        var downloadLink = $("#signed_transaction_json_download");
+        if (window.URL) {
+            var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
+            downloadLink.prop('download', 'signed.transaction.json');
+            downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
+        } else {
+            downloadLink.hide();
+        }
         $("#signed_json_output").show();
         var signedPrunableTransactionJson = $("#signed_prunable_transaction_json");
         if (response.prunableAttachmentJSON) {
