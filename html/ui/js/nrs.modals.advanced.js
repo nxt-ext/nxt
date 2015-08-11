@@ -120,11 +120,10 @@ var NRS = (function(NRS, $, undefined) {
         );
     });
 
-    $("#broadcast_transaction_json_upload").click(function(e) {
+    $("#broadcast_transaction_json_file").change(function(e) {
         e.preventDefault();
-        var linkId = $(this).attr('id');
-        var textAreaId = linkId.substring(0, linkId.lastIndexOf("_"));
-        var fileInputId = textAreaId + "_file";
+        var fileInputId = $(this).attr('id');
+        var textAreaId = fileInputId.substring(0, fileInputId.lastIndexOf("_"));
         var fileInput = document.getElementById(fileInputId);
         var file = fileInput.files[0];
         if (!file) {
@@ -400,6 +399,7 @@ var NRS = (function(NRS, $, undefined) {
     var transactionJSONModal = $("#transaction_json_modal");
     transactionJSONModal.on("show.bs.modal", function() {
 		$(this).find(".output").hide();
+        $(this).find(".upload_container").hide();
 		$(this).find("#unsigned_transaction_bytes_reader").hide();
 		$(this).find(".tab_content:first").show();
         $("#transaction_json_modal_button").text($.t("sign_transaction")).data("resetText", $.t("sign_transaction")).data("form", "sign_transaction_form");
