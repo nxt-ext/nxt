@@ -1004,21 +1004,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public void trimDerivedTables() {
-        blockchain.readLock();
         try {
-            try {
-                Db.db.beginTransaction();
-                doTrimDerivedTables();
-                Db.db.commitTransaction();
-            } catch (Exception e) {
-                Logger.logMessage(e.toString(), e);
-                Db.db.rollbackTransaction();
-                throw e;
-            } finally {
-                Db.db.endTransaction();
-            }
+            Db.db.beginTransaction();
+            doTrimDerivedTables();
+            Db.db.commitTransaction();
+        } catch (Exception e) {
+            Logger.logMessage(e.toString(), e);
+            Db.db.rollbackTransaction();
+            throw e;
         } finally {
-            blockchain.readUnlock();
+            Db.db.endTransaction();
         }
     }
 
@@ -1026,8 +1021,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
         if (lastTrimHeight > 0) {
             for (DerivedDbTable table : derivedTables) {
-                table.trim(lastTrimHeight);
-                Db.db.commitTransaction();
+                blockchain.readLock();
+                try {
+                    table.trim(lastTrimHeight);
+                    Db.db.commitTransaction();
+                } finally {
+                    blockchain.readUnlock();
+                }
             }
         }
     }
