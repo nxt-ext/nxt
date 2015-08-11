@@ -1263,45 +1263,80 @@ public final class Account {
     }
 
     void addToBalanceNQT(LedgerEvent event, long eventId, long amountNQT) {
-        if (amountNQT == 0) {
+        addToBalanceNQT(event, eventId, amountNQT, 0);
+    }
+
+    void addToBalanceNQT(LedgerEvent event, long eventId, long amountNQT, long feeNQT) {
+        if (amountNQT == 0 && feeNQT == 0) {
             return;
         }
-        this.balanceNQT = Math.addExact(this.balanceNQT, amountNQT);
-        addToGuaranteedBalanceNQT(amountNQT);
+        long totalAmountNQT = Math.addExact(amountNQT, feeNQT);
+        this.balanceNQT = Math.addExact(this.balanceNQT, totalAmountNQT);
+        addToGuaranteedBalanceNQT(totalAmountNQT);
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
-        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.NXT_BALANCE,
-                                               null, amountNQT, this.balanceNQT));
+        if (feeNQT != 0) {
+            AccountLedger.logEntry(new LedgerEntry(LedgerEvent.TRANSACTION_FEE, eventId, this.id,
+                    LedgerHolding.NXT_BALANCE, null, feeNQT, this.balanceNQT - amountNQT));
+        }
+        if (amountNQT != 0) {
+            AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                    LedgerHolding.NXT_BALANCE, null, amountNQT, this.balanceNQT));
+        }
     }
 
     void addToUnconfirmedBalanceNQT(LedgerEvent event, long eventId, long amountNQT) {
-        if (amountNQT == 0) {
+        addToUnconfirmedBalanceNQT(event, eventId, amountNQT, 0);
+    }
+
+    void addToUnconfirmedBalanceNQT(LedgerEvent event, long eventId, long amountNQT, long feeNQT) {
+        if (amountNQT == 0 && feeNQT == 0) {
             return;
         }
-        this.unconfirmedBalanceNQT = Math.addExact(this.unconfirmedBalanceNQT, amountNQT);
+        long totalAmountNQT = Math.addExact(amountNQT, feeNQT);
+        this.unconfirmedBalanceNQT = Math.addExact(this.unconfirmedBalanceNQT, totalAmountNQT);
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
-        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.UNCONFIRMED_NXT_BALANCE, null,
-                                               amountNQT, this.unconfirmedBalanceNQT));
+        if (feeNQT != 0) {
+            AccountLedger.logEntry(new LedgerEntry(LedgerEvent.TRANSACTION_FEE, eventId, this.id,
+                    LedgerHolding.UNCONFIRMED_NXT_BALANCE, null, feeNQT, this.unconfirmedBalanceNQT - amountNQT));
+        }
+        if (amountNQT != 0) {
+            AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                    LedgerHolding.UNCONFIRMED_NXT_BALANCE, null, amountNQT, this.unconfirmedBalanceNQT));
+        }
     }
 
     void addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent event, long eventId, long amountNQT) {
-        if (amountNQT == 0) {
+        addToBalanceAndUnconfirmedBalanceNQT(event, eventId, amountNQT, 0);
+    }
+
+    void addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent event, long eventId, long amountNQT, long feeNQT) {
+        if (amountNQT == 0 && feeNQT == 0) {
             return;
         }
-        this.balanceNQT = Math.addExact(this.balanceNQT, amountNQT);
-        this.unconfirmedBalanceNQT = Math.addExact(this.unconfirmedBalanceNQT, amountNQT);
-        addToGuaranteedBalanceNQT(amountNQT);
+        long totalAmountNQT = Math.addExact(amountNQT, feeNQT);
+        this.balanceNQT = Math.addExact(this.balanceNQT, totalAmountNQT);
+        this.unconfirmedBalanceNQT = Math.addExact(this.unconfirmedBalanceNQT, totalAmountNQT);
+        addToGuaranteedBalanceNQT(totalAmountNQT);
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         accountTable.insert(this);
         listeners.notify(this, Event.BALANCE);
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
-        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.UNCONFIRMED_NXT_BALANCE, null,
-                                               amountNQT, this.unconfirmedBalanceNQT));
-        AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id, LedgerHolding.NXT_BALANCE, null,
-                                               amountNQT, this.balanceNQT));
+        if (feeNQT != 0) {
+            AccountLedger.logEntry(new LedgerEntry(LedgerEvent.TRANSACTION_FEE, eventId, this.id,
+                    LedgerHolding.UNCONFIRMED_NXT_BALANCE, null, feeNQT, this.unconfirmedBalanceNQT - amountNQT));
+            AccountLedger.logEntry(new LedgerEntry(LedgerEvent.TRANSACTION_FEE, eventId, this.id,
+                    LedgerHolding.NXT_BALANCE, null, feeNQT, this.balanceNQT - amountNQT));
+        }
+        if (amountNQT != 0) {
+            AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                    LedgerHolding.UNCONFIRMED_NXT_BALANCE, null, amountNQT, this.unconfirmedBalanceNQT));
+            AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
+                    LedgerHolding.NXT_BALANCE, null, amountNQT, this.balanceNQT));
+        }
     }
 
     void addToForgedBalanceNQT(long amountNQT) {

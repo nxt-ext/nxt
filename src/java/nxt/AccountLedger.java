@@ -409,6 +409,7 @@ public class AccountLedger {
         // Block and Transaction
             BLOCK_GENERATED(1, false),
             REJECT_PHASED_TRANSACTION(2, true),
+            TRANSACTION_FEE(50, true),
         // TYPE_PAYMENT
             ORDINARY_PAYMENT(3, true),
         // TYPE_MESSAGING

@@ -193,18 +193,20 @@ public abstract class TransactionType {
 
     // return false iff double spending
     final boolean applyUnconfirmed(TransactionImpl transaction, Account senderAccount) {
-        long totalAmountNQT = Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT());
+        long amountNQT = transaction.getAmountNQT();
+        long feeNQT = transaction.getFeeNQT();
         if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            totalAmountNQT = Math.addExact(totalAmountNQT, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+            feeNQT = Math.addExact(feeNQT, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
+        long totalAmountNQT = Math.addExact(amountNQT, feeNQT);
         if (senderAccount.getUnconfirmedBalanceNQT() < totalAmountNQT
                 && !(transaction.getTimestamp() == 0 && Arrays.equals(senderAccount.getPublicKey(), Genesis.CREATOR_PUBLIC_KEY))) {
             return false;
         }
-        senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalAmountNQT);
+        senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -amountNQT, -feeNQT);
         if (!applyAttachmentUnconfirmed(transaction, senderAccount)) {
-            senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalAmountNQT);
+            senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), amountNQT, feeNQT);
             return false;
         }
         return true;
@@ -216,7 +218,7 @@ public abstract class TransactionType {
         long amount = transaction.getAmountNQT();
         long transactionId = transaction.getId();
         if (transaction.getPhasing() == null || !isPhasable()) {
-            senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -Math.addExact(amount, transaction.getFeeNQT()));
+            senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -amount, -transaction.getFeeNQT());
         } else {
             senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -amount);
         }
@@ -231,10 +233,10 @@ public abstract class TransactionType {
     final void undoUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         undoAttachmentUnconfirmed(transaction, senderAccount);
         senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                Math.addExact(transaction.getAmountNQT(), transaction.getFeeNQT()));
+                transaction.getAmountNQT(), transaction.getFeeNQT());
         if (transaction.referencedTransactionFullHash() != null
                 && transaction.getTimestamp() > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
+            senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), 0,
                     Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
     }
@@ -1593,8 +1595,7 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsBidOrderPlacement attachment = (Attachment.ColoredCoinsBidOrderPlacement) transaction.getAttachment();
                 if (senderAccount.getUnconfirmedBalanceNQT() >= Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT())) {
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(),
-                            -Math.multiplyExact(attachment.getQuantityQNT(),
-                                    attachment.getPriceNQT()));
+                            -Math.multiplyExact(attachment.getQuantityQNT(), attachment.getPriceNQT()));
                     return true;
                 }
                 return false;

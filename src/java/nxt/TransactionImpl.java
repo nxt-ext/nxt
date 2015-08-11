@@ -1026,10 +1026,11 @@ final class TransactionImpl implements Transaction {
         }
         if (referencedTransactionFullHash != null
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(getType().getLedgerEvent(), getId(), Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+            senderAccount.addToUnconfirmedBalanceNQT(getType().getLedgerEvent(), getId(),
+                    0, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (phasing != null && type.isPhasable()) {
-            senderAccount.addToBalanceNQT(getType().getLedgerEvent(), getId(), -feeNQT);
+            senderAccount.addToBalanceNQT(getType().getLedgerEvent(), getId(), 0, -feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {
             if (phasing == null || !appendage.isPhasable()) {
