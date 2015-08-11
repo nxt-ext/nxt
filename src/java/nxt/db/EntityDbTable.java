@@ -70,14 +70,17 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final T newEntity(DbKey dbKey) {
-        if (db.isInTransaction()) {
+        boolean cache = db.isInTransaction();
+        if (cache) {
             T t = (T) db.getCache(table).get(dbKey);
             if (t != null) {
                 return t;
             }
         }
         T t = dbKeyFactory.newEntity(dbKey);
-        db.getCache(table).put(dbKey, t);
+        if (cache) {
+            db.getCache(table).put(dbKey, t);
+        }
         return t;
     }
 

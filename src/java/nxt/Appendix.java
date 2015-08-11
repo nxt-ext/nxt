@@ -1115,7 +1115,7 @@ public interface Appendix {
                 throw new NxtException.NotValidException("Announced public key does not match recipient accountId");
             }
             Account recipientAccount = Account.getAccount(recipientId);
-            if (recipientAccount != null && recipientAccount.getKeyHeight() > 0 && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
+            if (recipientAccount != null && recipientAccount.getPublicKey() != null && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
                 throw new NxtException.NotCurrentlyValidException("A different public key for this account has already been announced");
             }
         }

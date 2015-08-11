@@ -99,7 +99,7 @@ public final class DebugTrace {
             "crowdfunding", "claim", "mint",
             "asset quantity", "currency units", "transaction", "lessee", "lessor guaranteed balance",
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
-            "sender", "recipient", "key height", "block", "timestamp"};
+            "sender", "recipient", "block", "timestamp"};
 
     private static final Map<String,String> headers = new HashMap<>();
     static {
@@ -356,7 +356,6 @@ public final class DebugTrace {
         map.put("timestamp", String.valueOf(Nxt.getBlockchain().getLastBlock().getTimestamp()));
         map.put("height", String.valueOf(Nxt.getBlockchain().getHeight()));
         map.put("event", unconfirmed ? "unconfirmed balance" : "balance");
-        map.put("key height", String.valueOf(account != null ? account.getKeyHeight() : 0));
         return map;
     }
 

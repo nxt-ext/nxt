@@ -26,7 +26,6 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.DerivedDbTable;
-import nxt.db.PersistentDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.db.VersionedPersistentDbTable;
 import nxt.util.Convert;
@@ -339,6 +338,7 @@ public final class Account {
             this.accountId = accountId;
             this.dbKey = publicKeyDbKeyFactory.newKey(accountId);
             this.publicKey = publicKey;
+            this.height = Nxt.getBlockchain().getHeight();
         }
 
         private PublicKey(ResultSet rs) throws SQLException {
@@ -349,12 +349,13 @@ public final class Account {
         }
 
         private void save(Connection con) throws SQLException {
+            height = Nxt.getBlockchain().getHeight();
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO public_key (account_id, public_key, height, latest) "
                     + "KEY (account_id, height) VALUES (?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, accountId);
-                pstmt.setBytes(++i, publicKey);
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                DbUtils.setBytes(pstmt, ++i, publicKey);
+                pstmt.setInt(++i, height);
                 pstmt.executeUpdate();
             }
         }
@@ -850,7 +851,7 @@ public final class Account {
 
     private final long id;
     private final DbKey dbKey;
-    private volatile PublicKey publicKey;
+    private PublicKey publicKey;
     private long balanceNQT;
     private long unconfirmedBalanceNQT;
     private long forgedBalanceNQT;
@@ -929,13 +930,6 @@ public final class Account {
         return publicKey == null ? null : publicKey.publicKey;
     }
 
-    int getKeyHeight() {
-        if (this.publicKey == null) {
-            this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
-        }
-        return publicKey == null || publicKey.publicKey == null ? 0 : publicKey.height;
-    }
-
     public EncryptedData encryptTo(byte[] data, String senderSecretPhrase, boolean compress) {
         if (getPublicKey() == null) {
             throw new IllegalArgumentException("Recipient account doesn't have a public key set");
@@ -975,8 +969,10 @@ public final class Account {
 
     public long getEffectiveBalanceNXT(int height) {
         if (height >= Constants.TRANSPARENT_FORGING_BLOCK_6) {
-            int keyHeight = getKeyHeight();
-            if (keyHeight == 0 || height - keyHeight <= 1440) {
+            if (this.publicKey == null) {
+                this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
+            }
+            if (this.publicKey == null || this.publicKey.publicKey == null || this.publicKey.height == 0 || height - this.publicKey.height <= 1440) {
                 return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
             }
         }
@@ -1151,30 +1147,27 @@ public final class Account {
     }
 
     void leaseEffectiveBalance(long lesseeId, short period) {
-        Account lessee = Account.getAccount(lesseeId);
-        if (lessee != null && lessee.getKeyHeight() > 0) {
-            int height = Nxt.getBlockchain().getHeight();
-            AccountLease accountLease = accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(id));
-            if (accountLease == null) {
-                accountLease = new AccountLease(id,
-                        height + Constants.LEASING_DELAY,
-                        height + Constants.LEASING_DELAY + period,
-                        lesseeId);
-            } else if (accountLease.currentLesseeId == 0) {
-                accountLease.currentLeasingHeightFrom = height + Constants.LEASING_DELAY;
-                accountLease.currentLeasingHeightTo = height + Constants.LEASING_DELAY + period;
-                accountLease.currentLesseeId = lesseeId;
-            } else {
-                accountLease.nextLeasingHeightFrom = height + Constants.LEASING_DELAY;
-                if (accountLease.nextLeasingHeightFrom < accountLease.currentLeasingHeightTo) {
-                    accountLease.nextLeasingHeightFrom = accountLease.currentLeasingHeightTo;
-                }
-                accountLease.nextLeasingHeightTo = accountLease.nextLeasingHeightFrom + period;
-                accountLease.nextLesseeId = lesseeId;
+        int height = Nxt.getBlockchain().getHeight();
+        AccountLease accountLease = accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(id));
+        if (accountLease == null) {
+            accountLease = new AccountLease(id,
+                    height + Constants.LEASING_DELAY,
+                    height + Constants.LEASING_DELAY + period,
+                    lesseeId);
+        } else if (accountLease.currentLesseeId == 0) {
+            accountLease.currentLeasingHeightFrom = height + Constants.LEASING_DELAY;
+            accountLease.currentLeasingHeightTo = height + Constants.LEASING_DELAY + period;
+            accountLease.currentLesseeId = lesseeId;
+        } else {
+            accountLease.nextLeasingHeightFrom = height + Constants.LEASING_DELAY;
+            if (accountLease.nextLeasingHeightFrom < accountLease.currentLeasingHeightTo) {
+                accountLease.nextLeasingHeightFrom = accountLease.currentLeasingHeightTo;
             }
-            accountLeaseTable.insert(accountLease);
-            leaseListeners.notify(accountLease, Event.LEASE_SCHEDULED);
+            accountLease.nextLeasingHeightTo = accountLease.nextLeasingHeightFrom + period;
+            accountLease.nextLesseeId = lesseeId;
         }
+        accountLeaseTable.insert(accountLease);
+        leaseListeners.notify(accountLease, Event.LEASE_SCHEDULED);
     }
 
     static boolean setOrVerify(long accountId, byte[] key) {
@@ -1185,6 +1178,7 @@ public final class Account {
         }
         if (publicKey.publicKey == null) {
             publicKey.publicKey = key;
+            publicKey.height = Nxt.getBlockchain().getHeight();
             return true;
         }
         return Arrays.equals(publicKey.publicKey, key);
@@ -1195,20 +1189,19 @@ public final class Account {
         PublicKey publicKey = publicKeyTable.get(dbKey);
         if (publicKey == null) {
             publicKey = publicKeyTable.newEntity(dbKey);
+        }
+        if (publicKey.publicKey == null) {
             publicKey.publicKey = key;
             publicKeyTable.insert(publicKey);
-        } else if (publicKey.publicKey == null) {
-            publicKey.publicKey = key;
-            publicKeyTable.insert(publicKey);
-        } else if (Arrays.equals(publicKey.publicKey, key)) {
+        } else if (! Arrays.equals(publicKey.publicKey, key)) {
+            throw new IllegalStateException("Public key mismatch");
+        } else if (publicKey.height >= Nxt.getBlockchain().getHeight() - 1) {
             PublicKey dbPublicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id), false);
             if (dbPublicKey == null || dbPublicKey.publicKey == null) {
-                publicKey.publicKey = key;
                 publicKeyTable.insert(publicKey);
             }
-        } else {
-            throw new IllegalStateException("Public key mismatch");
         }
+        this.publicKey = publicKey;
     }
 
     void addToAssetBalanceQNT(LedgerEvent event, long eventId, long assetId, long quantityQNT) {
