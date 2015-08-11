@@ -120,6 +120,25 @@ var NRS = (function(NRS, $, undefined) {
         );
     });
 
+    $("#broadcast_transaction_json_upload").click(function(e) {
+        e.preventDefault();
+        var linkId = $(this).attr('id');
+        var textAreaId = linkId.substring(0, linkId.lastIndexOf("_"));
+        var fileInputId = textAreaId + "_file";
+        var fileInput = document.getElementById(fileInputId);
+        var file = fileInput.files[0];
+        if (!file) {
+            $.growl($.t("select_file_to_upload"));
+            return;
+        }
+        var fileReader = new FileReader();
+        fileReader.onload = function(fileLoadedEvent) {
+            var textFromFile = fileLoadedEvent.target.result;
+            $("#" + textAreaId).val(textFromFile);
+        };
+        fileReader.readAsText(file, "UTF-8");
+    });
+
     NRS.forms.broadcastTransaction = function(modal) {
         // The problem is that broadcastTransaction is invoked by different modals
         // We need to find the correct form in case the modal has more than one
