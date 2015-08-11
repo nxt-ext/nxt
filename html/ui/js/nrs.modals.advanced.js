@@ -42,7 +42,17 @@ var NRS = (function(NRS, $, undefined) {
             } else {
                 $("#raw_transaction_modal_unsigned_transaction_json_label").html($.t("unsigned_transaction_json"));
             }
-            $("#raw_transaction_modal_unsigned_transaction_json").val(JSON.stringify(transaction.transactionJSON));
+            var unsignedTransactionJson = $("#raw_transaction_modal_unsigned_transaction_json");
+            var jsonStr = JSON.stringify(transaction.transactionJSON);
+            unsignedTransactionJson.val(jsonStr);
+            var downloadLink = $("#raw_transaction_modal_unsigned_transaction_json_download");
+            if (window.URL) {
+                var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
+                downloadLink.prop('download', 'unsigned.transaction.json');
+                downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
+            } else {
+                downloadLink.hide();
+            }
         }
 
         if (transaction.unsignedTransactionBytes && !transaction.transactionBytes) {
@@ -101,6 +111,7 @@ var NRS = (function(NRS, $, undefined) {
             },
             function (error) {},
             function (videoError) {
+                console.log(videoError);
                 reader.hide();
                 if (reader.data('stream')) {
                     reader.html5_qrcode_stop();
