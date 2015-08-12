@@ -491,18 +491,16 @@ public final class Peers {
                                 }
                                 connectSet.add((PeerImpl)peerList.get(ThreadLocalRandom.current().nextInt(peerList.size())));
                             }
-                            connectSet.forEach(peer -> {
-                                futures.add(peersService.submit(() -> {
-                                    peer.connect();
-                                    if (peer.getState() == Peer.State.CONNECTED &&
-                                                enableHallmarkProtection && peer.getWeight() == 0 &&
-                                                hasTooManyOutboundConnections()) {
-                                        Logger.logDebugMessage("Too many outbound connections, deactivating peer " + peer.getHost());
-                                        peer.deactivate();
-                                    }
-                                    return null;
-                                }));
-                            });
+                            connectSet.forEach(peer -> futures.add(peersService.submit(() -> {
+                                peer.connect();
+                                if (peer.getState() == Peer.State.CONNECTED &&
+                                            enableHallmarkProtection && peer.getWeight() == 0 &&
+                                            hasTooManyOutboundConnections()) {
+                                    Logger.logDebugMessage("Too many outbound connections, deactivating peer " + peer.getHost());
+                                    peer.deactivate();
+                                }
+                                return null;
+                            })));
                             for (Future<?> future : futures) {
                                 future.get();
                             }

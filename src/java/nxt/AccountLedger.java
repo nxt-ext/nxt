@@ -504,7 +504,7 @@ public class AccountLedger {
          * @param   code                    Event code
          * @param   isTransaction           Event identifier is a transaction
          */
-        private LedgerEvent(int code, boolean isTransaction) {
+        LedgerEvent(int code, boolean isTransaction) {
             this.code = code;
             this.isTransaction = isTransaction;
         }
@@ -578,7 +578,7 @@ public class AccountLedger {
          * @param   code                    Holding code
          * @param   isUnconfirmed           TRUE if the holding is unconfirmed
          */
-        private LedgerHolding(int code, boolean isUnconfirmed) {
+        LedgerHolding(int code, boolean isUnconfirmed) {
             this.code = code;
             this.isUnconfirmed = isUnconfirmed;
         }

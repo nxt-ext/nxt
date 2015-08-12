@@ -31,7 +31,7 @@ public interface Peer extends Comparable<Peer> {
 
         private final long code;        // Service code - must be a power of 2
 
-        private Service(int code) {
+        Service(int code) {
             this.code = code;
         }
 
