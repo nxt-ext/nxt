@@ -205,12 +205,10 @@ public class AccountLedger {
         // Combine multiple ledger entries
         int index = pendingEntries.indexOf(ledgerEntry);
         if (index >= 0) {
-            LedgerEntry existingEntry = pendingEntries.get(index);
-            existingEntry.updateChange(ledgerEntry.getChange());
-            existingEntry.setBalance(ledgerEntry.getBalance());
-        } else {
-            pendingEntries.add(ledgerEntry);
+            LedgerEntry existingEntry = pendingEntries.remove(index);
+            ledgerEntry.updateChange(existingEntry.getChange());
         }
+        pendingEntries.add(ledgerEntry);
     }
 
     /**
