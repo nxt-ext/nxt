@@ -186,27 +186,46 @@ public class AccountLedger {
      * @param   ledgerEntry                 Ledger entry
      */
     static void logEntry(LedgerEntry ledgerEntry) {
+        //
         // Must be in a database transaction
+        //
         if (!Db.db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
         }
+        //
         // Must be tracking this account
+        //
         if (!ledgerEnabled || (!trackAllAccounts && !trackAccounts.contains(ledgerEntry.getAccountId()))) {
             return;
         }
+        //
         // Log unconfirmed changes only when processing a block and logUnconfirmed does not equal 0
         // Log confirmed changes unless logUnconfirmed equals 2
+        //
         if (ledgerEntry.getHolding() != null &&
                     (ledgerEntry.getHolding().isUnconfirmed() &&
                         (!blockchainProcessor.isProcessingBlock() || logUnconfirmed == 0)) ||
                     (!ledgerEntry.getHolding().isUnconfirmed() && logUnconfirmed == 2)) {
             return;
         }
+        //
         // Combine multiple ledger entries
+        //
         int index = pendingEntries.indexOf(ledgerEntry);
         if (index >= 0) {
             LedgerEntry existingEntry = pendingEntries.remove(index);
             ledgerEntry.updateChange(existingEntry.getChange());
+            long adjustedBalance = existingEntry.getBalance();
+            for (; index < pendingEntries.size(); index++) {
+                existingEntry = pendingEntries.get(index);
+                if (existingEntry.getAccountId() == ledgerEntry.getAccountId() &&
+                        existingEntry.getHolding() == ledgerEntry.getHolding() &&
+                        ((existingEntry.getHoldingId() == null && ledgerEntry.getHoldingId() == null) ||
+                        (existingEntry.getHoldingId() != null && existingEntry.getHoldingId().equals(ledgerEntry.getHoldingId())))) {
+                    existingEntry.setBalance(adjustedBalance);
+                    adjustedBalance += existingEntry.getChange();
+                }
+            }
         }
         pendingEntries.add(ledgerEntry);
     }
