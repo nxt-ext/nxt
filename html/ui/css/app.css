@@ -3501,9 +3501,11 @@ body > .header .navbar {
 
     .navbar .navbar-right > .nav.sends + .nav {
       margin: 0; 
+      display: -webkit-flex;
       display: flex;
       float: none;
       width: 100%;
+      -webkit-justify-content: space-between;
       justify-content: space-between;
     }
     .navbar .navbar-right > .nav.sends + .nav > li > a {
@@ -3512,7 +3514,9 @@ body > .header .navbar {
 
     .navbar .navbar-right > .nav.sends { 
       height: 31px; 
+      display: -webkit-flex;
       display: flex;
+      -webkit-justify-content: space-around;
       justify-content: space-around;
       margin: 0;
     }
