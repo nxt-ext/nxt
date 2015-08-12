@@ -155,12 +155,10 @@ var NRS = (function(NRS, $, undefined) {
 					.append($("<li></li>")
 						.append($("<a></a>")
 							.attr("href","#")
-							.attr("style","display: inline-block;width: 360px;")
 							.attr("onClick","NRS.login(false,'"+account+"')")
 							.text(account))
 						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
-							.attr("onClick","NRS.removeAccount('"+account+"')")
-							.attr("style","margin-right:5px"))
+							.attr("onClick","NRS.removeAccount('"+account+"')"))
 					);
 				}
 			});

@@ -1755,7 +1755,7 @@ body > .header .logo .icon {
 .callout.callout-danger {
   background-color: #fcf2f2;
   border-color: #dFb5b4;
-  word-break: break-all;
+  word-break: break-word;
 }
 .callout.callout-warning {
   background-color: #fefbed;
@@ -1948,7 +1948,8 @@ body > .header .logo .icon {
   -moz-border-radius: 4px;
   border-radius: 4px;
   margin: 10px auto;
-  width: 320px;
+  width: 80%;
+  max-width: 320px;
   display: inline-block;
 }
 .lockscreen-item:before,
@@ -3106,9 +3107,23 @@ hr {
 }
 
 #testnet_login {
-  display:block;
-  text-align:left;
+  display:none;
+  text-align:center;
   margin:auto auto 0px auto;
+  width: 100%;
+  max-width: 400px; 
+}
+
+#testnet_warning {
+  display:none;
+  position:fixed;
+  bottom:0;
+  left:0;
+  padding:5px;
+  background:red;
+  color:white;
+  text-align: center;
+  cursor: pointer;
 }
 
 #login_error  {
@@ -3358,7 +3373,7 @@ body > .header .navbar {
   height: 50px; 
 }
 
-@media screen and (max-width: 965px) {
+@media (max-width: 965px) {
 
   /*Shorten width of send containers to wrap on 2 lines*/
   .navbar-right > .nav.sends > .dropdown > a { 
@@ -3383,7 +3398,7 @@ body > .header .navbar {
 }/* @media min-width: 955px */
 
 
-@media screen and (max-width: 800px) {
+@media (max-width: 800px) {
 
   .sidebar,
   body.fixed .wrapper { 
@@ -3425,7 +3440,7 @@ body > .header .navbar {
 }/* @media min-width: 800px */
 
 
-@media screen and (max-width: 767px) {
+@media (max-width: 767px) {
   .navbar .navbar-nav > li {
     position: static; 
   }
@@ -3455,7 +3470,7 @@ body > .header .navbar {
 }/* @media min-width: 767px */
 
 
-@media screen and (max-width: 550px) {
+@media (max-width: 550px) {
 
   .sidebar,
   body.fixed .wrapper { 
@@ -3515,3 +3530,71 @@ body > .header .navbar {
       }
   
 }/* @media min-width: 550px */
+
+
+
+/*
+ * @duckx 20150812 - login screen  */
+
+#logo-nxt-img { 
+  margin-bottom:40px;
+}
+
+.lockscreen-credentials #login_account {
+    min-width: 256px;
+    max-width: 320px;
+    width: 100%;
+}
+
+.lockscreen-credentials .dropdown-menu a {
+    height: 24px;
+    padding: 3px 30px 0px 15px;
+}
+
+.lockscreen-credentials .dropdown-menu button.close {
+  padding: 0 5px 0 0;
+  margin: -22px 0 0 0;
+}
+
+#custom_passphrase_link {
+  margin-top: 10px;
+  margin-bottom: 0;
+  display:none; 
+  text-align: center;
+}
+
+#testnet_warning.testnet-collapse {
+  height: 12px;
+  padding: 0;
+  font-size: 9px;
+  width: 100%;
+  overflow: hidden;
+  cursor: none;
+}
+
+@media (max-width: 700px) {
+  #testnet_login,
+  #testnet_warning {
+    font-size: 11px; 
+  }
+
+}/* @media min-width: 700px */
+
+
+@media (max-height: 680px) {
+  body.lockscreen #testnet_warning {
+    top: 0;
+    bottom: initial;
+  }
+
+  #logo-nxt-img { 
+    width: 221px;
+    margin-bottom: 9px;
+  }
+
+  #account_phrase_generator_panel {
+    margin: -189px 0 0 0;
+  }
+
+  
+}/* @media min-height: 480px */

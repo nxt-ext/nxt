@@ -673,7 +673,7 @@
   "next_lessee": "Next Lessee",
   "next_lessee_status": "The next lease period is scheduled from block __start__ to block __end__, the lessee account is __account__",
   "no": "No",
-  "no_account_q_create_account": "Don't have an account? Click here to create one!",
+  "no_account_q_create_account": "Create New Account",
   "no_aliases_yet": "No aliases yet",
   "register_one_alias": "Register one",
   "no_asset_found": "No asset found.",
