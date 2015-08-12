@@ -554,6 +554,62 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	};
 
+    NRS.getLedgerEntryRow = function(entry, actions) {
+		var linkClass = entry.isTransactionEvent ? "show_transaction_modal_action" : "show_block_modal_action";
+		var dataToken = entry.isTransactionEvent ? "data-transaction" : "data-block";
+        var change = entry.change;
+        var balance = entry.balance;
+        var balanceType = "nxt";
+        var balanceEntity = "NXT";
+        if (/ASSET_BALANCE/i.test(entry.holdingType)) {
+            NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
+                balanceType = "asset";
+                balanceEntity = response.name;
+                change = NRS.convertToQNTf(change, response.decimals);
+                balance = NRS.convertToQNTf(balance, response.decimals);
+            }, false);
+        } else if (/CURRENCY_BALANCE/i.test(entry.holdingType)) {
+            NRS.sendRequest("getCurrency", {"currency": entry.holding}, function (response) {
+                balanceType = "currency";
+                balanceEntity = response.name;
+                change = NRS.convertToQNTf(change, response.decimals);
+                balance = NRS.convertToQNTf(balance, response.decimals);
+            }, false);
+        } else {
+            change = NRS.convertToQNTf(change, 8);
+            balance = NRS.convertToQNTf(balance, 8);
+        }
+        var html = "";
+		html += "<tr class='tr_transaction_" + entry.transaction + "'>";
+		html += "<td style='vertical-align:middle;'>";
+  		html += "<a class='show_ledger_entry_modal_action' href='#' data-timestamp='" + String(entry.timestamp).escapeHTML() + "' ";
+  		html += "data-entry='" + String(entry.ledgerId).escapeHTML() + "'>";
+  		html += NRS.formatTimestamp(entry.timestamp) + "</a>";
+  		html += "</td>";
+		html += '<td style="vertical-align:middle;">';
+        html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + $.t(entry.eventType.toLowerCase()) + '</span>';
+        html += "<a class='" + linkClass + "' href='#' data-timestamp='" + String(entry.timestamp).escapeHTML() + "'";
+        html += dataToken + "='" + String(entry.event).escapeHTML() + "'>";
+        html += " <i class='fa fa-info'></i></a>";
+		html += '</td>';
+		if (balanceType == "nxt") {
+            html += "<td style='vertical-align:middle;'>" + NRS.formatAmount(entry.change) + "</td>";
+            html += "<td style='vertical-align:middle;'>" + NRS.formatAmount(entry.balance) + "</td>";
+            html += "<td></td>";
+            html += "<td></td>";
+            html += "<td></td>";
+            html += "<td></td>";
+        } else {
+            html += "<td></td>";
+            html += "<td></td>";
+            html += "<td>" + balanceType + "</td>";
+            html += "<td>" + balanceEntity + "</td>";
+            html += "<td style='vertical-align:middle;'>" + entry.change + "</td>";
+            html += "<td style='vertical-align:middle;'>" + entry.balance + "</td>";
+        }
+		return html;
+	};
+
 	NRS.buildTransactionsTypeNavi = function() {
 		var html = '';
 		html += '<li role="presentation" class="active"><a href="#" data-transaction-type="" ';
@@ -659,27 +715,39 @@ var NRS = (function(NRS, $, undefined) {
 			"lastIndex": 9
 		};
 		
-		var unconfirmedTransactions = NRS.unconfirmedTransactions;
-		if (unconfirmedTransactions) {
-			for (var i = 0; i < unconfirmedTransactions.length; i++) {
-				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
-			}
-		}
-
-		NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
-			if (response.transactions && response.transactions.length) {
-				for (var i = 0; i < response.transactions.length; i++) {
-					var transaction = response.transactions[i];
-					transaction.confirmed = true;
-					rows += NRS.getTransactionRowHTML(transaction);
+		NRS.sendRequest("getAccountLedger+", params, function(response) {
+			if (response.entries && response.entries.length) {
+				for (var i = 0; i < response.entries.length; i++) {
+					var entry = response.entries[i];
+					rows += NRS.getLedgerEntryRow(entry);
 				}
-
 				NRS.dataLoaded(rows);
-				NRS.addPhasingInfoToTransactionRows(response.transactions);
 			} else {
 				NRS.dataLoaded(rows);
 			}
 		});
+
+		//var unconfirmedTransactions = NRS.unconfirmedTransactions;
+		//if (unconfirmedTransactions) {
+		//	for (var i = 0; i < unconfirmedTransactions.length; i++) {
+		//		rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
+		//	}
+		//}
+        //
+		//NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
+		//	if (response.transactions && response.transactions.length) {
+		//		for (var i = 0; i < response.transactions.length; i++) {
+		//			var transaction = response.transactions[i];
+		//			transaction.confirmed = true;
+		//			rows += NRS.getTransactionRowHTML(transaction);
+		//		}
+        //
+		//		NRS.dataLoaded(rows);
+		//		NRS.addPhasingInfoToTransactionRows(response.transactions);
+		//	} else {
+		//		NRS.dataLoaded(rows);
+		//	}
+		//});
 	};
 
 	NRS.incoming.dashboard = function() {
