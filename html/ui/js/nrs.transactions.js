@@ -554,14 +554,21 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	};
 
-    NRS.getLedgerEntryRow = function(entry, actions) {
-		var linkClass = entry.isTransactionEvent ? "show_transaction_modal_action" : "show_block_modal_action";
-		var dataToken = entry.isTransactionEvent ? "data-transaction" : "data-block";
+    NRS.getLedgerEntryRow = function(entry) {
+        var linkClass;
+        var dataToken;
+        if (entry.isTransactionEvent) {
+            linkClass = "show_transaction_modal_action";
+            dataToken = "data-transaction='" + String(entry.event).escapeHTML() + "'";
+        } else {
+            linkClass = "show_block_modal_action";
+            dataToken = "data-id='1' data-block='" + String(entry.event).escapeHTML()+ "'";
+        }
         var change = entry.change;
         var balance = entry.balance;
         var balanceType = "nxt";
         var balanceEntity = "NXT";
-        var holdingIcon;
+        var holdingIcon = "";
         if (/ASSET_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
                 balanceType = "asset";
@@ -588,10 +595,10 @@ var NRS = (function(NRS, $, undefined) {
         } else if (entry.change < 0) {
             sign = "<i class='fa fa-minus-circle' style='color:#E04434'></i> ";
             if (change.length > 0) {
-                change = change.substring(1);
+                change = String(change).substring(1);
             }
         }
-        var eventType = entry.eventType;
+        var eventType = String(entry.eventType).escapeHTML();
         if (eventType.startsWith("ASSET") || eventType.startsWith("CURRENCY")) {
             eventType = eventType.substring(eventType.indexOf("_") + 1);
         }
@@ -605,14 +612,12 @@ var NRS = (function(NRS, $, undefined) {
   		html += "</td>";
 		html += '<td style="vertical-align:middle;">';
         html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + eventType + '</span>';
-        html += "<a class='" + linkClass + "' href='#' data-timestamp='" + String(entry.timestamp).escapeHTML() + "'";
-        html += dataToken + "='" + String(entry.event).escapeHTML() + "'>";
+        html += "<a class='" + linkClass + "' href='#' data-timestamp='" + String(entry.timestamp).escapeHTML() + "' " + dataToken + ">";
         html += " <i class='fa fa-info'></i></a>";
 		html += '</td>';
 		if (balanceType == "nxt") {
             html += "<td style='vertical-align:middle;'>" + sign + change + "</td>";
             html += "<td style='vertical-align:middle;'>" + balance + "</td>";
-            html += "<td></td>";
             html += "<td></td>";
             html += "<td></td>";
             html += "<td></td>";
@@ -748,7 +753,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("dashboard");
 	};
 
-	NRS.pages.ledger = function(callback, subpage) {
+	NRS.pages.ledger = function() {
 		var rows = "";
         var params = {
             "account": NRS.account,

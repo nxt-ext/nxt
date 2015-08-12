@@ -25,11 +25,17 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 		NRS.fetchingModalData = true;
-		var blockHeight = $(this).data("block");
-		NRS.sendRequest("getBlock+", {
-			"height": blockHeight,
-			"includeTransactions": "true"
-		}, function(response) {
+		var block = $(this).data("block");
+        var isBlockId = $(this).data("id");
+        var params = {
+            "includeTransactions": "true"
+        };
+        if (isBlockId) {
+            params["block"] = block;
+        } else {
+            params["height"] = block;
+        }
+        NRS.sendRequest("getBlock+", params, function(response) {
 			NRS.showBlockModal(response);
 		});
 	});
