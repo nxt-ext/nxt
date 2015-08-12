@@ -215,15 +215,15 @@ public class AccountLedger {
         if (index >= 0) {
             LedgerEntry existingEntry = pendingEntries.remove(index);
             ledgerEntry.updateChange(existingEntry.getChange());
-            long adjustedBalance = existingEntry.getBalance();
+            long adjustedBalance = existingEntry.getBalance() - existingEntry.getChange();
             for (; index < pendingEntries.size(); index++) {
                 existingEntry = pendingEntries.get(index);
                 if (existingEntry.getAccountId() == ledgerEntry.getAccountId() &&
                         existingEntry.getHolding() == ledgerEntry.getHolding() &&
                         ((existingEntry.getHoldingId() == null && ledgerEntry.getHoldingId() == null) ||
                         (existingEntry.getHoldingId() != null && existingEntry.getHoldingId().equals(ledgerEntry.getHoldingId())))) {
-                    existingEntry.setBalance(adjustedBalance);
                     adjustedBalance += existingEntry.getChange();
+                    existingEntry.setBalance(adjustedBalance);
                 }
             }
         }
