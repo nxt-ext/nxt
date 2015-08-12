@@ -3577,7 +3577,6 @@ body > .header .navbar {
   #testnet_warning {
     font-size: 11px; 
   }
-
 }/* @media min-width: 700px */
 
 
@@ -3595,6 +3594,12 @@ body > .header .navbar {
   #account_phrase_generator_panel {
     margin: -189px 0 0 0;
   }
+}/* @media min-height: 680px */
 
-  
-}/* @media min-height: 480px */
+
+@media (max-height: 400px) { /* When mobile keyboard is displayed. Hide logo. */
+  html.lockscreen body { margin-top: 25px }
+  #logo-nxt-img { display: none; }
+  #registration_link { margin-top: 15px }
+}/* @media min-height: 400px */
+
