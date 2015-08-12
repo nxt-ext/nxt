@@ -115,7 +115,7 @@
                 <div class="box box-primary">
                     <div class="box-header"><h3 class="box-title" data-i18n="recent_transactions">Recent Transactions</h3></div>
                     <div class="box-body no-padding">
-                        <div class="data-container data-loading" data-no-padding="true" data-extra="#dashboard_transactions_footer">
+                        <div class="data-container data-loading" data-no-padding="true" data-extra="#dashboard_ledger_footer">
                             <table class="table table-striped" id="dashboard_table">
                                 <thead>
                                 <tr>
@@ -134,37 +134,12 @@
                                 </tbody>
                             </table>
                             <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                            <div class="data-empty-container"><p data-i18n="no_transactions_yet">No transactions yet.</p></div>
+                            <div class="data-empty-container"><p data-i18n="no_account_ledger">No Account Ledger Entries.</p></div>
                         </div>
                     </div>
-                    <div class="box-footer" id="dashboard_transactions_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="transactions"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
+                    <div class="box-footer" id="dashboard_ledger_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="ledger"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
                 </div>
             </div>
-            <!--<div class="col-md-3">
-                <div class="box box-primary">
-                    <div class="box-header"><h3 class="box-title" data-i18n="recent_blocks">Recent Blocks</h3></div>
-                    <div class="box-body no-padding">
-                        <div class="data-container data-loading" data-no-padding="true" data-extra="#dashboard_blocks_footer">
-                            <table class="table table-striped" id="dashboard_blocks_table">
-                                <thead>
-                                <tr>
-                                    <th data-i18n="height" style="width: 30px">Height</th>
-                                    <th data-i18n="date">Date</th>
-                                    <th data-i18n="amount_plus_fee">Amount + Fee</th>
-                                    <th data-i18n="nr_transactions_short"># TX</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                
-                                </tbody>
-                            </table>
-                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                            <div class="data-empty-container"><p data-i18n="no_blocks_found">No blocks found.</p></div>
-                        </div>
-                    </div>
-                    <div class="box-footer" id="dashboard_blocks_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="blocks"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
-                </div>
-            </div-->
         </div>
     </section>
 </div>

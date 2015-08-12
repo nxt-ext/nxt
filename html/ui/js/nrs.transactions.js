@@ -726,32 +726,29 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded(rows);
 			}
 		});
-
-		//var unconfirmedTransactions = NRS.unconfirmedTransactions;
-		//if (unconfirmedTransactions) {
-		//	for (var i = 0; i < unconfirmedTransactions.length; i++) {
-		//		rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
-		//	}
-		//}
-        //
-		//NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
-		//	if (response.transactions && response.transactions.length) {
-		//		for (var i = 0; i < response.transactions.length; i++) {
-		//			var transaction = response.transactions[i];
-		//			transaction.confirmed = true;
-		//			rows += NRS.getTransactionRowHTML(transaction);
-		//		}
-        //
-		//		NRS.dataLoaded(rows);
-		//		NRS.addPhasingInfoToTransactionRows(response.transactions);
-		//	} else {
-		//		NRS.dataLoaded(rows);
-		//	}
-		//});
 	};
 
 	NRS.incoming.dashboard = function() {
 		NRS.loadPage("dashboard");
+	};
+
+	NRS.pages.ledger = function(callback, subpage) {
+		var rows = "";
+        var params = {
+            "account": NRS.account,
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+        };
+
+        NRS.sendRequest("getAccountLedger+", params, function(response) {
+            if (response.entries && response.entries.length) {
+                for (var i = 0; i < response.entries.length; i++) {
+                    var entry = response.entries[i];
+                    rows += NRS.getLedgerEntryRow(entry);
+                }
+            }
+            NRS.dataLoaded(rows);
+        });
 	};
 
 	NRS.pages.transactions = function(callback, subpage) {
@@ -899,6 +896,12 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<span data-i18n="dashboard">Dashboard</span>',
 			"type": 'PAGE',
 			"page": 'dashboard'
+		};
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="account_ledger">Account Ledger</span>',
+			"type": 'PAGE',
+			"page": 'ledger'
 		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
