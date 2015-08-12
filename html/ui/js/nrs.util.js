@@ -1418,14 +1418,13 @@ var NRS = (function (NRS, $, undefined) {
                     }).capitalize();
                 }
 
-                match = response.errorDescription.match(/At least one of (.*) must be specified/i);
+                match = response.errorDescription.match(/At least one of \[(.*)\] must be specified/i);
                 if (match && match[1]) {
                     var fieldNames = match[1].split(",");
                     var translatedFieldNames = [];
-
-                    $.each(fieldNames, function (fieldName) {
-                        translatedFieldNames.push(NRS.getTranslatedFieldName(fieldName).toLowerCase());
-                    });
+                    for (var i=0; i<fieldNames.length; i++) {
+                        translatedFieldNames.push(NRS.getTranslatedFieldName(fieldNames[i]));
+                    }
 
                     var translatedFieldNamesJoined = translatedFieldNames.join(", ");
 
