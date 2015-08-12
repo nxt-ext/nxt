@@ -1413,5 +1413,9 @@
   "no_account_ledger": "No account ledger entries found",
   "entry": "Entry",
   "change": "Change",
-  "balance": "Balance"
+  "balance": "Balance",
+  "holding": "Holding",
+  "transaction_fee": "Transaction Fee",
+  "block_generated": "Block Generated",
+  "issuance": "Issuance"
 }

@@ -561,24 +561,41 @@ var NRS = (function(NRS, $, undefined) {
         var balance = entry.balance;
         var balanceType = "nxt";
         var balanceEntity = "NXT";
+        var holdingIcon;
         if (/ASSET_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
                 balanceType = "asset";
                 balanceEntity = response.name;
-                change = NRS.convertToQNTf(change, response.decimals);
-                balance = NRS.convertToQNTf(balance, response.decimals);
+                change = NRS.formatQuantity(change, response.decimals);
+                balance = NRS.formatQuantity(balance, response.decimals);
+                holdingIcon = "<i class='fa fa-signal'></i> ";
             }, false);
         } else if (/CURRENCY_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getCurrency", {"currency": entry.holding}, function (response) {
                 balanceType = "currency";
                 balanceEntity = response.name;
-                change = NRS.convertToQNTf(change, response.decimals);
-                balance = NRS.convertToQNTf(balance, response.decimals);
+                change = NRS.formatQuantity(change, response.decimals);
+                balance = NRS.formatQuantity(balance, response.decimals);
+                holdingIcon =  "<i class='fa fa-bank'></i> ";
             }, false);
         } else {
-            change = NRS.convertToQNTf(change, 8);
-            balance = NRS.convertToQNTf(balance, 8);
+            change = NRS.formatAmount(change);
+            balance = NRS.formatAmount(balance);
         }
+        var sign = "";
+        if (entry.change > 0) {
+            sign = "<i class='fa fa-plus-circle' style='color:#65C62E'></i> ";
+        } else if (entry.change < 0) {
+            sign = "<i class='fa fa-minus-circle' style='color:#E04434'></i> ";
+            if (change.length > 0) {
+                change = change.substring(1);
+            }
+        }
+        var eventType = entry.eventType;
+        if (eventType.startsWith("ASSET") || eventType.startsWith("CURRENCY")) {
+            eventType = eventType.substring(eventType.indexOf("_") + 1);
+        }
+        eventType = $.t(eventType.toLowerCase());
         var html = "";
 		html += "<tr class='tr_transaction_" + entry.transaction + "'>";
 		html += "<td style='vertical-align:middle;'>";
@@ -587,14 +604,14 @@ var NRS = (function(NRS, $, undefined) {
   		html += NRS.formatTimestamp(entry.timestamp) + "</a>";
   		html += "</td>";
 		html += '<td style="vertical-align:middle;">';
-        html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + $.t(entry.eventType.toLowerCase()) + '</span>';
+        html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + eventType + '</span>';
         html += "<a class='" + linkClass + "' href='#' data-timestamp='" + String(entry.timestamp).escapeHTML() + "'";
         html += dataToken + "='" + String(entry.event).escapeHTML() + "'>";
         html += " <i class='fa fa-info'></i></a>";
 		html += '</td>';
 		if (balanceType == "nxt") {
-            html += "<td style='vertical-align:middle;'>" + NRS.formatAmount(entry.change) + "</td>";
-            html += "<td style='vertical-align:middle;'>" + NRS.formatAmount(entry.balance) + "</td>";
+            html += "<td style='vertical-align:middle;'>" + sign + change + "</td>";
+            html += "<td style='vertical-align:middle;'>" + balance + "</td>";
             html += "<td></td>";
             html += "<td></td>";
             html += "<td></td>";
@@ -602,10 +619,9 @@ var NRS = (function(NRS, $, undefined) {
         } else {
             html += "<td></td>";
             html += "<td></td>";
-            html += "<td>" + balanceType + "</td>";
-            html += "<td>" + balanceEntity + "</td>";
-            html += "<td style='vertical-align:middle;'>" + entry.change + "</td>";
-            html += "<td style='vertical-align:middle;'>" + entry.balance + "</td>";
+            html += "<td>" + holdingIcon + balanceEntity + "</td>";
+            html += "<td style='vertical-align:middle;'>" + sign + change + "</td>";
+            html += "<td style='vertical-align:middle;'>" + balance + "</td>";
         }
 		return html;
 	};
@@ -742,6 +758,10 @@ var NRS = (function(NRS, $, undefined) {
 
         NRS.sendRequest("getAccountLedger+", params, function(response) {
             if (response.entries && response.entries.length) {
+                if (response.entries.length > NRS.itemsPerPage) {
+                    NRS.hasMorePages = true;
+                    response.entries.pop();
+                }
                 for (var i = 0; i < response.entries.length; i++) {
                     var entry = response.entries[i];
                     rows += NRS.getLedgerEntryRow(entry);
