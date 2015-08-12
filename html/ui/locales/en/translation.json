@@ -1393,7 +1393,7 @@
   "transaction_j_s_o_n": "Transaction JSON",
   "signed_transaction_json": "Signed Transaction JSON",
   "unsigned_transaction_json": "Unsigned Transaction JSON",
-  "unsigned_bytes_qr_codes": "Unsigned Bytes QR code",
+  "unsigned_bytes_qr_code": "Unsigned Bytes QR code",
   "scan_qr_code": "Scan QR code",
   "transaction_json_operations": "Transaction JSON Operations",
   "sign_transaction": "Sign Transaction",
@@ -1402,5 +1402,10 @@
   "unsigned_transaction_json": "Unsigned Transaction JSON",
   "validate": "Validate",
   "signed_prunable_transaction_json": "Signed Prunable Transaction JSON",
-  "already_processed": "Already Processed"
+  "transaction_signature_qr_code": "Transaction Signature QR code",
+  "signature": "Signature",
+  "sign_transaction": "Sign Transaction",
+  "do_not_sign": "Do Not Sign",
+  "dividend_height_asset_height": "Dividend height lower than asset issuance height",
+  "select_file_to_upload": "Select File To Upload"
 }

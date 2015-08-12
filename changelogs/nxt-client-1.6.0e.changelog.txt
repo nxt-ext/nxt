@@ -1,0 +1,26 @@
+This is an experimental release for the Voting System and Phasing. It enables
+these features on testnet, and is a required update for all testnet nodes.
+
+Offline transaction signing support
+The purpose of this security feature is to allow users to sign transactions without ever entering their passphrase on a workstation connected to the internet,
+thus avoid the risk of their passphrase being stolen by locally installed malware such as key loggers or copy/paste loggers.
+As prerequisite to using this feature, users should prepare two workstations (1) online with up to date blockchain (2) offline with Java and NXT installed
+but without internet connection and optionally without up to date blockchain.
+In addition you should prepare a web camera to scan QR codes and or a USB stick to copy data between the workstations.
+
+The following procedure should be followed:
+On the online workstation - users submit transactions without entering their passphrase, with the existing "Do Not Broadcast" option checked,
+and with the new "Do Not Sign" option checked. To make sure this is followed, when "Do Not Sign" is checked, the passphrase field is emptied and disabled. 
+The account submitting the transaction must have a public key. 
+In response the server returns the unsigned transaction JSON and in case there are no encrypted messages, also the unsigned transaction bytes.
+The client now displays the "Raw Transaction Details" modal with the unsigned transaction JSON and the unsigned transaction bytes, if exists.
+The unsigned transaction bytes does not include the prunable attachments, however they can be used for signing the transaction and for broadcasting 
+the transaction in case no prunable attachments exist.
+You can pass the unsigned transaction bytes to the offline workstation by scanning a QR code or you can copy the unsigned transaction JSON to a file
+and copy it to the offline workstation.
+On the offline workstation - users should use the new "Transaction JSON Operations" modal "Sign Transaction" tab, to sign the offline transaction. 
+In response a signature field is provided with a QR code in addition to the signed transaction JSON which users can save to a file.
+Alternatively users can use the nxt.tools.SignTransactionJSON or nxt.tools.SignTransactions to perform the signing offline.
+Back on the online workstation - users can scan the signature QR code into the "Raw Transaction Details" modal signature field and broadcast the transaction.
+Alternatively they can use the "Broadcast Transaction" tab of the "Transaction JSON Operations" modal to broadcast the transaction JSON copied from the offline 
+workstation.

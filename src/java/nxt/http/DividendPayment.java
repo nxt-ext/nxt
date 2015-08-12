@@ -19,7 +19,9 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
+import nxt.Nxt;
 import nxt.NxtException;
+import nxt.Transaction;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,7 +43,7 @@ public class DividendPayment extends CreateTransaction {
         final Account account = ParameterParser.getSenderAccount(request);
         final Asset asset = ParameterParser.getAsset(request);
         if (Asset.getAsset(asset.getId(), height) == null) {
-            throw new ParameterException(JSONResponses.ASSET_NOT_ISSUED_YET);
+            return JSONResponses.ASSET_NOT_ISSUED_YET;
         }
         final Attachment attachment = new Attachment.ColoredCoinsDividendPayment(asset.getId(), height, amountNQTPerQNT);
         return this.createTransaction(request, account, attachment);
