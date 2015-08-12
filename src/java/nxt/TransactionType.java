@@ -2510,15 +2510,14 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
-                Account recipientAccount = Account.getAccount(transaction.getRecipientId());
                 if (transaction.getSenderId() == transaction.getRecipientId()
                         || transaction.getAmountNQT() != 0
                         || attachment.getPeriod() < Constants.LEASING_DELAY) {
                     throw new NxtException.NotValidException("Invalid effective balance leasing: "
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
-                if (recipientAccount == null
-                        || (recipientAccount.getPublicKey() == null && ! transaction.getStringId().equals("5081403377391821646"))) {
+                byte[] recipientPublicKey = Account.getPublicKey(transaction.getRecipientId());
+                if (recipientPublicKey == null && ! transaction.getStringId().equals("5081403377391821646")) {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
                 }
