@@ -206,8 +206,7 @@ var NRS = (function(NRS, $) {
 		}
 
 		var originalRequestType = requestType;
-		
-		if (requestType != "addPeer" && requestType != "blacklistPeer") {
+        if (!NRS.isOfflineSafeRequest(requestType)) {
 			if (NRS.downloadingBlockchain) {
 				$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
 				if (formErrorFunction) {
