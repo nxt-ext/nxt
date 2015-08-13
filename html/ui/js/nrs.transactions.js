@@ -604,10 +604,10 @@ var NRS = (function(NRS, $, undefined) {
         }
         eventType = $.t(eventType.toLowerCase());
         var html = "";
-		html += "<tr class='tr_transaction_" + entry.transaction + "'>";
+		html += "<tr>";
 		html += "<td style='vertical-align:middle;'>";
-  		html += "<a class='show_ledger_entry_modal_action' href='#' data-timestamp='" + String(entry.timestamp).escapeHTML() + "' ";
-  		html += "data-entry='" + String(entry.ledgerId).escapeHTML() + "'>";
+  		html += "<a class='show_ledger_modal_action' href='#' data-entry='" + String(entry.ledgerId).escapeHTML() +"'";
+        html += "data-change='" + (entry.change < 0 ? -change : change) + "' data-balance='" + balance + "'>";
   		html += NRS.formatTimestamp(entry.timestamp) + "</a>";
   		html += "</td>";
 		html += '<td style="vertical-align:middle;">';

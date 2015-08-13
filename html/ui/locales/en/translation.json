@@ -1417,5 +1417,12 @@
   "holding": "Holding",
   "transaction_fee": "Transaction Fee",
   "block_generated": "Block Generated",
-  "issuance": "Issuance"
+  "issuance": "Issuance",
+  "ledger_entry": "Ledger Entry",
+  "entry_time": "Entry Time",
+  "is_transaction_event": "Transaction Related",
+  "holding_type": "Holding Type",
+  "event": "Event",
+  "event_type": "Event Type",
+  "ledger_id": "Ledger Id"
 }
