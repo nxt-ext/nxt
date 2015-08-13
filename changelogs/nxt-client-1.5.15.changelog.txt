@@ -75,7 +75,9 @@ content of the message is sensitive.
 
 Other changes:
 
-The SignTransaction API now also returns the full signed transaction JSON.
+The signTransaction API now also returns the full signed transaction JSON.
+
+The calculateFullHash API now also accepts unsignedTransactionJSON parameter.
 
 Added getLastTrades and getLastExchanges API, accepting a multivalue asset,
 respectively currencies parameter, and returning an array containing the last
