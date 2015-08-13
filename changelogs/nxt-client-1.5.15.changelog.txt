@@ -28,7 +28,8 @@ new "Do Not Sign" option checked (this option appears only when
 "Do Not Broadcast" is checked). When "Do Not Sign" is checked, the passphrase
 field is cleared and disabled.
 
-The account submitting the transaction must have a public key.
+If the account submitting the transaction does not yet have its public key
+announced, a separate input field appears, to allow entering the public key.
 
 In response, the server returns the unsigned transaction JSON, and in case
 there are no encrypted message attachments, also the unsigned transaction
