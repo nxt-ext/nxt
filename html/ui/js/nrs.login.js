@@ -162,7 +162,7 @@ var NRS = (function(NRS, $, undefined) {
 					);
 				}
 			});
-			var otherHTML = "<li><a href='#' style='display: inline-block;width: 380px;' ";
+			var otherHTML = "<li><a href='#'";
 			otherHTML += "data-i18n='other'>Other</a></li>";
 			var $otherHTML = $(otherHTML);
 			$otherHTML.click(function(e) {
