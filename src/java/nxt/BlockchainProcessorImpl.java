@@ -109,6 +109,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
             ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
 
+    private int initialScanHeight;
     private volatile int lastTrimHeight;
     private volatile int lastRestoreTime = 0;
     private final Set<Long> prunableTransactions = new HashSet<>();
@@ -1052,6 +1053,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
+    public int getInitialScanHeight() {
+        return initialScanHeight;
+    }
+
+    @Override
     public boolean isDownloading() {
         return isDownloading;
     }
@@ -1751,6 +1757,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                  PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block " + (height > 0 ? "WHERE height >= ? " : "") + "ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
+                initialScanHeight = blockchain.getHeight();
                 if (height > blockchain.getHeight() + 1) {
                     Logger.logMessage("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchain.getHeight() + ", no scan needed");
                     pstmtDone.executeUpdate();

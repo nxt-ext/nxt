@@ -193,6 +193,14 @@ public class AccountLedger {
             throw new IllegalStateException("Not in transaction");
         }
         //
+        // Don't log account changes if we are scanning the blockchain and the current height
+        // is less than the minimum account_ledger trim height
+        //
+        if (blockchainProcessor.isScanning() && trimKeep > 0 &&
+                blockchain.getHeight() <= blockchainProcessor.getInitialScanHeight() - trimKeep) {
+            return;
+        }
+        //
         // Must be tracking this account
         //
         if (!ledgerEnabled || (!trackAllAccounts && !trackAccounts.contains(ledgerEntry.getAccountId()))) {
