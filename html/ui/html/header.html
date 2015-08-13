@@ -28,10 +28,13 @@
             <span class="icon-bar"></span> 
         </a>
         <div class="navbar-right">
-            <ul class="nav navbar-nav">
+            <ul class="nav navbar-nav sends">
                 <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
                 <li class="dropdown"><a href="#" data-toggle="modal" data-target="#transfer_currency_modal" data-i18n="send_currency">Send Currency</a></li>
                 <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
+
+            </ul>
+            <ul class="nav navbar-nav">
                 <li><a href="#" id="unconfirmed_notification_menu" class="goto-page" data-page="transactions" data-subpage="unconfirmed" style="padding-top:13px;padding-bottom:13px;display:none;">
                     <span class="badge nm_outer2" style="background-color: #fff;padding:3px;">
                         <span class="badge nm_inner_subtype" style="background-color: #fff;">
@@ -41,7 +44,7 @@
                     </span>
                     </a>
                 </li>
-                <li><a href="#" id="phasing_notification_menu" class="goto-page" data-page="transactions" data-subpage="phasing" style="padding-top:13px;padding-bottom:13px;display:none;">
+                <li style="display:none;"><a href="#" id="phasing_notification_menu" class="goto-page" data-page="transactions" data-subpage="phasing">
                     <span class="badge nm_outer2" style="background-color: #fff;padding:3px;">
                         <span class="badge nm_inner_subtype" style="background-color: #fff;">
                             <span style="color:#337ab7;"><i class="fa fa-gavel"></i> </span>
@@ -72,7 +75,8 @@
                         <li role="presentation" class="divider"></li>
                         <li><a href="#" data-toggle="modal" data-target="#token_modal"><i class="fa fa-code"></i><span data-i18n="generate_token">Generate Token</span></a></li>
                         <li><a href="#" data-toggle="modal" data-target="#hash_modal"><i class="fa fa-calculator"></i><span data-i18n="calculate_hash">Calculate Hash</span></a></li>
-                        <li><a href="#" data-toggle="modal" data-target="#transaction_operations_modal"><i class="fa fa-asterisk"></i><span data-i18n="transaction_operations">Transaction Operations</span></a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#transaction_operations_modal"><i class="fa fa-asterisk"></i><span data-i18n="transaction_bytes_operations">Transaction Bytes Operations</span></a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#transaction_json_modal"><i class="fa fa-compass"></i><span data-i18n="transaction_json_operations">Transaction JSON Operations</span></a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a href="#" data-toggle="modal" data-target="#upload_data_modal"><i class="fa fa-upload"></i><span data-i18n="upload_file">Upload File</span></a></li>
                     </ul>
@@ -95,7 +99,7 @@
                         <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Plugins" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_plugins_tutorial">Plugins Tutorial</span></a></li>
                     </ul>
                 </li>
-                <li class="dropdown" id="logout_button_container" style="margin-right:20px;">
+                <li class="dropdown" id="logout_button_container">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
                         <i class="fa fa-power-off"></i>
                     </a>

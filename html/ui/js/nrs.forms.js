@@ -114,10 +114,13 @@ var NRS = (function(NRS, $) {
 						options.publicKey = data.recipientPublicKey;
 					}
 
-					encrypted = NRS.encryptNote(data.message, options, data.secretPhrase);
-
-					data.encryptedMessageData = encrypted.message;
-					data.encryptedMessageNonce = encrypted.nonce;
+                    if (data.doNotSign) {
+                        data.messageToEncrypt = data.message;
+                    } else {
+                        encrypted = NRS.encryptNote(data.message, options, data.secretPhrase);
+                        data.encryptedMessageData = encrypted.message;
+                        data.encryptedMessageNonce = encrypted.nonce;
+                    }
 					data.messageToEncryptIsText = "true";
 					if (!data.permanent_message) {
 						data.encryptedMessageIsPrunable = "true";
@@ -138,14 +141,17 @@ var NRS = (function(NRS, $) {
 
 		if (data.add_note_to_self && data.note_to_self) {
 			try {
-				encrypted = NRS.encryptNote(data.note_to_self, {
-					"publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(data.secretPhrase))
-				}, data.secretPhrase);
+				if (data.doNotSign) {
+                    data.messageToEncryptToSelf = data.note_to_self;
+                } else {
+                    encrypted = NRS.encryptNote(data.note_to_self, {
+                        "publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(data.secretPhrase))
+                    }, data.secretPhrase);
 
-				data.encryptToSelfMessageData = encrypted.message;
-				data.encryptToSelfMessageNonce = encrypted.nonce;
+                    data.encryptToSelfMessageData = encrypted.message;
+                    data.encryptToSelfMessageNonce = encrypted.nonce;
+                }
 				data.messageToEncryptToSelfIsText = "true";
-
 				delete data.note_to_self;
 			} catch (err) {
 				throw err;
@@ -459,7 +465,7 @@ var NRS = (function(NRS, $) {
 			data.deadline = String(data.deadline * 60); //hours to minutes
 		}
 
-		if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
+        if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
 			$form.find(".error_message").html($.t("error_passphrase_required")).show();
 			if (formErrorFunction) {
 				formErrorFunction(false, data);

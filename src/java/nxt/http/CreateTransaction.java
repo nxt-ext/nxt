@@ -142,13 +142,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 encryptedMessage = (Appendix.EncryptedMessage) ParameterParser.getEncryptedMessage(req, recipient, false);
             }
         }
-        Appendix.EncryptToSelfMessage encryptToSelfMessage = null;
-        EncryptedData encryptedToSelfData = ParameterParser.getEncryptToSelfMessage(req);
-        if (encryptedToSelfData != null) {
-            boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
-            boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncryptToSelf"));
-            encryptToSelfMessage = new Appendix.EncryptToSelfMessage(encryptedToSelfData, isText, isCompressed);
-        }
+        Appendix.EncryptToSelfMessage encryptToSelfMessage = ParameterParser.getEncryptToSelfMessage(req);
         Appendix.Message message = null;
         Appendix.PrunablePlainMessage prunablePlainMessage = null;
         if ("true".equalsIgnoreCase(req.getParameter("messageIsPrunable"))) {
@@ -214,7 +208,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
             JSONObject transactionJSON = JSONData.unconfirmedTransaction(transaction);
             response.put("transactionJSON", transactionJSON);
-            response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
+            try {
+                response.put("unsignedTransactionBytes", Convert.toHexString(transaction.getUnsignedBytes()));
+            } catch (NxtException.NotYetEncryptedException ignore) {}
             if (secretPhrase != null) {
                 response.put("transaction", transaction.getStringId());
                 response.put("fullHash", transactionJSON.get("fullHash"));
@@ -225,7 +221,9 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("broadcasted", true);
             } else {
-                transaction.validate();
+                try {
+                    transaction.validate();
+                } catch (NxtException.NotYetEncryptedException ignore) {}
                 response.put("broadcasted", false);
             }
         } catch (NxtException.NotYetEnabledException e) {
