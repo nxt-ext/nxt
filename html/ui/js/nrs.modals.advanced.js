@@ -48,7 +48,7 @@ var NRS = (function(NRS, $, undefined) {
             var downloadLink = $("#raw_transaction_modal_unsigned_transaction_json_download");
             if (window.URL) {
                 var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
-                downloadLink.prop('download', 'unsigned.transaction.json');
+                downloadLink.prop('download', 'unsigned.transaction.' + transaction.transactionJSON.timestamp + '.json');
                 downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
             } else {
                 downloadLink.hide();
@@ -467,7 +467,7 @@ var NRS = (function(NRS, $, undefined) {
         var downloadLink = $("#signed_transaction_json_download");
         if (window.URL) {
             var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
-            downloadLink.prop('download', 'signed.transaction.json');
+            downloadLink.prop('download', 'signed.transaction.' + response.transactionJSON.timestamp + '.json');
             downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
         } else {
             downloadLink.hide();
