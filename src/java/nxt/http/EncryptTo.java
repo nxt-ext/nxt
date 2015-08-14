@@ -19,11 +19,14 @@ package nxt.http;
 import nxt.Account;
 import nxt.NxtException;
 import nxt.crypto.EncryptedData;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.INCORRECT_MESSAGE_TO_ENCRYPT;
 import static nxt.http.JSONResponses.INCORRECT_RECIPIENT;
+import static nxt.http.JSONResponses.MISSING_MESSAGE_TO_ENCRYPT;
 
 public final class EncryptTo extends APIServlet.APIRequestHandler {
 
@@ -41,8 +44,20 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
         if (recipientAccount == null || recipientAccount.getPublicKey() == null) {
             return INCORRECT_RECIPIENT;
         }
-
-        EncryptedData encryptedData = ParameterParser.getEncryptedData(req, recipientAccount);
+        boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
+        String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
+        if (plainMessage == null) {
+            return MISSING_MESSAGE_TO_ENCRYPT;
+        }
+        byte[] plainMessageBytes;
+        try {
+            plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
+        } catch (RuntimeException e) {
+            return INCORRECT_MESSAGE_TO_ENCRYPT;
+        }
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
+        EncryptedData encryptedData = recipientAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
         return JSONData.encryptedData(encryptedData);
 
     }

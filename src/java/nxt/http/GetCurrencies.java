@@ -17,15 +17,12 @@
 package nxt.http;
 
 import nxt.Currency;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_CURRENCY;
-import static nxt.http.JSONResponses.MISSING_CURRENCY;
 import static nxt.http.JSONResponses.UNKNOWN_CURRENCY;
 
 public final class GetCurrencies extends APIServlet.APIRequestHandler {
@@ -37,33 +34,18 @@ public final class GetCurrencies extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
-
-        String[] currencies = req.getParameterValues("currencies");
-        if (currencies == null) {
-            return MISSING_CURRENCY;
-        }
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+        long[] currencyIds = ParameterParser.getUnsignedLongs(req, "currencies");
         boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
-
         JSONObject response = new JSONObject();
         JSONArray currenciesJSONArray = new JSONArray();
         response.put("currencies", currenciesJSONArray);
-        if (currencies == null) {
-            return response;
-        }
-        for (String currencyIdString : currencies) {
-            if (currencyIdString == null || currencyIdString.equals("")) {
-                continue;
+        for (long currencyId : currencyIds) {
+            Currency currency = Currency.getCurrency(currencyId);
+            if (currency == null) {
+                return UNKNOWN_CURRENCY;
             }
-            try {
-                Currency currency = Currency.getCurrency(Convert.parseUnsignedLong(currencyIdString));
-                if (currency == null) {
-                    return UNKNOWN_CURRENCY;
-                }
-                currenciesJSONArray.add(JSONData.currency(currency, includeCounts));
-            } catch (RuntimeException e) {
-                return INCORRECT_CURRENCY;
-            }
+            currenciesJSONArray.add(JSONData.currency(currency, includeCounts));
         }
         return response;
     }

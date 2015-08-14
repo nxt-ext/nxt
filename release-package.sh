@@ -14,7 +14,7 @@ FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt COPYING.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
-FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh compact.sh compact.bat"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh compact.sh compact.bat sign.sh"
 FILES="${FILES} NXT_Wallet.url Dockerfile"
 
 unix2dos *.bat
@@ -92,11 +92,11 @@ echo -e "\n\nChange log:\n" >> ${CHANGELOG}
 cat changelogs/${CHANGELOG} >> ${CHANGELOG}
 echo >> ${CHANGELOG}
 
-gpg --detach-sign --armour --sign-with jlp666@yandex.ru ${PACKAGE}.zip
-gpg --detach-sign --armour --sign-with jlp666@yandex.ru ${PACKAGE}.jar
-#gpg --detach-sign --armour --sign-with jlp666@yandex.ru ${PACKAGE}.exe
+gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.zip
+gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.jar
+#gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.exe
 
-gpg --clearsign --sign-with jlp666@yandex.ru ${CHANGELOG}
+gpg --clearsign --sign-with 0x811D6940E1E4240C ${CHANGELOG}
 rm -f ${CHANGELOG}
 gpgv ${PACKAGE}.zip.asc ${PACKAGE}.zip
 gpgv ${PACKAGE}.jar.asc ${PACKAGE}.jar

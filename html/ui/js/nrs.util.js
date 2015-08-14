@@ -1024,7 +1024,7 @@ var NRS = (function (NRS, $, undefined) {
                 }
             } else if (key == "price" || key == "total" || key == "amount" || key == "fee" || key == "refund" || key == "discount") {
                 value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
-            } else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer") {
+            } else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer" || key == "lessee") {
                 value = "<a href='#' data-user='" + String(value).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(value) + "</a>";
             } else if (key == "request_processing_time") { /* Skip from displaying request processing time */
                 continue;
@@ -1418,14 +1418,13 @@ var NRS = (function (NRS, $, undefined) {
                     }).capitalize();
                 }
 
-                match = response.errorDescription.match(/At least one of (.*) must be specified/i);
+                match = response.errorDescription.match(/At least one of \[(.*)\] must be specified/i);
                 if (match && match[1]) {
                     var fieldNames = match[1].split(",");
                     var translatedFieldNames = [];
-
-                    $.each(fieldNames, function (fieldName) {
-                        translatedFieldNames.push(NRS.getTranslatedFieldName(fieldName).toLowerCase());
-                    });
+                    for (var i=0; i<fieldNames.length; i++) {
+                        translatedFieldNames.push(NRS.getTranslatedFieldName(fieldNames[i]));
+                    }
 
                     var translatedFieldNamesJoined = translatedFieldNames.join(", ");
 

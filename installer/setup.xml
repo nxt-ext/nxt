@@ -165,6 +165,8 @@
             <executable targetfile="${INSTALL_PATH}/package.sh"/>
             <file src="compact.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/compact.sh"/>
+            <file src="sign.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/sign.sh"/>
 		</pack>
         <pack name="jre" os="windows" required="yes" uninstall="false">
             <description>Java 32 bit</description>

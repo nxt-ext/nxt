@@ -522,6 +522,9 @@ body > .header .logo .icon {
     float: right;
   }
 }
+
+/* DELETE ME 20150715 
+  
 @media screen and (max-width: 560px) {
   body > .header {
     position: relative;
@@ -545,6 +548,11 @@ body > .header .logo .icon {
     margin-top: 100px;
   }
 }
+
+*/
+
+
+
 /*
     Component: Sidebar
 --------------------------
@@ -1795,6 +1803,7 @@ body > .header .logo .icon {
 .alert-no-icon {
   margin-left: 0px !important;
   padding-left:  15px !important;
+  word-wrap: break-word;
 }
 /*
     Component: Navs
@@ -3298,7 +3307,7 @@ input.masked {
   display:none;
 }
 
-.optional_message, .optional_note {
+.optional_message, .optional_note, .optional_do_not_sign, .optional_public_key {
   display:none;
 }
 
@@ -3340,3 +3349,169 @@ input.masked {
 	left: 105px; 
 	top: 17px;
 }
+
+
+/*
+ * @duckx 20150715 - Header  */
+
+body > .header .navbar { 
+  height: 50px; 
+}
+
+@media screen and (max-width: 965px) {
+
+  /*Shorten width of send containers to wrap on 2 lines*/
+  .navbar-right > .nav.sends > .dropdown > a { 
+    width: 91px; 
+    text-align: center; 
+    padding: 5px 15px; 
+  }
+
+  body > .header .logo {
+    width: 155px; 
+  }
+
+  body > .header .navbar {
+    margin-left: 150px; 
+    padding-right: 9px;
+  }
+
+  .navbar .navbar-right > .nav {
+    margin: 0;
+  }
+
+}/* @media min-width: 955px */
+
+
+@media screen and (max-width: 800px) {
+
+  .sidebar,
+  body.fixed .wrapper { 
+    margin-top: 76px;
+  }
+
+  body > .header .logo { 
+    position: relative;
+    z-index: 9999;
+    width: 160px; 
+    margin: 0 0 0 40px; 
+    background: transparent; 
+  }
+
+  body > .header .navbar {
+    margin: 0; 
+    height: 75px; 
+  }
+
+  .navbar .navbar-right > .nav.sends {
+    width: 100%;
+    position: absolute;
+    text-align: center;
+    left: 0;
+    bottom: 0;
+    height: 24px;
+  }
+
+  .navbar .navbar-right > .nav.sends li {
+    display: inline;
+    float:none; 
+  }
+
+  .navbar .navbar-right > .nav.sends a {
+    display: inline;
+    padding: 0 25px; 
+  }
+
+}/* @media min-width: 800px */
+
+
+@media screen and (max-width: 767px) {
+  .navbar .navbar-nav > li {
+    position: static; 
+  }
+
+  .navbar-nav .open .dropdown-menu {
+    background: #fff; 
+    margin-top: -30px;
+    position: absolute;
+    width: 100%;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .navbar .nav > li > a:focus,
+  .navbar .nav > li > a:hover,
+  .navbar .nav > li > a:hover .badge 
+  .navbar .nav .open > a:hover {
+    background: none !important;
+    color: #bbb;
+  }
+
+  .navbar-right > .nav > .dropdown > a,
+  .navbar .nav .open > a, 
+  .navbar .nav a {
+    background: none; 
+  }
+
+}/* @media min-width: 767px */
+
+
+@media screen and (max-width: 550px) {
+
+  .sidebar,
+  body.fixed .wrapper { 
+    margin-top: 76px;
+  }
+
+  body > .header .logo {
+    padding: 0 342px 0 5px; 
+    width: 100%; 
+    background: 0; 
+    margin: 0;
+    display: none; 
+  }
+
+  body > .header .navbar .sidebar-toggle {
+    position: relative;
+    top: 31px;
+    z-index: 9;
+  }
+
+
+  .navbar .navbar-right {
+    float: none;
+    width: 100%;
+    position: absolute;
+    height: 75px;
+  }
+
+    .navbar .navbar-right > .nav.sends + .nav {
+      margin: 0; 
+      display: flex;
+      float: none;
+      width: 100%;
+      justify-content: space-between;
+    }
+    .navbar .navbar-right > .nav.sends + .nav > li > a {
+      padding: 13px; 
+    }
+
+    .navbar .navbar-right > .nav.sends { 
+      height: 31px; 
+      display: flex;
+      justify-content: space-around;
+      margin: 0;
+    }
+
+      .navbar .navbar-right > .nav.sends li {
+        width: 60px; 
+      }
+
+      .navbar .navbar-right > .nav.sends a { 
+        padding: 0;
+        display: block;
+        width: 100%; 
+        line-height: 13px; 
+        font-weight: normal;
+      }
+  
+}/* @media min-width: 550px */

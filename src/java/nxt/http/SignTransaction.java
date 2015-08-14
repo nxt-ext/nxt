@@ -18,9 +18,7 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Transaction;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -37,7 +35,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String transactionJSON = Convert.emptyToNull(req.getParameter("unsignedTransactionJSON"));
         String transactionBytes = Convert.emptyToNull(req.getParameter("unsignedTransactionBytes"));
@@ -55,18 +53,19 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         try {
             Transaction transaction = builder.build(secretPhrase);
+            JSONObject signedTransactionJSON = JSONData.unconfirmedTransaction(transaction);
             if (validate) {
                 transaction.validate();
+                response.put("verify", transaction.verifySignature());
             }
+            response.put("transactionJSON", signedTransactionJSON);
+            response.put("fullHash", signedTransactionJSON.get("fullHash"));
+            response.put("signatureHash", signedTransactionJSON.get("signatureHash"));
             response.put("transaction", transaction.getStringId());
-            response.put("fullHash", transaction.getFullHash());
             response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
             JSONData.putPrunableAttachment(response, transaction);
-            response.put("signatureHash", Convert.toHexString(Crypto.sha256().digest(transaction.getSignature())));
-            response.put("verify", transaction.verifySignature());
         } catch (NxtException.ValidationException|RuntimeException e) {
-            Logger.logDebugMessage(e.getMessage(), e);
-            JSONData.putException(response, e, "Incorrect unsigned transaction");
+            JSONData.putException(response, e, "Incorrect unsigned transaction json or bytes");
         }
         return response;
     }

@@ -49,6 +49,10 @@ public interface Appendix {
         }
     }
 
+    interface Encryptable {
+        void encrypt(String secretPhrase);
+    }
+
 
     abstract class AbstractAppendix implements Appendix {
 
@@ -439,7 +443,7 @@ public interface Appendix {
 
     abstract class AbstractEncryptedMessage extends AbstractAppendix {
 
-        private final EncryptedData encryptedData;
+        private EncryptedData encryptedData;
         private final boolean isText;
         private final boolean isCompressed;
 
@@ -512,6 +516,10 @@ public interface Appendix {
             return encryptedData;
         }
 
+        final void setEncryptedData(EncryptedData encryptedData) {
+            this.encryptedData = encryptedData;
+        }
+
         public final boolean isText() {
             return isText;
         }
@@ -537,11 +545,15 @@ public interface Appendix {
             if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
             }
+            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
+            if (encryptedMessageJSON != null && encryptedMessageJSON.get("data") == null) {
+                return new UnencryptedPrunableEncryptedMessage(attachmentData);
+            }
             return new PrunableEncryptedMessage(attachmentData);
         }
 
         private final byte[] hash;
-        private final EncryptedData encryptedData;
+        private EncryptedData encryptedData;
         private final boolean isText;
         private final boolean isCompressed;
         private volatile PrunableMessage prunableMessage;
@@ -582,12 +594,12 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) {
+        public final Fee getBaselineFee(Transaction transaction) {
             return PRUNABLE_ENCRYPTED_DATA_FEE;
         }
 
         @Override
-        int getMySize() {
+        final int getMySize() {
             return 32;
         }
 
@@ -622,7 +634,7 @@ public interface Appendix {
         }
 
         @Override
-        String getAppendixName() {
+        final String getAppendixName() {
             return appendixName;
         }
 
@@ -654,7 +666,7 @@ public interface Appendix {
         }
 
         @Override
-        void validateAtFinish(Transaction transaction) {
+        final void validateAtFinish(Transaction transaction) {
         }
         
         @Override
@@ -667,6 +679,10 @@ public interface Appendix {
                 return prunableMessage.getEncryptedData();
             }
             return encryptedData;
+        }
+
+        final void setEncryptedData(EncryptedData encryptedData) {
+            this.encryptedData = encryptedData;
         }
 
         public final boolean isText() {
@@ -684,7 +700,7 @@ public interface Appendix {
         }
 
         @Override
-        public byte[] getHash() {
+        public final byte[] getHash() {
             if (hash != null) {
                 return hash;
             }
@@ -704,8 +720,82 @@ public interface Appendix {
         }
 
         @Override
-        public boolean isPhasable() {
+        public final boolean isPhasable() {
             return false;
+        }
+
+    }
+
+    final class UnencryptedPrunableEncryptedMessage extends PrunableEncryptedMessage implements Encryptable {
+
+        private final byte[] messageToEncrypt;
+        private final byte[] recipientPublicKey;
+
+        private UnencryptedPrunableEncryptedMessage(JSONObject attachmentJSON) {
+            super(attachmentJSON);
+            setEncryptedData(null);
+            JSONObject encryptedMessageJSON = (JSONObject)attachmentJSON.get("encryptedMessage");
+            String messageToEncryptString = (String)encryptedMessageJSON.get("messageToEncrypt");
+            this.messageToEncrypt = isText() ? Convert.toBytes(messageToEncryptString) : Convert.parseHexString(messageToEncryptString);
+            this.recipientPublicKey = Convert.parseHexString((String)attachmentJSON.get("recipientPublicKey"));
+        }
+
+        public UnencryptedPrunableEncryptedMessage(byte[] messageToEncrypt, boolean isText, boolean isCompressed, byte[] recipientPublicKey) {
+            super(null, isText, isCompressed);
+            this.messageToEncrypt = messageToEncrypt;
+            this.recipientPublicKey = recipientPublicKey;
+        }
+
+        @Override
+        int getMyFullSize() {
+            return getEncryptedData() == null ? Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH : getEncryptedData().getData().length;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Prunable encrypted message not yet encrypted");
+            }
+            super.putMyBytes(buffer);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            if (getEncryptedData() == null) {
+                JSONObject encryptedMessageJSON = new JSONObject();
+                encryptedMessageJSON.put("messageToEncrypt", isText() ? Convert.toString(messageToEncrypt) : Convert.toHexString(messageToEncrypt));
+                encryptedMessageJSON.put("isText", isText());
+                encryptedMessageJSON.put("isCompressed", isCompressed());
+                json.put("recipientPublicKey", Convert.toHexString(recipientPublicKey));
+                json.put("encryptedMessage", encryptedMessageJSON);
+            } else {
+                super.putMyJSON(json);
+            }
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Prunable encrypted message not yet encrypted");
+            }
+            super.validate(transaction);
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Prunable encrypted message not yet encrypted");
+            }
+            super.apply(transaction, senderAccount, recipientAccount);
+        }
+
+        @Override
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {}
+
+        @Override
+        public void encrypt(String secretPhrase) {
+            setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
+                    Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
         }
 
     }
@@ -717,6 +807,9 @@ public interface Appendix {
         static EncryptedMessage parse(JSONObject attachmentData) {
             if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
+            }
+            if (((JSONObject)attachmentData.get("encryptedMessage")).get("data") == null) {
+                return new UnencryptedEncryptedMessage(attachmentData);
             }
             return new EncryptedMessage(attachmentData);
         }
@@ -734,7 +827,7 @@ public interface Appendix {
         }
 
         @Override
-        String getAppendixName() {
+        final String getAppendixName() {
             return appendixName;
         }
 
@@ -755,6 +848,80 @@ public interface Appendix {
 
     }
 
+    final class UnencryptedEncryptedMessage extends EncryptedMessage implements Encryptable {
+
+        private final byte[] messageToEncrypt;
+        private final byte[] recipientPublicKey;
+
+        UnencryptedEncryptedMessage(JSONObject attachmentData) {
+            super(attachmentData);
+            setEncryptedData(null);
+            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptedMessage");
+            String messageToEncryptString = (String)encryptedMessageJSON.get("messageToEncrypt");
+            messageToEncrypt = isText() ? Convert.toBytes(messageToEncryptString) : Convert.parseHexString(messageToEncryptString);
+            recipientPublicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
+        }
+
+        public UnencryptedEncryptedMessage(byte[] messageToEncrypt, boolean isText, boolean isCompressed, byte[] recipientPublicKey) {
+            super(null, isText, isCompressed);
+            this.messageToEncrypt = messageToEncrypt;
+            this.recipientPublicKey = recipientPublicKey;
+        }
+
+        @Override
+        int getMySize() {
+            if (getEncryptedData() == null) {
+                return 4 + Constants.MAX_ENCRYPTED_MESSAGE_LENGTH;
+            }
+            return super.getMySize();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
+            }
+            super.putMyBytes(buffer);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            if (getEncryptedData() == null) {
+                JSONObject encryptedMessageJSON = new JSONObject();
+                encryptedMessageJSON.put("messageToEncrypt", isText() ? Convert.toString(messageToEncrypt) : Convert.toHexString(messageToEncrypt));
+                encryptedMessageJSON.put("isText", isText());
+                encryptedMessageJSON.put("isCompressed", isCompressed());
+                json.put("encryptedMessage", encryptedMessageJSON);
+                json.put("recipientPublicKey", Convert.toHexString(recipientPublicKey));
+            } else {
+                super.putMyJSON(json);
+            }
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
+            }
+            super.validate(transaction);
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
+            }
+            super.apply(transaction, senderAccount, recipientAccount);
+        }
+
+        @Override
+        public void encrypt(String secretPhrase) {
+            setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
+                    Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
+        }
+
+    }
+
     class EncryptToSelfMessage extends AbstractEncryptedMessage {
 
         private static final String appendixName = "EncryptToSelfMessage";
@@ -762,6 +929,9 @@ public interface Appendix {
         static EncryptToSelfMessage parse(JSONObject attachmentData) {
             if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
+            }
+            if (((JSONObject)attachmentData.get("encryptToSelfMessage")).get("data") == null) {
+                return new UnencryptedEncryptToSelfMessage(attachmentData);
             }
             return new EncryptToSelfMessage(attachmentData);
         }
@@ -779,7 +949,7 @@ public interface Appendix {
         }
 
         @Override
-        String getAppendixName() {
+        final String getAppendixName() {
             return appendixName;
         }
 
@@ -788,6 +958,76 @@ public interface Appendix {
             JSONObject encryptToSelfMessageJSON = new JSONObject();
             super.putMyJSON(encryptToSelfMessageJSON);
             json.put("encryptToSelfMessage", encryptToSelfMessageJSON);
+        }
+
+    }
+
+    final class UnencryptedEncryptToSelfMessage extends EncryptToSelfMessage implements Encryptable {
+
+        private final byte[] messageToEncrypt;
+
+        UnencryptedEncryptToSelfMessage(JSONObject attachmentData) {
+            super(attachmentData);
+            setEncryptedData(null);
+            JSONObject encryptedMessageJSON = (JSONObject)attachmentData.get("encryptToSelfMessage");
+            String messageToEncryptString = (String)encryptedMessageJSON.get("messageToEncrypt");
+            messageToEncrypt = isText() ? Convert.toBytes(messageToEncryptString) : Convert.parseHexString(messageToEncryptString);
+        }
+
+        public UnencryptedEncryptToSelfMessage(byte[] messageToEncrypt, boolean isText, boolean isCompressed) {
+            super(null, isText, isCompressed);
+            this.messageToEncrypt = messageToEncrypt;
+        }
+
+        @Override
+        int getMySize() {
+            if (getEncryptedData() == null) {
+                return 4 + Constants.MAX_ENCRYPTED_MESSAGE_LENGTH;
+            }
+            return super.getMySize();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
+            }
+            super.putMyBytes(buffer);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            if (getEncryptedData() == null) {
+                JSONObject encryptedMessageJSON = new JSONObject();
+                encryptedMessageJSON.put("messageToEncrypt", isText() ? Convert.toString(messageToEncrypt) : Convert.toHexString(messageToEncrypt));
+                encryptedMessageJSON.put("isText", isText());
+                encryptedMessageJSON.put("isCompressed", isCompressed());
+                json.put("encryptToSelfMessage", encryptedMessageJSON);
+            } else {
+                super.putMyJSON(json);
+            }
+        }
+
+        @Override
+        void validate(Transaction transaction) throws NxtException.ValidationException {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
+            }
+            super.validate(transaction);
+        }
+
+        @Override
+        void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
+            if (getEncryptedData() == null) {
+                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
+            }
+            super.apply(transaction, senderAccount, recipientAccount);
+        }
+
+        @Override
+        public void encrypt(String secretPhrase) {
+            setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
+                    Crypto.getPrivateKey(secretPhrase), Crypto.getPublicKey(secretPhrase)));
         }
 
     }

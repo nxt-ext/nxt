@@ -79,7 +79,7 @@ var NRS = (function(NRS, $, undefined) {
 		$menuItem.find('span .nm_inner_total').html(String(totalCount));
 		$menuItem.show();
 
-		var template = '<div class="popover" style="min-width:350px;"><div class="arrow"></div><div class="popover-inner">';
+		var template = '<div class="popover" style="min-width:320px;"><div class="arrow"></div><div class="popover-inner">';
 		template += '<h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>';
 
 		if($menuItem.data('bs.popover')) {

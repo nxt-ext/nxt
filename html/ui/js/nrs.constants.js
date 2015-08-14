@@ -22,6 +22,7 @@ var NRS = (function (NRS, $, undefined) {
         'DB_VERSION': 2,
 
         'PLUGIN_VERSION': 1,
+        'MAX_SHORT_JAVA': 32767,
         'MAX_INT_JAVA': 2147483647,
         'MIN_PRUNABLE_MESSAGE_LENGTH': 28,
 
@@ -125,6 +126,14 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getHashAlgorithm = function (code) {
         return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
+    };
+
+    // TODO receive from the server list of APIs which are safe for offline execution
+    NRS.isOfflineSafeRequest = function(requestType) {
+        return requestType == "addPeer" || requestType == "blacklistPeer" || requestType == "signTransaction" ||
+            requestType == "decodeToken" || requestType == "generateToken" ||
+            requestType == "decodeFileToken" || requestType == "generateFileToken" || requestType == "hash" ||
+            requestType == "parseTransaction" || requestType == "calculateFullHash";
     };
 
     return NRS;

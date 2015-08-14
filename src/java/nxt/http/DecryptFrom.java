@@ -44,7 +44,7 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
         if (account.getPublicKey() == null) {
             return INCORRECT_ACCOUNT;
         }
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         byte[] data = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("data")));
         byte[] nonce = Convert.parseHexString(Convert.nullToEmpty(req.getParameter("nonce")));
         EncryptedData encryptedData = new EncryptedData(data, nonce);
