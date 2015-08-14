@@ -73,6 +73,12 @@ in order for it to prepare the transaction JSON. Therefore, use a local
 installation when preparing encrypted messages for offline signing, if the
 content of the message is sensitive.
 
+All tabs in the "Transaction Operations" modal that have both bytes and json
+input fields need to have only one of them filled. If in doubt, using the json
+is preferred, as it will work for all transactions. The bytes format is still
+accepted, when possible, for backwards compatibility, and for transferring
+using QR codes (as the json cannot fit in a QR representation).
+
 
 Other changes:
 
