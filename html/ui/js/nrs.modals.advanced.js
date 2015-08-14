@@ -420,6 +420,10 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).closest(".modal").find(".tab_content").hide();
 		if (tab == "broadcast_json") {
 			$("#transaction_json_modal_button").text($.t("broadcast")).data("resetText", $.t("broadcast")).data("form", "broadcast_json_form");
+		} else if(tab == "parse_transaction") {
+			$("#transaction_json_modal_button").text($.t("parse_transaction")).data("resetText", $.t("parse_transaction")).data("form", "parse_transaction_form");
+		} else if(tab == "calculate_full_hash") {
+			$("#transaction_json_modal_button").text($.t("calculate_full_hash")).data("resetText", $.t("calculate_full_hash")).data("form", "calculate_full_hash_form");
 		} else {
 			$("#transaction_json_modal_button").text($.t("sign_transaction")).data("resetText", $.t("sign_transaction")).data("form", "sign_transaction_form");
 		}
