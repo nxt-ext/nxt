@@ -661,12 +661,16 @@ var NRS = (function(NRS, $) {
 		}
 
 		try {
-			var encrypted = NRS.encryptNote(data.data, {
-				"account": data.buyer
-			}, data.secretPhrase);
+			if (data.doNotSign) {
+                data.goodsToEncrypt = data.data;
+            } else {
+                var encrypted = NRS.encryptNote(data.data, {
+                    "account": data.buyer
+                }, data.secretPhrase);
 
-			data.goodsData = encrypted.message;
-			data.goodsNonce = encrypted.nonce;
+                data.goodsData = encrypted.message;
+                data.goodsNonce = encrypted.nonce;
+            }
 			data.goodsIsText = "true";
 		} catch (err) {
 			return {

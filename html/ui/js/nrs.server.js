@@ -246,7 +246,7 @@ var NRS = (function (NRS, $, undefined) {
         var secretPhrase = "";
 
         //unknown account..
-        if (type == "POST" && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
+        if (type == "POST" && !NRS.isOfflineSafeRequest(requestType) && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
             callback({
                 "errorCode": 2,
                 "errorDescription": $.t("error_new_account")
@@ -384,8 +384,8 @@ var NRS = (function (NRS, $, undefined) {
                     callback(response, data);
                 } else {
                     if (response.broadcasted == false) {
-                        if (!NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes),
-                                requestType, data)) {
+                        addMissingData(data);
+                        if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data)) {
                             callback({
                                 "errorCode": 1,
                                 "errorDescription": $.t("error_bytes_validation_server")
@@ -444,6 +444,7 @@ var NRS = (function (NRS, $, undefined) {
         var payload = transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
         if (data.broadcast == "false") {
             response.transactionBytes = payload;
+            response.transactionJSON.signature = signature;
             NRS.showRawTransactionModal(response);
         } else {
             if (extra) {

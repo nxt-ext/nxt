@@ -128,5 +128,13 @@ var NRS = (function (NRS, $, undefined) {
         return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
     };
 
+    // TODO receive from the server list of APIs which are safe for offline execution
+    NRS.isOfflineSafeRequest = function(requestType) {
+        return requestType == "addPeer" || requestType == "blacklistPeer" || requestType == "signTransaction" ||
+            requestType == "decodeToken" || requestType == "generateToken" ||
+            requestType == "decodeFileToken" || requestType == "generateFileToken" || requestType == "hash" ||
+            requestType == "parseTransaction" || requestType == "calculateFullHash";
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
