@@ -37,7 +37,7 @@ public final class SignTransactionJSON {
     public static void main(String[] args) {
         try {
             Logger.setLevel(Logger.Level.ERROR);
-            if (args.length != 2) {
+            if (args.length == 0 || args.length > 2) {
                 System.out.println("Usage: SignTransactionJSON <unsigned transaction json file> <signed transaction json file>");
                 System.exit(1);
             }
@@ -46,7 +46,14 @@ public final class SignTransactionJSON {
                 System.out.println("File not found: " + unsigned.getAbsolutePath());
                 System.exit(1);
             }
-            File signed = new File(args[1]);
+            File signed;
+            if (args.length == 2) {
+                signed = new File(args[1]);
+            } else if (unsigned.getName().startsWith("unsigned.")) {
+                signed = new File(unsigned.getParentFile(), unsigned.getName().substring(2));
+            } else {
+                signed = new File(unsigned.getParentFile(), "signed." + unsigned.getName());
+            }
             if (signed.exists()) {
                 System.out.println("File already exists: " + signed.getAbsolutePath());
                 System.exit(1);
