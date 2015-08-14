@@ -29,11 +29,11 @@ var NRS = (function(NRS, $, undefined) {
             });
             $("#raw_transaction_modal_unsigned_transaction_bytes_container").show();
             $("#raw_transaction_modal_unsigned_bytes_qr_code_container").show();
-            $("#raw_transaction_broadcast").prop("disabled", false);
+            $("#raw_transaction_broadcast").show();
         } else {
             $("#raw_transaction_modal_unsigned_transaction_bytes_container").hide();
             $("#raw_transaction_modal_unsigned_bytes_qr_code_container").hide();
-            $("#raw_transaction_broadcast").prop("disabled", true);
+            $("#raw_transaction_broadcast").hide();
         }
 
         if (transaction.transactionJSON) {
@@ -438,14 +438,6 @@ var NRS = (function(NRS, $, undefined) {
             downloadLink.hide();
         }
         $("#signed_json_output").show();
-        var signedPrunableTransactionJson = $("#signed_prunable_transaction_json");
-        if (response.prunableAttachmentJSON) {
-            signedPrunableTransactionJson.val(JSON.stringify(response.prunableAttachmentJSON));
-            $("#signed_prunable_json_output").show();
-        } else {
-            signedPrunableTransactionJson.val("");
-            $("#signed_prunable_json_output").hide();
-        }
         $("#transaction_signature").val(response.transactionJSON.signature);
         $("#transaction_signature_qr_code").empty().qrcode({
             "text": response.transactionJSON.signature,
