@@ -55,23 +55,21 @@ public final class BroadcastTransaction extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String transactionJSON = Convert.emptyToNull(req.getParameter("transactionJSON"));
         String transactionBytes = Convert.emptyToNull(req.getParameter("transactionBytes"));
         String prunableAttachmentJSON = Convert.emptyToNull(req.getParameter("prunableAttachmentJSON"));
 
-        Transaction.Builder builder = ParameterParser.parseTransaction(transactionJSON, transactionBytes, prunableAttachmentJSON);
-        Transaction transaction = builder.build();
-
         JSONObject response = new JSONObject();
         try {
+            Transaction.Builder builder = ParameterParser.parseTransaction(transactionJSON, transactionBytes, prunableAttachmentJSON);
+            Transaction transaction = builder.build();
             Nxt.getTransactionProcessor().broadcast(transaction);
             response.put("transaction", transaction.getStringId());
             response.put("fullHash", transaction.getFullHash());
         } catch (NxtException.ValidationException|RuntimeException e) {
-            Logger.logDebugMessage(e.getMessage(), e);
-            JSONData.putException(response, e);
+            JSONData.putException(response, e, "Failed to broadcast transaction");
         }
         return response;
 
