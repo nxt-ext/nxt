@@ -48,9 +48,9 @@ scanning the QR code, or you can download the unsigned transaction JSON to a
 file by clicking the download icon, and transfer it using a USB stick to the
 offline workstation.
 
-On the offline workstation - users should use the new modal
-"Transaction JSON Operations", "Sign Transaction" tab, to sign the unsigned
-transaction JSON, which can be uploaded from a file.
+On the offline workstation - users should use the "Transaction Operations"
+modal, "Sign Transaction" tab, to sign the unsigned transaction JSON, which
+can be uploaded from a file.
 
 In response, a signature field is displayed, with a QR code, and also the
 signed transaction JSON which users can save to a file for transferring back
@@ -59,8 +59,8 @@ to the online workstation.
 Back on the online workstation, users can scan the signature QR code into the
 "Raw Transaction Details" modal signature field, and broadcast the
 transaction. Alternatively, they can use the "Broadcast Transaction" tab of
-the "Transaction JSON Operations" modal to broadcast the transaction JSON
-copied from the offline workstation.
+the "Transaction Operations" modal to broadcast the transaction JSON copied
+from the offline workstation.
 
 A command line tool, sign.sh, has been provided, for signing transaction JSON
 without needing to even have an Nxt server or a browser running.
