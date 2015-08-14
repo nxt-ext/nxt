@@ -585,7 +585,7 @@ var NRS = (function(NRS, $) {
 
 				formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
 
-				if (requestType != "parseTransaction") {
+				if (requestType != "parseTransaction" && requestType != "calculateFullHash") {
 					if (typeof formCompleteFunction == "function") {
 						data.requestType = requestType;
 

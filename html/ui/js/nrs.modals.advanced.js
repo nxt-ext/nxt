@@ -141,10 +141,11 @@ var NRS = (function(NRS, $, undefined) {
     NRS.forms.broadcastTransaction = function(modal) {
         // The problem is that broadcastTransaction is invoked by different modals
         // We need to find the correct form in case the modal has more than one
+        var data
         if (modal.attr('id') == "transaction_json_modal") {
-            var data = NRS.getFormData($("#broadcast_json_form"));
+            data = NRS.getFormData($("#broadcast_json_form"));
         } else {
-            var data = NRS.getFormData(modal.find("form:first"));
+            data = NRS.getFormData(modal.find("form:first"));
         }
         if (data.transactionJSON) {
             var signature = data.signature;
@@ -357,45 +358,6 @@ var NRS = (function(NRS, $, undefined) {
 		$tabPane.find('.approve_mb_model_' + String(mbModelId)).show();
 	});
 
-    var transactionOperationsModal = $("#transaction_operations_modal");
-    transactionOperationsModal.on("show.bs.modal", function() {
-		$(this).find(".output_table tbody").empty();
-		$(this).find(".output").hide();
-
-		$(this).find(".tab_content:first").show();
-		$("#transaction_operations_modal_button").text($.t("broadcast")).data("resetText", $.t("broadcast")).data("form", "broadcast_transaction_form");
-	});
-
-	transactionOperationsModal.on("hidden.bs.modal", function() {
-		$(this).find(".tab_content").hide();
-		$(this).find("ul.nav li.active").removeClass("active");
-		$(this).find("ul.nav li:first").addClass("active");
-
-		$(this).find(".output_table tbody").empty();
-		$(this).find(".output").hide();
-	});
-
-    transactionOperationsModal.find("ul.nav li").click(function(e) {
-		e.preventDefault();
-
-		var tab = $(this).data("tab");
-
-		$(this).siblings().removeClass("active");
-		$(this).addClass("active");
-
-		$(this).closest(".modal").find(".tab_content").hide();
-
-		if (tab == "broadcast_transaction") {
-			$("#transaction_operations_modal_button").text($.t("broadcast")).data("resetText", $.t("broadcast")).data("form", "broadcast_transaction_form");
-		} else if (tab == "parse_transaction") {
-			$("#transaction_operations_modal_button").text($.t("parse_transaction_bytes")).data("resetText", $.t("parse_transaction_bytes")).data("form", "parse_transaction_form");
-		} else {
-			$("#transaction_operations_modal_button").text($.t("calculate_full_hash")).data("resetText", $.t("calculate_full_hash")).data("form", "calculate_full_hash_form");
-		}
-
-		$("#transaction_operations_modal_" + tab).show();
-	});
-
     var transactionJSONModal = $("#transaction_json_modal");
     transactionJSONModal.on("show.bs.modal", function() {
 		$(this).find(".output").hide();
@@ -432,7 +394,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.forms.broadcastTransactionComplete = function() {
 		$("#parse_transaction_form").find(".error_message").hide();
-		$("#transaction_operations_modal").modal("hide");
+        $("#transaction_json_modal").modal("hide");
 	};
 
 	NRS.forms.parseTransactionComplete = function(response) {
@@ -459,7 +421,6 @@ var NRS = (function(NRS, $, undefined) {
 
     NRS.forms.broadcastTransactionComplete = function() {
    		$("#parse_transaction_form").find(".error_message").hide();
-   		$("#transaction_operations_modal").modal("hide");
    		$("#transaction_json_modal").modal("hide");
    	};
 
