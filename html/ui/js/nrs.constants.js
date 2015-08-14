@@ -132,7 +132,8 @@ var NRS = (function (NRS, $, undefined) {
     NRS.isOfflineSafeRequest = function(requestType) {
         return requestType == "addPeer" || requestType == "blacklistPeer" || requestType == "signTransaction" ||
             requestType == "decodeToken" || requestType == "generateToken" ||
-            requestType == "decodeFileToken" || requestType == "generateFileToken" || requestType == "hash";
+            requestType == "decodeFileToken" || requestType == "generateFileToken" || requestType == "hash" ||
+            requestType == "parseTransaction" || requestType == "calculateFullHash";
     };
 
     return NRS;

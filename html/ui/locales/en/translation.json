@@ -1408,6 +1408,8 @@
   "do_not_sign": "Do Not Sign",
   "dividend_height_asset_height": "Dividend height lower than asset issuance height",
   "select_file_to_upload": "Select File To Upload",
+  "broadcast_json": "Broadcast JSON",
+  "broadcast_bytes": "Broadcast Bytes"
   "already_processed": "Already Processed",
   "account_ledger": "Account Ledger",
   "no_account_ledger": "No account ledger entries found",

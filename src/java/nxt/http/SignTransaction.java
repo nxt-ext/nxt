@@ -19,7 +19,6 @@ package nxt.http;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.util.Convert;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -36,7 +35,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String transactionJSON = Convert.emptyToNull(req.getParameter("unsignedTransactionJSON"));
         String transactionBytes = Convert.emptyToNull(req.getParameter("unsignedTransactionBytes"));
@@ -66,8 +65,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
             response.put("transactionBytes", Convert.toHexString(transaction.getBytes()));
             JSONData.putPrunableAttachment(response, transaction);
         } catch (NxtException.ValidationException|RuntimeException e) {
-            Logger.logDebugMessage(e.getMessage(), e);
-            JSONData.putException(response, e, "Incorrect unsigned transaction");
+            JSONData.putException(response, e, "Incorrect unsigned transaction json or bytes");
         }
         return response;
     }
