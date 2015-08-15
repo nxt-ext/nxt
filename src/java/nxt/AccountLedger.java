@@ -180,6 +180,39 @@ public class AccountLedger {
         return listeners.removeListener(listener, eventType);
     }
 
+    static boolean mustLogEntry(long accountId, boolean isUnconfirmed) {
+        //
+        // Must be tracking this account
+        //
+        if (!ledgerEnabled || (!trackAllAccounts && !trackAccounts.contains(accountId))) {
+            return false;
+        }
+        // confirmed changes only occur while processing block, and unconfirmed changes are
+        // only logged while processing block
+        if (!blockchainProcessor.isProcessingBlock()) {
+            return false;
+        }
+        //
+        // Log unconfirmed changes only when processing a block and logUnconfirmed does not equal 0
+        // Log confirmed changes unless logUnconfirmed equals 2
+        //
+        if (isUnconfirmed && logUnconfirmed == 0) {
+            return false;
+        }
+        if (!isUnconfirmed && logUnconfirmed == 2) {
+            return false;
+        }
+        //
+        // Don't log account changes if we are scanning the blockchain and the current height
+        // is less than the minimum account_ledger trim height
+        //
+        if (blockchainProcessor.isScanning() && trimKeep > 0 &&
+                blockchain.getHeight() <= blockchainProcessor.getInitialScanHeight() - trimKeep) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Log an event in the account_ledger table
      *
@@ -191,31 +224,6 @@ public class AccountLedger {
         //
         if (!Db.db.isInTransaction()) {
             throw new IllegalStateException("Not in transaction");
-        }
-        //
-        // Don't log account changes if we are scanning the blockchain and the current height
-        // is less than the minimum account_ledger trim height
-        //
-        if (blockchainProcessor.isScanning() && trimKeep > 0 &&
-                blockchain.getHeight() <= blockchainProcessor.getInitialScanHeight() - trimKeep) {
-            return;
-        }
-        //
-        // Must be tracking this account
-        //
-        if (!ledgerEnabled || (!trackAllAccounts && !trackAccounts.contains(ledgerEntry.getAccountId()))) {
-            return;
-        }
-        //
-        // Log unconfirmed changes only when processing a block and logUnconfirmed does not equal 0
-        // Log confirmed changes unless logUnconfirmed equals 2
-        //
-        if (ledgerEntry.getHolding() != null &&
-                    (ledgerEntry.getHolding().isUnconfirmed() &&
-                        (!blockchainProcessor.isProcessingBlock() || logUnconfirmed == 0)) ||
-                //TODO: what if holding is null here?
-                    (!ledgerEntry.getHolding().isUnconfirmed() && logUnconfirmed == 2)) {
-            return;
         }
         //
         // Combine multiple ledger entries
