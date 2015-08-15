@@ -97,20 +97,17 @@ public class TaggedData {
         private final long id;
         private final DbKey dbKey;
         private int timestamp;
-        private int height;
 
-        private Timestamp(long id, int timestamp, int height) {
+        private Timestamp(long id, int timestamp) {
             this.id = id;
             this.dbKey = timestampKeyFactory.newKey(this.id);
             this.timestamp = timestamp;
-            this.height = height;
         }
 
         private Timestamp(ResultSet rs) throws SQLException {
             this.id = rs.getLong("id");
             this.dbKey = timestampKeyFactory.newKey(this.id);
             this.timestamp = rs.getInt("timestamp");
-            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -119,7 +116,7 @@ public class TaggedData {
                 int i = 0;
                 pstmt.setLong(++i, this.id);
                 pstmt.setInt(++i, this.timestamp);
-                pstmt.setInt(++i, this.height);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
         }
@@ -194,15 +191,32 @@ public class TaggedData {
 
         private static void init() {}
 
-        //TODO: adding tag at height lower than current height probably will not work as expected
-        private static void add(TaggedData taggedData, int height) {
+        private static void add(TaggedData taggedData) {
             for (String tagValue : taggedData.getParsedTags()) {
                 Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
                 if (tag == null) {
-                    tag = new Tag(tagValue, height);
+                    tag = new Tag(tagValue, Nxt.getBlockchain().getHeight());
                 }
                 tag.count += 1;
                 tagTable.insert(tag);
+            }
+        }
+
+        private static void add(TaggedData taggedData, int height) {
+            try (Connection con = Db.db.getConnection();
+                 PreparedStatement pstmt = con.prepareStatement("UPDATE data_tag SET tag_count = tag_count + 1 WHERE tag = ? AND height >= ?")) {
+                for (String tagValue : taggedData.getParsedTags()) {
+                    pstmt.setString(1, tagValue);
+                    pstmt.setInt(2, height);
+                    int updated = pstmt.executeUpdate();
+                    if (updated == 0) {
+                        Tag tag = new Tag(tagValue, height);
+                        tag.count += 1;
+                        tagTable.insert(tag);
+                    }
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
             }
         }
 
@@ -260,10 +274,6 @@ public class TaggedData {
 
         public int getCount() {
             return count;
-        }
-
-        public int getHeight() {
-            return height;
         }
 
     }
@@ -474,36 +484,23 @@ public class TaggedData {
         return blockTimestamp;
     }
 
-    public int getHeight() {
-        return height;
-    }
-
     static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
-        add(transaction, attachment, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
-    }
-
-    static void add(Transaction transaction, Attachment.TaggedDataUpload attachment, int blockTimestamp, int height) {
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId()));
             if (taggedData == null && attachment.getData() != null) {
-                taggedData = new TaggedData(transaction, attachment, blockTimestamp, height);
+                taggedData = new TaggedData(transaction, attachment);
                 taggedDataTable.insert(taggedData);
-                Tag.add(taggedData, height);
+                Tag.add(taggedData);
             }
         }
-        Timestamp timestamp = new Timestamp(transaction.getId(), transaction.getTimestamp(), height);
+        Timestamp timestamp = new Timestamp(transaction.getId(), transaction.getTimestamp());
         timestampTable.insert(timestamp);
     }
 
     static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment) {
-        extend(transaction, attachment, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
-    }
-
-    static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment, int blockTimestamp, int height) {
         long taggedDataId = attachment.getTaggedDataId();
         Timestamp timestamp = timestampTable.get(timestampKeyFactory.newKey(taggedDataId));
         timestamp.timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, transaction.getTimestamp() - timestamp.timestamp);
-        timestamp.height = height;
         timestampTable.insert(timestamp);
         List<Long> extendTransactionIds = extendTable.get(extendDbKeyFactory.newKey(taggedDataId));
         extendTransactionIds.add(transaction.getId());
@@ -512,13 +509,13 @@ public class TaggedData {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(taggedDataId));
             if (taggedData == null && attachment.getData() != null) {
                 TransactionImpl uploadTransaction = TransactionDb.findTransaction(taggedDataId);
-                taggedData = new TaggedData(uploadTransaction, attachment, blockTimestamp, height);
-                Tag.add(taggedData, height);
+                taggedData = new TaggedData(uploadTransaction, attachment);
+                Tag.add(taggedData);
             }
             if (taggedData != null) {
                 taggedData.transactionTimestamp = timestamp.timestamp;
-                taggedData.blockTimestamp = blockTimestamp;
-                taggedData.height = height;
+                taggedData.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+                taggedData.height = Nxt.getBlockchain().getHeight();
                 taggedDataTable.insert(taggedData);
             }
         }
