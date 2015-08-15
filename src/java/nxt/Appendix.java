@@ -164,7 +164,7 @@ public interface Appendix {
         void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {}
 
         boolean isPhasable() {
-            return true;
+            return ! (this instanceof Prunable);
         }
 
     }
