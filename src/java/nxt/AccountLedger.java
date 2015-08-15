@@ -213,6 +213,7 @@ public class AccountLedger {
         if (ledgerEntry.getHolding() != null &&
                     (ledgerEntry.getHolding().isUnconfirmed() &&
                         (!blockchainProcessor.isProcessingBlock() || logUnconfirmed == 0)) ||
+                //TODO: what if holding is null here?
                     (!ledgerEntry.getHolding().isUnconfirmed() && logUnconfirmed == 2)) {
             return;
         }
