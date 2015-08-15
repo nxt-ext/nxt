@@ -1801,6 +1801,7 @@ public abstract class TransactionType {
                 long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
                         - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
+                //TODO: use same ledger eventId as in applyAttachmentUnconfirmed
                 senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalDividendPayment);
             }
 
@@ -2655,8 +2656,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isPruned(long id) {
-                return TaggedData.isPruned(id, false);
+            boolean isPruned(long transactionId) {
+                return TaggedData.isPruned(transactionId);
             }
 
         };
@@ -2718,8 +2719,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isPruned(long id) {
-                return TaggedData.isPruned(id, true);
+            boolean isPruned(long transactionId) {
+                return false;
             }
 
         };

@@ -61,7 +61,7 @@ public class TaggedData {
 
         @Override
         protected String defaultSort() {
-            return " ORDER BY block_timestamp DESC, height DESC ";
+            return " ORDER BY block_timestamp DESC, height DESC, db_id DESC ";
         }
 
         @Override
@@ -194,6 +194,7 @@ public class TaggedData {
 
         private static void init() {}
 
+        //TODO: adding tag at height lower than current height probably will not work as expected
         private static void add(TaggedData taggedData, int height) {
             for (String tagValue : taggedData.getParsedTags()) {
                 Tag tag = tagTable.get(tagDbKeyFactory.newKey(tagValue));
@@ -322,7 +323,7 @@ public class TaggedData {
 
     public static DbIterator<TaggedData> searchData(String query, String channel, long accountId, int from, int to) {
         return taggedDataTable.search(query, getDbClause(channel, accountId), from, to,
-                " ORDER BY ft.score DESC, tagged_data.block_timestamp DESC ");
+                " ORDER BY ft.score DESC, tagged_data.block_timestamp DESC, tagged_data.db_id DESC ");
     }
 
     private static DbClause getDbClause(String channel, long accountId) {
@@ -523,29 +524,31 @@ public class TaggedData {
         }
     }
 
-    static boolean isPruned(long transactionId, boolean extendTransaction) {
-        boolean isPruned = false;
+    static void restore(Transaction transaction, Attachment.TaggedDataUpload attachment, int blockTimestamp, int height) {
+        TaggedData taggedData = new TaggedData(transaction, attachment, blockTimestamp, height);
+        taggedDataTable.insert(taggedData);
+        Tag.add(taggedData, height);
+        int timestamp = transaction.getTimestamp();
+        for (long extendTransactionId : TaggedData.getExtendTransactionIds(transaction.getId())) {
+            Transaction extendTransaction = TransactionDb.findTransaction(extendTransactionId);
+            timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, extendTransaction.getTimestamp() - timestamp);
+            taggedData.transactionTimestamp = timestamp;
+            taggedData.blockTimestamp = extendTransaction.getBlockTimestamp();
+            taggedData.height = extendTransaction.getHeight();
+            taggedDataTable.insert(taggedData);
+        }
+    }
+
+    static boolean isPruned(long transactionId) {
         try (Connection con = Db.db.getConnection();
-                PreparedStatement pstmt1 = con.prepareStatement("SELECT id from tagged_data_extend WHERE extend_id = ?");
-                PreparedStatement pstmt2 = con.prepareStatement("SELECT 1 FROM tagged_data WHERE id = ?")) {
-            if (extendTransaction) {
-                pstmt1.setLong(1, transactionId);
-                try (ResultSet rs = pstmt1.executeQuery()) {
-                    if (!rs.next()) {
-                        return true;
-                    }
-                    pstmt2.setLong(1, rs.getLong(1));
-                }
-            } else {
-                pstmt2.setLong(1, transactionId);
-            }
-            try (ResultSet rs = pstmt2.executeQuery()) {
-                isPruned = !rs.next();
+             PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM tagged_data WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return !rs.next();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        return isPruned;
     }
 
 }

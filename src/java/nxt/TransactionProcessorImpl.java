@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -661,6 +662,24 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
+    private static final Comparator<UnconfirmedTransaction> cachedUnconfirmedTransactionComparator = (UnconfirmedTransaction t1, UnconfirmedTransaction t2) -> {
+        int compare;
+        // Sort by transaction_height ASC
+        compare = Integer.compare(t1.getHeight(), t2.getHeight());
+        if (compare != 0)
+            return compare;
+        // Sort by fee_per_byte DESC
+        compare = Long.compare(t1.getFeePerByte(), t2.getFeePerByte());
+        if (compare != 0)
+            return -compare;
+        // Sort by arrival_timestamp ASC
+        compare = Long.compare(t1.getArrivalTimestamp(), t2.getArrivalTimestamp());
+        if (compare != 0)
+            return compare;
+        // Sort by transaction ID ASC
+        return Long.compare(t1.getId(), t2.getId());
+    };
+
     /**
      * Get the cached unconfirmed transactions
      *
@@ -668,25 +687,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
      */
     @Override
     public SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude) {
-        SortedSet<UnconfirmedTransaction> transactionSet = new TreeSet<>(
-            (UnconfirmedTransaction t1, UnconfirmedTransaction t2) -> {
-                int compare;
-                // Sort by transaction_height ASC
-                compare = Integer.compare(t1.getHeight(), t2.getHeight());
-                if (compare != 0)
-                    return compare;
-                // Sort by fee_per_byte DESC
-                compare = Long.compare(t1.getFeePerByte(), t2.getFeePerByte());
-                if (compare != 0)
-                    return -compare;
-                // Sort by arrival_timestamp ASC
-                compare = Long.compare(t1.getArrivalTimestamp(), t2.getArrivalTimestamp());
-                if (compare != 0)
-                    return compare;
-                // Sort by transaction ID ASC
-                return Long.compare(t1.getId(), t2.getId());
-            }
-        );
+        SortedSet<UnconfirmedTransaction> transactionSet = new TreeSet<>(cachedUnconfirmedTransactionComparator);
         Nxt.getBlockchain().readLock();
         try {
             //
@@ -766,7 +767,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                     Appendix.Phasing phasing = myTransaction.getPhasing();
                                     int blockTimestamp;
                                     int height;
-                                    if (phasing != null && myTransaction.getType().isPhasable()) {
+                                    if (phasing != null && appendage.isPhasable()) {
                                         height = phasing.getFinishHeight();
                                         Block finishBlock = Nxt.getBlockchain().getBlockAtHeight(height);
                                         if (finishBlock == null) {

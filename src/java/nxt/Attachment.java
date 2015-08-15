@@ -74,8 +74,8 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final boolean isPhasable() {
-            return getTransactionType().isPhasable();
+        public final boolean isPhasable() {
+            return !(this instanceof Prunable) && getTransactionType().isPhasable();
         }
 
     }
@@ -2810,7 +2810,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
-            TaggedData.add(transaction, this, blockTimestamp, height);
+            TaggedData.restore(transaction, this, blockTimestamp, height);
         }
 
     }
@@ -2895,7 +2895,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
-            TaggedData.extend(transaction, this, blockTimestamp, height);
+            throw new UnsupportedOperationException();
         }
 
     }
