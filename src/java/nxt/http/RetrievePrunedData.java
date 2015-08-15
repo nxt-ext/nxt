@@ -19,6 +19,7 @@ package nxt.http;
 import nxt.Nxt;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
 import javax.servlet.http.HttpServletRequest;
 
 /**

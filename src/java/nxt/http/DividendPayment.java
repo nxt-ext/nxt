@@ -19,9 +19,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
-import nxt.Nxt;
 import nxt.NxtException;
-import nxt.Transaction;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
