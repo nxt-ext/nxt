@@ -53,7 +53,7 @@ public final class PrunableMessage {
 
         @Override
         protected String defaultSort() {
-            return " ORDER BY block_timestamp DESC ";
+            return " ORDER BY block_timestamp DESC, db_id DESC ";
         }
 
     };
@@ -75,7 +75,7 @@ public final class PrunableMessage {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM prunable_message WHERE sender_id = ?"
-                    + " UNION ALL SELECT * FROM prunable_message WHERE recipient_id = ? AND sender_id <> ? ORDER BY block_timestamp DESC "
+                    + " UNION ALL SELECT * FROM prunable_message WHERE recipient_id = ? AND sender_id <> ? ORDER BY block_timestamp DESC, db_id DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -95,7 +95,7 @@ public final class PrunableMessage {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM prunable_message WHERE sender_id = ? AND recipient_id = ? "
                     + "UNION ALL SELECT * FROM prunable_message WHERE sender_id = ? AND recipient_id = ? AND sender_id <> recipient_id "
-                    + "ORDER BY block_timestamp DESC "
+                    + "ORDER BY block_timestamp DESC, db_id DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -267,17 +267,15 @@ public final class PrunableMessage {
     }
 
     static boolean isPruned(long transactionId) {
-        boolean isPruned = false;
         try (Connection con = Db.db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM prunable_message WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                isPruned = !rs.next();
+                return !rs.next();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        return isPruned;
     }
 
 }
