@@ -41,8 +41,9 @@ public class RetrievePrunedData extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         try {
-            Nxt.getBlockchainProcessor().restorePrunedData();
+            int count = Nxt.getBlockchainProcessor().restorePrunedData();
             response.put("done", true);
+            response.put("numberOfPrunedData", count);
         } catch (RuntimeException e) {
             JSONData.putException(response, e);
         }

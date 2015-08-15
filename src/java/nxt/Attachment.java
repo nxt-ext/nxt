@@ -2895,7 +2895,6 @@ public interface Attachment extends Appendix {
 
         @Override
         public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
-            throw new UnsupportedOperationException();
         }
 
     }

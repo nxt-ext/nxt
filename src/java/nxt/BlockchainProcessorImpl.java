@@ -841,6 +841,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 }
                 if (peer == null) {
+                    Logger.logDebugMessage("Cannot find any archive peers");
                     return;
                 }
                 Logger.logDebugMessage("Connected to archive peer " + peer.getHost());
@@ -854,6 +855,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     processing = new HashSet<>(prunableTransactions.size());
                     processing.addAll(prunableTransactions);
                 }
+                Logger.logDebugMessage("Need to restore " + processing.size() + " pruned data");
                 //
                 // Request transactions in batches of 100 until all transactions have been processed
                 //
@@ -901,6 +903,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logErrorMessage("Unable to restore prunable data", e);
             } finally {
                 isRestoring = false;
+                Logger.logDebugMessage("Done retrieving prunable transactions from " + peer.getHost() + ", remaining " + prunableTransactions.size());
             }
         }
     }
@@ -1137,7 +1140,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
-    public void restorePrunedData() {
+    public int restorePrunedData() {
         Db.db.beginTransaction();
         try (Connection con = Db.db.getConnection()) {
             int now = Nxt.getEpochTime();
@@ -1169,6 +1172,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new RuntimeException(e.toString(), e);
         } finally {
             Db.db.endTransaction();
+        }
+        synchronized (prunableTransactions) {
+            return prunableTransactions.size();
         }
     }
 
