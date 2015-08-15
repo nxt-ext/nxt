@@ -658,9 +658,6 @@ public final class Account {
     }
 
     public static Account getAccount(long id) {
-        if (id == 0) {
-            return null;
-        }
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey);
         if (account == null) {
@@ -674,9 +671,6 @@ public final class Account {
     }
 
     public static Account getAccount(long id, int height) {
-        if (id == 0) {
-            return null;
-        }
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey, height);
         if (account == null) {
