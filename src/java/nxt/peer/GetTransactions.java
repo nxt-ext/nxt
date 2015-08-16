@@ -17,6 +17,7 @@
 package nxt.peer;
 
 import nxt.Blockchain;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.Transaction;
 import org.json.simple.JSONArray;
@@ -34,6 +35,9 @@ public class GetTransactions extends PeerServlet.PeerRequestHandler {
 
     @Override
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
+        if (!Constants.INCLUDE_EXPIRED_PRUNABLE) {
+            return PeerServlet.UNSUPPORTED_REQUEST_TYPE;
+        }
         JSONObject response = new JSONObject();
         JSONArray transactionArray = new JSONArray();
         JSONArray transactionIds = (JSONArray)request.get("transactionIds");

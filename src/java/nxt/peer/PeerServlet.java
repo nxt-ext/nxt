@@ -69,7 +69,7 @@ public final class PeerServlet extends WebSocketServlet {
         peerRequestHandlers = Collections.unmodifiableMap(map);
     }
 
-    private static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
+    static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
     static {
         JSONObject response = new JSONObject();
         response.put("error", Errors.UNSUPPORTED_REQUEST_TYPE);
