@@ -41,8 +41,11 @@ available services are Hallmark (being a hallmarked peer), and Prunable
 (providing archival and retrieval service for expired prunable data).
 
 To configure a peer to provide the Prunable service, nxt.maxPrunableLifetime
-must be set to -1 and nxt.includeExpiredPrunable must be true. Such a peer
-will then provide expired prunable data to other peers when requested.
+must be set to -1 and nxt.includeExpiredPrunable must be true (default). Such
+a peer will then provide expired prunable data to other peers when requested.
+If nxt.includeExpiredPrunable is false, the node will still keep prunable data
+indefinitely (if nxt.maxPrunableLifetime is -1), but will not provide them to
+others.
 
 The services a peer provides are also exposed in the getBlockchainStatus and
 getStatus APIs. The getPeers API accepts optional service parameter, to
