@@ -1,0 +1,110 @@
+This experimental release adds several major new features. It does not require
+a hard fork, and update to the 1.6 branch will be completely optional even
+after it is declared stable. 1.6 peers are compatible with 1.5 peers, but as
+usual the database changes are not reversible, going back from 1.6 to 1.5
+would require starting again from a 1.5 database.
+
+
+Account ledger:
+
+The account ledger feature provides a record of all recent changes to the
+account balances (including NXT, asset, and currency balances), and the event
+that caused each change. It is enabled by default for all account, but can be
+set to track certain accounts only or be disabled completely, using the
+nxt.ledgerAccounts property. By default records are kept for the last 30,000
+blocks, this can be changed using the nxt.ledgerTrimKeep property.
+The nxt.ledgerLogUnconfirmed property controls whether confirmed, unconfirmed,
+or both types of changes are tracked.
+
+The new APIs getAccountLedger and getAccountLedgerEntry are used to retrieve
+account ledger records. Their parameters and response fields are documented in
+the javadoc.
+
+Account ledger events can also be followed using the existing eventRegister
+and eventWait API.
+
+Using account ledger events as an alternative to the getAccountTransactions or
+getBlockchainTransactions API completely avoids the need to handle phased
+transactions as a special case. Only changes to account balances that actually
+happened, and at the time (block height) they happened, are recorded in the
+account ledger. The account ledger also makes it easier to monitor an account
+for changes that occurred as a result of past transactions (e.g. an AE order
+being filled), or are result of dividend payment transactions, or block
+forging fees.
+
+
+Peer services:
+
+Peers can advertise to other peers the set of services they provide, and
+include this information when sharing peer addresses with each other. Currently
+available services are Hallmark (being a hallmarked peer), and Prunable
+(providing archival and retrieval service for expired prunable data).
+
+To configure a peer to provide the Prunable service, nxt.maxPrunableLifetime
+must be set to -1 and nxt.includeExpiredPrunable must be true. Such a peer
+will then provide expired prunable data to other peers when requested.
+
+The services a peer provides are also exposed in the getBlockchainStatus and
+getStatus APIs. The getPeers API accepts optional service parameter, to
+filter the result based on desired provided service, and includes the services
+each peer provides in the peer info.
+
+
+Restore prunable data:
+
+A peer configured with nxt.maxPrunableLifetime=-1, or any positive value
+higher than the minimum of two weeks (1209600 seconds), when downloading the
+blockchain from scratch, will automatically start requesting the missing
+prunable parts (prunable plain/encrypted messages, and tagged data) from any
+archival peers it finds on the network (those providing the Prunable service).
+
+This task of requesting and restoring missing prunable data can also be
+triggered using the new retrievePrunedDat debug API, for peers that already
+have the full blockchain or need to be restarted during the download process.
+
+(Note that when nxt.maxPrunableLifetime is set to a positive value, extend
+tagged data transactions are ignored for the purpose of selecting which
+pruned tagged data to retrieve, the timestamp on the original upload data
+transaction is what is being used. To make sure all pruned data are retrieved,
+set nxt.maxPrunableLifetime to -1, and if really needed set it back to the
+desired value after the initial restore is complete.)
+
+The getBlockchainTransactions API now accepts optional includeExpiredPrunable
+parameter, to force including expired prunable parts in the response, if
+available (default false).
+
+
+Asset delete:
+
+Asset transfers to the Genesis accounts are now treated as deleting the
+corresponding number of shares, with the total asset quantity adjusted
+accordingly. A new deleteAssetShares API has been added to perform this
+function. At the next hard fork (1.7), asset transfers to Genesis will be
+completely disallowed and the deleteAssetShares API will then create a new
+AssetDelete transaction type, to achieve the same quantity reduction effect.
+
+
+A new getTaggedDataExtendTransactions API has been added, to retrieve all
+tagged data extend transactions for a given tagged data upload transaction.
+
+
+Several performance optimizations have been included in this release:
+
+The last 10 blocks and the transactions in them are now cached in memory.
+The unconfirmed transactions (up to nxt.maxUnconfirmedTransactions, default
+2000) are also cached in memory.
+
+Accounts with zero balance are now deleted from the account table, which
+significantly reduces its size and should make queries for the balances of the
+active accounts faster. Only public keys for such accounts, if available, are
+permanently stored in the separate public_key table. Creation of new accounts
+for one-time use, which is the practice of many exchanges and merchants,
+should now be less of a burden for the database, as long as such accounts are
+fully emptied after use.
+
+
+Updated jetty to version 9.3.2. If unpacking on top of a previous installation,
+delete the old lib subdirectory first.
+
+This release will perform a database upgrade and rescan on first start.
+
