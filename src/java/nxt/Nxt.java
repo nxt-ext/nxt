@@ -45,7 +45,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.6.0e";
+    public static final String VERSION = "1.7.0e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();

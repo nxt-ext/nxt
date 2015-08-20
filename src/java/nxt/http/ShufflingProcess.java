@@ -74,7 +74,7 @@ public final class ShufflingProcess extends CreateTransaction {
             return JSON.prepare(response);
         }
 
-        String secretPhrase = ParameterParser.getSecretPhrase(req);
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
 
         String recipientSecretPhrase = Convert.emptyToNull(req.getParameter("recipientSecretPhrase"));
         byte[] recipientPublicKey;
