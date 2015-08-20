@@ -3541,8 +3541,22 @@ body > .header .navbar {
  * @duckx 20150812 - login screen  */
 
 #logo-nxt-img { 
-  margin-bottom:40px;
+  margin: 0 auto 40px auto;
+  display: block;
 }
+
+#welcome_panel {
+  margin: 0 9px;
+}
+
+#welcome_panel .panel-body {
+  text-align: center; 
+}
+
+#welcome_panel .panel-body .btn {
+  margin: 0 5px 9px 5px;
+}
+
 
 .lockscreen-credentials #login_account {
     min-width: 256px;
