@@ -16,9 +16,6 @@
 
 package nxt.crypto;
 
-import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
-import org.bouncycastle.jcajce.provider.digest.SHA3;
-
 public enum HashFunction {
 
     /**
@@ -34,7 +31,7 @@ public enum HashFunction {
      */
     SHA3((byte)3) {
         public byte[] hash(byte[] input) {
-            return new SHA3.DigestSHA3(256).digest(input);
+            return Crypto.sha3().digest(input);
         }
     },
     /**
@@ -55,12 +52,12 @@ public enum HashFunction {
     },
     RIPEMD160((byte)6) {
         public byte[] hash(byte[] input) {
-            return new RIPEMD160.Digest().digest(input);
+            return Crypto.ripemd160().digest(input);
         }
     },
     RIPEMD160_SHA256((byte)62) {
         public byte[] hash(byte[] input) {
-            return new RIPEMD160.Digest().digest(Crypto.sha256().digest(input));
+            return Crypto.ripemd160().digest(Crypto.sha256().digest(input));
         }
     };
 
