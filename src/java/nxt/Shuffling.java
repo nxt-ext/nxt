@@ -31,6 +31,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 
@@ -308,10 +309,18 @@ public final class Shuffling {
     }
 
     void distribute() {
+        //TODO: cache shuffling participants
+        for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
+            Account recipientAccount = Account.getAccount(Account.getId(participant.getRecipientPublicKey()));
+            if (recipientAccount != null && !Arrays.equals(recipientAccount.getPublicKey(), participant.getRecipientPublicKey())) {
+                //TODO: penalty?
+                cancel();
+                return;
+            }
+        }
         for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
             long recipientId = Account.getId(participant.getRecipientPublicKey());
             Account recipientAccount = Account.addOrGetAccount(recipientId);
-            //TODO: distribution must fail if somebody created the same account with a different public key in the meantime, should check in validate
             recipientAccount.apply(participant.getRecipientPublicKey());
             updateBalance(recipientId, amount);
             updateUnconfirmedBalance(recipientId, amount);
