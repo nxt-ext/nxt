@@ -22,7 +22,6 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
-import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
@@ -31,6 +30,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
@@ -197,8 +197,10 @@ public final class Shuffling {
             shuffling.setStage(Stage.VERIFICATION);
             List<EncryptedData> unmarshaledDataList = EncryptedData.getUnmarshaledDataList(data);
             Deque<EncryptedData> stack = new ArrayDeque<>(unmarshaledDataList);
-            for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(shufflingId)) {
-                participant.setRecipientPublicKey(stack.pop().getData());
+            try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shufflingId)) {
+                for (ShufflingParticipant participant : participants) {
+                    participant.setRecipientPublicKey(stack.pop().getData());
+                }
             }
         }
     }
@@ -309,49 +311,51 @@ public final class Shuffling {
     }
 
     void distribute() {
-        //TODO: cache shuffling participants
-        for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
-            Account recipientAccount = Account.getAccount(Account.getId(participant.getRecipientPublicKey()));
-            if (recipientAccount != null && !Arrays.equals(recipientAccount.getPublicKey(), participant.getRecipientPublicKey())) {
-                //TODO: penalty?
-                cancel();
-                return;
+        List<ShufflingParticipant> participants = new ArrayList<>();
+        try (DbIterator<ShufflingParticipant> iterator = ShufflingParticipant.getParticipants(id)) {
+            for (ShufflingParticipant participant : iterator) {
+                Account recipientAccount = Account.getAccount(Account.getId(participant.getRecipientPublicKey()));
+                if (recipientAccount != null && !Arrays.equals(recipientAccount.getPublicKey(), participant.getRecipientPublicKey())) {
+                    //TODO: penalty?
+                    cancel();
+                    return;
+                }
+                participants.add(participant);
             }
         }
-        for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
+        for (ShufflingParticipant participant : participants) {
             long recipientId = Account.getId(participant.getRecipientPublicKey());
             Account recipientAccount = Account.addOrGetAccount(recipientId);
             recipientAccount.apply(participant.getRecipientPublicKey());
-            updateBalance(recipientId, amount);
-            updateUnconfirmedBalance(recipientId, amount);
-            updateBalance(participant.getAccountId(), -amount);
+            Account participantAccount = Account.getAccount(participant.getAccountId());
+            if (isCurrency()) {
+                recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, amount);
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
+                participantAccount.addToCurrencyUnits(currencyId, -amount);
+                participantAccount.addToBalanceNQT(-Constants.SHUFFLE_DEPOSIT_NQT);
+            } else {
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
+                participantAccount.addToBalanceNQT(-amount);
+            }
         }
         setStage(Stage.DONE);
         listeners.notify(this, Event.SHUFFLING_DONE);
     }
 
     void cancel() {
-        for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
-            updateUnconfirmedBalance(participant.getAccountId(), amount);
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            for (ShufflingParticipant participant : participants) {
+                Account participantAccount = Account.getAccount(participant.getAccountId());
+                if (isCurrency()) {
+                    participantAccount.addToUnconfirmedCurrencyUnits(currencyId, amount);
+                    participantAccount.addToUnconfirmedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
+                } else {
+                    participantAccount.addToUnconfirmedBalanceNQT(amount);
+                }
+            }
         }
         setStage(Stage.CANCELLED);
         listeners.notify(this, Event.SHUFFLING_CANCELLED);
-    }
-
-    private void updateBalance(long accountId, long amount) {
-        if (isCurrency()) {
-            Account.getAccount(accountId).addToCurrencyUnits(currencyId, amount);
-        } else {
-            Account.getAccount(accountId).addToBalanceNQT(amount);
-        }
-    }
-
-    private void updateUnconfirmedBalance(long accountId, long amount) {
-        if (isCurrency()) {
-            Account.getAccount(accountId).addToUnconfirmedCurrencyUnits(currencyId, amount);
-        } else {
-            Account.getAccount(accountId).addToUnconfirmedBalanceNQT(amount);
-        }
     }
 
     boolean isRegistrationAllowed() {
@@ -374,9 +378,11 @@ public final class Shuffling {
         if (!isVerificationAllowed()) {
             return false;
         }
-        for (ShufflingParticipant participant : ShufflingParticipant.getParticipants(id)) {
-            if (!participant.isVerified()) {
-                return false;
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            for (ShufflingParticipant participant : participants) {
+                if (!participant.isVerified()) {
+                    return false;
+                }
             }
         }
         return true;

@@ -817,8 +817,9 @@ public abstract class MonetarySystem extends TransactionType {
                     throw new NxtException.NotValidException("Invalid currency amount " + attachment.getAmount());
                 }
             } else {
-                if (attachment.getAmount() <= 0 || attachment.getAmount() > Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("Invalid NQT amount " + attachment.getAmount());
+                if (attachment.getAmount() < Constants.SHUFFLE_DEPOSIT_NQT || attachment.getAmount() > Constants.MAX_BALANCE_NQT) {
+                    throw new NxtException.NotValidException("Invalid NQT amount " + attachment.getAmount()
+                            + ", minimum is " + Constants.SHUFFLE_DEPOSIT_NQT);
                 }
             }
             if (attachment.getParticipantCount() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS
@@ -837,8 +838,10 @@ public abstract class MonetarySystem extends TransactionType {
         boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
             if (attachment.isCurrency()) {
-                if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= attachment.getAmount()) {
+                if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= attachment.getAmount()
+                        && senderAccount.getUnconfirmedBalanceNQT() >= Constants.SHUFFLE_DEPOSIT_NQT) {
                     senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), -attachment.getAmount());
+                    senderAccount.addToUnconfirmedBalanceNQT(-Constants.SHUFFLE_DEPOSIT_NQT);
                     return true;
                 }
             } else {
@@ -861,6 +864,7 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemShufflingCreation attachment = (Attachment.MonetarySystemShufflingCreation) transaction.getAttachment();
             if (attachment.isCurrency()) {
                 senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), attachment.getAmount());
+                senderAccount.addToUnconfirmedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
             } else {
                 senderAccount.addToUnconfirmedBalanceNQT(attachment.getAmount());
             }
@@ -924,8 +928,10 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling.isCurrency()) {
-                if (senderAccount.getUnconfirmedCurrencyUnits(shuffling.getCurrencyId()) >= shuffling.getAmount()) {
-                    senderAccount.addToUnconfirmedCurrencyUnits(shuffling.getCurrencyId(), -shuffling.getAmount());
+                if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= shuffling.getAmount()
+                        && senderAccount.getUnconfirmedBalanceNQT() >= Constants.SHUFFLE_DEPOSIT_NQT) {
+                    senderAccount.addToUnconfirmedCurrencyUnits(attachment.getCurrencyId(), -shuffling.getAmount());
+                    senderAccount.addToUnconfirmedBalanceNQT(-Constants.SHUFFLE_DEPOSIT_NQT);
                     return true;
                 }
             } else {
@@ -949,6 +955,7 @@ public abstract class MonetarySystem extends TransactionType {
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling.isCurrency()) {
                 senderAccount.addToUnconfirmedCurrencyUnits(shuffling.getCurrencyId(), shuffling.getAmount());
+                senderAccount.addToUnconfirmedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
             } else {
                 senderAccount.addToUnconfirmedBalanceNQT(shuffling.getAmount());
             }

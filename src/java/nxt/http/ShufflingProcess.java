@@ -92,14 +92,15 @@ public final class ShufflingProcess extends CreateTransaction {
 
         //TODO: there is too much logic here, must be moved to a core class such as Shuffling
         // Read the participant list for the shuffling
-        DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId());
         Map<Long, Long> mapping = new HashMap<>();
         Map<Long, Long> reverseMapping = new HashMap<>();
         Map<Long, ShufflingParticipant> participantLookup = new HashMap<>();
-        for (ShufflingParticipant participant : participants) {
-            mapping.put(participant.getAccountId(), participant.getNextAccountId());
-            reverseMapping.put(participant.getNextAccountId(), participant.getAccountId());
-            participantLookup.put(participant.getAccountId(), participant);
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId())) {
+            for (ShufflingParticipant participant : participants) {
+                mapping.put(participant.getAccountId(), participant.getNextAccountId());
+                reverseMapping.put(participant.getNextAccountId(), participant.getAccountId());
+                participantLookup.put(participant.getAccountId(), participant);
+            }
         }
         if (participantLookup.get(senderAccount.getId()) == null) {
             JSONObject response = new JSONObject();

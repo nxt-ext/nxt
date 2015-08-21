@@ -142,6 +142,7 @@ public final class Constants {
     public static final int[] MIN_VERSION = new int[] {1, 5};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
+    public static final long SHUFFLE_DEPOSIT_NQT = 1000 * ONE_NXT;
 
     public static final long EPOCH_BEGINNING;
     static {
