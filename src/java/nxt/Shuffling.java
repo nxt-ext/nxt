@@ -16,23 +16,26 @@
 
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
+import nxt.util.Logger;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Deque;
+import java.util.Collections;
 import java.util.List;
 
 public final class Shuffling {
@@ -184,25 +187,18 @@ public final class Shuffling {
     static void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
         long shufflingId = attachment.getShufflingId();
         long participantId = transaction.getSenderId();
-        byte[] data = attachment.getData();
+        byte[][] data = attachment.getData();
         ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(shufflingId, participantId);
         Shuffling shuffling = Shuffling.getShuffling(shufflingId);
         long nextParticipantId = senderParticipant.getNextAccountId();
-        if (nextParticipantId != 0) {
-            shuffling.setAssigneeAccountId(nextParticipantId);
-            ShufflingParticipant.updateData(shufflingId, nextParticipantId, data);
-            senderParticipant.setProcessingComplete();
-        } else {
-            // participant processing is complete update the shuffling stage
+        if (nextParticipantId == 0) {
+            // store recipient public keys in the data field of the shuffle issuer
+            nextParticipantId = shuffling.issuerId;
             shuffling.setStage(Stage.VERIFICATION);
-            List<EncryptedData> unmarshaledDataList = EncryptedData.getUnmarshaledDataList(data);
-            Deque<EncryptedData> stack = new ArrayDeque<>(unmarshaledDataList);
-            try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shufflingId)) {
-                for (ShufflingParticipant participant : participants) {
-                    participant.setRecipientPublicKey(stack.pop().getData());
-                }
-            }
         }
+        shuffling.setAssigneeAccountId(nextParticipantId);
+        ShufflingParticipant.updateData(shufflingId, nextParticipantId, data);
+        senderParticipant.setProcessingComplete();
     }
 
     static void init() {}
@@ -306,36 +302,170 @@ public final class Shuffling {
         shufflingTable.insert(this);
     }
 
+    //TODO: further optimizations possible
+    //TODO: needs to be rewritten anyway
+    public byte[][] process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
+        List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
+        ShufflingParticipant thisParticipant = null;
+        // Read the participant list for the shuffling
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            ShufflingParticipant lastParticipant = null;
+            for (ShufflingParticipant participant : participants) {
+                if (lastParticipant == null && participant.getAccountId() != issuerId) {
+                    throw new RuntimeException("Issuer is not the first participant");
+                } else if (lastParticipant != null && lastParticipant.getNextAccountId() != participant.getAccountId()) {
+                    throw new RuntimeException(String.format("Shuffling participants out of order, %s, %s",
+                            lastParticipant.getNextAccountId(), participant.getAccountId()));
+                }
+                shufflingParticipants.add(participant);
+                lastParticipant = participant;
+                if (participant.getAccountId() == accountId) {
+                    thisParticipant = participant;
+                }
+            }
+        }
+        if (thisParticipant == null) {
+            throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " is not a participant in " + Long.toUnsignedString(id));
+        }
+        // Read the encrypted participant data for the sender account token (the first sender won't have any data)
+        byte[][] data = thisParticipant.getData();
+
+        // decrypt the tokens bundled in the current data
+        List<byte[]> outputDataList = new ArrayList<>();
+        for (byte[] bytes : data) {
+            EncryptedData encryptedData = EncryptedData.readEncryptedData(bytes);
+            // Since we cannot tell which participant public key was used to encrypted which token
+            // we'll have to try them all until one succeed starting with the shuffling issuer which has to be a participant
+            byte[] decryptedBytes = null;
+            for (ShufflingParticipant participant : shufflingParticipants) {
+                if (thisParticipant == participant) {
+                    break;
+                }
+                Account publicKeyAccount = Account.getAccount(participant.getAccountId());
+                if (Logger.isDebugEnabled()) {
+                    Logger.logDebugMessage(String.format("decryptFrom using public key of %s sender %s data %s nonce %s",
+                            Convert.rsAccount(publicKeyAccount.getId()), Convert.rsAccount(accountId),
+                            Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
+                }
+                try {
+                    decryptedBytes = publicKeyAccount.decryptFrom(encryptedData, secretPhrase, false);
+                    if (Logger.isDebugEnabled()) {
+                        Logger.logDebugMessage(String.format("decryptFrom bytes %s", Arrays.toString(decryptedBytes)));
+                    }
+                    break;
+
+                } catch (Exception e) {
+                    if (! (e.getCause() instanceof InvalidCipherTextException)) {
+                        throw e;
+                    }
+                }
+            }
+            if (decryptedBytes == null) {
+                return null;
+            }
+            outputDataList.add(decryptedBytes);
+        }
+
+        // Calculate the token for the current sender by iteratively encrypting it using the public key of all the participants
+        // which did not perform shuffle processing yet
+        // If we are that last participant to process then we do not encrypt our recipient
+        byte[] bytesToEncrypt = recipientPublicKey;
+        for (int i = shufflingParticipants.size() - 1; i >= 0; i--) {
+            ShufflingParticipant participant = shufflingParticipants.get(i);
+            if (participant == thisParticipant) {
+                break;
+            }
+            Account account = Account.getAccount(participant.getAccountId());
+            if (Logger.isDebugEnabled()) {
+                Logger.logDebugMessage(String.format("encryptTo %s by %s bytes %s",
+                        Convert.rsAccount(account.getId()), Convert.rsAccount(accountId), Arrays.toString(bytesToEncrypt)));
+            }
+            EncryptedData encryptedData = account.encryptTo(bytesToEncrypt, secretPhrase, false);
+            bytesToEncrypt = encryptedData.getBytes();
+            if (Logger.isDebugEnabled()) {
+                Logger.logDebugMessage(String.format("encryptTo data %s nonce %s",
+                        Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
+            }
+        }
+        outputDataList.add(bytesToEncrypt);
+
+        // Shuffle the tokens and save the shuffled tokens as the participant data
+        Collections.shuffle(outputDataList, Crypto.getSecureRandom());
+        return outputDataList.toArray(new byte[outputDataList.size()][]);
+    }
+
+    public byte[][] revealSharedKeys(final long accountId, final String secretPhrase, List<EncryptedData> outputDataList) {
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            while (participants.hasNext()) {
+                if (participants.next().getAccountId() == accountId) {
+                    break;
+                }
+            }
+            if (!participants.hasNext()) {
+                return Convert.EMPTY_BYTES;
+            }
+            byte[] myPrivateKey = Crypto.getPrivateKey(secretPhrase);
+            List<byte[]> keys = new ArrayList<>();
+            Account nextParticipant = Account.getAccount(participants.next().getAccountId());
+            byte[] decryptedBytes = null;
+            for (EncryptedData encryptedData : outputDataList) {
+                try {
+                    decryptedBytes = nextParticipant.decryptFrom(encryptedData, secretPhrase, false);
+                    keys.add(Crypto.getSharedKey(myPrivateKey, nextParticipant.getPublicKey(), encryptedData.getNonce()));
+                    break;
+                } catch (Exception e) {
+                    if (!(e.getCause() instanceof InvalidCipherTextException)) {
+                        throw e;
+                    }
+                }
+            }
+            if (decryptedBytes == null) {
+                throw new RuntimeException("None of the encrypted data could be decrypted");
+            }
+            while (participants.hasNext()) {
+                nextParticipant = Account.getAccount(participants.next().getAccountId());
+                EncryptedData encryptedData = EncryptedData.readEncryptedData(decryptedBytes);
+                keys.add(Crypto.getSharedKey(myPrivateKey, nextParticipant.getPublicKey(), encryptedData.getNonce()));
+                decryptedBytes = nextParticipant.decryptFrom(encryptedData, secretPhrase, false);
+            }
+            return keys.toArray(new byte[keys.size()][]);
+        }
+    }
+
     void verify(long accountId) {
         ShufflingParticipant.getParticipant(id, accountId).verify();
     }
 
     void distribute() {
-        List<ShufflingParticipant> participants = new ArrayList<>();
-        try (DbIterator<ShufflingParticipant> iterator = ShufflingParticipant.getParticipants(id)) {
-            for (ShufflingParticipant participant : iterator) {
-                Account recipientAccount = Account.getAccount(Account.getId(participant.getRecipientPublicKey()));
-                if (recipientAccount != null && !Arrays.equals(recipientAccount.getPublicKey(), participant.getRecipientPublicKey())) {
-                    //TODO: penalty?
-                    cancel();
-                    return;
-                }
-                participants.add(participant);
+        byte[][] recipientPublicKeys = getRecipientPublicKeys();
+        for (byte[] recipientPublicKey : recipientPublicKeys) {
+            Account recipientAccount = Account.getAccount(Account.getId(recipientPublicKey));
+            if (recipientAccount != null && !Arrays.equals(recipientAccount.getPublicKey(), recipientPublicKey)) {
+                //TODO: penalty?
+                cancel();
+                return;
             }
         }
-        for (ShufflingParticipant participant : participants) {
-            long recipientId = Account.getId(participant.getRecipientPublicKey());
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            for (ShufflingParticipant participant : participants) {
+                Account participantAccount = Account.getAccount(participant.getAccountId());
+                if (isCurrency()) {
+                    participantAccount.addToCurrencyUnits(currencyId, -amount);
+                    participantAccount.addToBalanceNQT(-Constants.SHUFFLE_DEPOSIT_NQT);
+                } else {
+                    participantAccount.addToBalanceNQT(-amount);
+                }
+            }
+        }
+        for (byte[] recipientPublicKey : recipientPublicKeys) {
+            long recipientId = Account.getId(recipientPublicKey);
             Account recipientAccount = Account.addOrGetAccount(recipientId);
-            recipientAccount.apply(participant.getRecipientPublicKey());
-            Account participantAccount = Account.getAccount(participant.getAccountId());
+            recipientAccount.apply(recipientPublicKey);
             if (isCurrency()) {
                 recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, amount);
                 recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
-                participantAccount.addToCurrencyUnits(currencyId, -amount);
-                participantAccount.addToBalanceNQT(-Constants.SHUFFLE_DEPOSIT_NQT);
             } else {
                 recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(amount);
-                participantAccount.addToBalanceNQT(-amount);
             }
         }
         setStage(Stage.DONE);
@@ -402,7 +532,7 @@ public final class Shuffling {
         }
     }
 
-    boolean isParticipant(long senderId) {
+    public boolean isParticipant(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId) != null;
     }
 
@@ -412,6 +542,10 @@ public final class Shuffling {
 
     public boolean isParticipantProcessingComplete(long senderId) {
         return ShufflingParticipant.getParticipant(id, senderId).isProcessingComplete();
+    }
+
+    public byte[][] getRecipientPublicKeys() {
+        return ShufflingParticipant.getParticipant(id, issuerId).getData();
     }
 
     static void cancelShuffling(long currencyId) {

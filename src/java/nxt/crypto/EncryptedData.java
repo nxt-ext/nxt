@@ -19,15 +19,8 @@ package nxt.crypto;
 import nxt.NxtException;
 import nxt.util.Convert;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
 
 public final class EncryptedData {
 
@@ -58,21 +51,6 @@ public final class EncryptedData {
         return new EncryptedData(data, nonce);
     }
 
-    /*
-    public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength, long nonce)
-            throws NxtException.NotValidException {
-        if (length == 0) {
-            return EMPTY_DATA;
-        }
-        if (length > maxLength) {
-            throw new NxtException.NotValidException("Max encrypted data length exceeded: " + length);
-        }
-        byte[] data = new byte[length];
-        buffer.get(data);
-        return new EncryptedData(data, ByteBuffer.allocate(8).putLong(nonce).array());
-    }
-    */
-
     public static EncryptedData readEncryptedData(byte[] bytes) {
         if (bytes.length == 0) {
             return EMPTY_DATA;
@@ -86,67 +64,6 @@ public final class EncryptedData {
         }
     }
 
-    public static byte[] marshalData(EncryptedData encryptedData) {
-        ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
-        DataOutputStream dataOutputStream = new DataOutputStream(bytesStream);
-        marshalData(dataOutputStream, encryptedData);
-        return bytesStream.toByteArray();
-    }
-
-    public static void marshalData(DataOutputStream dataOutputStream, EncryptedData encryptedData) {
-        try {
-            dataOutputStream.writeInt(encryptedData.getData().length);
-            dataOutputStream.write(encryptedData.getData());
-            dataOutputStream.writeInt(encryptedData.getNonce().length);
-            dataOutputStream.write(encryptedData.getNonce());
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public static EncryptedData unmarshalData(byte[] data) {
-        return unmarshalData(new DataInputStream(new ByteArrayInputStream(data)));
-    }
-
-    public static EncryptedData unmarshalData(DataInputStream dataInputStream) {
-        try {
-            byte[] data = new byte[dataInputStream.readInt()];
-            int rc = dataInputStream.read(data);
-            if (rc != data.length) {
-                throw new IllegalStateException("Error reading data");
-            }
-            int nonceLen = dataInputStream.readInt();
-            byte[] nonce;
-            if (nonceLen > 0) {
-                nonce = new byte[nonceLen];
-                rc = dataInputStream.read(nonce);
-                if (rc != nonce.length) {
-                    throw new IllegalStateException("Error reading nonce");
-                }
-            } else {
-                // When creating EncryptedData for plain text data we set an empty nonce to signal this
-                nonce = new byte[]{};
-            }
-            return new EncryptedData(data, nonce);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public static List<EncryptedData> getUnmarshaledDataList(byte[] dataBytes) {
-        DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(dataBytes));
-        List<EncryptedData> inputDataList = new ArrayList<>();
-        try {
-            while (dataInputStream.available() > 0) {
-                EncryptedData encryptedData = unmarshalData(dataInputStream);
-                inputDataList.add(encryptedData);
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        return inputDataList;
-    }
-
     private final byte[] data;
     private final byte[] nonce;
 
@@ -154,13 +71,6 @@ public final class EncryptedData {
         this.data = data;
         this.nonce = nonce;
     }
-
-    /*
-    public EncryptedData(byte[] data, long nonce) {
-        this.data = data;
-        this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
-    }
-    */
 
     public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
         if (data.length == 0) {

@@ -2648,46 +2648,69 @@ public interface Attachment extends Appendix {
     final class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
-        private final byte[] data;
+        private final byte[][] data;
 
         MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
-            int size = buffer.getInt();
-            if (size > Constants.MAX_PAYLOAD_LENGTH) { //TODO: improve
-                throw new NxtException.NotValidException("Invalid data size " + size);
+            int count = buffer.get();
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
+                throw new NxtException.NotValidException("Invalid data count " + count);
             }
-            this.data = new byte[size];
-            buffer.get(data);
+            this.data = new byte[count][];
+            for (int i = 0; i < count; i++) {
+                int size = buffer.getInt();
+                if (size > Constants.MAX_PAYLOAD_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid data size " + size);
+                }
+                this.data[i] = new byte[size];
+                buffer.get(this.data[i]);
+            }
         }
 
         MonetarySystemShufflingProcessing(JSONObject attachmentData) {
             super(attachmentData);
-            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
-            this.data = Convert.parseHexString((String)attachmentData.get("data"));
+            this.shufflingId = Convert.parseUnsignedLong((String) attachmentData.get("shuffling"));
+            JSONArray jsonArray = (JSONArray)attachmentData.get("data");
+            this.data = new byte[jsonArray.size()][];
+            for (int i = 0; i < this.data.length; i++) {
+                this.data[i] = Convert.parseHexString((String)jsonArray.get(i));
+            }
         }
 
-        public MonetarySystemShufflingProcessing(long shufflingId, byte[] data) {
+        public MonetarySystemShufflingProcessing(long shufflingId, byte[][] data) {
             this.shufflingId = shufflingId;
             this.data = data;
         }
 
         @Override
         int getMySize() {
-            return 8 + 4 + data.length;
+            int size = 8 + 1;
+            for (byte[] bytes : data) {
+                size += 4;
+                size += bytes.length;
+            }
+            return size;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(shufflingId);
-            buffer.putInt(data.length);
-            buffer.put(data);
+            buffer.put((byte)data.length);
+            for (byte[] bytes : data) {
+                buffer.putInt(bytes.length);
+                buffer.put(bytes);
+            }
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Long.toUnsignedString(shufflingId));
-            attachment.put("data", Convert.toHexString(data));
+            JSONArray jsonArray = new JSONArray();
+            attachment.put("data", jsonArray);
+            for (byte[] bytes : data) {
+                jsonArray.add(Convert.toHexString(bytes));
+            }
         }
 
         @Override
@@ -2699,7 +2722,7 @@ public interface Attachment extends Appendix {
             return shufflingId;
         }
 
-        public byte[] getData() {
+        public byte[][] getData() {
             return data;
         }
 

@@ -28,6 +28,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+//TODO: fix test
 public class TestShuffling extends BlockchainTest {
 
     @Test

@@ -316,6 +316,11 @@ final class JSONData {
         json.put("cancellationHeight", shuffling.getCancellationHeight());
         json.put("participantCount", shuffling.getParticipantCount());
         json.put("stage", shuffling.getStage().getCode());
+        JSONArray recipientPublicKeys = new JSONArray();
+        for (byte[] recipientPublicKey : shuffling.getRecipientPublicKeys()) {
+            recipientPublicKeys.add(Convert.toHexString(recipientPublicKey));
+        }
+        json.put("recipientPublicKeys", recipientPublicKeys);
         return json;
     }
 
@@ -324,8 +329,6 @@ final class JSONData {
         json.put("shuffling", Long.toUnsignedString(participant.getShufflingId()));
         putAccount(json, "account", participant.getAccountId());
         putAccount(json, "nextAccount", participant.getNextAccountId());
-        json.put("recipientPublicKey", Convert.toHexString(participant.getRecipientPublicKey()));
-        putAccount(json, "recipient", Account.getId(participant.getRecipientPublicKey()));
         json.put("state", participant.getState().getCode());
         return json;
     }

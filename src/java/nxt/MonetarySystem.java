@@ -778,7 +778,6 @@ public abstract class MonetarySystem extends TransactionType {
 
     };
 
-    //TODO: shuffling transactions not yet reviewed
     public static final TransactionType SHUFFLING_CREATION = new MonetarySystem() {
 
         @Override
@@ -1241,6 +1240,7 @@ public abstract class MonetarySystem extends TransactionType {
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            //TODO: cancelling participant should pay a penalty, it someone else is at fault should use a blame transaction instead
             shuffling.cancel();
         }
 
