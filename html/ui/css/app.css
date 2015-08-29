@@ -2657,15 +2657,15 @@ tr.tentative-crossed td , tr.tentative-crossed td a {
 	display: none;
 }
 
-.data-container.data-loading .data-loading-container {
+#dashboard_page .data-container.data-loading .data-loading-container {
 	display: block;
 }
 
-.data-container.data-empty .data-empty-container {
+#dashboard_page .data-container.data-empty .data-empty-container {
 	display: block;
 }
 
-.data-container.data-empty table, .data-container.data-loading table {
+#dashboard_page .data-container.data-empty table, .data-container.data-loading table {
 	display: none;
 }
 
@@ -3534,6 +3534,170 @@ body > .header .navbar {
       }
   
 }/* @media min-width: 550px */
+
+
+
+@media (max-width: 600px) {
+
+  /* Dashboard BOXES  @media 600px -- duckx */
+   #dashboard_page .small-box { 
+     height: 110px;
+   }
+   #dashboard_page .small-box > .inner {
+     padding: 5px;
+   }
+   #dashboard_page .small-box h3 {
+     font-size: 25px; 
+   }
+   #dashboard_page .small-box p {
+     display: inline !important; 
+   }
+   #dashboard_page .small-box > .small-box-footer { 
+     position: absolute;
+     width: 100%;
+     bottom: 0;
+   }
+
+
+  /* Dashboard Tables @media 600px -- duckx */
+   .content,
+   .row,
+   .panel-body { margin:0; padding: 0 }
+
+   #dashboard_page .data-container th, 
+   #transactions_page .data-container th { 
+     display:none;
+   }
+   #dashboard_page .data-container tr,
+   #transactions_page .data-container tr { 
+     display: box; /*support old browsers*/ 
+     display: flex; 
+     flex-wrap: wrap; 
+     justify-content: center; 
+   }
+   #dashboard_page .data-container td,
+   #transactions_page .data-container td { 
+     display:block;
+     width: 33% !important;
+     box-sizing: border-box;
+     text-align: center;
+     font-size: 12px;
+     padding: 15px 3px !important;
+     border: 0 !important;
+     background: none !important;
+   }
+     #dashboard_page .data-container td:nth-child(5):before,
+     #transactions_page .data-container td:nth-child(5):before { 
+       font-weight: bold;
+       content: "Amount: ";
+     }
+     #dashboard_page .data-container td:nth-child(6):before,
+     #transactions_page .data-container td:nth-child(6):before { 
+       font-weight: bold;
+       content: "Fee: ";
+     }
+     #dashboard_page .data-container td:nth-child(9):before,
+     #transactions_page .data-container td:nth-child(9):before { 
+       font-weight: bold;
+       content: "Conf: ";
+     }
+
+     #dashboard_page .data-container td:nth-child(1),
+     #transactions_page .data-container td:nth-child(1) { /* date */
+       order: 1;
+       width: 25% !important;
+       padding: 15px 0 0 15px !important;
+     } 
+     #dashboard_page .data-container td:nth-child(2),
+     #transactions_page .data-container td:nth-child(2) { /* has message */
+       order:-1;
+       width: 0% !important;
+       position: absolute;
+     }
+       #dashboard_page .data-container td:nth-child(2) .fa-envelope-o,
+       #transactions_page .data-container td:nth-child(2) .fa-envelope-o { 
+         top: 0;
+         left: 0; 
+         position: absolute;
+         border-bottom: 35px solid transparent !important;
+         border-left: 35px solid #337ab7 !important;
+         height: 0;
+       }
+       #dashboard_page .data-container td:nth-child(2) .fa-envelope-o:before,
+       #transactions_page .data-container td:nth-child(2) .fa-envelope-o:before { 
+         margin: 6px 0 0 -46px;
+         transform: rotate(-45deg);
+         display: block;
+         color: #fff;
+       }
+     #dashboard_page .data-container td:nth-child(3),
+     #transactions_page .data-container td:nth-child(3) { /* trans type */ 
+       order: 3;
+       width: 22% !important;
+       background: #337ab7 !important;
+       color: #fff;
+       padding: 5px 9px !important;
+     }
+     #dashboard_page .data-container td:nth-child(4),
+     #transactions_page .data-container td:nth-child(4) { /* plus or minus */ 
+       order: 4;
+       width: 10% !important;
+     }
+     #dashboard_page .data-container td:nth-child(5),
+     #transactions_page .data-container td:nth-child(5) { /* amount */ 
+       order: 5;
+       width: 35% !important;
+     }
+     #dashboard_page .data-container td:nth-child(6),
+     #transactions_page .data-container td:nth-child(6) { /* fee */ 
+       order: 6;
+       width: 25% !important;
+     }
+     #dashboard_page .data-container td:nth-child(7),
+     #transactions_page .data-container td:nth-child(7) { /* account */ 
+       order: 2;
+       width: 53% !important;
+     }
+     #dashboard_page .data-container td:nth-child(8),
+     #transactions_page .data-container td:nth-child(8) { /* phasing */ 
+       order: 9;
+       padding: 0 !important;
+     }
+       #dashboard_page .data-container td:nth-child(8) .show_popover,
+       #transactions_page .data-container td:nth-child(8) .show_popover { 
+         margin: 0 0 15px;
+       }
+     #dashboard_page .data-container td:nth-child(9),
+     #transactions_page .data-container td:nth-child(9) {  /* confirms */
+       order: 7; 
+       width: 30% !important;
+     }
+
+
+  /* My Transaction Page @media 600px -- duckx */
+  #transactions_type_navi {
+    clear: both;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; 
+    text-align: center; 
+  }
+  #transactions_type_navi li:nth-child(9) { 
+    flex-basis: 100%;
+    text-align: center;
+  }
+    #transactions_type_navi li a { padding: 9px; }
+
+  #transactions_sub_type_navi {
+    display: flex; 
+    flex-wrap: wrap;
+    justify-content: flex-start; 
+    padding: 9px; 
+  }
+    #transactions_sub_type_navi li { flex-basis: 49%; font-size: 12px; }
+    #transactions_sub_type_navi li>a { padding: 9px 5px; }
+
+}/* @media min-width: 600px */
 
 
 
