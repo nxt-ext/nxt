@@ -3547,7 +3547,8 @@ body > .header .navbar {
      padding: 5px;
    }
    #dashboard_page .small-box h3 {
-     font-size: 25px; 
+     font-size: 23px; 
+     white-space: normal;
    }
    #dashboard_page .small-box p {
      display: inline !important; 
