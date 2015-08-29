@@ -3576,6 +3576,9 @@ body > .header .navbar {
      flex-wrap: wrap; 
      justify-content: center; 
    }
+     #dashboard_page .table-striped>tbody>tr:nth-of-type(odd),
+     #transactions_page .table-striped>tbody>tr:nth-of-type(odd) { background: #eee; } 
+
    #dashboard_page .data-container td,
    #transactions_page .data-container td { 
      display:block;
