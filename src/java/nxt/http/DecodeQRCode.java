@@ -33,6 +33,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import nxt.NxtException;
+import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -72,9 +73,8 @@ public final class DecodeQRCode extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest request)
             throws NxtException {
    
-        String qrCodeBase64 = request.getParameter("qrCodeBase64");
-        if(qrCodeBase64 == null) qrCodeBase64 = "";
-        
+        String qrCodeBase64 = Convert.nullToEmpty(request.getParameter("qrCodeBase64"));
+
         JSONObject response = new JSONObject();
         try {
             BinaryBitmap binaryBitmap = new BinaryBitmap(
@@ -91,26 +91,25 @@ public final class DecodeQRCode extends APIServlet.APIRequestHandler {
             
             Result qrCodeData = new MultiFormatReader().decode(binaryBitmap, hints);
             response.put("qrCodeData", qrCodeData.getText());
-        }
-        catch(IOException ex) {
+        } catch(IOException ex) {
             String errorMessage = "Error reading base64 byte stream";
             Logger.logErrorMessage(errorMessage, ex);
             JSONData.putException(response, ex, errorMessage);
-        }
-        catch(NullPointerException ex) {
+        } catch(NullPointerException ex) {
             String errorMessage = "Invalid base64 image";
             Logger.logErrorMessage(errorMessage, ex);
             JSONData.putException(response, ex, errorMessage);
-        }
-        catch(NotFoundException ex) {
+        } catch(NotFoundException ex) {
             response.put("qrCodeData", "");
         }
         return response;
     }
+
     @Override
     final boolean requirePost() {
         return true;
     }
+
     @Override
     boolean allowRequiredBlockParameters() {
         return false;
