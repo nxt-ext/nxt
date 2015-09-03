@@ -20,11 +20,7 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	$("#account_details_modal").on("show.bs.modal", function(e) {
-		$("#account_details_modal_qr_code").empty().qrcode({
-			"text": NRS.accountRS,
-			"width": 128,
-			"height": 128
-		});
+                NRS.sendRequestQRCode("#account_details_modal_qr_code", NRS.accountRS, 125, 125);
 
 		$("#account_details_modal_balance").show();
 

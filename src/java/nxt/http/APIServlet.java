@@ -139,6 +139,8 @@ public final class APIServlet extends HttpServlet {
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
         map.put("decodeFileToken", DecodeFileToken.instance);
+        map.put("decodeQRCode", DecodeQRCode.instance);
+        map.put("encodeQRCode", EncodeQRCode.instance);
         map.put("encryptTo", EncryptTo.instance);
         map.put("eventRegister", EventRegister.instance);
         map.put("eventWait", EventWait.instance);
