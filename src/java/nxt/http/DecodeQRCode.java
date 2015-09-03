@@ -114,4 +114,10 @@ public final class DecodeQRCode extends APIServlet.APIRequestHandler {
     boolean allowRequiredBlockParameters() {
         return false;
     }
+
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

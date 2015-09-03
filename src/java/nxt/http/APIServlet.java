@@ -106,6 +106,10 @@ public final class APIServlet extends HttpServlet {
             return true;
         }
 
+        boolean requireBlockchain() {
+            return true;
+        }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");

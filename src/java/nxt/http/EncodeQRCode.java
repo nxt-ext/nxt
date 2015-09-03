@@ -133,4 +133,10 @@ public final class EncodeQRCode extends APIServlet.APIRequestHandler {
     boolean allowRequiredBlockParameters() {
         return false;
     }
+
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

@@ -53,4 +53,9 @@ public final class ParseTransaction extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }
