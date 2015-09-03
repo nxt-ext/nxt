@@ -1415,6 +1415,28 @@ var NRS = (function (NRS, $, undefined) {
             }, {});
         });
     };
+    
+    NRS.sendRequestQRCode = function(target, qrCodeData, width, height) {
+        width = width || 0;
+        height = height || 0;
+        NRS.sendRequest(
+            "encodeQRCode",
+            {
+                "doNotSign": true,
+                "qrCodeData": qrCodeData,
+                "width": width,
+                "height": height
+            },
+            function(response) {
+                if('qrCodeBase64' in response) {
+                    $(target).empty().append(
+                        $("<img src='data:image/jpeg;base64,"+response.qrCodeBase64+"'>")
+                    );
+                }
+            },
+            false
+        );
+    }
 
     function addAddressData(data) {
         if (typeof data == "object" && ("recipient" in data)) {
