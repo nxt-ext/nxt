@@ -57,4 +57,9 @@ public final class RebroadcastUnconfirmedTransactions extends APIServlet.APIRequ
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }
