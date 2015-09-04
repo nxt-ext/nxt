@@ -1781,7 +1781,7 @@ public abstract class TransactionType {
                         - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
-                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), assetId, -totalDividendPayment);
+                    senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalDividendPayment);
                     return true;
                 }
                 return false;
@@ -1790,7 +1790,8 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                senderAccount.payDividends(attachment.getAssetId(), attachment.getHeight(), attachment.getAmountNQTPerQNT());
+                senderAccount.payDividends(transaction.getId(), attachment.getAssetId(), attachment.getHeight(),
+                        attachment.getAmountNQTPerQNT());
             }
 
             @Override
@@ -1801,7 +1802,6 @@ public abstract class TransactionType {
                 long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
                         - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
-                //TODO: use same ledger eventId as in applyAttachmentUnconfirmed
                 senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalDividendPayment);
             }
 

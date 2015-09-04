@@ -1500,7 +1500,7 @@ public final class Account {
         }
     }
 
-    void payDividends(final long assetId, final int height, final long amountNQTPerQNT) {
+    void payDividends(final long transactionId, final long assetId, final int height, final long amountNQTPerQNT) {
         long totalDividend = 0;
         List<AccountAsset> accountAssets = new ArrayList<>();
         try (DbIterator<AccountAsset> iterator = getAssetAccounts(assetId, height, 0, -1)) {
@@ -1512,11 +1512,11 @@ public final class Account {
             if (accountAsset.getAccountId() != this.id && accountAsset.getQuantityQNT() != 0) {
                 long dividend = Math.multiplyExact(accountAsset.getQuantityQNT(), amountNQTPerQNT);
                 Account.getAccount(accountAsset.getAccountId())
-                        .addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, dividend);
+                        .addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, transactionId, dividend);
                 totalDividend += dividend;
             }
         }
-        this.addToBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, assetId, -totalDividend);
+        this.addToBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, transactionId, -totalDividend);
     }
 
     @Override
