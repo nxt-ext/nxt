@@ -206,7 +206,7 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 $("#phasing_info_details_link").hide();
             }
-
+            // TODO Someday I'd like to replace it with if (NRS.isOfType(transaction, "OrdinaryPayment"))
             if (transaction.type == 0) {
                 switch (transaction.subtype) {
                     case 0:
