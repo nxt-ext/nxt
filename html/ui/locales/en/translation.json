@@ -1426,5 +1426,6 @@
   "holding_type": "Holding Type",
   "event": "Event",
   "event_type": "Event Type",
-  "ledger_id": "Ledger Id"
+  "ledger_id": "Ledger Id",
+  "server_connection_error": "Server Connection Error"
 }
