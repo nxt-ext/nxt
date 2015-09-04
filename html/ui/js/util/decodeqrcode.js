@@ -14,39 +14,27 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.http;
+qrcode = {};
+qrcode.callback = null;
 
-import nxt.util.Convert;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
-
-import javax.servlet.http.HttpServletRequest;
-
-public final class FullHashToId extends APIServlet.APIRequestHandler {
-
-    static final FullHashToId instance = new FullHashToId();
-
-    private FullHashToId() {
-        super(new APITag[] {APITag.UTILS}, "fullHash");
-    }
-
-    @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
-        JSONObject response = new JSONObject();
-        long longId = Convert.fullHashToId(Convert.parseHexString(req.getParameter("fullHash")));
-        response.put("longId", String.valueOf(longId));
-        response.put("stringId", Long.toUnsignedString(longId));
-        return response;
-    }
-
-    @Override
-    boolean allowRequiredBlockParameters() {
-        return false;
-    }
-
-    @Override
-    boolean requireBlockchain() {
-        return false;
-    }
-
+qrcode.decode = function() {
+    var canvasElem = $('#qr-canvas');
+    var canvas = canvasElem[0];
+    var dataurl = canvas.toDataURL('image/jpeg');
+    var regex = /base64,(.*)/
+    var base64Array = regex.exec(dataurl);
+    if(base64Array == null) return;
+    var base64 = base64Array[1];
+    NRS.sendRequest("decodeQRCode",
+        {
+            "doNotSign": true,
+            "qrCodeBase64": base64
+        },
+        function(response) {
+            if(qrcode.callback != null && 'qrCodeData' in response)
+                if(response.qrCodeData == "") return;
+                qrcode.callback(response.qrCodeData);
+        },
+        false
+    );
 }

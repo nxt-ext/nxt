@@ -72,4 +72,9 @@ public class BlacklistPeer extends APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

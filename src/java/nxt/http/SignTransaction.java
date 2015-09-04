@@ -70,4 +70,9 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
         return response;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

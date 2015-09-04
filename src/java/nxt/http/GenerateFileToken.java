@@ -75,4 +75,9 @@ public final class GenerateFileToken extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }
