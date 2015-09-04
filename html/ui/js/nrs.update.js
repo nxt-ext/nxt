@@ -24,12 +24,12 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.checkAliasVersions = function() {
 		if (NRS.downloadingBlockchain) {
-			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation").find("span").hide();
 			$("#nrs_update_explanation_blockchain_sync").show();
 			return;
 		}
 		if (NRS.isTestNet) {
-			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation").find("span").hide();
 			$("#nrs_update_explanation_testnet").show();
 			return;
 		}
@@ -64,30 +64,22 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (NRS.inApp) {
 			//user uses an old version which does not supply the platform / version
-			if (NRS.appPlatform == "" || NRS.appVersion == "" || version_compare(NRS.appVersion, "2.0.0", "<")) {
+			if (NRS.appPlatform == "" || NRS.appVersion == "") {
 				$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html("A new version of the NXT Wallet application is available for download <a href='http://nxt.org/get-started-nxt/download-nxt-software' target='_blank'>here</a>. You must install it manually due to changes in the NRS startup procedure.").show();
 			}
-
-			/* Old code check
-			var noticeDate = new Date(2014, 9, 28);
-
-			if (new Date() > noticeDate) {
-				$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html("A new version of the NXT Wallet application is available for download <a href='http://nxt.org/get-started-nxt/download-nxt-software' target='_blank'>here</a>. You must install it manually due to changes in the NRS startup procedure.").show();
-			}*/
 		}
-	}
+	};
 
 	NRS.checkForNewVersion = function() {
-		var installVersusNormal, installVersusBeta, normalVersusBeta;
-
-		if (NRS.normalVersion && NRS.normalVersion.versionNr) {
+        var installVersusNormal, installVersusBeta;
+        if (NRS.normalVersion && NRS.normalVersion.versionNr) {
 			installVersusNormal = NRS.versionCompare(NRS.state.version, NRS.normalVersion.versionNr);
 		}
 		if (NRS.betaVersion && NRS.betaVersion.versionNr) {
 			installVersusBeta = NRS.versionCompare(NRS.state.version, NRS.betaVersion.versionNr);
 		}
 
-		$("#nrs_update_explanation > span").hide();
+		$("#nrs_update_explanation").find("> span").hide();
 
 		$("#nrs_update_explanation_wait").attr("style", "display: none !important");
 
@@ -110,7 +102,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.isOutdated = false;
 			$("#nrs_update_explanation_up_to_date").show();
 		}
-	}
+	};
 
 	NRS.versionCompare = function(v1, v2) {
 		if (v2 == undefined) {
@@ -153,13 +145,13 @@ var NRS = (function(NRS, $, undefined) {
 			if (v2parts.length == i) {
 				return 1;
 			}
-			if (v1parts[i] == v2parts[i]) {
-				continue;
-			} else if (v1parts[i] > v2parts[i]) {
-				return 1;
-			} else {
-				return -1;
-			}
+            if (v1parts[i] != v2parts[i]) {
+                if (v1parts[i] > v2parts[i]) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
 		}
 
 		if (v1parts.length != v2parts.length) {
@@ -175,48 +167,24 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			return 0;
 		}
-	}
-
-	NRS.supportsUpdateVerification = function() {
-		if ((typeof File !== 'undefined') && !File.prototype.slice) {
-			if (File.prototype.webkitSlice) {
-				File.prototype.slice = File.prototype.webkitSlice;
-			}
-
-			if (File.prototype.mozSlice) {
-				File.prototype.slice = File.prototype.mozSlice;
-			}
-		}
-
-		// Check for the various File API support.
-		if (!window.File || !window.FileReader || !window.FileList || !window.Blob || !File.prototype.slice || !window.Worker) {
-			return false;
-		}
-
-		return true;
-	}
+	};
 
 	NRS.verifyClientUpdate = function(e) {
 		e.stopPropagation();
 		e.preventDefault();
-
 		var files = null;
-
 		if (e.originalEvent.target.files && e.originalEvent.target.files.length) {
 			files = e.originalEvent.target.files;
 		} else if (e.originalEvent.dataTransfer.files && e.originalEvent.dataTransfer.files.length) {
 			files = e.originalEvent.dataTransfer.files;
 		}
-
 		if (!files) {
 			return;
 		}
-
-		$("#nrs_update_hash_progress").css("width", "0%");
-		$("#nrs_update_hash_progress").show();
-
+        var updateHashProgress = $("#nrs_update_hash_progress");
+        updateHashProgress.css("width", "0%");
+		updateHashProgress.show();
 		var worker = new Worker("js/crypto/sha256worker.js");
-
 		worker.onmessage = function(e) {
 			if (e.data.progress) {
 				$("#nrs_update_hash_progress").css("width", e.data.progress + "%");
@@ -224,20 +192,19 @@ var NRS = (function(NRS, $, undefined) {
 				$("#nrs_update_hash_progress").hide();
 				$("#nrs_update_drop_zone").hide();
 
-				if (e.data.sha256 == NRS.downloadedVersion.hash) {
-					$("#nrs_update_result").html($.t("success_hash_verification")).attr("class", " ");
+                var nrsUpdateResult = $("#nrs_update_result");
+                if (e.data.sha256 == NRS.downloadedVersion.hash) {
+					nrsUpdateResult.html($.t("success_hash_verification")).attr("class", " ");
 				} else {
-					$("#nrs_update_result").html($.t("error_hash_verification")).attr("class", "incorrect");
+					nrsUpdateResult.html($.t("error_hash_verification")).attr("class", "incorrect");
 				}
 
 				$("#nrs_update_hash_version").html(NRS.downloadedVersion.versionNr);
 				$("#nrs_update_hash_download").html(e.data.sha256);
 				$("#nrs_update_hash_official").html(NRS.downloadedVersion.hash);
 				$("#nrs_update_hashes").show();
-				$("#nrs_update_result").show();
-
+				nrsUpdateResult.show();
 				NRS.downloadedVersion = {};
-
 				$("body").off("dragover.nrs, drop.nrs");
 			}
 		};
@@ -245,7 +212,7 @@ var NRS = (function(NRS, $, undefined) {
 		worker.postMessage({
 			file: files[0]
 		});
-	}
+	};
 
 	NRS.downloadClientUpdate = function(version) {
 		if (version == "release") {
@@ -267,9 +234,11 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			$("#nrs_update_iframe").attr("src", "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-client-" + NRS.downloadedVersion.versionNr + ".zip");
 			$("#nrs_update_explanation").hide();
-			$("#nrs_update_drop_zone").show();
+            var updateDropZone = $("#nrs_update_drop_zone");
+            updateDropZone.show();
 
-			$("body").on("dragover.nrs", function(e) {
+            var body = $("body");
+            body.on("dragover.nrs", function(e) {
 				e.preventDefault();
 				e.stopPropagation();
 
@@ -278,11 +247,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 
-			$("body").on("drop.nrs", function(e) {
+			body.on("drop.nrs", function(e) {
 				NRS.verifyClientUpdate(e);
 			});
 
-			$("#nrs_update_drop_zone").on("click", function(e) {
+			updateDropZone.on("click", function(e) {
 				e.preventDefault();
 
 				$("#nrs_update_file_select").trigger("click");
@@ -295,7 +264,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		return false;
-	}
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));
