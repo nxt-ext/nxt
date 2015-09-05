@@ -42,7 +42,7 @@ var NRS = (function(NRS, $) {
 		$("#token_modal").find(".error_message").hide();
 
 		if (response.token) {
-			$("#generate_token_output").html($.t("generated_token_is") + "<br /><br /><textarea style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
+			$("#generate_token_output").html($.t("generated_token_is") + "<br /><br /><textarea readonly style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
 		} else {
 			$.growl($.t("error_generate_token"), {
 				"type": "danger"
