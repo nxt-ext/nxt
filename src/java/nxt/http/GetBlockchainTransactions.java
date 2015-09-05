@@ -33,7 +33,8 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
 
     private GetBlockchainTransactions() {
         super(new APITag[] {APITag.ACCOUNTS, APITag.TRANSACTIONS}, "account", "timestamp", "type", "subtype",
-                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "phasedOnly", "nonPhasedOnly");
+                "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "phasedOnly", "nonPhasedOnly",
+                "includeExpiredPrunable");
     }
 
     @Override
@@ -45,6 +46,7 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
         boolean withMessage = "true".equalsIgnoreCase(req.getParameter("withMessage"));
         boolean phasedOnly = "true".equalsIgnoreCase(req.getParameter("phasedOnly"));
         boolean nonPhasedOnly = "true".equalsIgnoreCase(req.getParameter("nonPhasedOnly"));
+        boolean includeExpiredPrunable = "true".equalsIgnoreCase(req.getParameter("includeExpiredPrunable"));
 
         byte type;
         byte subtype;
@@ -63,8 +65,9 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations, type, subtype, timestamp,
-                withMessage, phasedOnly, nonPhasedOnly, firstIndex, lastIndex)) {
+        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations,
+                type, subtype, timestamp, withMessage, phasedOnly, nonPhasedOnly, firstIndex, lastIndex,
+                includeExpiredPrunable)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

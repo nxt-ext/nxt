@@ -1894,10 +1894,6 @@ var NRS = (function (NRS, $, undefined) {
                 "type": "success"
             });
         }
-
-        if (response.alreadyProcessed) {
-            return;
-        }
     };
 
     var _selectedApprovalAsset = "";

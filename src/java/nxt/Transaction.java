@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.util.Filter;
 import org.json.simple.JSONObject;
 
 import java.util.List;
@@ -123,6 +124,8 @@ public interface Transaction {
     List<? extends Appendix> getAppendages();
 
     List<? extends Appendix> getAppendages(boolean includeExpiredPrunable);
+
+    List<? extends Appendix> getAppendages(Filter<Appendix> filter, boolean includeExpiredPrunable);
 
     int getECBlockHeight();
 

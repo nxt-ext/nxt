@@ -316,8 +316,8 @@ final class ParameterParser {
             }
             String secretPhrase = getSecretPhrase(req, false);
             if (secretPhrase != null) {
-                Account senderAccount = getSenderAccount(req);
-                encryptedData = senderAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
+                byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+                encryptedData = Account.encryptTo(publicKey, plainMessageBytes, secretPhrase, compress);
             }
         }
         if (encryptedData != null) {
@@ -522,14 +522,21 @@ final class ParameterParser {
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
         boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
         byte[] plainMessageBytes = null;
+        byte[] recipientPublicKey = null;
         EncryptedData encryptedData = ParameterParser.getEncryptedData(req, "encryptedMessage");
         if (encryptedData == null) {
             String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
             if (plainMessage == null) {
                 return null;
             }
-            if (recipient == null || recipient.getPublicKey() == null) {
-                throw new ParameterException(INCORRECT_RECIPIENT);
+            if (recipient != null) {
+                recipientPublicKey = recipient.getPublicKey();
+            }
+            if (recipientPublicKey == null) {
+                recipientPublicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter("recipientPublicKey")));
+            }
+            if (recipientPublicKey == null) {
+                throw new ParameterException(MISSING_RECIPIENT_PUBLIC_KEY);
             }
             try {
                 plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
@@ -538,7 +545,7 @@ final class ParameterParser {
             }
             String secretPhrase = getSecretPhrase(req, false);
             if (secretPhrase != null) {
-                encryptedData = recipient.encryptTo(plainMessageBytes, secretPhrase, compress);
+                encryptedData = Account.encryptTo(recipientPublicKey, plainMessageBytes, secretPhrase, compress);
             }
         }
         if (encryptedData != null) {
@@ -549,9 +556,9 @@ final class ParameterParser {
             }
         } else {
             if (prunable) {
-                return new Appendix.UnencryptedPrunableEncryptedMessage(plainMessageBytes, isText, compress, recipient.getPublicKey());
+                return new Appendix.UnencryptedPrunableEncryptedMessage(plainMessageBytes, isText, compress, recipientPublicKey);
             } else {
-                return new Appendix.UnencryptedEncryptedMessage(plainMessageBytes, isText, compress, recipient.getPublicKey());
+                return new Appendix.UnencryptedEncryptedMessage(plainMessageBytes, isText, compress, recipientPublicKey);
             }
         }
     }

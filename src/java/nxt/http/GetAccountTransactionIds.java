@@ -70,7 +70,7 @@ public final class GetAccountTransactionIds extends APIServlet.APIRequestHandler
 
         JSONArray transactionIds = new JSONArray();
         try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations, type, subtype, timestamp,
-                withMessage, false, true, firstIndex, lastIndex)) {
+                withMessage, false, true, firstIndex, lastIndex, false)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactionIds.add(transaction.getStringId());

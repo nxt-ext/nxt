@@ -21,6 +21,8 @@ import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.peer.Peer;
+import nxt.peer.Peers;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
@@ -54,6 +56,9 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
         response.put("isTestnet", Constants.isTestnet);
         response.put("maxPrunableLifetime", Constants.MAX_PRUNABLE_LIFETIME);
         response.put("includeExpiredPrunable", Constants.INCLUDE_EXPIRED_PRUNABLE);
+        JSONArray servicesArray = new JSONArray();
+        Peers.getServices().forEach(service -> servicesArray.add(service.name()));
+        response.put("services", servicesArray);
         return response;
     }
 

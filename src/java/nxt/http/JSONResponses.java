@@ -56,6 +56,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_ASSET = missing("asset");
     public static final JSONStreamAware UNKNOWN_BLOCK = unknown("block");
     public static final JSONStreamAware INCORRECT_BLOCK = incorrect("block");
+    public static final JSONStreamAware UNKNOWN_ENTRY = unknown("entry");
     public static final JSONStreamAware MISSING_PEER = missing("peer");
     public static final JSONStreamAware UNKNOWN_PEER = unknown("peer");
     public static final JSONStreamAware MISSING_TRANSACTION = missing("transaction");
@@ -144,6 +145,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SECRET = missing("secret");
     public static final JSONStreamAware INCORRECT_SECRET = incorrect("secret");
     public static final JSONStreamAware MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY = missing("recipientSecretPhrase", "recipientPublicKey");
+    public static final JSONStreamAware MISSING_RECIPIENT_PUBLIC_KEY = missing("recipientPublicKey");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

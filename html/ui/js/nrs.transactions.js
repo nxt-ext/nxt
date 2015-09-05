@@ -554,6 +554,83 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	};
 
+    NRS.getLedgerEntryRow = function(entry) {
+        var linkClass;
+        var dataToken;
+        if (entry.isTransactionEvent) {
+            linkClass = "show_transaction_modal_action";
+            dataToken = "data-transaction='" + String(entry.event).escapeHTML() + "'";
+        } else {
+            linkClass = "show_block_modal_action";
+            dataToken = "data-id='1' data-block='" + String(entry.event).escapeHTML()+ "'";
+        }
+        var change = entry.change;
+        var balance = entry.balance;
+        var balanceType = "nxt";
+        var balanceEntity = "NXT";
+        var holdingIcon = "";
+        if (/ASSET_BALANCE/i.test(entry.holdingType)) {
+            NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
+                balanceType = "asset";
+                balanceEntity = response.name;
+                change = NRS.formatQuantity(change, response.decimals);
+                balance = NRS.formatQuantity(balance, response.decimals);
+                holdingIcon = "<i class='fa fa-signal'></i> ";
+            }, false);
+        } else if (/CURRENCY_BALANCE/i.test(entry.holdingType)) {
+            NRS.sendRequest("getCurrency", {"currency": entry.holding}, function (response) {
+                balanceType = "currency";
+                balanceEntity = response.name;
+                change = NRS.formatQuantity(change, response.decimals);
+                balance = NRS.formatQuantity(balance, response.decimals);
+                holdingIcon =  "<i class='fa fa-bank'></i> ";
+            }, false);
+        } else {
+            change = NRS.formatAmount(change);
+            balance = NRS.formatAmount(balance);
+        }
+        var sign = "";
+        if (entry.change > 0) {
+            sign = "<i class='fa fa-plus-circle' style='color:#65C62E'></i> ";
+        } else if (entry.change < 0) {
+            sign = "<i class='fa fa-minus-circle' style='color:#E04434'></i> ";
+            if (change.length > 0) {
+                change = String(change).substring(1);
+            }
+        }
+        var eventType = String(entry.eventType).escapeHTML();
+        if (eventType.startsWith("ASSET") || eventType.startsWith("CURRENCY")) {
+            eventType = eventType.substring(eventType.indexOf("_") + 1);
+        }
+        eventType = $.t(eventType.toLowerCase());
+        var html = "";
+		html += "<tr>";
+		html += "<td style='vertical-align:middle;'>";
+  		html += "<a class='show_ledger_modal_action' href='#' data-entry='" + String(entry.ledgerId).escapeHTML() +"'";
+        html += "data-change='" + (entry.change < 0 ? -change : change) + "' data-balance='" + balance + "'>";
+  		html += NRS.formatTimestamp(entry.timestamp) + "</a>";
+  		html += "</td>";
+		html += '<td style="vertical-align:middle;">';
+        html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + eventType + '</span>';
+        html += "<a class='" + linkClass + "' href='#' data-timestamp='" + String(entry.timestamp).escapeHTML() + "' " + dataToken + ">";
+        html += " <i class='fa fa-info'></i></a>";
+		html += '</td>';
+		if (balanceType == "nxt") {
+            html += "<td style='vertical-align:middle;'>" + sign + change + "</td>";
+            html += "<td style='vertical-align:middle;'>" + balance + "</td>";
+            html += "<td></td>";
+            html += "<td></td>";
+            html += "<td></td>";
+        } else {
+            html += "<td></td>";
+            html += "<td></td>";
+            html += "<td>" + holdingIcon + balanceEntity + "</td>";
+            html += "<td style='vertical-align:middle;'>" + sign + change + "</td>";
+            html += "<td style='vertical-align:middle;'>" + balance + "</td>";
+        }
+		return html;
+	};
+
 	NRS.buildTransactionsTypeNavi = function() {
 		var html = '';
 		html += '<li role="presentation" class="active"><a href="#" data-transaction-type="" ';
@@ -651,39 +728,62 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 
-	NRS.pages.dashboard = function() {
-		var rows = "";
-		var params = {
-			"account": NRS.account,
-			"firstIndex": 0,
-			"lastIndex": 9
-		};
-		
-		var unconfirmedTransactions = NRS.unconfirmedTransactions;
-		if (unconfirmedTransactions) {
-			for (var i = 0; i < unconfirmedTransactions.length; i++) {
-				rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
-			}
-		}
+    NRS.pages.dashboard = function() {
+        var rows = "";
+        var params = {
+            "account": NRS.account,
+            "firstIndex": 0,
+            "lastIndex": 9
+        };
 
-		NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
-			if (response.transactions && response.transactions.length) {
-				for (var i = 0; i < response.transactions.length; i++) {
-					var transaction = response.transactions[i];
-					transaction.confirmed = true;
-					rows += NRS.getTransactionRowHTML(transaction);
-				}
+        var unconfirmedTransactions = NRS.unconfirmedTransactions;
+        if (unconfirmedTransactions) {
+            for (var i = 0; i < unconfirmedTransactions.length; i++) {
+                rows += NRS.getTransactionRowHTML(unconfirmedTransactions[i]);
+            }
+        }
 
-				NRS.dataLoaded(rows);
-				NRS.addPhasingInfoToTransactionRows(response.transactions);
-			} else {
-				NRS.dataLoaded(rows);
-			}
-		});
-	};
+        NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
+            if (response.transactions && response.transactions.length) {
+                for (var i = 0; i < response.transactions.length; i++) {
+                    var transaction = response.transactions[i];
+                    transaction.confirmed = true;
+                    rows += NRS.getTransactionRowHTML(transaction);
+                }
+
+                NRS.dataLoaded(rows);
+                NRS.addPhasingInfoToTransactionRows(response.transactions);
+            } else {
+                NRS.dataLoaded(rows);
+            }
+        });
+    };
 
 	NRS.incoming.dashboard = function() {
 		NRS.loadPage("dashboard");
+	};
+
+	NRS.pages.ledger = function() {
+		var rows = "";
+        var params = {
+            "account": NRS.account,
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+        };
+
+        NRS.sendRequest("getAccountLedger+", params, function(response) {
+            if (response.entries && response.entries.length) {
+                if (response.entries.length > NRS.itemsPerPage) {
+                    NRS.hasMorePages = true;
+                    response.entries.pop();
+                }
+                for (var i = 0; i < response.entries.length; i++) {
+                    var entry = response.entries[i];
+                    rows += NRS.getLedgerEntryRow(entry);
+                }
+            }
+            NRS.dataLoaded(rows);
+        });
 	};
 
 	NRS.pages.transactions = function(callback, subpage) {
@@ -831,6 +931,12 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<span data-i18n="dashboard">Dashboard</span>',
 			"type": 'PAGE',
 			"page": 'dashboard'
+		};
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="account_ledger">Account Ledger</span>',
+			"type": 'PAGE',
+			"page": 'ledger'
 		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {

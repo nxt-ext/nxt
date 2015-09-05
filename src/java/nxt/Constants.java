@@ -136,8 +136,9 @@ public final class Constants {
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
     public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
     public static final int SHUFFLING_BLOCK = isTestnet ? 300000 : Integer.MAX_VALUE;
+    public static final int ASSET_DELETE_BLOCK = Integer.MAX_VALUE;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 471000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 495000;
 
     public static final int[] MIN_VERSION = new int[] {1, 5};
 
