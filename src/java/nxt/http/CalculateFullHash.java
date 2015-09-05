@@ -64,4 +64,9 @@ public final class CalculateFullHash extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

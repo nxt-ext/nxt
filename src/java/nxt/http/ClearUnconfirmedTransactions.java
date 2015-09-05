@@ -57,4 +57,9 @@ public final class ClearUnconfirmedTransactions extends APIServlet.APIRequestHan
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

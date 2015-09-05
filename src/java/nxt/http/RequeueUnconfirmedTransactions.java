@@ -57,4 +57,9 @@ public final class RequeueUnconfirmedTransactions extends APIServlet.APIRequestH
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

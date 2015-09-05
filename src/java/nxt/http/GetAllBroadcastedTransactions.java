@@ -48,4 +48,10 @@ public final class GetAllBroadcastedTransactions extends APIServlet.APIRequestHa
     boolean requirePassword() {
         return true;
     }
+
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }
