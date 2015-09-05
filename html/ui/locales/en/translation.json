@@ -1428,5 +1428,6 @@
   "event_type": "Event Type",
   "ledger_id": "Ledger Id",
   "server_connection_error": "Server Connection Error",
-  "data_required_field": "Data is a required field."
+  "data_required_field": "Data is a required field.",
+  "secret_is_text": "textual data representation"
 }
