@@ -368,7 +368,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find("ul.nav li.active").removeClass("active");
 		$(this).find("ul.nav li:first").addClass("active");
 		$(this).find(".output").hide();
-                $('#unsigned_transaction_bytes_reader').html5_qrcode_stop();
+        $('#unsigned_transaction_bytes_reader').html5_qrcode_stop();
 	});
 
     transactionJSONModal.find("ul.nav li").click(function(e) {
