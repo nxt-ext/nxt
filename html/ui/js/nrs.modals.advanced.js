@@ -364,11 +364,12 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
     transactionJSONModal.on("hidden.bs.modal", function() {
+		var reader = $('#unsigned_transaction_bytes_reader');
+		if(reader.data('stream')) reader.html5_qrcode_stop();
 		$(this).find(".tab_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$(this).find("ul.nav li:first").addClass("active");
 		$(this).find(".output").hide();
-                $('#unsigned_transaction_bytes_reader').html5_qrcode_stop();
 	});
 
     transactionJSONModal.find("ul.nav li").click(function(e) {
@@ -441,7 +442,7 @@ var NRS = (function(NRS, $, undefined) {
         $("#signed_json_output").show();
         $("#transaction_signature").val(response.transactionJSON.signature);
         NRS.sendRequestQRCode("#transaction_signature_qr_code", response.transactionJSON.signature, 292, 292);
-       $("#signature_output").show();
+        $("#signature_output").show();
     };
 
     NRS.forms.signTransaction = function() {
