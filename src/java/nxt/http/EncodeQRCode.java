@@ -23,19 +23,20 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import static java.lang.Integer.parseInt;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletRequest;
 import nxt.NxtException;
+import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>The EncodeQRCode API converts a UTF-8 string to a base64-encoded
@@ -90,16 +91,10 @@ public final class EncodeQRCode extends APIServlet.APIRequestHandler {
         
         JSONObject response = new JSONObject();
 
-        String qrCodeData = request.getParameter("qrCodeData");
-        if(qrCodeData == null) qrCodeData = "";
-        
-        String widthString = request.getParameter("width");
-        if(widthString == null) widthString = "0";
-        int width = parseInt(widthString, 10);
-        
-        String heightString = request.getParameter("height");
-        if(heightString == null) heightString = "0";
-        int height = parseInt(heightString, 10);
+        String qrCodeData = Convert.nullToEmpty(request.getParameter("qrCodeData"));
+
+        int width = ParameterParser.getInt(request, "width", 0, 5000, false);
+        int height = ParameterParser.getInt(request, "height", 0, 5000, false);
         
         try {
             Map hints = new HashMap();
@@ -121,20 +116,27 @@ public final class EncodeQRCode extends APIServlet.APIRequestHandler {
             os.close();
             String base64 = Base64.getEncoder().encodeToString(bytes);
             response.put("qrCodeBase64", base64);
-        }
-        catch(WriterException|IOException ex) {
+        } catch(WriterException|IOException ex) {
             String errorMessage = "Error creating image from qrCodeData";
             Logger.logErrorMessage(errorMessage, ex);
             JSONData.putException(response, ex, errorMessage);
         }
         return response;
     }
+
     @Override
     final boolean requirePost() {
         return true;
     }
+
     @Override
     boolean allowRequiredBlockParameters() {
         return false;
     }
+
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

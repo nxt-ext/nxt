@@ -72,4 +72,9 @@ public class AddPeer extends APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }
