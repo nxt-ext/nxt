@@ -22,40 +22,30 @@ import nxt.util.Convert;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public final class EncryptedData {
+public final class AnonymouslyEncryptedData {
 
-    public static final EncryptedData EMPTY_DATA = new EncryptedData(new byte[0], new byte[0]);
-
-    public static EncryptedData encrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {
-        if (plaintext.length == 0) {
-            return EMPTY_DATA;
-        }
-        byte[] nonce = new byte[32];
-        Crypto.getSecureRandom().nextBytes(nonce);
-        byte[] sharedKey = Crypto.getSharedKey(myPrivateKey, theirPublicKey, nonce);
+    public static AnonymouslyEncryptedData encrypt(byte[] plaintext, String secretPhrase, byte[] theirPublicKey, byte[] nonce) {
+        byte[] keySeed = Crypto.getKeySeed(secretPhrase, theirPublicKey, nonce);
+        byte[] myPrivateKey = Crypto.getPrivateKey(keySeed);
+        byte[] myPublicKey = Crypto.getPublicKey(keySeed);
+        byte[] sharedKey = Crypto.getSharedKey(myPrivateKey, theirPublicKey);
         byte[] data = Crypto.aesEncrypt(plaintext, sharedKey);
-        return new EncryptedData(data, nonce);
+        return new AnonymouslyEncryptedData(data, myPublicKey);
     }
 
-    public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength)
+    public static AnonymouslyEncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength)
             throws NxtException.NotValidException {
-        if (length == 0) {
-            return EMPTY_DATA;
-        }
         if (length > maxLength) {
             throw new NxtException.NotValidException("Max encrypted data length exceeded: " + length);
         }
         byte[] data = new byte[length];
         buffer.get(data);
-        byte[] nonce = new byte[32];
-        buffer.get(nonce);
-        return new EncryptedData(data, nonce);
+        byte[] publicKey = new byte[32];
+        buffer.get(publicKey);
+        return new AnonymouslyEncryptedData(data, publicKey);
     }
 
-    public static EncryptedData readEncryptedData(byte[] bytes) {
-        if (bytes.length == 0) {
-            return EMPTY_DATA;
-        }
+    public static AnonymouslyEncryptedData readEncryptedData(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         try {
@@ -66,18 +56,20 @@ public final class EncryptedData {
     }
 
     private final byte[] data;
-    private final byte[] nonce;
+    private final byte[] publicKey;
 
-    public EncryptedData(byte[] data, byte[] nonce) {
+    public AnonymouslyEncryptedData(byte[] data, byte[] publicKey) {
         this.data = data;
-        this.nonce = nonce;
+        this.publicKey = publicKey;
     }
 
-    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
-        if (data.length == 0) {
-            return data;
-        }
-        byte[] sharedKey = Crypto.getSharedKey(myPrivateKey, theirPublicKey, nonce);
+    public byte[] decrypt(String secretPhrase) {
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), publicKey);
+        return Crypto.aesDecrypt(data, sharedKey);
+    }
+
+    public byte[] decrypt(byte[] keySeed) {
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(keySeed), publicKey);
         return Crypto.aesDecrypt(data, sharedKey);
     }
 
@@ -85,25 +77,25 @@ public final class EncryptedData {
         return data;
     }
 
-    public byte[] getNonce() {
-        return nonce;
+    public byte[] getPublicKey() {
+        return publicKey;
     }
 
     public int getSize() {
-        return data.length + nonce.length;
+        return data.length + 32;
     }
 
     public byte[] getBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(nonce.length + data.length);
+        ByteBuffer buffer = ByteBuffer.allocate(data.length + 32);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.put(data);
-        buffer.put(nonce);
+        buffer.put(publicKey);
         return buffer.array();
     }
 
     @Override
     public String toString() {
-        return "data: " + Convert.toHexString(data) + " nonce: " + Convert.toHexString(nonce);
+        return "data: " + Convert.toHexString(data) + " publicKey: " + Convert.toHexString(publicKey);
     }
 
 }

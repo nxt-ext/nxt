@@ -16,8 +16,8 @@
 
 package nxt;
 
+import nxt.crypto.AnonymouslyEncryptedData;
 import nxt.crypto.Crypto;
-import nxt.crypto.EncryptedData;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -27,7 +27,6 @@ import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -302,8 +301,14 @@ public final class Shuffling {
         shufflingTable.insert(this);
     }
 
-    //TODO: further optimizations possible
-    //TODO: needs to be rewritten anyway
+    private byte[] getNonce() {
+        byte[] nonce = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            nonce[i] = (byte)(id >> (8 * i));
+        }
+        return nonce;
+    }
+
     public byte[][] process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
         List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
         ShufflingParticipant thisParticipant = null;
@@ -333,58 +338,36 @@ public final class Shuffling {
         // decrypt the tokens bundled in the current data
         List<byte[]> outputDataList = new ArrayList<>();
         for (byte[] bytes : data) {
-            EncryptedData encryptedData = EncryptedData.readEncryptedData(bytes);
-            // Since we cannot tell which participant public key was used to encrypted which token
-            // we'll have to try them all until one succeed starting with the shuffling issuer which has to be a participant
-            byte[] decryptedBytes = null;
-            for (ShufflingParticipant participant : shufflingParticipants) {
-                if (thisParticipant == participant) {
-                    break;
-                }
-                Account publicKeyAccount = Account.getAccount(participant.getAccountId());
-                if (Logger.isDebugEnabled()) {
-                    Logger.logDebugMessage(String.format("decryptFrom using public key of %s sender %s data %s nonce %s",
-                            Convert.rsAccount(publicKeyAccount.getId()), Convert.rsAccount(accountId),
-                            Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
-                }
-                try {
-                    decryptedBytes = publicKeyAccount.decryptFrom(encryptedData, secretPhrase, false);
-                    if (Logger.isDebugEnabled()) {
-                        Logger.logDebugMessage(String.format("decryptFrom bytes %s", Arrays.toString(decryptedBytes)));
-                    }
-                    break;
-
-                } catch (Exception e) {
-                    if (! (e.getCause() instanceof InvalidCipherTextException)) {
-                        throw e;
-                    }
-                }
-            }
-            if (decryptedBytes == null) {
+            AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.readEncryptedData(bytes);
+            try {
+                outputDataList.add(encryptedData.decrypt(secretPhrase));
+            } catch (Exception e) {
+                Logger.logMessage("Decryption failed", e);
+                //decryption failed, need to cancel and enter blame phase
                 return null;
             }
-            outputDataList.add(decryptedBytes);
         }
 
         // Calculate the token for the current sender by iteratively encrypting it using the public key of all the participants
         // which did not perform shuffle processing yet
         // If we are that last participant to process then we do not encrypt our recipient
         byte[] bytesToEncrypt = recipientPublicKey;
+        byte[] nonce = getNonce();
         for (int i = shufflingParticipants.size() - 1; i >= 0; i--) {
             ShufflingParticipant participant = shufflingParticipants.get(i);
             if (participant == thisParticipant) {
                 break;
             }
-            Account account = Account.getAccount(participant.getAccountId());
+            byte[] participantPublicKey = Account.getPublicKey(participant.getAccountId());
             if (Logger.isDebugEnabled()) {
                 Logger.logDebugMessage(String.format("encryptTo %s by %s bytes %s",
-                        Convert.rsAccount(account.getId()), Convert.rsAccount(accountId), Arrays.toString(bytesToEncrypt)));
+                        Convert.rsAccount(participant.getAccountId()), Convert.rsAccount(accountId), Arrays.toString(bytesToEncrypt)));
             }
-            EncryptedData encryptedData = account.encryptTo(bytesToEncrypt, secretPhrase, false);
+            AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.encrypt(bytesToEncrypt, secretPhrase, participantPublicKey, nonce);
             bytesToEncrypt = encryptedData.getBytes();
             if (Logger.isDebugEnabled()) {
-                Logger.logDebugMessage(String.format("encryptTo data %s nonce %s",
-                        Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getNonce())));
+                Logger.logDebugMessage(String.format("encryptTo data %s publicKey %s",
+                        Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getPublicKey())));
             }
         }
         outputDataList.add(bytesToEncrypt);
@@ -394,7 +377,7 @@ public final class Shuffling {
         return outputDataList.toArray(new byte[outputDataList.size()][]);
     }
 
-    public byte[][] revealSharedKeys(final long accountId, final String secretPhrase, List<EncryptedData> outputDataList) {
+    public byte[][] revealKeySeeds(final long accountId, final String secretPhrase, List<AnonymouslyEncryptedData> outputDataList) {
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             while (participants.hasNext()) {
                 if (participants.next().getAccountId() == accountId) {
@@ -404,31 +387,32 @@ public final class Shuffling {
             if (!participants.hasNext()) {
                 return Convert.EMPTY_BYTES;
             }
-            byte[] myPrivateKey = Crypto.getPrivateKey(secretPhrase);
-            List<byte[]> keys = new ArrayList<>();
-            Account nextParticipant = Account.getAccount(participants.next().getAccountId());
+            final byte[] nonce = getNonce();
+            final List<byte[]> keySeeds = new ArrayList<>();
+            byte[] nextParticipantPublicKey = Account.getPublicKey(participants.next().getAccountId());
+            byte[] keySeed = Crypto.getKeySeed(secretPhrase, nextParticipantPublicKey, nonce);
+            keySeeds.add(keySeed);
+            byte[] publicKey = Crypto.getPublicKey(keySeed);
             byte[] decryptedBytes = null;
-            for (EncryptedData encryptedData : outputDataList) {
-                try {
-                    decryptedBytes = nextParticipant.decryptFrom(encryptedData, secretPhrase, false);
-                    keys.add(Crypto.getSharedKey(myPrivateKey, nextParticipant.getPublicKey(), encryptedData.getNonce()));
+            // find the data that we encrypted
+            for (AnonymouslyEncryptedData encryptedData : outputDataList) {
+                if (Arrays.equals(encryptedData.getPublicKey(), publicKey)) {
+                    decryptedBytes = encryptedData.decrypt(keySeed);
                     break;
-                } catch (Exception e) {
-                    if (!(e.getCause() instanceof InvalidCipherTextException)) {
-                        throw e;
-                    }
                 }
             }
             if (decryptedBytes == null) {
                 throw new RuntimeException("None of the encrypted data could be decrypted");
             }
+            // decrypt all iteratively, adding the key seeds to the result
             while (participants.hasNext()) {
-                nextParticipant = Account.getAccount(participants.next().getAccountId());
-                EncryptedData encryptedData = EncryptedData.readEncryptedData(decryptedBytes);
-                keys.add(Crypto.getSharedKey(myPrivateKey, nextParticipant.getPublicKey(), encryptedData.getNonce()));
-                decryptedBytes = nextParticipant.decryptFrom(encryptedData, secretPhrase, false);
+                nextParticipantPublicKey = Account.getPublicKey(participants.next().getAccountId());
+                keySeed = Crypto.getKeySeed(secretPhrase, nextParticipantPublicKey, nonce);
+                keySeeds.add(keySeed);
+                AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.readEncryptedData(decryptedBytes);
+                decryptedBytes = encryptedData.decrypt(keySeed);
             }
-            return keys.toArray(new byte[keys.size()][]);
+            return keySeeds.toArray(new byte[keySeeds.size()][]);
         }
     }
 

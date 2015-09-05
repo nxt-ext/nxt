@@ -69,10 +69,31 @@ public final class Crypto {
         return new SHA3.DigestSHA3(256);
     }
 
+    public static byte[] getKeySeed(String secretPhrase, byte[]... nonces) {
+        MessageDigest digest = Crypto.sha256();
+        digest.update(Convert.toBytes(secretPhrase));
+        for (byte[] nonce : nonces) {
+            digest.update(nonce);
+        }
+        return digest.digest();
+    }
+
+    public static byte[] getPublicKey(byte[] keySeed) {
+        byte[] publicKey = new byte[32];
+        Curve25519.keygen(publicKey, null, Arrays.copyOf(keySeed, keySeed.length));
+        return publicKey;
+    }
+
     public static byte[] getPublicKey(String secretPhrase) {
         byte[] publicKey = new byte[32];
         Curve25519.keygen(publicKey, null, Crypto.sha256().digest(Convert.toBytes(secretPhrase)));
         return publicKey;
+    }
+
+    public static byte[] getPrivateKey(byte[] keySeed) {
+        byte[] s = Arrays.copyOf(keySeed, keySeed.length);
+        Curve25519.clamp(s);
+        return s;
     }
 
     public static byte[] getPrivateKey(String secretPhrase) {
@@ -145,15 +166,8 @@ public final class Crypto {
         }
     }
 
-    public static byte[] getSharedSecret(byte[] myPrivateKey, byte[] theirPublicKey) {
-        try {
-            byte[] sharedSecret = new byte[32];
-            Curve25519.curve(sharedSecret, myPrivateKey, theirPublicKey);
-            return sharedSecret;
-        } catch (RuntimeException e) {
-            Logger.logMessage("Error getting shared secret", e);
-            throw e;
-        }
+    public static byte[] getSharedKey(byte[] myPrivateKey, byte[] theirPublicKey) {
+        return sha256().digest(getSharedSecret(myPrivateKey, theirPublicKey));
     }
 
     public static byte[] getSharedKey(byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
@@ -164,9 +178,15 @@ public final class Crypto {
         return sha256().digest(dhSharedSecret);
     }
 
-    public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
-        byte[] key = getSharedKey(myPrivateKey, theirPublicKey, nonce);
-        return aesEncrypt(plaintext, key);
+    private static byte[] getSharedSecret(byte[] myPrivateKey, byte[] theirPublicKey) {
+        try {
+            byte[] sharedSecret = new byte[32];
+            Curve25519.curve(sharedSecret, myPrivateKey, theirPublicKey);
+            return sharedSecret;
+        } catch (RuntimeException e) {
+            Logger.logMessage("Error getting shared secret", e);
+            throw e;
+        }
     }
 
     public static byte[] aesEncrypt(byte[] plaintext, byte[] key) {
@@ -187,11 +207,6 @@ public final class Crypto {
         } catch (InvalidCipherTextException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
-    }
-
-    public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] myPrivateKey, byte[] theirPublicKey, byte[] nonce) {
-        byte[] key = getSharedKey(myPrivateKey, theirPublicKey, nonce);
-        return aesDecrypt(ivCiphertext, key);
     }
 
     public static byte[] aesDecrypt(byte[] ivCiphertext, byte[] key) {
