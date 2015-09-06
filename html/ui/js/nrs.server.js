@@ -246,7 +246,7 @@ var NRS = (function (NRS, $, undefined) {
         var secretPhrase = "";
 
         //unknown account..
-        if (type == "POST" && !NRS.isOfflineSafeRequest(requestType) && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
+        if (type == "POST" && NRS.isRequireBlockchain(requestType) && NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
             callback({
                 "errorCode": 2,
                 "errorDescription": $.t("error_new_account")

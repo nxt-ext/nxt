@@ -55,6 +55,7 @@ var NRS = (function (NRS, $, undefined) {
         "HASH_ALGORITHMS": {},
         "PHASING_HASH_ALGORITHMS": {},
         "MINTING_HASH_ALGORITHMS": {},
+        "REQUEST_TYPES": {},
 
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
@@ -93,6 +94,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.constants.GENESIS = response.genesisAccountId;
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
                 NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
+                NRS.constants.REQUEST_TYPES = response.requestTypes;
             }
         });
     };
@@ -128,12 +130,8 @@ var NRS = (function (NRS, $, undefined) {
         return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
     };
 
-    // TODO receive from the server list of APIs which are safe for offline execution
-    NRS.isOfflineSafeRequest = function(requestType) {
-        return requestType == "addPeer" || requestType == "blacklistPeer" || requestType == "signTransaction" ||
-            requestType == "decodeToken" || requestType == "generateToken" ||
-            requestType == "decodeFileToken" || requestType == "generateFileToken" || requestType == "hash" ||
-            requestType == "parseTransaction" || requestType == "calculateFullHash";
+    NRS.isRequireBlockchain = function(requestType) {
+        return NRS.constants.REQUEST_TYPES[requestType].requireBlockchain;
     };
 
     return NRS;
