@@ -817,7 +817,7 @@ public interface Appendix {
         @Override
         public void encrypt(String secretPhrase) {
             setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
+                    secretPhrase, recipientPublicKey));
         }
 
     }
@@ -939,7 +939,7 @@ public interface Appendix {
         @Override
         public void encrypt(String secretPhrase) {
             setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
+                    secretPhrase, recipientPublicKey));
         }
 
     }
@@ -1049,7 +1049,7 @@ public interface Appendix {
         @Override
         public void encrypt(String secretPhrase) {
             setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    Crypto.getPrivateKey(secretPhrase), Crypto.getPublicKey(secretPhrase)));
+                    secretPhrase, Crypto.getPublicKey(secretPhrase)));
         }
 
     }

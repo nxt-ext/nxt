@@ -26,13 +26,13 @@ public final class EncryptedData {
 
     public static final EncryptedData EMPTY_DATA = new EncryptedData(new byte[0], new byte[0]);
 
-    public static EncryptedData encrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {
+    public static EncryptedData encrypt(byte[] plaintext, String secretPhrase, byte[] theirPublicKey) {
         if (plaintext.length == 0) {
             return EMPTY_DATA;
         }
         byte[] nonce = new byte[32];
         Crypto.getSecureRandom().nextBytes(nonce);
-        byte[] sharedKey = Crypto.getSharedKey(myPrivateKey, theirPublicKey, nonce);
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), theirPublicKey, nonce);
         byte[] data = Crypto.aesEncrypt(plaintext, sharedKey);
         return new EncryptedData(data, nonce);
     }
@@ -73,11 +73,11 @@ public final class EncryptedData {
         this.nonce = nonce;
     }
 
-    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
+    public byte[] decrypt(String secretPhrase, byte[] theirPublicKey) {
         if (data.length == 0) {
             return data;
         }
-        byte[] sharedKey = Crypto.getSharedKey(myPrivateKey, theirPublicKey, nonce);
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), theirPublicKey, nonce);
         return Crypto.aesDecrypt(data, sharedKey);
     }
 
