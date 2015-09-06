@@ -2699,7 +2699,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
+    class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
 
         private final long shufflingId;
         private final byte[][] data;
@@ -2738,7 +2738,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        int getMySize() {
+        final int getMySize() {
             int size = 8 + 1;
             for (byte[] bytes : data) {
                 size += 4;
@@ -2748,7 +2748,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putMyBytes(ByteBuffer buffer) {
+        final void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(shufflingId);
             buffer.put((byte)data.length);
             for (byte[] bytes : data) {
@@ -2758,7 +2758,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        void putMyJSON(JSONObject attachment) {
+        final void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Long.toUnsignedString(shufflingId));
             JSONArray jsonArray = new JSONArray();
             attachment.put("data", jsonArray);
@@ -2772,16 +2772,16 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_PROCESSING;
         }
 
-        public long getShufflingId() {
+        public final long getShufflingId() {
             return shufflingId;
         }
 
-        public byte[][] getData() {
+        public final byte[][] getData() {
             return data;
         }
 
         @Override
-        public long getCurrencyId() {
+        public final long getCurrencyId() {
             return Shuffling.getShuffling(shufflingId).getCurrencyId();
         }
     }
@@ -2828,9 +2828,9 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class MonetarySystemShufflingCancellation extends MonetarySystemShuffling {
+    final class MonetarySystemShufflingCancellation extends MonetarySystemShufflingProcessing {
 
-        MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) {
+        MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
         }
 
@@ -2838,8 +2838,8 @@ public interface Attachment extends Appendix {
             super(attachmentData);
         }
 
-        public MonetarySystemShufflingCancellation(long shufflingId) {
-            super(shufflingId);
+        public MonetarySystemShufflingCancellation(long shufflingId, byte[][] data) {
+            super(shufflingId, data);
         }
 
         @Override

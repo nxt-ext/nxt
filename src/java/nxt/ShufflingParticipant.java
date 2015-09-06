@@ -134,7 +134,7 @@ public final class ShufflingParticipant {
     private long nextAccountId; // pointer to the next shuffling participant updated during registration
     private State state; // tracks the state of the participant in the process
     private byte[][] data; // encrypted data saved as intermediate result in the shuffling process
-    private byte[][] sharedKeys;
+    private byte[][] keySeeds; // to be revealed only if shuffle is being cancelled
 
     public ShufflingParticipant(long shufflingId, long accountId) {
         this.shufflingId = shufflingId;
@@ -142,7 +142,7 @@ public final class ShufflingParticipant {
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
         this.state = State.REGISTERED;
         this.data = Convert.EMPTY_BYTES;
-        this.sharedKeys = Convert.EMPTY_BYTES;
+        this.keySeeds = Convert.EMPTY_BYTES;
     }
 
     private ShufflingParticipant(ResultSet rs) throws SQLException {
@@ -158,18 +158,18 @@ public final class ShufflingParticipant {
         } else {
             this.data = Convert.EMPTY_BYTES;
         }
-        array = rs.getArray("shared_keys");
+        array = rs.getArray("key_seeds");
         if (array != null) {
-            Object[] sharedKeys = (Object[]) array.getArray();
-            this.sharedKeys = Arrays.copyOf(sharedKeys, sharedKeys.length, byte[][].class);
+            Object[] keySeeds = (Object[]) array.getArray();
+            this.keySeeds = Arrays.copyOf(keySeeds, keySeeds.length, byte[][].class);
         } else {
-            this.sharedKeys = Convert.EMPTY_BYTES;
+            this.keySeeds = Convert.EMPTY_BYTES;
         }
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
-                + "account_id, next_account_id, state, data, shared_keys, height, latest) "
+                + "account_id, next_account_id, state, data, key_seeds, height, latest) "
                 + "KEY (shuffling_id, account_id, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
@@ -182,8 +182,8 @@ public final class ShufflingParticipant {
             } else {
                 pstmt.setNull(++i, Types.ARRAY);
             }
-            if (sharedKeys.length > 0) {
-                pstmt.setObject(++i, sharedKeys);
+            if (keySeeds.length > 0) {
+                pstmt.setObject(++i, keySeeds);
             } else {
                 pstmt.setNull(++i, Types.ARRAY);
             }
@@ -224,6 +224,11 @@ public final class ShufflingParticipant {
 
     void setData(byte[][] data) {
         this.data = data;
+        shufflingParticipantTable.insert(this);
+    }
+
+    void setKeySeeds(byte[][] data) {
+        this.keySeeds = data;
         shufflingParticipantTable.insert(this);
     }
 

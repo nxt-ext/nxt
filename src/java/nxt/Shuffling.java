@@ -183,23 +183,6 @@ public final class Shuffling {
         }
     }
 
-    static void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
-        long shufflingId = attachment.getShufflingId();
-        long participantId = transaction.getSenderId();
-        byte[][] data = attachment.getData();
-        ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(shufflingId, participantId);
-        Shuffling shuffling = Shuffling.getShuffling(shufflingId);
-        long nextParticipantId = senderParticipant.getNextAccountId();
-        if (nextParticipantId == 0) {
-            // store recipient public keys in the data field of the shuffle issuer
-            nextParticipantId = shuffling.issuerId;
-            shuffling.setStage(Stage.VERIFICATION);
-        }
-        shuffling.setAssigneeAccountId(nextParticipantId);
-        ShufflingParticipant.updateData(shufflingId, nextParticipantId, data);
-        senderParticipant.setProcessingComplete();
-    }
-
     static void init() {}
 
     private final long id;
@@ -377,7 +360,8 @@ public final class Shuffling {
         return outputDataList.toArray(new byte[outputDataList.size()][]);
     }
 
-    public byte[][] revealKeySeeds(final long accountId, final String secretPhrase, List<AnonymouslyEncryptedData> outputDataList) {
+    public byte[][] revealKeySeeds(final String secretPhrase) {
+        long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             while (participants.hasNext()) {
                 if (participants.next().getAccountId() == accountId) {
@@ -387,15 +371,18 @@ public final class Shuffling {
             if (!participants.hasNext()) {
                 return Convert.EMPTY_BYTES;
             }
+            ShufflingParticipant nextParticipant = participants.next();
+            byte[][] data = nextParticipant.getData();
             final byte[] nonce = getNonce();
             final List<byte[]> keySeeds = new ArrayList<>();
-            byte[] nextParticipantPublicKey = Account.getPublicKey(participants.next().getAccountId());
+            byte[] nextParticipantPublicKey = Account.getPublicKey(nextParticipant.getAccountId());
             byte[] keySeed = Crypto.getKeySeed(secretPhrase, nextParticipantPublicKey, nonce);
             keySeeds.add(keySeed);
             byte[] publicKey = Crypto.getPublicKey(keySeed);
             byte[] decryptedBytes = null;
             // find the data that we encrypted
-            for (AnonymouslyEncryptedData encryptedData : outputDataList) {
+            for (byte[] bytes : data) {
+                AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.readEncryptedData(bytes);
                 if (Arrays.equals(encryptedData.getPublicKey(), publicKey)) {
                     decryptedBytes = encryptedData.decrypt(keySeed);
                     break;
@@ -414,6 +401,21 @@ public final class Shuffling {
             }
             return keySeeds.toArray(new byte[keySeeds.size()][]);
         }
+    }
+
+    void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
+        long participantId = transaction.getSenderId();
+        byte[][] data = attachment.getData();
+        ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(this.id, participantId);
+        long nextParticipantId = senderParticipant.getNextAccountId();
+        if (nextParticipantId == 0) {
+            // store recipient public keys in the data field of the shuffle issuer
+            nextParticipantId = this.issuerId;
+            setStage(Stage.VERIFICATION);
+        }
+        setAssigneeAccountId(nextParticipantId);
+        ShufflingParticipant.updateData(this.id, nextParticipantId, data);
+        senderParticipant.setProcessingComplete();
     }
 
     void verify(long accountId) {
@@ -456,6 +458,7 @@ public final class Shuffling {
         listeners.notify(this, Event.SHUFFLING_DONE);
     }
 
+    //TODO: find out which of the participants are at fault, after all reveal their keys
     void cancel(AccountLedger.LedgerEvent event, long eventId) {
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
@@ -502,6 +505,7 @@ public final class Shuffling {
         return true;
     }
 
+    //TODO: a participant may have to cancel if unable to decrypt the data sent by the previous participants, in process stage
     /**
      * Shuffling issuer can cancel the shuffling at any time but participants can only cancel during the verification stage
      *
@@ -512,7 +516,8 @@ public final class Shuffling {
         if (senderId == issuerId) {
             return stage.isCancellationAllowed();
         } else {
-            return stage == Stage.VERIFICATION;
+            return stage == Stage.VERIFICATION || stage == Stage.CANCELLED;
+            // if cancel transaction is also used to reveal keys, multiple cancels should be allowed
         }
     }
 

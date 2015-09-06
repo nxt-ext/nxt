@@ -1106,7 +1106,8 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemShufflingProcessing attachment = (Attachment.MonetarySystemShufflingProcessing)transaction.getAttachment();
-            Shuffling.updateParticipantData(transaction, attachment);
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            shuffling.updateParticipantData(transaction, attachment);
         }
 
         @Override
@@ -1291,7 +1292,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
+        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemShufflingCancellation(buffer, transactionVersion);
         }
 
@@ -1336,6 +1337,7 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             //TODO: cancelling participant should pay a penalty, it someone else is at fault should use a blame transaction instead
+            ShufflingParticipant.getParticipant(shuffling.getId(), senderAccount.getId()).setKeySeeds(attachment.getData());
             shuffling.cancel(getLedgerEvent(), transaction.getId());
         }
 

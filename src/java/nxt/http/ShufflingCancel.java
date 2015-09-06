@@ -35,7 +35,9 @@ public final class ShufflingCancel extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
-        Attachment attachment = new Attachment.MonetarySystemShufflingCancellation(shuffling.getId());
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
+        byte[][] keySeeds = shuffling.revealKeySeeds(secretPhrase);
+        Attachment attachment = new Attachment.MonetarySystemShufflingCancellation(shuffling.getId(), keySeeds);
 
         Account account = ParameterParser.getSenderAccount(req);
         return createTransaction(req, account, attachment);
