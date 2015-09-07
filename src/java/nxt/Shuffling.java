@@ -157,6 +157,10 @@ public final class Shuffling {
         return shufflingTable.get(shufflingDbKeyFactory.newKey(shufflingId));
     }
 
+    public static int getCurrencyShufflingCount(long currencyId) {
+        return shufflingTable.getCount(new DbClause.LongClause("currency_id", currencyId));
+    }
+
     static void addShuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
         Shuffling shuffling = new Shuffling(transaction, attachment);
         shufflingTable.insert(shuffling);
@@ -195,6 +199,7 @@ public final class Shuffling {
 
     private Stage stage;
     private long assigneeAccountId;
+    private long cancellingAccountId;
 
     private Shuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
         this.id = transaction.getId();
@@ -217,15 +222,16 @@ public final class Shuffling {
         this.participantCount = rs.getByte("participant_count");
         this.cancellationHeight = rs.getInt("cancellation_height");
         this.stage = Stage.get(rs.getByte("stage"));
-        this.assigneeAccountId = rs.getLong("assignee_account_Id");
+        this.assigneeAccountId = rs.getLong("assignee_account_id");
+        this.cancellingAccountId = rs.getLong("cancelling_account_id");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, currency_id, "
                 + "issuer_id, amount, participant_count, cancellation_height, stage, assignee_account_id, "
-                + "height, latest) "
+                + "cancelling_account_id, height, latest) "
                 + "KEY (id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.currencyId);
@@ -235,6 +241,7 @@ public final class Shuffling {
             pstmt.setInt(++i, this.cancellationHeight);
             pstmt.setByte(++i, this.getStage().getCode());
             pstmt.setLong(++i, this.assigneeAccountId);
+            pstmt.setLong(++i, this.cancellingAccountId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -282,6 +289,10 @@ public final class Shuffling {
     private void setAssigneeAccountId(long assigneeAccountId) {
         this.assigneeAccountId = assigneeAccountId;
         shufflingTable.insert(this);
+    }
+
+    public long getCancellingAccountId() {
+        return cancellingAccountId;
     }
 
     private byte[] getNonce() {
@@ -413,8 +424,8 @@ public final class Shuffling {
     void distribute(AccountLedger.LedgerEvent event, long eventId) {
         byte[][] recipientPublicKeys = getRecipientPublicKeys();
         for (byte[] recipientPublicKey : recipientPublicKeys) {
-            Account recipientAccount = Account.getAccount(Account.getId(recipientPublicKey));
-            if (recipientAccount != null && !Arrays.equals(recipientAccount.getPublicKey(), recipientPublicKey)) {
+            byte[] publicKey = Account.getPublicKey(Account.getId(recipientPublicKey));
+            if (publicKey != null && !Arrays.equals(publicKey, recipientPublicKey)) {
                 //TODO: penalty?
                 cancel(event, eventId);
                 return;
@@ -444,6 +455,13 @@ public final class Shuffling {
         }
         setStage(Stage.DONE);
         listeners.notify(this, Event.SHUFFLING_DONE);
+    }
+
+    void cancel(long cancellingAccountId, AccountLedger.LedgerEvent event, long eventId) {
+        if (this.cancellingAccountId == 0) {
+            this.cancellingAccountId = cancellingAccountId;
+        }
+        cancel(event, eventId);
     }
 
     //TODO: find out which of the participants are at fault, after all reveal their keys
@@ -517,13 +535,13 @@ public final class Shuffling {
         return ShufflingParticipant.getLastParticipant(id).getData();
     }
 
-    static void cancelShuffling(AccountLedger.LedgerEvent event, long eventId, long currencyId) {
-        try (DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(new DbClause.LongClause("currency_id", currencyId), 0, -1)) {
-            for (Shuffling shuffling : shufflings) {
-                if (shuffling.getStage().isCancellationAllowed()) {
-                    shuffling.cancel(event, eventId);
-                } //TODO: else? prevent deletion of currencies with shuffling in non-cancelable state?
+    void delete() {
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            for (ShufflingParticipant participant : participants) {
+                participant.delete();
             }
         }
+        shufflingTable.delete(this);
     }
+
 }

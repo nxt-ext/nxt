@@ -438,6 +438,10 @@ public final class Currency {
     }
 
     public boolean canBeDeletedBy(long senderAccountId) {
+        //TODO: make sure shufflings are deleted after completion
+        if (!is(CurrencyType.NON_SHUFFLEABLE) && Shuffling.getCurrencyShufflingCount(currencyId) > 0) {
+            return false;
+        }
         if (!isActive()) {
             return senderAccountId == accountId;
         }
@@ -483,9 +487,6 @@ public final class Currency {
         }
         if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);
-        }
-        if (!is(CurrencyType.NON_SHUFFLEABLE)) {
-            Shuffling.cancelShuffling(event, eventId, currencyId);
         }
         senderAccount.addToUnconfirmedCurrencyUnits(event, eventId, currencyId,
                 -senderAccount.getUnconfirmedCurrencyUnits(currencyId));

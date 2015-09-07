@@ -259,4 +259,8 @@ public final class ShufflingParticipant {
         shufflingParticipantTable.insert(this);
     }
 
+    void delete() {
+        shufflingParticipantTable.delete(this);
+    }
+
 }

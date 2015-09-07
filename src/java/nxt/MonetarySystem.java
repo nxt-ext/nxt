@@ -1207,6 +1207,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
     };
 
+    //TODO: why is this transaction needed? should happen automatically after last verification
     public static final TransactionType SHUFFLING_DISTRIBUTION = new MonetarySystem() {
 
         @Override
@@ -1349,7 +1350,7 @@ public abstract class MonetarySystem extends TransactionType {
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             //TODO: cancelling participant should pay a penalty, it someone else is at fault should use a blame transaction instead
             ShufflingParticipant.getParticipant(shuffling.getId(), senderAccount.getId()).setKeySeeds(attachment.getData());
-            shuffling.cancel(getLedgerEvent(), transaction.getId());
+            shuffling.cancel(senderAccount.getId(), getLedgerEvent(), transaction.getId());
         }
 
         @Override
