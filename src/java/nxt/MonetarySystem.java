@@ -985,7 +985,7 @@ public abstract class MonetarySystem extends TransactionType {
             if (!shuffling.isRegistrationAllowed()) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling registration has ended for " + Long.toUnsignedString(attachment.getShufflingId()));
             }
-            if (shuffling.isParticipant(transaction.getSenderId())) {
+            if (shuffling.getParticipant(transaction.getSenderId()) != null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is already registered for shuffling %s",
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
@@ -1081,11 +1081,12 @@ public abstract class MonetarySystem extends TransactionType {
             if (!shuffling.isProcessingAllowed()) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling is not ready for processing " + Long.toUnsignedString(attachment.getShufflingId()));
             }
-            if (!shuffling.isParticipant(transaction.getSenderId())) {
+            ShufflingParticipant participant = shuffling.getParticipant(transaction.getSenderId());
+            if (participant == null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
-            if (shuffling.isParticipantProcessingComplete(transaction.getSenderId())) {
+            if (participant.getData().length > 0) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s processing already complete",
                         Convert.rsAccount(transaction.getSenderId())));
             }
@@ -1159,11 +1160,12 @@ public abstract class MonetarySystem extends TransactionType {
             if (!shuffling.isVerificationAllowed()) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling not ready for verification: " + Long.toUnsignedString(attachment.getShufflingId()));
             }
-            if (!shuffling.isParticipant(transaction.getSenderId())) {
+            ShufflingParticipant participant = shuffling.getParticipant(transaction.getSenderId());
+            if (participant == null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
-            if (shuffling.isParticipantVerified(transaction.getSenderId())) {
+            if (participant.isVerified()) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling participant already verified: " + Long.toUnsignedString(attachment.getShufflingId()));
             }
         }

@@ -174,12 +174,13 @@ public final class Shuffling {
         Shuffling shuffling = Shuffling.getShuffling(shufflingId);
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, shuffling.getAssigneeAccountId());
         participant.setNextAccountId(participantId);
-        shuffling.setAssigneeAccountId(participantId);
 
         // Check if participant registration is complete and if so update the shuffling
         if (ShufflingParticipant.getCount(shufflingId) == shuffling.participantCount) {
             shuffling.assigneeAccountId = shuffling.issuerId;
             shuffling.setStage(Stage.PROCESSING); // update the db
+        } else {
+            shuffling.setAssigneeAccountId(participantId);
         }
     }
 
@@ -293,8 +294,8 @@ public final class Shuffling {
     }
 
     public byte[][] process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
+        byte[][] data = Convert.EMPTY_BYTES;
         List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
-        ShufflingParticipant thisParticipant = null;
         // Read the participant list for the shuffling
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             ShufflingParticipant lastParticipant = null;
@@ -307,17 +308,11 @@ public final class Shuffling {
                 }
                 shufflingParticipants.add(participant);
                 lastParticipant = participant;
-                if (participant.getAccountId() == accountId) {
-                    thisParticipant = participant;
+                if (participant.getNextAccountId() == accountId) {
+                    data = participant.getData();
                 }
             }
         }
-        if (thisParticipant == null) {
-            throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " is not a participant in " + Long.toUnsignedString(id));
-        }
-        // Read the encrypted participant data for the sender account token (the first sender won't have any data)
-        byte[][] data = thisParticipant.getData();
-
         // decrypt the tokens bundled in the current data
         List<byte[]> outputDataList = new ArrayList<>();
         for (byte[] bytes : data) {
@@ -338,7 +333,7 @@ public final class Shuffling {
         byte[] nonce = getNonce();
         for (int i = shufflingParticipants.size() - 1; i >= 0; i--) {
             ShufflingParticipant participant = shufflingParticipants.get(i);
-            if (participant == thisParticipant) {
+            if (participant.getAccountId() == accountId) {
                 break;
             }
             byte[] participantPublicKey = Account.getPublicKey(participant.getAccountId());
@@ -363,19 +358,23 @@ public final class Shuffling {
     public byte[][] revealKeySeeds(final String secretPhrase) {
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            ShufflingParticipant participant = null;
             while (participants.hasNext()) {
-                if (participants.next().getAccountId() == accountId) {
+                participant = participants.next();
+                if (participant.getAccountId() == accountId) {
                     break;
                 }
             }
             if (!participants.hasNext()) {
                 return Convert.EMPTY_BYTES;
             }
-            ShufflingParticipant nextParticipant = participants.next();
-            byte[][] data = nextParticipant.getData();
+            if (participant == null) {
+                throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " is not a participant");
+            }
+            byte[][] data = participant.getData();
             final byte[] nonce = getNonce();
             final List<byte[]> keySeeds = new ArrayList<>();
-            byte[] nextParticipantPublicKey = Account.getPublicKey(nextParticipant.getAccountId());
+            byte[] nextParticipantPublicKey = Account.getPublicKey(participant.getNextAccountId());
             byte[] keySeed = Crypto.getKeySeed(secretPhrase, nextParticipantPublicKey, nonce);
             keySeeds.add(keySeed);
             byte[] publicKey = Crypto.getPublicKey(keySeed);
@@ -407,15 +406,13 @@ public final class Shuffling {
         long participantId = transaction.getSenderId();
         byte[][] data = attachment.getData();
         ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(this.id, participantId);
+        senderParticipant.setData(data);
         long nextParticipantId = senderParticipant.getNextAccountId();
         if (nextParticipantId == 0) {
-            // store recipient public keys in the data field of the shuffle issuer
             nextParticipantId = this.issuerId;
-            setStage(Stage.VERIFICATION);
+            this.stage = Stage.VERIFICATION;
         }
         setAssigneeAccountId(nextParticipantId);
-        ShufflingParticipant.updateData(this.id, nextParticipantId, data);
-        senderParticipant.setProcessingComplete();
     }
 
     void verify(long accountId) {
@@ -521,20 +518,12 @@ public final class Shuffling {
         }
     }
 
-    public boolean isParticipant(long senderId) {
-        return ShufflingParticipant.getParticipant(id, senderId) != null;
-    }
-
-    boolean isParticipantVerified(long senderId) {
-        return ShufflingParticipant.getParticipant(id, senderId).isVerified();
-    }
-
-    public boolean isParticipantProcessingComplete(long senderId) {
-        return ShufflingParticipant.getParticipant(id, senderId).isProcessingComplete();
+    public ShufflingParticipant getParticipant(long senderId) {
+        return ShufflingParticipant.getParticipant(id, senderId);
     }
 
     public byte[][] getRecipientPublicKeys() {
-        return ShufflingParticipant.getParticipant(id, issuerId).getData();
+        return ShufflingParticipant.getLastParticipant(id).getData();
     }
 
     static void cancelShuffling(AccountLedger.LedgerEvent event, long eventId, long currencyId) {

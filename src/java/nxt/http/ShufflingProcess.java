@@ -58,7 +58,7 @@ public final class ShufflingProcess extends CreateTransaction {
                     Convert.rsAccount(senderId), Convert.rsAccount(shuffling.getAssigneeAccountId())));
             return JSON.prepare(response);
         }
-        if (!shuffling.isParticipant(senderId)) {
+        if (shuffling.getParticipant(senderId) == null) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 13);
             response.put("errorDescription", String.format("Account %s is not a participant of shuffling %d",

@@ -114,15 +114,14 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.get(shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId));
     }
 
+    static ShufflingParticipant getLastParticipant(long shufflingId) {
+        return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.FixedClause("next_account_id IS NULL")));
+    }
+
     static void addParticipant(long shufflingId, long accountId) {
         ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId);
         shufflingParticipantTable.insert(participant);
         listeners.notify(participant, Event.PARTICIPANT_ADDED);
-    }
-
-    static void updateData(long shufflingId, long accountId, byte[][] data) {
-        ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, accountId);
-        participant.setData(data);
     }
 
     static void init() {}
@@ -205,6 +204,9 @@ public final class ShufflingParticipant {
     }
 
     void setNextAccountId(long nextAccountId) {
+        if (this.nextAccountId != 0) {
+            throw new IllegalStateException("nextAccountId already set to " + Long.toUnsignedString(this.nextAccountId));
+        }
         this.nextAccountId = nextAccountId;
         shufflingParticipantTable.insert(this);
     }
@@ -223,11 +225,18 @@ public final class ShufflingParticipant {
     }
 
     void setData(byte[][] data) {
+        if (this.data.length > 0) {
+            throw new IllegalStateException("data already set");
+        }
         this.data = data;
+        this.state = State.PROCESSED;
         shufflingParticipantTable.insert(this);
     }
 
     void setKeySeeds(byte[][] data) {
+        if (this.keySeeds.length > 0) {
+            throw new IllegalStateException("keySeeds already set");
+        }
         this.keySeeds = data;
         shufflingParticipantTable.insert(this);
     }
@@ -239,14 +248,6 @@ public final class ShufflingParticipant {
     void verify() {
         state = State.VERIFIED;
         shufflingParticipantTable.insert(this);
-    }
-
-    public boolean isProcessingComplete() {
-        return state == State.PROCESSED;
-    }
-
-    void setProcessingComplete() {
-        state = State.PROCESSED;
     }
 
 }
