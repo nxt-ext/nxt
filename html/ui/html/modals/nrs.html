@@ -360,10 +360,13 @@
                             <label for="calculate_hash_data" data-i18n="data">DATA</label>
                             <textarea class="form-control" name="secret" id="calculate_hash_data" placeholder="DATA TO HASH" data-i18n="[placeholder]data_to_hash" tabindex="1" rows="3"></textarea>
                         </div>
+                        <div class="input-group">
+                            <input type="checkbox" name="secretIsText" id="secret_is_text" value="true" data-default="checked"/>
+                            <label for="secret_is_text" style="font-weight:normal;" tabindex="3" data-i18n="secret_is_text">SECRET IS TEXT</label>
+                        </div>
                         <div class="form-group hash_algorithm_model_group" data-modal-ui-element="hash_algorithm_model_modal_ui_element"></div>
                         <div class="callout callout-info" id="hash_calculation_output" style="display:none;"></div>
                         <input type="hidden" name="request_type" value="hash" />
-                        <input type="hidden" name="secretIsText" value="true" />
                     </form>
                  </div>
             </div>
