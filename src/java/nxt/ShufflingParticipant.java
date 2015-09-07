@@ -107,7 +107,7 @@ public final class ShufflingParticipant {
     }
 
     public static DbIterator<ShufflingParticipant> getParticipants(long shufflingId) {
-        return shufflingParticipantTable.getManyBy(new DbClause.LongClause("shuffling_id", shufflingId), 0, -1, " ORDER BY db_id ");
+        return shufflingParticipantTable.getManyBy(new DbClause.LongClause("shuffling_id", shufflingId), 0, -1, " ORDER BY index ");
     }
 
     public static ShufflingParticipant getParticipant(long shufflingId, long accountId) {
@@ -118,10 +118,11 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.FixedClause("next_account_id IS NULL")));
     }
 
-    static void addParticipant(long shufflingId, long accountId) {
-        ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId);
+    static ShufflingParticipant addParticipant(long shufflingId, long accountId, int index) {
+        ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId, index);
         shufflingParticipantTable.insert(participant);
         listeners.notify(participant, Event.PARTICIPANT_ADDED);
+        return participant;
     }
 
     static void init() {}
@@ -129,16 +130,18 @@ public final class ShufflingParticipant {
     private final long shufflingId;
     private final long accountId; // sender account
     private final DbKey dbKey;
+    private final int index;
 
     private long nextAccountId; // pointer to the next shuffling participant updated during registration
     private State state; // tracks the state of the participant in the process
     private byte[][] data; // encrypted data saved as intermediate result in the shuffling process
     private byte[][] keySeeds; // to be revealed only if shuffle is being cancelled
 
-    public ShufflingParticipant(long shufflingId, long accountId) {
+    private ShufflingParticipant(long shufflingId, long accountId, int index) {
         this.shufflingId = shufflingId;
         this.accountId = accountId;
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
+        this.index = index;
         this.state = State.REGISTERED;
         this.data = Convert.EMPTY_BYTES;
         this.keySeeds = Convert.EMPTY_BYTES;
@@ -149,6 +152,7 @@ public final class ShufflingParticipant {
         this.accountId = rs.getLong("account_id");
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
         this.nextAccountId = rs.getLong("next_account_id");
+        this.index = rs.getInt("participant_index");
         this.state = State.get(rs.getByte("state"));
         Array array = rs.getArray("data");
         if (array != null) {
@@ -168,13 +172,14 @@ public final class ShufflingParticipant {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
-                + "account_id, next_account_id, state, data, key_seeds, height, latest) "
+                + "account_id, next_account_id, participant_index, state, data, key_seeds, height, latest) "
                 + "KEY (shuffling_id, account_id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.shufflingId);
             pstmt.setLong(++i, this.accountId);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.nextAccountId);
+            pstmt.setInt(++i, index);
             pstmt.setByte(++i, this.getState().getCode());
             if (data.length > 0) {
                 pstmt.setObject(++i, data);
@@ -209,6 +214,10 @@ public final class ShufflingParticipant {
         }
         this.nextAccountId = nextAccountId;
         shufflingParticipantTable.insert(this);
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public State getState() {

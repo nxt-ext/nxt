@@ -160,23 +160,22 @@ public final class Shuffling {
     static void addShuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
         Shuffling shuffling = new Shuffling(transaction, attachment);
         shufflingTable.insert(shuffling);
-        ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId());
+        ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId(), 0);
         listeners.notify(shuffling, Event.SHUFFLING_CREATED);
     }
 
     static void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
         long shufflingId = attachment.getShufflingId();
         long participantId = transaction.getSenderId();
-        ShufflingParticipant.addParticipant(shufflingId, participantId);
-
         // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
         // to the new participant
         Shuffling shuffling = Shuffling.getShuffling(shufflingId);
-        ShufflingParticipant participant = ShufflingParticipant.getParticipant(shufflingId, shuffling.getAssigneeAccountId());
-        participant.setNextAccountId(participantId);
+        ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(shufflingId, shuffling.getAssigneeAccountId());
+        lastParticipant.setNextAccountId(participantId);
+        ShufflingParticipant participant = ShufflingParticipant.addParticipant(shufflingId, participantId, lastParticipant.getIndex() + 1);
 
         // Check if participant registration is complete and if so update the shuffling
-        if (ShufflingParticipant.getCount(shufflingId) == shuffling.participantCount) {
+        if (participant.getIndex() == shuffling.participantCount - 1) {
             shuffling.assigneeAccountId = shuffling.issuerId;
             shuffling.setStage(Stage.PROCESSING); // update the db
         } else {
@@ -298,16 +297,8 @@ public final class Shuffling {
         List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
         // Read the participant list for the shuffling
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
-            ShufflingParticipant lastParticipant = null;
             for (ShufflingParticipant participant : participants) {
-                if (lastParticipant == null && participant.getAccountId() != issuerId) {
-                    throw new RuntimeException("Issuer is not the first participant");
-                } else if (lastParticipant != null && lastParticipant.getNextAccountId() != participant.getAccountId()) {
-                    throw new RuntimeException(String.format("Shuffling participants out of order, %s, %s",
-                            lastParticipant.getNextAccountId(), participant.getAccountId()));
-                }
                 shufflingParticipants.add(participant);
-                lastParticipant = participant;
                 if (participant.getNextAccountId() == accountId) {
                     data = participant.getData();
                 }
@@ -358,23 +349,23 @@ public final class Shuffling {
     public byte[][] revealKeySeeds(final String secretPhrase) {
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
-            ShufflingParticipant participant = null;
+            byte[][] data = null;
             while (participants.hasNext()) {
-                participant = participants.next();
+                ShufflingParticipant participant = participants.next();
                 if (participant.getAccountId() == accountId) {
+                    data = participant.getData();
                     break;
                 }
             }
             if (!participants.hasNext()) {
                 return Convert.EMPTY_BYTES;
             }
-            if (participant == null) {
+            if (data == null) {
                 throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " is not a participant");
             }
-            byte[][] data = participant.getData();
             final byte[] nonce = getNonce();
             final List<byte[]> keySeeds = new ArrayList<>();
-            byte[] nextParticipantPublicKey = Account.getPublicKey(participant.getNextAccountId());
+            byte[] nextParticipantPublicKey = Account.getPublicKey(participants.next().getAccountId());
             byte[] keySeed = Crypto.getKeySeed(secretPhrase, nextParticipantPublicKey, nonce);
             keySeeds.add(keySeed);
             byte[] publicKey = Crypto.getPublicKey(keySeed);

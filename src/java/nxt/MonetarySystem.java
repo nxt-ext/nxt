@@ -1090,7 +1090,16 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s processing already complete",
                         Convert.rsAccount(transaction.getSenderId())));
             }
-            //TODO: also validate data?
+            byte[][] data = attachment.getData();
+            if (data.length != participant.getIndex() + 1) {
+                throw new NxtException.NotValidException(String.format("Invalid number of encrypted data %d for participant number %d",
+                        data.length, participant.getIndex()));
+            }
+            for (byte[] bytes : data) {
+                if (bytes.length < 32) {
+                    throw new NxtException.NotValidException("Invalid encrypted data length " + bytes.length);
+                }
+            }
         }
 
         @Override
