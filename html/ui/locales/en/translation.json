@@ -1398,8 +1398,6 @@
   "transaction_json_operations": "Transaction JSON Operations",
   "sign_transaction": "Sign Transaction",
   "transaction_json": "Transaction JSON",
-  "signed_transaction_json": "Signed Transaction JSON",
-  "unsigned_transaction_json": "Unsigned Transaction JSON",
   "validate": "Validate",
   "signed_prunable_transaction_json": "Signed Prunable Transaction JSON",
   "transaction_signature_qr_code": "Transaction Signature QR code",
