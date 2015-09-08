@@ -32,7 +32,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ALIAS_NAME = incorrect("alias", "(must contain only digits and latin letters)");
     public static final JSONStreamAware INCORRECT_ALIAS_NOTFORSALE = incorrect("alias", "(alias is not for sale at the moment)");
     public static final JSONStreamAware INCORRECT_URI_LENGTH = incorrect("uri", "(length must be not longer than " + Constants.MAX_ALIAS_URI_LENGTH + " characters)");
-    public static final JSONStreamAware MISSING_SECRET_PHRASE = missingSecretPhrase();
     public static final JSONStreamAware INCORRECT_PUBLIC_KEY = incorrect("publicKey");
     public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
@@ -339,6 +338,14 @@ public final class JSONResponses {
         REQUIRED_LAST_BLOCK_NOT_FOUND = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware MISSING_SECRET_PHRASE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 3);
+        response.put("errorDescription", "secretPhrase not specified or not submitted to the remote node");
+        MISSING_SECRET_PHRASE = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -347,13 +354,6 @@ public final class JSONResponses {
         } else {
             response.put("errorDescription", "At least one of " + Arrays.toString(paramNames) + " must be specified");
         }
-        return JSON.prepare(response);
-    }
-
-    static JSONStreamAware missingSecretPhrase() {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "secretPhrase not specified or not submitted to a remote node");
         return JSON.prepare(response);
     }
 
