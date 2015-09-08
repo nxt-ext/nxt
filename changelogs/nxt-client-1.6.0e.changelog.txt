@@ -87,8 +87,28 @@ completely disallowed and the deleteAssetShares API will then create a new
 AssetDelete transaction type, to achieve the same quantity reduction effect.
 
 
+API additions:
+
 A new getTaggedDataExtendTransactions API has been added, to retrieve all
 tagged data extend transactions for a given tagged data upload transaction.
+
+The getConstants API now also returns a list of all supported request types
+and their properties.
+
+The approveTransaction API accepts revealedSecretIsText boolean parameter,
+default false, as a way of specifying whether revealedSecret is text or
+binary. The old revealedSecretText parameter to submit the text value
+directly is still supported.
+
+Added encodeQRCode and decodeQRCode APIs, to handle the encoding and decoding
+of QR image on the server side, instead of in javascript, using the ZXing java
+QR processing library, version 3.2.1. This improves the generation and parsing
+of QR codes used in offline transaction processing, images that failed to
+decode correctly using javascript can now successfully be processed.
+
+Allow attaching encrypted messages to accounts that don't yet have a public
+key announced, as long as the public key is included in the same transaction
+as a public key announcement attachment.
 
 
 Several performance optimizations have been included in this release:
