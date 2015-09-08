@@ -17,7 +17,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function (NRS, $, undefined) {
+var NRS = (function (NRS, $) {
     NRS.constants = {
         'DB_VERSION': 2,
 
@@ -131,7 +131,21 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.isRequireBlockchain = function(requestType) {
+        if (!NRS.constants.REQUEST_TYPES[requestType]) {
+            // For requests invoked before the getConstants request returns,
+            // we implicitly assume that they do not require the blockchain
+            return false;
+        }
         return NRS.constants.REQUEST_TYPES[requestType].requireBlockchain;
+    };
+
+    NRS.isRequirePost = function(requestType) {
+        if (!NRS.constants.REQUEST_TYPES[requestType]) {
+            // For requests invoked before the getConstants request returns
+            // we implicitly assume that they can use GET
+            return false;
+        }
+        return NRS.constants.REQUEST_TYPES[requestType].requirePost;
     };
 
     return NRS;

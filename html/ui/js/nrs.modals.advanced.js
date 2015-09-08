@@ -33,18 +33,21 @@ var NRS = (function(NRS, $, undefined) {
         }
 
         if (transaction.transactionJSON) {
+            var namePrefix;
             if (transaction.transactionBytes) {
-                $("#raw_transaction_modal_unsigned_transaction_json_label").html($.t("signed_transaction_json"));
+                $("#raw_transaction_modal_transaction_json_label").html($.t("signed_transaction_json"));
+                namePrefix = "signed";
             } else {
-                $("#raw_transaction_modal_unsigned_transaction_json_label").html($.t("unsigned_transaction_json"));
+                $("#raw_transaction_modal_transaction_json_label").html($.t("unsigned_transaction_json"));
+                namePrefix = "unsigned";
             }
-            var unsignedTransactionJson = $("#raw_transaction_modal_unsigned_transaction_json");
+            var unsignedTransactionJson = $("#raw_transaction_modal_transaction_json");
             var jsonStr = JSON.stringify(transaction.transactionJSON);
             unsignedTransactionJson.val(jsonStr);
-            var downloadLink = $("#raw_transaction_modal_unsigned_transaction_json_download");
+            var downloadLink = $("#raw_transaction_modal_transaction_json_download");
             if (window.URL) {
                 var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
-                downloadLink.prop('download', 'unsigned.transaction.' + transaction.transactionJSON.timestamp + '.json');
+                downloadLink.prop('download', namePrefix + '.transaction.' + transaction.transactionJSON.timestamp + '.json');
                 downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
             } else {
                 downloadLink.hide();
