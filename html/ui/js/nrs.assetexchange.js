@@ -55,15 +55,14 @@ var NRS = (function (NRS, $, undefined) {
                     //add to bookmarked assets
                     if (newAssetIds.length) {
                         var qs = [];
-
                         for (var i = 0; i < newAssetIds.length; i++) {
                             qs.push("assets=" + encodeURIComponent(newAssetIds[i]));
                         }
-
                         qs = qs.join("&");
                         //first get the assets info
                         NRS.sendRequest("getAssets+", {
-                            //special request.. ugly hack.. also does POST due to URL max length
+                            // This hack is used to manually compose the query string. The querystring param is later
+                            // transformed into the actual request data before sending to the server.
                             "querystring": qs
                         }, function (response) {
                             if (response.assets && response.assets.length) {

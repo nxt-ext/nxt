@@ -227,7 +227,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = ("secretPhrase" in data || data.doNotSign || "adminPassword" in data || requestType == "getForging" ? "POST" : "GET");
+        var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
         var url = NRS.server + "/nxt?requestType=" + requestType;
 
         if (type == "GET") {
@@ -238,9 +238,6 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        var secretPhrase = "";
-
-        //unknown account..
         if (type == "POST" && NRS.isRequireBlockchain(requestType) && NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
             callback({
                 "errorCode": 2,
@@ -259,6 +256,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
+        var secretPhrase = "";
         if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" &&
             requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
             if (NRS.rememberPassword) {
@@ -287,16 +285,11 @@ var NRS = (function (NRS, $, undefined) {
             ajaxCall = $.ajax;
         }
 
-        //workaround for 1 specific case.. ugly
+        // Used for passing row query string which is too long for a GET request
         if (data.querystring) {
             data = data.querystring;
             type = "POST";
         }
-
-        if (requestType == "broadcastTransaction" || requestType == "addPeer" || requestType == "blacklistPeer") {
-            type = "POST";
-        }
-
         var contentType;
         var processData;
         var formData = null;
@@ -1449,10 +1442,8 @@ var NRS = (function (NRS, $, undefined) {
     NRS.sendRequestQRCode = function(target, qrCodeData, width, height) {
         width = width || 0;
         height = height || 0;
-        NRS.sendRequest(
-            "encodeQRCode",
+        NRS.sendRequest("encodeQRCode",
             {
-                "doNotSign": true,
                 "qrCodeData": qrCodeData,
                 "width": width,
                 "height": height
@@ -1464,7 +1455,7 @@ var NRS = (function (NRS, $, undefined) {
                     );
                 }
             },
-            false
+            true
         );
     };
 
