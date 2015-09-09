@@ -41,7 +41,8 @@ public final class ShufflingParticipant {
     public enum State {
         REGISTERED((byte)0),
         PROCESSED((byte)1),
-        VERIFIED((byte)2);
+        VERIFIED((byte)2),
+        CANCELLED((byte)3);
 
         private final byte code;
 
@@ -224,11 +225,6 @@ public final class ShufflingParticipant {
         return state;
     }
 
-    void setState(State state) {
-        this.state = state;
-        shufflingParticipantTable.insert(this);
-    }
-
     public byte[][] getData() {
         return data;
     }
@@ -246,11 +242,12 @@ public final class ShufflingParticipant {
         return keySeeds;
     }
 
-    void setKeySeeds(byte[][] data) {
+    void setKeySeeds(byte[][] keySeeds) {
         if (this.keySeeds.length > 0) {
             throw new IllegalStateException("keySeeds already set");
         }
-        this.keySeeds = data;
+        this.keySeeds = keySeeds;
+        this.state = State.CANCELLED;
         shufflingParticipantTable.insert(this);
     }
 

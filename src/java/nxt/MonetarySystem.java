@@ -1362,9 +1362,8 @@ public abstract class MonetarySystem extends TransactionType {
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
-            //TODO: cancelling participant should pay a penalty, it someone else is at fault should use a blame transaction instead
             ShufflingParticipant.getParticipant(shuffling.getId(), senderAccount.getId()).setKeySeeds(attachment.getData());
-            shuffling.cancel(senderAccount.getId(), getLedgerEvent(), transaction.getId());
+            shuffling.setCancellingAccountId(senderAccount.getId());
         }
 
         @Override

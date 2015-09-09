@@ -100,7 +100,7 @@ public final class Shuffling {
                     for (Shuffling shuffling : shufflings) {
                         // Cancel the shuffling in case the blockchain reached its cancellation height
                         if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getStage().isCancellationAllowed()) {
-                            shuffling.cancel(AccountLedger.LedgerEvent.CURRENCY_SHUFFLING, block.getId());
+                            shuffling.cancel(block);
                         }
                     }
                 } catch (SQLException e) {
@@ -295,6 +295,13 @@ public final class Shuffling {
         return cancellingAccountId;
     }
 
+    void setCancellingAccountId(long cancellingAccountId) {
+        if (this.cancellingAccountId == 0) {
+            this.cancellingAccountId = cancellingAccountId;
+        }
+        shufflingTable.insert(this);
+    }
+
     private byte[] getNonce() {
         byte[] nonce = new byte[8];
         for (int i = 0; i < 8; i++) {
@@ -462,7 +469,14 @@ public final class Shuffling {
                 }
                 if (i < participantCount - 1) {
                     encryptedData = AnonymouslyEncryptedData.readEncryptedData(participantBytes);
-                } // else it is not encrypted data but plaintext recipient public key, at the last participant
+                } else {
+                    // else it is not encrypted data but plaintext recipient public key, at the last participant
+                    // check for collisions and assume they are intentional (?)
+                    byte[] currentPublicKey = Account.getPublicKey(Account.getId(participantBytes));
+                    if (currentPublicKey != null && !Arrays.equals(currentPublicKey, participantBytes)) {
+                        return participant;
+                    }
+                }
             }
         }
         return getParticipant(cancellingAccountId);
@@ -500,8 +514,10 @@ public final class Shuffling {
         for (byte[] recipientPublicKey : recipientPublicKeys) {
             byte[] publicKey = Account.getPublicKey(Account.getId(recipientPublicKey));
             if (publicKey != null && !Arrays.equals(publicKey, recipientPublicKey)) {
-                //TODO: penalty?
-                cancel(event, eventId);
+                // distribution not possible, do a cancellation on behalf of last participant instead
+                ShufflingParticipant lastParticipant = ShufflingParticipant.getLastParticipant(this.id);
+                lastParticipant.setKeySeeds(Convert.EMPTY_BYTES);
+                setCancellingAccountId(lastParticipant.getAccountId());
                 return;
             }
         }
@@ -531,23 +547,31 @@ public final class Shuffling {
         listeners.notify(this, Event.SHUFFLING_DONE);
     }
 
-    void cancel(long cancellingAccountId, AccountLedger.LedgerEvent event, long eventId) {
-        if (this.cancellingAccountId == 0) {
-            this.cancellingAccountId = cancellingAccountId;
-        }
-        cancel(event, eventId);
-    }
-
-    //TODO: find out which of the participants are at fault, after all reveal their keys
-    void cancel(AccountLedger.LedgerEvent event, long eventId) {
+    void cancel(Block block) {
+        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.CURRENCY_SHUFFLING;
+        long eventId = block.getId();
+        ShufflingParticipant blamed = blame();
+        long blamedAccountId = blamed.getAccountId();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
                 if (isCurrency()) {
                     participantAccount.addToUnconfirmedCurrencyUnits(event, eventId, currencyId, amount);
-                    participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
+                    if (participantAccount.getId() != blamedAccountId) {
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
+                    } else {
+                        // as a penalty the deposit goes to the generator of the finish block
+                        participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
+                        Account.getAccount(block.getGeneratorId()).addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
+                    }
                 } else {
-                    participantAccount.addToUnconfirmedBalanceNQT(event, eventId, amount);
+                    if (participantAccount.getId() != blamedAccountId) {
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, amount);
+                    } else {
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, amount - Constants.SHUFFLE_DEPOSIT_NQT);
+                        participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
+                        Account.getAccount(block.getGeneratorId()).addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
+                    }
                 }
             }
         }
