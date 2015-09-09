@@ -2738,7 +2738,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final int getMySize() {
+        int getMySize() {
             int size = 8 + 1;
             for (byte[] bytes : data) {
                 size += 4;
@@ -2748,7 +2748,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final void putMyBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(shufflingId);
             buffer.put((byte)data.length);
             for (byte[] bytes : data) {
@@ -2758,7 +2758,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final void putMyJSON(JSONObject attachment) {
+        void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Long.toUnsignedString(shufflingId));
             JSONArray jsonArray = new JSONArray();
             attachment.put("data", jsonArray);
@@ -2830,21 +2830,49 @@ public interface Attachment extends Appendix {
 
     final class MonetarySystemShufflingCancellation extends MonetarySystemShufflingProcessing {
 
+        private final long cancellingAccountId;
+
         MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
+            this.cancellingAccountId = buffer.getLong();
         }
 
         MonetarySystemShufflingCancellation(JSONObject attachmentData) {
             super(attachmentData);
+            this.cancellingAccountId = Convert.parseUnsignedLong((String) attachmentData.get("cancellingAccount"));
         }
 
-        public MonetarySystemShufflingCancellation(long shufflingId, byte[][] data) {
+        public MonetarySystemShufflingCancellation(long shufflingId, byte[][] data, long cancellingAccountId) {
             super(shufflingId, data);
+            this.cancellingAccountId = cancellingAccountId;
         }
 
         @Override
         public TransactionType getTransactionType() {
             return MonetarySystem.SHUFFLING_CANCELLATION;
+        }
+
+        @Override
+        final int getMySize() {
+            return super.getMySize() + 8;
+        }
+
+        @Override
+        final void putMyBytes(ByteBuffer buffer) {
+            super.putMyBytes(buffer);
+            buffer.putLong(cancellingAccountId);
+        }
+
+        @Override
+        final void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            if (cancellingAccountId != 0) {
+                attachment.put("cancellingAccount", Long.toUnsignedString(cancellingAccountId));
+            }
+        }
+
+        public long getCancellingAccountId() {
+            return cancellingAccountId;
         }
 
     }

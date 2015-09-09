@@ -29,15 +29,16 @@ public final class ShufflingCancel extends CreateTransaction {
     static final ShufflingCancel instance = new ShufflingCancel();
 
     private ShufflingCancel() {
-        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling");
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling", "cancellingAccount");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
+        long cancellingAccountId = ParameterParser.getAccountId(req, "cancellingAccount", false);
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         byte[][] keySeeds = shuffling.revealKeySeeds(secretPhrase);
-        Attachment attachment = new Attachment.MonetarySystemShufflingCancellation(shuffling.getId(), keySeeds);
+        Attachment attachment = new Attachment.MonetarySystemShufflingCancellation(shuffling.getId(), keySeeds, cancellingAccountId);
 
         Account account = ParameterParser.getSenderAccount(req);
         return createTransaction(req, account, attachment);

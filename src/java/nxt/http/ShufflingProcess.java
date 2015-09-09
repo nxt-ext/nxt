@@ -20,6 +20,7 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.NxtException;
 import nxt.Shuffling;
+import nxt.ShufflingParticipant;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -58,7 +59,8 @@ public final class ShufflingProcess extends CreateTransaction {
                     Convert.rsAccount(senderId), Convert.rsAccount(shuffling.getAssigneeAccountId())));
             return JSON.prepare(response);
         }
-        if (shuffling.getParticipant(senderId) == null) {
+        ShufflingParticipant participant = shuffling.getParticipant(senderId);
+        if (participant == null) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 13);
             response.put("errorDescription", String.format("Account %s is not a participant of shuffling %d",
@@ -83,15 +85,9 @@ public final class ShufflingProcess extends CreateTransaction {
         }
 
         byte[][] data = shuffling.process(senderId, secretPhrase, recipientPublicKey);
-        if (data == null) {
-            //TODO: this will happen if a rogue participant submitted junk data, need to find out who
-            JSONObject response = new JSONObject();
-            response.put("errorCode", 15);
-            response.put("errorDescription", String.format("Cannot decrypt token for account %s of shuffling %s",
-                    Convert.rsAccount(senderAccount.getId()), Long.toUnsignedString(shuffling.getId())));
-            return JSON.prepare(response);
+        if (data.length < participant.getIndex() + 1) {
+            //TODO: this will happen if a rogue participant submitted junk data, need to submit a cancellation after this transaction too
         }
-
         Attachment attachment = new Attachment.MonetarySystemShufflingProcessing(shuffling.getId(), data);
         return createTransaction(req, senderAccount, attachment);
     }

@@ -242,6 +242,10 @@ public final class ShufflingParticipant {
         shufflingParticipantTable.insert(this);
     }
 
+    public byte[][] getKeySeeds() {
+        return keySeeds;
+    }
+
     void setKeySeeds(byte[][] data) {
         if (this.keySeeds.length > 0) {
             throw new IllegalStateException("keySeeds already set");

@@ -21,6 +21,7 @@ import nxt.util.Convert;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 public final class AnonymouslyEncryptedData {
 
@@ -68,8 +69,11 @@ public final class AnonymouslyEncryptedData {
         return Crypto.aesDecrypt(data, sharedKey);
     }
 
-    public byte[] decrypt(byte[] keySeed) {
-        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(keySeed), publicKey);
+    public byte[] decrypt(byte[] keySeed, byte[] theirPublicKey) {
+        if (!Arrays.equals(Crypto.getPublicKey(keySeed), publicKey)) {
+            throw new RuntimeException("Data was not encrypted using this keySeed");
+        }
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(keySeed), theirPublicKey);
         return Crypto.aesDecrypt(data, sharedKey);
     }
 

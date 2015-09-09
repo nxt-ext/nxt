@@ -1091,7 +1091,7 @@ public abstract class MonetarySystem extends TransactionType {
                         Convert.rsAccount(transaction.getSenderId())));
             }
             byte[][] data = attachment.getData();
-            if (data.length != participant.getIndex() + 1) {
+            if (data.length > participant.getIndex() + 1) {
                 throw new NxtException.NotValidException(String.format("Invalid number of encrypted data %d for participant number %d",
                         data.length, participant.getIndex()));
             }
@@ -1336,6 +1336,20 @@ public abstract class MonetarySystem extends TransactionType {
             if (!shuffling.isCancellationAllowed(transaction.getSenderId())) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling in state %s cannot be cancelled by account %s",
                        shuffling.getStage(), Convert.rsAccount(transaction.getSenderId())));
+            }
+            long cancellingAccountId = attachment.getCancellingAccountId();
+            if (cancellingAccountId != 0 && cancellingAccountId != shuffling.getCancellingAccountId()) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Shuffling %s is not currently being cancelled by account %s",
+                        Long.toUnsignedString(shuffling.getId()), Long.toUnsignedString(cancellingAccountId)));
+            }
+            ShufflingParticipant participant = shuffling.getParticipant(transaction.getSenderId());
+            if (participant == null) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
+                        Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+            }
+            byte[][] keySeeds = attachment.getData();
+            if (keySeeds.length != 0 && keySeeds.length != shuffling.getParticipantCount() - participant.getIndex() - 1) {
+                throw new NxtException.NotValidException("Invalid number of revealed keySeeds: " + keySeeds.length);
             }
         }
 
