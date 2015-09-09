@@ -470,6 +470,10 @@ public final class Shuffling {
                 if (i < participantCount - 1) {
                     encryptedData = AnonymouslyEncryptedData.readEncryptedData(participantBytes);
                 } else {
+                    if (participantBytes.length != 32) {
+                        // cannot be a valid public key
+                        return participant;
+                    }
                     // else it is not encrypted data but plaintext recipient public key, at the last participant
                     // check for collisions and assume they are intentional (?)
                     byte[] currentPublicKey = Account.getPublicKey(Account.getId(participantBytes));
@@ -499,6 +503,14 @@ public final class Shuffling {
         senderParticipant.setData(data);
         long nextParticipantId = senderParticipant.getNextAccountId();
         if (nextParticipantId == 0) {
+            for (byte[] recipientPublicKey : data) {
+                if (recipientPublicKey.length == 32) {
+                    long recipientId = Account.getId(recipientPublicKey);
+                    if (Account.setOrVerify(recipientId, recipientPublicKey)) {
+                        Account.addOrGetAccount(recipientId).apply(recipientPublicKey);
+                    }
+                }
+            }
             nextParticipantId = this.issuerId;
             this.stage = Stage.VERIFICATION;
         }
