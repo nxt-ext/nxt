@@ -163,8 +163,6 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountPhasedTransactions", GetAccountPhasedTransactions.instance);
         map.put("getAccountPhasedTransactionCount", GetAccountPhasedTransactionCount.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
-        map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
-        map.put("getAccountTransactions", GetAccountTransactions.instance);
         map.put("getAccountLessors", GetAccountLessors.instance);
         map.put("getAccountAssets", GetAccountAssets.instance);
         map.put("getAccountCurrencies", GetAccountCurrencies.instance);
