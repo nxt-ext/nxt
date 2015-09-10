@@ -1429,5 +1429,6 @@
   "data_required_field": "Data is a required field.",
   "secret_is_text": "textual data representation",
   "delete_shares": "Delete Shares",
-  "action": "Action"
+  "action": "Action",
+  "available": "Available"
 }
