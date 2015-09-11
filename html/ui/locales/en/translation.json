@@ -1427,5 +1427,8 @@
   "ledger_id": "Ledger Id",
   "server_connection_error": "Server Connection Error",
   "data_required_field": "Data is a required field.",
-  "secret_is_text": "textual data representation"
+  "secret_is_text": "textual data representation",
+  "delete_shares": "Delete Shares",
+  "action": "Action",
+  "available": "Available"
 }
