@@ -55,15 +55,14 @@ var NRS = (function (NRS, $, undefined) {
                     //add to bookmarked assets
                     if (newAssetIds.length) {
                         var qs = [];
-
                         for (var i = 0; i < newAssetIds.length; i++) {
                             qs.push("assets=" + encodeURIComponent(newAssetIds[i]));
                         }
-
                         qs = qs.join("&");
                         //first get the assets info
                         NRS.sendRequest("getAssets+", {
-                            //special request.. ugly hack.. also does POST due to URL max length
+                            // This hack is used to manually compose the query string. The querystring param is later
+                            // transformed into the actual request data before sending to the server.
                             "querystring": qs
                         }, function (response) {
                             if (response.assets && response.assets.length) {
@@ -1557,7 +1556,19 @@ var NRS = (function (NRS, $, undefined) {
             if (highestBidOrder != -1) {
                 var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(asset.balanceQNT, highestBidOrder));
             }
-            rows += "<tr data-asset='" + String(asset.asset).escapeHTML() + "'><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td><td>" + (lowestAskOrder != -1 ? NRS.formatOrderPricePerWholeQNT(lowestAskOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(highestBidOrder, asset.decimals) : "/") + "</td><td>" + (highestBidOrder != -1 ? NRS.formatAmount(totalNQT) : "/") + "</td><td><a href='#' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "'>" + $.t("transfer") + "</a></td></tr>";
+            rows += "<tr data-asset='" + String(asset.asset).escapeHTML() + "'>" +
+                "<td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td>" +
+                "<td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td>" +
+                "<td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td>" +
+                "<td>" + percentageAsset + "%</td>" +
+                "<td>" + (lowestAskOrder != -1 ? NRS.formatOrderPricePerWholeQNT(lowestAskOrder, asset.decimals) : "/") + "</td>" +
+                "<td>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(highestBidOrder, asset.decimals) : "/") + "</td>" +
+                "<td>" + (highestBidOrder != -1 ? NRS.formatAmount(totalNQT) : "/") + "</td>" +
+                "<td>" +
+                    "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "' data-action='transfer_asset'>" + $.t("transfer") + "</a>" +
+                    "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "' data-action='delete_shares'>" + $.t("delete_shares") + "</a>" +
+                "</td>" +
+            "</tr>";
         }
         NRS.dataLoaded(rows);
     };
@@ -1608,11 +1619,19 @@ var NRS = (function (NRS, $, undefined) {
         var assetId = $invoker.data("asset");
         var assetName = $invoker.data("name");
         var decimals = $invoker.data("decimals");
+        var action = $invoker.data("action");
 
         $("#transfer_asset_asset").val(assetId);
         $("#transfer_asset_decimals").val(decimals);
+        $("#transfer_asset_action").val(action);
         $("#transfer_asset_name, #transfer_asset_quantity_name").html(String(assetName).escapeHTML());
-        $("#transer_asset_available").html("");
+        $("#transfer_asset_title").html($.t(action));
+        $("#transfer_asset_button").html($.t(action));
+        if (action == "transfer_asset") {
+            $("#transfer_asset_recipient_container").show();
+        } else if (action == "delete_shares") {
+            $("#transfer_asset_recipient_container").hide();
+        }
 
         var confirmedBalance = 0;
         var unconfirmedBalance = 0;
@@ -1638,11 +1657,11 @@ var NRS = (function (NRS, $, undefined) {
         var availableAssetsMessage = "";
 
         if (confirmedBalance == unconfirmedBalance) {
-            availableAssetsMessage = " - " + $.t("available_for_transfer", {
+            availableAssetsMessage = " - " + $.t("available", {
                 "qty": NRS.formatQuantity(confirmedBalance, decimals)
             });
         } else {
-            availableAssetsMessage = " - " + $.t("available_for_transfer", {
+            availableAssetsMessage = " - " + $.t("available", {
                 "qty": NRS.formatQuantity(unconfirmedBalance, decimals)
             }) + " (" + NRS.formatQuantity(confirmedBalance, decimals) + " " + $.t("total_lowercase") + ")";
         }
@@ -1694,6 +1713,10 @@ var NRS = (function (NRS, $, undefined) {
             delete data.permanent_message;
         }
 
+        if ($("#transfer_asset_action").val() == "delete_shares") {
+            data.recipient = NRS.constants.GENESIS_RS;
+            delete data.recipientPublicKey;
+        }
         return {
             "data": data
         };
@@ -1893,10 +1916,6 @@ var NRS = (function (NRS, $, undefined) {
             $.growl($.t("success_cancel_buy_order"), {
                 "type": "success"
             });
-        }
-
-        if (response.alreadyProcessed) {
-            return;
         }
     };
 

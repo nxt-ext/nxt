@@ -74,8 +74,8 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final boolean isPhasable() {
-            return getTransactionType().isPhasable();
+        public final boolean isPhasable() {
+            return !(this instanceof Prunable) && getTransactionType().isPhasable();
         }
 
     }
@@ -1001,6 +1001,60 @@ public interface Attachment extends Appendix {
 
         public String getComment() {
             return comment;
+        }
+
+    }
+
+    final class ColoredCoinsAssetDelete extends AbstractAttachment {
+
+        private final long assetId;
+        private final long quantityQNT;
+
+        ColoredCoinsAssetDelete(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.assetId = buffer.getLong();
+            this.quantityQNT = buffer.getLong();
+        }
+
+        ColoredCoinsAssetDelete(JSONObject attachmentData) {
+            super(attachmentData);
+            this.assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
+            this.quantityQNT = Convert.parseLong(attachmentData.get("quantityQNT"));
+        }
+
+        public ColoredCoinsAssetDelete(long assetId, long quantityQNT) {
+            this.assetId = assetId;
+            this.quantityQNT = quantityQNT;
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(assetId);
+            buffer.putLong(quantityQNT);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("asset", Long.toUnsignedString(assetId));
+            attachment.put("quantityQNT", quantityQNT);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.ASSET_DELETE;
+        }
+
+        public long getAssetId() {
+            return assetId;
+        }
+
+        public long getQuantityQNT() {
+            return quantityQNT;
         }
 
     }
@@ -2675,6 +2729,11 @@ public interface Attachment extends Appendix {
             }
         }
 
+        @Override
+        public boolean hasPrunableData() {
+            return (taggedData != null || data != null);
+        }
+
         abstract long getTaggedDataId(Transaction transaction);
 
     }
@@ -2747,6 +2806,11 @@ public interface Attachment extends Appendix {
         @Override
         long getTaggedDataId(Transaction transaction) {
             return transaction.getId();
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            TaggedData.restore(transaction, this, blockTimestamp, height);
         }
 
     }
@@ -2827,6 +2891,10 @@ public interface Attachment extends Appendix {
 
         boolean jsonIsPruned() {
             return jsonIsPruned;
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
         }
 
     }

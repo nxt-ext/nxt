@@ -37,6 +37,14 @@ final class TransactionDb {
     }
 
     static TransactionImpl findTransaction(long transactionId, int height) {
+        // Check the block cache
+        synchronized (BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return transaction.getHeight() <= height ? transaction : null;
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
@@ -58,9 +66,19 @@ final class TransactionDb {
     }
 
     static TransactionImpl findTransactionByFullHash(byte[] fullHash, int height) {
+        long transactionId = Convert.fullHashToId(fullHash);
+        // Check the cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return (transaction.getHeight() <= height &&
+                        Arrays.equals(transaction.fullHash(), fullHash) ? transaction : null);
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE id = ?")) {
-            pstmt.setLong(1, Convert.fullHashToId(fullHash));
+            pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height) {
                     return loadTransaction(con, rs);
@@ -80,6 +98,14 @@ final class TransactionDb {
     }
 
     static boolean hasTransaction(long transactionId, int height) {
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return (transaction.getHeight() <= height);
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT height FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
@@ -96,9 +122,19 @@ final class TransactionDb {
     }
 
     static boolean hasTransactionByFullHash(byte[] fullHash, int height) {
+        long transactionId = Convert.fullHashToId(fullHash);
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return (transaction.getHeight() <= height &&
+                        Arrays.equals(transaction.fullHash(), fullHash));
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT full_hash, height FROM transaction WHERE id = ?")) {
-            pstmt.setLong(1, Convert.fullHashToId(fullHash));
+            pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 return rs.next() && Arrays.equals(rs.getBytes("full_hash"), fullHash) && rs.getInt("height") <= height;
             }
@@ -108,6 +144,14 @@ final class TransactionDb {
     }
 
     static byte[] getFullHash(long transactionId) {
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            TransactionImpl transaction = BlockDb.transactionCache.get(transactionId);
+            if (transaction != null) {
+                return transaction.fullHash();
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT full_hash FROM transaction WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
@@ -190,7 +234,7 @@ final class TransactionDb {
             if (rs.getBoolean("has_prunable_encrypted_message")) {
                 builder.appendix(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
-           
+
             return builder.build();
 
         } catch (SQLException e) {
@@ -199,6 +243,14 @@ final class TransactionDb {
     }
 
     static List<TransactionImpl> findBlockTransactions(long blockId) {
+        // Check the block cache
+        synchronized(BlockDb.blockCache) {
+            BlockImpl block = BlockDb.blockCache.get(blockId);
+            if (block != null) {
+                return block.getTransactions();
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection()) {
             return findBlockTransactions(con, blockId);
         } catch (SQLException e) {
@@ -225,6 +277,31 @@ final class TransactionDb {
         }
     }
 
+    static List<PrunableTransaction> findPrunableTransactions(Connection con, int minTimestamp, int maxTimestamp) {
+        List<PrunableTransaction> result = new ArrayList<>();
+        try (PreparedStatement pstmt = con.prepareStatement("SELECT id, type, subtype, "
+                + "has_prunable_attachment AS prunable_attachment, "
+                + "(has_prunable_message OR has_prunable_encrypted_message) AS prunable_message "
+                + "FROM transaction WHERE (timestamp BETWEEN ? AND ?) AND "
+                + "(has_prunable_attachment = TRUE OR has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE)")) {
+            pstmt.setInt(1, minTimestamp);
+            pstmt.setInt(2, maxTimestamp);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    long id = rs.getLong("id");
+                    byte type = rs.getByte("type");
+                    byte subtype = rs.getByte("subtype");
+                    TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
+                    result.add(new PrunableTransaction(id, transactionType,
+                            rs.getBoolean("prunable_attachment"), rs.getBoolean("prunable_message")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+        return result;
+    }
+
     static void saveTransactions(Connection con, List<TransactionImpl> transactions) {
         try {
             short index = 0;
@@ -234,8 +311,8 @@ final class TransactionDb {
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
                         + "has_encrypttoself_message, phased, has_prunable_message, has_prunable_encrypted_message, "
-                        + "ec_block_height, ec_block_id, transaction_index) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "has_prunable_attachment, ec_block_height, ec_block_id, transaction_index) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -274,6 +351,7 @@ final class TransactionDb {
                     pstmt.setBoolean(++i, transaction.getPhasing() != null);
                     pstmt.setBoolean(++i, transaction.hasPrunablePlainMessage());
                     pstmt.setBoolean(++i, transaction.hasPrunableEncryptedMessage());
+                    pstmt.setBoolean(++i, transaction.getAttachment() instanceof Appendix.Prunable);
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
                     pstmt.setShort(++i, index++);
@@ -282,6 +360,36 @@ final class TransactionDb {
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static class PrunableTransaction {
+        private final long id;
+        private final TransactionType transactionType;
+        private final boolean prunableAttachment;
+        private final boolean prunableMessage;
+
+        public PrunableTransaction(long id, TransactionType transactionType, boolean prunableAttachment, boolean prunableMessage) {
+            this.id = id;
+            this.transactionType = transactionType;
+            this.prunableAttachment = prunableAttachment;
+            this.prunableMessage = prunableMessage;
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public TransactionType getTransactionType() {
+            return transactionType;
+        }
+
+        public boolean hasPrunableAttachment() {
+            return prunableAttachment;
+        }
+
+        public boolean hasPrunableMessage() {
+            return prunableMessage;
         }
     }
 

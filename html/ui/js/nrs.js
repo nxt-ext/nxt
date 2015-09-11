@@ -245,29 +245,13 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.getUrlParameter("account")){
 			NRS.login(false,NRS.getUrlParameter("account"));
 		}
-
-		/*
-		$("#asset_exchange_search input[name=q]").addClear({
-			right: 0,
-			top: 4,
-			onClear: function(input) {
-				$("#asset_exchange_search").trigger("submit");
-			}
-		});
-
-		$("#id_search input[name=q], #alias_search input[name=q]").addClear({
-			right: 0,
-			top: 4
-		});*/
 	};
 
 	function _fix() {
 		var height = $(window).height() - $("body > .header").height();
-		//$(".wrapper").css("min-height", height + "px");
 		var content = $(".wrapper").height();
 
 		$(".content.content-stretch:visible").width($(".page:visible").width());
-
 		if (content > height) {
 			$(".left-side, html, body").css("min-height", content + "px");
 		} else {
@@ -279,13 +263,10 @@ var NRS = (function(NRS, $, undefined) {
 		if (seconds == stateIntervalSeconds && stateInterval) {
 			return;
 		}
-
 		if (stateInterval) {
 			clearInterval(stateInterval);
 		}
-
 		stateIntervalSeconds = seconds;
-
 		stateInterval = setInterval(function() {
 			NRS.getState();
 			NRS.updateForgingStatus();
@@ -298,7 +279,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
-				//todo
+                $.growl($.t("server_connection_error") + " " + response.errorDescription);
 			} else {
 				var firstTime = !("lastBlock" in NRS.state);
 				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
@@ -503,7 +484,9 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		if (callback) {
-			callback();
+			try {
+                callback();
+            } catch(e) { /* ignore since sometimes callback is not a function */ }
 		}
 	};
 

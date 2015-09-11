@@ -18,45 +18,44 @@
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
  */
-var NRS = (function(NRS, $, undefined) {
-	$("#token_modal").on("show.bs.modal", function(e) {
+var NRS = (function(NRS, $) {
+    var tokenModal = $("#token_modal");
+    tokenModal.on("show.bs.modal", function() {
 		$("#generate_token_output, #decode_token_output").html("").hide();
 
 		$("#token_modal_generate_token").show();
 		$("#token_modal_button").text($.t("generate")).data("form", "generate_token_form");
 	});
 
-	NRS.forms.generateToken = function($modal) {
+	NRS.forms.generateToken = function() {
 		var data = $.trim($("#generate_token_data").val());
-
 		if (!data) {
 			return {
-				"error": "Data is a required field."
+				"error": $.t("data_required_field")
 			};
-			$("#generate_token_output").html("").hide();
 		} else {
 			return {};
 		}
-	}
+	};
 
-	NRS.forms.generateTokenComplete = function(response, data) {
+	NRS.forms.generateTokenComplete = function(response) {
 		$("#token_modal").find(".error_message").hide();
 
 		if (response.token) {
-			$("#generate_token_output").html($.t("generated_token_is") + "<br /><br /><textarea style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
+			$("#generate_token_output").html($.t("generated_token_is") + "<br /><br /><textarea readonly style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
 		} else {
 			$.growl($.t("error_generate_token"), {
 				"type": "danger"
 			});
 			$("#generate_token_modal").modal("hide");
 		}
-	}
+	};
 
 	NRS.forms.generateTokenError = function() {
 		$("#generate_token_output").hide();
-	}
+	};
 
-	NRS.forms.decodeTokenComplete = function(response, data) {
+	NRS.forms.decodeTokenComplete = function(response) {
 		$("#token_modal").find(".error_message").hide();
 
 		if (response.valid) {
@@ -70,13 +69,13 @@ var NRS = (function(NRS, $, undefined) {
 				"timestamp": NRS.formatTimestamp(response.timestamp)
 			})).addClass("callout-danger").removeClass("callout-info").show();
 		}
-	}
+	};
 
 	NRS.forms.decodeTokenError = function() {
 		$("#decode_token_output").hide();
-	}
+	};
 
-	$("#token_modal ul.nav li").click(function(e) {
+    tokenModal.find("ul.nav li").click(function(e) {
 		e.preventDefault();
 
 		var tab = $(this).data("tab");
@@ -94,12 +93,11 @@ var NRS = (function(NRS, $, undefined) {
 			$("#token_modal_button").text($.t("validate")).data("form", "validate_token_form");
 		}
 
-		$("#token_modal .error_message").hide();
-
+		$("#token_modal").find(".error_message").hide();
 		content.show();
 	});
 
-	$("#token_modal").on("hidden.bs.modal", function(e) {
+	tokenModal.on("hidden.bs.modal", function() {
 		$(this).find(".token_modal_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#generate_token_nav").addClass("active");

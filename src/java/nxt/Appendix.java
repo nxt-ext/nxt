@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.AccountLedger.LedgerEvent;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
@@ -42,10 +43,12 @@ public interface Appendix {
 
     interface Prunable {
         byte[] getHash();
+        boolean hasPrunableData();
+        void restorePrunableData(Transaction transaction, int blockTimestamp, int height);
         default boolean shouldLoadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
-            return Constants.INCLUDE_EXPIRED_PRUNABLE ||
-                    Nxt.getEpochTime() - transaction.getTimestamp() <
-                            (includeExpiredPrunable ? Constants.MAX_PRUNABLE_LIFETIME : Constants.MIN_PRUNABLE_LIFETIME);
+            return Nxt.getEpochTime() - transaction.getTimestamp() <
+                    (includeExpiredPrunable && Constants.INCLUDE_EXPIRED_PRUNABLE ?
+                            Constants.MAX_PRUNABLE_LIFETIME : Constants.MIN_PRUNABLE_LIFETIME);
         }
     }
 
@@ -161,7 +164,7 @@ public interface Appendix {
         void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {}
 
         boolean isPhasable() {
-            return true;
+            return ! (this instanceof Prunable);
         }
 
     }
@@ -439,6 +442,16 @@ public interface Appendix {
         public boolean isPhasable() {
             return false;
         }
+
+        @Override
+        public boolean hasPrunableData() {
+            return (prunableMessage != null || message != null);
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            PrunableMessage.add(transaction, this, blockTimestamp, height);
+        }
     }
 
     abstract class AbstractEncryptedMessage extends AbstractAppendix {
@@ -668,7 +681,7 @@ public interface Appendix {
         @Override
         final void validateAtFinish(Transaction transaction) {
         }
-        
+
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             PrunableMessage.add(transaction, this);
@@ -724,6 +737,15 @@ public interface Appendix {
             return false;
         }
 
+        @Override
+        public boolean hasPrunableData() {
+            return (prunableMessage != null || encryptedData != null);
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            PrunableMessage.add(transaction, this, blockTimestamp, height);
+        }
     }
 
     final class UnencryptedPrunableEncryptedMessage extends PrunableEncryptedMessage implements Encryptable {
@@ -1092,15 +1114,15 @@ public interface Appendix {
             if (Account.getId(this.publicKey) != recipientId) {
                 throw new NxtException.NotValidException("Announced public key does not match recipient accountId");
             }
-            Account recipientAccount = Account.getAccount(recipientId);
-            if (recipientAccount != null && recipientAccount.getKeyHeight() > 0 && ! Arrays.equals(publicKey, recipientAccount.getPublicKey())) {
+            byte[] recipientPublicKey = Account.getPublicKey(recipientId);
+            if (recipientPublicKey != null && ! Arrays.equals(publicKey, recipientPublicKey)) {
                 throw new NxtException.NotCurrentlyValidException("A different public key for this account has already been announced");
             }
         }
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            if (recipientAccount.setOrVerify(publicKey)) {
+            if (Account.setOrVerify(recipientAccount.getId(), publicKey)) {
                 recipientAccount.apply(this.publicKey);
             }
         }
@@ -1411,8 +1433,10 @@ public interface Appendix {
         void reject(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
             transaction.getType().undoAttachmentUnconfirmed(transaction, senderAccount);
-            senderAccount.addToUnconfirmedBalanceNQT(transaction.getAmountNQT());
-            TransactionProcessorImpl.getInstance().notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
+            senderAccount.addToUnconfirmedBalanceNQT(LedgerEvent.REJECT_PHASED_TRANSACTION, transaction.getId(),
+                                                     transaction.getAmountNQT());
+            TransactionProcessorImpl.getInstance()
+                    .notifyListeners(Collections.singletonList(transaction), TransactionProcessor.Event.REJECT_PHASED_TRANSACTION);
             Logger.logDebugMessage("Transaction " + transaction.getStringId() + " has been rejected");
         }
 

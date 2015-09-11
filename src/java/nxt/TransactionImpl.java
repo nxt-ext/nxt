@@ -19,6 +19,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.db.DbKey;
 import nxt.util.Convert;
+import nxt.util.Filter;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
 
@@ -475,6 +476,18 @@ final class TransactionImpl implements Transaction {
     }
 
     @Override
+    public List<Appendix> getAppendages(Filter<Appendix> filter, boolean includeExpiredPrunable) {
+        List<Appendix> result = new ArrayList<>();
+        appendages.forEach(appendix -> {
+            if (filter.ok(appendix)) {
+                appendix.loadPrunable(this, includeExpiredPrunable);
+                result.add(appendix);
+            }
+        });
+        return result;
+    }
+
+    @Override
     public long getId() {
         if (id == 0) {
             if (signature == null) {
@@ -866,8 +879,7 @@ final class TransactionImpl implements Transaction {
     }
 
     public boolean verifySignature() {
-        Account account = Account.getAccount(getSenderId());
-        return account != null && checkSignature() && account.setOrVerify(getSenderPublicKey());
+        return checkSignature() && Account.setOrVerify(getSenderId(), getSenderPublicKey());
     }
 
     private volatile boolean hasValidSignature = false;
@@ -1013,10 +1025,11 @@ final class TransactionImpl implements Transaction {
         }
         if (referencedTransactionFullHash != null
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
-            senderAccount.addToUnconfirmedBalanceNQT(Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
+            senderAccount.addToUnconfirmedBalanceNQT(getType().getLedgerEvent(), getId(),
+                    0, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
         if (phasing != null && type.isPhasable()) {
-            senderAccount.addToBalanceNQT(-feeNQT);
+            senderAccount.addToBalanceNQT(getType().getLedgerEvent(), getId(), 0, -feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {
             if (phasing == null || !appendage.isPhasable()) {
