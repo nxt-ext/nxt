@@ -2786,27 +2786,6 @@ public interface Attachment extends Appendix {
         }
     }
 
-    final class MonetarySystemShufflingDistribution extends MonetarySystemShuffling {
-
-        MonetarySystemShufflingDistribution(ByteBuffer buffer, byte transactionVersion) {
-            super(buffer, transactionVersion);
-        }
-
-        MonetarySystemShufflingDistribution(JSONObject attachmentData) {
-            super(attachmentData);
-        }
-
-        public MonetarySystemShufflingDistribution(long shufflingId) {
-            super(shufflingId);
-        }
-
-        @Override
-        public TransactionType getTransactionType() {
-            return MonetarySystem.SHUFFLING_DISTRIBUTION;
-        }
-
-    }
-
     final class MonetarySystemShufflingVerification extends MonetarySystemShuffling {
 
         MonetarySystemShufflingVerification(ByteBuffer buffer, byte transactionVersion) {

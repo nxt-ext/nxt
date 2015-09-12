@@ -38,8 +38,7 @@ public abstract class MonetarySystem extends TransactionType {
     private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_REGISTRATION = 10;
     private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_PROCESSING = 11;
     private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION = 12;
-    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION = 13;
-    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 14;
+    private static final byte SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION = 13;
 
     static TransactionType findTransactionType(byte subtype) {
         switch (subtype) {
@@ -69,8 +68,6 @@ public abstract class MonetarySystem extends TransactionType {
                 return MonetarySystem.SHUFFLING_PROCESSING;
             case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_SHUFFLING_VERIFICATION:
                 return MonetarySystem.SHUFFLING_VERIFICATION;
-            case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION:
-                return MonetarySystem.SHUFFLING_DISTRIBUTION;
             case MonetarySystem.SUBTYPE_MONETARY_SYSTEM_SHUFFLING_CANCELLATION:
                 return MonetarySystem.SHUFFLING_CANCELLATION;
             default:
@@ -1207,85 +1204,6 @@ public abstract class MonetarySystem extends TransactionType {
         }
     };
 
-    //TODO: why is this transaction needed? should happen automatically after last verification
-    public static final TransactionType SHUFFLING_DISTRIBUTION = new MonetarySystem() {
-
-        @Override
-        public byte getSubtype() {
-            return SUBTYPE_MONETARY_SYSTEM_SHUFFLING_DISTRIBUTION;
-        }
-
-        @Override
-        public LedgerEvent getLedgerEvent() {
-            return LedgerEvent.CURRENCY_SHUFFLING;
-        }
-
-        @Override
-        public String getName() {
-            return "ShufflingDistribution";
-        }
-
-        @Override
-        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
-            return new Attachment.MonetarySystemShufflingDistribution(buffer, transactionVersion);
-        }
-
-        @Override
-        Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) {
-            return new Attachment.MonetarySystemShufflingDistribution(attachmentData);
-        }
-
-        @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
-            if (super.isDuplicate(transaction, duplicates)) {
-                return true;
-            }
-            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
-            String key = Long.toUnsignedString(attachment.getShufflingId()) + "." + Long.toUnsignedString(transaction.getSenderId());
-            return TransactionType.isDuplicate(SHUFFLING_DISTRIBUTION, key, duplicates, true);
-        }
-
-        @Override
-        void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
-            }
-            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
-            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
-            if (shuffling == null) {
-                throw new NxtException.NotCurrentlyValidException("Shuffling not found: " + Long.toUnsignedString(attachment.getShufflingId()));
-            }
-            if (shuffling.getIssuerId() != transaction.getSenderId()) {
-                throw new NxtException.NotValidException(String.format("Only shuffling issuer %s can trigger distribution",
-                        Convert.rsAccount(transaction.getSenderId())));
-            }
-            if (!shuffling.isDistributionAllowed()) {
-                throw new NxtException.NotCurrentlyValidException("Shuffling not ready for distribution: " + Long.toUnsignedString(attachment.getShufflingId()));
-            }
-        }
-
-        @Override
-        boolean applyAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-            return true;
-        }
-
-        @Override
-        void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            Attachment.MonetarySystemShufflingDistribution attachment = (Attachment.MonetarySystemShufflingDistribution) transaction.getAttachment();
-            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
-            shuffling.distribute(getLedgerEvent(), transaction.getId());
-        }
-
-        @Override
-        void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
-
-        @Override
-        public boolean canHaveRecipient() {
-            return false;
-        }
-    };
-
     public static final TransactionType SHUFFLING_CANCELLATION = new MonetarySystem() {
 
         @Override
@@ -1346,6 +1264,12 @@ public abstract class MonetarySystem extends TransactionType {
             if (participant == null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+            }
+            if (participant.isVerified()) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling participant already verified: " + Long.toUnsignedString(attachment.getShufflingId()));
+            }
+            if (participant.getState() == ShufflingParticipant.State.CANCELLED) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling participant already cancelled: " + Long.toUnsignedString(attachment.getShufflingId()));
             }
             byte[][] keySeeds = attachment.getData();
             if (keySeeds.length != 0 && keySeeds.length != shuffling.getParticipantCount() - participant.getIndex() - 1) {

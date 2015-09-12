@@ -126,6 +126,11 @@ public final class ShufflingParticipant {
         return participant;
     }
 
+    static int getVerifiedCount(long shufflingId) {
+        return shufflingParticipantTable.getCount(new DbClause.LongClause("shuffling_id", shufflingId).and(
+                new DbClause.FixedClause("state=" + State.VERIFIED.getCode())));
+    }
+
     static void init() {}
 
     private final long shufflingId;
