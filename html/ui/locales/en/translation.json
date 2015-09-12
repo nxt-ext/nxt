@@ -1430,5 +1430,11 @@
   "secret_is_text": "textual data representation",
   "delete_shares": "Delete Shares",
   "action": "Action",
-  "available": "Available"
+  "available": "Available",
+  "coin": "Coin",
+  "coins": "Coins",
+  "coin_exchange": "Coin Exchange",
+  "exchange_using_shape_shift": "Exchange coins using Shape Shift",
+  "exchange_nxt_to_coin": "Exchange NXT to Coin",
+  "exchange_coin_to_nxt": "Exchange Coin to NXT"
 }
