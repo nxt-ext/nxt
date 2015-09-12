@@ -44,26 +44,19 @@ public final class Shuffling {
     }
 
     public enum Stage {
-        REGISTRATION((byte)1),
-        PROCESSING((byte)2),
-        VERIFICATION((byte)3),
-        CANCELLED((byte)4) {
-            @Override
-            public boolean isCancellationAllowed() {
-                return false;
-            }
-        },
-        DONE((byte)5) {
-            @Override
-            public boolean isCancellationAllowed() {
-                return false;
-            }
-        };
+        REGISTRATION((byte)0, new byte[]{1,4}),
+        PROCESSING((byte)1, new byte[]{2,3,4}),
+        VERIFICATION((byte)2, new byte[]{3,4,5}),
+        BLAME((byte)3, new byte[]{3,4}),
+        CANCELLED((byte)4, new byte[]{}),
+        DONE((byte)5, new byte[]{});
 
         private final byte code;
+        private final byte[] allowedNext;
 
-        Stage(byte code) {
+        Stage(byte code, byte[] allowedNext) {
             this.code = code;
+            this.allowedNext = allowedNext;
         }
 
         private static Stage get(byte code) {
@@ -79,8 +72,8 @@ public final class Shuffling {
             return code;
         }
 
-        public boolean isCancellationAllowed() {
-            return true;
+        public boolean canBecome(Stage nextStage) {
+            return Arrays.binarySearch(allowedNext, nextStage.code) >= 0;
         }
     }
 
@@ -99,7 +92,7 @@ public final class Shuffling {
                     DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(con, pstmt, false);
                     for (Shuffling shuffling : shufflings) {
                         // Cancel the shuffling in case the blockchain reached its cancellation height
-                        if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getStage().isCancellationAllowed()) {
+                        if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getStage().canBecome(Stage.CANCELLED)) {
                             shuffling.cancel(block);
                         }
                     }
@@ -166,25 +159,6 @@ public final class Shuffling {
         shufflingTable.insert(shuffling);
         ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId(), 0);
         listeners.notify(shuffling, Event.SHUFFLING_CREATED);
-    }
-
-    static void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
-        long shufflingId = attachment.getShufflingId();
-        long participantId = transaction.getSenderId();
-        // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
-        // to the new participant
-        Shuffling shuffling = Shuffling.getShuffling(shufflingId);
-        ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(shufflingId, shuffling.getAssigneeAccountId());
-        lastParticipant.setNextAccountId(participantId);
-        ShufflingParticipant participant = ShufflingParticipant.addParticipant(shufflingId, participantId, lastParticipant.getIndex() + 1);
-
-        // Check if participant registration is complete and if so update the shuffling
-        if (participant.getIndex() == shuffling.participantCount - 1) {
-            shuffling.assigneeAccountId = shuffling.issuerId;
-            shuffling.setStage(Stage.PROCESSING); // update the db
-        } else {
-            shuffling.setAssigneeAccountId(participantId);
-        }
     }
 
     static void init() {}
@@ -278,24 +252,22 @@ public final class Shuffling {
     }
 
     private void setStage(Stage stage) {
+        if (!this.stage.canBecome(stage)) {
+            throw new IllegalStateException(String.format("Shuffling in stage %s cannot go to stage %s", this.stage, stage));
+        }
         this.stage = stage;
-        shufflingTable.insert(this);
     }
 
     public long getAssigneeAccountId() {
         return assigneeAccountId;
     }
 
-    private void setAssigneeAccountId(long assigneeAccountId) {
-        this.assigneeAccountId = assigneeAccountId;
-        shufflingTable.insert(this);
-    }
-
     public long getCancellingAccountId() {
         return cancellingAccountId;
     }
 
-    void setCancellingAccountId(long cancellingAccountId) {
+    void cancelBy(long cancellingAccountId) {
+        setStage(Stage.BLAME);
         if (this.cancellingAccountId == 0) {
             this.cancellingAccountId = cancellingAccountId;
         }
@@ -419,7 +391,7 @@ public final class Shuffling {
             }
             // or the first one who did not submit verification
             for (ShufflingParticipant participant : participants) {
-                if (!participant.isVerified()) {
+                if (participant.getState() != ShufflingParticipant.State.VERIFIED) {
                     return participant;
                 }
             }
@@ -496,6 +468,24 @@ public final class Shuffling {
         return participants;
     }
 
+    void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
+        long participantId = transaction.getSenderId();
+        // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
+        // to the new participant
+        ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(this.id, this.assigneeAccountId);
+        lastParticipant.setNextAccountId(participantId);
+        ShufflingParticipant participant = ShufflingParticipant.addParticipant(this.id, participantId, lastParticipant.getIndex() + 1);
+
+        // Check if participant registration is complete and if so update the shuffling
+        if (participant.getIndex() == this.participantCount - 1) {
+            this.assigneeAccountId = this.issuerId;
+            setStage(Stage.PROCESSING);
+        } else {
+            this.assigneeAccountId = participantId;
+        }
+        shufflingTable.insert(this);
+    }
+
     void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
         long participantId = transaction.getSenderId();
         byte[][] data = attachment.getData();
@@ -512,9 +502,10 @@ public final class Shuffling {
                 }
             }
             nextParticipantId = this.issuerId;
-            this.stage = Stage.VERIFICATION;
+            setStage(Stage.VERIFICATION);
         }
-        setAssigneeAccountId(nextParticipantId);
+        this.assigneeAccountId = nextParticipantId;
+        shufflingTable.insert(this);
     }
 
     void verify(long accountId) {
@@ -532,7 +523,7 @@ public final class Shuffling {
                 // distribution not possible, do a cancellation on behalf of last participant instead
                 ShufflingParticipant lastParticipant = ShufflingParticipant.getLastParticipant(this.id);
                 lastParticipant.setKeySeeds(Convert.EMPTY_BYTES);
-                setCancellingAccountId(lastParticipant.getAccountId());
+                cancelBy(lastParticipant.getAccountId());
                 return;
             }
         }
@@ -559,10 +550,11 @@ public final class Shuffling {
             }
         }
         setStage(Stage.DONE);
+        shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_DONE);
     }
 
-    void cancel(Block block) {
+    private void cancel(Block block) {
         AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.CURRENCY_SHUFFLING;
         long eventId = block.getId();
         ShufflingParticipant blamed = blame();
@@ -591,35 +583,8 @@ public final class Shuffling {
             }
         }
         setStage(Stage.CANCELLED);
+        shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_CANCELLED);
-    }
-
-    boolean isRegistrationAllowed() {
-        return stage == Stage.REGISTRATION;
-    }
-
-    public boolean isProcessingAllowed() {
-        return stage == Stage.PROCESSING;
-    }
-
-    boolean isVerificationAllowed() {
-        return stage == Stage.VERIFICATION;
-    }
-
-    //TODO: a participant may have to cancel if unable to decrypt the data sent by the previous participants, in process stage
-    /**
-     * Shuffling issuer can cancel the shuffling at any time but participants can only cancel during the verification stage
-     *
-     * @param senderId the sender of the transaction
-     * @return is cancellation allowed
-     */
-    boolean isCancellationAllowed(long senderId) {
-        if (senderId == issuerId) {
-            return stage.isCancellationAllowed();
-        } else {
-            return stage == Stage.VERIFICATION || stage == Stage.CANCELLED;
-            // if cancel transaction is also used to reveal keys, multiple cancels should be allowed
-        }
     }
 
     public ShufflingParticipant getParticipant(long accountId) {

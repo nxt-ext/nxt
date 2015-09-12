@@ -39,15 +39,17 @@ import java.util.Arrays;
 public final class ShufflingParticipant {
 
     public enum State {
-        REGISTERED((byte)0),
-        PROCESSED((byte)1),
-        VERIFIED((byte)2),
-        CANCELLED((byte)3);
+        REGISTERED((byte)0, new byte[]{1}),
+        PROCESSED((byte)1, new byte[]{2,3}),
+        VERIFIED((byte)2, new byte[]{3}),
+        CANCELLED((byte)3, new byte[]{});
 
         private final byte code;
+        private final byte[] allowedNext;
 
-        State(byte code) {
+        State(byte code, byte[] allowedNext) {
             this.code = code;
+            this.allowedNext = allowedNext;
         }
 
         static State get(byte code) {
@@ -61,6 +63,10 @@ public final class ShufflingParticipant {
 
         public byte getCode() {
             return code;
+        }
+
+        public boolean canBecome(State nextState) {
+            return Arrays.binarySearch(allowedNext, nextState.code) >= 0;
         }
     }
 
@@ -230,6 +236,13 @@ public final class ShufflingParticipant {
         return state;
     }
 
+    private void setState(State state) {
+        if (!this.state.canBecome(state)) {
+            throw new IllegalStateException(String.format("Shuffling participant in state %s cannot go to state %s", this.state, state));
+        }
+        this.state = state;
+    }
+
     public byte[][] getData() {
         return data;
     }
@@ -239,7 +252,7 @@ public final class ShufflingParticipant {
             throw new IllegalStateException("data already set");
         }
         this.data = data;
-        this.state = State.PROCESSED;
+        setState(State.PROCESSED);
         shufflingParticipantTable.insert(this);
     }
 
@@ -252,16 +265,12 @@ public final class ShufflingParticipant {
             throw new IllegalStateException("keySeeds already set");
         }
         this.keySeeds = keySeeds;
-        this.state = State.CANCELLED;
+        setState(State.CANCELLED);
         shufflingParticipantTable.insert(this);
     }
 
-    public boolean isVerified() {
-        return state == State.VERIFIED;
-    }
-
     void verify() {
-        state = State.VERIFIED;
+        setState(State.VERIFIED);
         shufflingParticipantTable.insert(this);
     }
 

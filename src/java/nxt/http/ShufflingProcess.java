@@ -44,10 +44,10 @@ public final class ShufflingProcess extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
-        if (!shuffling.isProcessingAllowed()) {
+        if (shuffling.getStage() != Shuffling.Stage.PROCESSING) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 11);
-            response.put("errorDescription", "Shuffling is not ready for processing, stage " + shuffling.getStage());
+            response.put("errorDescription", "Shuffling is not in processing, stage " + shuffling.getStage());
             return JSON.prepare(response);
         }
         Account senderAccount = ParameterParser.getSenderAccount(req);
