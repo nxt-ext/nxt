@@ -266,10 +266,11 @@ public final class Shuffling {
         return cancellingAccountId;
     }
 
-    void cancelBy(long cancellingAccountId) {
+    void cancelBy(ShufflingParticipant participant, byte[][] keySeeds) {
+        participant.setKeySeeds(keySeeds);
         setStage(Stage.BLAME);
         if (this.cancellingAccountId == 0) {
-            this.cancellingAccountId = cancellingAccountId;
+            this.cancellingAccountId = participant.getAccountId();
         }
         shufflingTable.insert(this);
     }
@@ -381,7 +382,12 @@ public final class Shuffling {
     }
 
     ShufflingParticipant blame() {
-        List<ShufflingParticipant> participants = getParticipants();
+        List<ShufflingParticipant> participants = new ArrayList<>();
+        try (DbIterator<ShufflingParticipant> iterator = ShufflingParticipant.getParticipants(this.id)) {
+            while (iterator.hasNext()) {
+                participants.add(iterator.next());
+            }
+        }
         if (cancellingAccountId == 0) {
             // if no one submitted cancellation, blame the first one that did not submit processing data
             for (ShufflingParticipant participant : participants) {
@@ -400,7 +406,7 @@ public final class Shuffling {
         // start from issuer and verify all data up
         for (ShufflingParticipant participant : participants) {
             byte[][] keySeeds = participant.getKeySeeds();
-            // if participant couldn't submit key seeds because he also couldn't decrypt any of the previous data, this should have been caught before
+            // if participant couldn't submit key seeds because he also couldn't decrypt some of the previous data, this should have been caught before
             if (keySeeds.length == 0) {
                 return participant;
             }
@@ -458,16 +464,6 @@ public final class Shuffling {
         return getParticipant(cancellingAccountId);
     }
 
-    List<ShufflingParticipant> getParticipants() {
-        List<ShufflingParticipant> participants = new ArrayList<>();
-        try (DbIterator<ShufflingParticipant> iterator = ShufflingParticipant.getParticipants(this.id)) {
-            while (iterator.hasNext()) {
-                participants.add(iterator.next());
-            }
-        }
-        return participants;
-    }
-
     void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
         long participantId = transaction.getSenderId();
         // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
@@ -489,10 +485,16 @@ public final class Shuffling {
     void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
         long participantId = transaction.getSenderId();
         byte[][] data = attachment.getData();
-        ShufflingParticipant senderParticipant = ShufflingParticipant.getParticipant(this.id, participantId);
-        senderParticipant.setData(data);
-        long nextParticipantId = senderParticipant.getNextAccountId();
+        ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
+        participant.setData(data);
+        if (data.length < participant.getIndex() + 1) {
+            // couldn't decrypt all data from previous participants
+            cancelBy(participant, Convert.EMPTY_BYTES);
+            return;
+        }
+        long nextParticipantId = participant.getNextAccountId();
         if (nextParticipantId == 0) {
+            // last participant announces all valid recipient public keys
             for (byte[] recipientPublicKey : data) {
                 if (recipientPublicKey.length == 32) {
                     long recipientId = Account.getId(recipientPublicKey);
@@ -522,8 +524,7 @@ public final class Shuffling {
             if (publicKey != null && !Arrays.equals(publicKey, recipientPublicKey)) {
                 // distribution not possible, do a cancellation on behalf of last participant instead
                 ShufflingParticipant lastParticipant = ShufflingParticipant.getLastParticipant(this.id);
-                lastParticipant.setKeySeeds(Convert.EMPTY_BYTES);
-                cancelBy(lastParticipant.getAccountId());
+                cancelBy(lastParticipant, Convert.EMPTY_BYTES);
                 return;
             }
         }

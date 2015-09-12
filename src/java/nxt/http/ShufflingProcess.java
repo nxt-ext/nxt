@@ -85,9 +85,6 @@ public final class ShufflingProcess extends CreateTransaction {
         }
 
         byte[][] data = shuffling.process(senderId, secretPhrase, recipientPublicKey);
-        if (data.length < participant.getIndex() + 1) {
-            //TODO: this will happen if a rogue participant submitted junk data, need to submit a cancellation after this transaction too
-        }
         Attachment attachment = new Attachment.MonetarySystemShufflingProcessing(shuffling.getId(), data);
         return createTransaction(req, senderAccount, attachment);
     }

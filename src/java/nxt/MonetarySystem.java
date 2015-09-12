@@ -1286,8 +1286,8 @@ public abstract class MonetarySystem extends TransactionType {
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
-            ShufflingParticipant.getParticipant(shuffling.getId(), senderAccount.getId()).setKeySeeds(attachment.getData());
-            shuffling.cancelBy(senderAccount.getId());
+            ShufflingParticipant participant = ShufflingParticipant.getParticipant(shuffling.getId(), senderAccount.getId());
+            shuffling.cancelBy(participant, attachment.getData());
         }
 
         @Override
