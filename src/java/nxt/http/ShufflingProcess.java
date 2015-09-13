@@ -84,8 +84,7 @@ public final class ShufflingProcess extends CreateTransaction {
             return INCORRECT_PUBLIC_KEY; // do not allow existing account to be used as recipient
         }
 
-        byte[][] data = shuffling.process(senderId, secretPhrase, recipientPublicKey);
-        Attachment attachment = new Attachment.MonetarySystemShufflingProcessing(shuffling.getId(), data);
+        Attachment.MonetarySystemShufflingProcessing attachment = shuffling.process(senderId, secretPhrase, recipientPublicKey);
         return createTransaction(req, senderAccount, attachment);
     }
 

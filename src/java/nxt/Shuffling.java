@@ -283,17 +283,22 @@ public final class Shuffling {
         return nonce;
     }
 
-    public byte[][] process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
+    public Attachment.MonetarySystemShufflingProcessing process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
         byte[][] data = Convert.EMPTY_BYTES;
+        byte[] previousDataTransactionFullHash = Convert.EMPTY_BYTE;
         List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
+        Nxt.getBlockchain().readLock();
         // Read the participant list for the shuffling
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 shufflingParticipants.add(participant);
                 if (participant.getNextAccountId() == accountId) {
                     data = participant.getData();
+                    previousDataTransactionFullHash = participant.getDataTransactionFullHash();
                 }
             }
+        } finally {
+            Nxt.getBlockchain().readUnlock();
         }
         // decrypt the tokens bundled in the current data
         List<byte[]> outputDataList = new ArrayList<>();
@@ -331,22 +336,27 @@ public final class Shuffling {
         outputDataList.add(bytesToEncrypt);
         // Shuffle the tokens and save the shuffled tokens as the participant data
         Collections.shuffle(outputDataList, Crypto.getSecureRandom());
-        return outputDataList.toArray(new byte[outputDataList.size()][]);
+        return new Attachment.MonetarySystemShufflingProcessing(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
+                previousDataTransactionFullHash);
     }
 
-    public byte[][] revealKeySeeds(final String secretPhrase) {
-        long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+    public Attachment.MonetarySystemShufflingCancellation revealKeySeeds(final String secretPhrase, long cancellingAccountId) {
+        Nxt.getBlockchain().readLock();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
             byte[][] data = null;
+            byte[] dataTransactionFullHash = null;
             while (participants.hasNext()) {
                 ShufflingParticipant participant = participants.next();
                 if (participant.getAccountId() == accountId) {
                     data = participant.getData();
+                    dataTransactionFullHash = participant.getDataTransactionFullHash();
                     break;
                 }
             }
             if (!participants.hasNext()) {
-                return Convert.EMPTY_BYTES;
+                return new Attachment.MonetarySystemShufflingCancellation(this.id, Convert.EMPTY_BYTES, dataTransactionFullHash,
+                        cancellingAccountId);
             }
             if (data == null) {
                 throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " is not a participant");
@@ -377,11 +387,14 @@ public final class Shuffling {
                 AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.readEncryptedData(decryptedBytes);
                 decryptedBytes = encryptedData.decrypt(keySeed, nextParticipantPublicKey);
             }
-            return keySeeds.toArray(new byte[keySeeds.size()][]);
+            return new Attachment.MonetarySystemShufflingCancellation(this.id, keySeeds.toArray(new byte[keySeeds.size()][]),
+                    dataTransactionFullHash, cancellingAccountId);
+        } finally {
+            Nxt.getBlockchain().readUnlock();
         }
     }
 
-    ShufflingParticipant blame() {
+    private ShufflingParticipant blame() {
         List<ShufflingParticipant> participants = new ArrayList<>();
         try (DbIterator<ShufflingParticipant> iterator = ShufflingParticipant.getParticipants(this.id)) {
             while (iterator.hasNext()) {
@@ -461,11 +474,16 @@ public final class Shuffling {
                 }
             }
         }
-        return getParticipant(cancellingAccountId);
+        // blame the participant that cancelled without reason
+        for (ShufflingParticipant participant : participants) {
+            if (participant.getAccountId() == cancellingAccountId) {
+                return participant;
+            }
+        }
+        throw new RuntimeException("Couldn't find a participant to blame"); // shouldn't happen
     }
 
-    void addParticipant(Transaction transaction, Attachment.MonetarySystemShufflingRegistration attachment) {
-        long participantId = transaction.getSenderId();
+    void addParticipant(long participantId) {
         // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
         // to the new participant
         ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(this.id, this.assigneeAccountId);
@@ -486,6 +504,7 @@ public final class Shuffling {
         long participantId = transaction.getSenderId();
         byte[][] data = attachment.getData();
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
+        participant.setDataTransactionFullHash(((TransactionImpl) transaction).fullHash());
         participant.setData(data);
         if (data.length < participant.getIndex() + 1) {
             // couldn't decrypt all data from previous participants
@@ -590,6 +609,10 @@ public final class Shuffling {
 
     public ShufflingParticipant getParticipant(long accountId) {
         return ShufflingParticipant.getParticipant(id, accountId);
+    }
+
+    public ShufflingParticipant getLastParticipant() {
+        return ShufflingParticipant.getLastParticipant(id);
     }
 
     public byte[][] getRecipientPublicKeys() {

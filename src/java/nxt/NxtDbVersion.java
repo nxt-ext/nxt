@@ -993,15 +993,17 @@ class NxtDbVersion extends DbVersion {
             case 419:
                 apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id INT IDENTITY, shuffling_id BIGINT NOT NULL, "
                         + "account_id BIGINT NOT NULL, next_account_id BIGINT NULL, participant_index, "
-                        + "state TINYINT NOT NULL, data ARRAY, key_seeds ARRAY, "
+                        + "state TINYINT NOT NULL, data ARRAY, key_seeds ARRAY, data_transaction_full_hash BINARY(32), "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 420:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant (shuffling_id, account_id, height DESC)");
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant "
+                        + "(shuffling_id, account_id, height DESC)");
 			//TODO: more indexes
             case 421:
             	return;
             default:
-                throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
+                throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
+                        + ", probably trying to run older code on newer database");
         }
     }
 }

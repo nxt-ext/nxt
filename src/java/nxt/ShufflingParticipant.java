@@ -148,6 +148,7 @@ public final class ShufflingParticipant {
     private State state; // tracks the state of the participant in the process
     private byte[][] data; // encrypted data saved as intermediate result in the shuffling process
     private byte[][] keySeeds; // to be revealed only if shuffle is being cancelled
+    private byte[] dataTransactionFullHash;
 
     private ShufflingParticipant(long shufflingId, long accountId, int index) {
         this.shufflingId = shufflingId;
@@ -180,13 +181,14 @@ public final class ShufflingParticipant {
         } else {
             this.keySeeds = Convert.EMPTY_BYTES;
         }
+        this.dataTransactionFullHash = rs.getBytes("data_transaction_full_hash");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
-                + "account_id, next_account_id, participant_index, state, data, key_seeds, height, latest) "
+                + "account_id, next_account_id, participant_index, state, data, key_seeds, data_transaction_full_hash, height, latest) "
                 + "KEY (shuffling_id, account_id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.shufflingId);
             pstmt.setLong(++i, this.accountId);
@@ -203,6 +205,7 @@ public final class ShufflingParticipant {
             } else {
                 pstmt.setNull(++i, Types.ARRAY);
             }
+            DbUtils.setBytes(pstmt, ++i, dataTransactionFullHash);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -267,6 +270,24 @@ public final class ShufflingParticipant {
         this.keySeeds = keySeeds;
         setState(State.CANCELLED);
         shufflingParticipantTable.insert(this);
+    }
+
+    public byte[] getDataTransactionFullHash() {
+        return dataTransactionFullHash;
+    }
+
+    void setDataTransactionFullHash(byte[] dataTransactionFullHash) {
+        if (this.dataTransactionFullHash != null) {
+            throw new IllegalStateException("dataTransactionFullHash already set");
+        }
+        this.dataTransactionFullHash = dataTransactionFullHash;
+    }
+
+    public ShufflingParticipant getPreviousParticipant() {
+        if (index == 0) {
+            return null;
+        }
+        return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.IntClause("index", index - 1)));
     }
 
     void verify() {

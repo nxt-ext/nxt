@@ -2653,17 +2653,17 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final int getMySize() {
+        int getMySize() {
             return 8;
         }
 
         @Override
-        final void putMyBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(shufflingId);
         }
 
         @Override
-        final void putMyJSON(JSONObject attachment) {
+        void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Long.toUnsignedString(shufflingId));
         }
 
@@ -2699,14 +2699,13 @@ public interface Attachment extends Appendix {
 
     }
 
-    class MonetarySystemShufflingProcessing extends AbstractAttachment implements MonetarySystemAttachment {
+    final class MonetarySystemShufflingProcessing extends MonetarySystemShuffling {
 
-        private final long shufflingId;
         private final byte[][] data;
+        private final byte[] previousDataTransactionFullHash;
 
         MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            this.shufflingId = buffer.getLong();
             int count = buffer.get();
             if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
                 throw new NxtException.NotValidException("Invalid data count " + count);
@@ -2720,51 +2719,58 @@ public interface Attachment extends Appendix {
                 this.data[i] = new byte[size];
                 buffer.get(this.data[i]);
             }
+            this.previousDataTransactionFullHash = new byte[32];
+            buffer.get(this.previousDataTransactionFullHash);
         }
 
         MonetarySystemShufflingProcessing(JSONObject attachmentData) {
             super(attachmentData);
-            this.shufflingId = Convert.parseUnsignedLong((String) attachmentData.get("shuffling"));
             JSONArray jsonArray = (JSONArray)attachmentData.get("data");
             this.data = new byte[jsonArray.size()][];
             for (int i = 0; i < this.data.length; i++) {
                 this.data[i] = Convert.parseHexString((String)jsonArray.get(i));
             }
+            this.previousDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("previousDataTransactionFullHash"));
         }
 
-        public MonetarySystemShufflingProcessing(long shufflingId, byte[][] data) {
-            this.shufflingId = shufflingId;
+        public MonetarySystemShufflingProcessing(long shufflingId, byte[][] data, byte[] previousDataTransactionFullHash) {
+            super(shufflingId);
             this.data = data;
+            this.previousDataTransactionFullHash = previousDataTransactionFullHash;
         }
 
         @Override
         int getMySize() {
-            int size = 8 + 1;
+            int size = super.getMySize();
+            size += 1;
             for (byte[] bytes : data) {
                 size += 4;
                 size += bytes.length;
             }
+            size += 32;
             return size;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(shufflingId);
+            super.putMyBytes(buffer);
             buffer.put((byte)data.length);
             for (byte[] bytes : data) {
                 buffer.putInt(bytes.length);
                 buffer.put(bytes);
             }
+            buffer.put(previousDataTransactionFullHash);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
+            super.putMyJSON(attachment);
             JSONArray jsonArray = new JSONArray();
             attachment.put("data", jsonArray);
             for (byte[] bytes : data) {
                 jsonArray.add(Convert.toHexString(bytes));
             }
+            attachment.put("previousDataTransactionFullHash", Convert.toHexString(previousDataTransactionFullHash));
         }
 
         @Override
@@ -2772,32 +2778,34 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_PROCESSING;
         }
 
-        public final long getShufflingId() {
-            return shufflingId;
-        }
-
-        public final byte[][] getData() {
+        public byte[][] getData() {
             return data;
         }
 
-        @Override
-        public final long getCurrencyId() {
-            return Shuffling.getShuffling(shufflingId).getCurrencyId();
+        public byte[] getPreviousDataTransactionFullHash() {
+            return previousDataTransactionFullHash;
         }
+
     }
 
     final class MonetarySystemShufflingVerification extends MonetarySystemShuffling {
 
+        private final byte[] lastDataTransactionFullHash;
+
         MonetarySystemShufflingVerification(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
+            this.lastDataTransactionFullHash = new byte[32];
+            buffer.get(this.lastDataTransactionFullHash);
         }
 
         MonetarySystemShufflingVerification(JSONObject attachmentData) {
             super(attachmentData);
+            this.lastDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("lastDataTransactionFullHash"));
         }
 
-        public MonetarySystemShufflingVerification(long shufflingId) {
+        public MonetarySystemShufflingVerification(long shufflingId, byte[] lastDataTransactionFullHash) {
             super(shufflingId);
+            this.lastDataTransactionFullHash = lastDataTransactionFullHash;
         }
 
         @Override
@@ -2805,24 +2813,66 @@ public interface Attachment extends Appendix {
             return MonetarySystem.SHUFFLING_VERIFICATION;
         }
 
+        @Override
+        int getMySize() {
+            return super.getMySize() + 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            super.putMyBytes(buffer);
+            buffer.put(lastDataTransactionFullHash);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            attachment.put("lastDataTransactionFullHash", Convert.toHexString(lastDataTransactionFullHash));
+        }
+
+        public byte[] getLastDataTransactionFullHash() {
+            return lastDataTransactionFullHash;
+        }
+
     }
 
-    final class MonetarySystemShufflingCancellation extends MonetarySystemShufflingProcessing {
+    final class MonetarySystemShufflingCancellation extends MonetarySystemShuffling {
 
+        private final byte[][] keySeeds;
+        private final byte[] dataTransactionFullHash;
         private final long cancellingAccountId;
 
         MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
+            int count = buffer.get();
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
+                throw new NxtException.NotValidException("Invalid keySeeds count " + count);
+            }
+            this.keySeeds = new byte[count][];
+            for (int i = 0; i < count; i++) {
+                this.keySeeds[i] = new byte[32];
+                buffer.get(this.keySeeds[i]);
+            }
+            this.dataTransactionFullHash = new byte[32];
+            buffer.get(this.dataTransactionFullHash);
             this.cancellingAccountId = buffer.getLong();
         }
 
         MonetarySystemShufflingCancellation(JSONObject attachmentData) {
             super(attachmentData);
+            JSONArray jsonArray = (JSONArray)attachmentData.get("keySeeds");
+            this.keySeeds = new byte[jsonArray.size()][];
+            for (int i = 0; i < this.keySeeds.length; i++) {
+                this.keySeeds[i] = Convert.parseHexString((String)jsonArray.get(i));
+            }
+            this.dataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("dataTransactionFullHash"));
             this.cancellingAccountId = Convert.parseUnsignedLong((String) attachmentData.get("cancellingAccount"));
         }
 
-        public MonetarySystemShufflingCancellation(long shufflingId, byte[][] data, long cancellingAccountId) {
-            super(shufflingId, data);
+        public MonetarySystemShufflingCancellation(long shufflingId, byte[][] keySeeds, byte[] dataTransactionFullHash, long cancellingAccountId) {
+            super(shufflingId);
+            this.keySeeds = keySeeds;
+            this.dataTransactionFullHash = dataTransactionFullHash;
             this.cancellingAccountId = cancellingAccountId;
         }
 
@@ -2832,22 +2882,41 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final int getMySize() {
-            return super.getMySize() + 8;
+        int getMySize() {
+            return super.getMySize() + 1 + 32 * keySeeds.length + 32 + 8;
         }
 
         @Override
-        final void putMyBytes(ByteBuffer buffer) {
+        void putMyBytes(ByteBuffer buffer) {
             super.putMyBytes(buffer);
+            buffer.put((byte) keySeeds.length);
+            for (byte[] bytes : keySeeds) {
+                buffer.put(bytes);
+            }
+            buffer.put(dataTransactionFullHash);
             buffer.putLong(cancellingAccountId);
         }
 
         @Override
-        final void putMyJSON(JSONObject attachment) {
+        void putMyJSON(JSONObject attachment) {
             super.putMyJSON(attachment);
+            JSONArray jsonArray = new JSONArray();
+            attachment.put("keySeeds", jsonArray);
+            for (byte[] bytes : keySeeds) {
+                jsonArray.add(Convert.toHexString(bytes));
+            }
+            attachment.put("dataTransactionFullHash", Convert.toHexString(dataTransactionFullHash));
             if (cancellingAccountId != 0) {
                 attachment.put("cancellingAccount", Long.toUnsignedString(cancellingAccountId));
             }
+        }
+
+        public byte[][] getKeySeeds() {
+            return keySeeds;
+        }
+
+        public byte[] getDataTransactionFullHash() {
+            return dataTransactionFullHash;
         }
 
         public long getCancellingAccountId() {

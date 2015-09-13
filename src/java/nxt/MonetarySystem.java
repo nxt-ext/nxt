@@ -16,11 +16,12 @@
 
 package nxt;
 
-import nxt.util.Convert;
 import nxt.AccountLedger.LedgerEvent;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Map;
 
 public abstract class MonetarySystem extends TransactionType {
@@ -1018,7 +1019,7 @@ public abstract class MonetarySystem extends TransactionType {
         void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
             Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
-            shuffling.addParticipant(transaction, attachment);
+            shuffling.addParticipant(transaction.getSenderId());
         }
 
         @Override
@@ -1088,6 +1089,13 @@ public abstract class MonetarySystem extends TransactionType {
             if (!participant.getState().canBecome(ShufflingParticipant.State.PROCESSED)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s processing already complete",
                         Convert.rsAccount(transaction.getSenderId())));
+            }
+            ShufflingParticipant previousParticipant = participant.getPreviousParticipant();
+            if (previousParticipant != null) {
+                byte[] previousDataTransactionFullHash = previousParticipant.getDataTransactionFullHash();
+                if (!Arrays.equals(previousDataTransactionFullHash, attachment.getPreviousDataTransactionFullHash())) {
+                    throw new NxtException.NotCurrentlyValidException("Previous data transaction full hash doesn't match");
+                }
             }
             byte[][] data = attachment.getData();
             if (data.length > participant.getIndex() + 1) {
@@ -1176,6 +1184,9 @@ public abstract class MonetarySystem extends TransactionType {
             if (!participant.getState().canBecome(ShufflingParticipant.State.VERIFIED)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot become verified",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
+            }
+            if (!Arrays.equals(attachment.getLastDataTransactionFullHash(), shuffling.getLastParticipant().getDataTransactionFullHash())) {
+                throw new NxtException.NotCurrentlyValidException("Last participant data hash doesn't match");
             }
         }
 
@@ -1271,9 +1282,17 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot submit cancellation",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
             }
-            byte[][] keySeeds = attachment.getData();
+            if (!Arrays.equals(participant.getDataTransactionFullHash(), attachment.getDataTransactionFullHash())) {
+                throw new NxtException.NotCurrentlyValidException("Data transaction full hash doesn't match");
+            }
+            byte[][] keySeeds = attachment.getKeySeeds();
             if (keySeeds.length != 0 && keySeeds.length != shuffling.getParticipantCount() - participant.getIndex() - 1) {
                 throw new NxtException.NotValidException("Invalid number of revealed keySeeds: " + keySeeds.length);
+            }
+            for (byte[] keySeed : keySeeds) {
+                if (keySeed.length != 32) {
+                    throw new NxtException.NotValidException("Invalid keySeed: " + Convert.toHexString(keySeed));
+                }
             }
         }
 
@@ -1287,7 +1306,7 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             ShufflingParticipant participant = ShufflingParticipant.getParticipant(shuffling.getId(), senderAccount.getId());
-            shuffling.cancelBy(participant, attachment.getData());
+            shuffling.cancelBy(participant, attachment.getKeySeeds());
         }
 
         @Override
