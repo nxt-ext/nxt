@@ -376,7 +376,10 @@ public final class Shuffling {
         }
     }
 
-    private ShufflingParticipant blame() {
+    private long blame() {
+        if (stage == Stage.REGISTRATION) {
+            return 0;
+        }
         List<ShufflingParticipant> participants = new ArrayList<>();
         try (DbIterator<ShufflingParticipant> iterator = ShufflingParticipant.getParticipants(this.id)) {
             while (iterator.hasNext()) {
@@ -387,13 +390,13 @@ public final class Shuffling {
             // if no one submitted cancellation, blame the first one that did not submit processing data
             for (ShufflingParticipant participant : participants) {
                 if (participant.getData().length == 0) {
-                    return participant;
+                    return participant.getAccountId();
                 }
             }
             // or the first one who did not submit verification
             for (ShufflingParticipant participant : participants) {
                 if (participant.getState() != ShufflingParticipant.State.VERIFIED) {
-                    return participant;
+                    return participant.getAccountId();
                 }
             }
             throw new RuntimeException("All participants submitted data and verifications, blame phase should not have been entered");
@@ -403,7 +406,7 @@ public final class Shuffling {
             byte[][] keySeeds = participant.getKeySeeds();
             // if participant couldn't submit key seeds because he also couldn't decrypt some of the previous data, this should have been caught before
             if (keySeeds.length == 0) {
-                return participant;
+                return participant.getAccountId();
             }
             byte[] publicKey = Crypto.getPublicKey(keySeeds[0]);
             AnonymouslyEncryptedData encryptedData = null;
@@ -416,7 +419,7 @@ public final class Shuffling {
             }
             if (encryptedData == null || !Arrays.equals(publicKey, encryptedData.getPublicKey())) {
                 // participant lied about key seeds or data
-                return participant;
+                return participant.getAccountId();
             }
             for (int i = participant.getIndex() + 1; i < participantCount; i++) {
                 ShufflingParticipant nextParticipant = participants.get(i);
@@ -427,7 +430,7 @@ public final class Shuffling {
                     participantBytes = encryptedData.decrypt(keySeed, nextParticipantPublicKey);
                 } catch (Exception e) {
                     // the next participant couldn't decrypt the data either, blame this one
-                    return participant;
+                    return participant.getAccountId();
                 }
                 boolean found = false;
                 for (byte[] bytes : nextParticipant.getData()) {
@@ -438,31 +441,25 @@ public final class Shuffling {
                 }
                 if (!found) {
                     // the next participant did not include this participant's data
-                    return nextParticipant;
+                    return nextParticipant.getAccountId();
                 }
                 if (i < participantCount - 1) {
                     encryptedData = AnonymouslyEncryptedData.readEncryptedData(participantBytes);
                 } else {
                     if (participantBytes.length != 32) {
                         // cannot be a valid public key
-                        return participant;
+                        return participant.getAccountId();
                     }
                     // else it is not encrypted data but plaintext recipient public key, at the last participant
                     // check for collisions and assume they are intentional (?)
                     byte[] currentPublicKey = Account.getPublicKey(Account.getId(participantBytes));
                     if (currentPublicKey != null && !Arrays.equals(currentPublicKey, participantBytes)) {
-                        return participant;
+                        return participant.getAccountId();
                     }
                 }
             }
         }
-        // blame the participant that cancelled without reason
-        for (ShufflingParticipant participant : participants) {
-            if (participant.getAccountId() == cancellingAccountId) {
-                return participant;
-            }
-        }
-        throw new RuntimeException("Couldn't find a participant to blame"); // shouldn't happen
+        return cancellingAccountId;
     }
 
     void addParticipant(long participantId) {
@@ -560,8 +557,7 @@ public final class Shuffling {
     private void cancel(Block block) {
         AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.CURRENCY_SHUFFLING;
         long eventId = block.getId();
-        ShufflingParticipant blamed = blame();
-        long blamedAccountId = blamed.getAccountId();
+        long blamedAccountId = blame();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
