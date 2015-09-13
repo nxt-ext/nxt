@@ -438,7 +438,6 @@ public final class Currency {
     }
 
     public boolean canBeDeletedBy(long senderAccountId) {
-        //TODO: make sure shufflings are deleted after completion
         if (!is(CurrencyType.NON_SHUFFLEABLE) && Shuffling.getCurrencyShufflingCount(currencyId) > 0) {
             return false;
         }

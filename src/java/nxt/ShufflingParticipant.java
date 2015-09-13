@@ -86,7 +86,6 @@ public final class ShufflingParticipant {
 
     };
 
-    //TODO: trim participants 1440 blocks after shuffle completion?
     private static final VersionedEntityDbTable<ShufflingParticipant> shufflingParticipantTable = new VersionedEntityDbTable<ShufflingParticipant>("shuffling_participant", shufflingParticipantDbKeyFactory) {
 
         @Override

@@ -77,33 +77,6 @@ public final class Shuffling {
         }
     }
 
-    static {
-        Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
-            @Override
-            public void notify(Block block) {
-                //TODO: optimize, use cancellation_height and avoid table scan
-                Connection con = null;
-                try {
-                    con = Db.db.getConnection();
-                    PreparedStatement pstmt = con.prepareStatement("SELECT * FROM shuffling WHERE stage <> ? and stage <> ? AND latest = TRUE");
-                    int i = 0;
-                    pstmt.setByte(++i, Stage.CANCELLED.getCode());
-                    pstmt.setByte(++i, Stage.DONE.getCode());
-                    DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(con, pstmt, false);
-                    for (Shuffling shuffling : shufflings) {
-                        // Cancel the shuffling in case the blockchain reached its cancellation height
-                        if (block.getHeight() > shuffling.getCancellationHeight() && shuffling.getStage().canBecome(Stage.CANCELLED)) {
-                            shuffling.cancel(block);
-                        }
-                    }
-                } catch (SQLException e) {
-                    DbUtils.close(con);
-                    throw new RuntimeException(e.toString(), e);
-                }
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-    }
-
     private static final Listeners<Shuffling, Event> listeners = new Listeners<>();
 
     private static final DbKey.LongKeyFactory<Shuffling> shufflingDbKeyFactory = new DbKey.LongKeyFactory<Shuffling>("id") {
@@ -115,7 +88,6 @@ public final class Shuffling {
 
     };
 
-    //TODO: trim completed shufflings after 1440 blocks?
     private static final VersionedEntityDbTable<Shuffling> shufflingTable = new VersionedEntityDbTable<Shuffling>("shuffling", shufflingDbKeyFactory) {
 
         @Override
@@ -129,6 +101,16 @@ public final class Shuffling {
         }
 
     };
+
+    static {
+        Nxt.getBlockchainProcessor().addListener(block -> {
+            try (DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(new DbClause.IntClause("cancellation_height", block.getHeight()), 0, -1)) {
+                for (Shuffling shuffling : shufflings) {
+                    shuffling.cancel(block);
+                }
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+    }
 
     public static DbIterator<Shuffling> getAll(int from, int to) {
         return shufflingTable.getAll(from, to);
@@ -572,6 +554,7 @@ public final class Shuffling {
         setStage(Stage.DONE);
         shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_DONE);
+        delete();
     }
 
     private void cancel(Block block) {
@@ -605,6 +588,7 @@ public final class Shuffling {
         setStage(Stage.CANCELLED);
         shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_CANCELLED);
+        delete();
     }
 
     public ShufflingParticipant getParticipant(long accountId) {
@@ -619,7 +603,7 @@ public final class Shuffling {
         return ShufflingParticipant.getLastParticipant(id).getData();
     }
 
-    void delete() {
+    private void delete() {
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 participant.delete();
