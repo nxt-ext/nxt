@@ -2,9 +2,6 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
-
-    var API_KEY = "773ecd081abd54e760a45b3551bbd4d725cf788590619e3f4bdeb81d01994d1dcad8a1d35771f669cfa47742af38e2207e297bc0eeeaea733853c2235548fba3";
-    var SHAPE_SHIFT_URL = "https://cors.shapeshift.io/";
     var DEF_COINS = ["BTC", "LTC", "DOGE"];
     var SUPPORTED_COINS = {};
 
@@ -54,7 +51,7 @@ var NRS = (function(NRS, $) {
 
     var apiCall = function(action, requestData, method, doneCallback, ignoreError, modal) {
         $.ajax({
-            url: SHAPE_SHIFT_URL + action,
+            url: NRS.settings.exchange_url + action,
             crossDomain: true,
             dataType: "json",
             type: method,
@@ -308,14 +305,23 @@ var NRS = (function(NRS, $) {
         select.push($('#shape_shift_coin_0'));
         select.push($('#shape_shift_coin_1'));
         select.push($('#shape_shift_coin_2'));
-      	apiCall('getcoins', {}, 'GET', function(data) {
-            var selectedCoins = getCoins();
+        select.push($('#settings_exchange_coin0'));
+        select.push($('#settings_exchange_coin1'));
+        select.push($('#settings_exchange_coin2'));
+        var selectedCoins = [];
+        selectedCoins.push(NRS.settings.exchange_coin0);
+        selectedCoins.push(NRS.settings.exchange_coin1);
+        selectedCoins.push(NRS.settings.exchange_coin2);
+        selectedCoins.push(NRS.settings.exchange_coin0);
+        selectedCoins.push(NRS.settings.exchange_coin1);
+        selectedCoins.push(NRS.settings.exchange_coin2);
+        apiCall('getcoins', {}, 'GET', function(data) {
             SUPPORTED_COINS = data;
             for (var i=0; i<select.length; i++) {
                 select[i].empty();
                 $.each(data, function(code, coin) {
                     if (code != 'NXT' && coin['status'] == 'available') {
-                        select[i].append('<option value="' + code + '">' + coin['name'] + '</option>');
+                        select[i].append('<option value="' + code + '">' + coin['name'] + ' [' + code + ']</option>');
                         SUPPORTED_COINS[code] = coin;
                     }
                 });
@@ -353,7 +359,7 @@ var NRS = (function(NRS, $) {
             withdrawal: withdrawal,
             pair: pair,
             returnAddress: NRS.accountRS,
-            apiKey: API_KEY
+            apiKey: NRS.settings.exchange_api_key
         }, 'POST', function (data) {
             NRS.logConsole("shift response");
             var msg;
@@ -427,7 +433,7 @@ var NRS = (function(NRS, $) {
             amount: amount,
             withdrawal: withdrawal,
             pair: pair,
-            apiKey: API_KEY
+            apiKey: NRS.settings.exchange_api_key
         }, "POST", function(data) {
             var rate = $("#m_send_amount_buy_rate");
             var fee = $("#m_send_amount_buy_fee");
@@ -514,7 +520,7 @@ var NRS = (function(NRS, $) {
             NRS.showModalError("Account has no public key, please login using your passphrase", modal);
             return;
         }
-        apiCall('shift', { withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: API_KEY }, "POST", function (data) {
+        apiCall('shift', { withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key }, "POST", function (data) {
             NRS.logConsole("shift request done");
             var msg;
             if (data.depositType != coin) {
@@ -593,7 +599,8 @@ var NRS = (function(NRS, $) {
             NRS.showModalError("Account has no public key, please login using your passphrase", modal);
             return;
         }
-        apiCall('sendamount', { amount: amount, withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: API_KEY }, "POST", function (data) {
+        apiCall('sendamount', { amount: amount, withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key },
+                "POST", function (data) {
             var rate = $("#m_send_amount_sell_rate");
             var fee = $("#m_send_amount_sell_fee");
             var depositAmount = $("#m_send_amount_sell_deposit_amount");
