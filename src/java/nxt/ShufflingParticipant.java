@@ -124,11 +124,10 @@ public final class ShufflingParticipant {
         return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.FixedClause("next_account_id IS NULL")));
     }
 
-    static ShufflingParticipant addParticipant(long shufflingId, long accountId, int index) {
+    static void addParticipant(long shufflingId, long accountId, int index) {
         ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId, index);
         shufflingParticipantTable.insert(participant);
         listeners.notify(participant, Event.PARTICIPANT_ADDED);
-        return participant;
     }
 
     static int getVerifiedCount(long shufflingId) {

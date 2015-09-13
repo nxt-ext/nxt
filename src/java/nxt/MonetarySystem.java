@@ -1090,15 +1090,19 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s processing already complete",
                         Convert.rsAccount(transaction.getSenderId())));
             }
+            if (participant.getAccountId() != shuffling.getAssigneeAccountId()) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Participant %s is not currently assigned to process shuffling %s",
+                        Long.toUnsignedString(participant.getAccountId()), Long.toUnsignedString(shuffling.getId())));
+            }
             ShufflingParticipant previousParticipant = participant.getPreviousParticipant();
             if (previousParticipant != null) {
                 byte[] previousDataTransactionFullHash = previousParticipant.getDataTransactionFullHash();
-                if (!Arrays.equals(previousDataTransactionFullHash, attachment.getPreviousDataTransactionFullHash())) {
+                if (previousDataTransactionFullHash == null || !Arrays.equals(previousDataTransactionFullHash, attachment.getPreviousDataTransactionFullHash())) {
                     throw new NxtException.NotCurrentlyValidException("Previous data transaction full hash doesn't match");
                 }
             }
             byte[][] data = attachment.getData();
-            if (data.length > participant.getIndex() + 1) {
+            if (data.length > participant.getIndex() + 1 || data.length == 0) {
                 throw new NxtException.NotValidException(String.format("Invalid number of encrypted data %d for participant number %d",
                         data.length, participant.getIndex()));
             }
@@ -1185,8 +1189,9 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot become verified",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
             }
-            if (!Arrays.equals(attachment.getLastDataTransactionFullHash(), shuffling.getLastParticipant().getDataTransactionFullHash())) {
-                throw new NxtException.NotCurrentlyValidException("Last participant data hash doesn't match");
+            byte[] lastParticipantDataTransactionFullHash = shuffling.getLastParticipant().getDataTransactionFullHash();
+            if (lastParticipantDataTransactionFullHash == null || !Arrays.equals(lastParticipantDataTransactionFullHash, attachment.getLastDataTransactionFullHash())) {
+                throw new NxtException.NotCurrentlyValidException("Last participant data transaction hash doesn't match");
             }
         }
 
@@ -1282,7 +1287,7 @@ public abstract class MonetarySystem extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot submit cancellation",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
             }
-            if (!Arrays.equals(participant.getDataTransactionFullHash(), attachment.getDataTransactionFullHash())) {
+            if (participant.getDataTransactionFullHash() == null || !Arrays.equals(participant.getDataTransactionFullHash(), attachment.getDataTransactionFullHash())) {
                 throw new NxtException.NotCurrentlyValidException("Data transaction full hash doesn't match");
             }
             byte[][] keySeeds = attachment.getKeySeeds();

@@ -193,7 +193,7 @@ public final class Shuffling {
             DbUtils.setLongZeroToNull(pstmt, ++i, this.currencyId);
             pstmt.setLong(++i, this.issuerId);
             pstmt.setLong(++i, this.amount);
-            pstmt.setLong(++i, this.participantCount);
+            pstmt.setByte(++i, this.participantCount);
             pstmt.setInt(++i, this.cancellationHeight);
             pstmt.setByte(++i, this.getStage().getCode());
             pstmt.setLong(++i, this.assigneeAccountId);
@@ -467,10 +467,10 @@ public final class Shuffling {
         // to the new participant
         ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(this.id, this.assigneeAccountId);
         lastParticipant.setNextAccountId(participantId);
-        ShufflingParticipant participant = ShufflingParticipant.addParticipant(this.id, participantId, lastParticipant.getIndex() + 1);
-
+        int index = lastParticipant.getIndex() + 1;
+        ShufflingParticipant.addParticipant(this.id, participantId, index);
         // Check if participant registration is complete and if so update the shuffling
-        if (participant.getIndex() == this.participantCount - 1) {
+        if (index == this.participantCount - 1) {
             this.assigneeAccountId = this.issuerId;
             setStage(Stage.PROCESSING);
         } else {
@@ -561,14 +561,18 @@ public final class Shuffling {
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
+                if (blamedAccountId != 0) {
+                    // as a penalty the deposit goes to the generator of the finish block
+                    Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
+                    blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
+                    blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
+                }
                 if (isCurrency()) {
                     participantAccount.addToUnconfirmedCurrencyUnits(event, eventId, currencyId, amount);
                     if (participantAccount.getId() != blamedAccountId) {
                         participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
                     } else {
-                        // as a penalty the deposit goes to the generator of the finish block
                         participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
-                        Account.getAccount(block.getGeneratorId()).addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
                     }
                 } else {
                     if (participantAccount.getId() != blamedAccountId) {
@@ -576,7 +580,6 @@ public final class Shuffling {
                     } else {
                         participantAccount.addToUnconfirmedBalanceNQT(event, eventId, amount - Constants.SHUFFLE_DEPOSIT_NQT);
                         participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
-                        Account.getAccount(block.getGeneratorId()).addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
                     }
                 }
             }

@@ -102,7 +102,7 @@ public final class Constants {
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply
     public static final byte MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS = 3;
-    public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 100;
+    public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 30; //TODO: find max possible number, not likely to be > 30
     public static final short MIN_SHUFFLING_DELAY = 5;
     public static final short MAX_SHUFFLING_DELAY = 1440;
     public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
