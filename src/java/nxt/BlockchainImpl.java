@@ -508,7 +508,7 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<TransactionImpl> getExpectedTransactions(Filter<Transaction> filter) {
-        Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+        Map<TransactionType, Map<String, Integer>> duplicates = new HashMap<>();
         BlockchainProcessorImpl blockchainProcessor = BlockchainProcessorImpl.getInstance();
         List<TransactionImpl> result = new ArrayList<>();
         readLock();

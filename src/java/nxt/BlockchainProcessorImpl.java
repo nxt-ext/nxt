@@ -1251,7 +1251,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockOutOfOrderException(msg, block);
                 }
 
-                Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+                Map<TransactionType, Map<String, Integer>> duplicates = new HashMap<>();
                 List<TransactionImpl> validPhasedTransactions = new ArrayList<>();
                 List<TransactionImpl> invalidPhasedTransactions = new ArrayList<>();
                 validatePhasedTransactions(previousLastBlock.getHeight(), validPhasedTransactions, invalidPhasedTransactions, duplicates);
@@ -1284,7 +1284,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void validatePhasedTransactions(int height, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions,
-                                            Map<TransactionType, Map<String, Boolean>> duplicates) {
+                                            Map<TransactionType, Map<String, Integer>> duplicates) {
         if (height >= Constants.PHASING_BLOCK) {
             try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(height + 1)) {
                 for (TransactionImpl phasedTransaction : phasedTransactions) {
@@ -1343,7 +1343,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private void validateTransactions(BlockImpl block, BlockImpl previousLastBlock, int curTime, Map<TransactionType, Map<String, Boolean>> duplicates) throws BlockNotAcceptedException {
+    private void validateTransactions(BlockImpl block, BlockImpl previousLastBlock, int curTime, Map<TransactionType, Map<String, Integer>> duplicates) throws BlockNotAcceptedException {
         long payloadLength = 0;
         long calculatedTotalAmount = 0;
         long calculatedTotalFee = 0;
@@ -1577,7 +1577,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    SortedSet<UnconfirmedTransaction> selectUnconfirmedTransactions(Map<TransactionType, Map<String, Boolean>> duplicates, Block previousBlock, int blockTimestamp) {
+    SortedSet<UnconfirmedTransaction> selectUnconfirmedTransactions(Map<TransactionType, Map<String, Integer>> duplicates, Block previousBlock, int blockTimestamp) {
         List<UnconfirmedTransaction> orderedUnconfirmedTransactions = new ArrayList<>();
         try (FilteringIterator<UnconfirmedTransaction> unconfirmedTransactions = new FilteringIterator<>(
                 TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions(),
@@ -1635,7 +1635,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     void generateBlock(String secretPhrase, int blockTimestamp) throws BlockNotAcceptedException {
 
-        Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+        Map<TransactionType, Map<String, Integer>> duplicates = new HashMap<>();
         if (blockchain.getHeight() >= Constants.PHASING_BLOCK) {
             try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(blockchain.getHeight() + 1)) {
                 for (TransactionImpl phasedTransaction : phasedTransactions) {
@@ -1811,7 +1811,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             if (currentBlock.getId() != currentBlockId || currentBlock.getHeight() > blockchain.getHeight() + 1) {
                                 throw new NxtException.NotValidException("Database blocks in the wrong order!");
                             }
-                            Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+                            Map<TransactionType, Map<String, Integer>> duplicates = new HashMap<>();
                             List<TransactionImpl> validPhasedTransactions = new ArrayList<>();
                             List<TransactionImpl> invalidPhasedTransactions = new ArrayList<>();
                             validatePhasedTransactions(blockchain.getHeight(), validPhasedTransactions, invalidPhasedTransactions, duplicates);

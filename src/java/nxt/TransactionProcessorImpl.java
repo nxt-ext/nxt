@@ -162,7 +162,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Map<TransactionType, Map<String, Boolean>> unconfirmedDuplicates = new HashMap<>();
+    private final Map<TransactionType, Map<String, Integer>> unconfirmedDuplicates = new HashMap<>();
 
 
     private final Runnable removeUnconfirmedTransactionsThread = () -> {

@@ -1044,11 +1044,11 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    boolean isDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+    boolean isDuplicate(Map<TransactionType, Map<String, Integer>> duplicates) {
         return type.isDuplicate(this, duplicates);
     }
 
-    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Integer>> duplicates) {
         return type.isUnconfirmedDuplicate(this, duplicates);
     }
 

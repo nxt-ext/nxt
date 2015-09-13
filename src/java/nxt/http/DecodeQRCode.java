@@ -24,19 +24,20 @@ import com.google.zxing.NotFoundException;
 import com.google.zxing.Result;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
+import nxt.NxtException;
+import nxt.util.Convert;
+import nxt.util.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONStreamAware;
+
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletRequest;
-import nxt.NxtException;
-import nxt.util.Convert;
-import nxt.util.Logger;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
 /**
  * <p>The DecodeQRCode API converts a base64-encoded image of a

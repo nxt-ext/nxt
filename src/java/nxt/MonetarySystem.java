@@ -84,7 +84,7 @@ public abstract class MonetarySystem extends TransactionType {
     }
 
     @Override
-    boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+    boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
         if (!(transaction.getAttachment() instanceof Attachment.MonetarySystemAttachment)) {
             return false;
         }
@@ -160,7 +160,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             String nameLower = attachment.getName().toLowerCase();
             String codeLower = attachment.getCode().toLowerCase();
@@ -747,14 +747,14 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
             return super.isDuplicate(transaction, duplicates) ||
                     TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true);
         }
 
         @Override
-        boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
             return TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true);
         }
@@ -794,7 +794,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyDeletion attachment = (Attachment.MonetarySystemCurrencyDeletion) transaction.getAttachment();
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
             String nameLower = currency.getName().toLowerCase();
@@ -990,7 +990,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             //TODO: implement
             return false;
         }
@@ -1114,7 +1114,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             //TODO: implement
             return false;
         }
@@ -1196,7 +1196,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             //TODO: implement
             return false;
         }
@@ -1251,7 +1251,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             if (super.isDuplicate(transaction, duplicates)) {
                 return true;
             }
