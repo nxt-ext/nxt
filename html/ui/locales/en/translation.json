@@ -1436,5 +1436,9 @@
   "coin_exchange": "Coin Exchange",
   "exchange_using_shape_shift": "Exchange coins using Shape Shift",
   "exchange_nxt_to_coin": "Exchange NXT to Coin",
-  "exchange_coin_to_nxt": "Exchange Coin to NXT"
+  "exchange_coin_to_nxt": "Exchange Coin to NXT",
+  "exchange_nxt_to_coin_shift": "Exchange NXT to __coin__ (shift)",
+  "exchange_nxt_to_coin_send_amount": "Exchange NXT to __coin__ (send amount)",
+  "exchange_coin_to_nxt_shift": "Exchange __coin__ to NXT (shift)",
+  "exchange_coin_to_nxt_send_amount": "Exchange __coin__ to NXT (send amount)"
 }

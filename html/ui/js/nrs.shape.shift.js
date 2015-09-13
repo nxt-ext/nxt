@@ -27,32 +27,6 @@ var NRS = (function(NRS, $) {
         return pairParts[1] + '_' + pairParts[0];
     };
 
-    var formatTimestamp = function (timestamp) {
-        var date = new Date(timestamp);
-        var d = date.getDate();
-        var dd = d < 10 ? '0' + d : d;
-        var M = date.getMonth() + 1;
-        var MM = M < 10 ? '0' + M : M;
-        var yyyy = date.getFullYear();
-
-        var res = 'dd/MM/yyyy'
-            .replace(/dd/g, dd)
-            .replace(/MM/g, MM)
-            .replace(/yyyy/g, yyyy);
-
-        var hours = date.getHours();
-        var minutes = date.getMinutes();
-        if (minutes < 10) {
-            minutes = "0" + minutes;
-        }
-        var seconds = date.getSeconds();
-        if (seconds < 10) {
-            seconds = "0" + seconds;
-        }
-        res += " " + hours + ":" + minutes + ":" + seconds;
-        return res;
-    };
-
     var getCoins = function() {
         // TODO add to settings
         return DEF_COINS;
@@ -74,7 +48,7 @@ var NRS = (function(NRS, $) {
             }
         }
         addresses.splice(0, 0, { address: address, pair: pair, time: Date.now() });
-        console.log("deposit address " + address + " pair " + pair + " added");
+        NRS.logConsole("deposit address " + address + " pair " + pair + " added");
         localStorage["shapeshift.depositAddresses." + NRS.accountRS] = JSON.stringify(addresses);
     };
 
@@ -89,7 +63,7 @@ var NRS = (function(NRS, $) {
             data: requestData
         }).done(function(response, status) {
             if (status != "success") {
-                console.log(action + ' status ' + status);
+                NRS.logConsole(action + ' status ' + status);
                 if (modal) {
                     NRS.showModalError(status, modal);
                 }
@@ -99,10 +73,10 @@ var NRS = (function(NRS, $) {
                 var msg;
                 if (error.code) {
                     msg = ' code ' + error.code + ' errno ' + error.errno + ' syscall ' + error.syscall;
-                    console.log(action + msg);
+                    NRS.logConsole(action + msg);
                 } else {
                     msg = error;
-                    console.log(action + ' error ' + error);
+                    NRS.logConsole(action + ' error ' + error);
                 }
                 if (!ignoreError) {
                     return;
@@ -114,7 +88,7 @@ var NRS = (function(NRS, $) {
             doneCallback(response);
         }).fail(function (xhr, textStatus, error) {
             var message = "Request failed, action " + action + " method " + method + " status " + textStatus + " error " + error;
-            console.log(message);
+            NRS.logConsole(message);
             throw message;
         })
     };
@@ -129,10 +103,10 @@ var NRS = (function(NRS, $) {
         for (var i = 0; i < coins.length; i++) {
             tasks.push((function (i) {
                 return function (callback) {
-                    console.log("marketinfo iteration " + i);
+                    NRS.logConsole("marketinfo iteration " + i);
                     var pair = coinToPair(op, coins[i]);
                     var counterPair = reversePair(pair);
-                    console.log("counterPair " + counterPair);
+                    NRS.logConsole("counterPair " + counterPair);
                     apiCall("marketinfo/" + pair, {}, "GET", function(data) {
                         var row = "";
                         row += "<tr>";
@@ -158,27 +132,27 @@ var NRS = (function(NRS, $) {
                             "data-pair='" + pair + "' data-rate='" + data.rate + "' data-min='" + data.minimum + "' data-max='" + data.limit +
                             "' data-fee='" + data.minerFee + "'>Pay</a></td>";
                         row += "</tr>";
-                        console.log(row);
+                        NRS.logConsole(row);
                         callback(null, row);
                     });
                 }
             })(i));
         }
-        console.log(tasks.length + " tasks ready to run");
+        NRS.logConsole(tasks.length + " tasks ready to run");
         async.series(tasks, function (err, results) {
             var table = $("#p_shape_shift_" + op + "_nxt");
             if (err) {
-                console.log("Err: ", err, "\nResults:", results);
+                NRS.logConsole("Err: ", err, "\nResults:", results);
                 table.find("tbody").empty();
                 NRS.dataLoadFinished(table);
                 return;
             }
-            console.log("results", results);
+            NRS.logConsole("results", results);
             var rows = "";
             for (i = 0; i < results.length; i++) {
                 rows += results[i];
             }
-            console.log("rows " + rows);
+            NRS.logConsole("rows " + rows);
             table.find("tbody").empty().append(rows);
             NRS.dataLoadFinished(table);
         });
@@ -215,23 +189,23 @@ var NRS = (function(NRS, $) {
         for (var i = 0; i < depositAddresses.length; i++) {
             tasks.push((function (i) {
                 return function (callback) {
-                    console.log("txStat iteration " + i);
+                    NRS.logConsole("txStat iteration " + i);
                     apiCall("txStat/" + depositAddresses[i].address, {}, "GET", function(data) {
                         var row = "";
                         row += "<tr>";
-                        row += "<td>" + formatTimestamp(depositAddresses[i].time) + "</td>";
+                        row += "<td>" + NRS.formatTimestamp(depositAddresses[i].time, false, true) + "</td>";
                         row += "<td>" + data.status + "</td>";
                         if (data.status == "failed") {
                             row += "<td>" + data.error + "</td>";
                             row += empty + empty + empty + empty + empty + empty;
-                            console.log(row);
+                            NRS.logConsole(row);
                             callback(null, row);
                             return;
                         }
                         row += "<td>" + getAddressLink(data.address, depositAddresses[i].pair.split('_')[0]) + "</td>";
                         if (data.status == "no_deposits") {
                             row += empty + empty + empty + empty + empty + empty;
-                            console.log(row);
+                            NRS.logConsole(row);
                             callback(null, row);
                             return;
                         }
@@ -239,7 +213,7 @@ var NRS = (function(NRS, $) {
                         row += "<td>" + data.incomingType + "</td>";
                         if (data.status == "received") {
                             row += empty + empty + empty + empty;
-                            console.log(row);
+                            NRS.logConsole(row);
                             callback(null, row);
                             return;
                         }
@@ -247,13 +221,13 @@ var NRS = (function(NRS, $) {
                         row += "<td>" + data.outgoingCoin + "</td>";
                         row += "<td>" + data.outgoingType + "</td>";
                         row += "<td>" + getTransactionLink(data.transaction, depositAddresses[i].pair.split('_')[1]) + "</td>";
-                        console.log(row);
+                        NRS.logConsole(row);
                         callback(null, row);
                     }, true);
                 }
             })(i));
         }
-        console.log(tasks.length + " tasks ready to run");
+        NRS.logConsole(tasks.length + " tasks ready to run");
         var table = $("#p_shape_shift_my_table");
         if (tasks.length == 0) {
             table.find("tbody").empty();
@@ -261,17 +235,17 @@ var NRS = (function(NRS, $) {
         }
         async.series(tasks, function (err, results) {
             if (err) {
-                console.log("Err: ", err, "\nResults:", results);
+                NRS.logConsole("Err: ", err, "\nResults:", results);
                 table.find("tbody").empty();
                 NRS.dataLoadFinished(table);
                 return;
             }
-            console.log("results", results);
+            NRS.logConsole("results", results);
             var rows = "";
             for (i = 0; i < results.length; i++) {
                 rows += results[i];
             }
-            console.log("rows " + rows);
+            NRS.logConsole("rows " + rows);
             table.find("tbody").empty().append(rows);
             NRS.dataLoadFinished(table);
         });
@@ -279,7 +253,7 @@ var NRS = (function(NRS, $) {
 
     function renderRecentTable() {
         apiCall('recenttx/50', {}, 'GET', function (data) {
-            console.log("recent");
+            NRS.logConsole("recent");
             var rows = "";
             if (data) {
                 for (var i = 0; i < data.length; i++) {
@@ -290,12 +264,12 @@ var NRS = (function(NRS, $) {
                     rows += "<tr>";
                     rows += "<td>" + String(transaction.curIn).escapeHTML() + "</td>";
                     rows += "<td>" + String(transaction.curOut).escapeHTML() + "</td>";
-                    rows += "<td>" + formatTimestamp(1000 * transaction.timestamp) + "</td>";
+                    rows += "<td>" + NRS.formatTimestamp(1000 * transaction.timestamp, false, true) + "</td>";
                     rows += "<td>" + transaction.amount + "</td>";
                     rows += "</tr>";
                 }
             }
-            console.log("recent rows " + rows);
+            NRS.logConsole("recent rows " + rows);
             var table = $("#p_shape_shift_table");
             table.find("tbody").empty().append(rows);
             NRS.dataLoadFinished(table);
@@ -304,7 +278,7 @@ var NRS = (function(NRS, $) {
 
     function renderNxtLimit() {
         apiCall('limit/nxt_btc', {}, 'GET', function (data) {
-            console.log("limit1 " + data.limit);
+            NRS.logConsole("limit1 " + data.limit);
             $('#shape_shift_nxt_avail').html(String(data.limit).escapeHTML());
         });
     }
@@ -317,7 +291,7 @@ var NRS = (function(NRS, $) {
         renderMyExchangesTable();
         renderRecentTable();
         NRS.pageLoaded();
-        setTimeout(NRS.pages.p_shape_shift, 60000);
+        setTimeout(NRS.pages.exchange, 60000);
     };
 
     $('.coin-select').change(function() {
@@ -355,8 +329,8 @@ var NRS = (function(NRS, $) {
         var pair = invoker.data("pair");
         $("#m_shape_shift_buy_pair").val(pair);
         var coin = pairToCoin(pair);
-        console.log("modal invoked pair " + pair + " coin " + coin);
-        $("#m_shape_shift_buy_title").html("Exchange NXT to " + coin);
+        NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
+        $("#m_shape_shift_buy_title").html($.t("exchange_nxt_to_coin_shift", { coin: coin }));
         $("#m_shape_shift_buy_min").val(invoker.data("min"));
         $("#m_shape_shift_buy_min_coin").html("NXT");
         $("#m_shape_shift_buy_max").val(invoker.data("max"));
@@ -374,37 +348,37 @@ var NRS = (function(NRS, $) {
         var amountNQT = NRS.convertToNQT($("#m_shape_shift_buy_amount").val());
         var withdrawal = $("#m_shape_shift_buy_withdrawal_address").val();
         var pair = $("#m_shape_shift_buy_pair").val();
-        console.log('shift withdrawal ' + withdrawal + " pair " + pair);
+        NRS.logConsole('shift withdrawal ' + withdrawal + " pair " + pair);
         apiCall('shift', {
             withdrawal: withdrawal,
             pair: pair,
             returnAddress: NRS.accountRS,
             apiKey: API_KEY
         }, 'POST', function (data) {
-            console.log("shift response");
+            NRS.logConsole("shift response");
             var msg;
             if (data.error) {
                 return;
             }
             if (data.depositType != "NXT") {
                 msg = "incorrect deposit coin " + data.depositType;
-                console.log(msg);
+                NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
             if (data.withdrawalType != pairToCoin(pair)) {
                 msg = "incorrect withdrawal coin " + data.withdrawalType;
-                console.log(msg);
+                NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
             if (data.withdrawal != withdrawal) {
                 msg = "incorrect withdrawal address " + data.withdrawal;
-                console.log(msg);
+                NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
-            console.log("shift request done, deposit address " + data.deposit);
+            NRS.logConsole("shift request done, deposit address " + data.deposit);
             NRS.sendRequest("sendMoney", {
                 "recipient": data.deposit,
                 "amountNQT": amountNQT,
@@ -413,7 +387,7 @@ var NRS = (function(NRS, $) {
                 "feeNQT": NRS.convertToNQT(1)
             }, function (response) {
                 if (response.errorCode) {
-                    console.log("sendMoney response " + response.errorCode + " " + response.errorDescription);
+                    NRS.logConsole("sendMoney response " + response.errorCode + " " + response.errorDescription);
                     NRS.showModalError(NRS.translateServerError(response), modal);
                     return;
                 }
@@ -429,8 +403,8 @@ var NRS = (function(NRS, $) {
         var invoker = $(e.relatedTarget);
         var pair = invoker.data("pair");
         var coin = pairToCoin(pair);
-        console.log("modal invoked pair " + pair + " coin " + coin);
-        $("#m_send_amount_buy_title").html("Pay " + coin + " with NXT");
+        NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
+        $("#m_send_amount_buy_title").html($.t("exchange_nxt_to_coin_send_amount", { coin: coin }));
         $("#m_send_amount_buy_withdrawal_amount_coin").html(coin);
         $("#m_send_amount_buy_rate_text").html(coin + " per 1 NXT");
         $("#m_send_amount_withdrawal_address_coin").html(coin + " address");
@@ -485,7 +459,7 @@ var NRS = (function(NRS, $) {
             // add 1 NXT fee to make sure the net amount is what requested by shape shift
             depositAmount.val(parseFloat(data.success.depositAmount) + 1);
             depositAddress.val(data.success.deposit);
-            expiration.val(formatTimestamp(data.success.expiration));
+            expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
             buySubmit.prop('disabled', false);
         }, true, modal)
     });
@@ -495,7 +469,7 @@ var NRS = (function(NRS, $) {
         var modal = $(this).closest(".modal");
         var pair = $("#m_send_amount_buy_pair").val();
         var depositAddress = $("#m_send_amount_buy_deposit_address").val();
-        console.log("pay request submitted, deposit address " + depositAddress);
+        NRS.logConsole("pay request submitted, deposit address " + depositAddress);
         var amountNQT = NRS.convertToNQT($("#m_send_amount_buy_deposit_amount").val());
         NRS.sendRequest("sendMoney", {
             "recipient": depositAddress,
@@ -505,7 +479,7 @@ var NRS = (function(NRS, $) {
             "feeNQT": NRS.convertToNQT(1)
         }, function (response) {
             if (response.errorCode) {
-                console.log('sendMoney error ' + response.errorDescription);
+                NRS.logConsole('sendMoney error ' + response.errorDescription);
                 NRS.showModalError(response.errorDescription, modal);
                 return;
             }
@@ -521,8 +495,8 @@ var NRS = (function(NRS, $) {
         var modal = $(this).closest(".modal");
         var pair = invoker.data("pair");
         var coin = pairToCoin(pair);
-        console.log("modal invoked pair " + pair + " coin " + coin);
-        $("#m_shape_shift_sell_title").html("Exchange " + coin + " to NXT");
+        NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
+        $("#m_shape_shift_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: coin }));
         $("#m_shape_shift_sell_min").val(invoker.data("min"));
         $("#m_shape_shift_sell_min_coin").html(coin);
         $("#m_shape_shift_sell_max").val(invoker.data("max"));
@@ -541,27 +515,27 @@ var NRS = (function(NRS, $) {
             return;
         }
         apiCall('shift', { withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: API_KEY }, "POST", function (data) {
-            console.log("shift request done");
+            NRS.logConsole("shift request done");
             var msg;
             if (data.depositType != coin) {
                 msg = "incorrect deposit coin " + data.depositType;
-                console.log(msg);
+                NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
             if (data.withdrawalType != "NXT") {
                 msg = "incorrect withdrawal coin " + data.withdrawalType;
-                console.log(msg);
+                NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
             if (data.withdrawal != NRS.accountRS) {
                 msg = "incorrect withdrawal address " + data.withdrawal;
-                console.log(msg);
+                NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
-            console.log("shift request done, deposit address " + data.deposit);
+            NRS.logConsole("shift request done, deposit address " + data.deposit);
             $("#m_shape_shift_sell_deposit_address").html(data.deposit);
             NRS.sendRequestQRCode("#m_shape_shift_sell_qr_code", data.deposit, 125, 125);
         })
@@ -584,7 +558,7 @@ var NRS = (function(NRS, $) {
         if (deposit != "") {
             apiCall('cancelpending', { address: deposit }, 'POST', function(data) {
                 var msg = data.success ? data.success : data.err;
-                console.log("sell cancelled response: " + msg);
+                NRS.logConsole("sell cancelled response: " + msg);
             })
         }
     });
@@ -594,8 +568,8 @@ var NRS = (function(NRS, $) {
         var modal = $(this).closest(".modal");
         var pair = invoker.data("pair");
         var coin = pairToCoin(pair);
-        console.log("modal invoked pair " + pair + " coin " + coin);
-        $("#m_send_amount_sell_title").html("Pay NXT with " + coin);
+        NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
+        $("#m_send_amount_sell_title").html($.t("exchange_coin_to_nxt_send_amount", { coin: coin }));
         $("#m_send_amount_sell_rate_text").html(coin + " per 1 NXT");
         $("#m_send_amount_sell_fee_coin").html("NXT");
         $("#m_send_amount_sell_withdrawal_amount_coin").html("NXT");
@@ -648,8 +622,8 @@ var NRS = (function(NRS, $) {
             fee.val(data.success.minerFee);
             depositAmount.val(parseFloat(data.success.depositAmount));
             depositAddress.html(data.success.deposit);
-            expiration.val(formatTimestamp(data.success.expiration));
-            console.log("sendamount request done, deposit address " + data.success.deposit);
+            expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
+            NRS.logConsole("sendamount request done, deposit address " + data.success.deposit);
             NRS.sendRequestQRCode("#m_send_amount_sell_qr_code", "bitcoin:" + data.success.deposit + "?amount=" + data.success.depositAmount, 125, 125);
             $("#m_send_amount_sell_done").prop('disabled', false);
         }, true, modal)
@@ -672,7 +646,7 @@ var NRS = (function(NRS, $) {
         if (deposit != "") {
             apiCall('cancelpending', { address: deposit }, 'POST', function(data) {
                 var msg = data.success ? data.success : data.err;
-                console.log("sell cancelled response: " + msg);
+                NRS.logConsole("sell cancelled response: " + msg);
             })
         }
     });
