@@ -1142,7 +1142,7 @@ public abstract class TransactionType {
                     if (uri.length() > Constants.MAX_HUB_ANNOUNCEMENT_URI_LENGTH) {
                         throw new NxtException.NotValidException("Invalid URI length: " + uri.length());
                     }
-                    //TODO: also check URI validity here?
+                    //also check URI validity here?
                 }
             }
 

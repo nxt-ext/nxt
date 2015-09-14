@@ -937,6 +937,8 @@ public abstract class MonetarySystem extends TransactionType {
             }
         }
 
+        //NOTE: isDuplicate currently inherited from MonetarySystem
+
         @Override
         public boolean canHaveRecipient() {
             return false;
@@ -991,8 +993,12 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-            //TODO: implement
-            return false;
+            Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            return TransactionType.isDuplicate(SHUFFLING_REGISTRATION,
+                    Long.toUnsignedString(shuffling.getId()) + "." + Long.toUnsignedString(transaction.getSenderId()), duplicates, true)
+                    || TransactionType.isDuplicate(SHUFFLING_REGISTRATION,
+                    Long.toUnsignedString(shuffling.getId()), duplicates, shuffling.getParticipantCount() - ShufflingParticipant.getCount(shuffling.getId()));
         }
 
         @Override
@@ -1115,8 +1121,9 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-            //TODO: implement
-            return false;
+            Attachment.MonetarySystemShufflingProcessing attachment = (Attachment.MonetarySystemShufflingProcessing) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            return TransactionType.isDuplicate(SHUFFLING_PROCESSING, Long.toUnsignedString(shuffling.getId()), duplicates, true);
         }
 
         @Override
@@ -1197,8 +1204,10 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-            //TODO: implement
-            return false;
+            Attachment.MonetarySystemShufflingVerification attachment = (Attachment.MonetarySystemShufflingVerification) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            return TransactionType.isDuplicate(SHUFFLING_VERIFICATION,
+                    Long.toUnsignedString(shuffling.getId()) + "." + Long.toUnsignedString(transaction.getSenderId()), duplicates, true);
         }
 
         @Override
@@ -1251,16 +1260,6 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-            if (super.isDuplicate(transaction, duplicates)) {
-                return true;
-            }
-            Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
-            String key = Long.toUnsignedString(attachment.getShufflingId()) + "." + Long.toUnsignedString(transaction.getSenderId());
-            return TransactionType.isDuplicate(SHUFFLING_CANCELLATION, key, duplicates, true);
-        }
-
-        @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
                 throw new NxtException.NotYetEnabledException("Shuffling not yet enabled");
@@ -1299,6 +1298,14 @@ public abstract class MonetarySystem extends TransactionType {
                     throw new NxtException.NotValidException("Invalid keySeed: " + Convert.toHexString(keySeed));
                 }
             }
+        }
+
+        @Override
+        boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+            Attachment.MonetarySystemShufflingCancellation attachment = (Attachment.MonetarySystemShufflingCancellation) transaction.getAttachment();
+            Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
+            return TransactionType.isDuplicate(SHUFFLING_VERIFICATION, // use VERIFICATION for unique type
+                    Long.toUnsignedString(shuffling.getId()) + "." + Long.toUnsignedString(transaction.getSenderId()), duplicates, true);
         }
 
         @Override
