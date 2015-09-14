@@ -495,10 +495,12 @@ public class AccountLedger {
             CURRENCY_RESERVE_INCREASE(44, true),
             CURRENCY_TRANSFER(45, true),
             CURRENCY_UNDO_CROWDFUNDING(46, false),
-            CURRENCY_SHUFFLING(51, false), //TODO: need more shuffling events
         // TYPE_DATA
             TAGGED_DATA_UPLOAD(47, true),
-            TAGGED_DATA_EXTEND(48, true);
+            TAGGED_DATA_EXTEND(48, true),
+        // TYPE_SHUFFLING
+            SHUFFLING(51, false); //TODO: need more shuffling events
+
 
         /** Event code mapping */
         private static final Map<Integer, LedgerEvent> eventMap = new HashMap<>();

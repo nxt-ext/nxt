@@ -19,7 +19,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.Constants;
-import nxt.Currency;
+import nxt.HoldingType;
 import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
@@ -31,24 +31,22 @@ public final class ShufflingCreate extends CreateTransaction {
 
     private ShufflingCreate() {
         super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION},
-                "currency", "units", "amountNQT", "participantCount", "cancellationHeight");
+                "holding", "holdingType", "amount", "participantCount", "cancellationHeight");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long currencyId = 0;
-        long amount;
-        Currency currency = ParameterParser.getCurrency(req, false);
-        if (currency != null) {
-            currencyId = currency.getId();
-            amount = ParameterParser.getLong(req, "units", 1L, Constants.MAX_BALANCE_NQT, true);
-        } else {
-            amount = ParameterParser.getAmountNQT(req);
+        HoldingType holdingType = HoldingType.get(ParameterParser.getByte(req, "holdingType", (byte) 0, (byte) 2, true));
+        long amount = ParameterParser.getLong(req, "amount", holdingType == HoldingType.NXT ? Constants.SHUFFLE_DEPOSIT_NQT : 1L,
+                Long.MAX_VALUE, true);
+        long holdingId = ParameterParser.getUnsignedLong(req, "holding", holdingType != HoldingType.NXT);
+        if (holdingType == HoldingType.NXT && holdingId != 0) {
+            return JSONResponses.incorrect("holding", "holding only used for currency or asset shuffling");
         }
-        byte participantCount = ParameterParser.getByte(req, "participantCount", Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS, Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS, true);
+        byte participantCount = ParameterParser.getByte(req, "participantCount", Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS,
+                Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS, true);
         int cancellationHeight = ParameterParser.getInt(req, "cancellationHeight", 0, Integer.MAX_VALUE, true);
-        Attachment attachment = new Attachment.MonetarySystemShufflingCreation(currencyId, amount, participantCount, cancellationHeight);
-
+        Attachment attachment = new Attachment.ShufflingCreation(holdingId, holdingType, amount, participantCount, cancellationHeight);
         Account account = ParameterParser.getSenderAccount(req);
         return createTransaction(req, account, attachment);
     }

@@ -132,11 +132,11 @@ public final class Shuffling {
         return shufflingTable.get(shufflingDbKeyFactory.newKey(shufflingId));
     }
 
-    public static int getCurrencyShufflingCount(long currencyId) {
-        return shufflingTable.getCount(new DbClause.LongClause("currency_id", currencyId));
+    public static int getHoldingShufflingCount(long holdingId) {
+        return shufflingTable.getCount(new DbClause.LongClause("holding_id", holdingId));
     }
 
-    static void addShuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
+    static void addShuffling(Transaction transaction, Attachment.ShufflingCreation attachment) {
         Shuffling shuffling = new Shuffling(transaction, attachment);
         shufflingTable.insert(shuffling);
         ShufflingParticipant.addParticipant(shuffling.getId(), transaction.getSenderId(), 0);
@@ -147,7 +147,8 @@ public final class Shuffling {
 
     private final long id;
     private final DbKey dbKey;
-    private final long currencyId;
+    private final long holdingId;
+    private final HoldingType holdingType;
     private final long issuerId;
     private final long amount;
     private final byte participantCount;
@@ -157,10 +158,11 @@ public final class Shuffling {
     private long assigneeAccountId;
     private long cancellingAccountId;
 
-    private Shuffling(Transaction transaction, Attachment.MonetarySystemShufflingCreation attachment) {
+    private Shuffling(Transaction transaction, Attachment.ShufflingCreation attachment) {
         this.id = transaction.getId();
         this.dbKey = shufflingDbKeyFactory.newKey(this.id);
-        this.currencyId = attachment.getCurrencyId();
+        this.holdingId = attachment.getHoldingId();
+        this.holdingType = attachment.getHoldingType();
         this.issuerId = transaction.getSenderId();
         this.amount = attachment.getAmount();
         this.participantCount = attachment.getParticipantCount();
@@ -172,7 +174,8 @@ public final class Shuffling {
     private Shuffling(ResultSet rs) throws SQLException {
         this.id = rs.getLong("id");
         this.dbKey = shufflingDbKeyFactory.newKey(this.id);
-        this.currencyId = rs.getLong("currency_id");
+        this.holdingId = rs.getLong("holding_id");
+        this.holdingType = HoldingType.get(rs.getByte("holding_type"));
         this.issuerId = rs.getLong("issuer_id");
         this.amount = rs.getLong("amount");
         this.participantCount = rs.getByte("participant_count");
@@ -183,14 +186,15 @@ public final class Shuffling {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, currency_id, "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, holding_id, holding_type, "
                 + "issuer_id, amount, participant_count, cancellation_height, stage, assignee_account_id, "
                 + "cancelling_account_id, height, latest) "
                 + "KEY (id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.currencyId);
+            DbUtils.setLongZeroToNull(pstmt, ++i, this.holdingId);
+            pstmt.setByte(++i, this.holdingType.getCode());
             pstmt.setLong(++i, this.issuerId);
             pstmt.setLong(++i, this.amount);
             pstmt.setByte(++i, this.participantCount);
@@ -207,11 +211,13 @@ public final class Shuffling {
         return id;
     }
 
-    public boolean isCurrency() {
-        return currencyId != 0;
+    public long getHoldingId() {
+        return holdingId;
     }
 
-    public long getCurrencyId() { return currencyId; }
+    public HoldingType getHoldingType() {
+        return holdingType;
+    }
 
     public long getIssuerId() {
         return issuerId;
@@ -265,7 +271,7 @@ public final class Shuffling {
         return nonce;
     }
 
-    public Attachment.MonetarySystemShufflingProcessing process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
+    public Attachment.ShufflingProcessing process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
         byte[][] data = Convert.EMPTY_BYTES;
         byte[] previousDataTransactionFullHash = Convert.EMPTY_BYTE;
         List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
@@ -318,11 +324,11 @@ public final class Shuffling {
         outputDataList.add(bytesToEncrypt);
         // Shuffle the tokens and save the shuffled tokens as the participant data
         Collections.shuffle(outputDataList, Crypto.getSecureRandom());
-        return new Attachment.MonetarySystemShufflingProcessing(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
+        return new Attachment.ShufflingProcessing(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                 previousDataTransactionFullHash);
     }
 
-    public Attachment.MonetarySystemShufflingCancellation revealKeySeeds(final String secretPhrase, long cancellingAccountId) {
+    public Attachment.ShufflingCancellation revealKeySeeds(final String secretPhrase, long cancellingAccountId) {
         Nxt.getBlockchain().readLock();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
@@ -337,7 +343,7 @@ public final class Shuffling {
                 }
             }
             if (!participants.hasNext()) {
-                return new Attachment.MonetarySystemShufflingCancellation(this.id, Convert.EMPTY_BYTES, dataTransactionFullHash,
+                return new Attachment.ShufflingCancellation(this.id, Convert.EMPTY_BYTES, dataTransactionFullHash,
                         cancellingAccountId);
             }
             if (data == null) {
@@ -369,7 +375,7 @@ public final class Shuffling {
                 AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.readEncryptedData(decryptedBytes);
                 decryptedBytes = encryptedData.decrypt(keySeed, nextParticipantPublicKey);
             }
-            return new Attachment.MonetarySystemShufflingCancellation(this.id, keySeeds.toArray(new byte[keySeeds.size()][]),
+            return new Attachment.ShufflingCancellation(this.id, keySeeds.toArray(new byte[keySeeds.size()][]),
                     dataTransactionFullHash, cancellingAccountId);
         } finally {
             Nxt.getBlockchain().readUnlock();
@@ -479,7 +485,7 @@ public final class Shuffling {
         shufflingTable.insert(this);
     }
 
-    void updateParticipantData(Transaction transaction, Attachment.MonetarySystemShufflingProcessing attachment) {
+    void updateParticipantData(Transaction transaction, Attachment.ShufflingProcessing attachment) {
         long participantId = transaction.getSenderId();
         byte[][] data = attachment.getData();
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
@@ -529,11 +535,9 @@ public final class Shuffling {
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
-                if (isCurrency()) {
-                    participantAccount.addToCurrencyUnits(AccountLedger.LedgerEvent.CURRENCY_SHUFFLING, this.id, currencyId, -amount);
-                    participantAccount.addToBalanceNQT(AccountLedger.LedgerEvent.CURRENCY_SHUFFLING, this.id, -Constants.SHUFFLE_DEPOSIT_NQT);
-                } else {
-                    participantAccount.addToBalanceNQT(AccountLedger.LedgerEvent.CURRENCY_SHUFFLING, this.id, -amount);
+                holdingType.addToBalance(participantAccount, AccountLedger.LedgerEvent.SHUFFLING, this.id, this.holdingId, -amount);
+                if (holdingType != HoldingType.NXT) {
+                    participantAccount.addToBalanceNQT(AccountLedger.LedgerEvent.SHUFFLING, this.id, -Constants.SHUFFLE_DEPOSIT_NQT);
                 }
             }
         }
@@ -541,11 +545,9 @@ public final class Shuffling {
             long recipientId = Account.getId(recipientPublicKey);
             Account recipientAccount = Account.addOrGetAccount(recipientId);
             recipientAccount.apply(recipientPublicKey);
-            if (isCurrency()) {
-                recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(AccountLedger.LedgerEvent.CURRENCY_SHUFFLING, this.id, currencyId, amount);
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.CURRENCY_SHUFFLING, this.id, Constants.SHUFFLE_DEPOSIT_NQT);
-            } else {
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.CURRENCY_SHUFFLING, this.id, amount);
+            holdingType.addToBalanceAndUnconfirmedBalance(recipientAccount, AccountLedger.LedgerEvent.SHUFFLING, this.id, this.holdingId, amount);
+            if (holdingType != HoldingType.NXT) {
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.SHUFFLING, this.id, Constants.SHUFFLE_DEPOSIT_NQT);
             }
         }
         setStage(Stage.DONE);
@@ -555,7 +557,7 @@ public final class Shuffling {
     }
 
     private void cancel(Block block) {
-        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.CURRENCY_SHUFFLING;
+        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING;
         long eventId = block.getId();
         long blamedAccountId = blame();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
@@ -567,20 +569,16 @@ public final class Shuffling {
                     blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
                     blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
                 }
-                if (isCurrency()) {
-                    participantAccount.addToUnconfirmedCurrencyUnits(event, eventId, currencyId, amount);
-                    if (participantAccount.getId() != blamedAccountId) {
+                holdingType.addToUnconfirmedBalance(participantAccount, event, eventId, this.holdingId, this.amount);
+                if (participantAccount.getId() != blamedAccountId) {
+                    if (holdingType != HoldingType.NXT) {
                         participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
-                    } else {
-                        participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
                     }
                 } else {
-                    if (participantAccount.getId() != blamedAccountId) {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, amount);
-                    } else {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, amount - Constants.SHUFFLE_DEPOSIT_NQT);
-                        participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
+                    if (holdingType == HoldingType.NXT) {
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
                     }
+                    participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
                 }
             }
         }

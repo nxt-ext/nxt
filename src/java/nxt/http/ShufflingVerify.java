@@ -40,7 +40,7 @@ public final class ShufflingVerify extends CreateTransaction {
         if (lastDataTransactionFullHash == null) {
             return JSONResponses.missing("lastDataTransactionFullHash");
         }
-        Attachment attachment = new Attachment.MonetarySystemShufflingVerification(shuffling.getId(), lastDataTransactionFullHash);
+        Attachment attachment = new Attachment.ShufflingVerification(shuffling.getId(), lastDataTransactionFullHash);
 
         Account account = ParameterParser.getSenderAccount(req);
         return createTransaction(req, account, attachment);

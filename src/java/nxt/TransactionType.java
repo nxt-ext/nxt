@@ -36,6 +36,7 @@ public abstract class TransactionType {
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
     static final byte TYPE_MONETARY_SYSTEM = 5;
     private static final byte TYPE_DATA = 6;
+    static final byte TYPE_SHUFFLING = 7;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
@@ -158,7 +159,7 @@ public abstract class TransactionType {
                 }
             case TYPE_MONETARY_SYSTEM:
                 return MonetarySystem.findTransactionType(subtype);
-            case (TYPE_DATA):
+            case TYPE_DATA:
                 switch (subtype) {
                     case SUBTYPE_DATA_TAGGED_DATA_UPLOAD:
                         return Data.TAGGED_DATA_UPLOAD;
@@ -167,6 +168,8 @@ public abstract class TransactionType {
                     default:
                         return null;
                 }
+            case TYPE_SHUFFLING:
+                return ShufflingTransaction.findTransactionType(subtype);
             default:
                 return null;
         }

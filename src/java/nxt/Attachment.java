@@ -2557,31 +2557,35 @@ public interface Attachment extends Appendix {
         }
     }
 
-    final class MonetarySystemShufflingCreation extends AbstractAttachment implements MonetarySystemAttachment {
+    final class ShufflingCreation extends AbstractAttachment {
 
-        private final long currencyId;
+        private final long holdingId;
+        private final HoldingType holdingType;
         private final long amount;
         private final byte participantCount;
         private final int cancellationHeight;
 
-        MonetarySystemShufflingCreation(ByteBuffer buffer, byte transactionVersion) {
+        ShufflingCreation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.currencyId = buffer.getLong();
+            this.holdingId = buffer.getLong();
+            this.holdingType = HoldingType.get(buffer.get());
             this.amount = buffer.getLong();
             this.participantCount = buffer.get();
             this.cancellationHeight = buffer.getInt();
         }
 
-        MonetarySystemShufflingCreation(JSONObject attachmentData) {
+        ShufflingCreation(JSONObject attachmentData) {
             super(attachmentData);
-            this.currencyId = Convert.parseUnsignedLong((String)attachmentData.get("currency"));
+            this.holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
+            this.holdingType = HoldingType.get(((Long)attachmentData.get("holdingType")).byteValue());
             this.amount = Convert.parseLong(attachmentData.get("amount"));
             this.participantCount = ((Long)attachmentData.get("participantCount")).byteValue();
             this.cancellationHeight = ((Long)attachmentData.get("cancellationHeight")).intValue();
         }
 
-        public MonetarySystemShufflingCreation(long currencyId, long amount, byte participantCount, int cancellationHeight) {
-            this.currencyId = currencyId;
+        public ShufflingCreation(long holdingId, HoldingType holdingType, long amount, byte participantCount, int cancellationHeight) {
+            this.holdingId = holdingId;
+            this.holdingType = holdingType;
             this.amount = amount;
             this.participantCount = participantCount;
             this.cancellationHeight = cancellationHeight;
@@ -2589,12 +2593,13 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return 8 + 8 + 1 + 4;
+            return 8 + 1 + 8 + 1 + 4;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putLong(currencyId);
+            buffer.putLong(holdingId);
+            buffer.put(holdingType.getCode());
             buffer.putLong(amount);
             buffer.put(participantCount);
             buffer.putInt(cancellationHeight);
@@ -2602,7 +2607,8 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyJSON(JSONObject attachment) {
-            attachment.put("currency", Long.toUnsignedString(currencyId));
+            attachment.put("holding", Long.toUnsignedString(holdingId));
+            attachment.put("holdingType", holdingType.getCode());
             attachment.put("amount", amount);
             attachment.put("participantCount", participantCount);
             attachment.put("cancellationHeight", cancellationHeight);
@@ -2610,16 +2616,15 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.SHUFFLING_CREATION;
+            return ShufflingTransaction.SHUFFLING_CREATION;
         }
 
-        public boolean isCurrency() {
-            return currencyId != 0;
+        public long getHoldingId() {
+            return holdingId;
         }
 
-        @Override
-        public long getCurrencyId() {
-            return currencyId;
+        public HoldingType getHoldingType() {
+            return holdingType;
         }
 
         public long getAmount() {
@@ -2635,21 +2640,21 @@ public interface Attachment extends Appendix {
         }
     }
 
-    abstract class MonetarySystemShuffling extends AbstractAttachment {
+    abstract class ShufflingAttachment extends AbstractAttachment {
 
         private final long shufflingId;
 
-        private MonetarySystemShuffling(ByteBuffer buffer, byte transactionVersion) {
+        private ShufflingAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
         }
 
-        private MonetarySystemShuffling(JSONObject attachmentData) {
+        private ShufflingAttachment(JSONObject attachmentData) {
             super(attachmentData);
             this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
         }
 
-        private MonetarySystemShuffling(long shufflingId) {
+        private ShufflingAttachment(long shufflingId) {
             this.shufflingId = shufflingId;
         }
 
@@ -2674,33 +2679,33 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class MonetarySystemShufflingRegistration extends MonetarySystemShuffling {
+    final class ShufflingRegistration extends ShufflingAttachment {
 
-        MonetarySystemShufflingRegistration(ByteBuffer buffer, byte transactionVersion) {
+        ShufflingRegistration(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
         }
 
-        MonetarySystemShufflingRegistration(JSONObject attachmentData) {
+        ShufflingRegistration(JSONObject attachmentData) {
             super(attachmentData);
         }
 
-        public MonetarySystemShufflingRegistration(long shufflingId) {
+        public ShufflingRegistration(long shufflingId) {
             super(shufflingId);
         }
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.SHUFFLING_REGISTRATION;
+            return ShufflingTransaction.SHUFFLING_REGISTRATION;
         }
 
     }
 
-    final class MonetarySystemShufflingProcessing extends MonetarySystemShuffling {
+    final class ShufflingProcessing extends ShufflingAttachment {
 
         private final byte[][] data;
         private final byte[] previousDataTransactionFullHash;
 
-        MonetarySystemShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        ShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             int count = buffer.get();
             if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
@@ -2719,7 +2724,7 @@ public interface Attachment extends Appendix {
             buffer.get(this.previousDataTransactionFullHash);
         }
 
-        MonetarySystemShufflingProcessing(JSONObject attachmentData) {
+        ShufflingProcessing(JSONObject attachmentData) {
             super(attachmentData);
             JSONArray jsonArray = (JSONArray)attachmentData.get("data");
             this.data = new byte[jsonArray.size()][];
@@ -2729,7 +2734,7 @@ public interface Attachment extends Appendix {
             this.previousDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("previousDataTransactionFullHash"));
         }
 
-        public MonetarySystemShufflingProcessing(long shufflingId, byte[][] data, byte[] previousDataTransactionFullHash) {
+        public ShufflingProcessing(long shufflingId, byte[][] data, byte[] previousDataTransactionFullHash) {
             super(shufflingId);
             this.data = data;
             this.previousDataTransactionFullHash = previousDataTransactionFullHash;
@@ -2771,7 +2776,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.SHUFFLING_PROCESSING;
+            return ShufflingTransaction.SHUFFLING_PROCESSING;
         }
 
         public byte[][] getData() {
@@ -2784,29 +2789,29 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class MonetarySystemShufflingVerification extends MonetarySystemShuffling {
+    final class ShufflingVerification extends ShufflingAttachment {
 
         private final byte[] lastDataTransactionFullHash;
 
-        MonetarySystemShufflingVerification(ByteBuffer buffer, byte transactionVersion) {
+        ShufflingVerification(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.lastDataTransactionFullHash = new byte[32];
             buffer.get(this.lastDataTransactionFullHash);
         }
 
-        MonetarySystemShufflingVerification(JSONObject attachmentData) {
+        ShufflingVerification(JSONObject attachmentData) {
             super(attachmentData);
             this.lastDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("lastDataTransactionFullHash"));
         }
 
-        public MonetarySystemShufflingVerification(long shufflingId, byte[] lastDataTransactionFullHash) {
+        public ShufflingVerification(long shufflingId, byte[] lastDataTransactionFullHash) {
             super(shufflingId);
             this.lastDataTransactionFullHash = lastDataTransactionFullHash;
         }
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.SHUFFLING_VERIFICATION;
+            return ShufflingTransaction.SHUFFLING_VERIFICATION;
         }
 
         @Override
@@ -2832,13 +2837,13 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class MonetarySystemShufflingCancellation extends MonetarySystemShuffling {
+    final class ShufflingCancellation extends ShufflingAttachment {
 
         private final byte[][] keySeeds;
         private final byte[] dataTransactionFullHash;
         private final long cancellingAccountId;
 
-        MonetarySystemShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        ShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             int count = buffer.get();
             if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
@@ -2854,7 +2859,7 @@ public interface Attachment extends Appendix {
             this.cancellingAccountId = buffer.getLong();
         }
 
-        MonetarySystemShufflingCancellation(JSONObject attachmentData) {
+        ShufflingCancellation(JSONObject attachmentData) {
             super(attachmentData);
             JSONArray jsonArray = (JSONArray)attachmentData.get("keySeeds");
             this.keySeeds = new byte[jsonArray.size()][];
@@ -2865,7 +2870,7 @@ public interface Attachment extends Appendix {
             this.cancellingAccountId = Convert.parseUnsignedLong((String) attachmentData.get("cancellingAccount"));
         }
 
-        public MonetarySystemShufflingCancellation(long shufflingId, byte[][] keySeeds, byte[] dataTransactionFullHash, long cancellingAccountId) {
+        public ShufflingCancellation(long shufflingId, byte[][] keySeeds, byte[] dataTransactionFullHash, long cancellingAccountId) {
             super(shufflingId);
             this.keySeeds = keySeeds;
             this.dataTransactionFullHash = dataTransactionFullHash;
@@ -2874,7 +2879,7 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return MonetarySystem.SHUFFLING_CANCELLATION;
+            return ShufflingTransaction.SHUFFLING_CANCELLATION;
         }
 
         @Override

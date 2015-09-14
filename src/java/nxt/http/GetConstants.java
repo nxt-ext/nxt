@@ -20,6 +20,7 @@ import nxt.Constants;
 import nxt.CurrencyMinting;
 import nxt.CurrencyType;
 import nxt.Genesis;
+import nxt.HoldingType;
 import nxt.PhasingPoll;
 import nxt.TransactionType;
 import nxt.VoteWeighting;
@@ -139,6 +140,12 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                     requestType.put("requirePassword", handler.requirePassword());
                 }
                 response.put("requestTypes", requestTypes);
+
+                JSONObject holdingTypes = new JSONObject();
+                for (HoldingType holdingType : HoldingType.values()) {
+                    holdingTypes.put(holdingType.toString(), holdingType.getCode());
+                }
+                response.put("holdingTypes", holdingTypes);
 
                 CONSTANTS = JSON.prepare(response);
             } catch (Exception e) {

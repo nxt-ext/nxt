@@ -35,7 +35,7 @@ public final class ShufflingRegister extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
-        Attachment attachment = new Attachment.MonetarySystemShufflingRegistration(shuffling.getId());
+        Attachment attachment = new Attachment.ShufflingRegistration(shuffling.getId());
 
         Account account = ParameterParser.getSenderAccount(req);
         return createTransaction(req, account, attachment);

@@ -217,7 +217,7 @@ public enum CurrencyType {
 
         @Override
         void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
-            if (transaction.getType() == MonetarySystem.SHUFFLING_CREATION) {
+            if (transaction.getType() == ShufflingTransaction.SHUFFLING_CREATION) {
                 throw new NxtException.NotValidException("Shuffling is not allowed for this currency");
             }
         }
