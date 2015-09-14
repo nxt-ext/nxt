@@ -1006,9 +1006,9 @@ public abstract class MonetarySystem extends TransactionType {
             Attachment.MonetarySystemShufflingRegistration attachment = (Attachment.MonetarySystemShufflingRegistration) transaction.getAttachment();
             Shuffling shuffling = Shuffling.getShuffling(attachment.getShufflingId());
             if (shuffling.isCurrency()) {
-                if (senderAccount.getUnconfirmedCurrencyUnits(attachment.getCurrencyId()) >= shuffling.getAmount()
+                if (senderAccount.getUnconfirmedCurrencyUnits(shuffling.getCurrencyId()) >= shuffling.getAmount()
                         && senderAccount.getUnconfirmedBalanceNQT() >= Constants.SHUFFLE_DEPOSIT_NQT) {
-                    senderAccount.addToUnconfirmedCurrencyUnits(getLedgerEvent(), transaction.getId(), attachment.getCurrencyId(), -shuffling.getAmount());
+                    senderAccount.addToUnconfirmedCurrencyUnits(getLedgerEvent(), transaction.getId(), shuffling.getCurrencyId(), -shuffling.getAmount());
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -Constants.SHUFFLE_DEPOSIT_NQT);
                     return true;
                 }

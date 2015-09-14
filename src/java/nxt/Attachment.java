@@ -2617,6 +2617,7 @@ public interface Attachment extends Appendix {
             return currencyId != 0;
         }
 
+        @Override
         public long getCurrencyId() {
             return currencyId;
         }
@@ -2634,7 +2635,7 @@ public interface Attachment extends Appendix {
         }
     }
 
-    abstract class MonetarySystemShuffling extends AbstractAttachment implements MonetarySystemAttachment {
+    abstract class MonetarySystemShuffling extends AbstractAttachment {
 
         private final long shufflingId;
 
@@ -2669,11 +2670,6 @@ public interface Attachment extends Appendix {
 
         public final long getShufflingId() {
             return shufflingId;
-        }
-
-        @Override
-        public final long getCurrencyId() {
-            return Shuffling.getShuffling(shufflingId).getCurrencyId();
         }
 
     }
