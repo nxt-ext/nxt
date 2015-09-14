@@ -2,7 +2,6 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
-    var DEF_COINS = ["BTC", "LTC", "DOGE"];
     var SUPPORTED_COINS = {};
 
     var coinToPair = function (op, coin) {
@@ -25,12 +24,17 @@ var NRS = (function(NRS, $) {
     };
 
     var getCoins = function() {
-        // TODO add to settings
-        return DEF_COINS;
+        var coins = [];
+        for (var i=0; i<3; i++) {
+            coins.push(NRS.settings["exchange_coin" + i]);
+        }
+        return coins;
     };
 
     var setCoins = function(coins) {
-        // TODO update settings
+        for (var i=0; i<coins.length; i++) {
+            NRS.updateSettings("exchange_coin" + i, coins[i]);
+        }
     };
 
     var addDepositAddress = function(address, pair) {
@@ -280,8 +284,39 @@ var NRS = (function(NRS, $) {
         });
     }
 
+    function loadCoins() {
+        var inputFields = [];
+        inputFields.push($('#shape_shift_coin_0'));
+        inputFields.push($('#shape_shift_coin_1'));
+        inputFields.push($('#shape_shift_coin_2'));
+        var selectedCoins = [];
+        selectedCoins.push(NRS.settings.exchange_coin0);
+        selectedCoins.push(NRS.settings.exchange_coin1);
+        selectedCoins.push(NRS.settings.exchange_coin2);
+        apiCall('getcoins', {}, 'GET', function (data) {
+            SUPPORTED_COINS = data;
+            for (var i = 0; i < inputFields.length; i++) {
+                inputFields[i].empty();
+                var isSelectionAvailable = false;
+                $.each(data, function (code, coin) {
+                    if (code != 'NXT' && coin['status'] == 'available') {
+                        inputFields[i].append('<option value="' + code + '">' + coin['name'] + ' [' + code + ']</option>');
+                        SUPPORTED_COINS[code] = coin;
+                    }
+                    if (selectedCoins[i] == code) {
+                        isSelectionAvailable = true;
+                    }
+                });
+                if (isSelectionAvailable) {
+                    inputFields[i].val(selectedCoins[i]);
+                }
+            }
+        });
+    }
+    
     NRS.pages.exchange = function() {
         NRS.pageLoading();
+        loadCoins();
         renderNxtLimit();
         renderExchangeTable("buy");
         renderExchangeTable("sell");
@@ -300,35 +335,7 @@ var NRS = (function(NRS, $) {
         renderExchangeTable('sell');
     });
 
-	NRS.setup.exchange = function() {
-        var select = [];
-        select.push($('#shape_shift_coin_0'));
-        select.push($('#shape_shift_coin_1'));
-        select.push($('#shape_shift_coin_2'));
-        select.push($('#settings_exchange_coin0'));
-        select.push($('#settings_exchange_coin1'));
-        select.push($('#settings_exchange_coin2'));
-        var selectedCoins = [];
-        selectedCoins.push(NRS.settings.exchange_coin0);
-        selectedCoins.push(NRS.settings.exchange_coin1);
-        selectedCoins.push(NRS.settings.exchange_coin2);
-        selectedCoins.push(NRS.settings.exchange_coin0);
-        selectedCoins.push(NRS.settings.exchange_coin1);
-        selectedCoins.push(NRS.settings.exchange_coin2);
-        apiCall('getcoins', {}, 'GET', function(data) {
-            SUPPORTED_COINS = data;
-            for (var i=0; i<select.length; i++) {
-                select[i].empty();
-                $.each(data, function(code, coin) {
-                    if (code != 'NXT' && coin['status'] == 'available') {
-                        select[i].append('<option value="' + code + '">' + coin['name'] + ' [' + code + ']</option>');
-                        SUPPORTED_COINS[code] = coin;
-                    }
-                });
-                select[i].val(selectedCoins[i]);
-            }
-        });
-	};
+	NRS.setup.exchange = function() {};
 
     $("#m_shape_shift_buy_modal").on("show.bs.modal", function (e) {
         var invoker = $(e.relatedTarget);
