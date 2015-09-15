@@ -326,6 +326,11 @@ var NRS = (function(NRS, $) {
         setTimeout(NRS.pages.exchange, 60000);
     };
 
+    NRS.getFundAccountLink = function() {
+        return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shape_shift_sell_modal' " +
+            "data-pair='BTC_NXT'>" + $.t("fund_account_message") + "</a>";
+    };
+
     $('.coin-select').change(function() {
         var id = $(this).attr('id');
         var coins = getCoins();
@@ -510,48 +515,71 @@ var NRS = (function(NRS, $) {
         var coin = pairToCoin(pair);
         NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
         $("#m_shape_shift_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: coin }));
-        $("#m_shape_shift_sell_min").val(invoker.data("min"));
-        $("#m_shape_shift_sell_min_coin").html(coin);
-        $("#m_shape_shift_sell_max").val(invoker.data("max"));
-        $("#m_shape_shift_sell_max_coin").html(coin);
-        $("#m_shape_shift_sell_rate").val(invoker.data("rate"));
-        $("#m_shape_shift_sell_rate_text").html("NXT per 1 " + coin);
-        $("#m_shape_shift_sell_fee").val(invoker.data("fee"));
-        $("#m_shape_shift_sell_fee_coin").html("NXT");
-        $("#m_shape_shift_sell_pair").val(pair);
-        var publicKey = NRS.publicKey;
-        if (publicKey == "" && NRS.accountInfo) {
-            publicKey = NRS.accountInfo.publicKey;
-        }
-        if (!publicKey || publicKey == "") {
-            NRS.showModalError("Account has no public key, please login using your passphrase", modal);
-            return;
-        }
-        apiCall('shift', { withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key }, "POST", function (data) {
-            NRS.logConsole("shift request done");
-            var msg;
-            if (data.depositType != coin) {
-                msg = "incorrect deposit coin " + data.depositType;
-                NRS.logConsole(msg);
-                NRS.showModalError(msg, modal);
-                return;
+        var data = invoker.data;
+        async.waterfall([
+            function(callback) {
+                if (data.rate) {
+                    callback(null);
+                } else {
+                    apiCall("marketinfo/" + pair, {}, "GET", function(response) {
+                        data.rate = response.rate;
+                        data.min = response.minimum;
+                        data.max = response.limit;
+                        data.fee = response.minerFee;
+                        callback(null);
+                    })
+                }
+            },
+            function(callback) {
+                $("#m_shape_shift_sell_min").val(data.min);
+                $("#m_shape_shift_sell_min_coin").html(coin);
+                $("#m_shape_shift_sell_max").val(data.max);
+                $("#m_shape_shift_sell_max_coin").html(coin);
+                $("#m_shape_shift_sell_rate").val(data.rate);
+                $("#m_shape_shift_sell_rate_text").html("NXT per 1 " + coin);
+                $("#m_shape_shift_sell_fee").val(data.fee);
+                $("#m_shape_shift_sell_fee_coin").html("NXT");
+                $("#m_shape_shift_sell_pair").val(pair);
+                var publicKey = NRS.publicKey;
+                if (publicKey == "" && NRS.accountInfo) {
+                    publicKey = NRS.accountInfo.publicKey;
+                }
+                if (!publicKey || publicKey == "") {
+                    NRS.showModalError("Account has no public key, please login using your passphrase", modal);
+                    return;
+                }
+                apiCall('shift', {
+                    withdrawal: NRS.accountRS,
+                    rsAddress: publicKey,
+                    pair: pair,
+                    apiKey: NRS.settings.exchange_api_key
+                }, "POST", function (data) {
+                    NRS.logConsole("shift request done");
+                    var msg;
+                    if (data.depositType != coin) {
+                        msg = "incorrect deposit coin " + data.depositType;
+                        NRS.logConsole(msg);
+                        NRS.showModalError(msg, modal);
+                        return;
+                    }
+                    if (data.withdrawalType != "NXT") {
+                        msg = "incorrect withdrawal coin " + data.withdrawalType;
+                        NRS.logConsole(msg);
+                        NRS.showModalError(msg, modal);
+                        return;
+                    }
+                    if (data.withdrawal != NRS.accountRS) {
+                        msg = "incorrect withdrawal address " + data.withdrawal;
+                        NRS.logConsole(msg);
+                        NRS.showModalError(msg, modal);
+                        return;
+                    }
+                    NRS.logConsole("shift request done, deposit address " + data.deposit);
+                    $("#m_shape_shift_sell_deposit_address").html(data.deposit);
+                    NRS.sendRequestQRCode("#m_shape_shift_sell_qr_code", data.deposit, 125, 125);
+                })
             }
-            if (data.withdrawalType != "NXT") {
-                msg = "incorrect withdrawal coin " + data.withdrawalType;
-                NRS.logConsole(msg);
-                NRS.showModalError(msg, modal);
-                return;
-            }
-            if (data.withdrawal != NRS.accountRS) {
-                msg = "incorrect withdrawal address " + data.withdrawal;
-                NRS.logConsole(msg);
-                NRS.showModalError(msg, modal);
-                return;
-            }
-            NRS.logConsole("shift request done, deposit address " + data.deposit);
-            $("#m_shape_shift_sell_deposit_address").html(data.deposit);
-            NRS.sendRequestQRCode("#m_shape_shift_sell_qr_code", data.deposit, 125, 125);
-        })
+        ])
     });
 
     $("#m_shape_shift_sell_done").on("click", function(e) {

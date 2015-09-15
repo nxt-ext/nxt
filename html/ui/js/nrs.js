@@ -781,10 +781,11 @@ var NRS = (function(NRS, $, undefined) {
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
 						if (NRS.newlyCreatedAccount) {
-							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-								"account_id": String(NRS.accountRS).escapeHTML(),
-								"public_key": String(NRS.publicKey).escapeHTML()
-							}) + "<br /><br />" + $.t("status_blockchain_downloading")).show();
+                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+                                "account_id": String(NRS.accountRS).escapeHTML(),
+                                "public_key": String(NRS.publicKey).escapeHTML()
+                            }) + "<br/><br/>" + $.t("status_blockchain_downloading") +
+                            "<br/><br/>" + NRS.getFundAccountLink()).show();
 						} else {
 							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading")).show();
 						}
@@ -799,7 +800,7 @@ var NRS = (function(NRS, $, undefined) {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
                                 "account_id": String(NRS.accountRS).escapeHTML(),
                                 "public_key": String(NRS.publicKey).escapeHTML()
-                            })).show();
+                            }) + "<br/><br/>" + NRS.getFundAccountLink()).show();
                         }
 					}
 				} else {
