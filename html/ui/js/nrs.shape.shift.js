@@ -108,30 +108,56 @@ var NRS = (function(NRS, $) {
                     var pair = coinToPair(op, coins[i]);
                     var counterPair = reversePair(pair);
                     NRS.logConsole("counterPair " + counterPair);
-                    apiCall("marketinfo/" + pair, {}, "GET", function(data) {
+                    async.waterfall([
+                        function(callback) {
+                            apiCall("marketinfo/" + pair, {}, "GET", function(data) {
+                                callback(null, data);
+                            })
+                        },
+                        function(marketInfoData, callback) {
+                            var amount = 100;
+                            if (op == "buy") {
+                                amount = amount * marketInfoData.rate;
+                            }
+                            apiCall("sendamount", { "amount": amount, "pair": pair}, "POST", function(data) {
+                                marketInfoData.quotedRate = data.success.quotedRate;
+                                callback(null, marketInfoData);
+                            })
+                        }
+                    ], function(err, data){
                         var row = "";
                         row += "<tr>";
                         row += "<td>" + SUPPORTED_COINS[coins[i]].name + " " +
                             "<img src='" + SUPPORTED_COINS[coins[i]].image + "' width='16px' height='16px'/>" +
                         "</td>";
                         row += "<td>" + coins[i] + "</td>";
-                        var rate;
+                        var rate, quotedRate, diff;
                         if (op == "sell") {
                             if (parseFloat(data.rate) == 0) {
                                 rate = "N/A";
                             } else {
                                 rate = invert(data.rate);
                             }
+                            if (parseFloat(data.quotedRate) == 0) {
+                                quotedRate = "N/A";
+                            } else {
+                                quotedRate = invert(data.quotedRate);
+                            }
+                            diff = -100 * (quotedRate - rate) / rate;
                         } else {
                             rate = data.rate;
+                            quotedRate = data.quotedRate;
+                            diff = 100 * (quotedRate - rate) / rate;
                         }
                         row += "<td>" + String(rate).escapeHTML() + "</td>";
+                        row += "<td>" + String(quotedRate).escapeHTML() + "</td>";
+                        row += "<td>" + NRS.formatAmount(diff, 2) + "%</td>";
                         row += "<td><a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shape_shift_" + op + "_modal' " +
                             "data-pair='" + pair + "' data-rate='" + data.rate + "' data-min='" + data.minimum + "' data-max='" + data.limit +
                             "' data-fee='" + data.minerFee + "'>Shift</a>";
                         row += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_send_amount_" + op + "_modal' " +
                             "data-pair='" + pair + "' data-rate='" + data.rate + "' data-min='" + data.minimum + "' data-max='" + data.limit +
-                            "' data-fee='" + data.minerFee + "'>Pay</a></td>";
+                            "' data-fee='" + data.minerFee + "'>Send Amount</a></td>";
                         row += "</tr>";
                         NRS.logConsole(row);
                         callback(null, row);
@@ -530,7 +556,7 @@ var NRS = (function(NRS, $) {
                     })
                 }
             },
-            function(callback) {
+            function() {
                 $("#m_shape_shift_sell_min").val(data.min);
                 $("#m_shape_shift_sell_min_coin").html(coin);
                 $("#m_shape_shift_sell_max").val(data.max);

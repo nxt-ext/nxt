@@ -1441,5 +1441,8 @@
   "exchange_nxt_to_coin_send_amount": "Exchange NXT to __coin__ (send amount)",
   "exchange_coin_to_nxt_shift": "Exchange __coin__ to NXT (shift)",
   "exchange_coin_to_nxt_send_amount": "Exchange __coin__ to NXT (send amount)",
-  "fund_account_message": "Exchange Bitcoin to NXT"
+  "fund_account_message": "Exchange Bitcoin to NXT",
+  "shift_rate": "Shift Rate",
+  "send_amount_rate": "Send Rate",
+  "diff_percent": "Difference"
 }
