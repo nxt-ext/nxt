@@ -23,6 +23,7 @@ import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
+import nxt.db.PrunableDbTable;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
@@ -74,14 +75,66 @@ public final class ShufflingParticipant {
         PARTICIPANT_ADDED, RECIPIENT_ADDED
     }
 
+    private final static class ShufflingData {
+
+        private final long shufflingId;
+        private final long accountId;
+        private final DbKey dbKey;
+        private final byte[][] data;
+        private final int transactionTimestamp;
+        private final int height;
+
+        private ShufflingData(long shufflingId, long accountId, byte[][] data, int transactionTimestamp, int height) {
+            this.shufflingId = shufflingId;
+            this.accountId = accountId;
+            this.dbKey = shufflingDataDbKeyFactory.newKey(shufflingId, accountId);
+            this.data = data;
+            this.transactionTimestamp = transactionTimestamp;
+            this.height = height;
+        }
+
+        private ShufflingData(ResultSet rs) throws SQLException {
+            this.shufflingId = rs.getLong("shuffling_id");
+            this.accountId = rs.getLong("account_id");
+            this.dbKey = shufflingDataDbKeyFactory.newKey(shufflingId, accountId);
+            Array array = rs.getArray("data");
+            if (array != null) {
+                Object[] data = (Object[]) array.getArray();
+                this.data = Arrays.copyOf(data, data.length, byte[][].class);
+            } else {
+                this.data = Convert.EMPTY_BYTES;
+            }
+            this.transactionTimestamp = rs.getInt("transaction_timestamp");
+            this.height = rs.getInt("height");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO shuffling_data (shuffling_id, account_id, data, "
+                    + "transaction_timestamp, height) "
+                    + "VALUES (?, ?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.shufflingId);
+                pstmt.setLong(++i, this.accountId);
+                if (data.length > 0) {
+                    pstmt.setObject(++i, data);
+                } else {
+                    pstmt.setNull(++i, Types.ARRAY);
+                }
+                pstmt.setInt(++i, this.transactionTimestamp);
+                pstmt.setInt(++i, height);
+                pstmt.executeUpdate();
+            }
+        }
+
+    }
+
     private static final Listeners<ShufflingParticipant, Event> listeners = new Listeners<>();
 
-    private static final DbKey.LinkKeyFactory<ShufflingParticipant> shufflingParticipantDbKeyFactory =
-            new DbKey.LinkKeyFactory<ShufflingParticipant>("shuffling_id", "account_id") {
+    private static final DbKey.LinkKeyFactory<ShufflingParticipant> shufflingParticipantDbKeyFactory = new DbKey.LinkKeyFactory<ShufflingParticipant>("shuffling_id", "account_id") {
 
         @Override
-        public DbKey newKey(ShufflingParticipant transfer) {
-            return transfer.dbKey;
+        public DbKey newKey(ShufflingParticipant participant) {
+            return participant.dbKey;
         }
 
     };
@@ -96,6 +149,29 @@ public final class ShufflingParticipant {
         @Override
         protected void save(Connection con, ShufflingParticipant participant) throws SQLException {
             participant.save(con);
+        }
+
+    };
+
+    private static final DbKey.LinkKeyFactory<ShufflingData> shufflingDataDbKeyFactory = new DbKey.LinkKeyFactory<ShufflingData>("shuffling_id", "account_id") {
+
+        @Override
+        public DbKey newKey(ShufflingData shufflingData) {
+            return shufflingData.dbKey;
+        }
+
+    };
+
+    private static final PrunableDbTable<ShufflingData> shufflingDataTable = new PrunableDbTable<ShufflingData>("shuffling_data", shufflingDataDbKeyFactory) {
+
+        @Override
+        protected ShufflingData load(Connection con, ResultSet rs) throws SQLException {
+            return new ShufflingData(rs);
+        }
+
+        @Override
+        protected void save(Connection con, ShufflingData shufflingData) throws SQLException {
+            shufflingData.save(con);
         }
 
     };
@@ -144,7 +220,7 @@ public final class ShufflingParticipant {
 
     private long nextAccountId; // pointer to the next shuffling participant updated during registration
     private State state; // tracks the state of the participant in the process
-    private byte[][] data; // encrypted data saved as intermediate result in the shuffling process
+    private byte[][] blameData; // encrypted data saved as intermediate result in the shuffling process
     private byte[][] keySeeds; // to be revealed only if shuffle is being cancelled
     private byte[] dataTransactionFullHash;
 
@@ -154,7 +230,7 @@ public final class ShufflingParticipant {
         this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
         this.index = index;
         this.state = State.REGISTERED;
-        this.data = Convert.EMPTY_BYTES;
+        this.blameData = Convert.EMPTY_BYTES;
         this.keySeeds = Convert.EMPTY_BYTES;
     }
 
@@ -168,9 +244,9 @@ public final class ShufflingParticipant {
         Array array = rs.getArray("data");
         if (array != null) {
             Object[] data = (Object[]) array.getArray();
-            this.data = Arrays.copyOf(data, data.length, byte[][].class);
+            this.blameData = Arrays.copyOf(data, data.length, byte[][].class);
         } else {
-            this.data = Convert.EMPTY_BYTES;
+            this.blameData = Convert.EMPTY_BYTES;
         }
         array = rs.getArray("key_seeds");
         if (array != null) {
@@ -184,7 +260,7 @@ public final class ShufflingParticipant {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_participant (shuffling_id, "
-                + "account_id, next_account_id, participant_index, state, data, key_seeds, data_transaction_full_hash, height, latest) "
+                + "account_id, next_account_id, participant_index, state, blame_data, key_seeds, data_transaction_full_hash, height, latest) "
                 + "KEY (shuffling_id, account_id, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
@@ -193,8 +269,8 @@ public final class ShufflingParticipant {
             DbUtils.setLongZeroToNull(pstmt, ++i, this.nextAccountId);
             pstmt.setInt(++i, index);
             pstmt.setByte(++i, this.getState().getCode());
-            if (data.length > 0) {
-                pstmt.setObject(++i, data);
+            if (blameData.length > 0) {
+                pstmt.setObject(++i, blameData);
             } else {
                 pstmt.setNull(++i, Types.ARRAY);
             }
@@ -245,26 +321,36 @@ public final class ShufflingParticipant {
     }
 
     public byte[][] getData() {
-        return data;
+        ShufflingData shufflingData = shufflingDataTable.get(shufflingDataDbKeyFactory.newKey(shufflingId, accountId));
+        return shufflingData != null ? shufflingData.data : null;
     }
 
-    void setData(byte[][] data) {
-        if (this.data.length > 0) {
+    void setData(byte[][] data, int timestamp) {
+        if (getData() != null) {
             throw new IllegalStateException("data already set");
         }
-        this.data = data;
+        shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, Nxt.getBlockchain().getHeight()));
         setState(State.PROCESSED);
         shufflingParticipantTable.insert(this);
+    }
+
+    void restoreData(byte[][] data, int timestamp, int height) {
+        shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, height));
+    }
+
+    public byte[][] getBlameData() {
+        return blameData;
     }
 
     public byte[][] getKeySeeds() {
         return keySeeds;
     }
 
-    void setKeySeeds(byte[][] keySeeds) {
+    void cancel(byte[][] blameData, byte[][] keySeeds) {
         if (this.keySeeds.length > 0) {
             throw new IllegalStateException("keySeeds already set");
         }
+        this.blameData = blameData;
         this.keySeeds = keySeeds;
         setState(State.CANCELLED);
         shufflingParticipantTable.insert(this);
@@ -289,6 +375,9 @@ public final class ShufflingParticipant {
     }
 
     void verify() {
+        if (nextAccountId == 0) {
+            setState(State.PROCESSED); // last participant can verify at same time as processing
+        }
         setState(State.VERIFIED);
         shufflingParticipantTable.insert(this);
     }

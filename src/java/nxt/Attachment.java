@@ -2700,26 +2700,24 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class ShufflingProcessing extends ShufflingAttachment {
+    final class ShufflingProcessing extends ShufflingAttachment implements Prunable {
 
-        private final byte[][] data;
+        static ShufflingProcessing parse(JSONObject attachmentData) {
+            if (!Appendix.hasAppendix(ShufflingTransaction.SHUFFLING_PROCESSING.getName(), attachmentData)) {
+                return null;
+            }
+            return new ShufflingProcessing(attachmentData);
+        }
+
+        private volatile byte[][] data;
+        private final byte[] hash;
         private final byte[] previousDataTransactionFullHash;
 
         ShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
-            int count = buffer.get();
-            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
-                throw new NxtException.NotValidException("Invalid data count " + count);
-            }
-            this.data = new byte[count][];
-            for (int i = 0; i < count; i++) {
-                int size = buffer.getInt();
-                if (size > Constants.MAX_PAYLOAD_LENGTH) {
-                    throw new NxtException.NotValidException("Invalid data size " + size);
-                }
-                this.data[i] = new byte[size];
-                buffer.get(this.data[i]);
-            }
+            this.data = null;
+            this.hash = new byte[32];
+            buffer.get(hash);
             this.previousDataTransactionFullHash = new byte[32];
             buffer.get(this.previousDataTransactionFullHash);
         }
@@ -2727,9 +2725,15 @@ public interface Attachment extends Appendix {
         ShufflingProcessing(JSONObject attachmentData) {
             super(attachmentData);
             JSONArray jsonArray = (JSONArray)attachmentData.get("data");
-            this.data = new byte[jsonArray.size()][];
-            for (int i = 0; i < this.data.length; i++) {
-                this.data[i] = Convert.parseHexString((String)jsonArray.get(i));
+            if (jsonArray != null) {
+                this.data = new byte[jsonArray.size()][];
+                for (int i = 0; i < this.data.length; i++) {
+                    this.data[i] = Convert.parseHexString((String) jsonArray.get(i));
+                }
+                this.hash = null;
+            } else {
+                this.data = null;
+                this.hash = Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("hash")));
             }
             this.previousDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("previousDataTransactionFullHash"));
         }
@@ -2737,6 +2741,130 @@ public interface Attachment extends Appendix {
         public ShufflingProcessing(long shufflingId, byte[][] data, byte[] previousDataTransactionFullHash) {
             super(shufflingId);
             this.data = data;
+            this.hash = null;
+            this.previousDataTransactionFullHash = previousDataTransactionFullHash;
+        }
+
+        @Override
+        int getMyFullSize() {
+            int size = super.getMySize();
+            if (data != null) {
+                size += 1;
+                for (byte[] bytes : data) {
+                    size += 4;
+                    size += bytes.length;
+                }
+            }
+            size += 32;
+            return size;
+        }
+
+        @Override
+        int getMySize() {
+            return super.getMySize() + 32 + 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            super.putMyBytes(buffer);
+            buffer.put(getHash());
+            buffer.put(previousDataTransactionFullHash);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            if (data != null) {
+                JSONArray jsonArray = new JSONArray();
+                attachment.put("data", jsonArray);
+                for (byte[] bytes : data) {
+                    jsonArray.add(Convert.toHexString(bytes));
+                }
+            }
+            attachment.put("hash", Convert.toHexString(getHash()));
+            attachment.put("previousDataTransactionFullHash", Convert.toHexString(previousDataTransactionFullHash));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return ShufflingTransaction.SHUFFLING_PROCESSING;
+        }
+
+        @Override
+        public byte[] getHash() {
+            if (hash != null) {
+                return hash;
+            }
+            if (data == null) {
+                return null;
+            }
+            MessageDigest digest = Crypto.sha256();
+            for (byte[] bytes : data) {
+                digest.update(bytes);
+            }
+            return digest.digest();
+        }
+
+        public byte[][] getData() {
+            return data;
+        }
+
+        public byte[] getPreviousDataTransactionFullHash() {
+            return previousDataTransactionFullHash;
+        }
+
+        @Override
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (data == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
+                data = ShufflingParticipant.getParticipant(getShufflingId(), transaction.getSenderId()).getData();
+            }
+        }
+
+        @Override
+        public boolean hasPrunableData() {
+            return data != null;
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            ShufflingParticipant.getParticipant(getShufflingId(), transaction.getSenderId()).restoreData(getData(), transaction.getTimestamp(), height);
+        }
+
+    }
+
+    final class ShufflingRecipients extends ShufflingAttachment {
+
+        private final byte[][] recipientPublicKeys;
+        private final byte[] previousDataTransactionFullHash;
+
+        ShufflingRecipients(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            int count = buffer.get();
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
+                throw new NxtException.NotValidException("Invalid data count " + count);
+            }
+            this.recipientPublicKeys = new byte[count][];
+            for (int i = 0; i < count; i++) {
+                this.recipientPublicKeys[i] = new byte[32];
+                buffer.get(this.recipientPublicKeys[i]);
+            }
+            this.previousDataTransactionFullHash = new byte[32];
+            buffer.get(this.previousDataTransactionFullHash);
+        }
+
+        ShufflingRecipients(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONArray jsonArray = (JSONArray)attachmentData.get("recipientPublicKeys");
+            this.recipientPublicKeys = new byte[jsonArray.size()][];
+            for (int i = 0; i < this.recipientPublicKeys.length; i++) {
+                this.recipientPublicKeys[i] = Convert.parseHexString((String)jsonArray.get(i));
+            }
+            this.previousDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("previousDataTransactionFullHash"));
+        }
+
+        public ShufflingRecipients(long shufflingId, byte[][] recipientPublicKeys, byte[] previousDataTransactionFullHash) {
+            super(shufflingId);
+            this.recipientPublicKeys = recipientPublicKeys;
             this.previousDataTransactionFullHash = previousDataTransactionFullHash;
         }
 
@@ -2744,10 +2872,7 @@ public interface Attachment extends Appendix {
         int getMySize() {
             int size = super.getMySize();
             size += 1;
-            for (byte[] bytes : data) {
-                size += 4;
-                size += bytes.length;
-            }
+            size += 32 * recipientPublicKeys.length;
             size += 32;
             return size;
         }
@@ -2755,9 +2880,8 @@ public interface Attachment extends Appendix {
         @Override
         void putMyBytes(ByteBuffer buffer) {
             super.putMyBytes(buffer);
-            buffer.put((byte)data.length);
-            for (byte[] bytes : data) {
-                buffer.putInt(bytes.length);
+            buffer.put((byte)recipientPublicKeys.length);
+            for (byte[] bytes : recipientPublicKeys) {
                 buffer.put(bytes);
             }
             buffer.put(previousDataTransactionFullHash);
@@ -2767,8 +2891,8 @@ public interface Attachment extends Appendix {
         void putMyJSON(JSONObject attachment) {
             super.putMyJSON(attachment);
             JSONArray jsonArray = new JSONArray();
-            attachment.put("data", jsonArray);
-            for (byte[] bytes : data) {
+            attachment.put("recipientPublicKeys", jsonArray);
+            for (byte[] bytes : recipientPublicKeys) {
                 jsonArray.add(Convert.toHexString(bytes));
             }
             attachment.put("previousDataTransactionFullHash", Convert.toHexString(previousDataTransactionFullHash));
@@ -2776,11 +2900,11 @@ public interface Attachment extends Appendix {
 
         @Override
         public TransactionType getTransactionType() {
-            return ShufflingTransaction.SHUFFLING_PROCESSING;
+            return ShufflingTransaction.SHUFFLING_RECIPIENTS;
         }
 
-        public byte[][] getData() {
-            return data;
+        public byte[][] getRecipientPublicKeys() {
+            return recipientPublicKeys;
         }
 
         public byte[] getPreviousDataTransactionFullHash() {
@@ -2839,6 +2963,7 @@ public interface Attachment extends Appendix {
 
     final class ShufflingCancellation extends ShufflingAttachment {
 
+        private final byte[][] blameData;
         private final byte[][] keySeeds;
         private final byte[] dataTransactionFullHash;
         private final long cancellingAccountId;
@@ -2846,6 +2971,19 @@ public interface Attachment extends Appendix {
         ShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             int count = buffer.get();
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
+                throw new NxtException.NotValidException("Invalid data count " + count);
+            }
+            this.blameData = new byte[count][];
+            for (int i = 0; i < count; i++) {
+                int size = buffer.getInt();
+                if (size > Constants.MAX_PAYLOAD_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid data size " + size);
+                }
+                this.blameData[i] = new byte[size];
+                buffer.get(this.blameData[i]);
+            }
+            count = buffer.get();
             if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
                 throw new NxtException.NotValidException("Invalid keySeeds count " + count);
             }
@@ -2861,7 +2999,12 @@ public interface Attachment extends Appendix {
 
         ShufflingCancellation(JSONObject attachmentData) {
             super(attachmentData);
-            JSONArray jsonArray = (JSONArray)attachmentData.get("keySeeds");
+            JSONArray jsonArray = (JSONArray)attachmentData.get("blameData");
+            this.blameData = new byte[jsonArray.size()][];
+            for (int i = 0; i < this.blameData.length; i++) {
+                this.blameData[i] = Convert.parseHexString((String)jsonArray.get(i));
+            }
+            jsonArray = (JSONArray)attachmentData.get("keySeeds");
             this.keySeeds = new byte[jsonArray.size()][];
             for (int i = 0; i < this.keySeeds.length; i++) {
                 this.keySeeds[i] = Convert.parseHexString((String)jsonArray.get(i));
@@ -2870,8 +3013,9 @@ public interface Attachment extends Appendix {
             this.cancellingAccountId = Convert.parseUnsignedLong((String) attachmentData.get("cancellingAccount"));
         }
 
-        public ShufflingCancellation(long shufflingId, byte[][] keySeeds, byte[] dataTransactionFullHash, long cancellingAccountId) {
+        public ShufflingCancellation(long shufflingId, byte[][] blameData, byte[][] keySeeds, byte[] dataTransactionFullHash, long cancellingAccountId) {
             super(shufflingId);
+            this.blameData = blameData;
             this.keySeeds = keySeeds;
             this.dataTransactionFullHash = dataTransactionFullHash;
             this.cancellingAccountId = cancellingAccountId;
@@ -2884,12 +3028,27 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return super.getMySize() + 1 + 32 * keySeeds.length + 32 + 8;
+            int size = super.getMySize();
+            size += 1;
+            for (byte[] bytes : blameData) {
+                size += 4;
+                size += bytes.length;
+            }
+            size += 1;
+            size += 32 * keySeeds.length;
+            size += 32;
+            size += 8;
+            return size;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             super.putMyBytes(buffer);
+            buffer.put((byte) blameData.length);
+            for (byte[] bytes : blameData) {
+                buffer.putInt(bytes.length);
+                buffer.put(bytes);
+            }
             buffer.put((byte) keySeeds.length);
             for (byte[] bytes : keySeeds) {
                 buffer.put(bytes);
@@ -2902,6 +3061,11 @@ public interface Attachment extends Appendix {
         void putMyJSON(JSONObject attachment) {
             super.putMyJSON(attachment);
             JSONArray jsonArray = new JSONArray();
+            attachment.put("blameData", jsonArray);
+            for (byte[] bytes : blameData) {
+                jsonArray.add(Convert.toHexString(bytes));
+            }
+            jsonArray = new JSONArray();
             attachment.put("keySeeds", jsonArray);
             for (byte[] bytes : keySeeds) {
                 jsonArray.add(Convert.toHexString(bytes));
@@ -2910,6 +3074,10 @@ public interface Attachment extends Appendix {
             if (cancellingAccountId != 0) {
                 attachment.put("cancellingAccount", Long.toUnsignedString(cancellingAccountId));
             }
+        }
+
+        public byte[][] getBlameData() {
+            return blameData;
         }
 
         public byte[][] getKeySeeds() {
@@ -2922,6 +3090,14 @@ public interface Attachment extends Appendix {
 
         public long getCancellingAccountId() {
             return cancellingAccountId;
+        }
+
+        byte[] getHash() {
+            MessageDigest digest = Crypto.sha256();
+            for (byte[] bytes : blameData) {
+                digest.update(bytes);
+            }
+            return digest.digest();
         }
 
     }
@@ -2951,6 +3127,7 @@ public interface Attachment extends Appendix {
         }
 
         private TaggedDataAttachment(JSONObject attachmentData) {
+            super(attachmentData);
             String dataJSON = (String) attachmentData.get("data");
             if (dataJSON != null) {
                 this.name = (String) attachmentData.get("name");

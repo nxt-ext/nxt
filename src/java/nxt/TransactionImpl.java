@@ -725,6 +725,10 @@ final class TransactionImpl implements Transaction {
     static TransactionImpl.BuilderImpl newTransactionBuilder(byte[] bytes, JSONObject prunableAttachments) throws NxtException.NotValidException {
         BuilderImpl builder = newTransactionBuilder(bytes);
         if (prunableAttachments != null) {
+            Attachment.ShufflingProcessing shufflingProcessing = Attachment.ShufflingProcessing.parse(prunableAttachments);
+            if (shufflingProcessing != null) {
+                builder.appendix(shufflingProcessing);
+            }
             Attachment.TaggedDataUpload taggedDataUpload = Attachment.TaggedDataUpload.parse(prunableAttachments);
             if (taggedDataUpload != null) {
                 builder.appendix(taggedDataUpload);
