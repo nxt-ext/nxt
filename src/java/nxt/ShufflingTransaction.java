@@ -21,7 +21,9 @@ import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class ShufflingTransaction extends TransactionType {
 
@@ -483,9 +485,13 @@ public abstract class ShufflingTransaction extends TransactionType {
             if (recipientPublicKeys.length > shuffling.getParticipantCount() || recipientPublicKeys.length == 0) {
                 throw new NxtException.NotValidException(String.format("Invalid number of recipient public keys %d", recipientPublicKeys.length));
             }
-            for (byte[] bytes : recipientPublicKeys) {
-                if (bytes.length != 32) {
-                    throw new NxtException.NotValidException("Invalid recipient public key length " + bytes.length);
+            Set<Long> recipientAccounts = new HashSet<>();
+            for (byte[] recipientPublicKey : recipientPublicKeys) {
+                if (recipientPublicKey.length != 32) {
+                    throw new NxtException.NotValidException("Invalid recipient public key length " + recipientPublicKey.length);
+                }
+                if (!recipientAccounts.add(Account.getId(recipientPublicKey))) {
+                    throw new NxtException.NotValidException("Duplicate recipient accounts");
                 }
             }
         }

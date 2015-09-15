@@ -37,7 +37,10 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public final class Shuffling {
 
@@ -350,6 +353,13 @@ public final class Shuffling {
         // Shuffle the tokens and save the shuffled tokens as the participant data
         Collections.shuffle(outputDataList, Crypto.getSecureRandom());
         if (isLast) {
+            Set<Long> recipientAccounts = new HashSet<>();
+            Iterator<byte[]> iterator = outputDataList.iterator();
+            while (iterator.hasNext()) {
+                if (!recipientAccounts.add(Account.getId(iterator.next()))) {
+                    iterator.remove();
+                }
+            }
             return new Attachment.ShufflingRecipients(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     previousDataTransactionFullHash);
         } else {
@@ -437,6 +447,7 @@ public final class Shuffling {
             }
             throw new RuntimeException("All participants submitted data and verifications, blame phase should not have been entered");
         }
+        Set<Long> recipientAccounts = new HashSet<>();
         // start from issuer and verify all data up
         for (ShufflingParticipant participant : participants) {
             byte[][] keySeeds = participant.getKeySeeds();
@@ -468,17 +479,6 @@ public final class Shuffling {
                     // the next participant couldn't decrypt the data either, blame this one
                     return participant.getAccountId();
                 }
-                boolean found = false;
-                for (byte[] bytes : nextParticipant.getBlameData()) {
-                    if (Arrays.equals(participantBytes, bytes)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    // the next participant did not include this participant's data
-                    return nextParticipant.getAccountId();
-                }
                 if (i < participantCount - 1) {
                     encryptedData = AnonymouslyEncryptedData.readEncryptedData(participantBytes);
                 } else {
@@ -492,6 +492,20 @@ public final class Shuffling {
                     if (currentPublicKey != null && !Arrays.equals(currentPublicKey, participantBytes)) {
                         return participant.getAccountId();
                     }
+                    if (!recipientAccounts.add(Account.getId(currentPublicKey))) {
+                        return participant.getAccountId();
+                    }
+                }
+                boolean found = false;
+                for (byte[] bytes : nextParticipant.getBlameData()) {
+                    if (Arrays.equals(participantBytes, bytes)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    // the next participant did not include this participant's data
+                    return nextParticipant.getAccountId();
                 }
             }
         }
