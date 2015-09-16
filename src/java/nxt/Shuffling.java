@@ -482,12 +482,12 @@ public final class Shuffling {
                 if (i < participantCount - 1) {
                     encryptedData = AnonymouslyEncryptedData.readEncryptedData(participantBytes);
                 } else {
+                    // else it is not encrypted data but plaintext recipient public key, at the last participant
                     if (participantBytes.length != 32) {
                         // cannot be a valid public key
                         return participant.getAccountId();
                     }
-                    // else it is not encrypted data but plaintext recipient public key, at the last participant
-                    // check for collisions and assume they are intentional (?)
+                    // check for collisions and assume they are intentional
                     byte[] currentPublicKey = Account.getPublicKey(Account.getId(participantBytes));
                     if (currentPublicKey != null && !Arrays.equals(currentPublicKey, participantBytes)) {
                         return participant.getAccountId();

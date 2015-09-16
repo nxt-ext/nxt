@@ -329,7 +329,7 @@ public abstract class ShufflingTransaction extends TransactionType {
         }
 
         @Override
-        Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) {
+        Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
             return new Attachment.ShufflingProcessing(attachmentData);
         }
 

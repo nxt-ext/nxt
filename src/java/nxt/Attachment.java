@@ -27,7 +27,9 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public interface Attachment extends Appendix {
 
@@ -2702,7 +2704,7 @@ public interface Attachment extends Appendix {
 
     final class ShufflingProcessing extends ShufflingAttachment implements Prunable {
 
-        static ShufflingProcessing parse(JSONObject attachmentData) {
+        static ShufflingProcessing parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (!Appendix.hasAppendix(ShufflingTransaction.SHUFFLING_PROCESSING.getName(), attachmentData)) {
                 return null;
             }
@@ -2722,13 +2724,18 @@ public interface Attachment extends Appendix {
             buffer.get(this.previousDataTransactionFullHash);
         }
 
-        ShufflingProcessing(JSONObject attachmentData) {
+        ShufflingProcessing(JSONObject attachmentData) throws NxtException.NotValidException {
             super(attachmentData);
             JSONArray jsonArray = (JSONArray)attachmentData.get("data");
             if (jsonArray != null) {
+                Set<String> set = new HashSet<>();
                 this.data = new byte[jsonArray.size()][];
                 for (int i = 0; i < this.data.length; i++) {
-                    this.data[i] = Convert.parseHexString((String) jsonArray.get(i));
+                    String dataString = (String) jsonArray.get(i);
+                    if (!set.add(dataString)) {
+                        throw new NxtException.NotValidException("Duplicate data " + dataString);
+                    }
+                    this.data[i] = Convert.parseHexString(dataString);
                 }
                 this.hash = null;
             } else {
@@ -2738,7 +2745,7 @@ public interface Attachment extends Appendix {
             this.previousDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("previousDataTransactionFullHash"));
         }
 
-        public ShufflingProcessing(long shufflingId, byte[][] data, byte[] previousDataTransactionFullHash) {
+        ShufflingProcessing(long shufflingId, byte[][] data, byte[] previousDataTransactionFullHash) {
             super(shufflingId);
             this.data = data;
             this.hash = null;
@@ -2862,7 +2869,7 @@ public interface Attachment extends Appendix {
             this.previousDataTransactionFullHash = Convert.parseHexString((String) attachmentData.get("previousDataTransactionFullHash"));
         }
 
-        public ShufflingRecipients(long shufflingId, byte[][] recipientPublicKeys, byte[] previousDataTransactionFullHash) {
+        ShufflingRecipients(long shufflingId, byte[][] recipientPublicKeys, byte[] previousDataTransactionFullHash) {
             super(shufflingId);
             this.recipientPublicKeys = recipientPublicKeys;
             this.previousDataTransactionFullHash = previousDataTransactionFullHash;
@@ -3013,7 +3020,7 @@ public interface Attachment extends Appendix {
             this.cancellingAccountId = Convert.parseUnsignedLong((String) attachmentData.get("cancellingAccount"));
         }
 
-        public ShufflingCancellation(long shufflingId, byte[][] blameData, byte[][] keySeeds, byte[] dataTransactionFullHash, long cancellingAccountId) {
+        ShufflingCancellation(long shufflingId, byte[][] blameData, byte[][] keySeeds, byte[] dataTransactionFullHash, long cancellingAccountId) {
             super(shufflingId);
             this.blameData = blameData;
             this.keySeeds = keySeeds;
