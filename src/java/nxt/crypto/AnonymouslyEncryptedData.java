@@ -30,7 +30,7 @@ public final class AnonymouslyEncryptedData {
         byte[] myPrivateKey = Crypto.getPrivateKey(keySeed);
         byte[] myPublicKey = Crypto.getPublicKey(keySeed);
         byte[] sharedKey = Crypto.getSharedKey(myPrivateKey, theirPublicKey);
-        byte[] data = Crypto.aesEncrypt(plaintext, sharedKey);
+        byte[] data = Crypto.aesGCMEncrypt(plaintext, sharedKey);
         return new AnonymouslyEncryptedData(data, myPublicKey);
     }
 
@@ -66,7 +66,7 @@ public final class AnonymouslyEncryptedData {
 
     public byte[] decrypt(String secretPhrase) {
         byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), publicKey);
-        return Crypto.aesDecrypt(data, sharedKey);
+        return Crypto.aesGCMDecrypt(data, sharedKey);
     }
 
     public byte[] decrypt(byte[] keySeed, byte[] theirPublicKey) {
@@ -74,7 +74,7 @@ public final class AnonymouslyEncryptedData {
             throw new RuntimeException("Data was not encrypted using this keySeed");
         }
         byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(keySeed), theirPublicKey);
-        return Crypto.aesDecrypt(data, sharedKey);
+        return Crypto.aesGCMDecrypt(data, sharedKey);
     }
 
     public byte[] getData() {
