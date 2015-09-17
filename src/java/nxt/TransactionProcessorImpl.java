@@ -764,11 +764,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                 if (((Appendix.Prunable)appendage).hasPrunableData()) {
                                     Logger.logDebugMessage(String.format("Loading prunable data for transaction %s %s appendage",
                                             Long.toUnsignedString(transaction.getId()), appendage.getAppendixName()));
-                                    Appendix.Phasing phasing = myTransaction.getPhasing();
                                     int blockTimestamp;
                                     int height;
-                                    if (phasing != null && appendage.isPhasable()) {
-                                        height = phasing.getFinishHeight();
+                                    if (appendage.isPhased(myTransaction)) {
+                                        height = myTransaction.getPhasing().getFinishHeight();
                                         Block finishBlock = Nxt.getBlockchain().getBlockAtHeight(height);
                                         if (finishBlock == null) {
                                             throw new NxtException.NotValidException(

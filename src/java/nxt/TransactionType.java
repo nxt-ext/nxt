@@ -190,10 +190,6 @@ public abstract class TransactionType {
 
     abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
 
-    void validateAttachmentAtFinish(Transaction transaction) throws NxtException.ValidationException {
-        validateAttachment(transaction);
-    }
-
     // return false iff double spending
     final boolean applyUnconfirmed(TransactionImpl transaction, Account senderAccount) {
         long amountNQT = transaction.getAmountNQT();
@@ -220,7 +216,7 @@ public abstract class TransactionType {
     final void apply(TransactionImpl transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
         long transactionId = transaction.getId();
-        if (transaction.getPhasing() == null || !isPhasable()) {
+        if (!transaction.attachmentIsPhased()) {
             senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -amount, -transaction.getFeeNQT());
         } else {
             senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -amount);
@@ -281,10 +277,6 @@ public abstract class TransactionType {
 
     boolean isPruned(long transactionId) {
         return false;
-    }
-
-    final int getFinishValidationHeight(Transaction transaction) {
-        return transaction.getPhasing() == null ? Nxt.getBlockchain().getHeight() : (transaction.getPhasing().getFinishHeight() - 1);
     }
 
     public abstract boolean canHaveRecipient();
@@ -857,8 +849,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishHeight() <= getFinishValidationHeight(transaction) + 1
-                        || attachment.getFinishHeight() >= getFinishValidationHeight(transaction) + Constants.MAX_POLL_DURATION) {
+                if (attachment.getFinishHeight() <= attachment.getFinishValidationHeight(transaction) + 1
+                        || attachment.getFinishHeight() >= attachment.getFinishValidationHeight(transaction) + Constants.MAX_POLL_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
@@ -935,7 +927,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                 }
 
-                if (poll.getFinishHeight() <= getFinishValidationHeight(transaction)) {
+                if (poll.getFinishHeight() <= attachment.getFinishValidationHeight(transaction)) {
                     throw new NxtException.NotCurrentlyValidException("Voting for this poll finishes at " + poll.getFinishHeight());
                 }
 
@@ -1074,9 +1066,9 @@ public abstract class TransactionType {
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
-                    if (poll.getFinishHeight() <= getFinishValidationHeight(transaction) + 1) {
+                    if (poll.getFinishHeight() <= attachment.getFinishValidationHeight(transaction) + 1) {
                         throw new NxtException.NotCurrentlyValidException(String.format("Phased transaction finishes at height %d which is not after approval transaction height %d",
-                                poll.getFinishHeight(), getFinishValidationHeight(transaction) + 1));
+                                poll.getFinishHeight(), attachment.getFinishValidationHeight(transaction) + 1));
                     }
                 }
             }
@@ -1836,7 +1828,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
                 if (attachment.getHeight() > Nxt.getBlockchain().getHeight()
-                        || attachment.getHeight() <= getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
+                        || attachment.getHeight() <= attachment.getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }
@@ -2584,10 +2576,6 @@ public abstract class TransactionType {
 
         @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
-
-        @Override
-        final void validateAttachmentAtFinish(Transaction transaction) {
         }
 
         @Override

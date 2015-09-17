@@ -40,6 +40,7 @@ public interface Appendix {
     Fee getBaselineFee(Transaction transaction);
     int getNextFeeHeight();
     Fee getNextFee(Transaction transaction);
+    boolean isPhased(Transaction transaction);
 
     interface Prunable {
         byte[] getHash();
@@ -152,6 +153,9 @@ public interface Appendix {
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
 
         void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            if (!isPhased(transaction)) {
+                return;
+            }
             validate(transaction);
         }
 
@@ -165,6 +169,11 @@ public interface Appendix {
 
         boolean isPhasable() {
             return ! (this instanceof Prunable);
+        }
+
+        @Override
+        public final boolean isPhased(Transaction transaction) {
+            return isPhasable() && transaction.getPhasing() != null;
         }
 
     }
@@ -387,10 +396,6 @@ public interface Appendix {
             if (msg == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
             }
-        }
-
-        @Override
-        void validateAtFinish(Transaction transaction) {
         }
 
         @Override
@@ -676,10 +681,6 @@ public interface Appendix {
             if (transaction.getRecipientId() == 0) {
                 throw new NxtException.NotValidException("Encrypted messages cannot be attached to transactions with no recipient");
             }
-        }
-
-        @Override
-        final void validateAtFinish(Transaction transaction) {
         }
 
         @Override

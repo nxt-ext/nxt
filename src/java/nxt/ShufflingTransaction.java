@@ -132,9 +132,9 @@ public abstract class ShufflingTransaction extends TransactionType {
                         attachment.getParticipantCount(), Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS, Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS));
             }
             //TODO: takes more than one block to complete, improve height check
-            if (attachment.getCancellationHeight() <= getFinishValidationHeight(transaction)) {
+            if (attachment.getCancellationHeight() <= attachment.getFinishValidationHeight(transaction)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Cancellation height %d is smaller than transaction finish height %d",
-                        attachment.getCancellationHeight(), getFinishValidationHeight(transaction)));
+                        attachment.getCancellationHeight(), attachment.getFinishValidationHeight(transaction)));
             }
         }
 
@@ -243,7 +243,7 @@ public abstract class ShufflingTransaction extends TransactionType {
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
             //TODO: improve height check
-            if (shuffling.getCancellationHeight() <= getFinishValidationHeight(transaction)) {
+            if (shuffling.getCancellationHeight() <= attachment.getFinishValidationHeight(transaction)) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling finishes at height " + shuffling.getCancellationHeight());
             }
         }

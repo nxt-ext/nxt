@@ -61,13 +61,8 @@ public interface Attachment extends Appendix {
             getTransactionType().validateAttachment(transaction);
         }
 
-        @Override
-        final void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
-            getTransactionType().validateAttachmentAtFinish(transaction);
-        }
-
         final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            getTransactionType().apply((TransactionImpl)transaction, senderAccount, recipientAccount);
+            getTransactionType().apply((TransactionImpl) transaction, senderAccount, recipientAccount);
         }
 
         @Override
@@ -78,6 +73,10 @@ public interface Attachment extends Appendix {
         @Override
         public final boolean isPhasable() {
             return !(this instanceof Prunable) && getTransactionType().isPhasable();
+        }
+
+        final int getFinishValidationHeight(Transaction transaction) {
+            return isPhased(transaction) ? transaction.getPhasing().getFinishHeight() - 1 : Nxt.getBlockchain().getHeight();
         }
 
     }
