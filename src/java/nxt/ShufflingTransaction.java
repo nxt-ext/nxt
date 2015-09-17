@@ -131,10 +131,8 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotValidException(String.format("Number of participants %d is not between %d and %d",
                         attachment.getParticipantCount(), Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS, Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS));
             }
-            //TODO: takes more than one block to complete, improve height check
-            if (attachment.getCancellationHeight() <= attachment.getFinishValidationHeight(transaction)) {
-                throw new NxtException.NotCurrentlyValidException(String.format("Cancellation height %d is smaller than transaction finish height %d",
-                        attachment.getCancellationHeight(), attachment.getFinishValidationHeight(transaction)));
+            if (attachment.getRegistrationPeriod() < attachment.getParticipantCount() || attachment.getRegistrationPeriod() > Constants.MAX_SHUFFLING_REGISTRATION_PERIOD) {
+                throw new NxtException.NotValidException("Invalid registration period: " + attachment.getRegistrationPeriod());
             }
         }
 
@@ -242,9 +240,8 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is already registered for shuffling %s",
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
-            //TODO: improve height check
-            if (shuffling.getCancellationHeight() <= attachment.getFinishValidationHeight(transaction)) {
-                throw new NxtException.NotCurrentlyValidException("Shuffling finishes at height " + shuffling.getCancellationHeight());
+            if (Nxt.getBlockchain().getHeight() + shuffling.getBlocksRemaining() <= attachment.getFinishValidationHeight(transaction)) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling registration finishes in " + shuffling.getBlocksRemaining() + " blocks");
             }
         }
 

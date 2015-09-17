@@ -2564,7 +2564,7 @@ public interface Attachment extends Appendix {
         private final HoldingType holdingType;
         private final long amount;
         private final byte participantCount;
-        private final int cancellationHeight;
+        private final short registrationPeriod;
 
         ShufflingCreation(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -2572,7 +2572,7 @@ public interface Attachment extends Appendix {
             this.holdingType = HoldingType.get(buffer.get());
             this.amount = buffer.getLong();
             this.participantCount = buffer.get();
-            this.cancellationHeight = buffer.getInt();
+            this.registrationPeriod = buffer.getShort();
         }
 
         ShufflingCreation(JSONObject attachmentData) {
@@ -2581,20 +2581,20 @@ public interface Attachment extends Appendix {
             this.holdingType = HoldingType.get(((Long)attachmentData.get("holdingType")).byteValue());
             this.amount = Convert.parseLong(attachmentData.get("amount"));
             this.participantCount = ((Long)attachmentData.get("participantCount")).byteValue();
-            this.cancellationHeight = ((Long)attachmentData.get("cancellationHeight")).intValue();
+            this.registrationPeriod = ((Long)attachmentData.get("registrationPeriod")).shortValue();
         }
 
-        public ShufflingCreation(long holdingId, HoldingType holdingType, long amount, byte participantCount, int cancellationHeight) {
+        public ShufflingCreation(long holdingId, HoldingType holdingType, long amount, byte participantCount, short registrationPeriod) {
             this.holdingId = holdingId;
             this.holdingType = holdingType;
             this.amount = amount;
             this.participantCount = participantCount;
-            this.cancellationHeight = cancellationHeight;
+            this.registrationPeriod = registrationPeriod;
         }
 
         @Override
         int getMySize() {
-            return 8 + 1 + 8 + 1 + 4;
+            return 8 + 1 + 8 + 1 + 2;
         }
 
         @Override
@@ -2603,7 +2603,7 @@ public interface Attachment extends Appendix {
             buffer.put(holdingType.getCode());
             buffer.putLong(amount);
             buffer.put(participantCount);
-            buffer.putInt(cancellationHeight);
+            buffer.putShort(registrationPeriod);
         }
 
         @Override
@@ -2612,7 +2612,7 @@ public interface Attachment extends Appendix {
             attachment.put("holdingType", holdingType.getCode());
             attachment.put("amount", amount);
             attachment.put("participantCount", participantCount);
-            attachment.put("cancellationHeight", cancellationHeight);
+            attachment.put("registrationPeriod", registrationPeriod);
         }
 
         @Override
@@ -2636,8 +2636,8 @@ public interface Attachment extends Appendix {
             return participantCount;
         }
 
-        public int getCancellationHeight() {
-            return cancellationHeight;
+        public short getRegistrationPeriod() {
+            return registrationPeriod;
         }
     }
 

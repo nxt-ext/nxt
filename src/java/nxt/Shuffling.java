@@ -109,11 +109,24 @@ public final class Shuffling {
 
     static {
         Nxt.getBlockchainProcessor().addListener(block -> {
-            try (DbIterator<Shuffling> shufflings = shufflingTable.getManyBy(new DbClause.IntClause("cancellation_height", block.getHeight()), 0, -1)) {
-                for (Shuffling shuffling : shufflings) {
-                    shuffling.cancel(block);
+            if (block.getTransactions().size() == Constants.MAX_NUMBER_OF_TRANSACTIONS) {
+                return;
+            }
+            List<Shuffling> shufflings = new ArrayList<>();
+            try (DbIterator<Shuffling> iterator = shufflingTable.getAll(0, -1)) {
+                for (Shuffling shuffling : iterator) {
+                    if (!shuffling.isFull(block)) {
+                        shufflings.add(shuffling);
+                    }
                 }
             }
+            shufflings.forEach(shuffling -> {
+                if (--shuffling.blocksRemaining <= 0) {
+                    shuffling.cancel(block);
+                } else {
+                    shufflingTable.insert(shuffling);
+                }
+            });
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
@@ -157,7 +170,7 @@ public final class Shuffling {
     private final long issuerId;
     private final long amount;
     private final byte participantCount;
-    private final int cancellationHeight;
+    private short blocksRemaining;
 
     private Stage stage;
     private long assigneeAccountId;
@@ -172,7 +185,7 @@ public final class Shuffling {
         this.issuerId = transaction.getSenderId();
         this.amount = attachment.getAmount();
         this.participantCount = attachment.getParticipantCount();
-        this.cancellationHeight = attachment.getCancellationHeight();
+        this.blocksRemaining = attachment.getRegistrationPeriod();
         this.stage = Stage.REGISTRATION;
         this.assigneeAccountId = issuerId;
         this.recipientPublicKeys = Convert.EMPTY_BYTES;
@@ -186,7 +199,7 @@ public final class Shuffling {
         this.issuerId = rs.getLong("issuer_id");
         this.amount = rs.getLong("amount");
         this.participantCount = rs.getByte("participant_count");
-        this.cancellationHeight = rs.getInt("cancellation_height");
+        this.blocksRemaining = rs.getShort("blocks_remaining");
         this.stage = Stage.get(rs.getByte("stage"));
         this.assigneeAccountId = rs.getLong("assignee_account_id");
         this.cancellingAccountId = rs.getLong("cancelling_account_id");
@@ -201,7 +214,7 @@ public final class Shuffling {
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, holding_id, holding_type, "
-                + "issuer_id, amount, participant_count, cancellation_height, stage, assignee_account_id, "
+                + "issuer_id, amount, participant_count, blocks_remaining, stage, assignee_account_id, "
                 + "cancelling_account_id, recipient_public_keys, height, latest) "
                 + "KEY (id, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
@@ -212,7 +225,7 @@ public final class Shuffling {
             pstmt.setLong(++i, this.issuerId);
             pstmt.setLong(++i, this.amount);
             pstmt.setByte(++i, this.participantCount);
-            pstmt.setInt(++i, this.cancellationHeight);
+            pstmt.setShort(++i, this.blocksRemaining);
             pstmt.setByte(++i, this.getStage().getCode());
             pstmt.setLong(++i, this.assigneeAccountId);
             pstmt.setLong(++i, this.cancellingAccountId);
@@ -250,8 +263,8 @@ public final class Shuffling {
         return participantCount;
     }
 
-    public int getCancellationHeight() {
-        return cancellationHeight;
+    public short getBlocksRemaining() {
+        return blocksRemaining;
     }
 
     public Stage getStage() {
@@ -279,6 +292,7 @@ public final class Shuffling {
 
     void cancelBy(ShufflingParticipant participant, byte[][] blameData, byte[][] keySeeds) {
         participant.cancel(blameData, keySeeds);
+        this.blocksRemaining = (short)(100 + participantCount);
         setStage(Stage.BLAME);
         if (this.cancellingAccountId == 0) {
             this.cancellingAccountId = participant.getAccountId();
@@ -522,6 +536,7 @@ public final class Shuffling {
         // Check if participant registration is complete and if so update the shuffling
         if (index == this.participantCount - 1) {
             this.assigneeAccountId = this.issuerId;
+            this.blocksRemaining = 100;
             setStage(Stage.PROCESSING);
         } else {
             this.assigneeAccountId = participantId;
@@ -541,6 +556,7 @@ public final class Shuffling {
             return;
         }
         this.assigneeAccountId = participant.getNextAccountId();
+        this.blocksRemaining = 100;
         shufflingTable.insert(this);
     }
 
@@ -562,6 +578,7 @@ public final class Shuffling {
                 Account.addOrGetAccount(recipientId).apply(recipientPublicKey);
             }
         }
+        this.blocksRemaining = (short)(100 + participantCount);
         setStage(Stage.VERIFICATION);
         this.assigneeAccountId = this.issuerId;
         shufflingTable.insert(this);
@@ -655,6 +672,16 @@ public final class Shuffling {
             }
         }
         shufflingTable.delete(this);
+    }
+
+    private boolean isFull(Block block) {
+        int transactionSize = 176; // min transaction size with no attachment
+        if (stage == Stage.REGISTRATION) {
+            transactionSize += 1 + 8;
+        } else { // must use same for PROCESSING/VERIFICATION/BLAME
+            transactionSize += 1 + 8; // TODO: determine max processing attachment size
+        }
+        return block.getPayloadLength() + transactionSize > Constants.MAX_PAYLOAD_LENGTH;
     }
 
 }

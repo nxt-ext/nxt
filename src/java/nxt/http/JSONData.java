@@ -317,7 +317,7 @@ final class JSONData {
         json.put("holdingType", shuffling.getHoldingType().getCode());
         putAccount(json, "assignee", shuffling.getAssigneeAccountId());
         json.put("amount", String.valueOf(shuffling.getAmount()));
-        json.put("cancellationHeight", shuffling.getCancellationHeight());
+        json.put("blocksRemaining", shuffling.getBlocksRemaining());
         json.put("participantCount", shuffling.getParticipantCount());
         json.put("stage", shuffling.getStage().getCode());
         JSONArray recipientPublicKeys = new JSONArray();

@@ -981,7 +981,7 @@ class NxtDbVersion extends DbVersion {
                 apply(null);
             case 415:
                 apply("CREATE TABLE IF NOT EXISTS shuffling (db_id IDENTITY, id BIGINT NOT NULL, holding_id BIGINT NULL, holding_type TINYINT NOT NULL, "
-                        + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count TINYINT NOT NULL, cancellation_height INT NOT NULL, "
+                        + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count TINYINT NOT NULL, blocks_remaining SMALLINT NOT NULL, "
                         + "stage TINYINT NOT NULL, assignee_account_id BIGINT NOT NULL, cancelling_account_id BIGINT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 416:
