@@ -97,13 +97,7 @@ public final class ShufflingParticipant {
             this.shufflingId = rs.getLong("shuffling_id");
             this.accountId = rs.getLong("account_id");
             this.dbKey = shufflingDataDbKeyFactory.newKey(shufflingId, accountId);
-            Array array = rs.getArray("data");
-            if (array != null) {
-                Object[] data = (Object[]) array.getArray();
-                this.data = Arrays.copyOf(data, data.length, byte[][].class);
-            } else {
-                this.data = Convert.EMPTY_BYTES;
-            }
+            this.data = DbUtils.getArray(rs, "data", byte[][].class, Convert.EMPTY_BYTES);
             this.transactionTimestamp = rs.getInt("transaction_timestamp");
             this.height = rs.getInt("height");
         }
@@ -115,13 +109,9 @@ public final class ShufflingParticipant {
                 int i = 0;
                 pstmt.setLong(++i, this.shufflingId);
                 pstmt.setLong(++i, this.accountId);
-                if (data.length > 0) {
-                    pstmt.setObject(++i, data);
-                } else {
-                    pstmt.setNull(++i, Types.ARRAY);
-                }
+                DbUtils.setArrayEmptyToNull(pstmt, ++i, this.data);
                 pstmt.setInt(++i, this.transactionTimestamp);
-                pstmt.setInt(++i, height);
+                pstmt.setInt(++i, this.height);
                 pstmt.executeUpdate();
             }
         }
@@ -241,20 +231,8 @@ public final class ShufflingParticipant {
         this.nextAccountId = rs.getLong("next_account_id");
         this.index = rs.getInt("participant_index");
         this.state = State.get(rs.getByte("state"));
-        Array array = rs.getArray("data");
-        if (array != null) {
-            Object[] data = (Object[]) array.getArray();
-            this.blameData = Arrays.copyOf(data, data.length, byte[][].class);
-        } else {
-            this.blameData = Convert.EMPTY_BYTES;
-        }
-        array = rs.getArray("key_seeds");
-        if (array != null) {
-            Object[] keySeeds = (Object[]) array.getArray();
-            this.keySeeds = Arrays.copyOf(keySeeds, keySeeds.length, byte[][].class);
-        } else {
-            this.keySeeds = Convert.EMPTY_BYTES;
-        }
+        this.blameData = DbUtils.getArray(rs, "data", byte[][].class, Convert.EMPTY_BYTES);
+        this.keySeeds = DbUtils.getArray(rs, "key_seeds", byte[][].class, Convert.EMPTY_BYTES);
         this.dataTransactionFullHash = rs.getBytes("data_transaction_full_hash");
     }
 
@@ -267,19 +245,11 @@ public final class ShufflingParticipant {
             pstmt.setLong(++i, this.shufflingId);
             pstmt.setLong(++i, this.accountId);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.nextAccountId);
-            pstmt.setInt(++i, index);
+            pstmt.setInt(++i, this.index);
             pstmt.setByte(++i, this.getState().getCode());
-            if (blameData.length > 0) {
-                pstmt.setObject(++i, blameData);
-            } else {
-                pstmt.setNull(++i, Types.ARRAY);
-            }
-            if (keySeeds.length > 0) {
-                pstmt.setObject(++i, keySeeds);
-            } else {
-                pstmt.setNull(++i, Types.ARRAY);
-            }
-            DbUtils.setBytes(pstmt, ++i, dataTransactionFullHash);
+            DbUtils.setArrayEmptyToNull(pstmt, ++i, this.blameData);
+            DbUtils.setArrayEmptyToNull(pstmt, ++i, this.keySeeds);
+            DbUtils.setBytes(pstmt, ++i, this.dataTransactionFullHash);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

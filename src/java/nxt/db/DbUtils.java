@@ -16,12 +16,16 @@
 
 package nxt.db;
 
+import nxt.util.Convert;
 import nxt.util.Logger;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 
 public final class DbUtils {
 
@@ -83,6 +87,36 @@ public final class DbUtils {
             pstmt.setLong(index, l);
         } else {
             pstmt.setNull(index, Types.BIGINT);
+        }
+    }
+
+    public static <T> T[] getArray(ResultSet rs, String columnName, Class<T[]> cls) throws SQLException {
+        return getArray(rs, columnName, cls, null);
+    }
+
+    public static <T> T[] getArray(ResultSet rs, String columnName, Class<T[]> cls, T[] ifNull) throws SQLException {
+        Array array = rs.getArray(columnName);
+        if (array != null) {
+            Object[] objects = (Object[]) array.getArray();
+            return Arrays.copyOf(objects, objects.length, cls);
+        } else {
+            return ifNull;
+        }
+    }
+
+    public static <T> void setArray(PreparedStatement pstmt, int index, T[] array) throws SQLException {
+        if (array != null) {
+            pstmt.setObject(index, array);
+        } else {
+            pstmt.setNull(index, Types.ARRAY);
+        }
+    }
+
+    public static <T> void setArrayEmptyToNull(PreparedStatement pstmt, int index, T[] array) throws SQLException {
+        if (array != null && array.length > 0) {
+            pstmt.setObject(index, array);
+        } else {
+            pstmt.setNull(index, Types.ARRAY);
         }
     }
 

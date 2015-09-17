@@ -21,6 +21,7 @@ import nxt.crypto.EncryptedData;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
@@ -319,8 +320,7 @@ public final class DigitalGoodsStore {
             this.name = rs.getString("name");
             this.description = rs.getString("description");
             this.tags = rs.getString("tags");
-            Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
-            this.parsedTags = Arrays.copyOf(array, array.length, String[].class);
+            this.parsedTags = DbUtils.getArray(rs, "parsed_tags", String[].class);
             this.quantity = rs.getInt("quantity");
             this.priceNQT = rs.getLong("price");
             this.delisted = rs.getBoolean("delisted");
@@ -337,7 +337,7 @@ public final class DigitalGoodsStore {
                 pstmt.setString(++i, this.name);
                 pstmt.setString(++i, this.description);
                 pstmt.setString(++i, this.tags);
-                pstmt.setObject(++i, this.parsedTags);
+                DbUtils.setArray(pstmt, ++i, this.parsedTags);
                 pstmt.setInt(++i, this.timestamp);
                 pstmt.setInt(++i, this.quantity);
                 pstmt.setLong(++i, this.priceNQT);

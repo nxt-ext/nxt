@@ -19,6 +19,7 @@ package nxt;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 import nxt.db.VersionedPersistentDbTable;
 import nxt.db.VersionedPrunableDbTable;
@@ -397,8 +398,7 @@ public class TaggedData {
         this.name = rs.getString("name");
         this.description = rs.getString("description");
         this.tags = rs.getString("tags");
-        Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
-        this.parsedTags = Arrays.copyOf(array, array.length, String[].class);
+        this.parsedTags = DbUtils.getArray(rs, "parsed_tags", String[].class);
         this.data = rs.getBytes("data");
         this.type = rs.getString("type");
         this.channel = rs.getString("channel");
@@ -419,7 +419,7 @@ public class TaggedData {
             pstmt.setString(++i, this.name);
             pstmt.setString(++i, this.description);
             pstmt.setString(++i, this.tags);
-            pstmt.setObject(++i, this.parsedTags);
+            DbUtils.setArray(pstmt, ++i, this.parsedTags);
             pstmt.setString(++i, this.type);
             pstmt.setString(++i, this.channel);
             pstmt.setBytes(++i, this.data);

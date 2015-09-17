@@ -203,13 +203,7 @@ public final class Shuffling {
         this.stage = Stage.get(rs.getByte("stage"));
         this.assigneeAccountId = rs.getLong("assignee_account_id");
         this.cancellingAccountId = rs.getLong("cancelling_account_id");
-        Array array = rs.getArray("recipient_public_keys");
-        if (array != null) {
-            Object[] recipientPublicKeys = (Object[]) array.getArray();
-            this.recipientPublicKeys = Arrays.copyOf(recipientPublicKeys, recipientPublicKeys.length, byte[][].class);
-        } else {
-            this.recipientPublicKeys = Convert.EMPTY_BYTES;
-        }
+        this.recipientPublicKeys = DbUtils.getArray(rs, "recipient_public_keys", byte[][].class, Convert.EMPTY_BYTES);
     }
 
     private void save(Connection con) throws SQLException {
@@ -229,11 +223,7 @@ public final class Shuffling {
             pstmt.setByte(++i, this.getStage().getCode());
             pstmt.setLong(++i, this.assigneeAccountId);
             pstmt.setLong(++i, this.cancellingAccountId);
-            if (recipientPublicKeys.length > 0) {
-                pstmt.setObject(++i, recipientPublicKeys);
-            } else {
-                pstmt.setNull(++i, Types.ARRAY);
-            }
+            DbUtils.setArrayEmptyToNull(pstmt, ++i, this.recipientPublicKeys);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }

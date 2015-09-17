@@ -205,7 +205,7 @@ public final class DebugTrace {
     private void trace(Block block) {
         for (Transaction transaction : block.getTransactions()) {
             long senderId = transaction.getSenderId();
-            if (transaction.getPhasing() != null) {
+            if (((TransactionImpl)transaction).attachmentIsPhased()) {
                 if (include(senderId)) {
                     log(getValues(senderId, transaction, false, true, false));
                 }

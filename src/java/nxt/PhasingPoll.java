@@ -356,13 +356,7 @@ public final class PhasingPoll extends AbstractPoll {
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = rs.getLong("quorum");
         this.whitelist = rs.getByte("whitelist_size") == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
-        Array array = rs.getArray("linked_full_hashes");
-        if (array != null) {
-            Object[] hashes = (Object[]) array.getArray();
-            this.linkedFullHashes = Arrays.copyOf(hashes, hashes.length, byte[][].class);
-        } else {
-            this.linkedFullHashes = Convert.EMPTY_BYTES;
-        }
+        this.linkedFullHashes = DbUtils.getArray(rs, "linked_full_hashes", byte[][].class, Convert.EMPTY_BYTES);
         hashedSecret = rs.getBytes("hashed_secret");
         algorithm = rs.getByte("algorithm");
     }
@@ -442,11 +436,7 @@ public final class PhasingPoll extends AbstractPoll {
             DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getMinBalance());
             DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getHoldingId());
             pstmt.setByte(++i, voteWeighting.getMinBalanceModel().getCode());
-            if (linkedFullHashes.length > 0) {
-                pstmt.setObject(++i, linkedFullHashes);
-            } else {
-                pstmt.setNull(++i, Types.ARRAY);
-            }
+            DbUtils.setArrayEmptyToNull(pstmt, ++i, linkedFullHashes);
             DbUtils.setBytes(pstmt, ++i, hashedSecret);
             pstmt.setByte(++i, algorithm);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
