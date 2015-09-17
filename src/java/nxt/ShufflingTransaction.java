@@ -65,11 +65,6 @@ public abstract class ShufflingTransaction extends TransactionType {
         return false;
     }
 
-    //TODO: shuffle creation and registration phasable?
-    @Override
-    public final boolean isPhasable() {
-        return false;
-    }
 
     public static final TransactionType SHUFFLING_CREATION = new ShufflingTransaction() {
 
@@ -137,9 +132,9 @@ public abstract class ShufflingTransaction extends TransactionType {
                         attachment.getParticipantCount(), Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS, Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS));
             }
             //TODO: takes more than one block to complete, improve height check
-            if (attachment.getCancellationHeight() <= Nxt.getBlockchain().getHeight()) {
-                throw new NxtException.NotValidException(String.format("Cancellation height %d is smaller than current height %d",
-                        attachment.getCancellationHeight(), Nxt.getBlockchain().getHeight()));
+            if (attachment.getCancellationHeight() <= getFinishValidationHeight(transaction)) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Cancellation height %d is smaller than transaction finish height %d",
+                        attachment.getCancellationHeight(), getFinishValidationHeight(transaction)));
             }
         }
 
@@ -246,6 +241,10 @@ public abstract class ShufflingTransaction extends TransactionType {
             if (shuffling.getParticipant(transaction.getSenderId()) != null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is already registered for shuffling %s",
                         Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+            }
+            //TODO: improve height check
+            if (shuffling.getCancellationHeight() <= getFinishValidationHeight(transaction)) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling finishes at height " + shuffling.getCancellationHeight());
             }
         }
 
@@ -414,6 +413,12 @@ public abstract class ShufflingTransaction extends TransactionType {
         public boolean canHaveRecipient() {
             return false;
         }
+
+        @Override
+        public boolean isPhasable() {
+            return false;
+        }
+
     };
 
     public static final TransactionType SHUFFLING_RECIPIENTS = new ShufflingTransaction() {
@@ -522,6 +527,12 @@ public abstract class ShufflingTransaction extends TransactionType {
         public boolean canHaveRecipient() {
             return false;
         }
+
+        @Override
+        public boolean isPhasable() {
+            return false;
+        }
+
     };
 
     public static final TransactionType SHUFFLING_VERIFICATION = new ShufflingTransaction() {
@@ -607,6 +618,12 @@ public abstract class ShufflingTransaction extends TransactionType {
         public boolean canHaveRecipient() {
             return false;
         }
+
+        @Override
+        public boolean isPhasable() {
+            return false;
+        }
+
     };
 
     public static final TransactionType SHUFFLING_CANCELLATION = new ShufflingTransaction() {
@@ -713,6 +730,12 @@ public abstract class ShufflingTransaction extends TransactionType {
         public boolean canHaveRecipient() {
             return false;
         }
+
+        @Override
+        public boolean isPhasable() {
+            return false;
+        }
+
     };
 
 }
