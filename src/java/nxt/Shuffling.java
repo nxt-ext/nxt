@@ -306,7 +306,7 @@ public final class Shuffling {
 
     void cancelBy(ShufflingParticipant participant, byte[][] blameData, byte[][] keySeeds) {
         participant.cancel(blameData, keySeeds);
-        this.blocksRemaining = (short)(100 + participantCount);
+        this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
         if (this.cancellingAccountId == 0) {
             this.cancellingAccountId = participant.getAccountId();
             setStage(Stage.BLAME);
@@ -551,7 +551,7 @@ public final class Shuffling {
         // Check if participant registration is complete and if so update the shuffling
         if (index == this.participantCount - 1) {
             this.assigneeAccountId = this.issuerId;
-            this.blocksRemaining = 100;
+            this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
             setStage(Stage.PROCESSING);
         } else {
             this.assigneeAccountId = participantId;
@@ -574,7 +574,7 @@ public final class Shuffling {
             return;
         }
         this.assigneeAccountId = participant.getNextAccountId();
-        this.blocksRemaining = 100;
+        this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
         shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_ASSIGNED);
     }
@@ -597,7 +597,7 @@ public final class Shuffling {
                 Account.addOrGetAccount(recipientId).apply(recipientPublicKey);
             }
         }
-        this.blocksRemaining = (short)(100 + participantCount);
+        this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
         setStage(Stage.VERIFICATION);
         this.assigneeAccountId = this.issuerId;
         shufflingTable.insert(this);
@@ -627,7 +627,7 @@ public final class Shuffling {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
                 holdingType.addToBalance(participantAccount, event, this.id, this.holdingId, -amount);
                 if (holdingType != HoldingType.NXT) {
-                    participantAccount.addToBalanceNQT(event, this.id, -Constants.SHUFFLE_DEPOSIT_NQT);
+                    participantAccount.addToBalanceNQT(event, this.id, -Constants.SHUFFLING_DEPOSIT_NQT);
                 }
             }
         }
@@ -637,7 +637,7 @@ public final class Shuffling {
             recipientAccount.apply(recipientPublicKey);
             holdingType.addToBalanceAndUnconfirmedBalance(recipientAccount, event, this.id, this.holdingId, amount);
             if (holdingType != HoldingType.NXT) {
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLE_DEPOSIT_NQT);
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
             }
         }
         setStage(Stage.DONE);
@@ -656,19 +656,19 @@ public final class Shuffling {
                 if (blamedAccountId != 0) {
                     // as a penalty the deposit goes to the generator of the finish block
                     Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
-                    blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
-                    blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLE_DEPOSIT_NQT);
+                    blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
+                    blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
                 }
                 holdingType.addToUnconfirmedBalance(participantAccount, event, eventId, this.holdingId, this.amount);
                 if (participantAccount.getId() != blamedAccountId) {
                     if (holdingType != HoldingType.NXT) {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLE_DEPOSIT_NQT);
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
                     }
                 } else {
                     if (holdingType == HoldingType.NXT) {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
                     }
-                    participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLE_DEPOSIT_NQT);
+                    participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
                 }
             }
         }
