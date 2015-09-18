@@ -177,7 +177,7 @@ public final class ShufflingParticipant {
     }
 
     public static DbIterator<ShufflingParticipant> getParticipants(long shufflingId) {
-        return shufflingParticipantTable.getManyBy(new DbClause.LongClause("shuffling_id", shufflingId), 0, -1, " ORDER BY index ");
+        return shufflingParticipantTable.getManyBy(new DbClause.LongClause("shuffling_id", shufflingId), 0, -1, " ORDER BY participant_index ");
     }
 
     public static ShufflingParticipant getParticipant(long shufflingId, long accountId) {
@@ -229,7 +229,7 @@ public final class ShufflingParticipant {
         this.nextAccountId = rs.getLong("next_account_id");
         this.index = rs.getInt("participant_index");
         this.state = State.get(rs.getByte("state"));
-        this.blameData = DbUtils.getArray(rs, "data", byte[][].class, Convert.EMPTY_BYTES);
+        this.blameData = DbUtils.getArray(rs, "blame_data", byte[][].class, Convert.EMPTY_BYTES);
         this.keySeeds = DbUtils.getArray(rs, "key_seeds", byte[][].class, Convert.EMPTY_BYTES);
         this.dataTransactionFullHash = rs.getBytes("data_transaction_full_hash");
     }
@@ -341,7 +341,7 @@ public final class ShufflingParticipant {
         if (index == 0) {
             return null;
         }
-        return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.IntClause("index", index - 1)));
+        return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.IntClause("participant_index", index - 1)));
     }
 
     void verify() {

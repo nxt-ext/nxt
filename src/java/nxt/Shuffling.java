@@ -235,7 +235,7 @@ public final class Shuffling {
                 + "issuer_id, amount, participant_count, blocks_remaining, stage, assignee_account_id, "
                 + "cancelling_account_id, recipient_public_keys, height, latest) "
                 + "KEY (id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.holdingId);
