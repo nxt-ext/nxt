@@ -306,7 +306,7 @@ public interface Appendix {
         private final boolean isText;
         private volatile PrunableMessage prunableMessage;
 
-        PrunablePlainMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        PrunablePlainMessage(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.hash = new byte[32];
             buffer.get(this.hash);

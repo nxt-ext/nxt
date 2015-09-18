@@ -16,7 +16,6 @@
 
 package nxt.db;
 
-import nxt.util.Convert;
 import nxt.util.Logger;
 
 import java.sql.Array;

@@ -1011,7 +1011,7 @@ public interface Attachment extends Appendix {
         private final long assetId;
         private final long quantityQNT;
 
-        ColoredCoinsAssetDelete(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        ColoredCoinsAssetDelete(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.assetId = buffer.getLong();
             this.quantityQNT = buffer.getLong();
@@ -2714,7 +2714,7 @@ public interface Attachment extends Appendix {
         private final byte[] hash;
         private final byte[] previousDataTransactionFullHash;
 
-        ShufflingProcessing(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        ShufflingProcessing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.data = null;
             this.hash = new byte[32];
