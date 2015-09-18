@@ -269,6 +269,10 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getExpectedExchangeRequests", GetExpectedExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
+        map.put("getAllShufflings", GetAllShufflings.instance);
+        map.put("getAccountShufflings", GetAccountShufflings.instance);
+        map.put("getAssignedShufflings", GetAssignedShufflings.instance);
+        map.put("getHoldingShufflings", GetHoldingShufflings.instance);
         map.put("getShuffling", GetShuffling.instance);
         map.put("getShufflingParticipants", GetShufflingParticipants.instance);
         map.put("getPrunableMessage", GetPrunableMessage.instance);

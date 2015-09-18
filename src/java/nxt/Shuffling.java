@@ -28,12 +28,10 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -152,6 +150,32 @@ public final class Shuffling {
 
     public static int getHoldingShufflingCount(long holdingId) {
         return shufflingTable.getCount(new DbClause.LongClause("holding_id", holdingId));
+    }
+
+    public static DbIterator<Shuffling> getHoldingShufflings(long holdingId, int from, int to) {
+        return shufflingTable.getManyBy(new DbClause.LongClause("holding_id", holdingId), from, to, " ORDER BY blocks_remaining ");
+    }
+
+    public static DbIterator<Shuffling> getAccountShufflings(long accountId, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT shuffling.* FROM shuffling, shuffling_participant WHERE "
+                    + "shuffling_participant.account_id = ? AND shuffling.id = shuffling_participant.shuffling_id "
+                    + "AND shuffling.latest = TRUE AND shuffling_participant.latest = TRUE ORDER BY blocks_remaining "
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, accountId);
+            DbUtils.setLimits(++i, pstmt, from, to);
+            return shufflingTable.getManyBy(con, pstmt, false);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    public static DbIterator<Shuffling> getAssignedShufflings(long assigneeAccountId, int from, int to) {
+        return shufflingTable.getManyBy(new DbClause.LongClause("assignee_account_id", assigneeAccountId), from, to, " ORDER BY blocks_remaining ");
     }
 
     static void addShuffling(Transaction transaction, Attachment.ShufflingCreation attachment) {
