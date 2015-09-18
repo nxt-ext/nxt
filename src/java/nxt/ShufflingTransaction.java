@@ -361,11 +361,9 @@ public abstract class ShufflingTransaction extends TransactionType {
                         Long.toUnsignedString(transaction.getSenderId())));
             }
             ShufflingParticipant previousParticipant = participant.getPreviousParticipant();
-            if (previousParticipant != null) {
-                byte[] previousDataTransactionFullHash = previousParticipant.getDataTransactionFullHash();
-                if (previousDataTransactionFullHash == null || !Arrays.equals(previousDataTransactionFullHash, attachment.getPreviousDataTransactionFullHash())) {
-                    throw new NxtException.NotCurrentlyValidException("Previous data transaction full hash doesn't match");
-                }
+            byte[] shufflingStateHash = previousParticipant == null ? shuffling.getParticipantsHash() : previousParticipant.getDataTransactionFullHash();
+            if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getPreviousDataTransactionFullHash())) {
+                throw new NxtException.NotCurrentlyValidException("Previous data transaction full hash doesn't match");
             }
             byte[][] data = attachment.getData();
             if (data == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {

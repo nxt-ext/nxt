@@ -186,6 +186,14 @@ public final class Convert {
         }
     }
 
+    public static byte[] toBytes(long n) {
+        byte[] bytes = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            bytes[i] = (byte)(n >> (8 * i));
+        }
+        return bytes;
+    }
+
     public static String readString(ByteBuffer buffer, int numBytes, int maxLength) throws NxtException.NotValidException {
         if (numBytes > 3 * maxLength) {
             throw new NxtException.NotValidException("Max parameter length exceeded");

@@ -28,6 +28,7 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 
+import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -315,17 +316,9 @@ public final class Shuffling {
         shufflingTable.insert(this);
     }
 
-    private byte[] getNonce() {
-        byte[] nonce = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            nonce[i] = (byte)(id >> (8 * i));
-        }
-        return nonce;
-    }
-
     public Attachment.ShufflingAttachment process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
         byte[][] data = Convert.EMPTY_BYTES;
-        byte[] previousDataTransactionFullHash = Convert.EMPTY_BYTE;
+        byte[] shufflingStateHash = null;
         List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
         Nxt.getBlockchain().readLock();
         // Read the participant list for the shuffling
@@ -334,8 +327,11 @@ public final class Shuffling {
                 shufflingParticipants.add(participant);
                 if (participant.getNextAccountId() == accountId) {
                     data = participant.getData();
-                    previousDataTransactionFullHash = participant.getDataTransactionFullHash();
+                    shufflingStateHash = participant.getDataTransactionFullHash();
                 }
+            }
+            if (shufflingStateHash == null) {
+                shufflingStateHash = getParticipantsHash(shufflingParticipants);
             }
         } finally {
             Nxt.getBlockchain().readUnlock();
@@ -360,7 +356,7 @@ public final class Shuffling {
         // which did not perform shuffle processing yet
         // If we are that last participant to process then we do not encrypt our recipient
         byte[] bytesToEncrypt = recipientPublicKey;
-        byte[] nonce = getNonce();
+        byte[] nonce = Convert.toBytes(this.id);
         for (int i = shufflingParticipants.size() - 1; i >= 0; i--) {
             ShufflingParticipant participant = shufflingParticipants.get(i);
             if (participant.getAccountId() == accountId) {
@@ -390,10 +386,10 @@ public final class Shuffling {
                 }
             }
             return new Attachment.ShufflingRecipients(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
-                    previousDataTransactionFullHash);
+                    shufflingStateHash);
         } else {
             return new Attachment.ShufflingProcessing(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
-                    previousDataTransactionFullHash);
+                    shufflingStateHash);
         }
     }
 
@@ -418,7 +414,7 @@ public final class Shuffling {
                 return new Attachment.ShufflingCancellation(this.id, data, Convert.EMPTY_BYTES, dataTransactionFullHash,
                         cancellingAccountId);
             }
-            final byte[] nonce = getNonce();
+            final byte[] nonce = Convert.toBytes(this.id);
             final List<byte[]> keySeeds = new ArrayList<>();
             byte[] nextParticipantPublicKey = Account.getPublicKey(participants.next().getAccountId());
             byte[] keySeed = Crypto.getKeySeed(secretPhrase, nextParticipantPublicKey, nonce);
@@ -703,6 +699,20 @@ public final class Shuffling {
             transactionSize += 1 + 8; // TODO: determine max processing attachment size
         }
         return block.getPayloadLength() + transactionSize > Constants.MAX_PAYLOAD_LENGTH;
+    }
+
+    byte[] getParticipantsHash() {
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(this.id)) {
+            return getParticipantsHash(participants);
+        }
+    }
+
+    static byte[] getParticipantsHash(Iterable<ShufflingParticipant> participants) {
+        MessageDigest digest = Crypto.sha256();
+        participants.forEach(participant -> {
+            digest.update(Convert.toBytes(participant.getAccountId()));
+        });
+        return digest.digest();
     }
 
 }
