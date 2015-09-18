@@ -29,12 +29,10 @@ import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Arrays;
 
 public final class ShufflingParticipant {
@@ -72,7 +70,7 @@ public final class ShufflingParticipant {
     }
 
     public enum Event {
-        PARTICIPANT_ADDED, RECIPIENT_ADDED
+        PARTICIPANT_REGISTERED, PARTICIPANT_PROCESSED, PARTICIPANT_VERIFIED, PARTICIPANT_CANCELLED
     }
 
     private final static class ShufflingData {
@@ -193,7 +191,7 @@ public final class ShufflingParticipant {
     static void addParticipant(long shufflingId, long accountId, int index) {
         ShufflingParticipant participant = new ShufflingParticipant(shufflingId, accountId, index);
         shufflingParticipantTable.insert(participant);
-        listeners.notify(participant, Event.PARTICIPANT_ADDED);
+        listeners.notify(participant, Event.PARTICIPANT_REGISTERED);
     }
 
     static int getVerifiedCount(long shufflingId) {
@@ -302,6 +300,7 @@ public final class ShufflingParticipant {
         shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, Nxt.getBlockchain().getHeight()));
         setState(State.PROCESSED);
         shufflingParticipantTable.insert(this);
+        listeners.notify(this, Event.PARTICIPANT_PROCESSED);
     }
 
     void restoreData(byte[][] data, int timestamp, int height) {
@@ -324,6 +323,7 @@ public final class ShufflingParticipant {
         this.keySeeds = keySeeds;
         setState(State.CANCELLED);
         shufflingParticipantTable.insert(this);
+        listeners.notify(this, Event.PARTICIPANT_CANCELLED);
     }
 
     public byte[] getDataTransactionFullHash() {
@@ -350,6 +350,7 @@ public final class ShufflingParticipant {
         }
         setState(State.VERIFIED);
         shufflingParticipantTable.insert(this);
+        listeners.notify(this, Event.PARTICIPANT_VERIFIED);
     }
 
     void delete() {

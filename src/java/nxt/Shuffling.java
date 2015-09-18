@@ -43,14 +43,14 @@ import java.util.Set;
 public final class Shuffling {
 
     public enum Event {
-        SHUFFLING_CREATED, SHUFFLING_CANCELLED, SHUFFLING_DONE
+        SHUFFLING_CREATED, SHUFFLING_ASSIGNED, SHUFFLING_PROCESSING_FINISHED, SHUFFLING_BLAME_STARTED, SHUFFLING_CANCELLED, SHUFFLING_DONE
     }
 
     public enum Stage {
         REGISTRATION((byte)0, new byte[]{1,4}),
         PROCESSING((byte)1, new byte[]{2,3,4}),
         VERIFICATION((byte)2, new byte[]{3,4,5}),
-        BLAME((byte)3, new byte[]{3,4}),
+        BLAME((byte)3, new byte[]{4}),
         CANCELLED((byte)4, new byte[]{}),
         DONE((byte)5, new byte[]{});
 
@@ -307,9 +307,10 @@ public final class Shuffling {
     void cancelBy(ShufflingParticipant participant, byte[][] blameData, byte[][] keySeeds) {
         participant.cancel(blameData, keySeeds);
         this.blocksRemaining = (short)(100 + participantCount);
-        setStage(Stage.BLAME);
         if (this.cancellingAccountId == 0) {
             this.cancellingAccountId = participant.getAccountId();
+            setStage(Stage.BLAME);
+            listeners.notify(this, Event.SHUFFLING_BLAME_STARTED);
         }
         shufflingTable.insert(this);
     }
@@ -556,6 +557,9 @@ public final class Shuffling {
             this.assigneeAccountId = participantId;
         }
         shufflingTable.insert(this);
+        if (stage == Stage.PROCESSING) {
+            listeners.notify(this, Event.SHUFFLING_ASSIGNED);
+        }
     }
 
     void updateParticipantData(Transaction transaction, Attachment.ShufflingProcessing attachment) {
@@ -572,6 +576,7 @@ public final class Shuffling {
         this.assigneeAccountId = participant.getNextAccountId();
         this.blocksRemaining = 100;
         shufflingTable.insert(this);
+        listeners.notify(this, Event.SHUFFLING_ASSIGNED);
     }
 
     void updateRecipients(Transaction transaction, Attachment.ShufflingRecipients attachment) {
@@ -596,6 +601,7 @@ public final class Shuffling {
         setStage(Stage.VERIFICATION);
         this.assigneeAccountId = this.issuerId;
         shufflingTable.insert(this);
+        listeners.notify(this, Event.SHUFFLING_PROCESSING_FINISHED);
     }
 
     void verify(long accountId) {
@@ -615,12 +621,13 @@ public final class Shuffling {
                 return;
             }
         }
+        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING_DISTRIBUTION;
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
-                holdingType.addToBalance(participantAccount, AccountLedger.LedgerEvent.SHUFFLING, this.id, this.holdingId, -amount);
+                holdingType.addToBalance(participantAccount, event, this.id, this.holdingId, -amount);
                 if (holdingType != HoldingType.NXT) {
-                    participantAccount.addToBalanceNQT(AccountLedger.LedgerEvent.SHUFFLING, this.id, -Constants.SHUFFLE_DEPOSIT_NQT);
+                    participantAccount.addToBalanceNQT(event, this.id, -Constants.SHUFFLE_DEPOSIT_NQT);
                 }
             }
         }
@@ -628,9 +635,9 @@ public final class Shuffling {
             long recipientId = Account.getId(recipientPublicKey);
             Account recipientAccount = Account.addOrGetAccount(recipientId);
             recipientAccount.apply(recipientPublicKey);
-            holdingType.addToBalanceAndUnconfirmedBalance(recipientAccount, AccountLedger.LedgerEvent.SHUFFLING, this.id, this.holdingId, amount);
+            holdingType.addToBalanceAndUnconfirmedBalance(recipientAccount, event, this.id, this.holdingId, amount);
             if (holdingType != HoldingType.NXT) {
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.SHUFFLING, this.id, Constants.SHUFFLE_DEPOSIT_NQT);
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLE_DEPOSIT_NQT);
             }
         }
         setStage(Stage.DONE);
@@ -640,7 +647,7 @@ public final class Shuffling {
     }
 
     private void cancel(Block block) {
-        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING;
+        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING_CANCELLATION;
         long eventId = block.getId();
         long blamedAccountId = blame();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {

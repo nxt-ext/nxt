@@ -499,7 +499,10 @@ public class AccountLedger {
             TAGGED_DATA_UPLOAD(47, true),
             TAGGED_DATA_EXTEND(48, true),
         // TYPE_SHUFFLING
-            SHUFFLING(51, false); //TODO: need more shuffling events
+            SHUFFLING_REGISTRATION(51, true),
+            SHUFFLING_PROCESSING(52, true),
+            SHUFFLING_CANCELLATION(53, false),
+            SHUFFLING_DISTRIBUTION(54, false);
 
 
         /** Event code mapping */

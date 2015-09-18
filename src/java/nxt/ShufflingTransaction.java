@@ -75,7 +75,7 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         public AccountLedger.LedgerEvent getLedgerEvent() {
-            return AccountLedger.LedgerEvent.SHUFFLING;
+            return AccountLedger.LedgerEvent.SHUFFLING_REGISTRATION;
         }
 
         @Override
@@ -205,7 +205,7 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         public AccountLedger.LedgerEvent getLedgerEvent() {
-            return AccountLedger.LedgerEvent.SHUFFLING;
+            return AccountLedger.LedgerEvent.SHUFFLING_REGISTRATION;
         }
 
         @Override
@@ -311,7 +311,7 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         public AccountLedger.LedgerEvent getLedgerEvent() {
-            return AccountLedger.LedgerEvent.SHUFFLING;
+            return AccountLedger.LedgerEvent.SHUFFLING_PROCESSING;
         }
 
         @Override
@@ -427,7 +427,7 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         public AccountLedger.LedgerEvent getLedgerEvent() {
-            return AccountLedger.LedgerEvent.SHUFFLING;
+            return AccountLedger.LedgerEvent.SHUFFLING_PROCESSING;
         }
 
         @Override
@@ -541,7 +541,7 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         public AccountLedger.LedgerEvent getLedgerEvent() {
-            return AccountLedger.LedgerEvent.SHUFFLING;
+            return AccountLedger.LedgerEvent.SHUFFLING_PROCESSING;
         }
 
         @Override
@@ -632,7 +632,7 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         public AccountLedger.LedgerEvent getLedgerEvent() {
-            return AccountLedger.LedgerEvent.SHUFFLING;
+            return AccountLedger.LedgerEvent.SHUFFLING_PROCESSING;
         }
 
         @Override
