@@ -32,7 +32,7 @@ public final class GetHoldingShufflings extends APIServlet.APIRequestHandler {
     static final GetHoldingShufflings instance = new GetHoldingShufflings();
 
     private GetHoldingShufflings() {
-        super(new APITag[] {APITag.SHUFFLING}, "holding", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.SHUFFLING}, "holding", "includeFinished", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -47,14 +47,14 @@ public final class GetHoldingShufflings extends APIServlet.APIRequestHandler {
                 return incorrect("holding");
             }
         }
-
+        boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("shufflings", jsonArray);
-        try (DbIterator<Shuffling> shufflings = Shuffling.getHoldingShufflings(holdingId, firstIndex, lastIndex)) {
+        try (DbIterator<Shuffling> shufflings = Shuffling.getHoldingShufflings(holdingId, includeFinished, firstIndex, lastIndex)) {
             for (Shuffling shuffling : shufflings) {
                 jsonArray.add(JSONData.shuffling(shuffling));
             }

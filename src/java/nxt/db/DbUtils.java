@@ -73,6 +73,14 @@ public final class DbUtils {
         }
     }
 
+    public static void setShortZeroToNull(PreparedStatement pstmt, int index, short s) throws SQLException {
+        if (s != 0) {
+            pstmt.setShort(index, s);
+        } else {
+            pstmt.setNull(index, Types.SMALLINT);
+        }
+    }
+
     public static void setIntZeroToNull(PreparedStatement pstmt, int index, int n) throws SQLException {
         if (n != 0) {
             pstmt.setInt(index, n);

@@ -85,6 +85,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfAccountLeases", Account.getAccountLeaseCount());
             response.put("numberOfActiveAccountLeases", Account.getActiveLeaseCount());
             response.put("numberOfShufflings", Shuffling.getCount());
+            response.put("numberOfActiveShufflings", Shuffling.getActiveCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfActivePeers", Peers.getActivePeers().size());
