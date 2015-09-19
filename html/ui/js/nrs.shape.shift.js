@@ -427,7 +427,7 @@ var NRS = (function(NRS, $) {
                 "recipient": data.deposit,
                 "amountNQT": amountNQT,
                 "secretPhrase": $("#m_shape_shift_buy_passpharse").val(),
-                "deadline": 1440,
+                "deadline": "1440",
                 "feeNQT": NRS.convertToNQT(1)
             }, function (response) {
                 if (response.errorCode) {
@@ -519,7 +519,7 @@ var NRS = (function(NRS, $) {
             "recipient": depositAddress,
             "amountNQT": amountNQT,
             "secretPhrase": $("#m_send_amount_buy_passpharse").val(),
-            "deadline": 1440,
+            "deadline": "1440",
             "feeNQT": NRS.convertToNQT(1)
         }, function (response) {
             if (response.errorCode) {
