@@ -28,6 +28,7 @@ import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Listeners;
+import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -286,9 +287,14 @@ public final class ShufflingParticipant {
             throw new IllegalStateException(String.format("Shuffling participant in state %s cannot go to state %s", this.state, state));
         }
         this.state = state;
+        Logger.logDebugMessage("Shuffling participant %s changed state to %s", Long.toUnsignedString(accountId), this.state);
     }
 
     public byte[][] getData() {
+        return getData(shufflingId, accountId);
+    }
+
+    static byte[][] getData(long shufflingId, long accountId) {
         ShufflingData shufflingData = shufflingDataTable.get(shufflingDataDbKeyFactory.newKey(shufflingId, accountId));
         return shufflingData != null ? shufflingData.data : null;
     }
@@ -303,7 +309,7 @@ public final class ShufflingParticipant {
         listeners.notify(this, Event.PARTICIPANT_PROCESSED);
     }
 
-    void restoreData(byte[][] data, int timestamp, int height) {
+    static void restoreData(long shufflingId, long accountId, byte[][] data, int timestamp, int height) {
         shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, height));
     }
 

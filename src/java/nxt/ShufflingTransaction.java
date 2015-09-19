@@ -238,7 +238,7 @@ public abstract class ShufflingTransaction extends TransactionType {
             }
             if (shuffling.getParticipant(transaction.getSenderId()) != null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is already registered for shuffling %s",
-                        Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+                        Long.toUnsignedString(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
             if (Nxt.getBlockchain().getHeight() + shuffling.getBlocksRemaining() <= attachment.getFinishValidationHeight(transaction)) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling registration finishes in " + shuffling.getBlocksRemaining() + " blocks");
@@ -346,11 +346,11 @@ public abstract class ShufflingTransaction extends TransactionType {
             ShufflingParticipant participant = shuffling.getParticipant(transaction.getSenderId());
             if (participant == null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
-                        Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+                        Long.toUnsignedString(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
             if (!participant.getState().canBecome(ShufflingParticipant.State.PROCESSED)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s processing already complete",
-                        Convert.rsAccount(transaction.getSenderId())));
+                        Long.toUnsignedString(transaction.getSenderId())));
             }
             if (participant.getAccountId() != shuffling.getAssigneeAccountId()) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s is not currently assigned to process shuffling %s",
@@ -360,10 +360,9 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotValidException(String.format("Participant %s is last in shuffle",
                         Long.toUnsignedString(transaction.getSenderId())));
             }
-            ShufflingParticipant previousParticipant = participant.getPreviousParticipant();
-            byte[] shufflingStateHash = previousParticipant == null ? shuffling.getParticipantsHash() : previousParticipant.getDataTransactionFullHash();
-            if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getPreviousDataTransactionFullHash())) {
-                throw new NxtException.NotCurrentlyValidException("Previous data transaction full hash doesn't match");
+            byte[] shufflingStateHash = shuffling.getStateHash();
+            if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getShufflingStateHash())) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling state hash doesn't match");
             }
             byte[][] data = attachment.getData();
             if (data == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
@@ -460,7 +459,7 @@ public abstract class ShufflingTransaction extends TransactionType {
             ShufflingParticipant participant = shuffling.getParticipant(transaction.getSenderId());
             if (participant == null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
-                        Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+                        Long.toUnsignedString(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
             if (participant.getNextAccountId() != 0) {
                 throw new NxtException.NotValidException(String.format("Participant %s is not last in shuffle",
@@ -468,18 +467,15 @@ public abstract class ShufflingTransaction extends TransactionType {
             }
             if (!participant.getState().canBecome(ShufflingParticipant.State.PROCESSED)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s processing already complete",
-                        Convert.rsAccount(transaction.getSenderId())));
+                        Long.toUnsignedString(transaction.getSenderId())));
             }
             if (participant.getAccountId() != shuffling.getAssigneeAccountId()) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Participant %s is not currently assigned to process shuffling %s",
                         Long.toUnsignedString(participant.getAccountId()), Long.toUnsignedString(shuffling.getId())));
             }
-            ShufflingParticipant previousParticipant = participant.getPreviousParticipant();
-            if (previousParticipant != null) {
-                byte[] previousDataTransactionFullHash = previousParticipant.getDataTransactionFullHash();
-                if (previousDataTransactionFullHash == null || !Arrays.equals(previousDataTransactionFullHash, attachment.getPreviousDataTransactionFullHash())) {
-                    throw new NxtException.NotCurrentlyValidException("Previous data transaction full hash doesn't match");
-                }
+            byte[] shufflingStateHash = shuffling.getStateHash();
+            if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getShufflingStateHash())) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling state hash doesn't match");
             }
             byte[][] recipientPublicKeys = attachment.getRecipientPublicKeys();
             if (recipientPublicKeys.length > shuffling.getParticipantCount() || recipientPublicKeys.length == 0) {
@@ -573,15 +569,15 @@ public abstract class ShufflingTransaction extends TransactionType {
             ShufflingParticipant participant = shuffling.getParticipant(transaction.getSenderId());
             if (participant == null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
-                        Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+                        Long.toUnsignedString(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
             if (!participant.getState().canBecome(ShufflingParticipant.State.VERIFIED)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot become verified",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
             }
-            byte[] lastParticipantDataTransactionFullHash = shuffling.getLastParticipant().getDataTransactionFullHash();
-            if (lastParticipantDataTransactionFullHash == null || !Arrays.equals(lastParticipantDataTransactionFullHash, attachment.getLastDataTransactionFullHash())) {
-                throw new NxtException.NotCurrentlyValidException("Last participant data transaction hash doesn't match");
+            byte[] shufflingStateHash = shuffling.getStateHash();
+            if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getShufflingStateHash())) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling state hash doesn't match");
             }
         }
 
@@ -658,10 +654,10 @@ public abstract class ShufflingTransaction extends TransactionType {
             if (shuffling == null) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling not found: " + Long.toUnsignedString(attachment.getShufflingId()));
             }
-            if (!shuffling.getStage().canBecome(Shuffling.Stage.BLAME)) {
+            long cancellingAccountId = attachment.getCancellingAccountId();
+            if (cancellingAccountId == 0 && !shuffling.getStage().canBecome(Shuffling.Stage.BLAME)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling in state %s cannot be cancelled", shuffling.getStage()));
             }
-            long cancellingAccountId = attachment.getCancellingAccountId();
             if (cancellingAccountId != 0 && cancellingAccountId != shuffling.getCancellingAccountId()) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling %s is not currently being cancelled by account %s",
                         Long.toUnsignedString(shuffling.getId()), Long.toUnsignedString(cancellingAccountId)));
@@ -669,14 +665,11 @@ public abstract class ShufflingTransaction extends TransactionType {
             ShufflingParticipant participant = shuffling.getParticipant(transaction.getSenderId());
             if (participant == null) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Account %s is not registered for shuffling %s",
-                        Convert.rsAccount(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
+                        Long.toUnsignedString(transaction.getSenderId()), Long.toUnsignedString(shuffling.getId())));
             }
             if (!participant.getState().canBecome(ShufflingParticipant.State.CANCELLED)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot submit cancellation",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
-            }
-            if (participant.getDataTransactionFullHash() == null || !Arrays.equals(participant.getDataTransactionFullHash(), attachment.getDataTransactionFullHash())) {
-                throw new NxtException.NotCurrentlyValidException("Data transaction full hash doesn't match");
             }
             Transaction dataProcessingTransaction = TransactionDb.findTransactionByFullHash(participant.getDataTransactionFullHash(), Nxt.getBlockchain().getHeight());
             if (dataProcessingTransaction == null) {
@@ -685,6 +678,10 @@ public abstract class ShufflingTransaction extends TransactionType {
             Attachment.ShufflingProcessing shufflingProcessing = (Attachment.ShufflingProcessing) dataProcessingTransaction.getAttachment();
             if (!Arrays.equals(shufflingProcessing.getHash(), attachment.getHash())) {
                 throw new NxtException.NotValidException("Blame data hash doesn't match processing data hash");
+            }
+            byte[] shufflingStateHash = shuffling.getStateHash();
+            if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getShufflingStateHash())) {
+                throw new NxtException.NotCurrentlyValidException("Shuffling state hash doesn't match");
             }
             byte[][] keySeeds = attachment.getKeySeeds();
             if (keySeeds.length != 0 && keySeeds.length != shuffling.getParticipantCount() - participant.getIndex() - 1) {

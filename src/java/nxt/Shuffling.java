@@ -48,10 +48,38 @@ public final class Shuffling {
     }
 
     public enum Stage {
-        REGISTRATION((byte)0, new byte[]{1,4}),
-        PROCESSING((byte)1, new byte[]{2,3,4}),
-        VERIFICATION((byte)2, new byte[]{3,4,5}),
-        BLAME((byte)3, new byte[]{4}),
+        REGISTRATION((byte)0, new byte[]{1,4}) {
+            @Override
+            byte[] getHash(Shuffling shuffling) {
+                return TransactionDb.findTransaction(shuffling.id).fullHash();
+            }
+        },
+        PROCESSING((byte)1, new byte[]{2,3,4}) {
+            @Override
+            byte[] getHash(Shuffling shuffling) {
+                if (shuffling.assigneeAccountId == shuffling.issuerId) {
+                    try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.id)) {
+                        return getParticipantsHash(participants);
+                    }
+                } else {
+                    ShufflingParticipant participant = shuffling.getParticipant(shuffling.assigneeAccountId);
+                    return participant.getPreviousParticipant().getDataTransactionFullHash();
+                }
+
+            }
+        },
+        VERIFICATION((byte)2, new byte[]{3,4,5}) {
+            @Override
+            byte[] getHash(Shuffling shuffling) {
+                return shuffling.getLastParticipant().getDataTransactionFullHash();
+            }
+        },
+        BLAME((byte)3, new byte[]{4}) {
+            @Override
+            byte[] getHash(Shuffling shuffling) {
+                return shuffling.getLastParticipant().getDataTransactionFullHash();
+            }
+        },
         CANCELLED((byte)4, new byte[]{}),
         DONE((byte)5, new byte[]{});
 
@@ -79,6 +107,11 @@ public final class Shuffling {
         public boolean canBecome(Stage nextStage) {
             return Arrays.binarySearch(allowedNext, nextStage.code) >= 0;
         }
+
+        byte[] getHash(Shuffling shuffling) {
+            throw new UnsupportedOperationException("Shuffling state hash not defined in stage " + this);
+        }
+
     }
 
     private static final Listeners<Shuffling, Event> listeners = new Listeners<>();
@@ -291,6 +324,7 @@ public final class Shuffling {
             throw new IllegalStateException(String.format("Shuffling in stage %s cannot go to stage %s", this.stage, stage));
         }
         this.stage = stage;
+        Logger.logDebugMessage("Shuffling %s entered stage %s", Long.toUnsignedString(id), this.stage);
     }
 
     public long getAssigneeAccountId() {
@@ -305,15 +339,16 @@ public final class Shuffling {
         return recipientPublicKeys;
     }
 
-    void cancelBy(ShufflingParticipant participant, byte[][] blameData, byte[][] keySeeds) {
-        participant.cancel(blameData, keySeeds);
-        this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
-        if (this.cancellingAccountId == 0) {
-            this.cancellingAccountId = participant.getAccountId();
-            setStage(Stage.BLAME);
-            listeners.notify(this, Event.SHUFFLING_BLAME_STARTED);
-        }
-        shufflingTable.insert(this);
+    public ShufflingParticipant getParticipant(long accountId) {
+        return ShufflingParticipant.getParticipant(id, accountId);
+    }
+
+    public ShufflingParticipant getLastParticipant() {
+        return ShufflingParticipant.getLastParticipant(id);
+    }
+
+    public byte[] getStateHash() {
+        return stage.getHash(this);
     }
 
     public Attachment.ShufflingAttachment process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
@@ -354,7 +389,6 @@ public final class Shuffling {
         }
         // Calculate the token for the current sender by iteratively encrypting it using the public key of all the participants
         // which did not perform shuffle processing yet
-        // If we are that last participant to process then we do not encrypt our recipient
         byte[] bytesToEncrypt = recipientPublicKey;
         byte[] nonce = Convert.toBytes(this.id);
         for (int i = shufflingParticipants.size() - 1; i >= 0; i--) {
@@ -363,16 +397,8 @@ public final class Shuffling {
                 break;
             }
             byte[] participantPublicKey = Account.getPublicKey(participant.getAccountId());
-            if (Logger.isDebugEnabled()) {
-                Logger.logDebugMessage(String.format("encryptTo %s by %s bytes %s",
-                        Convert.rsAccount(participant.getAccountId()), Convert.rsAccount(accountId), Arrays.toString(bytesToEncrypt)));
-            }
             AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.encrypt(bytesToEncrypt, secretPhrase, participantPublicKey, nonce);
             bytesToEncrypt = encryptedData.getBytes();
-            if (Logger.isDebugEnabled()) {
-                Logger.logDebugMessage(String.format("encryptTo data %s publicKey %s",
-                        Arrays.toString(encryptedData.getData()), Arrays.toString(encryptedData.getPublicKey())));
-            }
         }
         outputDataList.add(bytesToEncrypt);
         // Shuffle the tokens and save the shuffled tokens as the participant data
@@ -385,6 +411,7 @@ public final class Shuffling {
                     iterator.remove();
                 }
             }
+            // last participant prepares ShufflingRecipients transaction instead of ShufflingProcessing
             return new Attachment.ShufflingRecipients(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     shufflingStateHash);
         } else {
@@ -393,17 +420,22 @@ public final class Shuffling {
         }
     }
 
-    public Attachment.ShufflingCancellation revealKeySeeds(final String secretPhrase, long cancellingAccountId) {
+    public Attachment.ShufflingCancellation revealKeySeeds(final String secretPhrase, long cancellingAccountId, byte[] shufflingStateHash) {
         Nxt.getBlockchain().readLock();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            if (cancellingAccountId != this.cancellingAccountId) {
+                throw new RuntimeException(String.format("Current shuffling cancellingAccountId %s does not match %s",
+                        Long.toUnsignedString(this.cancellingAccountId), Long.toUnsignedString(cancellingAccountId)));
+            }
+            if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, getStateHash())) {
+                throw new RuntimeException("Current shuffling state hash does not match");
+            }
             long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
             byte[][] data = null;
-            byte[] dataTransactionFullHash = null;
             while (participants.hasNext()) {
                 ShufflingParticipant participant = participants.next();
                 if (participant.getAccountId() == accountId) {
                     data = participant.getData();
-                    dataTransactionFullHash = participant.getDataTransactionFullHash();
                     break;
                 }
             }
@@ -411,7 +443,7 @@ public final class Shuffling {
                 throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " is not a participant");
             }
             if (!participants.hasNext()) {
-                return new Attachment.ShufflingCancellation(this.id, data, Convert.EMPTY_BYTES, dataTransactionFullHash,
+                return new Attachment.ShufflingCancellation(this.id, data, Convert.EMPTY_BYTES, shufflingStateHash,
                         cancellingAccountId);
             }
             final byte[] nonce = Convert.toBytes(this.id);
@@ -441,10 +473,163 @@ public final class Shuffling {
                 decryptedBytes = encryptedData.decrypt(keySeed, nextParticipantPublicKey);
             }
             return new Attachment.ShufflingCancellation(this.id, data, keySeeds.toArray(new byte[keySeeds.size()][]),
-                    dataTransactionFullHash, cancellingAccountId);
+                    shufflingStateHash, cancellingAccountId);
         } finally {
             Nxt.getBlockchain().readUnlock();
         }
+    }
+
+    void addParticipant(long participantId) {
+        // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
+        // to the new participant
+        ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(this.id, this.assigneeAccountId);
+        lastParticipant.setNextAccountId(participantId);
+        int index = lastParticipant.getIndex() + 1;
+        ShufflingParticipant.addParticipant(this.id, participantId, index);
+        // Check if participant registration is complete and if so update the shuffling
+        if (index == this.participantCount - 1) {
+            this.assigneeAccountId = this.issuerId;
+            this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
+            setStage(Stage.PROCESSING);
+        } else {
+            this.assigneeAccountId = participantId;
+        }
+        shufflingTable.insert(this);
+        if (stage == Stage.PROCESSING) {
+            listeners.notify(this, Event.SHUFFLING_ASSIGNED);
+        }
+    }
+
+    void updateParticipantData(Transaction transaction, Attachment.ShufflingProcessing attachment) {
+        long participantId = transaction.getSenderId();
+        byte[][] data = attachment.getData();
+        ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
+        participant.setDataTransactionFullHash(((TransactionImpl) transaction).fullHash());
+        participant.setData(data, transaction.getTimestamp());
+        if (data.length < participant.getIndex() + 1) {
+            // couldn't decrypt all data from previous participants
+            cancelBy(participant, data, Convert.EMPTY_BYTES);
+            return;
+        }
+        this.assigneeAccountId = participant.getNextAccountId();
+        this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
+        shufflingTable.insert(this);
+        listeners.notify(this, Event.SHUFFLING_ASSIGNED);
+    }
+
+    void updateRecipients(Transaction transaction, Attachment.ShufflingRecipients attachment) {
+        long participantId = transaction.getSenderId();
+        this.recipientPublicKeys = attachment.getRecipientPublicKeys();
+        ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
+        participant.setDataTransactionFullHash(((TransactionImpl) transaction).fullHash());
+        if (recipientPublicKeys.length < participantCount) {
+            // couldn't decrypt all data from previous participants
+            cancelBy(participant, recipientPublicKeys, Convert.EMPTY_BYTES);
+            return;
+        }
+        participant.verify();
+        // last participant announces all valid recipient public keys
+        for (byte[] recipientPublicKey : recipientPublicKeys) {
+            long recipientId = Account.getId(recipientPublicKey);
+            if (Account.setOrVerify(recipientId, recipientPublicKey)) {
+                Account.addOrGetAccount(recipientId).apply(recipientPublicKey);
+            }
+        }
+        this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
+        setStage(Stage.VERIFICATION);
+        this.assigneeAccountId = this.issuerId;
+        shufflingTable.insert(this);
+        listeners.notify(this, Event.SHUFFLING_PROCESSING_FINISHED);
+    }
+
+    void verify(long accountId) {
+        ShufflingParticipant.getParticipant(id, accountId).verify();
+        if (ShufflingParticipant.getVerifiedCount(id) == participantCount) {
+            distribute();
+        }
+    }
+
+    void cancelBy(ShufflingParticipant participant, byte[][] blameData, byte[][] keySeeds) {
+        participant.cancel(blameData, keySeeds);
+        this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
+        if (this.cancellingAccountId == 0) {
+            this.cancellingAccountId = participant.getAccountId();
+            setStage(Stage.BLAME);
+            listeners.notify(this, Event.SHUFFLING_BLAME_STARTED);
+        }
+        shufflingTable.insert(this);
+    }
+
+    private void distribute() {
+        if (recipientPublicKeys.length != participantCount) {
+            cancelBy(getLastParticipant(), recipientPublicKeys, Convert.EMPTY_BYTES);
+            return;
+        }
+        for (byte[] recipientPublicKey : recipientPublicKeys) {
+            byte[] publicKey = Account.getPublicKey(Account.getId(recipientPublicKey));
+            if (publicKey != null && !Arrays.equals(publicKey, recipientPublicKey)) {
+                // distribution not possible, do a cancellation on behalf of last participant instead
+                cancelBy(getLastParticipant(), recipientPublicKeys, Convert.EMPTY_BYTES);
+                return;
+            }
+        }
+        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING_DISTRIBUTION;
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            for (ShufflingParticipant participant : participants) {
+                Account participantAccount = Account.getAccount(participant.getAccountId());
+                holdingType.addToBalance(participantAccount, event, this.id, this.holdingId, -amount);
+                if (holdingType != HoldingType.NXT) {
+                    participantAccount.addToBalanceNQT(event, this.id, -Constants.SHUFFLING_DEPOSIT_NQT);
+                }
+            }
+        }
+        for (byte[] recipientPublicKey : recipientPublicKeys) {
+            long recipientId = Account.getId(recipientPublicKey);
+            Account recipientAccount = Account.addOrGetAccount(recipientId);
+            recipientAccount.apply(recipientPublicKey);
+            holdingType.addToBalanceAndUnconfirmedBalance(recipientAccount, event, this.id, this.holdingId, amount);
+            if (holdingType != HoldingType.NXT) {
+                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
+            }
+        }
+        setStage(Stage.DONE);
+        shufflingTable.insert(this);
+        listeners.notify(this, Event.SHUFFLING_DONE);
+        delete();
+        Logger.logDebugMessage("Shuffling %s was distributed", Long.toUnsignedString(id));
+    }
+
+    private void cancel(Block block) {
+        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING_CANCELLATION;
+        long eventId = block.getId();
+        long blamedAccountId = blame();
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
+            for (ShufflingParticipant participant : participants) {
+                Account participantAccount = Account.getAccount(participant.getAccountId());
+                if (blamedAccountId != 0) {
+                    // as a penalty the deposit goes to the generator of the finish block
+                    Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
+                    blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
+                    blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
+                }
+                holdingType.addToUnconfirmedBalance(participantAccount, event, eventId, this.holdingId, this.amount);
+                if (participantAccount.getId() != blamedAccountId) {
+                    if (holdingType != HoldingType.NXT) {
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
+                    }
+                } else {
+                    if (holdingType == HoldingType.NXT) {
+                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
+                    }
+                    participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
+                }
+            }
+        }
+        setStage(Stage.CANCELLED);
+        shufflingTable.insert(this);
+        listeners.notify(this, Event.SHUFFLING_CANCELLED);
+        delete();
+        Logger.logDebugMessage("Shuffling %s was cancelled, blaming account %s", Long.toUnsignedString(id), Long.toUnsignedString(blamedAccountId));
     }
 
     private long blame() {
@@ -537,151 +722,6 @@ public final class Shuffling {
         return cancellingAccountId;
     }
 
-    void addParticipant(long participantId) {
-        // Update the shuffling assignee to point to the new participant and update the next pointer of the existing participant
-        // to the new participant
-        ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(this.id, this.assigneeAccountId);
-        lastParticipant.setNextAccountId(participantId);
-        int index = lastParticipant.getIndex() + 1;
-        ShufflingParticipant.addParticipant(this.id, participantId, index);
-        // Check if participant registration is complete and if so update the shuffling
-        if (index == this.participantCount - 1) {
-            this.assigneeAccountId = this.issuerId;
-            this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
-            setStage(Stage.PROCESSING);
-        } else {
-            this.assigneeAccountId = participantId;
-        }
-        shufflingTable.insert(this);
-        if (stage == Stage.PROCESSING) {
-            listeners.notify(this, Event.SHUFFLING_ASSIGNED);
-        }
-    }
-
-    void updateParticipantData(Transaction transaction, Attachment.ShufflingProcessing attachment) {
-        long participantId = transaction.getSenderId();
-        byte[][] data = attachment.getData();
-        ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
-        participant.setDataTransactionFullHash(((TransactionImpl) transaction).fullHash());
-        participant.setData(data, transaction.getTimestamp());
-        if (data.length < participant.getIndex() + 1) {
-            // couldn't decrypt all data from previous participants
-            cancelBy(participant, data, Convert.EMPTY_BYTES);
-            return;
-        }
-        this.assigneeAccountId = participant.getNextAccountId();
-        this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
-        shufflingTable.insert(this);
-        listeners.notify(this, Event.SHUFFLING_ASSIGNED);
-    }
-
-    void updateRecipients(Transaction transaction, Attachment.ShufflingRecipients attachment) {
-        long participantId = transaction.getSenderId();
-        this.recipientPublicKeys = attachment.getRecipientPublicKeys();
-        ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
-        participant.setDataTransactionFullHash(((TransactionImpl) transaction).fullHash());
-        if (recipientPublicKeys.length < participantCount) {
-            // couldn't decrypt all data from previous participants
-            cancelBy(participant, recipientPublicKeys, Convert.EMPTY_BYTES);
-            return;
-        }
-        participant.verify();
-        // last participant announces all valid recipient public keys
-        for (byte[] recipientPublicKey : recipientPublicKeys) {
-            long recipientId = Account.getId(recipientPublicKey);
-            if (Account.setOrVerify(recipientId, recipientPublicKey)) {
-                Account.addOrGetAccount(recipientId).apply(recipientPublicKey);
-            }
-        }
-        this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
-        setStage(Stage.VERIFICATION);
-        this.assigneeAccountId = this.issuerId;
-        shufflingTable.insert(this);
-        listeners.notify(this, Event.SHUFFLING_PROCESSING_FINISHED);
-    }
-
-    void verify(long accountId) {
-        ShufflingParticipant.getParticipant(id, accountId).verify();
-        if (ShufflingParticipant.getVerifiedCount(id) == participantCount) {
-            distribute();
-        }
-    }
-
-    private void distribute() {
-        for (byte[] recipientPublicKey : recipientPublicKeys) {
-            byte[] publicKey = Account.getPublicKey(Account.getId(recipientPublicKey));
-            if (publicKey != null && !Arrays.equals(publicKey, recipientPublicKey)) {
-                // distribution not possible, do a cancellation on behalf of last participant instead
-                ShufflingParticipant lastParticipant = ShufflingParticipant.getLastParticipant(this.id);
-                cancelBy(lastParticipant, recipientPublicKeys, Convert.EMPTY_BYTES);
-                return;
-            }
-        }
-        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING_DISTRIBUTION;
-        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
-            for (ShufflingParticipant participant : participants) {
-                Account participantAccount = Account.getAccount(participant.getAccountId());
-                holdingType.addToBalance(participantAccount, event, this.id, this.holdingId, -amount);
-                if (holdingType != HoldingType.NXT) {
-                    participantAccount.addToBalanceNQT(event, this.id, -Constants.SHUFFLING_DEPOSIT_NQT);
-                }
-            }
-        }
-        for (byte[] recipientPublicKey : recipientPublicKeys) {
-            long recipientId = Account.getId(recipientPublicKey);
-            Account recipientAccount = Account.addOrGetAccount(recipientId);
-            recipientAccount.apply(recipientPublicKey);
-            holdingType.addToBalanceAndUnconfirmedBalance(recipientAccount, event, this.id, this.holdingId, amount);
-            if (holdingType != HoldingType.NXT) {
-                recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
-            }
-        }
-        setStage(Stage.DONE);
-        shufflingTable.insert(this);
-        listeners.notify(this, Event.SHUFFLING_DONE);
-        delete();
-    }
-
-    private void cancel(Block block) {
-        AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING_CANCELLATION;
-        long eventId = block.getId();
-        long blamedAccountId = blame();
-        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
-            for (ShufflingParticipant participant : participants) {
-                Account participantAccount = Account.getAccount(participant.getAccountId());
-                if (blamedAccountId != 0) {
-                    // as a penalty the deposit goes to the generator of the finish block
-                    Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
-                    blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
-                    blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
-                }
-                holdingType.addToUnconfirmedBalance(participantAccount, event, eventId, this.holdingId, this.amount);
-                if (participantAccount.getId() != blamedAccountId) {
-                    if (holdingType != HoldingType.NXT) {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
-                    }
-                } else {
-                    if (holdingType == HoldingType.NXT) {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
-                    }
-                    participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
-                }
-            }
-        }
-        setStage(Stage.CANCELLED);
-        shufflingTable.insert(this);
-        listeners.notify(this, Event.SHUFFLING_CANCELLED);
-        delete();
-    }
-
-    public ShufflingParticipant getParticipant(long accountId) {
-        return ShufflingParticipant.getParticipant(id, accountId);
-    }
-
-    public ShufflingParticipant getLastParticipant() {
-        return ShufflingParticipant.getLastParticipant(id);
-    }
-
     private void delete() {
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
@@ -701,13 +741,7 @@ public final class Shuffling {
         return block.getPayloadLength() + transactionSize > Constants.MAX_PAYLOAD_LENGTH;
     }
 
-    byte[] getParticipantsHash() {
-        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(this.id)) {
-            return getParticipantsHash(participants);
-        }
-    }
-
-    static byte[] getParticipantsHash(Iterable<ShufflingParticipant> participants) {
+    private static byte[] getParticipantsHash(Iterable<ShufflingParticipant> participants) {
         MessageDigest digest = Crypto.sha256();
         participants.forEach(participant -> {
             digest.update(Convert.toBytes(participant.getAccountId()));

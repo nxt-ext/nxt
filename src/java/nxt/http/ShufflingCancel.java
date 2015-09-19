@@ -20,24 +20,33 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.NxtException;
 import nxt.Shuffling;
+import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 
 public final class ShufflingCancel extends CreateTransaction {
 
     static final ShufflingCancel instance = new ShufflingCancel();
 
     private ShufflingCancel() {
-        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling", "cancellingAccount");
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling", "cancellingAccount", "shufflingStateHash");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
         long cancellingAccountId = ParameterParser.getAccountId(req, "cancellingAccount", false);
+        byte[] shufflingStateHash = Convert.parseHexString(Convert.emptyToNull(req.getParameter("shufflingStateHash")));
+        if (shufflingStateHash == null) {
+            return JSONResponses.missing("shufflingStateHash");
+        }
+        if (!Arrays.equals(shufflingStateHash, shuffling.getStateHash())) {
+            return JSONResponses.incorrect("shufflingStateHash", "Shuffling is in a different state now");
+        }
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
-        Attachment.ShufflingCancellation attachment = shuffling.revealKeySeeds(secretPhrase, cancellingAccountId);
+        Attachment.ShufflingCancellation attachment = shuffling.revealKeySeeds(secretPhrase, cancellingAccountId, shufflingStateHash);
         Account account = ParameterParser.getSenderAccount(req);
         return createTransaction(req, account, attachment);
     }

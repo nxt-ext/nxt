@@ -24,23 +24,27 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 
 public final class ShufflingVerify extends CreateTransaction {
 
     static final ShufflingVerify instance = new ShufflingVerify();
 
     private ShufflingVerify() {
-        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling", "lastDataTransactionFullHash");
+        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shuffling", "shufflingStateHash");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
-        byte[] lastDataTransactionFullHash = Convert.parseHexString(Convert.emptyToNull(req.getParameter("lastDataTransactionFullHash")));
-        if (lastDataTransactionFullHash == null) {
-            return JSONResponses.missing("lastDataTransactionFullHash");
+        byte[] shufflingStateHash = Convert.parseHexString(Convert.emptyToNull(req.getParameter("shufflingStateHash")));
+        if (shufflingStateHash == null) {
+            return JSONResponses.missing("shufflingStateHash");
         }
-        Attachment attachment = new Attachment.ShufflingVerification(shuffling.getId(), lastDataTransactionFullHash);
+        if (!Arrays.equals(shufflingStateHash, shuffling.getStateHash())) {
+            return JSONResponses.incorrect("shufflingStateHash", "Shuffling is in a different state now");
+        }
+        Attachment attachment = new Attachment.ShufflingVerification(shuffling.getId(), shufflingStateHash);
 
         Account account = ParameterParser.getSenderAccount(req);
         return createTransaction(req, account, attachment);

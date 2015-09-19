@@ -320,6 +320,7 @@ final class JSONData {
         json.put("blocksRemaining", shuffling.getBlocksRemaining());
         json.put("participantCount", shuffling.getParticipantCount());
         json.put("stage", shuffling.getStage().getCode());
+        json.put("shufflingStateHash", Convert.toHexString(shuffling.getStateHash()));
         JSONArray recipientPublicKeys = new JSONArray();
         for (byte[] recipientPublicKey : shuffling.getRecipientPublicKeys()) {
             recipientPublicKeys.add(Convert.toHexString(recipientPublicKey));
