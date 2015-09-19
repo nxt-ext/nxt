@@ -315,7 +315,9 @@ final class JSONData {
         putAccount(json, "issuer", shuffling.getIssuerId());
         json.put("holding", Long.toUnsignedString(shuffling.getHoldingId()));
         json.put("holdingType", shuffling.getHoldingType().getCode());
-        putAccount(json, "assignee", shuffling.getAssigneeAccountId());
+        if (shuffling.getAssigneeAccountId() != 0) {
+            putAccount(json, "assignee", shuffling.getAssigneeAccountId());
+        }
         json.put("amount", String.valueOf(shuffling.getAmount()));
         json.put("blocksRemaining", shuffling.getBlocksRemaining());
         json.put("participantCount", shuffling.getParticipantCount());
@@ -325,7 +327,12 @@ final class JSONData {
         for (byte[] recipientPublicKey : shuffling.getRecipientPublicKeys()) {
             recipientPublicKeys.add(Convert.toHexString(recipientPublicKey));
         }
-        json.put("recipientPublicKeys", recipientPublicKeys);
+        if (recipientPublicKeys.size() > 0) {
+            json.put("recipientPublicKeys", recipientPublicKeys);
+        }
+        if (shuffling.getCancellingAccountId() != 0) {
+            putAccount(json, "cancellingAccount", shuffling.getCancellingAccountId());
+        }
         return json;
     }
 

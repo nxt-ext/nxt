@@ -575,6 +575,9 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot become verified",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
             }
+            if (participant.getIndex() == shuffling.getParticipantCount() - 1) {
+                throw new NxtException.NotValidException("Last participant cannot submit verification transaction");
+            }
             byte[] shufflingStateHash = shuffling.getStateHash();
             if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getShufflingStateHash())) {
                 throw new NxtException.NotCurrentlyValidException("Shuffling state hash doesn't match");
@@ -671,13 +674,17 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling participant %s in state %s cannot submit cancellation",
                         Long.toUnsignedString(attachment.getShufflingId()), participant.getState()));
             }
-            Transaction dataProcessingTransaction = TransactionDb.findTransactionByFullHash(participant.getDataTransactionFullHash(), Nxt.getBlockchain().getHeight());
-            if (dataProcessingTransaction == null) {
-                throw new NxtException.NotCurrentlyValidException("Invalid data transaction full hash");
-            }
-            Attachment.ShufflingProcessing shufflingProcessing = (Attachment.ShufflingProcessing) dataProcessingTransaction.getAttachment();
-            if (!Arrays.equals(shufflingProcessing.getHash(), attachment.getHash())) {
-                throw new NxtException.NotValidException("Blame data hash doesn't match processing data hash");
+            if (participant.getIndex() != shuffling.getParticipantCount() - 1) {
+                Transaction dataProcessingTransaction = TransactionDb.findTransactionByFullHash(participant.getDataTransactionFullHash(), Nxt.getBlockchain().getHeight());
+                if (dataProcessingTransaction == null) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid data transaction full hash");
+                }
+                Attachment.ShufflingProcessing shufflingProcessing = (Attachment.ShufflingProcessing) dataProcessingTransaction.getAttachment();
+                if (!Arrays.equals(shufflingProcessing.getHash(), attachment.getHash())) {
+                    throw new NxtException.NotValidException("Blame data hash doesn't match processing data hash");
+                }
+            } else {
+                throw new NxtException.NotValidException("Last participant cannot submit cancellation transaction");
             }
             byte[] shufflingStateHash = shuffling.getStateHash();
             if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, attachment.getShufflingStateHash())) {

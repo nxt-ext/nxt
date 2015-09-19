@@ -474,12 +474,11 @@ public final class Shuffling {
                     break;
                 }
             }
-            if (data == null) {
-                throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " is not a participant");
-            }
             if (!participants.hasNext()) {
-                return new Attachment.ShufflingCancellation(this.id, data, Convert.EMPTY_BYTES, shufflingStateHash,
-                        cancellingAccountId);
+                throw new RuntimeException("Last participant cannot have keySeeds to reveal");
+            }
+            if (data == null) {
+                throw new RuntimeException("Account " + Long.toUnsignedString(accountId) + " has not submitted data");
             }
             final byte[] nonce = Convert.toBytes(this.id);
             final List<byte[]> keySeeds = new ArrayList<>();
@@ -702,8 +701,9 @@ public final class Shuffling {
             throw new RuntimeException("All participants submitted data and verifications, blame phase should not have been entered");
         }
         Set<Long> recipientAccounts = new HashSet<>();
-        // start from issuer and verify all data up
-        for (ShufflingParticipant participant : participants) {
+        // start from issuer and verify all data up, skipping last participant
+        for (int i = 0; i < participantCount - 1; i++) {
+            ShufflingParticipant participant = participants.get(i);
             byte[][] keySeeds = participant.getKeySeeds();
             // if participant couldn't submit key seeds because he also couldn't decrypt some of the previous data, this should have been caught before
             if (keySeeds.length == 0) {
@@ -722,10 +722,10 @@ public final class Shuffling {
                 // participant lied about key seeds or data
                 return participant.getAccountId();
             }
-            for (int i = participant.getIndex() + 1; i < participantCount; i++) {
-                ShufflingParticipant nextParticipant = participants.get(i);
+            for (int k = i + 1; k < participantCount; k++) {
+                ShufflingParticipant nextParticipant = participants.get(k);
                 byte[] nextParticipantPublicKey = Account.getPublicKey(nextParticipant.getAccountId());
-                byte[] keySeed = keySeeds[i - participant.getIndex() - 1];
+                byte[] keySeed = keySeeds[k - i - 1];
                 byte[] participantBytes;
                 try {
                     participantBytes = encryptedData.decrypt(keySeed, nextParticipantPublicKey);
@@ -733,7 +733,8 @@ public final class Shuffling {
                     // the next participant couldn't decrypt the data either, blame this one
                     return participant.getAccountId();
                 }
-                if (i < participantCount - 1) {
+                boolean isLast = k == participantCount - 1;
+                if (!isLast) {
                     encryptedData = AnonymouslyEncryptedData.readEncryptedData(participantBytes);
                 } else {
                     // else it is not encrypted data but plaintext recipient public key, at the last participant
@@ -751,7 +752,7 @@ public final class Shuffling {
                     }
                 }
                 boolean found = false;
-                for (byte[] bytes : nextParticipant.getBlameData()) {
+                for (byte[] bytes : isLast ? recipientPublicKeys : nextParticipant.getBlameData()) {
                     if (Arrays.equals(participantBytes, bytes)) {
                         found = true;
                         break;
