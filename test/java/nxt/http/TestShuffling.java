@@ -19,262 +19,138 @@ package nxt.http;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Shuffling;
+import nxt.Tester;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 //TODO: fix test
 public class TestShuffling extends BlockchainTest {
 
+    private static Tester ALICE_RECIPIENT = new Tester("oiketrdgfxyjqhwds");
+    private static Tester BOB_RECIPIENT = new Tester("5ehtrd9oijnkter");
+    private static Tester CHUCK_RECIPIENT = new Tester("sdfxbejytdgfqrwefsrd");
+    private static Tester DAVE_RECIPIENT = new Tester("gh-=e49rsiufzn4^");
+
     @Test
     public void shufflingProcess() {
-        String shufflingId = create();
-        register(shufflingId);
-        process(shufflingId);
-        verify(shufflingId);
-        distribute(shufflingId);
-        tryCancel(shufflingId);
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
 
-        // Verify that only fees were reduced
-        Assert.assertEquals(-4 * Constants.ONE_NXT, ALICE.getBalanceDiff());
-        Assert.assertEquals(-4 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, DAVE.getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(participants.size(), 4);
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(shufflingAssignee, Long.toUnsignedString(ALICE.getId()));
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        process(shufflingId, DAVE, DAVE_RECIPIENT);
+        generateBlock();
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.VERIFICATION.getCode(), getShufflingResponse.get("stage"));
+        String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+
+        verify(shufflingId, ALICE, shufflingStateHash);
+        verify(shufflingId, BOB, shufflingStateHash);
+        verify(shufflingId, CHUCK, shufflingStateHash);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+
     }
 
-    private String create() {
+    private JSONObject create(Tester creator) {
         APICall apiCall = new APICall.Builder("shufflingCreate").
-                secretPhrase(secretPhrase1).
+                secretPhrase(creator.getSecretPhrase()).
                 feeNQT(Constants.ONE_NXT).
-                param("amountNQT", "10000000").
+                param("amount", "1500000000").
                 param("participantCount", "4").
-                param("cancellationHeight", Integer.MAX_VALUE).
+                param("registrationPeriod", 10).
                 build();
         JSONObject response = apiCall.invoke();
         Logger.logMessage("shufflingCreateResponse: " + response.toJSONString());
-        generateBlock();
-        return (String) response.get("transaction");
+        return response;
     }
 
-    private String register(String shufflingId) {
+    private JSONObject register(String shufflingId, Tester tester) {
         APICall apiCall = new APICall.Builder("shufflingRegister").
-                secretPhrase(secretPhrase2).
+                secretPhrase(tester.getSecretPhrase()).
                 feeNQT(Constants.ONE_NXT).
                 param("shuffling", shufflingId).
                 build();
         JSONObject response = apiCall.invoke();
         Logger.logMessage("shufflingRegisterResponse: " + response.toJSONString());
-        generateBlock();
-        apiCall = new APICall.Builder("shufflingRegister").
-                secretPhrase(secretPhrase3).
-                feeNQT(Constants.ONE_NXT).
-                param("shuffling", shufflingId).
-                build();
-        response = apiCall.invoke();
-        Logger.logMessage("shufflingRegisterResponse: " + response.toJSONString());
-        generateBlock();
-        apiCall = new APICall.Builder("shufflingRegister").
-                secretPhrase(secretPhrase4).
-                feeNQT(Constants.ONE_NXT).
-                param("shuffling", shufflingId).
-                build();
-        response = apiCall.invoke();
-        Logger.logMessage("shufflingRegisterResponse: " + response.toJSONString());
-        generateBlock();
-        apiCall = new APICall.Builder("getShuffling").
+        return response;
+    }
+
+    private JSONObject getShuffling(String shufflingId) {
+        APICall apiCall = new APICall.Builder("getShuffling").
                 param("shuffling", shufflingId).
                 build();
         JSONObject getShufflingResponse = apiCall.invoke();
         Logger.logMessage("getShufflingResponse: " + getShufflingResponse.toJSONString());
+        return getShufflingResponse;
+    }
 
-        apiCall = new APICall.Builder("getShufflingParticipants").
+    private JSONObject getShufflingParticipants(String shufflingId) {
+        APICall apiCall = new APICall.Builder("getShufflingParticipants").
                 param("shuffling", shufflingId).
                 build();
         JSONObject getParticipantsResponse = apiCall.invoke();
         Logger.logMessage("getShufflingParticipantsResponse: " + getParticipantsResponse.toJSONString());
-
-        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
-        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
-        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
-        Map<String, String> accountMapping = new HashMap<>();
-        for (Object participant : participants) {
-            String account = (String) ((JSONObject)participant).get("account");
-            String nextAccount = (String) ((JSONObject)participant).get("nextAccount");
-            accountMapping.put(account, nextAccount);
-        }
-        String account1 = accountMapping.get(shufflingAssignee);
-        Assert.assertTrue(account1 != null);
-        String account2 = accountMapping.get(account1);
-        Assert.assertTrue(account2 != null);
-        String account3 = accountMapping.get(account2);
-        Assert.assertTrue(account3 != null);
-        String account4 = accountMapping.get(account3);
-        Assert.assertTrue(account4 != null);
-        String nullAccount = accountMapping.get(account4);
-        Assert.assertTrue(nullAccount == null);
-        return shufflingId;
+        return getParticipantsResponse;
     }
 
-    private void process(String shufflingId) {
+    private JSONObject process(String shufflingId, Tester tester, Tester recipient) {
         APICall apiCall = new APICall.Builder("shufflingProcess").
                 param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase1).
-                param("recipient", ALICE.getStrId()).
+                param("secretPhrase", tester.getSecretPhrase()).
+                param("recipientSecretPhrase", recipient.getSecretPhrase()).
                 feeNQT(Constants.ONE_NXT).
                 build();
         JSONObject shufflingProcessResponse = apiCall.invoke();
         Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
-        generateBlock();
-
-        apiCall = new APICall.Builder("shufflingProcess").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase2).
-                param("recipient", BOB.getStrId()).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        shufflingProcessResponse = apiCall.invoke();
-        Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
-        generateBlock();
-
-        apiCall = new APICall.Builder("shufflingProcess").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase3).
-                param("recipient", CHUCK.getStrId()).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        shufflingProcessResponse = apiCall.invoke();
-        Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
-        generateBlock();
-
-        apiCall = new APICall.Builder("shufflingProcess").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase4).
-                param("recipient", DAVE.getStrId()).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        shufflingProcessResponse = apiCall.invoke();
-        Logger.logMessage("shufflingProcessResponse: " + shufflingProcessResponse.toJSONString());
-        generateBlock();
-
-        // Verify that each of the participants is also a recipient (not mandatory just for the test)
-        apiCall = new APICall.Builder("getShufflingParticipants").
-                param("shuffling", shufflingId).
-                build();
-        JSONObject getParticipantsResponse = apiCall.invoke();
-        Logger.logMessage("getShufflingParticipantsResponse: " + getParticipantsResponse.toJSONString());
-
-        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
-        Map<String, String> accountMapping = new HashMap<>();
-        for (Object participant : participants) {
-            String account = (String) ((JSONObject)participant).get("account");
-            String recipient = (String) ((JSONObject)participant).get("recipient");
-            accountMapping.put(account, recipient);
-        }
-        for (Map.Entry<String, String> mapping : accountMapping.entrySet()) {
-            Assert.assertTrue(accountMapping.get(mapping.getValue()) != null);
-            Logger.logMessage(String.format("account %s mapped to account %s", mapping.getValue(), accountMapping.get(mapping.getValue())));
-        }
+        return shufflingProcessResponse;
     }
 
-    private void verify(String shufflingId) {
+    private JSONObject verify(String shufflingId, Tester tester, String shufflingStateHash) {
         APICall apiCall = new APICall.Builder("shufflingVerify").
                 param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase1).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        apiCall.invoke();
-        apiCall = new APICall.Builder("shufflingVerify").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase2).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        apiCall.invoke();
-        apiCall = new APICall.Builder("shufflingVerify").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase3).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        apiCall.invoke();
-        apiCall = new APICall.Builder("shufflingVerify").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase4).
+                param("secretPhrase", tester.getSecretPhrase()).
+                param("shufflingStateHash", shufflingStateHash).
                 feeNQT(Constants.ONE_NXT).
                 build();
         JSONObject response = apiCall.invoke();
         Logger.logDebugMessage("shufflingVerifyResponse:" + response);
+        return response;
     }
 
-    private void distribute(String shufflingId) {
-        APICall apiCall = new APICall.Builder("shufflingDistribute").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase1).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        JSONObject response = apiCall.invoke();
-        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
-        Assert.assertTrue(((String) response.get("error")).contains("Shuffling not ready for distribution"));
-        generateBlock();
-        apiCall = new APICall.Builder("shufflingDistribute").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase4).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        response = apiCall.invoke();
-        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
-        Assert.assertTrue(((String)response.get("error")).contains("Only shuffling issuer"));
-        apiCall = new APICall.Builder("shufflingDistribute").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase1).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        response = apiCall.invoke();
-        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
-
-        // Duplicate transaction in the same block
-        apiCall = new APICall.Builder("shufflingDistribute").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase1).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        response = apiCall.invoke();
-        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
-        generateBlock();
-
-        apiCall = new APICall.Builder("getShuffling").
-                param("shuffling", shufflingId).
-                build();
-        JSONObject getShufflingResponse = apiCall.invoke();
-        Logger.logMessage("getShufflingResponse: " + getShufflingResponse.toJSONString());
-        Assert.assertEquals((long) Shuffling.Stage.DONE.getCode(), getShufflingResponse.get("stage"));
-
-        apiCall = new APICall.Builder("shufflingDistribute").
-                param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase1).
-                feeNQT(Constants.ONE_NXT).
-                build();
-        response = apiCall.invoke();
-        Logger.logDebugMessage("shufflingDistributeResponse:" + response);
-        Assert.assertTrue(((String)response.get("error")).contains("Shuffling not ready for distribution"));
-    }
-
-    private void tryCancel(String shufflingId) {
+    private JSONObject cancel(String shufflingId, Tester tester, String shufflingStateHash) {
         APICall apiCall = new APICall.Builder("shufflingCancel").
                 param("shuffling", shufflingId).
-                param("secretPhrase", secretPhrase1).
+                param("secretPhrase", tester.getSecretPhrase()).
+                param("shufflingStateHash", shufflingStateHash).
                 feeNQT(Constants.ONE_NXT).
                 build();
         JSONObject response = apiCall.invoke();
         Logger.logDebugMessage("shufflingCancelResponse:" + response);
-        Assert.assertTrue(((String) response.get("error")).contains("cannot be cancelled"));
+        return response;
     }
 
 }

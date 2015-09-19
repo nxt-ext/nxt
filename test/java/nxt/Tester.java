@@ -40,7 +40,7 @@ public class Tester {
     private final Map<Long, Long> initialCurrencyUnits = new HashMap<>();
     private final Map<Long, Long> initialUnconfirmedCurrencyUnits = new HashMap<>();
 
-    Tester(String secretPhrase) {
+    public Tester(String secretPhrase) {
         this.secretPhrase = secretPhrase;
         this.privateKey = Crypto.getPrivateKey(secretPhrase);
         this.publicKey = Crypto.getPublicKey(secretPhrase);
