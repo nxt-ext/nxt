@@ -653,12 +653,6 @@ public final class Shuffling {
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
-                if (blamedAccountId != 0) {
-                    // as a penalty the deposit goes to the generator of the finish block
-                    Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
-                    blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
-                    blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
-                }
                 holdingType.addToUnconfirmedBalance(participantAccount, event, eventId, this.holdingId, this.amount);
                 if (participantAccount.getId() != blamedAccountId) {
                     if (holdingType != HoldingType.NXT) {
@@ -671,6 +665,12 @@ public final class Shuffling {
                     participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
                 }
             }
+        }
+        if (blamedAccountId != 0) {
+            // as a penalty the deposit goes to the generator of the finish block
+            Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
+            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
+            blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
         }
         this.assigneeAccountId = 0;
         this.blocksRemaining = 0;
