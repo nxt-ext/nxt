@@ -102,8 +102,8 @@ public final class ShufflingParticipant {
         }
 
         private void save(Connection con) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_data (shuffling_id, account_id, data, "
-                    + "transaction_timestamp, height) KEY (shuffling_id, account_id, height) "
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO shuffling_data (shuffling_id, account_id, data, "
+                    + "transaction_timestamp, height) "
                     + "VALUES (?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.shufflingId);
