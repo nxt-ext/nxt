@@ -2846,7 +2846,7 @@ public interface Attachment extends Appendix {
         ShufflingRecipients(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
             int count = buffer.get();
-            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count < 0) {
                 throw new NxtException.NotValidException("Invalid data count " + count);
             }
             this.recipientPublicKeys = new byte[count][];

@@ -369,7 +369,7 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException("Data has been pruned prematurely");
             }
             if (data != null) {
-                if (data.length > participant.getIndex() + 1 || data.length == 0) {
+                if (data.length != participant.getIndex() + 1 && data.length != 0) {
                     throw new NxtException.NotValidException(String.format("Invalid number of encrypted data %d for participant number %d",
                             data.length, participant.getIndex()));
                 }
@@ -478,7 +478,7 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException("Shuffling state hash doesn't match");
             }
             byte[][] recipientPublicKeys = attachment.getRecipientPublicKeys();
-            if (recipientPublicKeys.length > shuffling.getParticipantCount() || recipientPublicKeys.length == 0) {
+            if (recipientPublicKeys.length != shuffling.getParticipantCount() && recipientPublicKeys.length != 0) {
                 throw new NxtException.NotValidException(String.format("Invalid number of recipient public keys %d", recipientPublicKeys.length));
             }
             Set<Long> recipientAccounts = new HashSet<>();
@@ -691,7 +691,7 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotCurrentlyValidException("Shuffling state hash doesn't match");
             }
             byte[][] keySeeds = attachment.getKeySeeds();
-            if (keySeeds.length != 0 && keySeeds.length != shuffling.getParticipantCount() - participant.getIndex() - 1) {
+            if (keySeeds.length != shuffling.getParticipantCount() - participant.getIndex() - 1) {
                 throw new NxtException.NotValidException("Invalid number of revealed keySeeds: " + keySeeds.length);
             }
             for (byte[] keySeed : keySeeds) {

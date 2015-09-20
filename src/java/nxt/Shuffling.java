@@ -414,12 +414,14 @@ public final class Shuffling {
             try {
                 byte[] decrypted = encryptedData.decrypt(secretPhrase);
                 if (isLast && decrypted.length != 32) {
-                    continue;
+                    Logger.logDebugMessage("Invalid recipient public key " + Convert.toHexString(decrypted));
+                    return new Attachment.ShufflingRecipients(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
                 }
                 outputDataList.add(decrypted);
             } catch (Exception e) {
                 Logger.logMessage("Decryption failed", e);
-                // skip data that fails to decrypt, which will result in output list shorter than expected
+                return isLast ? new Attachment.ShufflingRecipients(this.id, Convert.EMPTY_BYTES, shufflingStateHash)
+                        : new Attachment.ShufflingProcessing(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
             }
         }
         // Calculate the token for the current sender by iteratively encrypting it using the public key of all the participants
@@ -440,10 +442,10 @@ public final class Shuffling {
         Collections.shuffle(outputDataList, Crypto.getSecureRandom());
         if (isLast) {
             Set<Long> recipientAccounts = new HashSet<>();
-            Iterator<byte[]> iterator = outputDataList.iterator();
-            while (iterator.hasNext()) {
-                if (!recipientAccounts.add(Account.getId(iterator.next()))) {
-                    iterator.remove();
+            for (byte[] publicKey : outputDataList) {
+                if (!recipientAccounts.add(Account.getId(publicKey))) {
+                    // duplicate recipient public key
+                    return new Attachment.ShufflingRecipients(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
                 }
             }
             // last participant prepares ShufflingRecipients transaction instead of ShufflingProcessing
@@ -542,9 +544,9 @@ public final class Shuffling {
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
         participant.setData(data, transaction.getTimestamp());
         participant.setProcessed(((TransactionImpl) transaction).fullHash());
-        if (data.length < participant.getIndex() + 1) {
+        if (data.length == 0) {
             // couldn't decrypt all data from previous participants
-            cancelBy(participant, data, Convert.EMPTY_BYTES);
+            cancelBy(participant);
             return;
         }
         this.assigneeAccountId = participant.getNextAccountId();
@@ -558,9 +560,9 @@ public final class Shuffling {
         this.recipientPublicKeys = attachment.getRecipientPublicKeys();
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
         participant.setProcessed(((TransactionImpl) transaction).fullHash());
-        if (recipientPublicKeys.length < participantCount) {
+        if (recipientPublicKeys.length == 0) {
             // couldn't decrypt all data from previous participants
-            cancelBy(participant, recipientPublicKeys, Convert.EMPTY_BYTES);
+            cancelBy(participant);
             return;
         }
         participant.verify();
@@ -597,16 +599,20 @@ public final class Shuffling {
         shufflingTable.insert(this);
     }
 
+    private void cancelBy(ShufflingParticipant participant) {
+        cancelBy(participant, Convert.EMPTY_BYTES, Convert.EMPTY_BYTES);
+    }
+
     private void distribute() {
         if (recipientPublicKeys.length != participantCount) {
-            cancelBy(getLastParticipant(), recipientPublicKeys, Convert.EMPTY_BYTES);
+            cancelBy(getLastParticipant());
             return;
         }
         for (byte[] recipientPublicKey : recipientPublicKeys) {
             byte[] publicKey = Account.getPublicKey(Account.getId(recipientPublicKey));
             if (publicKey != null && !Arrays.equals(publicKey, recipientPublicKey)) {
                 // distribution not possible, do a cancellation on behalf of last participant instead
-                cancelBy(getLastParticipant(), recipientPublicKeys, Convert.EMPTY_BYTES);
+                cancelBy(getLastParticipant());
                 return;
             }
         }
@@ -679,6 +685,7 @@ public final class Shuffling {
 
     private long blame() {
         if (stage == Stage.REGISTRATION) {
+            Logger.logDebugMessage("Registration never completed");
             return 0;
         }
         List<ShufflingParticipant> participants = new ArrayList<>();
@@ -691,12 +698,14 @@ public final class Shuffling {
             // if no one submitted cancellation, blame the first one that did not submit processing data
             for (ShufflingParticipant participant : participants) {
                 if (participant.getState() == ShufflingParticipant.State.REGISTERED) {
+                    Logger.logDebugMessage("Participant %s did not submit processing", Long.toUnsignedString(participant.getAccountId()));
                     return participant.getAccountId();
                 }
             }
             // or the first one who did not submit verification
             for (ShufflingParticipant participant : participants) {
                 if (participant.getState() != ShufflingParticipant.State.VERIFIED) {
+                    Logger.logDebugMessage("Participant %s did not submit verification", Long.toUnsignedString(participant.getAccountId()));
                     return participant.getAccountId();
                 }
             }
@@ -709,6 +718,7 @@ public final class Shuffling {
             byte[][] keySeeds = participant.getKeySeeds();
             // if participant couldn't submit key seeds because he also couldn't decrypt some of the previous data, this should have been caught before
             if (keySeeds.length == 0) {
+                Logger.logDebugMessage("Participant %s did not reveal keys", Long.toUnsignedString(participant.getAccountId()));
                 return participant.getAccountId();
             }
             byte[] publicKey = Crypto.getPublicKey(keySeeds[0]);
@@ -722,13 +732,11 @@ public final class Shuffling {
             }
             if (encryptedData == null || !Arrays.equals(publicKey, encryptedData.getPublicKey())) {
                 // participant lied about key seeds or data
+                Logger.logDebugMessage("Participant %s did not submit blame data, or revealed invalid keys", Long.toUnsignedString(participant.getAccountId()));
                 return participant.getAccountId();
             }
             for (int k = i + 1; k < participantCount; k++) {
                 ShufflingParticipant nextParticipant = participants.get(k);
-                if (nextParticipant.getState() == ShufflingParticipant.State.REGISTERED) {
-                    break;
-                }
                 byte[] nextParticipantPublicKey = Account.getPublicKey(nextParticipant.getAccountId());
                 byte[] keySeed = keySeeds[k - i - 1];
                 byte[] participantBytes;
@@ -736,9 +744,31 @@ public final class Shuffling {
                     participantBytes = encryptedData.decrypt(keySeed, nextParticipantPublicKey);
                 } catch (Exception e) {
                     // the next participant couldn't decrypt the data either, blame this one
+                    Logger.logDebugMessage("Could not decrypt data from participant %s", Long.toUnsignedString(participant.getAccountId()));
                     return participant.getAccountId();
                 }
                 boolean isLast = k == participantCount - 1;
+                if (isLast) {
+                    // else it is not encrypted data but plaintext recipient public key, at the last participant
+                    if (participantBytes.length != 32) {
+                        // cannot be a valid public key
+                        Logger.logDebugMessage("Participant %s submitted invalid recipient public key", Long.toUnsignedString(participant.getAccountId()));
+                        return participant.getAccountId();
+                    }
+                    // check for collisions and assume they are intentional
+                    byte[] currentPublicKey = Account.getPublicKey(Account.getId(participantBytes));
+                    if (currentPublicKey != null && !Arrays.equals(currentPublicKey, participantBytes)) {
+                        Logger.logDebugMessage("Participant %s submitted colliding recipient public key", Long.toUnsignedString(participant.getAccountId()));
+                        return participant.getAccountId();
+                    }
+                    if (!recipientAccounts.add(Account.getId(participantBytes))) {
+                        Logger.logDebugMessage("Participant %s submitted duplicate recipient public key", Long.toUnsignedString(participant.getAccountId()));
+                        return participant.getAccountId();
+                    }
+                }
+                if (nextParticipant.getState() == ShufflingParticipant.State.CANCELLED && nextParticipant.getBlameData().length == 0) {
+                    break;
+                }
                 boolean found = false;
                 for (byte[] bytes : isLast ? recipientPublicKeys : nextParticipant.getBlameData()) {
                     if (Arrays.equals(participantBytes, bytes)) {
@@ -748,24 +778,11 @@ public final class Shuffling {
                 }
                 if (!found) {
                     // the next participant did not include this participant's data
+                    Logger.logDebugMessage("Participant %s did not include previous data", Long.toUnsignedString(nextParticipant.getAccountId()));
                     return nextParticipant.getAccountId();
                 }
                 if (!isLast) {
                     encryptedData = AnonymouslyEncryptedData.readEncryptedData(participantBytes);
-                } else {
-                    // else it is not encrypted data but plaintext recipient public key, at the last participant
-                    if (participantBytes.length != 32) {
-                        // cannot be a valid public key
-                        return participant.getAccountId();
-                    }
-                    // check for collisions and assume they are intentional
-                    byte[] currentPublicKey = Account.getPublicKey(Account.getId(participantBytes));
-                    if (currentPublicKey != null && !Arrays.equals(currentPublicKey, participantBytes)) {
-                        return participant.getAccountId();
-                    }
-                    if (!recipientAccounts.add(Account.getId(participantBytes))) {
-                        return participant.getAccountId();
-                    }
                 }
             }
         }

@@ -332,7 +332,7 @@ public class TestShuffling extends BlockchainTest {
     }
 
     @Test
-    public void cancelAfterVerify() {
+    public void cancelAfterVerifyChuck() {
         String shufflingId = (String)create(ALICE).get("transaction");
         generateBlock();
         register(shufflingId, BOB);
@@ -404,7 +404,7 @@ public class TestShuffling extends BlockchainTest {
     }
 
     @Test
-    public void removedProcessData() {
+    public void cancelAfterVerifyChuckInvalidKeys() {
         String shufflingId = (String)create(ALICE).get("transaction");
         generateBlock();
         register(shufflingId, BOB);
@@ -427,31 +427,262 @@ public class TestShuffling extends BlockchainTest {
         generateBlock();
         process(shufflingId, BOB, BOB_RECIPIENT);
         generateBlock();
-        JSONObject processResponse = process(shufflingId, CHUCK, CHUCK_RECIPIENT, false);
-        JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
-        JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
-        data.remove(0);
-        broadcast(transactionJSON, CHUCK);
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        process(shufflingId, DAVE, DAVE_RECIPIENT);
         generateBlock();
 
         getShufflingResponse = getShuffling(shufflingId);
-        Assert.assertEquals((long) Shuffling.Stage.BLAME.getCode(), getShufflingResponse.get("stage"));
-        long cancellingAccountId = Convert.parseUnsignedLong((String)getShufflingResponse.get("cancellingAccount"));
-        Assert.assertEquals(CHUCK.getId(), cancellingAccountId);
+        Assert.assertEquals((long) Shuffling.Stage.VERIFICATION.getCode(), getShufflingResponse.get("stage"));
         String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
-
-        cancel(shufflingId, ALICE, shufflingStateHash, cancellingAccountId);
-        cancel(shufflingId, BOB, shufflingStateHash, cancellingAccountId);
+        verify(shufflingId, ALICE, shufflingStateHash);
+        verify(shufflingId, BOB, shufflingStateHash);
+        JSONObject cancelResponse = cancel(shufflingId, CHUCK, shufflingStateHash, 0, false);
+        JSONObject transactionJSON = (JSONObject)cancelResponse.get("transactionJSON");
+        JSONArray keySeeds = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("keySeeds");
+        String s = (String)keySeeds.get(0);
+        keySeeds.set(0, "0000000000" + s.substring(10));
+        broadcast(transactionJSON, CHUCK);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        String cancellingAccountId = (String)getShufflingResponse.get("cancellingAccount");
+        Assert.assertEquals(Long.toUnsignedString(CHUCK.getId()), cancellingAccountId);
+        cancel(shufflingId, ALICE, shufflingStateHash, CHUCK.getId());
+        cancel(shufflingId, BOB, shufflingStateHash, CHUCK.getId());
         for (int i = 0; i < 14; i++) {
             generateBlock();
         }
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
 
-        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getBalanceDiff());
-        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
-        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT), CHUCK.getBalanceDiff());
-        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT), CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 3 * Constants.ONE_NXT), CHUCK.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 3 * Constants.ONE_NXT), CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNotNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNotNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNotNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNotNull(DAVE_RECIPIENT.getAccount());
+
+        Assert.assertEquals(0, ALICE_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, ALICE_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, BOB_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, BOB_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, CHUCK_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, CHUCK_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, DAVE_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, DAVE_RECIPIENT.getUnconfirmedBalanceDiff());
+    }
+
+    @Test
+    public void cancelAfterVerifyChuckInvalidKeysAlice() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        process(shufflingId, DAVE, DAVE_RECIPIENT);
+        generateBlock();
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.VERIFICATION.getCode(), getShufflingResponse.get("stage"));
+        String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        verify(shufflingId, ALICE, shufflingStateHash);
+        verify(shufflingId, BOB, shufflingStateHash);
+        cancel(shufflingId, CHUCK, shufflingStateHash, 0);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        String cancellingAccountId = (String)getShufflingResponse.get("cancellingAccount");
+        Assert.assertEquals(Long.toUnsignedString(CHUCK.getId()), cancellingAccountId);
+        JSONObject cancelResponse = cancel(shufflingId, ALICE, shufflingStateHash, CHUCK.getId(), false);
+        JSONObject transactionJSON = (JSONObject)cancelResponse.get("transactionJSON");
+        JSONArray keySeeds = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("keySeeds");
+        String s = (String)keySeeds.get(0);
+        keySeeds.set(0, "0000000000" + s.substring(10));
+        broadcast(transactionJSON, ALICE);
+        generateBlock();
+        cancel(shufflingId, BOB, shufflingStateHash, CHUCK.getId());
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 4 * Constants.ONE_NXT), ALICE.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 4 * Constants.ONE_NXT), ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNotNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNotNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNotNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNotNull(DAVE_RECIPIENT.getAccount());
+
+        Assert.assertEquals(0, ALICE_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, ALICE_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, BOB_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, BOB_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, CHUCK_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, CHUCK_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, DAVE_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, DAVE_RECIPIENT.getUnconfirmedBalanceDiff());
+    }
+
+    @Test
+    public void cancelAfterVerifyChuckInvalidKeysAlice2() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        process(shufflingId, DAVE, DAVE_RECIPIENT);
+        generateBlock();
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.VERIFICATION.getCode(), getShufflingResponse.get("stage"));
+        String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        verify(shufflingId, ALICE, shufflingStateHash);
+        verify(shufflingId, BOB, shufflingStateHash);
+        cancel(shufflingId, CHUCK, shufflingStateHash, 0);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        String cancellingAccountId = (String)getShufflingResponse.get("cancellingAccount");
+        Assert.assertEquals(Long.toUnsignedString(CHUCK.getId()), cancellingAccountId);
+        JSONObject cancelResponse = cancel(shufflingId, ALICE, shufflingStateHash, CHUCK.getId(), false);
+        JSONObject transactionJSON = (JSONObject)cancelResponse.get("transactionJSON");
+        JSONArray keySeeds = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("keySeeds");
+        String s = (String)keySeeds.get(1);
+        keySeeds.set(1, "0000000000" + s.substring(10));
+        broadcast(transactionJSON, ALICE);
+        generateBlock();
+        cancel(shufflingId, BOB, shufflingStateHash, CHUCK.getId());
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 4 * Constants.ONE_NXT), ALICE.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 4 * Constants.ONE_NXT), ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-4 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNotNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNotNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNotNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNotNull(DAVE_RECIPIENT.getAccount());
+
+        Assert.assertEquals(0, ALICE_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, ALICE_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, BOB_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, BOB_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, CHUCK_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, CHUCK_RECIPIENT.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, DAVE_RECIPIENT.getBalanceDiff());
+        Assert.assertEquals(0, DAVE_RECIPIENT.getUnconfirmedBalanceDiff());
+    }
+
+    @Test
+    public void badProcessDataAlice() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        JSONObject processResponse = process(shufflingId, ALICE, ALICE_RECIPIENT, false);
+        JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
+        JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
+        String s = (String)data.get(0);
+        data.set(0, "0000000000" + s.substring(10));
+        broadcast(transactionJSON, ALICE);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.BLAME.getCode(), getShufflingResponse.get("stage"));
+        long cancellingAccountId = Convert.parseUnsignedLong((String) getShufflingResponse.get("cancellingAccount"));
+        Assert.assertEquals(BOB.getId(), cancellingAccountId);
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT), ALICE.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT), ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-1 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-1 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
         Assert.assertEquals(-1 * Constants.ONE_NXT, DAVE.getBalanceDiff());
         Assert.assertEquals(-1 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
 
@@ -462,7 +693,70 @@ public class TestShuffling extends BlockchainTest {
     }
 
     @Test
-    public void modifiedProcessData() {
+    public void modifiedProcessDataBob() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        JSONObject processResponse = process(shufflingId, BOB, BOB_RECIPIENT, false);
+        JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
+        JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
+        String s = (String)data.get(0);
+        data.set(0, "0000000000" + s.substring(10));
+        broadcast(transactionJSON, BOB);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.BLAME.getCode(), getShufflingResponse.get("stage"));
+        long cancellingAccountId = Convert.parseUnsignedLong((String)getShufflingResponse.get("cancellingAccount"));
+        Assert.assertEquals(CHUCK.getId(), cancellingAccountId);
+        String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        cancel(shufflingId, ALICE, shufflingStateHash, cancellingAccountId);
+        JSONObject cancelResponse = cancel(shufflingId, BOB, shufflingStateHash, cancellingAccountId);
+        boolean bobCancelFailed = cancelResponse.get("error") != null; // if he happened to modify his own piece
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + (bobCancelFailed ? 2 : 3) * Constants.ONE_NXT), BOB.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + (bobCancelFailed ? 2 : 3) * Constants.ONE_NXT), BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-1 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-1 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNull(DAVE_RECIPIENT.getAccount());
+    }
+
+    @Test
+    public void modifiedProcessDataChuck() {
         String shufflingId = (String)create(ALICE).get("transaction");
         generateBlock();
         register(shufflingId, BOB);
@@ -509,6 +803,9 @@ public class TestShuffling extends BlockchainTest {
             generateBlock();
         }
 
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
         Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getBalanceDiff());
         Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
         Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getBalanceDiff());
@@ -523,6 +820,308 @@ public class TestShuffling extends BlockchainTest {
         Assert.assertNull(CHUCK_RECIPIENT.getAccount());
         Assert.assertNull(DAVE_RECIPIENT.getAccount());
     }
+
+    @Test
+    public void modifiedRecipientKeysDave() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        JSONObject processResponse = process(shufflingId, DAVE, DAVE_RECIPIENT, false);
+        JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
+        JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("recipientPublicKeys");
+        String s = (String)data.get(0);
+        if (!s.equals(DAVE_RECIPIENT.getPublicKeyStr())) {
+            data.set(0, "0000000000" + s.substring(10));
+        } else {
+            s = (String)data.get(1);
+            data.set(1, "0000000000" + s.substring(10));
+        }
+        broadcast(transactionJSON, DAVE);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.VERIFICATION.getCode(), getShufflingResponse.get("stage"));
+        String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        cancel(shufflingId, ALICE, shufflingStateHash, 0);
+        generateBlock();
+        getShufflingResponse = getShuffling(shufflingId);
+        shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+        cancel(shufflingId, BOB, shufflingStateHash, ALICE.getId());
+        cancel(shufflingId, CHUCK, shufflingStateHash, ALICE.getId());
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT), DAVE.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT), DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertTrue(ALICE_RECIPIENT.getAccount() == null || ALICE_RECIPIENT.getBalanceDiff() == 0);
+        Assert.assertTrue(ALICE_RECIPIENT.getAccount() == null || ALICE_RECIPIENT.getUnconfirmedBalanceDiff() == 0);
+        Assert.assertTrue(BOB_RECIPIENT.getAccount() == null || BOB_RECIPIENT.getBalanceDiff() == 0);
+        Assert.assertTrue(BOB_RECIPIENT.getAccount() == null || BOB_RECIPIENT.getUnconfirmedBalanceDiff() == 0);
+        Assert.assertTrue(CHUCK_RECIPIENT.getAccount() == null || CHUCK_RECIPIENT.getBalanceDiff() == 0);
+        Assert.assertTrue(CHUCK_RECIPIENT.getAccount() == null || CHUCK_RECIPIENT.getUnconfirmedBalanceDiff() == 0);
+        Assert.assertTrue(DAVE_RECIPIENT.getAccount() == null || DAVE_RECIPIENT.getBalanceDiff() == 0);
+        Assert.assertTrue(DAVE_RECIPIENT.getAccount() == null || DAVE_RECIPIENT.getUnconfirmedBalanceDiff() == 0);
+    }
+
+    @Test
+    public void duplicateRecipientKeysDave() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        JSONObject processResponse = process(shufflingId, DAVE, DAVE_RECIPIENT, false);
+        JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
+        JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("recipientPublicKeys");
+        String s = (String)data.get(0);
+        data.set(1, s);
+        JSONObject broadcastResponse = broadcast(transactionJSON, DAVE);
+        Assert.assertTrue(broadcastResponse.get("error") != null);
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-2 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), DAVE.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNull(DAVE_RECIPIENT.getAccount());
+    }
+
+    @Test
+    public void duplicateProcessDataChuck() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        JSONObject processResponse = process(shufflingId, CHUCK, CHUCK_RECIPIENT, false);
+        JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
+        JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
+        String s = (String)data.get(0);
+        data.set(1, s);
+        JSONObject broadcastResponse = broadcast(transactionJSON, CHUCK);
+        Assert.assertTrue(broadcastResponse.get("error") != null);
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-2 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), CHUCK.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-1 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-1 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNull(DAVE_RECIPIENT.getAccount());
+    }
+
+    @Test
+    public void duplicateRecipientsBobChuck() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, BOB_RECIPIENT);
+        generateBlock();
+        process(shufflingId, CHUCK, BOB_RECIPIENT);
+        generateBlock();
+        process(shufflingId, DAVE, DAVE_RECIPIENT);
+        generateBlock();
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.BLAME.getCode(), getShufflingResponse.get("stage"));
+
+        long cancellingAccountId = Convert.parseUnsignedLong((String)getShufflingResponse.get("cancellingAccount"));
+        Assert.assertEquals(DAVE.getId(), cancellingAccountId);
+        String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+
+        cancel(shufflingId, ALICE, shufflingStateHash, cancellingAccountId);
+        cancel(shufflingId, BOB, shufflingStateHash, cancellingAccountId);
+        cancel(shufflingId, CHUCK, shufflingStateHash, cancellingAccountId);
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 3 * Constants.ONE_NXT), CHUCK.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 3 * Constants.ONE_NXT), CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNull(DAVE_RECIPIENT.getAccount());
+    }
+
+    @Test
+    public void duplicateRecipientsAliceBob() {
+        String shufflingId = (String)create(ALICE).get("transaction");
+        generateBlock();
+        register(shufflingId, BOB);
+        generateBlock();
+        register(shufflingId, CHUCK);
+        generateBlock();
+        register(shufflingId, DAVE);
+        generateBlock();
+
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        JSONObject getParticipantsResponse = getShufflingParticipants(shufflingId);
+        JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
+        Assert.assertEquals(4, participants.size());
+        String shufflingAssignee = (String) getShufflingResponse.get("assignee");
+        Assert.assertEquals(Long.toUnsignedString(ALICE.getId()), shufflingAssignee);
+
+        process(shufflingId, ALICE, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, BOB, ALICE_RECIPIENT);
+        generateBlock();
+        process(shufflingId, CHUCK, CHUCK_RECIPIENT);
+        generateBlock();
+        process(shufflingId, DAVE, DAVE_RECIPIENT);
+        generateBlock();
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.BLAME.getCode(), getShufflingResponse.get("stage"));
+
+        long cancellingAccountId = Convert.parseUnsignedLong((String)getShufflingResponse.get("cancellingAccount"));
+        Assert.assertEquals(DAVE.getId(), cancellingAccountId);
+        String shufflingStateHash = (String)getShufflingResponse.get("shufflingStateHash");
+
+        cancel(shufflingId, ALICE, shufflingStateHash, cancellingAccountId);
+        cancel(shufflingId, BOB, shufflingStateHash, cancellingAccountId);
+        cancel(shufflingId, CHUCK, shufflingStateHash, cancellingAccountId);
+        for (int i = 0; i < 14; i++) {
+            generateBlock();
+        }
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, ALICE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 3 * Constants.ONE_NXT), BOB.getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 3 * Constants.ONE_NXT), BOB.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getBalanceDiff());
+        Assert.assertEquals(-3 * Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getBalanceDiff());
+        Assert.assertEquals(-2 * Constants.ONE_NXT, DAVE.getUnconfirmedBalanceDiff());
+
+        Assert.assertNull(ALICE_RECIPIENT.getAccount());
+        Assert.assertNull(BOB_RECIPIENT.getAccount());
+        Assert.assertNull(CHUCK_RECIPIENT.getAccount());
+        Assert.assertNull(DAVE_RECIPIENT.getAccount());
+    }
+
 
     private JSONObject create(Tester creator) {
         APICall apiCall = new APICall.Builder("shufflingCreate").
@@ -598,6 +1197,10 @@ public class TestShuffling extends BlockchainTest {
     }
 
     private JSONObject cancel(String shufflingId, Tester tester, String shufflingStateHash, long cancellingAccountId) {
+        return cancel(shufflingId, tester, shufflingStateHash, cancellingAccountId, true);
+    }
+
+    private JSONObject cancel(String shufflingId, Tester tester, String shufflingStateHash, long cancellingAccountId, boolean broadcast) {
         APICall.Builder builder = new APICall.Builder("shufflingCancel").
                 param("shuffling", shufflingId).
                 param("secretPhrase", tester.getSecretPhrase()).
@@ -605,6 +1208,9 @@ public class TestShuffling extends BlockchainTest {
                 feeNQT(Constants.ONE_NXT);
         if (cancellingAccountId != 0) {
             builder.param("cancellingAccount", Long.toUnsignedString(cancellingAccountId));
+        }
+        if (!broadcast) {
+            builder.param("broadcast", "false");
         }
         APICall apiCall = builder.build();
         JSONObject response = apiCall.invoke();
@@ -616,9 +1222,13 @@ public class TestShuffling extends BlockchainTest {
         transaction.remove("signature");
         APICall apiCall = new APICall.Builder("signTransaction")
                 .param("unsignedTransactionJSON", transaction.toJSONString())
+                .param("validate", "false")
                 .param("secretPhrase", tester.getSecretPhrase())
                 .build();
         JSONObject response = apiCall.invoke();
+        if (response.get("transactionJSON") == null) {
+            return response;
+        }
         apiCall = new APICall.Builder("broadcastTransaction").
                 param("transactionJSON", ((JSONObject)response.get("transactionJSON")).toJSONString()).
                 feeNQT(Constants.ONE_NXT).
