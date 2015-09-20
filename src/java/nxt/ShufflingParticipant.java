@@ -102,8 +102,8 @@ public final class ShufflingParticipant {
         }
 
         private void save(Connection con) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO shuffling_data (shuffling_id, account_id, data, "
-                    + "transaction_timestamp, height) "
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling_data (shuffling_id, account_id, data, "
+                    + "transaction_timestamp, height) KEY (shuffling_id, account_id, height) "
                     + "VALUES (?, ?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.shufflingId);
@@ -300,13 +300,7 @@ public final class ShufflingParticipant {
     }
 
     void setData(byte[][] data, int timestamp) {
-        if (getData() != null) {
-            throw new IllegalStateException("data already set");
-        }
         shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, Nxt.getBlockchain().getHeight()));
-        setState(State.PROCESSED);
-        shufflingParticipantTable.insert(this);
-        listeners.notify(this, Event.PARTICIPANT_PROCESSED);
     }
 
     static void restoreData(long shufflingId, long accountId, byte[][] data, int timestamp, int height) {
@@ -336,11 +330,14 @@ public final class ShufflingParticipant {
         return dataTransactionFullHash;
     }
 
-    void setDataTransactionFullHash(byte[] dataTransactionFullHash) {
+    void setProcessed(byte[] dataTransactionFullHash) {
         if (this.dataTransactionFullHash != null) {
             throw new IllegalStateException("dataTransactionFullHash already set");
         }
+        setState(State.PROCESSED);
         this.dataTransactionFullHash = dataTransactionFullHash;
+        shufflingParticipantTable.insert(this);
+        listeners.notify(this, Event.PARTICIPANT_PROCESSED);
     }
 
     public ShufflingParticipant getPreviousParticipant() {
@@ -351,9 +348,6 @@ public final class ShufflingParticipant {
     }
 
     void verify() {
-        if (nextAccountId == 0) {
-            setState(State.PROCESSED); // last participant can verify at same time as processing
-        }
         setState(State.VERIFIED);
         shufflingParticipantTable.insert(this);
         listeners.notify(this, Event.PARTICIPANT_VERIFIED);
