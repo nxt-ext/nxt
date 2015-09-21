@@ -24,7 +24,6 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 
 public final class ShufflingCancel extends CreateTransaction {
 
@@ -41,9 +40,6 @@ public final class ShufflingCancel extends CreateTransaction {
         byte[] shufflingStateHash = Convert.parseHexString(Convert.emptyToNull(req.getParameter("shufflingStateHash")));
         if (shufflingStateHash == null) {
             return JSONResponses.missing("shufflingStateHash");
-        }
-        if (!Arrays.equals(shufflingStateHash, shuffling.getStateHash())) {
-            return JSONResponses.incorrect("shufflingStateHash", "Shuffling is in a different state now");
         }
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         Attachment.ShufflingCancellation attachment = shuffling.revealKeySeeds(secretPhrase, cancellingAccountId, shufflingStateHash);
