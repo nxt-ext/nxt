@@ -214,13 +214,13 @@ public enum CurrencyType {
     NON_SHUFFLEABLE(0x20) {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
+            if (transaction.getType() == ShufflingTransaction.SHUFFLING_CREATION) {
+                throw new NxtException.NotValidException("Shuffling is not allowed for this currency");
+            }
         }
 
         @Override
         void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
-            if (transaction.getType() == ShufflingTransaction.SHUFFLING_CREATION) {
-                throw new NxtException.NotValidException("Shuffling is not allowed for this currency");
-            }
         }
     };
 

@@ -154,6 +154,10 @@ public final class Convert {
         return array == null ? EMPTY_LONG : array;
     }
 
+    public static long nullToZero(Long l) {
+        return l == null ? 0 : l;
+    }
+
     public static long[] toArray(List<Long> list) {
         long[] result = new long[list.size()];
         for (int i = 0; i < list.size(); i++) {
