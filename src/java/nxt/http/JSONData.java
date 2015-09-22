@@ -837,11 +837,11 @@ final class JSONData {
         if (encryptedData != null) {
             json.put("encryptedMessage", encryptedData(prunableMessage.getEncryptedData()));
             if (secretPhrase != null) {
-                Account account = prunableMessage.getSenderId() == readerAccountId
-                        ? Account.getAccount(prunableMessage.getRecipientId()) : Account.getAccount(prunableMessage.getSenderId());
-                if (account != null) {
+                byte[] publicKey = prunableMessage.getSenderId() == readerAccountId
+                        ? Account.getPublicKey(prunableMessage.getRecipientId()) : Account.getPublicKey(prunableMessage.getSenderId());
+                if (publicKey != null) {
                     try {
-                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase, prunableMessage.isCompressed());
+                        byte[] decrypted = Account.decryptFrom(publicKey, encryptedData, secretPhrase, prunableMessage.isCompressed());
                         json.put("decryptedMessage", prunableMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         putException(json, e, "Decryption failed");
