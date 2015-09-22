@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.Asset;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
@@ -24,7 +23,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
 public final class GetAssetsByIssuer extends APIServlet.APIRequestHandler {
 
@@ -36,7 +34,7 @@ public final class GetAssetsByIssuer extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        List<Account> accounts = ParameterParser.getAccounts(req);
+        long[] accountIds = ParameterParser.getAccountIds(req, true);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
@@ -44,9 +42,9 @@ public final class GetAssetsByIssuer extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray accountsJSONArray = new JSONArray();
         response.put("assets", accountsJSONArray);
-        for (Account account : accounts) {
+        for (long accountId : accountIds) {
             JSONArray assetsJSONArray = new JSONArray();
-            try (DbIterator<Asset> assets = Asset.getAssetsIssuedBy(account.getId(), firstIndex, lastIndex)) {
+            try (DbIterator<Asset> assets = Asset.getAssetsIssuedBy(accountId, firstIndex, lastIndex)) {
                 while (assets.hasNext()) {
                     assetsJSONArray.add(JSONData.asset(assets.next(), includeCounts));
                 }

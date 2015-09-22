@@ -34,12 +34,12 @@ public final class GetDGSGoodsPurchaseCount extends APIServlet.APIRequestHandler
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        DigitalGoodsStore.Goods goods = ParameterParser.getGoods(req);
+        long goodsId = ParameterParser.getUnsignedLong(req, "goods", true);
         final boolean withPublicFeedbacksOnly = "true".equalsIgnoreCase(req.getParameter("withPublicFeedbacksOnly"));
         final boolean completed = "true".equalsIgnoreCase(req.getParameter("completed"));
 
         JSONObject response = new JSONObject();
-        response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), withPublicFeedbacksOnly, completed));
+        response.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goodsId, withPublicFeedbacksOnly, completed));
         return response;
 
     }

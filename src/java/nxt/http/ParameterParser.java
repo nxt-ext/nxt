@@ -152,6 +152,10 @@ final class ParameterParser {
         return values;
     }
 
+    static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        return getAccountId(req, "account", isMandatory);
+    }
+
     static long getAccountId(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {

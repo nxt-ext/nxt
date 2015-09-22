@@ -16,13 +16,10 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Asset;
 import nxt.NxtException;
 import nxt.Trade;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -40,8 +37,11 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String assetId = Convert.emptyToNull(req.getParameter("asset"));
-        String accountId = Convert.emptyToNull(req.getParameter("account"));
+        long assetId = ParameterParser.getUnsignedLong(req, "asset", false);
+        long accountId = ParameterParser.getAccountId(req, false);
+        if (assetId == 0 && accountId == 0) {
+            return JSONResponses.MISSING_ASSET_ACCOUNT;
+        }
 
         int timestamp = ParameterParser.getTimestamp(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
@@ -52,16 +52,12 @@ public final class GetTrades extends APIServlet.APIRequestHandler {
         JSONArray tradesData = new JSONArray();
         DbIterator<Trade> trades = null;
         try {
-            if (accountId == null) {
-                Asset asset = ParameterParser.getAsset(req);
-                trades = asset.getTrades(firstIndex, lastIndex);
-            } else if (assetId == null) {
-                Account account = ParameterParser.getAccount(req);
-                trades = account.getTrades(firstIndex, lastIndex);
+            if (accountId == 0) {
+                trades = Trade.getAssetTrades(assetId, firstIndex, lastIndex);
+            } else if (assetId == 0) {
+                trades = Trade.getAccountTrades(accountId, firstIndex, lastIndex);
             } else {
-                Asset asset = ParameterParser.getAsset(req);
-                Account account = ParameterParser.getAccount(req);
-                trades = Trade.getAccountAssetTrades(account.getId(), asset.getId(), firstIndex, lastIndex);
+                trades = Trade.getAccountAssetTrades(accountId, assetId, firstIndex, lastIndex);
             }
             while (trades.hasNext()) {
                 Trade trade = trades.next();

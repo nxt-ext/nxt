@@ -16,13 +16,10 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Currency;
 import nxt.CurrencyTransfer;
 import nxt.NxtException;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -40,8 +37,11 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        String currencyId = Convert.emptyToNull(req.getParameter("currency"));
-        String accountId = Convert.emptyToNull(req.getParameter("account"));
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
+        long accountId = ParameterParser.getAccountId(req, false);
+        if (currencyId == 0 && accountId == 0) {
+            return JSONResponses.MISSING_CURRENCY_ACCOUNT;
+        }
         boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
         int timestamp = ParameterParser.getTimestamp(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
@@ -51,16 +51,12 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
         JSONArray transfersData = new JSONArray();
         DbIterator<CurrencyTransfer> transfers = null;
         try {
-            if (accountId == null) {
-                Currency currency = ParameterParser.getCurrency(req);
-                transfers = currency.getTransfers(firstIndex, lastIndex);
-            } else if (currencyId == null) {
-                Account account = ParameterParser.getAccount(req);
-                transfers = account.getCurrencyTransfers(firstIndex, lastIndex);
+            if (accountId == 0) {
+                transfers = CurrencyTransfer.getCurrencyTransfers(currencyId, firstIndex, lastIndex);
+            } else if (currencyId == 0) {
+                transfers = CurrencyTransfer.getAccountCurrencyTransfers(accountId, firstIndex, lastIndex);
             } else {
-                Currency currency = ParameterParser.getCurrency(req);
-                Account account = ParameterParser.getAccount(req);
-                transfers = CurrencyTransfer.getAccountCurrencyTransfers(account.getId(), currency.getId(), firstIndex, lastIndex);
+                transfers = CurrencyTransfer.getAccountCurrencyTransfers(accountId, currencyId, firstIndex, lastIndex);
             }
             while (transfers.hasNext()) {
                 CurrencyTransfer currencyTransfer = transfers.next();
