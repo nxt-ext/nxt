@@ -17,8 +17,8 @@
 package nxt.http;
 
 import nxt.Nxt;
+import nxt.NxtException;
 import nxt.Transaction;
-import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import org.json.simple.JSONArray;
@@ -26,35 +26,31 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Set;
 
-public final class GetUnconfirmedTransactions extends APIServlet.APIRequestHandler {
+public final class GetExpectedTransactions extends APIServlet.APIRequestHandler {
 
-    static final GetUnconfirmedTransactions instance = new GetUnconfirmedTransactions();
+    static final GetExpectedTransactions instance = new GetExpectedTransactions();
 
-    private GetUnconfirmedTransactions() {
-        super(new APITag[] {APITag.TRANSACTIONS, APITag.ACCOUNTS}, "account", "account", "account");
+    private GetExpectedTransactions() {
+        super(new APITag[] {APITag.TRANSACTIONS}, "account", "account", "account");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Set<Long> accountIds = Convert.toSet(ParameterParser.getAccountIds(req, false));
         Filter<Transaction> filter = accountIds.isEmpty() ? transaction -> true :
                 transaction -> accountIds.contains(transaction.getSenderId()) || accountIds.contains(transaction.getRecipientId());
 
-        JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> transactionsIterator = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
-            while (transactionsIterator.hasNext()) {
-                Transaction transaction = transactionsIterator.next();
-                if (filter.ok(transaction)) {
-                    transactions.add(JSONData.unconfirmedTransaction(transaction));
-                }
-            }
-        }
+        List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
 
         JSONObject response = new JSONObject();
-        response.put("unconfirmedTransactions", transactions);
+        JSONArray jsonArray = new JSONArray();
+        transactions.forEach(transaction -> jsonArray.add(JSONData.unconfirmedTransaction(transaction)));
+        response.put("expectedTransactions", jsonArray);
+
         return response;
     }
 
