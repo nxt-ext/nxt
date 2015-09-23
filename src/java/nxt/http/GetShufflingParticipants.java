@@ -17,7 +17,6 @@
 package nxt.http;
 
 import nxt.NxtException;
-import nxt.Shuffling;
 import nxt.ShufflingParticipant;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
@@ -36,11 +35,11 @@ public final class GetShufflingParticipants extends APIServlet.APIRequestHandler
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        Shuffling shuffling = ParameterParser.getShuffling(req);
+        long shufflingId = ParameterParser.getUnsignedLong(req, "shuffling", true);
         JSONObject response = new JSONObject();
         JSONArray participantsJSONArray = new JSONArray();
         response.put("participants", participantsJSONArray);
-        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shuffling.getId())) {
+        try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(shufflingId)) {
             for (ShufflingParticipant participant : participants) {
                 participantsJSONArray.add(JSONData.participant(participant));
             }
