@@ -37,7 +37,7 @@ public final class GetAssetsByIssuer extends APIServlet.APIRequestHandler {
         long[] accountIds = ParameterParser.getAccountIds(req, true);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
+        boolean includeCounts = "true".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray accountsJSONArray = new JSONArray();

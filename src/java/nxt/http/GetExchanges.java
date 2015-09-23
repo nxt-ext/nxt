@@ -43,7 +43,7 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
         if (currencyId == 0 && accountId == 0) {
             return JSONResponses.MISSING_CURRENCY_ACCOUNT;
         }
-        boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);

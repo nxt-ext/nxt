@@ -57,8 +57,10 @@ var NRS = (function(NRS, $) {
 
 		if (NRS.fetchingModalData) {
 			NRS.sendRequest("getAccount", {
-				"account": NRS.userInfoModal.user
-			}, function(response) {
+				"account": NRS.userInfoModal.user,
+                "includeAssets": true,
+                "includeCurrencies": true
+            }, function(response) {
 				NRS.processAccountModalData(response);
 				NRS.fetchingModalData = false;
 			});
@@ -276,8 +278,9 @@ var NRS = (function(NRS, $) {
 
 	NRS.userInfoModal.assets = function() {
 		NRS.sendRequest("getAccount", {
-			"account": NRS.userInfoModal.user
-		}, function(response) {
+			"account": NRS.userInfoModal.user,
+            "includeAssets": true
+        }, function(response) {
 			if (response.assetBalances && response.assetBalances.length) {
 				var assets = {};
 				var nrAssets = 0;
@@ -319,6 +322,7 @@ var NRS = (function(NRS, $) {
 	NRS.userInfoModal.trade_history = function() {
 		NRS.sendRequest("getTrades", {
 			"account": NRS.userInfoModal.user,
+			"includeAssetInfo": true,
 			"firstIndex": 0,
 			"lastIndex": 100
 		}, function(response) {

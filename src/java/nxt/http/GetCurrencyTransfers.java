@@ -42,7 +42,7 @@ public final class GetCurrencyTransfers extends APIServlet.APIRequestHandler {
         if (currencyId == 0 && accountId == 0) {
             return JSONResponses.MISSING_CURRENCY_ACCOUNT;
         }
-        boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
         int timestamp = ParameterParser.getTimestamp(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);

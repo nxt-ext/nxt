@@ -42,7 +42,7 @@ public final class GetExchangesByExchangeRequest extends APIServlet.APIRequestHa
             return MISSING_TRANSACTION;
         }
         long transactionId = Convert.parseUnsignedLong(transactionIdString);
-        boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
         JSONObject response = new JSONObject();
         JSONArray exchangesData = new JSONArray();
         try (DbIterator<Exchange> exchanges = Exchange.getExchanges(transactionId)) {
