@@ -80,6 +80,7 @@ final class PeerImpl implements Peer {
     private volatile int lastInboundRequest;
     private volatile long hallmarkBalance = -1;
     private volatile int hallmarkBalanceHeight;
+    private volatile long services;
 
     PeerImpl(String host, String announcedAddress) {
         this.host = host;
@@ -504,17 +505,24 @@ final class PeerImpl implements Peer {
             // Check for an error response
             //
             if (response != null && response.get("error") != null) {
-                Logger.logDebugMessage("Peer " + host + " version " + version + " returned error: " +
-                        response.toJSONString() + ", request was: " + JSON.toString(request) +
-                        ", disconnecting");
                 deactivate();
-                if (connection != null)
-                    connection.disconnect();
+                if (Errors.SEQUENCE_ERROR.equals(response.get("error")) && request != Peers.myPeerInfoRequest) {
+                    Logger.logDebugMessage("Sequence error, reconnecting to " + host);
+                    connect();
+                } else {
+                    Logger.logDebugMessage("Peer " + host + " version " + version + " returned error: " +
+                            response.toJSONString() + ", request was: " + JSON.toString(request) +
+                            ", disconnecting");
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
             }
         } catch (NxtException.NxtIOException e) {
             blacklist(e);
-            if (connection != null)
+            if (connection != null) {
                 connection.disconnect();
+            }
         } catch (RuntimeException|ParseException|IOException e) {
             if (!(e instanceof UnknownHostException || e instanceof SocketTimeoutException ||
                                         e instanceof SocketException || Errors.END_OF_FILE.equals(e.getMessage()))) {
@@ -526,11 +534,13 @@ final class PeerImpl implements Peer {
                 showLog = true;
             }
             deactivate();
-            if (connection != null)
+            if (connection != null) {
                 connection.disconnect();
+            }
         }
-        if (showLog)
+        if (showLog) {
             Logger.logMessage(log + "\n");
+        }
 
         return response;
     }
@@ -573,6 +583,9 @@ final class PeerImpl implements Peer {
                     setState(State.NON_CONNECTED);
                     return;
                 }
+                String servicesString = (String)response.get("services");
+                long origServices = services;
+                services = (servicesString != null ? Long.parseUnsignedLong(servicesString) : 0);
                 setApplication((String)response.get("application"));
                 lastUpdated = lastConnectAttempt;
                 setVersion((String) response.get("version"));
@@ -619,8 +632,12 @@ final class PeerImpl implements Peer {
                         return;
                     }
                 }
+                
                 if (!isOldVersion) {
                     setState(State.CONNECTED);
+                    if (services != origServices) {
+                        Peers.notifyListeners(this, Peers.Event.CHANGED_SERVICES);
+                    }
                 } else if (!isBlacklisted()) {
                     blacklist("Old version: " + version);
                 }
@@ -642,7 +659,7 @@ final class PeerImpl implements Peer {
             int announcedPort = uri.getPort() == -1 ? Peers.getDefaultPeerPort() : uri.getPort();
             if (hallmark != null && announcedPort != hallmark.getPort()) {
                 Logger.logDebugMessage("Announced port " + announcedPort + " does not match hallmark " + hallmark.getPort() + ", ignoring hallmark for " + host);
-                hallmark = null;
+                unsetHallmark();
             }
             InetAddress address = InetAddress.getByName(host);
             for (InetAddress inetAddress : InetAddress.getAllByName(uri.getHost())) {
@@ -669,7 +686,7 @@ final class PeerImpl implements Peer {
         }
 
         if (hallmarkString == null) {
-            this.hallmark = null;
+            unsetHallmark();
             return true;
         }
 
@@ -678,7 +695,7 @@ final class PeerImpl implements Peer {
             Hallmark hallmark = Hallmark.parseHallmark(hallmarkString);
             if (!hallmark.isValid()) {
                 Logger.logDebugMessage("Invalid hallmark " + hallmarkString + " for " + host);
-                this.hallmark = null;
+                unsetHallmark();
                 return false;
             }
             if (!hallmark.getHost().equals(host)) {
@@ -692,11 +709,11 @@ final class PeerImpl implements Peer {
                 }
                 if (!validHost) {
                     Logger.logDebugMessage("Hallmark host " + hallmark.getHost() + " doesn't match " + host);
-                    this.hallmark = null;
+                    unsetHallmark();
                     return false;
                 }
             }
-            this.hallmark = hallmark;
+            setHallmark(hallmark);
             long accountId = Account.getId(hallmark.getPublicKey());
             List<PeerImpl> groupedPeers = new ArrayList<>();
             int mostRecentDate = 0;
@@ -727,7 +744,7 @@ final class PeerImpl implements Peer {
         } catch (RuntimeException e) {
             Logger.logDebugMessage("Failed to analyze hallmark for peer " + host + ", " + e.toString(), e);
         }
-        this.hallmark = null;
+        unsetHallmark();
         return false;
 
     }
@@ -739,4 +756,56 @@ final class PeerImpl implements Peer {
         return hallmark.getWeight();
     }
 
+    private void unsetHallmark() {
+        removeService(Service.HALLMARK, false);
+        this.hallmark = null;
+    }
+
+    private void setHallmark(Hallmark hallmark) {
+        this.hallmark = hallmark;
+        addService(Service.HALLMARK, false);
+    }
+
+    void addService(Service service, boolean doNotify) {
+        boolean notifyListeners;
+        synchronized (this) {
+            notifyListeners = ((services & service.getCode()) == 0);
+            services |= service.getCode();
+        }
+        if (notifyListeners && doNotify) {
+            Peers.notifyListeners(this, Peers.Event.CHANGED_SERVICES);
+        }
+    }
+
+    void removeService(Service service, boolean doNotify) {
+        boolean notifyListeners;
+        synchronized (this) {
+            notifyListeners = ((services & service.getCode()) != 0);
+            services &= (~service.getCode());
+        }
+        if (notifyListeners && doNotify) {
+            Peers.notifyListeners(this, Peers.Event.CHANGED_SERVICES);
+        }
+    }
+
+    long getServices() {
+        synchronized (this) {
+            return services;
+        }
+    }
+
+    void setServices(long services) {
+        synchronized (this) {
+            this.services = services;
+        }
+    }
+
+    @Override
+    public boolean providesService(Service service) {
+        boolean isProvided;
+        synchronized (this) {
+            isProvided = ((services & service.getCode()) != 0);
+        }
+        return isProvided;
+    }
 }

@@ -152,6 +152,10 @@ final class ParameterParser {
         return values;
     }
 
+    static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        return getAccountId(req, "account", isMandatory);
+    }
+
     static long getAccountId(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
@@ -169,6 +173,32 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(incorrect(name));
         }
+    }
+
+    static long[] getAccountIds(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        String[] paramValues = req.getParameterValues("account");
+        if (paramValues == null || paramValues.length == 0) {
+            if (isMandatory) {
+                throw new ParameterException(MISSING_ACCOUNT);
+            } else {
+                return Convert.EMPTY_LONG;
+            }
+        }
+        long[] values = new long[paramValues.length];
+        try {
+            for (int i = 0; i < paramValues.length; i++) {
+                if (paramValues[i] == null || paramValues[i].isEmpty()) {
+                    continue;
+                }
+                values[i] = Convert.parseAccountId(paramValues[i]);
+                if (values[i] == 0) {
+                    throw new ParameterException(INCORRECT_ACCOUNT);
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_ACCOUNT);
+        }
+        return values;
     }
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
@@ -265,74 +295,53 @@ final class ParameterParser {
         return getInt(req, "quantity", 0, Constants.MAX_DGS_LISTING_QUANTITY, true);
     }
 
-    static EncryptedData getEncryptedData(HttpServletRequest req, Account recipientAccount) throws ParameterException {
-        String data = Convert.emptyToNull(req.getParameter("encryptedMessageData"));
-        String nonce = Convert.emptyToNull(req.getParameter("encryptedMessageNonce"));
-        if (data != null && nonce != null) {
-            try {
-                return new EncryptedData(Convert.parseHexString(data), Convert.parseHexString(nonce));
-            } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_ENCRYPTED_MESSAGE);
-            }
-        }
-        String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
-        if (plainMessage == null) {
+    static EncryptedData getEncryptedData(HttpServletRequest req, String messageType) throws ParameterException {
+        String dataString = Convert.emptyToNull(req.getParameter(messageType + "Data"));
+        String nonceString = Convert.emptyToNull(req.getParameter(messageType + "Nonce"));
+        if (dataString == null || nonceString == null) {
             return null;
         }
-        if (recipientAccount == null) {
-            throw new ParameterException(INCORRECT_RECIPIENT);
-        }
-        String secretPhrase = getSecretPhrase(req);
-        boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
-        boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
+        byte[] data;
+        byte[] nonce;
         try {
-            byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            return recipientAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
+            data = Convert.parseHexString(dataString);
         } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
+            throw new ParameterException(JSONResponses.incorrect(messageType + "Data"));
         }
+        try {
+            nonce = Convert.parseHexString(nonceString);
+        } catch (RuntimeException e) {
+            throw new ParameterException(JSONResponses.incorrect(messageType + "Nonce"));
+        }
+        return new EncryptedData(data, nonce);
     }
 
-    static EncryptedData getEncryptToSelfMessage(HttpServletRequest req) throws ParameterException {
-        String data = Convert.emptyToNull(req.getParameter("encryptToSelfMessageData"));
-        String nonce = Convert.emptyToNull(req.getParameter("encryptToSelfMessageNonce"));
-        if (data != null && nonce != null) {
-            try {
-                return new EncryptedData(Convert.parseHexString(data), Convert.parseHexString(nonce));
-            } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_ENCRYPTED_MESSAGE);
-            }
-        }
-        String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncryptToSelf"));
-        if (plainMessage == null) {
-            return null;
-        }
-        String secretPhrase = getSecretPhrase(req);
-        Account senderAccount = Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        if (senderAccount == null) {
-            throw new ParameterException(UNKNOWN_ACCOUNT);
-        }
+    static Appendix.EncryptToSelfMessage getEncryptToSelfMessage(HttpServletRequest req) throws ParameterException {
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptToSelfIsText"));
         boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncryptToSelf"));
-        try {
-            byte[] plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            return senderAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
-        } catch (RuntimeException e) {
-            throw new ParameterException(INCORRECT_PLAIN_MESSAGE);
-        }
-    }
-
-    static EncryptedData getEncryptedGoods(HttpServletRequest req) throws ParameterException {
-        String data = Convert.emptyToNull(req.getParameter("goodsData"));
-        String nonce = Convert.emptyToNull(req.getParameter("goodsNonce"));
-        if (data != null && nonce != null) {
+        byte[] plainMessageBytes = null;
+        EncryptedData encryptedData = ParameterParser.getEncryptedData(req, "encryptToSelfMessage");
+        if (encryptedData == null) {
+            String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncryptToSelf"));
+            if (plainMessage == null) {
+                return null;
+            }
             try {
-                return new EncryptedData(Convert.parseHexString(data), Convert.parseHexString(nonce));
+                plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
             } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_DGS_ENCRYPTED_GOODS);
+                throw new ParameterException(INCORRECT_MESSAGE_TO_ENCRYPT);
+            }
+            String secretPhrase = getSecretPhrase(req, false);
+            if (secretPhrase != null) {
+                byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+                encryptedData = Account.encryptTo(publicKey, plainMessageBytes, secretPhrase, compress);
             }
         }
-        return null;
+        if (encryptedData != null) {
+            return new Appendix.EncryptToSelfMessage(encryptedData, isText, compress);
+        } else {
+            return new Appendix.UnencryptedEncryptToSelfMessage(plainMessageBytes, isText, compress);
+        }
     }
 
     static DigitalGoodsStore.Purchase getPurchase(HttpServletRequest req) throws ParameterException {
@@ -343,9 +352,9 @@ final class ParameterParser {
         return purchase;
     }
 
-    static String getSecretPhrase(HttpServletRequest req) throws ParameterException {
+    static String getSecretPhrase(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        if (secretPhrase == null) {
+        if (secretPhrase == null && isMandatory) {
             throw new ParameterException(MISSING_SECRET_PHRASE);
         }
         return secretPhrase;
@@ -526,22 +535,49 @@ final class ParameterParser {
         return null;
     }
 
-    static Appendix getEncryptedMessage(HttpServletRequest req, boolean prunable) throws ParameterException {
-        return getEncryptedMessage(req, null, prunable);
-    }
-
     static Appendix getEncryptedMessage(HttpServletRequest req, Account recipient, boolean prunable) throws ParameterException {
-        EncryptedData encryptedData = ParameterParser.getEncryptedData(req, recipient);
-        if (encryptedData != null) {
-            boolean encryptedDataIsText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
-            boolean isCompressed = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
-            if (prunable) {
-                return new Appendix.PrunableEncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
-            } else {
-                return new Appendix.EncryptedMessage(encryptedData, encryptedDataIsText, isCompressed);
+        boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+        boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
+        byte[] plainMessageBytes = null;
+        byte[] recipientPublicKey = null;
+        EncryptedData encryptedData = ParameterParser.getEncryptedData(req, "encryptedMessage");
+        if (encryptedData == null) {
+            String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
+            if (plainMessage == null) {
+                return null;
+            }
+            if (recipient != null) {
+                recipientPublicKey = recipient.getPublicKey();
+            }
+            if (recipientPublicKey == null) {
+                recipientPublicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter("recipientPublicKey")));
+            }
+            if (recipientPublicKey == null) {
+                throw new ParameterException(MISSING_RECIPIENT_PUBLIC_KEY);
+            }
+            try {
+                plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
+            } catch (RuntimeException e) {
+                throw new ParameterException(INCORRECT_MESSAGE_TO_ENCRYPT);
+            }
+            String secretPhrase = getSecretPhrase(req, false);
+            if (secretPhrase != null) {
+                encryptedData = Account.encryptTo(recipientPublicKey, plainMessageBytes, secretPhrase, compress);
             }
         }
-        return null;
+        if (encryptedData != null) {
+            if (prunable) {
+                return new Appendix.PrunableEncryptedMessage(encryptedData, isText, compress);
+            } else {
+                return new Appendix.EncryptedMessage(encryptedData, isText, compress);
+            }
+        } else {
+            if (prunable) {
+                return new Appendix.UnencryptedPrunableEncryptedMessage(plainMessageBytes, isText, compress, recipientPublicKey);
+            } else {
+                return new Appendix.UnencryptedEncryptedMessage(plainMessageBytes, isText, compress, recipientPublicKey);
+            }
+        }
     }
 
     static Attachment.TaggedDataUpload getTaggedData(HttpServletRequest req) throws ParameterException, NxtException.NotValidException {

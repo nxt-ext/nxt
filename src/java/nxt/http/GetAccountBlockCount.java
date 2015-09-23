@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.Nxt;
 import nxt.NxtException;
 import org.json.simple.JSONObject;
@@ -35,9 +34,9 @@ public final class GetAccountBlockCount extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         JSONObject response = new JSONObject();
-        response.put("numberOfBlocks", Nxt.getBlockchain().getBlockCount(account));
+        response.put("numberOfBlocks", Nxt.getBlockchain().getBlockCount(accountId));
 
         return response;
     }

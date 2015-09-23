@@ -122,8 +122,9 @@ public final class PrunableMessage {
     private final boolean isCompressed;
     private final int transactionTimestamp;
     private final int blockTimestamp;
+    private final int height;
 
-    private PrunableMessage(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
+    private PrunableMessage(Transaction transaction, Appendix.PrunablePlainMessage appendix, int blockTimestamp, int height) {
         this.id = transaction.getId();
         this.dbKey = prunableMessageKeyFactory.newKey(this.id);
         this.senderId = transaction.getSenderId();
@@ -132,11 +133,12 @@ public final class PrunableMessage {
         this.encryptedData = null;
         this.isText = appendix.isText();
         this.isCompressed = false;
-        this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+        this.blockTimestamp = blockTimestamp;
+        this.height = height;
         this.transactionTimestamp = transaction.getTimestamp();
     }
 
-    private PrunableMessage(Transaction transaction, Appendix.PrunableEncryptedMessage appendix) {
+    private PrunableMessage(Transaction transaction, Appendix.PrunableEncryptedMessage appendix, int blockTimestamp, int height) {
         this.id = transaction.getId();
         this.dbKey = prunableMessageKeyFactory.newKey(this.id);
         this.senderId = transaction.getSenderId();
@@ -145,7 +147,8 @@ public final class PrunableMessage {
         this.encryptedData = appendix.getEncryptedData();
         this.isText = appendix.isText();
         this.isCompressed = appendix.isCompressed();
-        this.blockTimestamp = Nxt.getBlockchain().getLastBlockTimestamp();
+        this.blockTimestamp = blockTimestamp;
+        this.height = height;
         this.transactionTimestamp = transaction.getTimestamp();
     }
 
@@ -165,11 +168,13 @@ public final class PrunableMessage {
         this.isCompressed = rs.getBoolean("is_compressed");
         this.blockTimestamp = rs.getInt("block_timestamp");
         this.transactionTimestamp = rs.getInt("transaction_timestamp");
+        this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO prunable_message (id, sender_id, recipient_id, "
-                + "message, is_encrypted, is_text, is_compressed, block_timestamp, transaction_timestamp, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "message, is_encrypted, is_text, is_compressed, block_timestamp, transaction_timestamp, height) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.senderId);
@@ -185,7 +190,7 @@ public final class PrunableMessage {
             pstmt.setBoolean(++i, isCompressed);
             pstmt.setInt(++i, blockTimestamp);
             pstmt.setInt(++i, transactionTimestamp);
-            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            pstmt.setInt(++i, height);
             pstmt.executeUpdate();
         }
     }
@@ -226,26 +231,51 @@ public final class PrunableMessage {
         return blockTimestamp;
     }
 
+    public int getHeight() {
+        return height;
+    }
+
     @Override
     public String toString() {
         return message != null ? (isText ? Convert.toString(message) : Convert.toHexString(message)) : encryptedData.toString();
     }
 
     static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME
-                && prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null
-                && appendix.getMessage() != null) {
-            PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix);
+        add(transaction, appendix, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
+    }
+
+    static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix, int blockTimestamp, int height) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME &&
+                prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null &&
+                appendix.getMessage() != null) {
+            PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix, blockTimestamp, height);
             prunableMessageTable.insert(prunableMessage);
         }
     }
 
     static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME
-                && prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null
-                && appendix.getEncryptedData() != null) {
-            PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix);
+        add(transaction, appendix, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
+    }
+
+    static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix, int blockTimestamp, int height) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME &&
+                prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null &&
+                appendix.getEncryptedData() != null) {
+            PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix, blockTimestamp, height);
             prunableMessageTable.insert(prunableMessage);
         }
     }
+
+    static boolean isPruned(long transactionId) {
+        try (Connection con = Db.db.getConnection();
+                PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM prunable_message WHERE id = ?")) {
+            pstmt.setLong(1, transactionId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return !rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
 }

@@ -16,13 +16,10 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Currency;
 import nxt.CurrencyFounder;
 import nxt.NxtException;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -39,9 +36,9 @@ public final class GetCurrencyFounders extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        String currencyId = Convert.emptyToNull(req.getParameter("currency"));
-        String accountId = Convert.emptyToNull(req.getParameter("account"));
-        if (currencyId == null && accountId == null) {
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
+        long accountId = ParameterParser.getAccountId(req, false);
+        if (currencyId == 0 && accountId == 0) {
             return JSONResponses.MISSING_CURRENCY_ACCOUNT;
         }
         int firstIndex = ParameterParser.getFirstIndex(req);
@@ -51,8 +48,8 @@ public final class GetCurrencyFounders extends APIServlet.APIRequestHandler {
         JSONArray foundersJSONArray = new JSONArray();
         response.put("founders", foundersJSONArray);
 
-        if (currencyId != null && accountId != null) {
-            CurrencyFounder currencyFounder = CurrencyFounder.getFounder(ParameterParser.getCurrency(req).getId(), ParameterParser.getAccount(req).getId());
+        if (currencyId != 0 && accountId != 0) {
+            CurrencyFounder currencyFounder = CurrencyFounder.getFounder(currencyId, accountId);
             if (currencyFounder != null) {
                 foundersJSONArray.add(JSONData.currencyFounder(currencyFounder));
             }
@@ -61,12 +58,10 @@ public final class GetCurrencyFounders extends APIServlet.APIRequestHandler {
 
         DbIterator<CurrencyFounder> founders = null;
         try {
-            if (accountId == null) {
-                Currency currency = ParameterParser.getCurrency(req);
-                founders = CurrencyFounder.getCurrencyFounders(currency.getId(), firstIndex, lastIndex);
-            } else if (currencyId == null) {
-                Account account = ParameterParser.getAccount(req);
-                founders = CurrencyFounder.getFounderCurrencies(account.getId(), firstIndex, lastIndex);
+            if (accountId == 0) {
+                founders = CurrencyFounder.getCurrencyFounders(currencyId, firstIndex, lastIndex);
+            } else if (currencyId == 0) {
+                founders = CurrencyFounder.getFounderCurrencies(accountId, firstIndex, lastIndex);
             }
             for (CurrencyFounder founder : founders) {
                 foundersJSONArray.add(JSONData.currencyFounder(founder));

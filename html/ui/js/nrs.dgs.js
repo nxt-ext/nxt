@@ -178,6 +178,7 @@ var NRS = (function(NRS, $) {
 		$(".dgs_search_pageheader_addon_seller").show();
 		NRS.sendRequest("getDGSGoods+", {
 			"seller": seller,
+			"includeCounts": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -201,6 +202,7 @@ var NRS = (function(NRS, $) {
 		$(".dgs_search_pageheader_addon_fulltext").show();
 		NRS.sendRequest("searchDGSGoods+", {
 			"query": query,
+            "includeCounts": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -224,6 +226,7 @@ var NRS = (function(NRS, $) {
 		$(".dgs_search_pageheader_addon_tag").show();
 		NRS.sendRequest("searchDGSGoods+", {
 			"tag": tag,
+            "includeCounts": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -661,12 +664,16 @@ var NRS = (function(NRS, $) {
 		}
 
 		try {
-			var encrypted = NRS.encryptNote(data.data, {
-				"account": data.buyer
-			}, data.secretPhrase);
+			if (data.doNotSign) {
+                data.goodsToEncrypt = data.data;
+            } else {
+                var encrypted = NRS.encryptNote(data.data, {
+                    "account": data.buyer
+                }, data.secretPhrase);
 
-			data.goodsData = encrypted.message;
-			data.goodsNonce = encrypted.nonce;
+                data.goodsData = encrypted.message;
+                data.goodsNonce = encrypted.nonce;
+            }
 			data.goodsIsText = "true";
 		} catch (err) {
 			return {

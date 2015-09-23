@@ -67,6 +67,8 @@ import java.util.List;
  * <li>Block.BLOCK_GENERATED</li>
  * <li>Block.BLOCK_POPPED</li>
  * <li>Block.BLOCK_PUSHED</li>
+ * <li>Ledger.ADD_ENTRY.account - The account suffix will be Reed-Solomon identifier
+ * of the account associated with the ledger entry.</li>
  * <li>Peer.ADD_INBOUND</li>
  * <li>Peer.ADDED_ACTIVE_PEER</li>
  * <li>Peer.BLACKLIST</li>
@@ -171,6 +173,16 @@ public class EventWait extends APIServlet.APIRequestHandler {
     }
 
     /**
+     * No required block parameters
+     *
+     * @return                      FALSE to disable the required block parameters
+     */
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
+    /**
      * Format the EventWait response
      *
      * @param   events              Event list
@@ -180,7 +192,10 @@ public class EventWait extends APIServlet.APIRequestHandler {
         JSONArray eventsJSON = new JSONArray();
         events.forEach(event -> {
             JSONArray idsJSON = new JSONArray();
-            idsJSON.addAll(event.getIdList());
+            if (event.isList())
+                idsJSON.addAll(event.getIdList());
+            else
+                idsJSON.add(event.getId());
             JSONObject eventJSON = new JSONObject();
             eventJSON.put("name", event.getName());
             eventJSON.put("ids", idsJSON);

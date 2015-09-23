@@ -37,6 +37,10 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
     }
 
     public final boolean delete(T t) {
+        return delete(t, false);
+    }
+
+    public final boolean delete(T t, boolean keepInCache) {
         if (t == null) {
             return false;
         }
@@ -70,7 +74,9 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         } finally {
-            db.getCache(table).remove(dbKey);
+            if (!keepInCache) {
+                db.getCache(table).remove(dbKey);
+            }
         }
     }
 
@@ -115,7 +121,6 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        db.getCache(table).clear();
     }
 
     static void trim(final TransactionalDb db, final String table, final int height, final DbKey.Factory dbKeyFactory) {

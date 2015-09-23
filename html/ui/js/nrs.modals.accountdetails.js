@@ -19,25 +19,21 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	$("#account_details_modal").on("show.bs.modal", function(e) {
-		$("#account_details_modal_qr_code").empty().qrcode({
-			"text": NRS.accountRS,
-			"width": 128,
-			"height": 128
-		});
-
+    var accountDetailsModal = $("#account_details_modal");
+    accountDetailsModal.on("show.bs.modal", function() {
+        NRS.sendRequestQRCode("#account_details_modal_qr_code", NRS.accountRS, 125, 125);
 		$("#account_details_modal_balance").show();
 
-		if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode != 5) {
+        var accountBalanceWarning = $("#account_balance_warning");
+        if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode != 5) {
 			$("#account_balance_table").hide();
-			//todo
-			$("#account_balance_warning").html(String(NRS.accountInfo.errorDescription).escapeHTML()).show();
+			accountBalanceWarning.html(String(NRS.accountInfo.errorDescription).escapeHTML()).show();
 		} else {
-			$("#account_balance_warning").hide();
-
-			if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
+			accountBalanceWarning.hide();
+            var accountBalancePublicKey = $("#account_balance_public_key");
+            if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
 				$("#account_balance_balance, #account_balance_unconfirmed_balance, #account_balance_effective_balance, #account_balance_guaranteed_balance, #account_balance_forged_balance").html("0 NXT");
-				$("#account_balance_public_key").html(String(NRS.publicKey).escapeHTML());
+				accountBalancePublicKey.html(String(NRS.publicKey).escapeHTML());
 				$("#account_balance_account_rs").html(String(NRS.accountRS).escapeHTML());
 				$("#account_balance_account").html(String(NRS.account).escapeHTML());
 			} else {
@@ -47,20 +43,20 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_balance_guaranteed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.guaranteedBalanceNQT)) + " NXT");
 				$("#account_balance_forged_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.forgedBalanceNQT)) + " NXT");
 
-				$("#account_balance_public_key").html(String(NRS.accountInfo.publicKey).escapeHTML());
+				accountBalancePublicKey.html(String(NRS.accountInfo.publicKey).escapeHTML());
 				$("#account_balance_account_rs").html(String(NRS.accountInfo.accountRS).escapeHTML());
 				$("#account_balance_account").html(String(NRS.account).escapeHTML());
 
 				if (!NRS.accountInfo.publicKey) {
-					$("#account_balance_public_key").html("/");
+					accountBalancePublicKey.html("/");
                     var warning = NRS.publicKey != 'undefined' ? $.t("public_key_not_announced_warning", { "public_key": NRS.publicKey }) : $.t("no_public_key_warning");
-					$("#account_balance_warning").html(warning + " " + $.t("public_key_actions")).show();
+					accountBalanceWarning.html(warning + " " + $.t("public_key_actions")).show();
 				}
 			}
 		}
 	});
 
-	$("#account_details_modal ul.nav li").click(function(e) {
+	accountDetailsModal.find("ul.nav li").click(function(e) {
 		e.preventDefault();
 
 		var tab = $(this).data("tab");
@@ -75,7 +71,7 @@ var NRS = (function(NRS, $, undefined) {
 		content.show();
 	});
 
-	$("#account_details_modal").on("hidden.bs.modal", function(e) {
+	accountDetailsModal.on("hidden.bs.modal", function() {
 		$(this).find(".account_details_modal_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#account_details_balance_nav").addClass("active");

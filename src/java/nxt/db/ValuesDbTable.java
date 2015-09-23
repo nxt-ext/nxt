@@ -43,7 +43,7 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
     protected abstract void save(Connection con, T t, V v) throws SQLException;
 
     protected void clearCache() {
-        db.getCache(table).clear();
+        db.clearCache(table);
     }
 
     public final List<V> get(DbKey dbKey) {
@@ -110,7 +110,6 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
             VersionedEntityDbTable.rollback(db, table, height, dbKeyFactory);
         } else {
             super.rollback(height);
-            db.getCache(table).clear();
         }
     }
 
@@ -121,12 +120,6 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
         } else {
             super.trim(height);
         }
-    }
-
-    @Override
-    public final void truncate() {
-        super.truncate();
-        db.getCache(table).clear();
     }
 
 }

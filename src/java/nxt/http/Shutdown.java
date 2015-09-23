@@ -60,4 +60,9 @@ public final class Shutdown extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

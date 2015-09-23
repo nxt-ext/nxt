@@ -388,6 +388,7 @@ var NRS = (function (NRS, $, undefined) {
             NRS.sendRequest("getExchanges+", {
                 "currency": currencyId,
                 "account": NRS.accountRS,
+                "includeCurrencyInfo": true,
                 "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
                 "lastIndex": NRS.pageNumber * NRS.itemsPerPage
             }, function (response) {
@@ -424,6 +425,7 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             NRS.sendRequest("getExchanges+", {
                 "currency": currencyId,
+                "includeCurrencyInfo": true,
                 "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
                 "lastIndex": NRS.pageNumber * NRS.itemsPerPage
             }, function (response) {
@@ -889,6 +891,7 @@ var NRS = (function (NRS, $, undefined) {
     NRS.pages.exchange_history = function () {
         NRS.sendRequest("getExchanges+", {
             "account": NRS.accountRS,
+            "includeCurrencyInfo": true,
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         }, function (response) {

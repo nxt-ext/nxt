@@ -312,6 +312,14 @@ var NRS = (function(NRS, $, undefined) {
             }
         });
     };
+
+    NRS.isOfType = function(transaction, type_str) {
+        if (!NRS.subtype[type_str]) {
+            $.growl($.t("unsupported_transaction_type"));
+            return;
+        }
+        return transaction.type == NRS.subtype[type_str].type && transaction.subtype == NRS.subtype[type_str].subtype;
+    };
     
     return NRS;
 }(NRS || {}, jQuery));

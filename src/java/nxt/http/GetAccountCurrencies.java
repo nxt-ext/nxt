@@ -17,10 +17,8 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Currency;
 import nxt.NxtException;
 import nxt.db.DbIterator;
-import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -39,13 +37,13 @@ public final class GetAccountCurrencies extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         int height = ParameterParser.getHeight(req);
-        String currencyValue = Convert.emptyToNull(req.getParameter("currency"));
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
 
-        if (currencyValue == null) {
+        if (currencyId == 0) {
             JSONObject response = new JSONObject();
-            try (DbIterator<Account.AccountCurrency> accountCurrencies = account.getCurrencies(height, 0, -1)) {
+            try (DbIterator<Account.AccountCurrency> accountCurrencies = Account.getAccountCurrencies(accountId, height, 0, -1)) {
                 JSONArray currencyJSON = new JSONArray();
                 while (accountCurrencies.hasNext()) {
                     currencyJSON.add(JSONData.accountCurrency(accountCurrencies.next(), false, true));
@@ -54,8 +52,7 @@ public final class GetAccountCurrencies extends APIServlet.APIRequestHandler {
                 return response;
             }
         } else {
-            Currency currency = ParameterParser.getCurrency(req);
-            Account.AccountCurrency accountCurrency = account.getCurrency(currency.getId(), height);
+            Account.AccountCurrency accountCurrency = Account.getAccountCurrency(accountId, currencyId, height);
             if (accountCurrency != null) {
                 return JSONData.accountCurrency(accountCurrency, false, true);
             }

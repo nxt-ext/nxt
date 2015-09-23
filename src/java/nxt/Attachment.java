@@ -74,8 +74,8 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final boolean isPhasable() {
-            return getTransactionType().isPhasable();
+        public final boolean isPhasable() {
+            return !(this instanceof Prunable) && getTransactionType().isPhasable();
         }
 
     }
@@ -1005,6 +1005,60 @@ public interface Attachment extends Appendix {
 
     }
 
+    final class ColoredCoinsAssetDelete extends AbstractAttachment {
+
+        private final long assetId;
+        private final long quantityQNT;
+
+        ColoredCoinsAssetDelete(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.assetId = buffer.getLong();
+            this.quantityQNT = buffer.getLong();
+        }
+
+        ColoredCoinsAssetDelete(JSONObject attachmentData) {
+            super(attachmentData);
+            this.assetId = Convert.parseUnsignedLong((String)attachmentData.get("asset"));
+            this.quantityQNT = Convert.parseLong(attachmentData.get("quantityQNT"));
+        }
+
+        public ColoredCoinsAssetDelete(long assetId, long quantityQNT) {
+            this.assetId = assetId;
+            this.quantityQNT = quantityQNT;
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(assetId);
+            buffer.putLong(quantityQNT);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("asset", Long.toUnsignedString(assetId));
+            attachment.put("quantityQNT", quantityQNT);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.ColoredCoins.ASSET_DELETE;
+        }
+
+        public long getAssetId() {
+            return assetId;
+        }
+
+        public long getQuantityQNT() {
+            return quantityQNT;
+        }
+
+    }
+
     abstract class ColoredCoinsOrderPlacement extends AbstractAttachment {
 
         private final long assetId;
@@ -1538,10 +1592,10 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class DigitalGoodsDelivery extends AbstractAttachment {
+    class DigitalGoodsDelivery extends AbstractAttachment {
 
         private final long purchaseId;
-        private final EncryptedData goods;
+        private EncryptedData goods;
         private final long discountNQT;
         private final boolean goodsIsText;
 
@@ -1597,18 +1651,84 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public TransactionType getTransactionType() {
+        public final TransactionType getTransactionType() {
             return TransactionType.DigitalGoods.DELIVERY;
         }
 
-        public long getPurchaseId() { return purchaseId; }
+        public final long getPurchaseId() {
+            return purchaseId;
+        }
 
-        public EncryptedData getGoods() { return goods; }
+        public final EncryptedData getGoods() {
+            return goods;
+        }
 
-        public long getDiscountNQT() { return discountNQT; }
+        final void setGoods(EncryptedData goods) {
+            this.goods = goods;
+        }
 
-        public boolean goodsIsText() {
+        public final long getDiscountNQT() {
+            return discountNQT;
+        }
+
+        public final boolean goodsIsText() {
             return goodsIsText;
+        }
+
+    }
+
+    final class UnencryptedDigitalGoodsDelivery extends DigitalGoodsDelivery implements Encryptable {
+
+        private final byte[] goodsToEncrypt;
+        private final byte[] recipientPublicKey;
+
+        UnencryptedDigitalGoodsDelivery(JSONObject attachmentData) {
+            super(attachmentData);
+            setGoods(null);
+            String goodsToEncryptString = (String)attachmentData.get("goodsToEncrypt");
+            this.goodsToEncrypt = goodsIsText() ? Convert.toBytes(goodsToEncryptString)
+                    : Convert.parseHexString(goodsToEncryptString);
+            this.recipientPublicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
+        }
+
+        public UnencryptedDigitalGoodsDelivery(long purchaseId, byte[] goodsToEncrypt, boolean goodsIsText, long discountNQT, byte[] recipientPublicKey) {
+            super(purchaseId, null, goodsIsText, discountNQT);
+            this.goodsToEncrypt = goodsToEncrypt;
+            this.recipientPublicKey = recipientPublicKey;
+        }
+
+        @Override
+        int getMySize() {
+            if (getGoods() == null) {
+                return 8 + 4 + Constants.MAX_DGS_GOODS_LENGTH + 32 + 8;
+            }
+            return super.getMySize();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            if (getGoods() == null) {
+                throw new NxtException.NotYetEncryptedException("Goods not yet encrypted");
+            }
+            super.putMyBytes(buffer);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            if (getGoods() == null) {
+                attachment.put("goodsToEncrypt", goodsIsText() ? Convert.toString(goodsToEncrypt) : Convert.toHexString(goodsToEncrypt));
+                attachment.put("recipientPublicKey", Convert.toHexString(recipientPublicKey));
+                attachment.put("purchase", Long.toUnsignedString(getPurchaseId()));
+                attachment.put("discountNQT", getDiscountNQT());
+                attachment.put("goodsIsText", goodsIsText());
+            } else {
+                super.putMyJSON(attachment);
+            }
+        }
+
+        @Override
+        public void encrypt(String secretPhrase) {
+            setGoods(EncryptedData.encrypt(Convert.compress(goodsToEncrypt), Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
         }
 
     }
@@ -2609,6 +2729,11 @@ public interface Attachment extends Appendix {
             }
         }
 
+        @Override
+        public boolean hasPrunableData() {
+            return (taggedData != null || data != null);
+        }
+
         abstract long getTaggedDataId(Transaction transaction);
 
     }
@@ -2681,6 +2806,11 @@ public interface Attachment extends Appendix {
         @Override
         long getTaggedDataId(Transaction transaction) {
             return transaction.getId();
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            TaggedData.restore(transaction, this, blockTimestamp, height);
         }
 
     }
@@ -2761,6 +2891,10 @@ public interface Attachment extends Appendix {
 
         boolean jsonIsPruned() {
             return jsonIsPruned;
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
         }
 
     }

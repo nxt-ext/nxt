@@ -38,14 +38,14 @@ public class ApproveTransaction extends CreateTransaction {
 
     private ApproveTransaction() {
         super(new APITag[]{APITag.CREATE_TRANSACTION, APITag.PHASING}, "transactionFullHash", "transactionFullHash", "transactionFullHash",
-                "revealedSecret", "revealedSecretText");
+                "revealedSecret", "revealedSecretIsText");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         String[] phasedTransactionValues = req.getParameterValues("transactionFullHash");
 
-        if (phasedTransactionValues.length == 0) {
+        if (phasedTransactionValues == null || phasedTransactionValues.length == 0) {
             return MISSING_TRANSACTION_FULL_HASH;
         }
 
@@ -63,8 +63,12 @@ public class ApproveTransaction extends CreateTransaction {
             phasedTransactionFullHashes.add(hash);
         }
 
-        byte[] secret = Convert.parseHexString(Convert.emptyToNull(req.getParameter("revealedSecret")));
-        if (secret == null) {
+        byte[] secret;
+        String secretValue = Convert.emptyToNull(req.getParameter("revealedSecret"));
+        if (secretValue != null) {
+            boolean isText = "true".equalsIgnoreCase(req.getParameter("revealedSecretIsText"));
+            secret = isText ? Convert.toBytes(secretValue) : Convert.parseHexString(secretValue);
+        } else {
             String secretText = Convert.emptyToNull(req.getParameter("revealedSecretText"));
             if (secretText != null) {
                 secret = Convert.toBytes(secretText);

@@ -63,4 +63,9 @@ public final class LongConvert extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

@@ -931,12 +931,58 @@ class NxtDbVersion extends DbVersion {
             case 392:
                 apply("CREATE INDEX IF NOT EXISTS exchange_request_height_idx ON exchange_request (height)");
             case 393:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 394:
+                apply("CREATE TABLE IF NOT EXISTS account_ledger (db_id IDENTITY, account_id BIGINT NOT NULL, "
+                        + "event_type TINYINT NOT NULL, event_id BIGINT NOT NULL, holding_type TINYINT NOT NULL, "
+                        + "holding_id BIGINT, change BIGINT NOT NULL, balance BIGINT NOT NULL, "
+                        + "block_id BIGINT NOT NULL, height INT NOT NULL, timestamp INT NOT NULL)");
+            case 395:
+                apply("CREATE INDEX IF NOT EXISTS account_ledger_id_idx ON account_ledger(account_id, db_id)");
+            case 396:
+                apply("CREATE INDEX IF NOT EXISTS account_ledger_height_idx ON account_ledger(height)");
+            case 397:
+                apply("ALTER TABLE peer ADD COLUMN IF NOT EXISTS services BIGINT");
+            case 398:
+                apply("TRUNCATE TABLE asset");
+            case 399:
+                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS latest BOOLEAN NOT NULL DEFAULT TRUE");
+            case 400:
+                apply("DROP INDEX IF EXISTS asset_id_idx");
+            case 401:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset(id, height)");
+            case 402:
+                apply("ALTER TABLE asset ADD COLUMN IF NOT EXISTS initial_quantity BIGINT NOT NULL");
+            case 403:
+                apply("CREATE TABLE IF NOT EXISTS tagged_data_extend (db_id IDENTITY, id BIGINT NOT NULL, "
+                        + "extend_id BIGINT NOT NULL, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 404:
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_extend_id_height_idx ON tagged_data_extend(id, height DESC)");
+            case 405:
+                apply("CREATE INDEX IF NOT EXISTS tagged_data_extend_height_id_idx ON tagged_data_extend(height, id)");
+            case 406:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS has_prunable_attachment BOOLEAN NOT NULL DEFAULT FALSE");
+            case 407:
+                apply("UPDATE transaction SET has_prunable_attachment = TRUE WHERE type = 6");
+            case 408:
+                apply("TRUNCATE TABLE account");
+            case 409:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS creation_height");
+            case 410:
+                apply("ALTER TABLE account DROP COLUMN IF EXISTS key_height");
+            case 411:
+                apply("DROP INDEX IF EXISTS public_key_account_id_idx");
+            case 412:
+                apply("ALTER TABLE public_key ADD COLUMN IF NOT EXISTS latest BOOLEAN NOT NULL DEFAULT TRUE");
+            case 413:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_height_idx ON public_key (account_id, height DESC)");
+            case 414:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 415:
                 nxt.db.FullTextTrigger.init();
                 apply(null);
-            case 395:
+            case 416:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");

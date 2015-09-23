@@ -27,6 +27,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,12 +155,12 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public DbIterator<BlockImpl> getBlocks(Account account, int timestamp) {
-        return getBlocks(account, timestamp, 0, -1);
+    public DbIterator<BlockImpl> getBlocks(long accountId, int timestamp) {
+        return getBlocks(accountId, timestamp, 0, -1);
     }
 
     @Override
-    public DbIterator<BlockImpl> getBlocks(Account account, int timestamp, int from, int to) {
+    public DbIterator<BlockImpl> getBlocks(long accountId, int timestamp, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
@@ -166,7 +168,7 @@ final class BlockchainImpl implements Blockchain {
                     + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
             if (timestamp > 0) {
                 pstmt.setInt(++i, timestamp);
             }
@@ -179,10 +181,10 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public int getBlockCount(Account account) {
+    public int getBlockCount(long accountId) {
         try (Connection con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block WHERE generator_id = ?")) {
-            pstmt.setLong(1, account.getId());
+            pstmt.setLong(1, accountId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 rs.next();
                 return rs.getInt(1);
@@ -199,9 +201,26 @@ final class BlockchainImpl implements Blockchain {
 
     @Override
     public List<Long> getBlockIdsAfter(long blockId, int limit) {
+        // Check the block cache
+        List<Long> result = new ArrayList<>(BlockDb.BLOCK_CACHE_SIZE);
+        synchronized(BlockDb.blockCache) {
+            BlockImpl block = BlockDb.blockCache.get(blockId);
+            if (block != null) {
+                Collection<BlockImpl> cacheMap = BlockDb.heightMap.tailMap(block.getHeight() + 1).values();
+                for (BlockImpl cacheBlock : cacheMap) {
+                    if (result.size() >= limit) {
+                        break;
+                    }
+                    result.add(cacheBlock.getId());
+                }
+                return result;
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
-            List<Long> result = new ArrayList<>();
+                PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block "
+                            + "WHERE db_id > (SELECT db_id FROM block WHERE id = ?) "
+                            + "ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -209,17 +228,37 @@ final class BlockchainImpl implements Blockchain {
                     result.add(rs.getLong("id"));
                 }
             }
-            return result;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        return result;
     }
 
     @Override
     public List<BlockImpl> getBlocksAfter(long blockId, int limit) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        }
+        // Check the block cache
+        List<BlockImpl> result = new ArrayList<>(BlockDb.BLOCK_CACHE_SIZE);
+        synchronized(BlockDb.blockCache) {
+            BlockImpl block = BlockDb.blockCache.get(blockId);
+            if (block != null) {
+                Collection<BlockImpl> cacheMap = BlockDb.heightMap.tailMap(block.getHeight() + 1).values();
+                for (BlockImpl cacheBlock : cacheMap) {
+                    if (result.size() >= limit) {
+                        break;
+                    }
+                    result.add(cacheBlock);
+                }
+                return result;
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
-            List<BlockImpl> result = new ArrayList<>();
+                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block "
+                        + "WHERE db_id > (SELECT db_id FROM block WHERE id = ?) "
+                        + "ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -227,34 +266,54 @@ final class BlockchainImpl implements Blockchain {
                     result.add(BlockDb.loadBlock(con, rs, true));
                 }
             }
-            return result;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        return result;
     }
 
     @Override
     public List<BlockImpl> getBlocksAfter(long blockId, List<Long> blockList) {
-        List<BlockImpl> result = new ArrayList<>();
-        if (blockList.isEmpty())
-            return result;
+        if (blockList.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // Check the block cache
+        List<BlockImpl> result = new ArrayList<>(BlockDb.BLOCK_CACHE_SIZE);
+        synchronized(BlockDb.blockCache) {
+            BlockImpl block = BlockDb.blockCache.get(blockId);
+            if (block != null) {
+                Collection<BlockImpl> cacheMap = BlockDb.heightMap.tailMap(block.getHeight() + 1).values();
+                int index = 0;
+                for (BlockImpl cacheBlock : cacheMap) {
+                    if (result.size() >= blockList.size() || cacheBlock.getId() != blockList.get(index++)) {
+                        break;
+                    }
+                    result.add(cacheBlock);
+                }
+                return result;
+            }
+        }
+        // Search the database
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block WHERE db_id > (SELECT db_id FROM block WHERE id = ?) ORDER BY db_id ASC LIMIT ?")) {
+                PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block "
+                        + "WHERE db_id > (SELECT db_id FROM block WHERE id = ?) "
+                        + "ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, blockList.size());
             try (ResultSet rs = pstmt.executeQuery()) {
                 int index = 0;
                 while (rs.next()) {
                     BlockImpl block = BlockDb.loadBlock(con, rs, true);
-                    if (block.getId() != blockList.get(index++))
+                    if (block.getId() != blockList.get(index++)) {
                         break;
+                    }
                     result.add(block);
                 }
             }
-            return result;
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+        return result;
     }
 
     @Override
@@ -326,14 +385,15 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp) {
-        return getTransactions(account, 0, type, subtype, blockTimestamp, false, false, false, 0, -1);
+    public DbIterator<TransactionImpl> getTransactions(long accountId, byte type, byte subtype, int blockTimestamp,
+                                                       boolean includeExpiredPrunable) {
+        return getTransactions(accountId, 0, type, subtype, blockTimestamp, false, false, false, 0, -1, includeExpiredPrunable);
     }
 
     @Override
-    public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
+    public DbIterator<TransactionImpl> getTransactions(long accountId, int numberOfConfirmations, byte type, byte subtype,
                                                        int blockTimestamp, boolean withMessage, boolean phasedOnly, boolean nonPhasedOnly,
-                                                       int from, int to) {
+                                                       int from, int to, boolean includeExpiredPrunable) {
         if (phasedOnly && nonPhasedOnly) {
             throw new IllegalArgumentException("At least one of phasedOnly or nonPhasedOnly must be false");
         }
@@ -397,8 +457,8 @@ final class BlockchainImpl implements Blockchain {
             PreparedStatement pstmt;
             int i = 0;
             pstmt = con.prepareStatement(buf.toString());
-            pstmt.setLong(++i, account.getId());
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
             if (blockTimestamp > 0) {
                 pstmt.setInt(++i, blockTimestamp);
             }
@@ -411,11 +471,13 @@ final class BlockchainImpl implements Blockchain {
             if (height < Integer.MAX_VALUE) {
                 pstmt.setInt(++i, height);
             }
-            int prunableExpiration = Constants.INCLUDE_EXPIRED_PRUNABLE ? 0 : Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME;
+            int prunableExpiration = Math.max(0, Constants.INCLUDE_EXPIRED_PRUNABLE && includeExpiredPrunable ?
+                                        Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME :
+                                        Nxt.getEpochTime() - Constants.MIN_PRUNABLE_LIFETIME);
             if (withMessage) {
                 pstmt.setInt(++i, prunableExpiration);
             }
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
             if (blockTimestamp > 0) {
                 pstmt.setInt(++i, blockTimestamp);
             }

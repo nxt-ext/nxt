@@ -16,6 +16,9 @@
 
 package nxt.tools;
 
+import nxt.Genesis;
+import nxt.util.Convert;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -94,6 +97,14 @@ public final class VerifyTraceFile {
                 if ("asset issuance".equals(event)) {
                     String assetId = valueMap.get("asset");
                     issuedAssetQuantities.put(assetId, Long.parseLong(valueMap.get("asset quantity")));
+                }
+                if ("asset transfer".equals(event)) {
+                    if (Genesis.CREATOR_ID == Convert.parseUnsignedLong(accountId)) {
+                        String assetId = valueMap.get("asset");
+                        long deletedQuantity = Long.parseLong(valueMap.get("asset quantity"));
+                        long currentQuantity = issuedAssetQuantities.get(assetId);
+                        issuedAssetQuantities.put(assetId, currentQuantity - deletedQuantity);
+                    }
                 }
                 Map<String,Map<String,Long>> accountCurrencyMap = accountCurrencyTotals.get(accountId);
                 if (accountCurrencyMap == null) {
@@ -205,7 +216,7 @@ public final class VerifyTraceFile {
                     }
                     System.out.println("total confirmed asset quantity change: " + totalAssetDelta);
                     long assetBalance = nullToZero(assetValues.get("asset balance"));
-                    if (assetBalance != totalAssetDelta) {
+                    if (assetBalance != totalAssetDelta && (Genesis.CREATOR_ID != Convert.parseUnsignedLong(accountId) || assetBalance != 0)) {
                         System.out.println("ERROR: asset balance doesn't match total asset quantity change!!!");
                         failed.add(accountId);
                     }

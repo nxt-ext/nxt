@@ -53,4 +53,9 @@ public final class TrimDerivedTables extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

@@ -16,8 +16,6 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Asset;
 import nxt.PhasingPoll;
 import nxt.Transaction;
 import nxt.VoteWeighting;
@@ -37,17 +35,15 @@ public class GetAssetPhasedTransactions extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        Asset asset = ParameterParser.getAsset(req);
-        Account account = ParameterParser.getAccount(req, false);
+        long assetId = ParameterParser.getUnsignedLong(req, "asset", true);
+        long accountId = ParameterParser.getAccountId(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean withoutWhitelist = "true".equalsIgnoreCase(req.getParameter("withoutWhitelist"));
 
-        long assetId = asset.getId();
-
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator = PhasingPoll.getHoldingPhasedTransactions(assetId, VoteWeighting.VotingModel.ASSET,
-                account, withoutWhitelist, firstIndex, lastIndex)) {
+                accountId, withoutWhitelist, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
                 transactions.add(JSONData.transaction(transaction));

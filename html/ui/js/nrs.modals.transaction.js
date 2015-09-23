@@ -142,10 +142,29 @@ var NRS = (function (NRS, $, undefined) {
                 var phasingDetails = {};
                 phasingDetails.finishHeight = finishHeight;
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
-                phasingDetails.quorum = transaction.attachment.phasingQuorum;
-                phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
                 var votingModel = NRS.getVotingModelName(parseInt(transaction.attachment.phasingVotingModel));
                 phasingDetails.votingModel = $.t(votingModel);
+
+                switch (votingModel) {
+                    case 'ASSET':
+                        NRS.sendRequest("getAsset", { "asset": transaction.attachment.phasingHolding }, function(response) {
+                            phasingDetails.quorum = NRS.convertToQNTf(transaction.attachment.phasingQuorum, response.decimals);
+                            phasingDetails.minBalance = NRS.convertToQNTf(transaction.attachment.phasingMinBalance, response.decimals);
+                        }, false);
+                        break;
+                      
+                    case 'CURRENCY':
+                        NRS.sendRequest("getCurrency", { "currency": transaction.attachment.phasingHolding }, function(response) {
+                            phasingDetails.quorum = NRS.convertToQNTf(transaction.attachment.phasingQuorum, response.decimals);
+                            phasingDetails.minBalance = NRS.convertToQNTf(transaction.attachment.phasingMinBalance, response.decimals);
+                        }, false);
+                        break;
+                      
+                    default:
+                        phasingDetails.quorum = transaction.attachment.phasingQuorum;
+                        phasingDetails.minBalance = transaction.attachment.phasingMinBalance;
+                }
+
                 var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.attachment.phasingHolding).escapeHTML() + "'>" + transaction.attachment.phasingHolding + "</a>";
                 if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
                     phasingDetails.asset_formatted_html = phasingTransactionLink;
@@ -187,7 +206,7 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 $("#phasing_info_details_link").hide();
             }
-
+            // TODO Someday I'd like to replace it with if (NRS.isOfType(transaction, "OrdinaryPayment"))
             if (transaction.type == 0) {
                 switch (transaction.subtype) {
                     case 0:
@@ -510,7 +529,9 @@ var NRS = (function (NRS, $, undefined) {
 
                             data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                             data["recipient"] = transaction.recipientRS ? transaction.recipientRS : transaction.recipient;
-
+                            if (data.recipient == NRS.constants.GENESIS_RS) {
+                                data.type = $.t("delete_shares");
+                            }
                             $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
                             $("#transaction_info_table").show();
 
@@ -1260,8 +1281,8 @@ var NRS = (function (NRS, $, undefined) {
                     exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
                     rows += "<tr>" +
                     "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
-                    "<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
-                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+                    "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
+                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
                     "</td>" +
                     "</tr>";
@@ -1328,8 +1349,8 @@ var NRS = (function (NRS, $, undefined) {
                     rows += "<tr>" +
                     "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
                     "<td>" + exchangeType + "</td>" +
-                    "<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
-                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+                    "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
+                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
                     "</td>" +
                     "</tr>";
