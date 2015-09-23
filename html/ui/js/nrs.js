@@ -1350,9 +1350,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		if (/NXT\-/i.test(id)) {
 			NRS.sendRequest("getAccount", {
-				"account": id,
-				"includeAssets": true,
-				"includeCurrencies": true
+				"account": id
 			}, function(response, input) {
 				if (!response.errorCode) {
 					response.account = input.account;
@@ -1378,9 +1376,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.showTransactionModal(response);
 				} else {
 					NRS.sendRequest("getAccount", {
-						"account": id,
-						"includeAssets": true,
-						"includeCurrencies": true
+						"account": id
 					}, function(response, input) {
 						if (!response.errorCode) {
 							response.account = input.account;
