@@ -31,7 +31,7 @@ public final class GetBalance extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        boolean includeEffectiveBalance = !"false".equalsIgnoreCase(req.getParameter("includeEffectiveBalance"));
+        boolean includeEffectiveBalance = "true".equalsIgnoreCase(req.getParameter("includeEffectiveBalance"));
         return JSONData.accountBalance(ParameterParser.getAccount(req), includeEffectiveBalance);
     }
 

@@ -40,8 +40,8 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
-        if (account.getPublicKey() == null) {
+        byte[] publicKey = Account.getPublicKey(ParameterParser.getAccountId(req, true));
+        if (publicKey == null) {
             return INCORRECT_ACCOUNT;
         }
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
@@ -51,7 +51,7 @@ public final class DecryptFrom extends APIServlet.APIRequestHandler {
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("decryptedMessageIsText"));
         boolean uncompress = !"false".equalsIgnoreCase(req.getParameter("uncompressDecryptedMessage"));
         try {
-            byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase, uncompress);
+            byte[] decrypted = Account.decryptFrom(publicKey, encryptedData, secretPhrase, uncompress);
             JSONObject response = new JSONObject();
             response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
             return response;

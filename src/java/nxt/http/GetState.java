@@ -56,7 +56,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         JSONObject response = GetBlockchainStatus.instance.processRequest(req);
 
-        if (!"false".equalsIgnoreCase(req.getParameter("includeCounts")) && API.checkPassword(req)) {
+        if ("true".equalsIgnoreCase(req.getParameter("includeCounts")) && API.checkPassword(req)) {
             response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
             response.put("numberOfAccounts", Account.getCount());
             response.put("numberOfAssets", Asset.getCount());

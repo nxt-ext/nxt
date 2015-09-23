@@ -43,7 +43,7 @@ public final class GetAskOrders extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long assetId = ParameterParser.getAsset(req).getId();
+        long assetId = ParameterParser.getUnsignedLong(req, "asset", true);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean showExpectedCancellations = "true".equalsIgnoreCase(req.getParameter("showExpectedCancellations"));

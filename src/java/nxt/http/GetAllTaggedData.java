@@ -37,7 +37,7 @@ public final class GetAllTaggedData extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
+        boolean includeData = "true".equalsIgnoreCase(req.getParameter("includeData"));
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();

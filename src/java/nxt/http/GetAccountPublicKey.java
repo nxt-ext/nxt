@@ -36,11 +36,11 @@ public final class GetAccountPublicKey extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
-
-        if (account.getPublicKey() != null) {
+        long accountId = ParameterParser.getAccountId(req, true);
+        byte[] publicKey = Account.getPublicKey(accountId);
+        if (publicKey != null) {
             JSONObject response = new JSONObject();
-            response.put("publicKey", Convert.toHexString(account.getPublicKey()));
+            response.put("publicKey", Convert.toHexString(publicKey));
             return response;
         } else {
             return JSON.emptyJSON;

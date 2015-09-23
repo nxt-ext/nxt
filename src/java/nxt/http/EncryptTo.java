@@ -40,8 +40,8 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long recipientId = ParameterParser.getAccountId(req, "recipient", true);
-        Account recipientAccount = Account.getAccount(recipientId);
-        if (recipientAccount == null || recipientAccount.getPublicKey() == null) {
+        byte[] recipientPublicKey = Account.getPublicKey(recipientId);
+        if (recipientPublicKey == null) {
             return INCORRECT_RECIPIENT;
         }
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
@@ -57,7 +57,7 @@ public final class EncryptTo extends APIServlet.APIRequestHandler {
             return INCORRECT_MESSAGE_TO_ENCRYPT;
         }
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
-        EncryptedData encryptedData = recipientAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
+        EncryptedData encryptedData = Account.encryptTo(recipientPublicKey, plainMessageBytes, secretPhrase, compress);
         return JSONData.encryptedData(encryptedData);
 
     }

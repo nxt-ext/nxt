@@ -53,6 +53,7 @@ public final class JSONResponses {
     public static final JSONStreamAware UNKNOWN_ASSET = unknown("asset");
     public static final JSONStreamAware INCORRECT_ASSET = incorrect("asset");
     public static final JSONStreamAware MISSING_ASSET = missing("asset");
+    public static final JSONStreamAware MISSING_ASSET_ACCOUNT = missing("asset", "account");
     public static final JSONStreamAware UNKNOWN_BLOCK = unknown("block");
     public static final JSONStreamAware INCORRECT_BLOCK = incorrect("block");
     public static final JSONStreamAware UNKNOWN_ENTRY = unknown("entry");

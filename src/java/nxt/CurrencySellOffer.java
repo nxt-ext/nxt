@@ -63,23 +63,19 @@ public final class CurrencySellOffer extends CurrencyExchangeOffer {
     }
 
     public static DbIterator<CurrencySellOffer> getOffers(Currency currency, int from, int to) {
-        return getOffers(currency, false, from, to);
+        return getCurrencyOffers(currency.getId(), false, from, to);
     }
 
-    public static DbIterator<CurrencySellOffer> getOffers(Currency currency, boolean availableOnly, int from, int to) {
-        DbClause dbClause = new DbClause.LongClause("currency_id", currency.getId());
+    public static DbIterator<CurrencySellOffer> getCurrencyOffers(long currencyId, boolean availableOnly, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("currency_id", currencyId);
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }
         return sellOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate ASC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
     }
 
-    public static DbIterator<CurrencySellOffer> getOffers(Account account, int from, int to) {
-        return getOffers(account, false, from, to);
-    }
-
-    public static DbIterator<CurrencySellOffer> getOffers(Account account, boolean availableOnly, int from, int to) {
-        DbClause dbClause = new DbClause.LongClause("account_id", account.getId());
+    public static DbIterator<CurrencySellOffer> getAccountOffers(long accountId, boolean availableOnly, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("account_id", accountId);
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }

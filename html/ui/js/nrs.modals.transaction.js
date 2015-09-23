@@ -1281,8 +1281,8 @@ var NRS = (function (NRS, $, undefined) {
                     exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
                     rows += "<tr>" +
                     "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
-                    "<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
-                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+                    "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
+                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
                     "</td>" +
                     "</tr>";
@@ -1349,8 +1349,8 @@ var NRS = (function (NRS, $, undefined) {
                     rows += "<tr>" +
                     "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
                     "<td>" + exchangeType + "</td>" +
-                    "<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
-                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
+                    "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
+                    "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
                     "</td>" +
                     "</tr>";

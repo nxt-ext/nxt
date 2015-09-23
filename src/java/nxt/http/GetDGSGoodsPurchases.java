@@ -36,7 +36,7 @@ public final class GetDGSGoodsPurchases extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        DigitalGoodsStore.Goods goods = ParameterParser.getGoods(req);
+        long goodsId = ParameterParser.getUnsignedLong(req, "goods", true);
         long buyerId = ParameterParser.getAccountId(req, "buyer", false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
@@ -48,7 +48,7 @@ public final class GetDGSGoodsPurchases extends APIServlet.APIRequestHandler {
         JSONArray purchasesJSON = new JSONArray();
         response.put("purchases", purchasesJSON);
 
-        try (DbIterator<DigitalGoodsStore.Purchase> iterator = DigitalGoodsStore.Purchase.getGoodsPurchases(goods.getId(),
+        try (DbIterator<DigitalGoodsStore.Purchase> iterator = DigitalGoodsStore.Purchase.getGoodsPurchases(goodsId,
                 buyerId, withPublicFeedbacksOnly, completed, firstIndex, lastIndex)) {
             while(iterator.hasNext()) {
                 purchasesJSON.add(JSONData.purchase(iterator.next()));
