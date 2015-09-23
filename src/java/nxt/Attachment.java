@@ -2644,38 +2644,49 @@ public interface Attachment extends Appendix {
     abstract class ShufflingAttachment extends AbstractAttachment {
 
         private final long shufflingId;
+        private final byte[] shufflingStateHash;
 
         private ShufflingAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
+            this.shufflingStateHash = new byte[32];
+            buffer.get(this.shufflingStateHash);
         }
 
         private ShufflingAttachment(JSONObject attachmentData) {
             super(attachmentData);
-            this.shufflingId = Convert.parseUnsignedLong((String)attachmentData.get("shuffling"));
+            this.shufflingId = Convert.parseUnsignedLong((String) attachmentData.get("shuffling"));
+            this.shufflingStateHash = Convert.parseHexString((String) attachmentData.get("shufflingStateHash"));
         }
 
-        private ShufflingAttachment(long shufflingId) {
+        private ShufflingAttachment(long shufflingId, byte[] shufflingStateHash) {
             this.shufflingId = shufflingId;
+            this.shufflingStateHash = shufflingStateHash;
         }
 
         @Override
         int getMySize() {
-            return 8;
+            return 8 + 32;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             buffer.putLong(shufflingId);
+            buffer.put(shufflingStateHash);
         }
 
         @Override
         void putMyJSON(JSONObject attachment) {
             attachment.put("shuffling", Long.toUnsignedString(shufflingId));
+            attachment.put("shufflingStateHash", Convert.toHexString(shufflingStateHash));
         }
 
         public final long getShufflingId() {
             return shufflingId;
+        }
+
+        public final byte[] getShufflingStateHash() {
+            return shufflingStateHash;
         }
 
     }
@@ -2690,8 +2701,8 @@ public interface Attachment extends Appendix {
             super(attachmentData);
         }
 
-        public ShufflingRegistration(long shufflingId) {
-            super(shufflingId);
+        public ShufflingRegistration(long shufflingId, byte[] shufflingStateHash) {
+            super(shufflingId, shufflingStateHash);
         }
 
         @Override
@@ -2712,15 +2723,12 @@ public interface Attachment extends Appendix {
 
         private volatile byte[][] data;
         private final byte[] hash;
-        private final byte[] shufflingStateHash;
 
         ShufflingProcessing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.data = null;
             this.hash = new byte[32];
             buffer.get(hash);
-            this.shufflingStateHash = new byte[32];
-            buffer.get(this.shufflingStateHash);
         }
 
         ShufflingProcessing(JSONObject attachmentData) throws NxtException.NotValidException {
@@ -2741,14 +2749,12 @@ public interface Attachment extends Appendix {
                 this.data = null;
                 this.hash = Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("hash")));
             }
-            this.shufflingStateHash = Convert.parseHexString((String) attachmentData.get("shufflingStateHash"));
         }
 
         ShufflingProcessing(long shufflingId, byte[][] data, byte[] shufflingStateHash) {
-            super(shufflingId);
+            super(shufflingId, shufflingStateHash);
             this.data = data;
             this.hash = null;
-            this.shufflingStateHash = shufflingStateHash;
         }
 
         @Override
@@ -2761,20 +2767,18 @@ public interface Attachment extends Appendix {
                     size += bytes.length;
                 }
             }
-            size += 32;
             return size;
         }
 
         @Override
         int getMySize() {
-            return super.getMySize() + 32 + 32;
+            return super.getMySize() + 32;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             super.putMyBytes(buffer);
             buffer.put(getHash());
-            buffer.put(shufflingStateHash);
         }
 
         @Override
@@ -2788,7 +2792,6 @@ public interface Attachment extends Appendix {
                 }
             }
             attachment.put("hash", Convert.toHexString(getHash()));
-            attachment.put("shufflingStateHash", Convert.toHexString(shufflingStateHash));
         }
 
         @Override
@@ -2815,10 +2818,6 @@ public interface Attachment extends Appendix {
             return data;
         }
 
-        public byte[] getShufflingStateHash() {
-            return shufflingStateHash;
-        }
-
         @Override
         void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
             if (data == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
@@ -2841,7 +2840,6 @@ public interface Attachment extends Appendix {
     final class ShufflingRecipients extends ShufflingAttachment {
 
         private final byte[][] recipientPublicKeys;
-        private final byte[] shufflingStateHash;
 
         ShufflingRecipients(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             super(buffer, transactionVersion);
@@ -2854,8 +2852,6 @@ public interface Attachment extends Appendix {
                 this.recipientPublicKeys[i] = new byte[32];
                 buffer.get(this.recipientPublicKeys[i]);
             }
-            this.shufflingStateHash = new byte[32];
-            buffer.get(this.shufflingStateHash);
         }
 
         ShufflingRecipients(JSONObject attachmentData) {
@@ -2865,13 +2861,11 @@ public interface Attachment extends Appendix {
             for (int i = 0; i < this.recipientPublicKeys.length; i++) {
                 this.recipientPublicKeys[i] = Convert.parseHexString((String)jsonArray.get(i));
             }
-            this.shufflingStateHash = Convert.parseHexString((String) attachmentData.get("shufflingStateHash"));
         }
 
         ShufflingRecipients(long shufflingId, byte[][] recipientPublicKeys, byte[] shufflingStateHash) {
-            super(shufflingId);
+            super(shufflingId, shufflingStateHash);
             this.recipientPublicKeys = recipientPublicKeys;
-            this.shufflingStateHash = shufflingStateHash;
         }
 
         @Override
@@ -2879,7 +2873,6 @@ public interface Attachment extends Appendix {
             int size = super.getMySize();
             size += 1;
             size += 32 * recipientPublicKeys.length;
-            size += 32;
             return size;
         }
 
@@ -2890,7 +2883,6 @@ public interface Attachment extends Appendix {
             for (byte[] bytes : recipientPublicKeys) {
                 buffer.put(bytes);
             }
-            buffer.put(shufflingStateHash);
         }
 
         @Override
@@ -2901,7 +2893,6 @@ public interface Attachment extends Appendix {
             for (byte[] bytes : recipientPublicKeys) {
                 jsonArray.add(Convert.toHexString(bytes));
             }
-            attachment.put("shufflingStateHash", Convert.toHexString(shufflingStateHash));
         }
 
         @Override
@@ -2913,56 +2904,25 @@ public interface Attachment extends Appendix {
             return recipientPublicKeys;
         }
 
-        public byte[] getShufflingStateHash() {
-            return shufflingStateHash;
-        }
-
     }
 
     final class ShufflingVerification extends ShufflingAttachment {
 
-        private final byte[] shufflingStateHash;
-
         ShufflingVerification(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.shufflingStateHash = new byte[32];
-            buffer.get(this.shufflingStateHash);
         }
 
         ShufflingVerification(JSONObject attachmentData) {
             super(attachmentData);
-            this.shufflingStateHash = Convert.parseHexString((String) attachmentData.get("shufflingStateHash"));
         }
 
         public ShufflingVerification(long shufflingId, byte[] shufflingStateHash) {
-            super(shufflingId);
-            this.shufflingStateHash = shufflingStateHash;
+            super(shufflingId, shufflingStateHash);
         }
 
         @Override
         public TransactionType getTransactionType() {
             return ShufflingTransaction.SHUFFLING_VERIFICATION;
-        }
-
-        @Override
-        int getMySize() {
-            return super.getMySize() + 32;
-        }
-
-        @Override
-        void putMyBytes(ByteBuffer buffer) {
-            super.putMyBytes(buffer);
-            buffer.put(shufflingStateHash);
-        }
-
-        @Override
-        void putMyJSON(JSONObject attachment) {
-            super.putMyJSON(attachment);
-            attachment.put("shufflingStateHash", Convert.toHexString(shufflingStateHash));
-        }
-
-        public byte[] getShufflingStateHash() {
-            return shufflingStateHash;
         }
 
     }
@@ -2971,7 +2931,6 @@ public interface Attachment extends Appendix {
 
         private final byte[][] blameData;
         private final byte[][] keySeeds;
-        private final byte[] shufflingStateHash;
         private final long cancellingAccountId;
 
         ShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
@@ -2998,8 +2957,6 @@ public interface Attachment extends Appendix {
                 this.keySeeds[i] = new byte[32];
                 buffer.get(this.keySeeds[i]);
             }
-            this.shufflingStateHash = new byte[32];
-            buffer.get(this.shufflingStateHash);
             this.cancellingAccountId = buffer.getLong();
         }
 
@@ -3015,15 +2972,13 @@ public interface Attachment extends Appendix {
             for (int i = 0; i < this.keySeeds.length; i++) {
                 this.keySeeds[i] = Convert.parseHexString((String)jsonArray.get(i));
             }
-            this.shufflingStateHash = Convert.parseHexString((String) attachmentData.get("shufflingStateHash"));
             this.cancellingAccountId = Convert.parseUnsignedLong((String) attachmentData.get("cancellingAccount"));
         }
 
         ShufflingCancellation(long shufflingId, byte[][] blameData, byte[][] keySeeds, byte[] shufflingStateHash, long cancellingAccountId) {
-            super(shufflingId);
+            super(shufflingId, shufflingStateHash);
             this.blameData = blameData;
             this.keySeeds = keySeeds;
-            this.shufflingStateHash = shufflingStateHash;
             this.cancellingAccountId = cancellingAccountId;
         }
 
@@ -3042,7 +2997,6 @@ public interface Attachment extends Appendix {
             }
             size += 1;
             size += 32 * keySeeds.length;
-            size += 32;
             size += 8;
             return size;
         }
@@ -3059,7 +3013,6 @@ public interface Attachment extends Appendix {
             for (byte[] bytes : keySeeds) {
                 buffer.put(bytes);
             }
-            buffer.put(shufflingStateHash);
             buffer.putLong(cancellingAccountId);
         }
 
@@ -3076,7 +3029,6 @@ public interface Attachment extends Appendix {
             for (byte[] bytes : keySeeds) {
                 jsonArray.add(Convert.toHexString(bytes));
             }
-            attachment.put("shufflingStateHash", Convert.toHexString(shufflingStateHash));
             if (cancellingAccountId != 0) {
                 attachment.put("cancellingAccount", Long.toUnsignedString(cancellingAccountId));
             }
@@ -3088,10 +3040,6 @@ public interface Attachment extends Appendix {
 
         public byte[][] getKeySeeds() {
             return keySeeds;
-        }
-
-        public byte[] getShufflingStateHash() {
-            return shufflingStateHash;
         }
 
         public long getCancellingAccountId() {

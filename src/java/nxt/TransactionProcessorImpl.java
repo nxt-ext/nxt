@@ -349,6 +349,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return transactions;
     }
 
+    Collection<UnconfirmedTransaction> getWaitingTransactions() {
+        return Collections.unmodifiableCollection(waitingTransactions);
+    }
+
     @Override
     public TransactionImpl[] getAllBroadcastedTransactions() {
         BlockchainImpl.getInstance().readLock();
