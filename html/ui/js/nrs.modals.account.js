@@ -57,9 +57,7 @@ var NRS = (function(NRS, $) {
 
 		if (NRS.fetchingModalData) {
 			NRS.sendRequest("getAccount", {
-				"account": NRS.userInfoModal.user,
-                "includeAssets": true,
-                "includeCurrencies": true
+				"account": NRS.userInfoModal.user
             }, function(response) {
 				NRS.processAccountModalData(response);
 				NRS.fetchingModalData = false;
