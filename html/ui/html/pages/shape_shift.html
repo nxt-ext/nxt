@@ -1,8 +1,17 @@
 <div id="exchange_page" class="page" xmlns="http://www.w3.org/1999/html">
-    <section class="content-header">
+    <section id="exchange_disabled" class="content">
+        <h2 data-i18n="exchange_welcome">Welcome to the Coin Exchange</h2>
+        <div data-i18n="exchange_greeting_1">The coin exchange functionality is based on a 3rd party service.</div>
+        <div data-i18n="exchange_greeting_2">Using it may reveal your client IP to this service.</div>
+        <br>
+        <a href="#" id="accept_exchange_link" data-i18n="accept_exchange">Accept</a>
+    </section>
+
+    <section id="exchange_page_header" class="content-header">
         <h1 data-i18n="coin_exchange">COIN EXCHANGE</h1>
     </section>
-    <section class="content">
+
+    <section id="exchange_page_content" class="content">
         <div style="color:#838383;margin-bottom:5px">
             <p data-i18n="exchange_using_shape_shift">Exchange coins using Shape Shift</p>
             <strong data-i18n="shape_shift_nxt_available">NXT available for exchange</strong>: <span id="shape_shift_nxt_avail"></span><br>

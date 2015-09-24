@@ -21,9 +21,10 @@ var NRS = (function(NRS, $) {
 	NRS.defaultSettings = {
 		"submit_on_enter": "0",
 		"animate_forging": "1",
-		"news": "-1",
-		"marketplace": "-1",
-		"console_log": "0",
+        "news": "-1",
+        "marketplace": "-1",
+        "exchange": "-1",
+        "console_log": "0",
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000",
@@ -253,15 +254,15 @@ var NRS = (function(NRS, $) {
 				}
 			}
 		}
-
-		if (NRS.settings["news"] != -1) {
-			$("#settings_news_initial").remove();
-		}
-
-		if (NRS.settings["marketplace"] != -1) {
-			$("#settings_marketplace_initial").remove();
-		}
-
+        if (NRS.settings["news"] != -1) {
+            $("#settings_news_initial").remove();
+        }
+        if (NRS.settings["marketplace"] != -1) {
+            $("#settings_marketplace_initial").remove();
+        }
+        if (NRS.settings["exchange"] != -1) {
+            $("#settings_exchange_initial").remove();
+        }
 		if (NRS.inApp) {
 			$("#settings_console_log_div").hide();
 		}

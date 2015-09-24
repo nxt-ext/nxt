@@ -341,6 +341,18 @@ var NRS = (function(NRS, $) {
     }
     
     NRS.pages.exchange = function() {
+        var exchangeDisabled = $("#exchange_disabled");
+        var exchangePageHeader = $("#exchange_page_header");
+        var exchangePageContent = $("#exchange_page_content");
+        if (NRS.settings.exchange != "1") {
+			exchangeDisabled.show();
+            exchangePageHeader.hide();
+            exchangePageContent.hide();
+            return;
+		}
+        exchangeDisabled.hide();
+        exchangePageHeader.show();
+        exchangePageContent.show();
         NRS.pageLoading();
         loadCoins();
         renderNxtLimit();
@@ -351,6 +363,12 @@ var NRS = (function(NRS, $) {
         NRS.pageLoaded();
         setTimeout(NRS.pages.exchange, 60000);
     };
+
+    $("#accept_exchange_link").on("click", function(e) {
+   		e.preventDefault();
+   		NRS.updateSettings("exchange", "1");
+        NRS.pages.exchange();
+   	});
 
     NRS.getFundAccountLink = function() {
         return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shape_shift_sell_modal' " +
@@ -366,7 +384,9 @@ var NRS = (function(NRS, $) {
         renderExchangeTable('sell');
     });
 
-	NRS.setup.exchange = function() {};
+	NRS.setup.exchange = function() {
+        // Do not implement connection to a 3rd party site here to prevent privacy leak
+    };
 
     $("#m_shape_shift_buy_modal").on("show.bs.modal", function (e) {
         var invoker = $(e.relatedTarget);
