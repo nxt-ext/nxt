@@ -46,7 +46,9 @@ public class TestAutomatedShuffling extends BlockchainTest {
         startShuffler(CHUCK, CHUCK_RECIPIENT, shufflingFullHash);
         startShuffler(DAVE, DAVE_RECIPIENT, shufflingFullHash);
         generateBlock();
-
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignore) {}
         Assert.assertEquals(-Constants.ONE_NXT, ALICE.getBalanceDiff());
         Assert.assertEquals(-(defaultShufflingAmount + 2 * Constants.ONE_NXT), ALICE.getUnconfirmedBalanceDiff());
         Assert.assertEquals(-Constants.ONE_NXT, BOB.getBalanceDiff());
@@ -67,6 +69,9 @@ public class TestAutomatedShuffling extends BlockchainTest {
 
         for (int i = 0; i < 4; i++) {
             generateBlock();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignore) {}
         }
 
         getShufflingResponse = getShuffling(shufflingId);

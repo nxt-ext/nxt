@@ -61,8 +61,6 @@ public final class Shuffler {
         }
     }
 
-    private static final Queue<Transaction> pendingTransactions = new LinkedBlockingQueue<>();
-
     static {
 
         Shuffling.addListener(shuffling -> {
@@ -79,11 +77,10 @@ public final class Shuffler {
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = shufflingsMap.get(shuffling.getId());
             if (shufflerMap != null) {
-                shufflerMap.values().forEach(shuffler -> {
-                    if (shuffler.accountId == shuffling.getAssigneeAccountId()) {
-                        shuffler.process(shuffling);
-                    }
-                });
+                Shuffler shuffler = shufflerMap.get(shuffling.getAssigneeAccountId());
+                if (shuffler != null) {
+                    shuffler.process(shuffling);
+                }
             }
         }, Shuffling.Event.SHUFFLING_ASSIGNED);
 
@@ -119,18 +116,6 @@ public final class Shuffler {
                 });
             }
         }, Shuffling.Event.SHUFFLING_BLAME_STARTED);
-
-        BlockchainProcessorImpl.getInstance().addListener(block -> {
-            pendingTransactions.forEach(transaction -> {
-                try {
-                    TransactionProcessorImpl.getInstance().broadcast(transaction);
-                } catch (NxtException.ValidationException e) {
-                    Logger.logErrorMessage("Failed to broadcast shuffling transaction", e);
-                }
-            });
-            pendingTransactions.clear();
-        }, BlockchainProcessor.Event.BLOCK_PUSHED);
-
     }
 
     private final long accountId;
@@ -173,11 +158,7 @@ public final class Shuffler {
             Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, 0,
                     (short) 1440, attachment);
             Transaction transaction = builder.build(secretPhrase);
-            if (BlockchainProcessorImpl.getInstance().isProcessingBlock()) {
-                pendingTransactions.add(transaction);
-            } else {
-                TransactionProcessorImpl.getInstance().broadcast(transaction);
-            }
+            TransactionProcessorImpl.getInstance().broadcast(transaction);
         } catch (NxtException.ValidationException e) {
             Logger.logErrorMessage("Error submitting shuffler transaction", e);
         }
