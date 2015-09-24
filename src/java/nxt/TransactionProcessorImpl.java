@@ -249,7 +249,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 if (Nxt.getBlockchainProcessor().isDownloading() && ! testUnconfirmedTransactions) {
                     return;
                 }
-                processWaitingTransactions();
                 Peer peer = Peers.getAnyPeer(Peer.State.CONNECTED, true);
                 if (peer == null) {
                     return;
@@ -284,9 +283,30 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
+    private final Runnable processWaitingTransactionsThread = () -> {
+
+        try {
+            try {
+                if (Nxt.getBlockchainProcessor().isDownloading() && ! testUnconfirmedTransactions) {
+                    return;
+                }
+                processWaitingTransactions();
+            } catch (Exception e) {
+                Logger.logMessage("Error processing waiting transactions", e);
+            }
+        } catch (Throwable t) {
+            Logger.logErrorMessage("CRITICAL ERROR. PLEASE REPORT TO THE DEVELOPERS.\n" + t.toString());
+            t.printStackTrace();
+            System.exit(1);
+        }
+
+    };
+
+
     private TransactionProcessorImpl() {
         ThreadPool.scheduleThread("ProcessTransactions", processTransactionsThread, 5);
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
+        ThreadPool.scheduleThread("ProcessWaitingTransactions", processWaitingTransactionsThread, 1);
         ThreadPool.runAfterStart(this::rebroadcastAllUnconfirmedTransactions);
         if (enableTransactionRebroadcasting) {
             ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
