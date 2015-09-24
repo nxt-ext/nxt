@@ -38,7 +38,7 @@ public final class SearchAssets extends APIServlet.APIRequestHandler {
         String query = Convert.nullToEmpty(req.getParameter("query"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
+        boolean includeCounts = "true".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray assetsJSONArray = new JSONArray();

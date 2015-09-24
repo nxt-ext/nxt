@@ -769,7 +769,11 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getAccountInfo = function(firstRun, callback) {
 		NRS.sendRequest("getAccount", {
-			"account": NRS.account
+			"account": NRS.account,
+			"includeAssets": true,
+			"includeCurrencies": true,
+			"includeLessors": true,
+			"includeEffectiveBalance": true
 		}, function(response) {
 			var previousAccountInfo = NRS.accountInfo;
 

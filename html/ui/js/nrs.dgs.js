@@ -178,6 +178,7 @@ var NRS = (function(NRS, $) {
 		$(".dgs_search_pageheader_addon_seller").show();
 		NRS.sendRequest("getDGSGoods+", {
 			"seller": seller,
+			"includeCounts": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -201,6 +202,7 @@ var NRS = (function(NRS, $) {
 		$(".dgs_search_pageheader_addon_fulltext").show();
 		NRS.sendRequest("searchDGSGoods+", {
 			"query": query,
+            "includeCounts": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -224,6 +226,7 @@ var NRS = (function(NRS, $) {
 		$(".dgs_search_pageheader_addon_tag").show();
 		NRS.sendRequest("searchDGSGoods+", {
 			"tag": tag,
+            "includeCounts": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {

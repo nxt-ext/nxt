@@ -16,41 +16,41 @@
 
 package nxt.http;
 
-import nxt.Currency;
-import nxt.db.DbIterator;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.Transaction;
+import nxt.util.Convert;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Set;
 
-public final class GetCurrenciesByIssuer extends APIServlet.APIRequestHandler {
+public final class GetExpectedTransactions extends APIServlet.APIRequestHandler {
 
-    static final GetCurrenciesByIssuer instance = new GetCurrenciesByIssuer();
+    static final GetExpectedTransactions instance = new GetExpectedTransactions();
 
-    private GetCurrenciesByIssuer() {
-        super(new APITag[] {APITag.MS, APITag.ACCOUNTS}, "account", "account", "account", "firstIndex", "lastIndex", "includeCounts");
+    private GetExpectedTransactions() {
+        super(new APITag[] {APITag.TRANSACTIONS}, "account", "account", "account");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        long[] accountIds = ParameterParser.getAccountIds(req, true);
-        int firstIndex = ParameterParser.getFirstIndex(req);
-        int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeCounts = "true".equalsIgnoreCase(req.getParameter("includeCounts"));
+    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+
+        Set<Long> accountIds = Convert.toSet(ParameterParser.getAccountIds(req, false));
+        Filter<Transaction> filter = accountIds.isEmpty() ? transaction -> true :
+                transaction -> accountIds.contains(transaction.getSenderId()) || accountIds.contains(transaction.getRecipientId());
+
+        List<? extends Transaction> transactions = Nxt.getBlockchain().getExpectedTransactions(filter);
 
         JSONObject response = new JSONObject();
-        JSONArray accountsJSONArray = new JSONArray();
-        response.put("currencies", accountsJSONArray);
-        for (long accountId : accountIds) {
-            JSONArray currenciesJSONArray = new JSONArray();
-            try (DbIterator<Currency> currencies = Currency.getCurrencyIssuedBy(accountId, firstIndex, lastIndex)) {
-                for (Currency currency : currencies) {
-                    currenciesJSONArray.add(JSONData.currency(currency, includeCounts));
-                }
-            }
-            accountsJSONArray.add(currenciesJSONArray);
-        }
+        JSONArray jsonArray = new JSONArray();
+        transactions.forEach(transaction -> jsonArray.add(JSONData.unconfirmedTransaction(transaction)));
+        response.put("expectedTransactions", jsonArray);
+
         return response;
     }
 

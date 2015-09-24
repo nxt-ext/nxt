@@ -744,12 +744,44 @@ public final class Account {
         }
     }
 
+    public static DbIterator<AccountAsset> getAccountAssets(long accountId, int from, int to) {
+        return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    }
+
+    public static DbIterator<AccountAsset> getAccountAssets(long accountId, int height, int from, int to) {
+        return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", accountId), height, from, to);
+    }
+
+    public static AccountAsset getAccountAsset(long accountId, long assetId) {
+        return accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId));
+    }
+
+    public static AccountAsset getAccountAsset(long accountId, long assetId, int height) {
+        return accountAssetTable.get(accountAssetDbKeyFactory.newKey(accountId, assetId), height);
+    }
+
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int from, int to) {
         return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to, " ORDER BY quantity DESC, account_id ");
     }
 
     public static DbIterator<AccountAsset> getAssetAccounts(long assetId, int height, int from, int to) {
         return accountAssetTable.getManyBy(new DbClause.LongClause("asset_id", assetId), height, from, to, " ORDER BY quantity DESC, account_id ");
+    }
+
+    public static AccountCurrency getAccountCurrency(long accountId, long currencyId) {
+        return accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(accountId, currencyId));
+    }
+
+    public static AccountCurrency getAccountCurrency(long accountId, long currencyId, int height) {
+        return accountCurrencyTable.get(accountCurrencyDbKeyFactory.newKey(accountId, currencyId), height);
+    }
+
+    public static DbIterator<AccountCurrency> getAccountCurrencies(long accountId, int from, int to) {
+        return accountCurrencyTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
+    }
+
+    public static DbIterator<AccountCurrency> getAccountCurrencies(long accountId, int height, int from, int to) {
+        return accountCurrencyTable.getManyBy(new DbClause.LongClause("account_id", accountId), height, from, to);
     }
 
     public static DbIterator<AccountCurrency> getCurrencyAccounts(long currencyId, int from, int to) {

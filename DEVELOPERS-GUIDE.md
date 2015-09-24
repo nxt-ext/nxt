@@ -16,7 +16,6 @@
   - **API** - http://localhost:7876/test
   - **DB Interface** - http://localhost:7876/dbshell
   - **Java Class Browser** - http://localhost:7876/doc
-  - **Utilities** - http://localhost:7876/admin.html
 
 ### Database ###
   

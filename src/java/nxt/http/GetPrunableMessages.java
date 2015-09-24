@@ -39,7 +39,7 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
@@ -47,8 +47,8 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
         long readerAccountId = secretPhrase == null ? 0 : Account.getId(Crypto.getPublicKey(secretPhrase));
         long otherAccountId = ParameterParser.getAccountId(req, "otherAccount", false);
 
-        DbIterator<PrunableMessage> messages = otherAccountId == 0 ? PrunableMessage.getPrunableMessages(account.getId(), firstIndex, lastIndex)
-                : PrunableMessage.getPrunableMessages(account.getId(), otherAccountId, firstIndex, lastIndex);
+        DbIterator<PrunableMessage> messages = otherAccountId == 0 ? PrunableMessage.getPrunableMessages(accountId, firstIndex, lastIndex)
+                : PrunableMessage.getPrunableMessages(accountId, otherAccountId, firstIndex, lastIndex);
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();

@@ -155,12 +155,12 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public DbIterator<BlockImpl> getBlocks(Account account, int timestamp) {
-        return getBlocks(account, timestamp, 0, -1);
+    public DbIterator<BlockImpl> getBlocks(long accountId, int timestamp) {
+        return getBlocks(accountId, timestamp, 0, -1);
     }
 
     @Override
-    public DbIterator<BlockImpl> getBlocks(Account account, int timestamp, int from, int to) {
+    public DbIterator<BlockImpl> getBlocks(long accountId, int timestamp, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
@@ -168,7 +168,7 @@ final class BlockchainImpl implements Blockchain {
                     + (timestamp > 0 ? " AND timestamp >= ? " : " ") + "ORDER BY height DESC"
                     + DbUtils.limitsClause(from, to));
             int i = 0;
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
             if (timestamp > 0) {
                 pstmt.setInt(++i, timestamp);
             }
@@ -181,10 +181,10 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public int getBlockCount(Account account) {
+    public int getBlockCount(long accountId) {
         try (Connection con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM block WHERE generator_id = ?")) {
-            pstmt.setLong(1, account.getId());
+            pstmt.setLong(1, accountId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 rs.next();
                 return rs.getInt(1);
@@ -385,13 +385,13 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
-    public DbIterator<TransactionImpl> getTransactions(Account account, byte type, byte subtype, int blockTimestamp,
+    public DbIterator<TransactionImpl> getTransactions(long accountId, byte type, byte subtype, int blockTimestamp,
                                                        boolean includeExpiredPrunable) {
-        return getTransactions(account, 0, type, subtype, blockTimestamp, false, false, false, 0, -1, includeExpiredPrunable);
+        return getTransactions(accountId, 0, type, subtype, blockTimestamp, false, false, false, 0, -1, includeExpiredPrunable);
     }
 
     @Override
-    public DbIterator<TransactionImpl> getTransactions(Account account, int numberOfConfirmations, byte type, byte subtype,
+    public DbIterator<TransactionImpl> getTransactions(long accountId, int numberOfConfirmations, byte type, byte subtype,
                                                        int blockTimestamp, boolean withMessage, boolean phasedOnly, boolean nonPhasedOnly,
                                                        int from, int to, boolean includeExpiredPrunable) {
         if (phasedOnly && nonPhasedOnly) {
@@ -457,8 +457,8 @@ final class BlockchainImpl implements Blockchain {
             PreparedStatement pstmt;
             int i = 0;
             pstmt = con.prepareStatement(buf.toString());
-            pstmt.setLong(++i, account.getId());
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
             if (blockTimestamp > 0) {
                 pstmt.setInt(++i, blockTimestamp);
             }
@@ -477,7 +477,7 @@ final class BlockchainImpl implements Blockchain {
             if (withMessage) {
                 pstmt.setInt(++i, prunableExpiration);
             }
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
             if (blockTimestamp > 0) {
                 pstmt.setInt(++i, blockTimestamp);
             }

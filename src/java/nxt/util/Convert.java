@@ -28,7 +28,10 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -168,6 +171,17 @@ public final class Convert {
             result.add(elem);
         }
         return result;
+    }
+
+    public static Set<Long> toSet(long[] array) {
+        if (array == null || array.length ==0) {
+            return Collections.emptySet();
+        }
+        Set<Long> set = new HashSet<>(array.length);
+        for (long elem : array) {
+            set.add(elem);
+        }
+        return set;
     }
 
     public static byte[] toBytes(String s) {

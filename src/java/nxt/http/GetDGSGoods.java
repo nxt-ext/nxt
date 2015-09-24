@@ -43,7 +43,7 @@ public final class GetDGSGoods extends APIServlet.APIRequestHandler {
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean inStockOnly = !"false".equalsIgnoreCase(req.getParameter("inStockOnly"));
         boolean hideDelisted = "true".equalsIgnoreCase(req.getParameter("hideDelisted"));
-        boolean includeCounts = !"false".equalsIgnoreCase(req.getParameter("includeCounts"));
+        boolean includeCounts = "true".equalsIgnoreCase(req.getParameter("includeCounts"));
 
         JSONObject response = new JSONObject();
         JSONArray goodsJSON = new JSONArray();

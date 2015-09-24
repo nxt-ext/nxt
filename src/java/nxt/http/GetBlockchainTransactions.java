@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
@@ -40,7 +39,7 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         int timestamp = ParameterParser.getTimestamp(req);
         int numberOfConfirmations = ParameterParser.getNumberOfConfirmations(req);
         boolean withMessage = "true".equalsIgnoreCase(req.getParameter("withMessage"));
@@ -65,7 +64,7 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
         int lastIndex = ParameterParser.getLastIndex(req);
 
         JSONArray transactions = new JSONArray();
-        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(account, numberOfConfirmations,
+        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(accountId, numberOfConfirmations,
                 type, subtype, timestamp, withMessage, phasedOnly, nonPhasedOnly, firstIndex, lastIndex,
                 includeExpiredPrunable)) {
             while (iterator.hasNext()) {

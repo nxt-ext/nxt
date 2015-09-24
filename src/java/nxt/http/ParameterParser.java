@@ -152,6 +152,10 @@ final class ParameterParser {
         return values;
     }
 
+    static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        return getAccountId(req, "account", isMandatory);
+    }
+
     static long getAccountId(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
         String paramValue = Convert.emptyToNull(req.getParameter(name));
         if (paramValue == null) {
@@ -169,6 +173,32 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(incorrect(name));
         }
+    }
+
+    static long[] getAccountIds(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        String[] paramValues = req.getParameterValues("account");
+        if (paramValues == null || paramValues.length == 0) {
+            if (isMandatory) {
+                throw new ParameterException(MISSING_ACCOUNT);
+            } else {
+                return Convert.EMPTY_LONG;
+            }
+        }
+        long[] values = new long[paramValues.length];
+        try {
+            for (int i = 0; i < paramValues.length; i++) {
+                if (paramValues[i] == null || paramValues[i].isEmpty()) {
+                    continue;
+                }
+                values[i] = Convert.parseAccountId(paramValues[i]);
+                if (values[i] == 0) {
+                    throw new ParameterException(INCORRECT_ACCOUNT);
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_ACCOUNT);
+        }
+        return values;
     }
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {

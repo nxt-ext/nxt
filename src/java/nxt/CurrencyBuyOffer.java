@@ -63,23 +63,19 @@ public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
     }
 
     public static DbIterator<CurrencyBuyOffer> getOffers(Currency currency, int from, int to) {
-        return getOffers(currency, false, from, to);
+        return getCurrencyOffers(currency.getId(), false, from, to);
     }
 
-    public static DbIterator<CurrencyBuyOffer> getOffers(Currency currency, boolean availableOnly, int from, int to) {
-        DbClause dbClause = new DbClause.LongClause("currency_id", currency.getId());
+    public static DbIterator<CurrencyBuyOffer> getCurrencyOffers(long currencyId, boolean availableOnly, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("currency_id", currencyId);
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }
         return buyOfferTable.getManyBy(dbClause, from, to, " ORDER BY rate DESC, creation_height ASC, transaction_height ASC, transaction_index ASC ");
     }
 
-    public static DbIterator<CurrencyBuyOffer> getOffers(Account account, int from, int to) {
-        return getOffers(account, false, from, to);
-    }
-
-    public static DbIterator<CurrencyBuyOffer> getOffers(Account account, boolean availableOnly, int from, int to) {
-        DbClause dbClause = new DbClause.LongClause("account_id", account.getId());
+    public static DbIterator<CurrencyBuyOffer> getAccountOffers(long accountId, boolean availableOnly, int from, int to) {
+        DbClause dbClause = new DbClause.LongClause("account_id", accountId);
         if (availableOnly) {
             dbClause = dbClause.and(availableOnlyDbClause);
         }
@@ -90,7 +86,7 @@ public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
         return getOffer(currency.getId(), account.getId());
     }
 
-    static CurrencyBuyOffer getOffer(final long currencyId, final long accountId) {
+    public static CurrencyBuyOffer getOffer(final long currencyId, final long accountId) {
         return buyOfferTable.getBy(new DbClause.LongClause("currency_id", currencyId).and(new DbClause.LongClause("account_id", accountId)));
     }
 

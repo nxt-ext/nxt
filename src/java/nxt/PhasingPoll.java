@@ -227,7 +227,7 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getVoterPhasedTransactions(Account voter, int from, int to) {
+    public static DbIterator<TransactionImpl> getVoterPhasedTransactions(long voterId, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
@@ -241,7 +241,7 @@ public final class PhasingPoll extends AbstractPoll {
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-            pstmt.setLong(++i, voter.getId());
+            pstmt.setLong(++i, voterId);
             DbUtils.setLimits(++i, pstmt, from, to);
 
             return BlockchainImpl.getInstance().getTransactions(con, pstmt);
@@ -252,7 +252,7 @@ public final class PhasingPoll extends AbstractPoll {
     }
 
     public static DbIterator<TransactionImpl> getHoldingPhasedTransactions(long holdingId, VoteWeighting.VotingModel votingModel,
-                                                                           Account account, boolean withoutWhitelist, int from, int to) {
+                                                                           long accountId, boolean withoutWhitelist, int from, int to) {
 
         Connection con = null;
         try {
@@ -263,7 +263,7 @@ public final class PhasingPoll extends AbstractPoll {
                     "AND phasing_poll.voting_model = ? " +
                     "AND phasing_poll.id = transaction.id " +
                     "AND phasing_poll.finish_height > ? " +
-                    (account != null ? "AND phasing_poll.account_id = ? " : "") +
+                    (accountId != 0 ? "AND phasing_poll.account_id = ? " : "") +
                     (withoutWhitelist ? "AND phasing_poll.whitelist_size = 0 " : "") +
                     "ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
@@ -271,8 +271,8 @@ public final class PhasingPoll extends AbstractPoll {
             pstmt.setLong(++i, holdingId);
             pstmt.setByte(++i, votingModel.getCode());
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
-            if (account != null) {
-                pstmt.setLong(++i, account.getId());
+            if (accountId != 0) {
+                pstmt.setLong(++i, accountId);
             }
             DbUtils.setLimits(++i, pstmt, from, to);
 
@@ -283,7 +283,7 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static DbIterator<TransactionImpl> getAccountPhasedTransactions(Account account, int from, int to) {
+    public static DbIterator<TransactionImpl> getAccountPhasedTransactions(long accountId, int from, int to) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
@@ -292,8 +292,8 @@ public final class PhasingPoll extends AbstractPoll {
                     " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
             int i = 0;
-            pstmt.setLong(++i, account.getId());
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             DbUtils.setLimits(++i, pstmt, from, to);
 
@@ -304,14 +304,14 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    public static int getAccountPhasedTransactionCount(Account account) {
+    public static int getAccountPhasedTransactionCount(long accountId) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction, phasing_poll  " +
                      " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
                      " AND phasing_poll.finish_height > ?")) {
             int i = 0;
-            pstmt.setLong(++i, account.getId());
-            pstmt.setLong(++i, account.getId());
+            pstmt.setLong(++i, accountId);
+            pstmt.setLong(++i, accountId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             try (ResultSet rs = pstmt.executeQuery()) {
                 rs.next();
