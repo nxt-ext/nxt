@@ -409,6 +409,13 @@ public abstract class ShufflingTransaction extends TransactionType {
             return false;
         }
 
+        @Override
+        boolean isPruned(long transactionId) {
+            Transaction transaction = TransactionDb.findTransaction(transactionId);
+            Attachment.ShufflingProcessing attachment = (Attachment.ShufflingProcessing)transaction.getAttachment();
+            return ShufflingParticipant.getData(attachment.getShufflingId(), transaction.getSenderId()) == null;
+        }
+
     };
 
     public static final TransactionType SHUFFLING_RECIPIENTS = new ShufflingTransaction() {
