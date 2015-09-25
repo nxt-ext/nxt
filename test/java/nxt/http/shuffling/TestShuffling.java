@@ -25,20 +25,39 @@ import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static nxt.http.shuffling.ShufflingUtil.*;
+import static nxt.http.shuffling.ShufflingUtil.ALICE_RECIPIENT;
+import static nxt.http.shuffling.ShufflingUtil.BOB_RECIPIENT;
+import static nxt.http.shuffling.ShufflingUtil.CHUCK_RECIPIENT;
+import static nxt.http.shuffling.ShufflingUtil.DAVE_RECIPIENT;
+import static nxt.http.shuffling.ShufflingUtil.broadcast;
+import static nxt.http.shuffling.ShufflingUtil.cancel;
+import static nxt.http.shuffling.ShufflingUtil.create;
+import static nxt.http.shuffling.ShufflingUtil.createAssetShuffling;
+import static nxt.http.shuffling.ShufflingUtil.createCurrencyShuffling;
+import static nxt.http.shuffling.ShufflingUtil.defaultHoldingShufflingAmount;
+import static nxt.http.shuffling.ShufflingUtil.defaultShufflingAmount;
+import static nxt.http.shuffling.ShufflingUtil.getShuffling;
+import static nxt.http.shuffling.ShufflingUtil.getShufflingParticipants;
+import static nxt.http.shuffling.ShufflingUtil.process;
+import static nxt.http.shuffling.ShufflingUtil.register;
+import static nxt.http.shuffling.ShufflingUtil.shufflingAsset;
+import static nxt.http.shuffling.ShufflingUtil.shufflingCurrency;
+import static nxt.http.shuffling.ShufflingUtil.verify;
 
 
 public class TestShuffling extends BlockchainTest {
 
     @Test
     public void successfulShuffling() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         Assert.assertEquals(-Constants.ONE_NXT, ALICE.getBalanceDiff());
@@ -104,13 +123,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void successfulAssetShuffling() {
-        String shufflingId = (String)createAssetShuffling(ALICE).get("transaction");
+        JSONObject shufflingCreate = createAssetShuffling(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -185,13 +206,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void successfulCurrencyShuffling() {
-        String shufflingId = (String)createCurrencyShuffling(ALICE).get("transaction");
+        JSONObject shufflingCreate = createCurrencyShuffling(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -266,9 +289,11 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void registrationNotFinished() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         for (int i = 0; i < 9; i++) {
             generateBlock();
         }
@@ -297,9 +322,11 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void registrationNotFinishedAsset() {
-        String shufflingId = (String)createAssetShuffling(ALICE).get("transaction");
+        JSONObject shufflingCreate = createAssetShuffling(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         for (int i = 0; i < 9; i++) {
             generateBlock();
         }
@@ -333,13 +360,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void processingNotStarted() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         for (int i = 0; i < 10; i++) {
             generateBlock();
         }
@@ -374,13 +403,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void processingNotStartedCurrency() {
-        String shufflingId = (String)createCurrencyShuffling(ALICE).get("transaction");
+        JSONObject shufflingCreate = createCurrencyShuffling(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         for (int i = 0; i < 10; i++) {
             generateBlock();
         }
@@ -424,12 +455,14 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void tooManyParticipants() {
-        String shufflingId = (String)create(ALICE, 3).get("transaction");
+        JSONObject shufflingCreate = create(ALICE, 3);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
-        register(shufflingId, CHUCK);
-        register(shufflingId, DAVE);
-        register(shufflingId, FORGY);
+        register(shufflingFullHash, BOB);
+        register(shufflingFullHash, CHUCK);
+        register(shufflingFullHash, DAVE);
+        register(shufflingFullHash, FORGY);
         for (int i = 0; i < 10; i++) {
             generateBlock();
         }
@@ -462,13 +495,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void processingNotFinished() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -514,13 +549,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void verifyNotStarted() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -577,13 +614,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void verifyNotFinished() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -645,13 +684,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void cancelAfterVerifyChuck() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -721,13 +762,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void cancelAfterVerifyChuckInvalidKeys() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -802,13 +845,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void cancelAfterVerifyChuckInvalidKeysAlice() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -884,13 +929,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void cancelAfterVerifyChuckInvalidKeysAlice2() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -966,13 +1013,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void badProcessDataAlice() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -1026,13 +1075,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void modifiedProcessDataBob() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -1093,13 +1144,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void modifiedProcessDataChuck() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -1163,13 +1216,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void modifiedRecipientKeysDave() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -1240,13 +1295,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void duplicateRecipientKeysDave() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -1299,13 +1356,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void duplicateProcessDataChuck() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -1356,13 +1415,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void duplicateRecipientsBobChuck() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);
@@ -1420,13 +1481,15 @@ public class TestShuffling extends BlockchainTest {
 
     @Test
     public void duplicateRecipientsAliceBob() {
-        String shufflingId = (String)create(ALICE).get("transaction");
+        JSONObject shufflingCreate = create(ALICE);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
         generateBlock();
-        register(shufflingId, BOB);
+        register(shufflingFullHash, BOB);
         generateBlock();
-        register(shufflingId, CHUCK);
+        register(shufflingFullHash, CHUCK);
         generateBlock();
-        register(shufflingId, DAVE);
+        register(shufflingFullHash, DAVE);
         generateBlock();
 
         JSONObject getShufflingResponse = getShuffling(shufflingId);

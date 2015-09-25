@@ -18,9 +18,6 @@ package nxt.http.shuffling;
 
 import nxt.Constants;
 import nxt.HoldingType;
-import nxt.Nxt;
-import nxt.Shuffler;
-import nxt.Shuffling;
 import nxt.Tester;
 import nxt.http.APICall;
 import nxt.util.Convert;
@@ -86,12 +83,11 @@ class ShufflingUtil {
         return response;
     }
 
-    static JSONObject register(String shufflingId, Tester tester) {
+    static JSONObject register(String shufflingFullHash, Tester tester) {
         APICall apiCall = new APICall.Builder("shufflingRegister").
                 secretPhrase(tester.getSecretPhrase()).
                 feeNQT(Constants.ONE_NXT).
-                param("shuffling", shufflingId).
-                param("shufflingStateHash", Nxt.getBlockchain().getTransaction(Convert.parseUnsignedLong(shufflingId)).getFullHash()).
+                param("shufflingFullHash", shufflingFullHash).
                 build();
         JSONObject response = apiCall.invoke();
         Logger.logMessage("shufflingRegisterResponse: " + response.toJSONString());
@@ -189,8 +185,15 @@ class ShufflingUtil {
         return response;
     }
 
-    static void startShuffler(Tester tester, Tester recipient, String shufflingFullHash) {
-        Shuffler.addOrGetShuffler(tester.getSecretPhrase(), recipient.getPublicKey(), Convert.parseHexString(shufflingFullHash));
+    static JSONObject startShuffler(Tester tester, Tester recipient, String shufflingFullHash) {
+        APICall apiCall = new APICall.Builder("startShuffler").
+                secretPhrase(tester.getSecretPhrase()).
+                param("recipientPublicKey", Convert.toHexString(recipient.getPublicKey())).
+                param("shufflingFullHash", shufflingFullHash).
+                build();
+        JSONObject response = apiCall.invoke();
+        Logger.logMessage("startShufflerResponse: " + response.toJSONString());
+        return response;
     }
 
     private ShufflingUtil() {}

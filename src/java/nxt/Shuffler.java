@@ -128,7 +128,11 @@ public final class Shuffler {
                 synchronized (shufflingsMap) {
                     shufflerMap.values().forEach(shuffler -> {
                         if (shuffler.accountId != shuffling.getIssuerId()) {
-                            shuffler.submitRegister(shuffling);
+                            try {
+                                shuffler.submitRegister(shuffling);
+                            } catch (RuntimeException e) {
+                                Logger.logErrorMessage(e.toString(), e);
+                            }
                         }
                     });
                     clearExpiration(shuffling);
@@ -142,7 +146,11 @@ public final class Shuffler {
                 synchronized (shufflingsMap) {
                     Shuffler shuffler = shufflerMap.get(shuffling.getAssigneeAccountId());
                     if (shuffler != null) {
-                        shuffler.submitProcess(shuffling);
+                        try {
+                            shuffler.submitProcess(shuffling);
+                        } catch (RuntimeException e) {
+                            Logger.logErrorMessage(e.toString(), e);
+                        }
                     }
                     clearExpiration(shuffling);
                 }
@@ -153,7 +161,13 @@ public final class Shuffler {
             Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
                 synchronized (shufflingsMap) {
-                    shufflerMap.values().forEach(shuffler -> shuffler.verify(shuffling));
+                    shufflerMap.values().forEach(shuffler -> {
+                        try {
+                            shuffler.verify(shuffling);
+                        } catch (RuntimeException e) {
+                            Logger.logErrorMessage(e.toString(), e);
+                        }
+                    });
                     clearExpiration(shuffling);
                 }
             }
@@ -163,7 +177,13 @@ public final class Shuffler {
             Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
                 synchronized (shufflingsMap) {
-                    shufflerMap.values().forEach(shuffler -> shuffler.cancel(shuffling));
+                    shufflerMap.values().forEach(shuffler -> {
+                        try {
+                            shuffler.cancel(shuffling);
+                        } catch (RuntimeException e) {
+                            Logger.logErrorMessage(e.toString(), e);
+                        }
+                    });
                     clearExpiration(shuffling);
                 }
             }
@@ -261,7 +281,7 @@ public final class Shuffler {
     }
 
     private void verify(Shuffling shuffling) {
-        if (accountId != shuffling.getLastParticipant().getAccountId()) {
+        if (shuffling.getParticipant(accountId).getIndex() != shuffling.getParticipantCount() - 1) {
             boolean found = false;
             for (byte[] key : shuffling.getRecipientPublicKeys()) {
                 if (Arrays.equals(key, recipientPublicKey)) {
@@ -278,34 +298,45 @@ public final class Shuffler {
     }
 
     private void cancel(Shuffling shuffling) {
-        if (accountId == shuffling.getLastParticipant().getAccountId()) {
+        if (accountId == shuffling.getCancellingAccountId()) {
+            return;
+        }
+        if (shuffling.getParticipant(accountId).getIndex() == shuffling.getParticipantCount() - 1) {
+            return;
+        }
+        if (ShufflingParticipant.getData(shuffling.getId(), accountId) == null) {
             return;
         }
         submitCancel(shuffling);
     }
 
     private void submitRegister(Shuffling shuffling) {
-        Attachment.ShufflingRegistration attachment = new Attachment.ShufflingRegistration(shuffling.getId(), shufflingFullHash);
+        Logger.logDebugMessage("Account %s registering for shuffling %s", Long.toUnsignedString(accountId), Long.toUnsignedString(shuffling.getId()));
+        Attachment.ShufflingRegistration attachment = new Attachment.ShufflingRegistration(shufflingFullHash);
         submitTransaction(attachment);
     }
 
     private void submitProcess(Shuffling shuffling) {
+        Logger.logDebugMessage("Account %s processing shuffling %s", Long.toUnsignedString(accountId), Long.toUnsignedString(shuffling.getId()));
         Attachment.ShufflingAttachment attachment = shuffling.process(accountId, secretPhrase, recipientPublicKey);
         submitTransaction(attachment);
     }
 
     private void submitVerify(Shuffling shuffling) {
+        Logger.logDebugMessage("Account %s verifying shuffling %s", Long.toUnsignedString(accountId), Long.toUnsignedString(shuffling.getId()));
         Attachment.ShufflingVerification attachment = new Attachment.ShufflingVerification(shuffling.getId(), shuffling.getStateHash());
         submitTransaction(attachment);
     }
 
     private void submitCancel(Shuffling shuffling) {
+        Logger.logDebugMessage("Account %s cancelling shuffling %s", Long.toUnsignedString(accountId), Long.toUnsignedString(shuffling.getId()));
         Attachment.ShufflingCancellation attachment = shuffling.revealKeySeeds(secretPhrase, shuffling.getCancellingAccountId(), shuffling.getStateHash());
         submitTransaction(attachment);
     }
 
     private void submitTransaction(Attachment.ShufflingAttachment attachment) {
         if (hasUnconfirmedTransaction(attachment)) {
+            Logger.logDebugMessage("Transaction already submitted");
             return;
         }
         try {

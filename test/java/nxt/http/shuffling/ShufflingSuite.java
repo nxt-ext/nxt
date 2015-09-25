@@ -22,7 +22,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        TestShuffling.class
+        TestShuffling.class,
+        TestAutomatedShuffling.class
 })
 
 public class ShufflingSuite extends AbstractHttpApiSuite { }

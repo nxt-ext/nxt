@@ -2641,25 +2641,33 @@ public interface Attachment extends Appendix {
         }
     }
 
-    abstract class ShufflingAttachment extends AbstractAttachment {
+    interface ShufflingAttachment extends Attachment {
+
+        long getShufflingId();
+
+        byte[] getShufflingStateHash();
+
+    }
+
+    abstract class AbstractShufflingAttachment extends AbstractAttachment implements ShufflingAttachment {
 
         private final long shufflingId;
         private final byte[] shufflingStateHash;
 
-        private ShufflingAttachment(ByteBuffer buffer, byte transactionVersion) {
+        private AbstractShufflingAttachment(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.shufflingId = buffer.getLong();
             this.shufflingStateHash = new byte[32];
             buffer.get(this.shufflingStateHash);
         }
 
-        private ShufflingAttachment(JSONObject attachmentData) {
+        private AbstractShufflingAttachment(JSONObject attachmentData) {
             super(attachmentData);
             this.shufflingId = Convert.parseUnsignedLong((String) attachmentData.get("shuffling"));
             this.shufflingStateHash = Convert.parseHexString((String) attachmentData.get("shufflingStateHash"));
         }
 
-        private ShufflingAttachment(long shufflingId, byte[] shufflingStateHash) {
+        private AbstractShufflingAttachment(long shufflingId, byte[] shufflingStateHash) {
             this.shufflingId = shufflingId;
             this.shufflingStateHash = shufflingStateHash;
         }
@@ -2681,28 +2689,35 @@ public interface Attachment extends Appendix {
             attachment.put("shufflingStateHash", Convert.toHexString(shufflingStateHash));
         }
 
+        @Override
         public final long getShufflingId() {
             return shufflingId;
         }
 
+        @Override
         public final byte[] getShufflingStateHash() {
             return shufflingStateHash;
         }
 
     }
 
-    final class ShufflingRegistration extends ShufflingAttachment {
+    final class ShufflingRegistration extends AbstractAttachment implements ShufflingAttachment {
+
+        private final byte[] shufflingFullHash;
 
         ShufflingRegistration(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
+            this.shufflingFullHash = new byte[32];
+            buffer.get(this.shufflingFullHash);
         }
 
         ShufflingRegistration(JSONObject attachmentData) {
             super(attachmentData);
+            this.shufflingFullHash = Convert.parseHexString((String) attachmentData.get("shufflingFullHash"));
         }
 
-        public ShufflingRegistration(long shufflingId, byte[] shufflingStateHash) {
-            super(shufflingId, shufflingStateHash);
+        public ShufflingRegistration(byte[] shufflingFullHash) {
+            this.shufflingFullHash = shufflingFullHash;
         }
 
         @Override
@@ -2710,9 +2725,34 @@ public interface Attachment extends Appendix {
             return ShufflingTransaction.SHUFFLING_REGISTRATION;
         }
 
+        @Override
+        int getMySize() {
+            return 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put(shufflingFullHash);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("shufflingFullHash", Convert.toHexString(shufflingFullHash));
+        }
+
+        @Override
+        public long getShufflingId() {
+            return Convert.fullHashToId(shufflingFullHash);
+        }
+
+        @Override
+        public byte[] getShufflingStateHash() {
+            return shufflingFullHash;
+        }
+
     }
 
-    final class ShufflingProcessing extends ShufflingAttachment implements Prunable {
+    final class ShufflingProcessing extends AbstractShufflingAttachment implements Prunable {
 
         static ShufflingProcessing parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (!Appendix.hasAppendix(ShufflingTransaction.SHUFFLING_PROCESSING.getName(), attachmentData)) {
@@ -2837,7 +2877,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class ShufflingRecipients extends ShufflingAttachment {
+    final class ShufflingRecipients extends AbstractShufflingAttachment {
 
         private final byte[][] recipientPublicKeys;
 
@@ -2906,7 +2946,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class ShufflingVerification extends ShufflingAttachment {
+    final class ShufflingVerification extends AbstractShufflingAttachment {
 
         ShufflingVerification(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
@@ -2927,7 +2967,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    final class ShufflingCancellation extends ShufflingAttachment {
+    final class ShufflingCancellation extends AbstractShufflingAttachment {
 
         private final byte[][] blameData;
         private final byte[][] keySeeds;
