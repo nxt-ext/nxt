@@ -23,13 +23,14 @@ import nxt.util.Logger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Set;
 
 public final class Shuffler {
 
     private static final Map<Long, Map<Long, Shuffler>> shufflingsMap = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<Integer, Set<Long>> expirations = Collections.synchronizedMap(new HashMap<>());
 
     public static Shuffler addOrGetShuffler(String secretPhrase, byte[] recipientPublicKey, byte[] shufflingFullHash) {
         long shufflingId = Convert.fullHashToId(shufflingFullHash);
@@ -49,6 +50,7 @@ public final class Shuffler {
                 map.put(accountId, shuffler);
                 Shuffling shuffling = Shuffling.getShuffling(Convert.fullHashToId(shufflingFullHash));
                 if (shuffling != null) {
+                    clearExpiration(shuffling);
                     shuffler.init(shuffling);
                 }
             } else if (!Arrays.equals(shuffler.recipientPublicKey, recipientPublicKey)) {
@@ -67,9 +69,10 @@ public final class Shuffler {
             if (shufflerMap != null) {
                 shufflerMap.values().forEach(shuffler -> {
                     if (shuffler.accountId != shuffling.getIssuerId()) {
-                        shuffler.register(shuffling);
+                        shuffler.submitRegister(shuffling);
                     }
                 });
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_CREATED);
 
@@ -78,43 +81,57 @@ public final class Shuffler {
             if (shufflerMap != null) {
                 Shuffler shuffler = shufflerMap.get(shuffling.getAssigneeAccountId());
                 if (shuffler != null) {
-                    shuffler.process(shuffling);
+                    shuffler.submitProcess(shuffling);
                 }
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_ASSIGNED);
 
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = shufflingsMap.get(shuffling.getId());
             if (shufflerMap != null) {
-                shufflerMap.values().forEach(shuffler -> {
-                    if (shuffler.accountId != shuffling.getLastParticipant().getAccountId()) {
-                        boolean found = false;
-                        for (byte[] key : shuffling.getRecipientPublicKeys()) {
-                            if (Arrays.equals(key, shuffler.recipientPublicKey)) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (found) {
-                            shuffler.verify(shuffling);
-                        } else {
-                            shuffler.cancel(shuffling);
-                        }
-                    }
-                });
+                shufflerMap.values().forEach(shuffler -> shuffler.verify(shuffling));
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_PROCESSING_FINISHED);
 
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = shufflingsMap.get(shuffling.getId());
             if (shufflerMap != null) {
-                shufflerMap.values().forEach(shuffler -> {
-                    if (shuffler.accountId != shuffling.getLastParticipant().getAccountId()) {
-                        shuffler.cancel(shuffling);
-                    }
-                });
+                shufflerMap.values().forEach(shuffler -> shuffler.cancel(shuffling));
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_BLAME_STARTED);
+
+        Shuffling.addListener(Shuffler::scheduleExpiration, Shuffling.Event.SHUFFLING_DONE);
+
+        Shuffling.addListener(Shuffler::scheduleExpiration, Shuffling.Event.SHUFFLING_CANCELLED);
+
+        BlockchainProcessorImpl.getInstance().addListener(block -> {
+            Set<Long> expired = expirations.get(block.getHeight());
+            if (expired != null) {
+                expired.forEach(shufflingsMap::remove);
+                expirations.remove(block.getHeight());
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+    }
+
+    private static void scheduleExpiration(Shuffling shuffling) {
+        int expirationHeight = Nxt.getBlockchain().getHeight() + 720;
+        Set<Long> shufflingIds = expirations.get(expirationHeight);
+        if (shufflingIds == null) {
+            shufflingIds = new HashSet<>();
+            expirations.put(expirationHeight, shufflingIds);
+        }
+        shufflingIds.add(shuffling.getId());
+    }
+
+    private static void clearExpiration(Shuffling shuffling) {
+        for (Set shufflingIds : expirations.values()) {
+            if (shufflingIds.remove(shuffling.getId())) {
+                return;
+            }
+        }
     }
 
     private final long accountId;
@@ -134,54 +151,69 @@ public final class Shuffler {
             case REGISTRATION:
                 ShufflingParticipant shufflingParticipant = shuffling.getParticipant(accountId);
                 if (shufflingParticipant == null) {
-                    register(shuffling);
+                    submitRegister(shuffling);
                 }
                 break;
             case PROCESSING:
                 if (accountId == shuffling.getAssigneeAccountId()) {
-                    process(shuffling);
+                    submitProcess(shuffling);
                 }
                 break;
             case VERIFICATION:
-                if (accountId != shuffling.getLastParticipant().getAccountId()) {
-                    boolean found = false;
-                    for (byte[] key : shuffling.getRecipientPublicKeys()) {
-                        if (Arrays.equals(key, recipientPublicKey)) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found) {
-                        verify(shuffling);
-                    } else {
-                        cancel(shuffling);
-                    }
-                }
+                verify(shuffling);
                 break;
             case BLAME:
-                if (accountId != shuffling.getLastParticipant().getAccountId()) {
-                    cancel(shuffling);
-                }
+                cancel(shuffling);
                 break;
+            case DONE:
+            case CANCELLED:
+                scheduleExpiration(shuffling);
+                break;
+            default:
+                throw new RuntimeException("Unsupported shuffling stage " + shuffling.getStage());
         }
     }
 
-    private void register(Shuffling shuffling) {
+    private void verify(Shuffling shuffling) {
+        if (accountId != shuffling.getLastParticipant().getAccountId()) {
+            boolean found = false;
+            for (byte[] key : shuffling.getRecipientPublicKeys()) {
+                if (Arrays.equals(key, recipientPublicKey)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                submitVerify(shuffling);
+            } else {
+                submitCancel(shuffling);
+            }
+        }
+    }
+
+    private void cancel(Shuffling shuffling) {
+        if (accountId == shuffling.getLastParticipant().getAccountId()) {
+            return;
+        }
+        submitCancel(shuffling);
+    }
+
+    private void submitRegister(Shuffling shuffling) {
         Attachment.ShufflingRegistration attachment = new Attachment.ShufflingRegistration(shuffling.getId(), shufflingFullHash);
         submitTransaction(attachment);
     }
 
-    private void process(Shuffling shuffling) {
+    private void submitProcess(Shuffling shuffling) {
         Attachment.ShufflingAttachment attachment = shuffling.process(accountId, secretPhrase, recipientPublicKey);
         submitTransaction(attachment);
     }
 
-    private void verify(Shuffling shuffling) {
+    private void submitVerify(Shuffling shuffling) {
         Attachment.ShufflingVerification attachment = new Attachment.ShufflingVerification(shuffling.getId(), shuffling.getStateHash());
         submitTransaction(attachment);
     }
 
-    private void cancel(Shuffling shuffling) {
+    private void submitCancel(Shuffling shuffling) {
         Attachment.ShufflingCancellation attachment = shuffling.revealKeySeeds(secretPhrase, shuffling.getCancellingAccountId(), shuffling.getStateHash());
         submitTransaction(attachment);
     }

@@ -90,6 +90,7 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     @After
     public void destroy() {
+        TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions();
         blockchainProcessor.popOffTo(baseHeight);
         shutdown();
     }
