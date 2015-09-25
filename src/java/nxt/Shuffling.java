@@ -51,7 +51,7 @@ public final class Shuffling {
         REGISTRATION((byte)0, new byte[]{1,4}) {
             @Override
             byte[] getHash(Shuffling shuffling) {
-                return TransactionDb.findTransaction(shuffling.id).fullHash();
+                return shuffling.getFullHash();
             }
         },
         PROCESSING((byte)1, new byte[]{2,3,4}) {
@@ -205,6 +205,15 @@ public final class Shuffling {
 
     public static Shuffling getShuffling(long shufflingId) {
         return shufflingTable.get(shufflingDbKeyFactory.newKey(shufflingId));
+    }
+
+    public static Shuffling getShuffling(byte[] fullHash) {
+        long shufflingId = Convert.fullHashToId(fullHash);
+        Shuffling shuffling = shufflingTable.get(shufflingDbKeyFactory.newKey(shufflingId));
+        if (shuffling != null && !Arrays.equals(shuffling.getFullHash(), fullHash)) {
+            return null;
+        }
+        return shuffling;
     }
 
     public static int getHoldingShufflingCount(long holdingId, boolean includeFinished) {
@@ -384,6 +393,10 @@ public final class Shuffling {
 
     public byte[] getStateHash() {
         return stage.getHash(this);
+    }
+
+    public byte[] getFullHash() {
+        return TransactionDb.getFullHash(id);
     }
 
     public Attachment.ShufflingAttachment process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {

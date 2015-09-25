@@ -20,35 +20,37 @@ import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public final class Shuffler {
 
-    private static final Map<Long, Map<Long, Shuffler>> shufflingsMap = Collections.synchronizedMap(new HashMap<>());
-    private static final Map<Integer, Set<Long>> expirations = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, Map<Long, Shuffler>> shufflingsMap = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<Integer, Set<String>> expirations = new HashMap<>();
 
     public static Shuffler addOrGetShuffler(String secretPhrase, byte[] recipientPublicKey, byte[] shufflingFullHash) {
-        long shufflingId = Convert.fullHashToId(shufflingFullHash);
+        String hash = Convert.toHexString(shufflingFullHash);
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         synchronized (shufflingsMap) {
-            Map<Long, Shuffler> map = shufflingsMap.get(shufflingId);
+            Map<Long, Shuffler> map = shufflingsMap.get(hash);
             if (map == null) {
                 map = new HashMap<>();
-                shufflingsMap.put(shufflingId, map);
+                shufflingsMap.put(hash, map);
             }
             Shuffler shuffler = map.get(accountId);
             if (recipientPublicKey == null) {
                 return shuffler;
             }
             if (shuffler == null) {
+                Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
                 shuffler = new Shuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
                 map.put(accountId, shuffler);
-                Shuffling shuffling = Shuffling.getShuffling(Convert.fullHashToId(shufflingFullHash));
                 if (shuffling != null) {
                     clearExpiration(shuffling);
                     shuffler.init(shuffling);
@@ -62,44 +64,104 @@ public final class Shuffler {
         }
     }
 
+    public static List<Shuffler> getAllShufflers() {
+        List<Shuffler> shufflers = new ArrayList<>();
+        synchronized (shufflingsMap) {
+            shufflingsMap.values().forEach(shufflerMap -> shufflers.addAll(shufflerMap.values()));
+        }
+        return shufflers;
+    }
+
+    public static List<Shuffler> getShufflingShufflers(byte[] shufflingFullHash) {
+        List<Shuffler> shufflers = new ArrayList<>();
+        Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
+        if (shufflerMap != null) {
+            synchronized (shufflingsMap) {
+                shufflers.addAll(shufflerMap.values());
+            }
+        }
+        return shufflers;
+    }
+
+    public static List<Shuffler> getAccountShufflers(long accountId) {
+        List<Shuffler> shufflers = new ArrayList<>();
+        synchronized (shufflingsMap) {
+            shufflingsMap.values().forEach(shufflerMap -> {
+                Shuffler shuffler = shufflerMap.get(accountId);
+                if (shuffler != null) {
+                    shufflers.add(shuffler);
+                }
+            });
+        }
+        return shufflers;
+    }
+
+    public static Shuffler getShuffler(long accountId, byte[] shufflingFullHash) {
+        Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
+        if (shufflerMap != null) {
+            synchronized (shufflingsMap) {
+                return shufflerMap.get(accountId);
+            }
+        }
+        return null;
+    }
+
+    public static Shuffler stopShuffler(long accountId, byte[] shufflingFullHash) {
+        Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
+        if (shufflerMap != null) {
+            synchronized (shufflingsMap) {
+                return shufflerMap.remove(accountId);
+            }
+        }
+        return null;
+    }
+
     static {
 
         Shuffling.addListener(shuffling -> {
-            Map<Long, Shuffler> shufflerMap = shufflingsMap.get(shuffling.getId());
+            Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                shufflerMap.values().forEach(shuffler -> {
-                    if (shuffler.accountId != shuffling.getIssuerId()) {
-                        shuffler.submitRegister(shuffling);
-                    }
-                });
-                clearExpiration(shuffling);
+                synchronized (shufflingsMap) {
+                    shufflerMap.values().forEach(shuffler -> {
+                        if (shuffler.accountId != shuffling.getIssuerId()) {
+                            shuffler.submitRegister(shuffling);
+                        }
+                    });
+                    clearExpiration(shuffling);
+                }
             }
         }, Shuffling.Event.SHUFFLING_CREATED);
 
         Shuffling.addListener(shuffling -> {
-            Map<Long, Shuffler> shufflerMap = shufflingsMap.get(shuffling.getId());
+            Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                Shuffler shuffler = shufflerMap.get(shuffling.getAssigneeAccountId());
-                if (shuffler != null) {
-                    shuffler.submitProcess(shuffling);
+                synchronized (shufflingsMap) {
+                    Shuffler shuffler = shufflerMap.get(shuffling.getAssigneeAccountId());
+                    if (shuffler != null) {
+                        shuffler.submitProcess(shuffling);
+                    }
+                    clearExpiration(shuffling);
                 }
-                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_ASSIGNED);
 
         Shuffling.addListener(shuffling -> {
-            Map<Long, Shuffler> shufflerMap = shufflingsMap.get(shuffling.getId());
+            Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                shufflerMap.values().forEach(shuffler -> shuffler.verify(shuffling));
-                clearExpiration(shuffling);
+                synchronized (shufflingsMap) {
+                    shufflerMap.values().forEach(shuffler -> shuffler.verify(shuffling));
+                    clearExpiration(shuffling);
+                }
             }
         }, Shuffling.Event.SHUFFLING_PROCESSING_FINISHED);
 
         Shuffling.addListener(shuffling -> {
-            Map<Long, Shuffler> shufflerMap = shufflingsMap.get(shuffling.getId());
+            Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                shufflerMap.values().forEach(shuffler -> shuffler.cancel(shuffling));
-                clearExpiration(shuffling);
+                synchronized (shufflingsMap) {
+                    shufflerMap.values().forEach(shuffler -> shuffler.cancel(shuffling));
+                    clearExpiration(shuffling);
+                }
             }
         }, Shuffling.Event.SHUFFLING_BLAME_STARTED);
 
@@ -108,22 +170,30 @@ public final class Shuffler {
         Shuffling.addListener(Shuffler::scheduleExpiration, Shuffling.Event.SHUFFLING_CANCELLED);
 
         BlockchainProcessorImpl.getInstance().addListener(block -> {
-            Set<Long> expired = expirations.get(block.getHeight());
-            if (expired != null) {
-                expired.forEach(shufflingsMap::remove);
-                expirations.remove(block.getHeight());
+            synchronized (shufflingsMap) {
+                Set<String> expired = expirations.get(block.getHeight());
+                if (expired != null) {
+                    expired.forEach(shufflingsMap::remove);
+                    expirations.remove(block.getHeight());
+                }
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
     }
 
+    private static Map<Long, Shuffler> getShufflers(Shuffling shuffling) {
+        return shufflingsMap.get(Convert.toHexString(shuffling.getFullHash()));
+    }
+
     private static void scheduleExpiration(Shuffling shuffling) {
         int expirationHeight = Nxt.getBlockchain().getHeight() + 720;
-        Set<Long> shufflingIds = expirations.get(expirationHeight);
-        if (shufflingIds == null) {
-            shufflingIds = new HashSet<>();
-            expirations.put(expirationHeight, shufflingIds);
+        synchronized (shufflingsMap) {
+            Set<String> shufflingIds = expirations.get(expirationHeight);
+            if (shufflingIds == null) {
+                shufflingIds = new HashSet<>();
+                expirations.put(expirationHeight, shufflingIds);
+            }
+            shufflingIds.add(Convert.toHexString(shuffling.getFullHash()));
         }
-        shufflingIds.add(shuffling.getId());
     }
 
     private static void clearExpiration(Shuffling shuffling) {
@@ -144,6 +214,18 @@ public final class Shuffler {
         this.accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         this.recipientPublicKey = recipientPublicKey;
         this.shufflingFullHash = shufflingFullHash;
+    }
+
+    public long getAccountId() {
+        return accountId;
+    }
+
+    public byte[] getRecipientPublicKey() {
+        return recipientPublicKey;
+    }
+
+    public byte[] getShufflingFullHash() {
+        return shufflingFullHash;
     }
 
     private void init(Shuffling shuffling) {
