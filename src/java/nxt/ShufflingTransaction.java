@@ -61,6 +61,11 @@ public abstract class ShufflingTransaction extends TransactionType {
     }
 
     @Override
+    public final boolean canHaveRecipient() {
+        return false;
+    }
+
+    @Override
     public final boolean isPhasingSafe() {
         return false;
     }
@@ -190,10 +195,6 @@ public abstract class ShufflingTransaction extends TransactionType {
             return isDuplicate;
         }
 
-        @Override
-        public boolean canHaveRecipient() {
-            return false;
-        }
     };
 
     public static final TransactionType SHUFFLING_REGISTRATION = new ShufflingTransaction() {
@@ -300,10 +301,6 @@ public abstract class ShufflingTransaction extends TransactionType {
             }
         }
 
-        @Override
-        public boolean canHaveRecipient() {
-            return false;
-        }
     };
 
     public static final TransactionType SHUFFLING_PROCESSING = new ShufflingTransaction() {
@@ -406,11 +403,6 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
-
-        @Override
-        public boolean canHaveRecipient() {
-            return false;
-        }
 
         @Override
         public boolean isPhasable() {
@@ -519,11 +511,6 @@ public abstract class ShufflingTransaction extends TransactionType {
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
 
         @Override
-        public boolean canHaveRecipient() {
-            return false;
-        }
-
-        @Override
         public boolean isPhasable() {
             return false;
         }
@@ -610,11 +597,6 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
-
-        @Override
-        public boolean canHaveRecipient() {
-            return false;
         }
 
         @Override
@@ -727,11 +709,6 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {}
-
-        @Override
-        public boolean canHaveRecipient() {
-            return false;
-        }
 
         @Override
         public boolean isPhasable() {

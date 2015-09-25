@@ -47,10 +47,9 @@ public final class Shuffler {
             if (shuffler == null) {
                 shuffler = new Shuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
                 map.put(accountId, shuffler);
-                Shuffling shuffling = Shuffling.getShuffling(shufflingId);
-                ShufflingParticipant shufflingParticipant = ShufflingParticipant.getParticipant(shufflingId, accountId);
-                if (shuffling != null && shufflingParticipant == null && accountId != shuffling.getIssuerId()) {
-                    shuffler.register(shuffling);
+                Shuffling shuffling = Shuffling.getShuffling(Convert.fullHashToId(shufflingFullHash));
+                if (shuffling != null) {
+                    shuffler.init(shuffling);
                 }
             } else if (!Arrays.equals(shuffler.recipientPublicKey, recipientPublicKey)) {
                 throw new IllegalArgumentException("A shuffler with different recipientPublicKey already started");
@@ -128,6 +127,43 @@ public final class Shuffler {
         this.accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         this.recipientPublicKey = recipientPublicKey;
         this.shufflingFullHash = shufflingFullHash;
+    }
+
+    private void init(Shuffling shuffling) {
+        switch (shuffling.getStage()) {
+            case REGISTRATION:
+                ShufflingParticipant shufflingParticipant = shuffling.getParticipant(accountId);
+                if (shufflingParticipant == null) {
+                    register(shuffling);
+                }
+                break;
+            case PROCESSING:
+                if (accountId == shuffling.getAssigneeAccountId()) {
+                    process(shuffling);
+                }
+                break;
+            case VERIFICATION:
+                if (accountId != shuffling.getLastParticipant().getAccountId()) {
+                    boolean found = false;
+                    for (byte[] key : shuffling.getRecipientPublicKeys()) {
+                        if (Arrays.equals(key, recipientPublicKey)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        verify(shuffling);
+                    } else {
+                        cancel(shuffling);
+                    }
+                }
+                break;
+            case BLAME:
+                if (accountId != shuffling.getLastParticipant().getAccountId()) {
+                    cancel(shuffling);
+                }
+                break;
+        }
     }
 
     private void register(Shuffling shuffling) {
