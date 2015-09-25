@@ -79,12 +79,13 @@ var NRS = (function(NRS, $) {
                     msg = error;
                     NRS.logConsole(action + ' error ' + error);
                 }
-                if (!ignoreError) {
+                if (ignoreError === false) {
                     return;
                 }
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
+                $("#shape_shift_status").html($.t("error"));
             }
             doneCallback(response);
         }).fail(function (xhr, textStatus, error) {
@@ -111,7 +112,7 @@ var NRS = (function(NRS, $) {
                     async.waterfall([
                         function(callback) {
                             apiCall("marketinfo/" + pair, {}, "GET", function(data) {
-                                callback(null, data);
+                                callback(data.error, data);
                             })
                         },
                         function(marketInfoData, callback) {
@@ -125,6 +126,10 @@ var NRS = (function(NRS, $) {
                             })
                         }
                     ], function(err, data){
+                        if (err) {
+                            callback(err, err);
+                            return;
+                        }
                         var row = "";
                         row += "<tr>";
                         row += "<td>" + SUPPORTED_COINS[coins[i]].name + " " +
@@ -306,7 +311,10 @@ var NRS = (function(NRS, $) {
     function renderNxtLimit() {
         apiCall('limit/nxt_btc', {}, 'GET', function (data) {
             NRS.logConsole("limit1 " + data.limit);
-            $('#shape_shift_nxt_avail').html(String(data.limit).escapeHTML());
+            if (data.limit) {
+                $('#shape_shift_status').html($.t('ok'));
+                $('#shape_shift_nxt_avail').html(String(data.limit).escapeHTML());
+            }
         });
     }
 

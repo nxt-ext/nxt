@@ -1448,5 +1448,7 @@
   "exchange_welcome": "Welcome to the Coin Exchange",
   "exchange_greeting_1": "The coin exchange functionality is based on a 3rd party service.",
   "exchange_greeting_2": "Using the exchange may reveal your client IP to this service.",
-  "accept_exchange_link": "Accept"
+  "accept_exchange_link": "Accept",
+  "status": "Status",
+  "unavailable": "Unavailable"
 }
