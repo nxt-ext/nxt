@@ -116,6 +116,10 @@ public final class Shuffler {
         return null;
     }
 
+    public static void stopAllShufflers() {
+        shufflingsMap.clear();
+    }
+
     static {
 
         Shuffling.addListener(shuffling -> {

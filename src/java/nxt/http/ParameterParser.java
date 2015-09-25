@@ -153,6 +153,17 @@ final class ParameterParser {
         return values;
     }
 
+    static byte[] getBytes(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return Convert.EMPTY_BYTE;
+        }
+        return Convert.parseHexString(paramValue);
+    }
+
     static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         return getAccountId(req, "account", isMandatory);
     }

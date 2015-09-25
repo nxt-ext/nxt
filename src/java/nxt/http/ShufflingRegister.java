@@ -20,7 +20,6 @@ import nxt.Account;
 import nxt.Attachment;
 import nxt.NxtException;
 import nxt.Shuffling;
-import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,10 +35,7 @@ public final class ShufflingRegister extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
-        byte[] shufflingStateHash = Convert.parseHexString(Convert.emptyToNull(req.getParameter("shufflingStateHash")));
-        if (shufflingStateHash == null) {
-            return JSONResponses.missing("shufflingStateHash");
-        }
+        byte[] shufflingStateHash = ParameterParser.getBytes(req, "shufflingStateHash", true);
 
         Attachment attachment = new Attachment.ShufflingRegistration(shuffling.getId(), shufflingStateHash);
 

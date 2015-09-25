@@ -41,6 +41,7 @@ import nxt.PhasingPoll;
 import nxt.PhasingVote;
 import nxt.Poll;
 import nxt.PrunableMessage;
+import nxt.Shuffler;
 import nxt.Shuffling;
 import nxt.ShufflingParticipant;
 import nxt.TaggedData;
@@ -343,6 +344,14 @@ final class JSONData {
         putAccount(json, "account", participant.getAccountId());
         putAccount(json, "nextAccount", participant.getNextAccountId());
         json.put("state", participant.getState().getCode());
+        return json;
+    }
+
+    static JSONObject shuffler(Shuffler shuffler) {
+        JSONObject json = new JSONObject();
+        putAccount(json, "account", shuffler.getAccountId());
+        putAccount(json, "recipient", Account.getId(shuffler.getRecipientPublicKey()));
+        json.put("shufflingFullHash", Convert.toHexString(shuffler.getShufflingFullHash()));
         return json;
     }
 
