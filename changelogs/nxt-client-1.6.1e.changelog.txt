@@ -60,3 +60,10 @@ As announced with the 1.6.0e release, upgrade to the 1.6 branch is optional,
 users who depend on the current 1.5 API behavior can stay with 1.5 up until
 the 1.7 hard fork.
 
+
+The default search query operator, used when searching the MS currencies or
+the marketplace, is now AND instead of OR.
+
+The Lucene full text search library has been updated to version 5.3.1. Remove
+the old lib subdirectory if unpacking on top of a previous installation.
+
