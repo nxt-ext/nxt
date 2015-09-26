@@ -822,9 +822,7 @@ public final class Shuffling {
 
     private static byte[] getParticipantsHash(Iterable<ShufflingParticipant> participants) {
         MessageDigest digest = Crypto.sha256();
-        participants.forEach(participant -> {
-            digest.update(Convert.toBytes(participant.getAccountId()));
-        });
+        participants.forEach(participant -> digest.update(Convert.toBytes(participant.getAccountId())));
         return digest.digest();
     }
 
