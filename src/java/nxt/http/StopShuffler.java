@@ -43,6 +43,7 @@ public final class StopShuffler extends APIServlet.APIRequestHandler {
             if (accountId != 0 && Account.getId(Crypto.getPublicKey(secretPhrase)) != accountId) {
                 return JSONResponses.INCORRECT_ACCOUNT;
             }
+            accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
             if (shufflingFullHash == null) {
                 return JSONResponses.missing("shufflingFullHash");
             }

@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.NxtException;
 import nxt.Shuffler;
 import nxt.crypto.Crypto;
@@ -26,7 +25,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.INCORRECT_PUBLIC_KEY;
 import static nxt.http.JSONResponses.MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY;
 
 public final class StartShuffler extends APIServlet.APIRequestHandler {
@@ -50,9 +48,6 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
             }
         } else {
             recipientPublicKey = Crypto.getPublicKey(recipientSecretPhrase);
-        }
-        if (Account.getAccount(recipientPublicKey) != null) {
-            return INCORRECT_PUBLIC_KEY; // do not allow existing account to be used as recipient
         }
         Shuffler shuffler = Shuffler.addOrGetShuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
         return shuffler != null ? JSONData.shuffler(shuffler) : JSON.emptyJSON;

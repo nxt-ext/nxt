@@ -196,6 +196,16 @@ class ShufflingUtil {
         return response;
     }
 
+    static JSONObject stopShuffler(Tester tester, String shufflingFullHash) {
+        APICall apiCall = new APICall.Builder("stopShuffler").
+                secretPhrase(tester.getSecretPhrase()).
+                param("shufflingFullHash", shufflingFullHash).
+                build();
+        JSONObject response = apiCall.invoke();
+        Logger.logMessage("stopShufflerResponse: " + response.toJSONString());
+        return response;
+    }
+
     private ShufflingUtil() {}
 
 }

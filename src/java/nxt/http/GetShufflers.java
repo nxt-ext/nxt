@@ -47,6 +47,7 @@ public final class GetShufflers extends APIServlet.APIRequestHandler {
             if (accountId != 0 && Account.getId(Crypto.getPublicKey(secretPhrase)) != accountId) {
                 return JSONResponses.INCORRECT_ACCOUNT;
             }
+            accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
             if (shufflingFullHash == null) {
                 shufflers = Shuffler.getAccountShufflers(accountId);
             } else {

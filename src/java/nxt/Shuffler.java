@@ -17,12 +17,12 @@
 package nxt;
 
 import nxt.crypto.Crypto;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,13 +31,14 @@ import java.util.Set;
 
 public final class Shuffler {
 
-    private static final Map<String, Map<Long, Shuffler>> shufflingsMap = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, Map<Long, Shuffler>> shufflingsMap = new HashMap<>();
     private static final Map<Integer, Set<String>> expirations = new HashMap<>();
 
     public static Shuffler addOrGetShuffler(String secretPhrase, byte[] recipientPublicKey, byte[] shufflingFullHash) {
         String hash = Convert.toHexString(shufflingFullHash);
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
-        synchronized (shufflingsMap) {
+        BlockchainImpl.getInstance().writeLock();
+        try {
             Map<Long, Shuffler> map = shufflingsMap.get(hash);
             if (map == null) {
                 map = new HashMap<>();
@@ -50,74 +51,100 @@ public final class Shuffler {
             if (shuffler == null) {
                 Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
                 shuffler = new Shuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
-                map.put(accountId, shuffler);
                 if (shuffling != null) {
-                    clearExpiration(shuffling);
                     shuffler.init(shuffling);
+                    clearExpiration(shuffling);
                 }
+                map.put(accountId, shuffler);
+                Logger.logMessage(String.format("Started shuffler for account %s, shuffling %s",
+                        Long.toUnsignedString(accountId), Long.toUnsignedString(Convert.fullHashToId(shufflingFullHash))));
             } else if (!Arrays.equals(shuffler.recipientPublicKey, recipientPublicKey)) {
                 throw new IllegalArgumentException("A shuffler with different recipientPublicKey already started");
             } else if (!Arrays.equals(shuffler.shufflingFullHash, shufflingFullHash)) {
                 throw new RuntimeException("A shuffler with different shufflingFullHash already started");
+            } else {
+                Logger.logMessage("Shuffler already started");
             }
             return shuffler;
+        } finally {
+            BlockchainImpl.getInstance().writeUnlock();
         }
     }
 
     public static List<Shuffler> getAllShufflers() {
         List<Shuffler> shufflers = new ArrayList<>();
-        synchronized (shufflingsMap) {
+        BlockchainImpl.getInstance().readLock();
+        try {
             shufflingsMap.values().forEach(shufflerMap -> shufflers.addAll(shufflerMap.values()));
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
         return shufflers;
     }
 
     public static List<Shuffler> getShufflingShufflers(byte[] shufflingFullHash) {
         List<Shuffler> shufflers = new ArrayList<>();
-        Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
-        if (shufflerMap != null) {
-            synchronized (shufflingsMap) {
+        BlockchainImpl.getInstance().readLock();
+        try {
+            Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
+            if (shufflerMap != null) {
                 shufflers.addAll(shufflerMap.values());
             }
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
         return shufflers;
     }
 
     public static List<Shuffler> getAccountShufflers(long accountId) {
         List<Shuffler> shufflers = new ArrayList<>();
-        synchronized (shufflingsMap) {
+        BlockchainImpl.getInstance().readLock();
+        try {
             shufflingsMap.values().forEach(shufflerMap -> {
                 Shuffler shuffler = shufflerMap.get(accountId);
                 if (shuffler != null) {
                     shufflers.add(shuffler);
                 }
             });
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
         return shufflers;
     }
 
     public static Shuffler getShuffler(long accountId, byte[] shufflingFullHash) {
-        Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
-        if (shufflerMap != null) {
-            synchronized (shufflingsMap) {
+        BlockchainImpl.getInstance().readLock();
+        try {
+            Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
+            if (shufflerMap != null) {
                 return shufflerMap.get(accountId);
             }
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
         return null;
     }
 
     public static Shuffler stopShuffler(long accountId, byte[] shufflingFullHash) {
-        Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
-        if (shufflerMap != null) {
-            synchronized (shufflingsMap) {
+        BlockchainImpl.getInstance().writeLock();
+        try {
+            Map<Long, Shuffler> shufflerMap = shufflingsMap.get(Convert.toHexString(shufflingFullHash));
+            if (shufflerMap != null) {
                 return shufflerMap.remove(accountId);
             }
+        } finally {
+            BlockchainImpl.getInstance().writeUnlock();
         }
         return null;
     }
 
     public static void stopAllShufflers() {
-        shufflingsMap.clear();
+        BlockchainImpl.getInstance().writeLock();
+        try {
+            shufflingsMap.clear();
+        } finally {
+            BlockchainImpl.getInstance().writeUnlock();
+        }
     }
 
     static {
@@ -125,67 +152,59 @@ public final class Shuffler {
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                synchronized (shufflingsMap) {
-                    shufflerMap.values().forEach(shuffler -> {
-                        if (shuffler.accountId != shuffling.getIssuerId()) {
-                            try {
-                                shuffler.submitRegister(shuffling);
-                            } catch (RuntimeException e) {
-                                Logger.logErrorMessage(e.toString(), e);
-                            }
+                shufflerMap.values().forEach(shuffler -> {
+                    if (shuffler.accountId != shuffling.getIssuerId()) {
+                        try {
+                            shuffler.submitRegister(shuffling);
+                        } catch (RuntimeException e) {
+                            Logger.logErrorMessage(e.toString(), e);
                         }
-                    });
-                    clearExpiration(shuffling);
-                }
+                    }
+                });
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_CREATED);
 
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                synchronized (shufflingsMap) {
-                    Shuffler shuffler = shufflerMap.get(shuffling.getAssigneeAccountId());
-                    if (shuffler != null) {
-                        try {
-                            shuffler.submitProcess(shuffling);
-                        } catch (RuntimeException e) {
-                            Logger.logErrorMessage(e.toString(), e);
-                        }
+                Shuffler shuffler = shufflerMap.get(shuffling.getAssigneeAccountId());
+                if (shuffler != null) {
+                    try {
+                        shuffler.submitProcess(shuffling);
+                    } catch (RuntimeException e) {
+                        Logger.logErrorMessage(e.toString(), e);
                     }
-                    clearExpiration(shuffling);
                 }
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_ASSIGNED);
 
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                synchronized (shufflingsMap) {
-                    shufflerMap.values().forEach(shuffler -> {
-                        try {
-                            shuffler.verify(shuffling);
-                        } catch (RuntimeException e) {
-                            Logger.logErrorMessage(e.toString(), e);
-                        }
-                    });
-                    clearExpiration(shuffling);
-                }
+                shufflerMap.values().forEach(shuffler -> {
+                    try {
+                        shuffler.verify(shuffling);
+                    } catch (RuntimeException e) {
+                        Logger.logErrorMessage(e.toString(), e);
+                    }
+                });
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_PROCESSING_FINISHED);
 
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
             if (shufflerMap != null) {
-                synchronized (shufflingsMap) {
-                    shufflerMap.values().forEach(shuffler -> {
-                        try {
-                            shuffler.cancel(shuffling);
-                        } catch (RuntimeException e) {
-                            Logger.logErrorMessage(e.toString(), e);
-                        }
-                    });
-                    clearExpiration(shuffling);
-                }
+                shufflerMap.values().forEach(shuffler -> {
+                    try {
+                        shuffler.cancel(shuffling);
+                    } catch (RuntimeException e) {
+                        Logger.logErrorMessage(e.toString(), e);
+                    }
+                });
+                clearExpiration(shuffling);
             }
         }, Shuffling.Event.SHUFFLING_BLAME_STARTED);
 
@@ -194,14 +213,13 @@ public final class Shuffler {
         Shuffling.addListener(Shuffler::scheduleExpiration, Shuffling.Event.SHUFFLING_CANCELLED);
 
         BlockchainProcessorImpl.getInstance().addListener(block -> {
-            synchronized (shufflingsMap) {
-                Set<String> expired = expirations.get(block.getHeight());
-                if (expired != null) {
-                    expired.forEach(shufflingsMap::remove);
-                    expirations.remove(block.getHeight());
-                }
+            Set<String> expired = expirations.get(block.getHeight());
+            if (expired != null) {
+                expired.forEach(shufflingsMap::remove);
+                expirations.remove(block.getHeight());
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+        
     }
 
     private static Map<Long, Shuffler> getShufflers(Shuffling shuffling) {
@@ -210,14 +228,12 @@ public final class Shuffler {
 
     private static void scheduleExpiration(Shuffling shuffling) {
         int expirationHeight = Nxt.getBlockchain().getHeight() + 720;
-        synchronized (shufflingsMap) {
-            Set<String> shufflingIds = expirations.get(expirationHeight);
-            if (shufflingIds == null) {
-                shufflingIds = new HashSet<>();
-                expirations.put(expirationHeight, shufflingIds);
-            }
-            shufflingIds.add(Convert.toHexString(shuffling.getFullHash()));
+        Set<String> shufflingIds = expirations.get(expirationHeight);
+        if (shufflingIds == null) {
+            shufflingIds = new HashSet<>();
+            expirations.put(expirationHeight, shufflingIds);
         }
+        shufflingIds.add(Convert.toHexString(shuffling.getFullHash()));
     }
 
     private static void clearExpiration(Shuffling shuffling) {
@@ -253,23 +269,33 @@ public final class Shuffler {
     }
 
     private void init(Shuffling shuffling) {
+        ShufflingParticipant shufflingParticipant = shuffling.getParticipant(accountId);
         switch (shuffling.getStage()) {
             case REGISTRATION:
-                ShufflingParticipant shufflingParticipant = shuffling.getParticipant(accountId);
+                if (Account.getAccount(recipientPublicKey) != null) {
+                    throw new RuntimeException("Existing account cannot be used as shuffling recipient");
+                }
                 if (shufflingParticipant == null) {
                     submitRegister(shuffling);
                 }
                 break;
             case PROCESSING:
+                if (Account.getAccount(recipientPublicKey) != null) {
+                    throw new RuntimeException("Existing account cannot be used as shuffling recipient");
+                }
                 if (accountId == shuffling.getAssigneeAccountId()) {
                     submitProcess(shuffling);
                 }
                 break;
             case VERIFICATION:
-                verify(shuffling);
+                if (shufflingParticipant.getState() == ShufflingParticipant.State.PROCESSED) {
+                    verify(shuffling);
+                }
                 break;
             case BLAME:
-                cancel(shuffling);
+                if (shufflingParticipant.getState() != ShufflingParticipant.State.CANCELLED) {
+                    cancel(shuffling);
+                }
                 break;
             case DONE:
             case CANCELLED:
@@ -335,9 +361,18 @@ public final class Shuffler {
     }
 
     private void submitTransaction(Attachment.ShufflingAttachment attachment) {
-        if (hasUnconfirmedTransaction(attachment)) {
-            Logger.logDebugMessage("Transaction already submitted");
-            return;
+        if (BlockchainProcessorImpl.getInstance().isProcessingBlock()) {
+            if (hasUnconfirmedTransaction(attachment, TransactionProcessorImpl.getInstance().getWaitingTransactions())) {
+                Logger.logDebugMessage("Transaction already submitted");
+                return;
+            }
+        } else {
+            try (DbIterator<UnconfirmedTransaction> unconfirmedTransactions = TransactionProcessorImpl.getInstance().getAllUnconfirmedTransactions()) {
+                if (hasUnconfirmedTransaction(attachment, unconfirmedTransactions)) {
+                    Logger.logDebugMessage("Transaction already submitted");
+                    return;
+                }
+            }
         }
         try {
             Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, 0,
@@ -349,8 +384,8 @@ public final class Shuffler {
         }
     }
 
-    private boolean hasUnconfirmedTransaction(Attachment.ShufflingAttachment shufflingAttachment) {
-        for (UnconfirmedTransaction unconfirmedTransaction : TransactionProcessorImpl.getInstance().getWaitingTransactions()) {
+    private boolean hasUnconfirmedTransaction(Attachment.ShufflingAttachment shufflingAttachment, Iterable<UnconfirmedTransaction> unconfirmedTransactions) {
+        for (UnconfirmedTransaction unconfirmedTransaction : unconfirmedTransactions) {
             if (unconfirmedTransaction.getSenderId() != accountId) {
                 continue;
             }
