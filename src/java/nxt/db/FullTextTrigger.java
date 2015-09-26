@@ -435,6 +435,7 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
         try {
             QueryParser parser = new QueryParser("_DATA", analyzer);
             parser.setDateResolution("_MODIFIED", DateTools.Resolution.SECOND);
+            parser.setDefaultOperator(QueryParser.Operator.AND);
             Query query = parser.parse("_TABLE:" + schema.toUpperCase() + "." + table.toUpperCase() + " AND (" + queryText + ")");
             TopDocs documents = indexSearcher.search(query, limit);
             ScoreDoc[] hits = documents.scoreDocs;
