@@ -18,7 +18,6 @@ package nxt.db;
 
 import nxt.Nxt;
 import nxt.util.Logger;
-import org.h2.fulltext.FullTextLucene;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -266,13 +265,14 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         Connection con = null;
         try {
             con = db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT " + table + ".*, ft.score FROM " + table + ", ftl_search_data(?, 2147483647, 0) ft "
-                    + " WHERE " + table + ".db_id = ft.keys[0] AND ft.table = ? " + (multiversion ? " AND " + table + ".latest = TRUE " : " ")
+            PreparedStatement pstmt = con.prepareStatement("SELECT " + table + ".*, ft.score FROM " + table +
+                    ", ftl_search('PUBLIC', '" + table + "', ?, 2147483647, 0) ft "
+                    + " WHERE " + table + ".db_id = ft.keys[0] "
+                    + (multiversion ? " AND " + table + ".latest = TRUE " : " ")
                     + " AND " + dbClause.getClause() + sort
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setString(++i, query);
-            pstmt.setString(++i, table.toUpperCase());
             i = dbClause.set(pstmt, ++i);
             i = DbUtils.setLimits(i, pstmt, from, to);
             return getManyBy(con, pstmt, true);
@@ -447,7 +447,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public final void createSearchIndex(Connection con) throws SQLException {
         if (fullTextSearchColumns != null) {
             Logger.logDebugMessage("Creating search index on " + table + " (" + fullTextSearchColumns + ")");
-            FullTextLucene.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
+            FullTextTrigger.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
         }
     }
 

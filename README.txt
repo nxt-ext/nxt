@@ -94,9 +94,6 @@ but only shows the form for the request type specified.
 http://localhost:7876/doc - a javadoc documentation for client developers who
 want to use the Java API directly instead of going through the http interface.
 
-http://localhost:7876/admin.html - some more commonly used commands, using the
-http interface.
-
 
 Compiling:
 

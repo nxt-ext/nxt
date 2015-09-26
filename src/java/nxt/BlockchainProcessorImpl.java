@@ -20,6 +20,7 @@ import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
 import nxt.db.DerivedDbTable;
 import nxt.db.FilteringIterator;
+import nxt.db.FullTextTrigger;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -28,7 +29,6 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
-import org.h2.fulltext.FullTextLucene;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -1772,7 +1772,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 if (height == 0) {
                     Logger.logDebugMessage("Dropping all full text search indexes");
-                    FullTextLucene.dropAll(con);
+                    FullTextTrigger.dropAll(con);
                 }
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {

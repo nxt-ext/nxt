@@ -387,13 +387,13 @@ final class BlockchainImpl implements Blockchain {
     @Override
     public DbIterator<TransactionImpl> getTransactions(long accountId, byte type, byte subtype, int blockTimestamp,
                                                        boolean includeExpiredPrunable) {
-        return getTransactions(accountId, 0, type, subtype, blockTimestamp, false, false, false, 0, -1, includeExpiredPrunable);
+        return getTransactions(accountId, 0, type, subtype, blockTimestamp, false, false, false, 0, -1, includeExpiredPrunable, false);
     }
 
     @Override
     public DbIterator<TransactionImpl> getTransactions(long accountId, int numberOfConfirmations, byte type, byte subtype,
                                                        int blockTimestamp, boolean withMessage, boolean phasedOnly, boolean nonPhasedOnly,
-                                                       int from, int to, boolean includeExpiredPrunable) {
+                                                       int from, int to, boolean includeExpiredPrunable, boolean executedOnly) {
         if (phasedOnly && nonPhasedOnly) {
             throw new IllegalArgumentException("At least one of phasedOnly or nonPhasedOnly must be false");
         }
@@ -405,7 +405,11 @@ final class BlockchainImpl implements Blockchain {
         Connection con = null;
         try {
             StringBuilder buf = new StringBuilder();
-            buf.append("SELECT * FROM transaction WHERE recipient_id = ? AND sender_id <> ? ");
+            buf.append("SELECT transaction.* FROM transaction ");
+            if (executedOnly && !nonPhasedOnly) {
+                buf.append(" LEFT JOIN phasing_poll_result ON transaction.id = phasing_poll_result.id ");
+            }
+            buf.append("WHERE recipient_id = ? AND sender_id <> ? ");
             if (blockTimestamp > 0) {
                 buf.append("AND block_timestamp >= ? ");
             }
@@ -427,8 +431,14 @@ final class BlockchainImpl implements Blockchain {
             } else if (nonPhasedOnly) {
                 buf.append("AND phased = FALSE ");
             }
-
-            buf.append("UNION ALL SELECT * FROM transaction WHERE sender_id = ? ");
+            if (executedOnly && !nonPhasedOnly) {
+                buf.append("AND (phased = FALSE OR approved = TRUE) ");
+            }
+            buf.append("UNION ALL SELECT transaction.* FROM transaction ");
+            if (executedOnly && !nonPhasedOnly) {
+                buf.append(" LEFT JOIN phasing_poll_result ON transaction.id = phasing_poll_result.id ");
+            }
+            buf.append("WHERE sender_id = ? ");
             if (blockTimestamp > 0) {
                 buf.append("AND block_timestamp >= ? ");
             }
@@ -449,6 +459,9 @@ final class BlockchainImpl implements Blockchain {
                 buf.append("AND phased = TRUE ");
             } else if (nonPhasedOnly) {
                 buf.append("AND phased = FALSE ");
+            }
+            if (executedOnly && !nonPhasedOnly) {
+                buf.append("AND (phased = FALSE OR approved = TRUE) ");
             }
 
             buf.append("ORDER BY block_timestamp DESC, transaction_index DESC");
