@@ -53,4 +53,14 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
         return shuffler != null ? JSONData.shuffler(shuffler) : JSON.emptyJSON;
     }
 
+    @Override
+    boolean requirePost() {
+        return true;
+    }
+
+    @Override
+    boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }
