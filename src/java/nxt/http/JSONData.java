@@ -49,6 +49,7 @@ import nxt.Vote;
 import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
+import nxt.db.DbIterator;
 import nxt.peer.Hallmark;
 import nxt.peer.Peer;
 import nxt.util.Convert;
@@ -307,7 +308,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject block(Block block, boolean includeTransactions) {
+    static JSONObject block(Block block, boolean includeTransactions, boolean includeExecutedPhased) {
         JSONObject json = new JSONObject();
         json.put("block", block.getStringId());
         json.put("height", block.getHeight());
@@ -340,6 +341,20 @@ final class JSONData {
             block.getTransactions().forEach(transaction -> transactions.add(transaction.getStringId()));
         }
         json.put("transactions", transactions);
+        if (includeExecutedPhased) {
+            JSONArray phasedTransactions = new JSONArray();
+            try (DbIterator<PhasingPoll.PhasingPollResult> phasingPollResults = PhasingPoll.getApproved(block.getHeight())) {
+                for (PhasingPoll.PhasingPollResult phasingPollResult : phasingPollResults) {
+                    long phasedTransactionId = phasingPollResult.getId();
+                    if (includeTransactions) {
+                        phasedTransactions.add(transaction(Nxt.getBlockchain().getTransaction(phasedTransactionId)));
+                    } else {
+                        phasedTransactions.add(Long.toUnsignedString(phasedTransactionId));
+                    }
+                }
+            }
+            json.put("executedPhasedTransactions", phasedTransactions);
+        }
         return json;
     }
 
@@ -544,6 +559,7 @@ final class JSONData {
             if (phasingPollResult != null) {
                 json.put("approved", phasingPollResult.isApproved());
                 json.put("result", String.valueOf(phasingPollResult.getResult()));
+                json.put("executionHeight", phasingPollResult.getHeight());
             }
         } else if (countVotes) {
             json.put("result", String.valueOf(poll.getResult()));
@@ -556,6 +572,7 @@ final class JSONData {
         json.put("transaction", Long.toUnsignedString(phasingPollResult.getId()));
         json.put("approved", phasingPollResult.isApproved());
         json.put("result", String.valueOf(phasingPollResult.getResult()));
+        json.put("executionHeight", phasingPollResult.getHeight());
         return json;
     }
 
@@ -801,7 +818,20 @@ final class JSONData {
     }
 
     static JSONObject transaction(Transaction transaction) {
-        return transaction(transaction, null);
+        return transaction(transaction, false);
+    }
+
+    static JSONObject transaction(Transaction transaction, boolean includePhasingResult) {
+        JSONObject json = transaction(transaction, null);
+        if (includePhasingResult && transaction.getPhasing() != null) {
+            PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(transaction.getId());
+            if (phasingPollResult != null) {
+                json.put("approved", phasingPollResult.isApproved());
+                json.put("result", String.valueOf(phasingPollResult.getResult()));
+                json.put("executionHeight", phasingPollResult.getHeight());
+            }
+        }
+        return json;
     }
 
     static JSONObject transaction(Transaction transaction, Filter<Appendix> filter) {
