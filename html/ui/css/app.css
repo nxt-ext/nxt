@@ -2954,9 +2954,21 @@ label .popover-content {
   background-color: #3c8dbc;
   color: #f9f9f9;
 }
+#remem-wrap { 
+  width: 210px;
+  margin: 0 auto;
+  text-align: left;
+}
+#remem-wrap.remem-pass-hide { text-align: center; }
+#remem-wrap.remem-pass-hide #remember_account_container  { width: auto; }
+#remem-wrap.remem-pass-hide #remember_password_container { display: none; }
+
+#remem-wrap input,
+#remem-wrap label { vertical-align: middle; position: relative; margin: 0; } 
+
 #remember_password_container,#remember_account_container {
   color:#fff;
-  text-align:center;
+  width: 260px; 
 }
 #remember_password_container label,#remember_account_container label {
 	font-weight:normal;
@@ -3561,9 +3573,9 @@ body > .header .navbar {
 
 
   /* Dashboard Tables @media 600px -- duckx */
-   .content,
-   .row,
-   .panel-body { margin:0; padding: 0 }
+   #dashboard_page .content,
+   #dashboard_page .row,
+   #dashboard_page .panel-body { margin:0; padding: 0 }
 
    #dashboard_page .data-container th, 
    #transactions_page .data-container th { 

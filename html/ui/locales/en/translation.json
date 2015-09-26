@@ -889,7 +889,7 @@
   "remember_decryption_passphrase": "Remember passphrase for decryption",
   "remember_passphrase_by_default": "Remember Passphrase By Default",
   "remember_passphrase_by_default_help": "On the login screen.",
-  "remember_passphrase_during_session": "Remember Passphrase During Session",
+  "remember_passphrase_during_session": "Remember Passphrase in Session",
   "remove_from_bookmarks": "Remove From Bookmarks",
   "remove_from_group": "Remove From Group",
   "repeat": "Repeat",
