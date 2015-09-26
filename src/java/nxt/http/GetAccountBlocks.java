@@ -48,7 +48,7 @@ public final class GetAccountBlocks extends APIServlet.APIRequestHandler {
         try (DbIterator<? extends Block> iterator = Nxt.getBlockchain().getBlocks(accountId, timestamp, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Block block = iterator.next();
-                blocks.add(JSONData.block(block, includeTransactions));
+                blocks.add(JSONData.block(block, includeTransactions, false));
             }
         }
 
