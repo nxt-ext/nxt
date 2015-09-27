@@ -123,7 +123,7 @@ public final class DigitalGoodsStore {
             return tagTable.getCount();
         }
 
-        private static final DbClause inStockOnlyClause = new DbClause.FixedClause(" in_stock_count > 0 ");
+        private static final DbClause inStockOnlyClause = new DbClause.IntClause("in_stock_count", DbClause.Op.GT, 0);
 
         public static int getCountInStock() {
             return tagTable.getCount(inStockOnlyClause);
@@ -243,7 +243,8 @@ public final class DigitalGoodsStore {
 
         };
 
-        private static final DbClause inStockClause = new DbClause.FixedClause(" goods.delisted = FALSE AND goods.quantity > 0 ");
+        private static final DbClause inStockClause = new DbClause.BooleanClause("goods.delisted", false)
+                .and(new DbClause.LongClause("goods.quantity", DbClause.Op.GT, 0));
 
         public static int getCount() {
             return goodsTable.getCount();
@@ -620,14 +621,14 @@ public final class DigitalGoodsStore {
         }
 
         public static DbIterator<Purchase> getPendingSellerPurchases(final long sellerId, int from, int to) {
-            DbClause dbClause = new DbClause.LongClause("seller_id", sellerId).and(new DbClause.FixedClause("pending = TRUE"));
+            DbClause dbClause = new DbClause.LongClause("seller_id", sellerId).and(new DbClause.BooleanClause("pending", true));
             return purchaseTable.getManyBy(dbClause, from, to);
         }
 
         public static DbIterator<Purchase> getExpiredSellerPurchases(final long sellerId, int from, int to) {
             DbClause dbClause = new DbClause.LongClause("seller_id", sellerId)
-                    .and(new DbClause.FixedClause("pending = FALSE"))
-                    .and(new DbClause.FixedClause("goods IS NULL"));
+                    .and(new DbClause.BooleanClause("pending", false))
+                    .and(new DbClause.NullClause("goods"));
             return purchaseTable.getManyBy(dbClause, from, to);
         }
 
@@ -641,7 +642,7 @@ public final class DigitalGoodsStore {
             final int previousTimestamp = Nxt.getBlockchain().getBlock(block.getPreviousBlockId()).getTimestamp();
             DbClause dbClause = new DbClause.LongClause("deadline", DbClause.Op.LT, timestamp)
                     .and(new DbClause.LongClause("deadline", DbClause.Op.GTE, previousTimestamp))
-                    .and(new DbClause.FixedClause("pending = TRUE"));
+                    .and(new DbClause.BooleanClause("pending", true));
             return purchaseTable.getManyBy(dbClause, 0, -1);
         }
 
