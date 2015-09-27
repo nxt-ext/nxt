@@ -22,6 +22,8 @@ import nxt.CurrencyType;
 import nxt.Genesis;
 import nxt.HoldingType;
 import nxt.PhasingPoll;
+import nxt.Shuffling;
+import nxt.ShufflingParticipant;
 import nxt.TransactionType;
 import nxt.VoteWeighting;
 import nxt.crypto.HashFunction;
@@ -146,6 +148,18 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                     holdingTypes.put(holdingType.toString(), holdingType.getCode());
                 }
                 response.put("holdingTypes", holdingTypes);
+
+                JSONObject shufflingStages = new JSONObject();
+                for (Shuffling.Stage stage : Shuffling.Stage.values()) {
+                    shufflingStages.put(stage.toString(), stage.getCode());
+                }
+                response.put("shufflingStages", shufflingStages);
+
+                JSONObject shufflingParticipantStates = new JSONObject();
+                for (ShufflingParticipant.State state : ShufflingParticipant.State.values()) {
+                    shufflingParticipantStates.put(state.toString(), state.getCode());
+                }
+                response.put("shufflingParticipantStates", shufflingParticipantStates);
 
                 CONSTANTS = JSON.prepare(response);
             } catch (Exception e) {

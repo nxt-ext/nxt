@@ -186,7 +186,7 @@ public final class ShufflingParticipant {
     }
 
     static ShufflingParticipant getLastParticipant(long shufflingId) {
-        return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.FixedClause("next_account_id IS NULL")));
+        return shufflingParticipantTable.getBy(new DbClause.LongClause("shuffling_id", shufflingId).and(new DbClause.NullClause("next_account_id")));
     }
 
     static void addParticipant(long shufflingId, long accountId, int index) {
@@ -197,7 +197,7 @@ public final class ShufflingParticipant {
 
     static int getVerifiedCount(long shufflingId) {
         return shufflingParticipantTable.getCount(new DbClause.LongClause("shuffling_id", shufflingId).and(
-                new DbClause.FixedClause("state=" + State.VERIFIED.getCode())));
+                new DbClause.ByteClause("state", State.VERIFIED.getCode())));
     }
 
     static void init() {}

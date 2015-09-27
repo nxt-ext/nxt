@@ -32,7 +32,7 @@ public final class GetHoldingShufflings extends APIServlet.APIRequestHandler {
     static final GetHoldingShufflings instance = new GetHoldingShufflings();
 
     private GetHoldingShufflings() {
-        super(new APITag[] {APITag.SHUFFLING}, "holding", "includeFinished", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.SHUFFLING}, "holding", "stage", "includeFinished", "firstIndex", "lastIndex");
     }
 
     @Override
@@ -47,6 +47,15 @@ public final class GetHoldingShufflings extends APIServlet.APIRequestHandler {
                 return incorrect("holding");
             }
         }
+        String stageValue = Convert.emptyToNull(req.getParameter("stage"));
+        Shuffling.Stage stage = null;
+        if (stageValue != null) {
+            try {
+                stage = Shuffling.Stage.get(Byte.parseByte(stageValue));
+            } catch (RuntimeException e) {
+                return incorrect("stage");
+            }
+        }
         boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
@@ -54,7 +63,7 @@ public final class GetHoldingShufflings extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("shufflings", jsonArray);
-        try (DbIterator<Shuffling> shufflings = Shuffling.getHoldingShufflings(holdingId, includeFinished, firstIndex, lastIndex)) {
+        try (DbIterator<Shuffling> shufflings = Shuffling.getHoldingShufflings(holdingId, stage, includeFinished, firstIndex, lastIndex)) {
             for (Shuffling shuffling : shufflings) {
                 jsonArray.add(JSONData.shuffling(shuffling));
             }

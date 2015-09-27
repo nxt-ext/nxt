@@ -106,7 +106,7 @@ public final class Shuffling {
             this.allowedNext = allowedNext;
         }
 
-        private static Stage get(byte code) {
+        public static Stage get(byte code) {
             for (Stage stage : Stage.values()) {
                 if (stage.code == code) {
                     return stage;
@@ -191,7 +191,7 @@ public final class Shuffling {
     }
 
     public static int getActiveCount() {
-        return shufflingTable.getCount(new DbClause.FixedClause("blocks_remaining IS NOT NULL"));
+        return shufflingTable.getCount(new DbClause.NotNullClause("blocks_remaining"));
     }
 
     public static DbIterator<Shuffling> getAll(int from, int to) {
@@ -199,7 +199,7 @@ public final class Shuffling {
     }
 
     public static DbIterator<Shuffling> getActiveShufflings(int from, int to) {
-        return shufflingTable.getManyBy(new DbClause.FixedClause("blocks_remaining IS NOT NULL"), from, to);
+        return shufflingTable.getManyBy(new DbClause.NotNullClause("blocks_remaining"), from, to);
     }
 
     public static Shuffling getShuffling(long shufflingId) {
@@ -218,15 +218,18 @@ public final class Shuffling {
     public static int getHoldingShufflingCount(long holdingId, boolean includeFinished) {
         DbClause clause = new DbClause.LongClause("holding_id", holdingId);
         if (!includeFinished) {
-            clause = clause.and(new DbClause.FixedClause("blocks_remaining IS NOT NULL"));
+            clause = clause.and(new DbClause.NotNullClause("blocks_remaining"));
         }
         return shufflingTable.getCount(clause);
     }
 
-    public static DbIterator<Shuffling> getHoldingShufflings(long holdingId, boolean includeFinished, int from, int to) {
+    public static DbIterator<Shuffling> getHoldingShufflings(long holdingId, Stage stage, boolean includeFinished, int from, int to) {
         DbClause clause = new DbClause.LongClause("holding_id", holdingId);
         if (!includeFinished) {
-            clause = clause.and(new DbClause.FixedClause("blocks_remaining IS NOT NULL"));
+            clause = clause.and(new DbClause.NotNullClause("blocks_remaining"));
+        }
+        if (stage != null) {
+            clause = clause.and(new DbClause.ByteClause("stage", stage.getCode()));
         }
         return shufflingTable.getManyBy(clause, from, to, " ORDER BY blocks_remaining NULLS LAST ");
     }
@@ -249,9 +252,10 @@ public final class Shuffling {
             throw new RuntimeException(e.toString(), e);
         }
     }
-
+    
     public static DbIterator<Shuffling> getAssignedShufflings(long assigneeAccountId, int from, int to) {
-        return shufflingTable.getManyBy(new DbClause.LongClause("assignee_account_id", assigneeAccountId), from, to,
+        return shufflingTable.getManyBy(new DbClause.LongClause("assignee_account_id", assigneeAccountId)
+                        .and(new DbClause.ByteClause("stage", Stage.PROCESSING.getCode())), from, to,
                 " ORDER BY blocks_remaining NULLS LAST ");
     }
 
