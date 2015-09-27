@@ -198,7 +198,7 @@ public final class PhasingPoll extends AbstractPoll {
     }
 
     public static DbIterator<PhasingPollResult> getApproved(int height) {
-        return resultTable.getManyBy(new DbClause.IntClause("height", height).and(new DbClause.FixedClause("approved IS TRUE")),
+        return resultTable.getManyBy(new DbClause.IntClause("height", height).and(new DbClause.BooleanClause("approved", true)),
                 0, -1, " ORDER BY db_id ASC ");
     }
 
