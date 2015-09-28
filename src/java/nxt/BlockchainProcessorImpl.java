@@ -1261,7 +1261,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 blockListeners.notify(block, Event.BEFORE_BLOCK_ACCEPT);
                 TransactionProcessorImpl.getInstance().requeueAllUnconfirmedTransactions();
                 addBlock(block);
-                accept(block, validPhasedTransactions, invalidPhasedTransactions);
+                accept(block, validPhasedTransactions, invalidPhasedTransactions, duplicates);
 
                 Db.db.commitTransaction();
             } catch (Exception e) {
@@ -1288,6 +1288,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (height >= Constants.PHASING_BLOCK) {
             try (DbIterator<TransactionImpl> phasedTransactions = PhasingPoll.getFinishingTransactions(height + 1)) {
                 for (TransactionImpl phasedTransaction : phasedTransactions) {
+                    if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && PhasingPoll.getResult(phasedTransaction.getId()) != null) {
+                        continue;
+                    }
                     try {
                         phasedTransaction.validate();
                         if (!phasedTransaction.attachmentIsDuplicate(duplicates, true)) {
@@ -1414,7 +1417,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
-    private void accept(BlockImpl block, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions) throws TransactionNotAcceptedException {
+    private void accept(BlockImpl block, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions,
+                        Map<TransactionType, Map<String, Integer>> duplicates) throws TransactionNotAcceptedException {
         try {
             isProcessingBlock = true;
             for (TransactionImpl transaction : block.getTransactions()) {
@@ -1451,6 +1455,49 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
                 }
             }
+            if (block.getHeight() > Constants.SHUFFLING_BLOCK) {
+                SortedSet<TransactionImpl> possiblyApprovedTransactions = new TreeSet<>(finishingTransactionsComparator);
+                for (TransactionImpl transaction : block.getTransactions()) {
+                    possiblyApprovedTransactions.addAll(PhasingPoll.getLinked(transaction.fullHash()));
+                    if (transaction.getType() == TransactionType.Messaging.PHASING_VOTE_CASTING && !transaction.attachmentIsPhased()) {
+                        Attachment.MessagingPhasingVoteCasting voteCasting = (Attachment.MessagingPhasingVoteCasting)transaction.getAttachment();
+                        for (byte[] hash : voteCasting.getTransactionFullHashes()) {
+                            PhasingPoll phasingPoll = PhasingPoll.getPoll(Convert.fullHashToId(hash));
+                            if (phasingPoll.allowEarlyFinish()) {
+                                possiblyApprovedTransactions.add(TransactionDb.findTransaction(phasingPoll.getId()));
+                            }
+                        }
+                    }
+                }
+                for (TransactionImpl phasedTransaction : validPhasedTransactions) {
+                    if (phasedTransaction.getType() != TransactionType.Messaging.PHASING_VOTE_CASTING) {
+                        continue;
+                    }
+                    PhasingPoll.PhasingPollResult result = PhasingPoll.getResult(phasedTransaction.getId());
+                    if (result == null || !result.isApproved()) {
+                        continue;
+                    }
+                    Attachment.MessagingPhasingVoteCasting phasingVoteCasting = (Attachment.MessagingPhasingVoteCasting)phasedTransaction.getAttachment();
+                    for (byte[] hash : phasingVoteCasting.getTransactionFullHashes()) {
+                        PhasingPoll phasingPoll = PhasingPoll.getPoll(Convert.fullHashToId(hash));
+                        if (phasingPoll.allowEarlyFinish()) {
+                            possiblyApprovedTransactions.add(TransactionDb.findTransaction(phasingPoll.getId()));
+                        }
+                    }
+                }
+                for (TransactionImpl transaction : possiblyApprovedTransactions) {
+                    if (PhasingPoll.getResult(transaction.getId()) != null) {
+                        continue;
+                    }
+                    try {
+                        transaction.validate();
+                        transaction.getPhasing().tryCountVotes(transaction, duplicates);
+                    } catch (NxtException.ValidationException e) {
+                        Logger.logDebugMessage("At height " + block.getHeight() + " phased transaction " + transaction.getStringId()
+                                + " no longer passes validation: " + e.getMessage() + ", cannot finish early");
+                    }
+                }
+            }
             blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
             if (block.getTransactions().size() > 0) {
                 TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
@@ -1461,6 +1508,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             AccountLedger.clearEntries();
         }
     }
+
+    private static final Comparator<Transaction> finishingTransactionsComparator = Comparator
+            .comparingInt(Transaction::getHeight)
+            .thenComparingInt(Transaction::getIndex)
+            .thenComparingLong(Transaction::getId);
 
     private List<BlockImpl> popOffTo(Block commonBlock) {
         blockchain.writeLock();
@@ -1840,7 +1892,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             }
                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
                             blockchain.setLastBlock(currentBlock);
-                            accept(currentBlock, validPhasedTransactions, invalidPhasedTransactions);
+                            accept(currentBlock, validPhasedTransactions, invalidPhasedTransactions, duplicates);
                             currentBlockId = currentBlock.getNextBlockId();
                             Db.db.clearCache();
                             Db.db.commitTransaction();

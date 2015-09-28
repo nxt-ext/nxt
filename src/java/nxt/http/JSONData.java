@@ -580,7 +580,6 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(poll.getId()));
         json.put("transactionFullHash", Convert.toHexString(poll.getFullHash()));
-        json.put("finished", poll.isFinished());
         json.put("finishHeight", poll.getFinishHeight());
         json.put("quorum", String.valueOf(poll.getQuorum()));
         putAccount(json, "account", poll.getAccountId());
@@ -591,9 +590,10 @@ final class JSONData {
             whitelistJson.add(whitelisted);
         }
         json.put("whitelist", whitelistJson);
-        if (poll.getLinkedFullHashes().length > 0) {
+        List<byte[]> linkedFullHashes = poll.getLinkedFullHashes();
+        if (linkedFullHashes.size() > 0) {
             JSONArray linkedFullHashesJSON = new JSONArray();
-            for (byte[] hash : poll.getLinkedFullHashes()) {
+            for (byte[] hash : linkedFullHashes) {
                 linkedFullHashesJSON.add(Convert.toHexString(hash));
             }
             json.put("linkedFullHashes", linkedFullHashesJSON);
@@ -602,15 +602,14 @@ final class JSONData {
             json.put("hashedSecret", Convert.toHexString(poll.getHashedSecret()));
         }
         putVoteWeighting(json, poll.getVoteWeighting());
-        if (poll.isFinished()) {
-            PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
-            if (phasingPollResult != null) {
-                json.put("approved", phasingPollResult.isApproved());
-                json.put("result", String.valueOf(phasingPollResult.getResult()));
-                json.put("executionHeight", phasingPollResult.getHeight());
-            }
+        PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
+        json.put("finished", phasingPollResult != null);
+        if (phasingPollResult != null) {
+            json.put("approved", phasingPollResult.isApproved());
+            json.put("result", String.valueOf(phasingPollResult.getResult()));
+            json.put("executionHeight", phasingPollResult.getHeight());
         } else if (countVotes) {
-            json.put("result", String.valueOf(poll.getResult()));
+            json.put("result", String.valueOf(poll.countVotes()));
         }
         return json;
     }

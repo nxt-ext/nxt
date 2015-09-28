@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 
 public interface Appendix {
 
@@ -1175,10 +1176,14 @@ public interface Appendix {
             byte minBalanceModel = buffer.get();
             voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
             byte linkedFullHashesSize = buffer.get();
-            linkedFullHashes = new byte[linkedFullHashesSize][];
-            for (int i = 0; i < linkedFullHashesSize; i++) {
-                linkedFullHashes[i] = new byte[32];
-                buffer.get(linkedFullHashes[i]);
+            if (linkedFullHashesSize > 0) {
+                linkedFullHashes = new byte[linkedFullHashesSize][];
+                for (int i = 0; i < linkedFullHashesSize; i++) {
+                    linkedFullHashes[i] = new byte[32];
+                    buffer.get(linkedFullHashes[i]);
+                }
+            } else {
+                linkedFullHashes = Convert.EMPTY_BYTES;
             }
             byte hashedSecretLength = buffer.get();
             if (hashedSecretLength > 0) {
@@ -1442,8 +1447,11 @@ public interface Appendix {
         }
 
         void countVotes(TransactionImpl transaction) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && PhasingPoll.getResult(transaction.getId()) != null) {
+                return;
+            }
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
-            long result = poll.getResult();
+            long result = poll.countVotes();
             poll.finish(result);
             if (result >= poll.getQuorum()) {
                 try {
@@ -1454,6 +1462,28 @@ public interface Appendix {
                 }
             } else {
                 reject(transaction);
+            }
+        }
+
+        void tryCountVotes(TransactionImpl transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+            PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
+            long result = poll.countVotes();
+            if (result >= poll.getQuorum()) {
+                if (!transaction.attachmentIsDuplicate(duplicates, true)) {
+                    try {
+                        release(transaction);
+                        poll.finish(result);
+                        Logger.logDebugMessage("Early finish of transaction " + transaction.getStringId() + " at height " + Nxt.getBlockchain().getHeight());
+                    } catch (RuntimeException e) {
+                        Logger.logErrorMessage("Failed to release phased transaction " + transaction.getJSONObject().toJSONString(), e);
+                    }
+                } else {
+                    Logger.logDebugMessage("At height " + Nxt.getBlockchain().getHeight() + " phased transaction " + transaction.getStringId()
+                            + " is duplicate, cannot finish early");
+                }
+            } else {
+                Logger.logDebugMessage("At height " + Nxt.getBlockchain().getHeight() + " phased transaction " + transaction.getStringId()
+                        + " does not yet meet quorum, cannot finish early");
             }
         }
 

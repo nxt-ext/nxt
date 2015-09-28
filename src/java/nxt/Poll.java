@@ -300,6 +300,10 @@ public final class Poll extends AbstractPoll {
         return timestamp;
     }
 
+    public boolean isFinished() {
+        return finishHeight <= Nxt.getBlockchain().getHeight();
+    }
+
     private List<OptionResult> countResults(VoteWeighting voteWeighting) {
         int countHeight = Math.min(finishHeight, Nxt.getBlockchain().getHeight());
         if (countHeight < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {

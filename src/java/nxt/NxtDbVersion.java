@@ -977,7 +977,6 @@ class NxtDbVersion extends DbVersion {
             case 413:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_height_idx ON public_key (account_id, height DESC)");
             case 414:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 415:
                 nxt.db.FullTextTrigger.init();
@@ -1014,7 +1013,24 @@ class NxtDbVersion extends DbVersion {
             case 426:
                 apply("CREATE INDEX shuffling_data_transaction_timestamp_idx ON shuffling_data (transaction_timestamp DESC)");
             case 427:
-            	return;
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll_linked_transaction (db_id IDENTITY, "
+                        + "transaction_id BIGINT NOT NULL, linked_full_hash BINARY(32) NOT NULL, linked_transaction_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL)");
+            case 428:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_linked_transaction_id_link_idx "
+                        + "ON phasing_poll_linked_transaction (transaction_id, linked_transaction_id)");
+            case 429:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_height_idx ON phasing_poll_linked_transaction (height)");
+            case 430:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_link_id_idx "
+                        + "ON phasing_poll_linked_transaction (linked_transaction_id, transaction_id)");
+            case 431:
+                apply("ALTER TABLE phasing_poll DROP COLUMN IF EXISTS linked_full_hashes");
+            case 432:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 433:
+                return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
                         + ", probably trying to run older code on newer database");
