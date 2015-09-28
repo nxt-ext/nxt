@@ -3801,3 +3801,10 @@ body > .header .navbar {
   #registration_link { margin-top: 15px }
 }/* @media min-height: 400px */
 
+
+/*
+ * dux - Global Styles
+ * * * * * * * * * * * */
+
+/* Text Counter Below Textarea */
+.txt-count { float: right; margin: 3px 9px 0 0; font-size: 12px; }

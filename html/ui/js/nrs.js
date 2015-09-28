@@ -1442,3 +1442,13 @@ function _checkDOMenabled() {
 	} catch (exception) {}
 	return storage;
 }
+
+//Display Character Count for Textarea
+$(document).ready(function() {
+  $('label + textarea').after('<div class="txt-count"><em>Character Count: <span>--</span></em></div>');
+
+  $('textarea').keyup(function() {
+    var cs = $(this).val().length;
+    $('.txt-count span').text(cs);
+  });
+});
