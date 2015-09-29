@@ -57,12 +57,14 @@ public final class PhasingPoll extends AbstractPoll {
         private final DbKey dbKey;
         private final long result;
         private final boolean approved;
+        private final int height;
 
         private PhasingPollResult(PhasingPoll poll, long result) {
             this.id = poll.getId();
             this.dbKey = resultDbKeyFactory.newKey(this.id);
             this.result = result;
             this.approved = result >= poll.getQuorum();
+            this.height = Nxt.getBlockchain().getHeight();
         }
 
         private PhasingPollResult(ResultSet rs) throws SQLException {
@@ -70,6 +72,7 @@ public final class PhasingPoll extends AbstractPoll {
             this.dbKey = resultDbKeyFactory.newKey(this.id);
             this.result = rs.getLong("result");
             this.approved = rs.getBoolean("approved");
+            this.height = rs.getInt("height");
         }
 
         private void save(Connection con) throws SQLException {
@@ -79,7 +82,7 @@ public final class PhasingPoll extends AbstractPoll {
                 pstmt.setLong(++i, id);
                 pstmt.setLong(++i, result);
                 pstmt.setBoolean(++i, approved);
-                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.setInt(++i, height);
                 pstmt.executeUpdate();
             }
         }
@@ -94,6 +97,10 @@ public final class PhasingPoll extends AbstractPoll {
 
         public boolean isApproved() {
             return approved;
+        }
+
+        public int getHeight() {
+            return height;
         }
     }
 
@@ -188,6 +195,11 @@ public final class PhasingPoll extends AbstractPoll {
 
     public static PhasingPollResult getResult(long id) {
         return resultTable.get(resultDbKeyFactory.newKey(id));
+    }
+
+    public static DbIterator<PhasingPollResult> getApproved(int height) {
+        return resultTable.getManyBy(new DbClause.IntClause("height", height).and(new DbClause.BooleanClause("approved", true)),
+                0, -1, " ORDER BY db_id ASC ");
     }
 
     public static int getPhasedCount() {

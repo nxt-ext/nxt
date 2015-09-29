@@ -654,7 +654,7 @@ public final class Account {
     }
 
     public static int getActiveLeaseCount() {
-        return accountTable.getCount(new DbClause.FixedClause("active_lessee_id IS NOT NULL"));
+        return accountTable.getCount(new DbClause.NotNullClause("active_lessee_id"));
     }
 
     public static Account getAccount(long id) {

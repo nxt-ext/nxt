@@ -10,6 +10,27 @@ The "account" parameter of getUnconfirmedTransactions and
 getUnconfirmedTransactionIds APIs can also be repeated multiple times now, to
 specify more than one account.
 
+Several APIs have been enhanced to make dealing with phased transactions
+easier.
+
+getBlock and getBlocks now take an optional includeExecutedPhased boolean
+parameter, default false. If true, the phased transactions approved and
+executed in each block (which were accepted in some previous block), if any,
+are included separately in the response, as either an array of transaction ids
+or full transaction json depending on the value of the includeTransactions
+parameter.
+
+getTransaction and getBlockchainTransactions now take an optional boolean
+parameter includePhasingResult, default false. If true, the execution status
+of each phased transaction is also retrieved and included in the result.
+The status of each phased transaction is retrieved in a separate database
+query, so for getBlockchainTransactions requests that retrieve many phased
+transactions at the same time the performance of this API may not be optimal.
+
+getBlockchainTransactions now takes an optional executedOnly boolean
+parameter, default false. If true, phased transactions that were not executed
+are not included in the result.
+
 
 Incompatible changes:
 
@@ -38,4 +59,11 @@ only the account NXT balance and info are returned by default.
 As announced with the 1.6.0e release, upgrade to the 1.6 branch is optional,
 users who depend on the current 1.5 API behavior can stay with 1.5 up until
 the 1.7 hard fork.
+
+
+The default search query operator, used when searching the MS currencies or
+the marketplace, is now AND instead of OR.
+
+The Lucene full text search library has been updated to version 5.3.1. Remove
+the old lib subdirectory if unpacking on top of a previous installation.
 

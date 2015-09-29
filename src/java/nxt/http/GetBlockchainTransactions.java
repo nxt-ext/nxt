@@ -33,7 +33,7 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
     private GetBlockchainTransactions() {
         super(new APITag[] {APITag.ACCOUNTS, APITag.TRANSACTIONS}, "account", "timestamp", "type", "subtype",
                 "firstIndex", "lastIndex", "numberOfConfirmations", "withMessage", "phasedOnly", "nonPhasedOnly",
-                "includeExpiredPrunable");
+                "includeExpiredPrunable", "includePhasingResult", "executedOnly");
     }
 
     @Override
@@ -46,6 +46,8 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
         boolean phasedOnly = "true".equalsIgnoreCase(req.getParameter("phasedOnly"));
         boolean nonPhasedOnly = "true".equalsIgnoreCase(req.getParameter("nonPhasedOnly"));
         boolean includeExpiredPrunable = "true".equalsIgnoreCase(req.getParameter("includeExpiredPrunable"));
+        boolean includePhasingResult = "true".equalsIgnoreCase(req.getParameter("includePhasingResult"));
+        boolean executedOnly = "true".equalsIgnoreCase(req.getParameter("executedOnly"));
 
         byte type;
         byte subtype;
@@ -66,10 +68,10 @@ public final class GetBlockchainTransactions extends APIServlet.APIRequestHandle
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getTransactions(accountId, numberOfConfirmations,
                 type, subtype, timestamp, withMessage, phasedOnly, nonPhasedOnly, firstIndex, lastIndex,
-                includeExpiredPrunable)) {
+                includeExpiredPrunable, executedOnly)) {
             while (iterator.hasNext()) {
                 Transaction transaction = iterator.next();
-                transactions.add(JSONData.transaction(transaction));
+                transactions.add(JSONData.transaction(transaction, includePhasingResult));
             }
         }
 
