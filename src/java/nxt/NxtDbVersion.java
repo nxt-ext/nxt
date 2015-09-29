@@ -1017,7 +1017,7 @@ class NxtDbVersion extends DbVersion {
                         + "transaction_id BIGINT NOT NULL, linked_full_hash BINARY(32) NOT NULL, linked_transaction_id BIGINT NOT NULL, "
                         + "height INT NOT NULL)");
             case 428:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS phasing_poll_linked_transaction_id_link_idx "
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_id_link_idx "
                         + "ON phasing_poll_linked_transaction (transaction_id, linked_transaction_id)");
             case 429:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_height_idx ON phasing_poll_linked_transaction (height)");
