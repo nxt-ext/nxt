@@ -381,7 +381,13 @@ var NRS = (function(NRS, $) {
         renderMyExchangesTable();
         renderRecentTable();
         NRS.pageLoaded();
-        setTimeout(NRS.pages.exchange, 60000);
+        setTimeout(refreshPage, 60000);
+    };
+
+    refreshPage = function() {
+        if (NRS.currentPage == "exchange") {
+            NRS.pages.exchange();
+        }
     };
 
     $("#accept_exchange_link").on("click", function(e) {
