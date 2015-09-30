@@ -982,7 +982,7 @@ public final class Account {
         if (compress && data.length > 0) {
             data = Convert.compress(data);
         }
-        return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), publicKey);
+        return EncryptedData.encrypt(data, senderSecretPhrase, publicKey);
     }
 
     public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
@@ -993,7 +993,7 @@ public final class Account {
     }
 
     public static byte[] decryptFrom(byte[] publicKey, EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
-        byte[] decrypted = encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
+        byte[] decrypted = encryptedData.decrypt(recipientSecretPhrase, publicKey);
         if (uncompress && decrypted.length > 0) {
             decrypted = Convert.uncompress(decrypted);
         }

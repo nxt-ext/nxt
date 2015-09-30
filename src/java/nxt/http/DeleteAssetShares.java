@@ -50,7 +50,7 @@ public final class DeleteAssetShares extends CreateTransaction {
         }
 
         JSONStreamAware response;
-        if (Nxt.getBlockchain().getHeight() < Constants.ASSET_DELETE_BLOCK) {
+        if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
             // Use AssetTransfer attachment if asset delete is not enabled yet
             Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT);
             response = createTransaction(req, account, Genesis.CREATOR_ID, 0, attachment);

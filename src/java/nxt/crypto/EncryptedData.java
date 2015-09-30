@@ -21,26 +21,19 @@ import nxt.util.Convert;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.SecureRandom;
 
 public final class EncryptedData {
 
-    private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
-        @Override
-        protected SecureRandom initialValue() {
-            return new SecureRandom();
-        }
-    };
-
     public static final EncryptedData EMPTY_DATA = new EncryptedData(new byte[0], new byte[0]);
 
-    public static EncryptedData encrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {
+    public static EncryptedData encrypt(byte[] plaintext, String secretPhrase, byte[] theirPublicKey) {
         if (plaintext.length == 0) {
             return EMPTY_DATA;
         }
         byte[] nonce = new byte[32];
-        secureRandom.get().nextBytes(nonce);
-        byte[] data = Crypto.aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce);
+        Crypto.getSecureRandom().nextBytes(nonce);
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), theirPublicKey, nonce);
+        byte[] data = Crypto.aesEncrypt(plaintext, sharedKey);
         return new EncryptedData(data, nonce);
     }
 
@@ -58,21 +51,6 @@ public final class EncryptedData {
         buffer.get(nonce);
         return new EncryptedData(data, nonce);
     }
-
-    /*
-    public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength, long nonce)
-            throws NxtException.NotValidException {
-        if (length == 0) {
-            return EMPTY_DATA;
-        }
-        if (length > maxLength) {
-            throw new NxtException.NotValidException("Max encrypted data length exceeded: " + length);
-        }
-        byte[] data = new byte[length];
-        buffer.get(data);
-        return new EncryptedData(data, ByteBuffer.allocate(8).putLong(nonce).array());
-    }
-    */
 
     public static EncryptedData readEncryptedData(byte[] bytes) {
         if (bytes.length == 0) {
@@ -95,18 +73,12 @@ public final class EncryptedData {
         this.nonce = nonce;
     }
 
-    /*
-    public EncryptedData(byte[] data, long nonce) {
-        this.data = data;
-        this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
-    }
-    */
-
-    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
+    public byte[] decrypt(String secretPhrase, byte[] theirPublicKey) {
         if (data.length == 0) {
             return data;
         }
-        return Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), theirPublicKey, nonce);
+        return Crypto.aesDecrypt(data, sharedKey);
     }
 
     public byte[] getData() {

@@ -35,8 +35,12 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     protected static int baseHeight;
 
-    private static final String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
-    private static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
+    protected static String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
+    protected static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
+    protected static String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+    protected static String secretPhrase2 = "rshw9abtpsa2";
+    protected static String secretPhrase3 = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
+    protected static String secretPhrase4 = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
     private static final String aliceSecretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
     private static final String bobSecretPhrase2 = "rshw9abtpsa2";
@@ -86,7 +90,9 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     @After
     public void destroy() {
-        AbstractForgingTest.shutdown();
+        TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions();
+        blockchainProcessor.popOffTo(baseHeight);
+        shutdown();
     }
 
     public static void generateBlock() {

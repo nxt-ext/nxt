@@ -29,6 +29,7 @@ import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
+import nxt.Shuffling;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
@@ -152,6 +153,17 @@ final class ParameterParser {
         return values;
     }
 
+    static byte[] getBytes(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return Convert.EMPTY_BYTE;
+        }
+        return Convert.parseHexString(paramValue);
+    }
+
     static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         return getAccountId(req, "account", isMandatory);
     }
@@ -252,8 +264,12 @@ final class ParameterParser {
     }
 
     static Currency getCurrency(HttpServletRequest req) throws ParameterException {
-        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", true));
-        if (currency == null) {
+        return getCurrency(req, true);
+    }
+
+    static Currency getCurrency(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", isMandatory));
+        if (isMandatory && currency == null) {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
         return currency;
@@ -273,6 +289,14 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_OFFER);
         }
         return offer;
+    }
+
+    static Shuffling getShuffling(HttpServletRequest req) throws ParameterException {
+        Shuffling shuffling = Shuffling.getShuffling(getUnsignedLong(req, "shuffling", true));
+        if (shuffling == null) {
+            throw new ParameterException(UNKNOWN_SHUFFLING);
+        }
+        return shuffling;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {

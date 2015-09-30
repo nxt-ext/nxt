@@ -977,28 +977,76 @@ class NxtDbVersion extends DbVersion {
             case 413:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS public_key_account_id_height_idx ON public_key (account_id, height DESC)");
             case 414:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 415:
                 nxt.db.FullTextTrigger.init();
                 apply(null);
             case 416:
+                apply("CREATE TABLE IF NOT EXISTS shuffling (db_id IDENTITY, id BIGINT NOT NULL, holding_id BIGINT NULL, holding_type TINYINT NOT NULL, "
+                        + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count TINYINT NOT NULL, blocks_remaining SMALLINT NULL, "
+                        + "stage TINYINT NOT NULL, assignee_account_id BIGINT NULL, cancelling_account_id BIGINT NULL, "
+                        + "recipient_public_keys ARRAY, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 417:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_height_idx ON shuffling (id, height DESC)");
+            case 418:
+                apply("CREATE INDEX IF NOT EXISTS shuffling_holding_id_height_idx ON shuffling (holding_id, height DESC)");
+            case 419:
+                apply("CREATE INDEX IF NOT EXISTS shuffling_assignee_account_id_height_idx ON shuffling (assignee_account_id, height DESC)");
+            case 420:
+                apply("CREATE INDEX IF NOT EXISTS shuffling_height_id_idx ON shuffling (height, id)");
+            case 421:
+                apply("CREATE TABLE IF NOT EXISTS shuffling_participant (db_id IDENTITY, shuffling_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, next_account_id BIGINT NULL, participant_index TINYINT NOT NULL, "
+                        + "state TINYINT NOT NULL, blame_data ARRAY, key_seeds ARRAY, data_transaction_full_hash BINARY(32), "
+                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
+            case 422:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_participant_shuffling_id_account_id_idx ON shuffling_participant "
+                        + "(shuffling_id, account_id, height DESC)");
+            case 423:
+                apply("CREATE INDEX IF NOT EXISTS shuffling_participant_height_idx ON shuffling_participant (height, shuffling_id, account_id)");
+            case 424:
+                apply("CREATE TABLE IF NOT EXISTS shuffling_data (db_id IDENTITY, shuffling_id BIGINT NOT NULL, account_id BIGINT NOT NULL, "
+                        + "data ARRAY, transaction_timestamp INT NOT NULL, height INT NOT NULL, "
+                        + "FOREIGN KEY (height) REFERENCES block (height) ON DELETE CASCADE)");
+            case 425:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_data_id_height_idx ON shuffling_data (shuffling_id, height DESC)");
+            case 426:
+                apply("CREATE INDEX shuffling_data_transaction_timestamp_idx ON shuffling_data (transaction_timestamp DESC)");
+            case 427:
+                apply("CREATE TABLE IF NOT EXISTS phasing_poll_linked_transaction (db_id IDENTITY, "
+                        + "transaction_id BIGINT NOT NULL, linked_full_hash BINARY(32) NOT NULL, linked_transaction_id BIGINT NOT NULL, "
+                        + "height INT NOT NULL)");
+            case 428:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_id_link_idx "
+                        + "ON phasing_poll_linked_transaction (transaction_id, linked_transaction_id)");
+            case 429:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_height_idx ON phasing_poll_linked_transaction (height)");
+            case 430:
+                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_link_id_idx "
+                        + "ON phasing_poll_linked_transaction (linked_transaction_id, transaction_id)");
+            case 431:
+                apply("ALTER TABLE phasing_poll DROP COLUMN IF EXISTS linked_full_hashes");
+            case 432:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 433:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "whitelist_size TINYINT NOT NULL DEFAULT 0, "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT, "
                         + "min_balance BIGINT, holding_id BIGINT, min_balance_model TINYINT, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 417:
+            case 434:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing_voter (db_id IDENTITY, account_id BIGINT NOT NULL, "
                         + "voter_id BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
                 
-            case 418:
+            case 435:
                 apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS has_control_phasing BOOLEAN NOT NULL DEFAULT FALSE");
-            case 419:
+            case 436:
                 return;
             default:
-                throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
+                throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
+                        + ", probably trying to run older code on newer database");
         }
     }
 }

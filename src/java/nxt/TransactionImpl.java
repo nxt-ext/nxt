@@ -567,6 +567,10 @@ final class TransactionImpl implements Transaction {
         return phasing;
     }
 
+    boolean attachmentIsPhased() {
+        return attachment.isPhased(this);
+    }
+
     Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
         return publicKeyAnnouncement;
     }
@@ -725,6 +729,10 @@ final class TransactionImpl implements Transaction {
     static TransactionImpl.BuilderImpl newTransactionBuilder(byte[] bytes, JSONObject prunableAttachments) throws NxtException.NotValidException {
         BuilderImpl builder = newTransactionBuilder(bytes);
         if (prunableAttachments != null) {
+            Attachment.ShufflingProcessing shufflingProcessing = Attachment.ShufflingProcessing.parse(prunableAttachments);
+            if (shufflingProcessing != null) {
+                builder.appendix(shufflingProcessing);
+            }
             Attachment.TaggedDataUpload taggedDataUpload = Attachment.TaggedDataUpload.parse(prunableAttachments);
             if (taggedDataUpload != null) {
                 builder.appendix(taggedDataUpload);
@@ -1030,11 +1038,11 @@ final class TransactionImpl implements Transaction {
             senderAccount.addToUnconfirmedBalanceNQT(getType().getLedgerEvent(), getId(),
                     0, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if (phasing != null && type.isPhasable()) {
+        if (attachmentIsPhased()) {
             senderAccount.addToBalanceNQT(getType().getLedgerEvent(), getId(), 0, -feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {
-            if (phasing == null || !appendage.isPhasable()) {
+            if (!appendage.isPhased(this)) {
                 appendage.loadPrunable(this);
                 appendage.apply(this, senderAccount, recipientAccount);
             }
@@ -1046,11 +1054,17 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    boolean isDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+    boolean attachmentIsDuplicate(Map<TransactionType, Map<String, Integer>> duplicates, boolean atFinishHeight) {
+        if (attachmentIsPhased() && !atFinishHeight) {
+            return false;
+        }
+        if (!attachmentIsPhased() && atFinishHeight) {
+            return false;
+        }
         return type.isDuplicate(this, duplicates);
     }
 
-    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Integer>> duplicates) {
         return type.isUnconfirmedDuplicate(this, duplicates);
     }
 

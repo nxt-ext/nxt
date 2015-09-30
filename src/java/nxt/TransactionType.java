@@ -42,6 +42,7 @@ public abstract class TransactionType {
     private static final byte TYPE_ACCOUNT_CONTROL = 4;
     static final byte TYPE_MONETARY_SYSTEM = 5;
     private static final byte TYPE_DATA = 6;
+    static final byte TYPE_SHUFFLING = 7;
 
     private static final byte SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 
@@ -167,18 +168,20 @@ public abstract class TransactionType {
                 }
             case TYPE_MONETARY_SYSTEM:
                 return MonetarySystem.findTransactionType(subtype);
-            case (TYPE_DATA):
+            case TYPE_DATA:
                 switch (subtype) {
                     case SUBTYPE_DATA_TAGGED_DATA_UPLOAD:
                         return Data.TAGGED_DATA_UPLOAD;
                     case SUBTYPE_DATA_TAGGED_DATA_EXTEND:
                         return Data.TAGGED_DATA_EXTEND;
+                    default:
+                        return null;
+                }
+            case TYPE_SHUFFLING:
+                return ShufflingTransaction.findTransactionType(subtype);
             default:
                 return null;
         }
-            default:
-                return null;
-    }
     }
 
 
@@ -195,10 +198,6 @@ public abstract class TransactionType {
     abstract Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException;
 
     abstract void validateAttachment(Transaction transaction) throws NxtException.ValidationException;
-
-    void validateAttachmentAtFinish(Transaction transaction) throws NxtException.ValidationException {
-        validateAttachment(transaction);
-    }
 
     // return false iff double spending
     final boolean applyUnconfirmed(TransactionImpl transaction, Account senderAccount) {
@@ -226,7 +225,7 @@ public abstract class TransactionType {
     final void apply(TransactionImpl transaction, Account senderAccount, Account recipientAccount) {
         long amount = transaction.getAmountNQT();
         long transactionId = transaction.getId();
-        if (transaction.getPhasing() == null || !isPhasable()) {
+        if (!transaction.attachmentIsPhased()) {
             senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -amount, -transaction.getFeeNQT());
         } else {
             senderAccount.addToBalanceNQT(getLedgerEvent(), transactionId, -amount);
@@ -252,34 +251,41 @@ public abstract class TransactionType {
 
     abstract void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount);
 
-    boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+    boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
         return false;
     }
 
-    boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+    boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
         return false;
     }
 
-    static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Map<String, Boolean>> duplicates, boolean exclusive) {
-        Map<String,Boolean> typeDuplicates = duplicates.get(uniqueType);
+    static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Map<String, Integer>> duplicates, boolean exclusive) {
+        return isDuplicate(uniqueType, key, duplicates, exclusive ? 0 : Integer.MAX_VALUE);
+    }
+
+    static boolean isDuplicate(TransactionType uniqueType, String key, Map<TransactionType, Map<String, Integer>> duplicates, int maxCount) {
+        Map<String,Integer> typeDuplicates = duplicates.get(uniqueType);
         if (typeDuplicates == null) {
             typeDuplicates = new HashMap<>();
             duplicates.put(uniqueType, typeDuplicates);
         }
-        Boolean hasExclusive = typeDuplicates.get(key);
-        if (hasExclusive == null) {
-            typeDuplicates.put(key, exclusive);
+        Integer currentCount = typeDuplicates.get(key);
+        if (currentCount == null) {
+            typeDuplicates.put(key, maxCount > 0 ? 1 : 0);
             return false;
         }
-        return hasExclusive || exclusive;
+        if (currentCount == 0) {
+            return true;
+        }
+        if (currentCount < maxCount) {
+            typeDuplicates.put(key, currentCount + 1);
+            return false;
+        }
+        return true;
     }
 
     boolean isPruned(long transactionId) {
         return false;
-    }
-
-    final int getFinishValidationHeight(Transaction transaction) {
-        return transaction.getPhasing() == null ? Nxt.getBlockchain().getHeight() : (transaction.getPhasing().getFinishHeight() - 1);
     }
 
     public abstract boolean canHaveRecipient();
@@ -492,7 +498,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
                 return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
             }
@@ -563,7 +569,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
                 return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
@@ -656,7 +662,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
                 return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
@@ -737,7 +743,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Boolean>> duplicates) {
+            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasDelete attachment = (Attachment.MessagingAliasDelete) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
                 return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
@@ -852,8 +858,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
-                if (attachment.getFinishHeight() <= getFinishValidationHeight(transaction) + 1
-                        || attachment.getFinishHeight() >= getFinishValidationHeight(transaction) + Constants.MAX_POLL_DURATION) {
+                if (attachment.getFinishHeight() <= attachment.getFinishValidationHeight(transaction) + 1
+                        || attachment.getFinishHeight() >= attachment.getFinishValidationHeight(transaction) + Constants.MAX_POLL_DURATION) {
                     throw new NxtException.NotCurrentlyValidException("Invalid finishing height" + attachment.getJSONObject());
                 }
 
@@ -930,7 +936,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Double voting attempt");
                 }
 
-                if (poll.getFinishHeight() <= getFinishValidationHeight(transaction)) {
+                if (poll.getFinishHeight() <= attachment.getFinishValidationHeight(transaction)) {
                     throw new NxtException.NotCurrentlyValidException("Voting for this poll finishes at " + poll.getFinishHeight());
                 }
 
@@ -953,7 +959,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Boolean>> duplicates) {
+            boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingVoteCasting attachment = (Attachment.MessagingVoteCasting) transaction.getAttachment();
                 String key = Long.toUnsignedString(attachment.getPollId()) + ":" + Long.toUnsignedString(transaction.getSenderId());
                 return isDuplicate(Messaging.VOTE_CASTING, key, duplicates, true);
@@ -1069,9 +1075,9 @@ public abstract class TransactionType {
                     if (!Arrays.equals(poll.getFullHash(), hash)) {
                         throw new NxtException.NotCurrentlyValidException("Phased transaction hash does not match hash in voting transaction");
                     }
-                    if (poll.getFinishHeight() <= getFinishValidationHeight(transaction) + 1) {
+                    if (poll.getFinishHeight() <= attachment.getFinishValidationHeight(transaction) + 1) {
                         throw new NxtException.NotCurrentlyValidException(String.format("Phased transaction finishes at height %d which is not after approval transaction height %d",
-                                poll.getFinishHeight(), getFinishValidationHeight(transaction) + 1));
+                                poll.getFinishHeight(), attachment.getFinishValidationHeight(transaction) + 1));
                     }
                 }
             }
@@ -1140,7 +1146,7 @@ public abstract class TransactionType {
                     if (uri.length() > Constants.MAX_HUB_ANNOUNCEMENT_URI_LENGTH) {
                         throw new NxtException.NotValidException("Invalid URI length: " + uri.length());
                     }
-                    //TODO: also check URI validity here?
+                    //also check URI validity here?
                 }
             }
 
@@ -1372,7 +1378,7 @@ public abstract class TransactionType {
                         || attachment.getAssetId() == 0) {
                     throw new NxtException.NotValidException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
-                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.ASSET_DELETE_BLOCK) {
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
                     throw new NxtException.NotCurrentlyValidException("Asset transfer to Genesis no longer allowed, "
                             + "use asset delete attachment instead");
                 }
@@ -1458,7 +1464,7 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.ASSET_DELETE_BLOCK) {
+                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
                     throw new NxtException.NotCurrentlyValidException("Asset delete not yet enabled at height " + Nxt.getBlockchain().getHeight());
                 }
                 Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
@@ -1818,7 +1824,7 @@ public abstract class TransactionType {
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
                 Asset asset;
-                if (Nxt.getBlockchain().getHeight() > Constants.ASSET_DELETE_BLOCK) {
+                if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
                     asset = Asset.getAsset(attachment.getAssetId(), attachment.getHeight());
                 } else {
                     asset = Asset.getAsset(attachment.getAssetId());
@@ -1831,7 +1837,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
                 if (attachment.getHeight() > Nxt.getBlockchain().getHeight()
-                        || attachment.getHeight() <= getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
+                        || attachment.getHeight() <= attachment.getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
                 }
             }
@@ -1985,7 +1991,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String,Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.DigitalGoodsDelisting attachment = (Attachment.DigitalGoodsDelisting) transaction.getAttachment();
                 return isDuplicate(DigitalGoods.DELISTING, Long.toUnsignedString(attachment.getGoodsId()), duplicates, true);
             }
@@ -2050,7 +2056,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.DigitalGoodsPriceChange attachment = (Attachment.DigitalGoodsPriceChange) transaction.getAttachment();
                 // not a bug, uniqueness is based on DigitalGoods.DELISTING
                 return isDuplicate(DigitalGoods.DELISTING, Long.toUnsignedString(attachment.getGoodsId()), duplicates, true);
@@ -2117,7 +2123,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.DigitalGoodsQuantityChange attachment = (Attachment.DigitalGoodsQuantityChange) transaction.getAttachment();
                 // not a bug, uniqueness is based on DigitalGoods.DELISTING
                 return isDuplicate(DigitalGoods.DELISTING, Long.toUnsignedString(attachment.getGoodsId()), duplicates, true);
@@ -2211,7 +2217,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 if (Nxt.getBlockchain().getHeight() < Constants.MONETARY_SYSTEM_BLOCK) {
                     return false;
                 }
@@ -2292,7 +2298,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
                 return isDuplicate(DigitalGoods.DELIVERY, Long.toUnsignedString(attachment.getPurchaseId()), duplicates, true);
             }
@@ -2446,7 +2452,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Boolean>> duplicates) {
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.DigitalGoodsRefund attachment = (Attachment.DigitalGoodsRefund) transaction.getAttachment();
                 return isDuplicate(DigitalGoods.REFUND, Long.toUnsignedString(attachment.getPurchaseId()), duplicates, true);
             }
@@ -2639,10 +2645,6 @@ public abstract class TransactionType {
 
         @Override
         final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
-        }
-
-        @Override
-        final void validateAttachmentAtFinish(Transaction transaction) {
         }
 
         @Override

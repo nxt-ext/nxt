@@ -270,6 +270,12 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getExpectedExchangeRequests", GetExpectedExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
+        map.put("getAllShufflings", GetAllShufflings.instance);
+        map.put("getAccountShufflings", GetAccountShufflings.instance);
+        map.put("getAssignedShufflings", GetAssignedShufflings.instance);
+        map.put("getHoldingShufflings", GetHoldingShufflings.instance);
+        map.put("getShuffling", GetShuffling.instance);
+        map.put("getShufflingParticipants", GetShufflingParticipants.instance);
         map.put("getPrunableMessage", GetPrunableMessage.instance);
         map.put("getPrunableMessages", GetPrunableMessages.instance);
         map.put("getAllPrunableMessages", GetAllPrunableMessages.instance);
@@ -290,6 +296,14 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
         map.put("setAlias", SetAlias.instance);
+        map.put("shufflingCreate", ShufflingCreate.instance);
+        map.put("shufflingRegister", ShufflingRegister.instance);
+        map.put("shufflingProcess", ShufflingProcess.instance);
+        map.put("shufflingVerify", ShufflingVerify.instance);
+        map.put("shufflingCancel", ShufflingCancel.instance);
+        map.put("startShuffler", StartShuffler.instance);
+        map.put("stopShuffler", StopShuffler.instance);
+        map.put("getShufflers", GetShufflers.instance);
         map.put("deleteAlias", DeleteAlias.instance);
         map.put("signTransaction", SignTransaction.instance);
         map.put("startForging", StartForging.instance);

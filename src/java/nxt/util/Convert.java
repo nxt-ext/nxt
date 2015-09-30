@@ -157,6 +157,10 @@ public final class Convert {
         return array == null ? EMPTY_LONG : array;
     }
 
+    public static long nullToZero(Long l) {
+        return l == null ? 0 : l;
+    }
+
     public static long[] toArray(List<Long> list) {
         long[] result = new long[list.size()];
         for (int i = 0; i < list.size(); i++) {
@@ -198,6 +202,14 @@ public final class Convert {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    public static byte[] toBytes(long n) {
+        byte[] bytes = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            bytes[i] = (byte)(n >> (8 * i));
+        }
+        return bytes;
     }
 
     public static String readString(ByteBuffer buffer, int numBytes, int maxLength) throws NxtException.NotValidException {

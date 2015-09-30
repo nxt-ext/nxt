@@ -41,6 +41,9 @@ import nxt.PhasingPoll;
 import nxt.PhasingVote;
 import nxt.Poll;
 import nxt.PrunableMessage;
+import nxt.Shuffler;
+import nxt.Shuffling;
+import nxt.ShufflingParticipant;
 import nxt.TaggedData;
 import nxt.Token;
 import nxt.Trade;
@@ -308,6 +311,51 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject shuffling(Shuffling shuffling) {
+        JSONObject json = new JSONObject();
+        json.put("shuffling", Long.toUnsignedString(shuffling.getId()));
+        putAccount(json, "issuer", shuffling.getIssuerId());
+        json.put("holding", Long.toUnsignedString(shuffling.getHoldingId()));
+        json.put("holdingType", shuffling.getHoldingType().getCode());
+        if (shuffling.getAssigneeAccountId() != 0) {
+            putAccount(json, "assignee", shuffling.getAssigneeAccountId());
+        }
+        json.put("amount", String.valueOf(shuffling.getAmount()));
+        json.put("blocksRemaining", shuffling.getBlocksRemaining());
+        json.put("participantCount", shuffling.getParticipantCount());
+        json.put("stage", shuffling.getStage().getCode());
+        json.put("shufflingStateHash", Convert.toHexString(shuffling.getStateHash()));
+        json.put("shufflingFullHash", Convert.toHexString(shuffling.getFullHash()));
+        JSONArray recipientPublicKeys = new JSONArray();
+        for (byte[] recipientPublicKey : shuffling.getRecipientPublicKeys()) {
+            recipientPublicKeys.add(Convert.toHexString(recipientPublicKey));
+        }
+        if (recipientPublicKeys.size() > 0) {
+            json.put("recipientPublicKeys", recipientPublicKeys);
+        }
+        if (shuffling.getCancellingAccountId() != 0) {
+            putAccount(json, "cancellingAccount", shuffling.getCancellingAccountId());
+        }
+        return json;
+    }
+
+    static JSONObject participant(ShufflingParticipant participant) {
+        JSONObject json = new JSONObject();
+        json.put("shuffling", Long.toUnsignedString(participant.getShufflingId()));
+        putAccount(json, "account", participant.getAccountId());
+        putAccount(json, "nextAccount", participant.getNextAccountId());
+        json.put("state", participant.getState().getCode());
+        return json;
+    }
+
+    static JSONObject shuffler(Shuffler shuffler) {
+        JSONObject json = new JSONObject();
+        putAccount(json, "account", shuffler.getAccountId());
+        putAccount(json, "recipient", Account.getId(shuffler.getRecipientPublicKey()));
+        json.put("shufflingFullHash", Convert.toHexString(shuffler.getShufflingFullHash()));
+        return json;
+    }
+
     static JSONObject block(Block block, boolean includeTransactions, boolean includeExecutedPhased) {
         JSONObject json = new JSONObject();
         json.put("block", block.getStringId());
@@ -532,7 +580,6 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(poll.getId()));
         json.put("transactionFullHash", Convert.toHexString(poll.getFullHash()));
-        json.put("finished", poll.isFinished());
         json.put("finishHeight", poll.getFinishHeight());
         json.put("quorum", String.valueOf(poll.getQuorum()));
         putAccount(json, "account", poll.getAccountId());
@@ -543,9 +590,10 @@ final class JSONData {
             whitelistJson.add(whitelisted);
         }
         json.put("whitelist", whitelistJson);
-        if (poll.getLinkedFullHashes().length > 0) {
+        List<byte[]> linkedFullHashes = poll.getLinkedFullHashes();
+        if (linkedFullHashes.size() > 0) {
             JSONArray linkedFullHashesJSON = new JSONArray();
-            for (byte[] hash : poll.getLinkedFullHashes()) {
+            for (byte[] hash : linkedFullHashes) {
                 linkedFullHashesJSON.add(Convert.toHexString(hash));
             }
             json.put("linkedFullHashes", linkedFullHashesJSON);
@@ -554,15 +602,14 @@ final class JSONData {
             json.put("hashedSecret", Convert.toHexString(poll.getHashedSecret()));
         }
         putVoteWeighting(json, poll.getVoteWeighting());
-        if (poll.isFinished()) {
-            PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
-            if (phasingPollResult != null) {
-                json.put("approved", phasingPollResult.isApproved());
-                json.put("result", String.valueOf(phasingPollResult.getResult()));
-                json.put("executionHeight", phasingPollResult.getHeight());
-            }
+        PhasingPoll.PhasingPollResult phasingPollResult = PhasingPoll.getResult(poll.getId());
+        json.put("finished", phasingPollResult != null);
+        if (phasingPollResult != null) {
+            json.put("approved", phasingPollResult.isApproved());
+            json.put("result", String.valueOf(phasingPollResult.getResult()));
+            json.put("executionHeight", phasingPollResult.getHeight());
         } else if (countVotes) {
-            json.put("result", String.valueOf(poll.getResult()));
+            json.put("result", String.valueOf(poll.countVotes()));
         }
         return json;
     }

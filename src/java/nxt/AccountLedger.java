@@ -497,7 +497,13 @@ public class AccountLedger {
             CURRENCY_UNDO_CROWDFUNDING(46, false),
         // TYPE_DATA
             TAGGED_DATA_UPLOAD(47, true),
-            TAGGED_DATA_EXTEND(48, true);
+            TAGGED_DATA_EXTEND(48, true),
+        // TYPE_SHUFFLING
+            SHUFFLING_REGISTRATION(51, true),
+            SHUFFLING_PROCESSING(52, true),
+            SHUFFLING_CANCELLATION(53, false),
+            SHUFFLING_DISTRIBUTION(54, false);
+
 
         /** Event code mapping */
         private static final Map<Integer, LedgerEvent> eventMap = new HashMap<>();

@@ -162,7 +162,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Map<TransactionType, Map<String, Boolean>> unconfirmedDuplicates = new HashMap<>();
+    private final Map<TransactionType, Map<String, Integer>> unconfirmedDuplicates = new HashMap<>();
 
 
     private final Runnable removeUnconfirmedTransactionsThread = () -> {
@@ -308,9 +308,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
         ThreadPool.scheduleThread("ProcessWaitingTransactions", processWaitingTransactionsThread, 1);
         ThreadPool.runAfterStart(this::rebroadcastAllUnconfirmedTransactions);
-        if (enableTransactionRebroadcasting) {
-            ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
-        }
+        ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 23);
     }
 
     @Override
@@ -369,6 +367,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return transactions;
     }
 
+    Collection<UnconfirmedTransaction> getWaitingTransactions() {
+        return Collections.unmodifiableCollection(waitingTransactions);
+    }
+
     @Override
     public TransactionImpl[] getAllBroadcastedTransactions() {
         BlockchainImpl.getInstance().readLock();
@@ -397,13 +399,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 return;
             }
             transaction.validate();
-            processTransaction(new UnconfirmedTransaction((TransactionImpl) transaction, System.currentTimeMillis()));
-            Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
-            List<Transaction> acceptedTransactions = Collections.singletonList(transaction);
-            Peers.sendToSomePeers(acceptedTransactions);
-            transactionListeners.notify(acceptedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
-            if (enableTransactionRebroadcasting) {
+            UnconfirmedTransaction unconfirmedTransaction = new UnconfirmedTransaction((TransactionImpl) transaction, System.currentTimeMillis());
+            boolean broadcastLater = BlockchainProcessorImpl.getInstance().isProcessingBlock();
+            if (broadcastLater) {
+                waitingTransactions.add(unconfirmedTransaction);
                 broadcastedTransactions.add((TransactionImpl) transaction);
+                Logger.logDebugMessage("Will broadcast new transaction later " + transaction.getStringId());
+            } else {
+                processTransaction(unconfirmedTransaction);
+                Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
+                List<Transaction> acceptedTransactions = Collections.singletonList(transaction);
+                Peers.sendToSomePeers(acceptedTransactions);
+                transactionListeners.notify(acceptedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
+                if (enableTransactionRebroadcasting) {
+                    broadcastedTransactions.add((TransactionImpl) transaction);
+                }
             }
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
@@ -784,11 +794,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                 if (((Appendix.Prunable)appendage).hasPrunableData()) {
                                     Logger.logDebugMessage(String.format("Loading prunable data for transaction %s %s appendage",
                                             Long.toUnsignedString(transaction.getId()), appendage.getAppendixName()));
-                                    Appendix.Phasing phasing = myTransaction.getPhasing();
                                     int blockTimestamp;
                                     int height;
-                                    if (phasing != null && appendage.isPhasable()) {
-                                        height = phasing.getFinishHeight();
+                                    if (appendage.isPhased(myTransaction)) {
+                                        height = myTransaction.getPhasing().getFinishHeight();
                                         Block finishBlock = Nxt.getBlockchain().getBlockAtHeight(height);
                                         if (finishBlock == null) {
                                             throw new NxtException.NotValidException(

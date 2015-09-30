@@ -32,7 +32,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_ALIAS_NAME = incorrect("alias", "(must contain only digits and latin letters)");
     public static final JSONStreamAware INCORRECT_ALIAS_NOTFORSALE = incorrect("alias", "(alias is not for sale at the moment)");
     public static final JSONStreamAware INCORRECT_URI_LENGTH = incorrect("uri", "(length must be not longer than " + Constants.MAX_ALIAS_URI_LENGTH + " characters)");
-    public static final JSONStreamAware MISSING_SECRET_PHRASE = missingSecretPhrase();
     public static final JSONStreamAware INCORRECT_PUBLIC_KEY = incorrect("publicKey");
     public static final JSONStreamAware MISSING_ALIAS_NAME = missing("aliasName");
     public static final JSONStreamAware MISSING_ALIAS_OR_ALIAS_NAME = missing("alias", "aliasName");
@@ -123,6 +122,9 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_OFFER = incorrect("offer");
     public static final JSONStreamAware INCORRECT_ADMIN_PASSWORD = incorrect("adminPassword", "(the specified password does not match nxt.adminPassword)");
     public static final JSONStreamAware OVERFLOW = error("overflow");
+    public static final JSONStreamAware MISSING_SHUFFLING = missing("shuffling");
+    public static final JSONStreamAware UNKNOWN_SHUFFLING = unknown("shuffling");
+    public static final JSONStreamAware INCORRECT_SHUFFLING = incorrect("shuffling");
     public static final JSONStreamAware RESPONSE_STREAM_ERROR = responseError("responseOutputStream");
     public static final JSONStreamAware RESPONSE_WRITE_ERROR = responseError("responseWrite");
     public static final JSONStreamAware MISSING_TRANSACTION_FULL_HASH = missing("transactionFullHash");
@@ -142,6 +144,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_HASH_ALGORITHM = incorrect("hashAlgorithm");
     public static final JSONStreamAware MISSING_SECRET = missing("secret");
     public static final JSONStreamAware INCORRECT_SECRET = incorrect("secret");
+    public static final JSONStreamAware MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY = missing("recipientSecretPhrase", "recipientPublicKey");
     public static final JSONStreamAware MISSING_RECIPIENT_PUBLIC_KEY = missing("recipientPublicKey");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
@@ -336,6 +339,14 @@ public final class JSONResponses {
         REQUIRED_LAST_BLOCK_NOT_FOUND = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware MISSING_SECRET_PHRASE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 3);
+        response.put("errorDescription", "secretPhrase not specified or not submitted to the remote node");
+        MISSING_SECRET_PHRASE = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
@@ -344,13 +355,6 @@ public final class JSONResponses {
         } else {
             response.put("errorDescription", "At least one of " + Arrays.toString(paramNames) + " must be specified");
         }
-        return JSON.prepare(response);
-    }
-
-    static JSONStreamAware missingSecretPhrase() {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 3);
-        response.put("errorDescription", "secretPhrase not specified or not submitted to a remote node");
         return JSON.prepare(response);
     }
 

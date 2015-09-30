@@ -273,7 +273,7 @@ public class APITestServlet extends HttpServlet {
         for (String parameter : parameters) {
             buf.append("<tr class='api-call-input-tr'>\n");
             buf.append("<td>").append(parameter).append(":</td>\n");
-            buf.append("<td><input type='").append("secretPhrase".equals(parameter) || "adminPassword".equals(parameter) ? "password" : "text").append("' ");
+            buf.append("<td><input type='").append(isPassword(parameter) ? "password" : "text").append("' ");
             buf.append("name='").append(parameter).append("' ");
             String value = Convert.emptyToNull(req.getParameter(parameter));
             if (value != null) {
@@ -303,6 +303,10 @@ public class APITestServlet extends HttpServlet {
         buf.append("</div> <!-- panel-collapse -->\n");
         buf.append("</div> <!-- panel -->\n");
         return buf.toString();
+    }
+
+    private static boolean isPassword(String parameter) {
+        return "secretPhrase".equals(parameter) || "adminPassword".equals(parameter) || "recipientSecretPhrase".equals(parameter);
     }
 
     private static void appendWikiLink(String className, StringBuilder buf) {

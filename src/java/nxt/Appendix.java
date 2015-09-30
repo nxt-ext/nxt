@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 
 public interface Appendix {
 
@@ -40,6 +41,7 @@ public interface Appendix {
     Fee getBaselineFee(Transaction transaction);
     int getNextFeeHeight();
     Fee getNextFee(Transaction transaction);
+    boolean isPhased(Transaction transaction);
 
     interface Prunable {
         byte[] getHash();
@@ -152,6 +154,9 @@ public interface Appendix {
         abstract void validate(Transaction transaction) throws NxtException.ValidationException;
 
         void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
+            if (!isPhased(transaction)) {
+                return;
+            }
             validate(transaction);
         }
 
@@ -165,6 +170,11 @@ public interface Appendix {
 
         boolean isPhasable() {
             return ! (this instanceof Prunable);
+        }
+
+        @Override
+        public final boolean isPhased(Transaction transaction) {
+            return isPhasable() && transaction.getPhasing() != null;
         }
 
     }
@@ -297,7 +307,7 @@ public interface Appendix {
         private final boolean isText;
         private volatile PrunableMessage prunableMessage;
 
-        PrunablePlainMessage(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        PrunablePlainMessage(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.hash = new byte[32];
             buffer.get(this.hash);
@@ -387,10 +397,6 @@ public interface Appendix {
             if (msg == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
                 throw new NxtException.NotCurrentlyValidException("Message has been pruned prematurely");
             }
-        }
-
-        @Override
-        void validateAtFinish(Transaction transaction) {
         }
 
         @Override
@@ -679,10 +685,6 @@ public interface Appendix {
         }
 
         @Override
-        final void validateAtFinish(Transaction transaction) {
-        }
-
-        @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             PrunableMessage.add(transaction, this);
         }
@@ -817,7 +819,7 @@ public interface Appendix {
         @Override
         public void encrypt(String secretPhrase) {
             setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
+                    secretPhrase, recipientPublicKey));
         }
 
     }
@@ -939,7 +941,7 @@ public interface Appendix {
         @Override
         public void encrypt(String secretPhrase) {
             setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
+                    secretPhrase, recipientPublicKey));
         }
 
     }
@@ -1049,7 +1051,7 @@ public interface Appendix {
         @Override
         public void encrypt(String secretPhrase) {
             setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    Crypto.getPrivateKey(secretPhrase), Crypto.getPublicKey(secretPhrase)));
+                    secretPhrase, Crypto.getPublicKey(secretPhrase)));
         }
 
     }
@@ -1163,10 +1165,14 @@ public interface Appendix {
             params = new PhasingParams(buffer);
             
             byte linkedFullHashesSize = buffer.get();
-            linkedFullHashes = new byte[linkedFullHashesSize][];
-            for (int i = 0; i < linkedFullHashesSize; i++) {
-                linkedFullHashes[i] = new byte[32];
-                buffer.get(linkedFullHashes[i]);
+            if (linkedFullHashesSize > 0) {
+                linkedFullHashes = new byte[linkedFullHashesSize][];
+                for (int i = 0; i < linkedFullHashesSize; i++) {
+                    linkedFullHashes[i] = new byte[32];
+                    buffer.get(linkedFullHashes[i]);
+                }
+            } else {
+                linkedFullHashes = Convert.EMPTY_BYTES;
             }
             byte hashedSecretLength = buffer.get();
             if (hashedSecretLength > 0) {
@@ -1355,8 +1361,11 @@ public interface Appendix {
         }
 
         void countVotes(TransactionImpl transaction) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && PhasingPoll.getResult(transaction.getId()) != null) {
+                return;
+            }
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
-            long result = poll.getResult();
+            long result = poll.countVotes();
             poll.finish(result);
             if (result >= poll.getQuorum()) {
                 try {
@@ -1367,6 +1376,28 @@ public interface Appendix {
                 }
             } else {
                 reject(transaction);
+            }
+        }
+
+        void tryCountVotes(TransactionImpl transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+            PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
+            long result = poll.countVotes();
+            if (result >= poll.getQuorum()) {
+                if (!transaction.attachmentIsDuplicate(duplicates, true)) {
+                    try {
+                        release(transaction);
+                        poll.finish(result);
+                        Logger.logDebugMessage("Early finish of transaction " + transaction.getStringId() + " at height " + Nxt.getBlockchain().getHeight());
+                    } catch (RuntimeException e) {
+                        Logger.logErrorMessage("Failed to release phased transaction " + transaction.getJSONObject().toJSONString(), e);
+                    }
+                } else {
+                    Logger.logDebugMessage("At height " + Nxt.getBlockchain().getHeight() + " phased transaction " + transaction.getStringId()
+                            + " is duplicate, cannot finish early");
+                }
+            } else {
+                Logger.logDebugMessage("At height " + Nxt.getBlockchain().getHeight() + " phased transaction " + transaction.getStringId()
+                        + " does not yet meet quorum, cannot finish early");
             }
         }
 

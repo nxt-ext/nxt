@@ -212,9 +212,7 @@ public final class Poll extends AbstractPoll {
         this.dbKey = pollDbKeyFactory.newKey(this.id);
         this.name = rs.getString("name");
         this.description = rs.getString("description");
-
-        Object[] array = (Object[])rs.getArray("options").getArray();
-        this.options = Arrays.copyOf(array, array.length, String[].class);
+        this.options = DbUtils.getArray(rs, "options", String[].class);
         this.minNumberOfOptions = rs.getByte("min_num_options");
         this.maxNumberOfOptions = rs.getByte("max_num_options");
         this.minRangeValue = rs.getByte("min_range_value");
@@ -232,7 +230,7 @@ public final class Poll extends AbstractPoll {
             pstmt.setLong(++i, accountId);
             pstmt.setString(++i, name);
             pstmt.setString(++i, description);
-            pstmt.setObject(++i, options);
+            DbUtils.setArray(pstmt, ++i, options);
             pstmt.setInt(++i, finishHeight);
             pstmt.setByte(++i, voteWeighting.getVotingModel().getCode());
             DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getMinBalance());
@@ -300,6 +298,10 @@ public final class Poll extends AbstractPoll {
 
     public int getTimestamp() {
         return timestamp;
+    }
+
+    public boolean isFinished() {
+        return finishHeight <= Nxt.getBlockchain().getHeight();
     }
 
     private List<OptionResult> countResults(VoteWeighting voteWeighting) {

@@ -25,7 +25,8 @@ public final class Constants {
     public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
 
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
-    public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * 176;
+    public static final int MIN_TRANSACTION_SIZE = 176;
+    public static final int MAX_PAYLOAD_LENGTH = MAX_NUMBER_OF_TRANSACTIONS * MIN_TRANSACTION_SIZE;
     public static final long MAX_BALANCE_NXT = 1000000000;
     public static final long ONE_NXT = 100000000;
     public static final long MAX_BALANCE_NQT = MAX_BALANCE_NXT * ONE_NXT;
@@ -102,9 +103,9 @@ public final class Constants {
     public static final long MAX_CURRENCY_TOTAL_SUPPLY = 1000000000L * 100000000L;
     public static final int MAX_MINTING_RATIO = 10000; // per mint units not more than 0.01% of total supply
     public static final byte MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS = 3;
-    public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 100;
-    public static final short MIN_SHUFFLING_DELAY = 5;
-    public static final short MAX_SHUFFLING_DELAY = 1440;
+    public static final byte MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS = 30; //TODO: find max possible number, not likely to be > 30
+    public static final short MAX_SHUFFLING_REGISTRATION_PERIOD = (short)(isTestnet ? 10 : 1440);
+    public static final short SHUFFLING_PROCESSING_DEADLINE = (short)(isTestnet ? 10 : 100);
     public static final int MAX_SHUFFLING_RECIPIENTS_LENGTH = 10000;
 
     public static final int MAX_TAGGED_DATA_NAME_LENGTH = 100;
@@ -135,13 +136,14 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
     public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
-    public static final int ASSET_DELETE_BLOCK = Integer.MAX_VALUE;
+    public static final int SHUFFLING_BLOCK = isTestnet ? 428000 : Integer.MAX_VALUE;
 
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 300000 : 495000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 400000 : 532000;
 
     public static final int[] MIN_VERSION = new int[] {1, 5};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
+    public static final long SHUFFLING_DEPOSIT_NQT = (isTestnet ? 10 : 1000) * ONE_NXT;
 
     public static final long EPOCH_BEGINNING;
     static {
