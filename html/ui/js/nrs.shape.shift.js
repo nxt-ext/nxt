@@ -54,6 +54,8 @@ var NRS = (function(NRS, $) {
     };
 
     var apiCall = function(action, requestData, method, doneCallback, ignoreError, modal) {
+        NRS.logConsole("api call action: " + action + " ,data: " + JSON.stringify(requestData) + " ,method: " + method +
+            (ignoreError ? " ignore " + ignoreError : "") + (modal ? " modal " + modal : ""));
         $.ajax({
             url: NRS.settings.exchange_url + action,
             crossDomain: true,
@@ -121,7 +123,11 @@ var NRS = (function(NRS, $) {
                                 amount = amount * marketInfoData.rate;
                             }
                             apiCall("sendamount", { "amount": amount, "pair": pair}, "POST", function(data) {
-                                marketInfoData.quotedRate = data.success.quotedRate;
+                                if (data.success.quotedRate) {
+                                    marketInfoData.quotedRate = data.success.quotedRate;
+                                } else {
+                                    marketInfoData.quotedRate = 0;
+                                }
                                 callback(null, marketInfoData);
                             })
                         }
@@ -145,14 +151,20 @@ var NRS = (function(NRS, $) {
                             }
                             if (parseFloat(data.quotedRate) == 0) {
                                 quotedRate = "N/A";
+                                diff = "N/A";
                             } else {
                                 quotedRate = invert(data.quotedRate);
+                                diff = -100 * (quotedRate - rate) / rate;
                             }
-                            diff = -100 * (quotedRate - rate) / rate;
                         } else {
                             rate = data.rate;
-                            quotedRate = data.quotedRate;
-                            diff = 100 * (quotedRate - rate) / rate;
+                            if (parseFloat(data.quotedRate) == 0) {
+                                quotedRate = "N/A";
+                                diff = "N/A";
+                            } else {
+                                quotedRate = data.quotedRate;
+                                diff = 100 * (quotedRate - rate) / rate;
+                            }
                         }
                         row += "<td>" + String(rate).escapeHTML() + "</td>";
                         row += "<td>" + String(quotedRate).escapeHTML() + "</td>";
