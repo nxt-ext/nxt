@@ -18,12 +18,12 @@ import javax.servlet.http.HttpServletRequest;
  * <li>phasingWhitelisted - array of whitelisted voter account IDs</li>
  * </ul>
  * 
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>account - the account for which the phasing control is queried</li>
  * </ul>
- * </p>
+ * 
  * 
  * @see SetPhasingOnlyControl
  * 

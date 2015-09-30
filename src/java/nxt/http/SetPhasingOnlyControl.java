@@ -8,9 +8,9 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 /**
- * Sets an account control that blocks transactions unless they are phased with certain parameters<br/>
+ * Sets an account control that blocks transactions unless they are phased with certain parameters
  * 
- * </p>
+ * <p>
  * Parameters
  * <ul>
  * <li>controlVotingModel - The expected voting model of the phasing. Possible values: 
@@ -35,7 +35,7 @@ import javax.servlet.http.HttpServletRequest;
  * <li>controlHolding - The expected holding ID - asset ID or currency ID.</li>
  * <li>controlWhitelisted - multiple values - the expected whitelisted accounts</li>
  * </ul>
- * </p>
+ *
  * 
  */
 public final class SetPhasingOnlyControl extends CreateTransaction {
