@@ -104,7 +104,7 @@ public final class APIServlet extends HttpServlet {
 
         boolean allowRequiredBlockParameters() {
             return true;
-        }
+    }
 
         boolean requireBlockchain() {
             return true;
@@ -352,7 +352,10 @@ public final class APIServlet extends HttpServlet {
         map.put("trimDerivedTables", TrimDerivedTables.instance);
         map.put("hash", Hash.instance);
         map.put("fullHashToId", FullHashToId.instance);
-
+        map.put("setPhasingOnlyControl", SetPhasingOnlyControl.instance);
+        map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
+        map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
+        
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
 
@@ -414,9 +417,9 @@ public final class APIServlet extends HttpServlet {
                 }
                 try {
                     try {
-                        if (apiRequestHandler.startDbTransaction()) {
-                            Db.db.beginTransaction();
-                        }
+                if (apiRequestHandler.startDbTransaction()) {
+                    Db.db.beginTransaction();
+                }
                         if (requireBlockId != 0 && !Nxt.getBlockchain().hasBlock(requireBlockId)) {
                             response = REQUIRED_BLOCK_NOT_FOUND;
                             return;
@@ -425,7 +428,7 @@ public final class APIServlet extends HttpServlet {
                             response = REQUIRED_LAST_BLOCK_NOT_FOUND;
                             return;
                         }
-                        response = apiRequestHandler.processRequest(req, resp);
+                response = apiRequestHandler.processRequest(req, resp);
                         if (requireLastBlockId == 0 && requireBlockId != 0 && response instanceof JSONObject) {
                             ((JSONObject) response).put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
                         }
@@ -449,7 +452,7 @@ public final class APIServlet extends HttpServlet {
             } catch (ExceptionInInitializerError err) {
                 Logger.logErrorMessage("Initialization Error", err.getCause());
                 response = ERROR_INCORRECT_REQUEST;
-            }
+                }
             if (response != null && (response instanceof JSONObject)) {
                 ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
             }
@@ -459,10 +462,10 @@ public final class APIServlet extends HttpServlet {
         } finally {
             // The response will be null if we created an asynchronous context
             if (response != null) {
-                try (Writer writer = resp.getWriter()) {
+            try (Writer writer = resp.getWriter()) {
                     JSON.writeJSONString(response, writer);
-                }
             }
+        }
         }
 
     }

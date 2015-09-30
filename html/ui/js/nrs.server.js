@@ -106,6 +106,8 @@ var NRS = (function (NRS, $, undefined) {
                 ["discountNXT", "NQT"],
                 ["phasingQuorumNXT", ""],
                 ["phasingMinBalanceNXT", ""],
+                ["controlQuorumNXT", ""],
+                ["controlMinBalanceNXT", ""],
                 ["minBalanceNXT", ""]
             ];
 
@@ -130,6 +132,8 @@ var NRS = (function (NRS, $, undefined) {
             var currencyFields = [
                 ["phasingQuorumQNTf", "phasingHoldingDecimals"],
                 ["phasingMinBalanceQNTf", "phasingHoldingDecimals"],
+                ["controlQuorumQNTf", "controlHoldingDecimals"],
+                ["controlMinBalanceQNTf", "controlHoldingDecimals"],
                 ["minBalanceQNTf", "create_poll_asset_decimals"],
                 ["minBalanceQNTf", "create_poll_ms_decimals"]
             ];

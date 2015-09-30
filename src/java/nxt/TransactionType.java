@@ -16,7 +16,11 @@
 
 package nxt;
 
+import nxt.Account.ControlType;
 import nxt.AccountLedger.LedgerEvent;
+import nxt.Attachment.AbstractAttachment;
+import nxt.NxtException.ValidationException;
+import nxt.VoteWeighting.VotingModel;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -70,7 +74,8 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
-
+    private static final byte SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY = 1;
+    
     private static final byte SUBTYPE_DATA_TAGGED_DATA_UPLOAD = 0;
     private static final byte SUBTYPE_DATA_TAGGED_DATA_EXTEND = 1;
 
@@ -153,7 +158,9 @@ public abstract class TransactionType {
             case TYPE_ACCOUNT_CONTROL:
                 switch (subtype) {
                     case SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING:
-                        return AccountControl.EFFECTIVE_BALANCE_LEASING;
+                        return TransactionType.AccountControl.EFFECTIVE_BALANCE_LEASING;
+                    case SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY:
+                        return TransactionType.AccountControl.SET_PHASING_ONLY;
                     default:
                         return null;
                 }
@@ -1693,7 +1700,7 @@ public abstract class TransactionType {
                 if (ask.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
                             + Long.toUnsignedString(ask.getAccountId()));
-                }
+            }
             }
 
         };
@@ -1746,7 +1753,7 @@ public abstract class TransactionType {
                 if (bid.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
                             + Long.toUnsignedString(bid.getAccountId()));
-                }
+            }
             }
 
         };
@@ -2545,6 +2552,72 @@ public abstract class TransactionType {
 
         };
 
+        public static final TransactionType SET_PHASING_ONLY = new AccountControl() {
+
+            @Override
+            public byte getSubtype() {
+                return SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ACCOUNT_CONTROL_PHASING_ONLY;
+            }
+
+            @Override
+            AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
+                return new Attachment.SetPhasingOnly(buffer, transactionVersion);
+            }
+
+            @Override
+            AbstractAttachment parseAttachment(JSONObject attachmentData) {
+                return new Attachment.SetPhasingOnly(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Phasing only account control not yet enabled");
+                }
+                Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
+                attachment.getPhasingParams().validate();
+                if (attachment.getPhasingParams().getVoteWeighting().getVotingModel() == VotingModel.NONE) {
+                    Account senderAccount = Account.getAccount(transaction.getSenderId());
+                    if (!senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
+                        new NxtException.NotCurrentlyValidException("Phasing only account control is not enabled for account "
+                                + Long.toUnsignedString(transaction.getSenderId()) + ", consequently cannot be removed");
+                    }
+                }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                return TransactionType.isDuplicate(SET_PHASING_ONLY, Long.toUnsignedString(transaction.getSenderId()), duplicates, true);
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
+                AccountRestrictions.PhasingOnly.set(senderAccount, attachment);
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public String getName() {
+                return "SetPhasingOnly";
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return false;
+            }
+            
+        };
+        
     }
 
     public static abstract class Data extends TransactionType {

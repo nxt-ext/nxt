@@ -39,7 +39,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
@@ -47,6 +50,10 @@ public final class Account {
     public enum Event {
         BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE, CURRENCY_BALANCE, UNCONFIRMED_CURRENCY_BALANCE,
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
+    }
+
+    public enum ControlType {
+        PHASING_ONLY
     }
 
     public static final class AccountAsset {
@@ -221,7 +228,7 @@ public final class Account {
             this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
             this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
             this.nextLesseeId = rs.getLong("next_lessee_id");
-        }
+    }
 
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_lease "
@@ -732,8 +739,8 @@ public final class Account {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement(
                     "SELECT * FROM account_lease WHERE current_leasing_height_from = ? AND latest = TRUE "
-                    + "UNION ALL SELECT * FROM account_lease WHERE current_leasing_height_to = ? AND latest = TRUE "
-                    + "ORDER BY current_lessee_id, lessor_id");
+                            + "UNION ALL SELECT * FROM account_lease WHERE current_leasing_height_to = ? AND latest = TRUE "
+                            + "ORDER BY current_lessee_id, lessor_id");
             int i = 0;
             pstmt.setInt(++i, height);
             pstmt.setInt(++i, height);
@@ -882,6 +889,7 @@ public final class Account {
     private long unconfirmedBalanceNQT;
     private long forgedBalanceNQT;
     private long activeLesseeId;
+    private Set<ControlType> controls;
 
     private Account(long id) {
         if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
@@ -889,6 +897,7 @@ public final class Account {
         }
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
+        this.controls = Collections.emptySet();
     }
 
     private Account(ResultSet rs) throws SQLException {
@@ -898,26 +907,32 @@ public final class Account {
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
         this.forgedBalanceNQT = rs.getLong("forged_balance");
         this.activeLesseeId = rs.getLong("active_lessee_id");
+        if (rs.getBoolean("has_control_phasing")) {
+            controls = Collections.unmodifiableSet(EnumSet.of(ControlType.PHASING_ONLY));
+        } else {
+            controls = Collections.emptySet();
+        }
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, "
                 + "balance, unconfirmed_balance, forged_balance, "
-                + "active_lessee_id, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "active_lessee_id, has_control_phasing, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.balanceNQT);
             pstmt.setLong(++i, this.unconfirmedBalanceNQT);
             pstmt.setLong(++i, this.forgedBalanceNQT);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.activeLesseeId);
+            pstmt.setBoolean(++i, controls.contains(ControlType.PHASING_ONLY));
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
 
     private void save() {
-        if (balanceNQT == 0 && unconfirmedBalanceNQT == 0 && forgedBalanceNQT == 0 && activeLesseeId == 0) {
+        if (balanceNQT == 0 && unconfirmedBalanceNQT == 0 && forgedBalanceNQT == 0 && activeLesseeId == 0 && controls.isEmpty()) {
             accountTable.delete(this, true);
         } else {
             accountTable.insert(this);
@@ -941,7 +956,7 @@ public final class Account {
         } else {
             accountInfo.name = name;
             accountInfo.description = description;
-        }
+    }
         accountInfo.save();
     }
 
@@ -1180,6 +1195,10 @@ public final class Account {
         return getUnconfirmedCurrencyUnits(this.id, currencyId);
     }
 
+    public Set<ControlType> getControls() {
+        return controls;
+    }
+
     void leaseEffectiveBalance(long lesseeId, short period) {
         int height = Nxt.getBlockchain().getHeight();
         AccountLease accountLease = accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(id));
@@ -1202,6 +1221,26 @@ public final class Account {
         }
         accountLeaseTable.insert(accountLease);
         leaseListeners.notify(accountLease, Event.LEASE_SCHEDULED);
+    }
+
+    void addControl(ControlType control) {
+        if (controls.contains(control)) {
+            return;
+        }
+        EnumSet<ControlType> newControls = EnumSet.of(control);
+        newControls.addAll(controls);
+        controls = Collections.unmodifiableSet(newControls);
+        accountTable.insert(this);
+    }
+
+    void removeControl(ControlType control) {
+        if (!controls.contains(control)) {
+            return;
+        }
+        EnumSet<ControlType> newControls = EnumSet.copyOf(controls);
+        newControls.remove(control);
+        controls = Collections.unmodifiableSet(newControls);
+        accountTable.insert(this);
     }
 
     static boolean setOrVerify(long accountId, byte[] key) {

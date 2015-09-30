@@ -204,6 +204,12 @@ var NRS = (function(NRS, $, undefined) {
                     'i18nKeyTitle': 'balance_leasing',
                     'iconHTML': '<i class="fa fa-arrow-circle-o-right"></i>',
                     'receiverPage': "transactions"
+                },
+                1: {
+                    'title': "Mandatory Approval",
+                    'i18nKeyTitle': 'phasing_only',
+                    'iconHTML': '<i class="fa fa-gavel"></i>',
+                    'receiverPage': "transactions"
                 }
             }
         },

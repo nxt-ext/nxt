@@ -27,6 +27,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Helper {
 
@@ -60,6 +62,21 @@ public class Helper {
         @Override
         public void notify(Block block) {
             Logger.logDebugMessage("Block Generated at height %d with %d transactions\n", block.getHeight(), block.getTransactions().size());
+        }
+    }
+    
+    public static class EasyMap {
+        public static <K, V> Map<K, V> of(K k1, V v1) {
+            HashMap<K, V> result = new HashMap<K, V>();
+            result.put(k1, v1);
+            return result;
+        }
+        
+        public static <K, V> Map<K, V> of(K k1, V v1, K k2, V v2) {
+            HashMap<K, V> result = new HashMap<K, V>();
+            result.put(k1, v1);
+            result.put(k2, v2);
+            return result;
         }
     }
 }

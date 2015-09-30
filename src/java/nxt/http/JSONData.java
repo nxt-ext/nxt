@@ -17,6 +17,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.AccountRestrictions;
 import nxt.AccountLedger.LedgerEntry;
 import nxt.Alias;
 import nxt.Appendix;
@@ -637,6 +638,21 @@ final class JSONData {
         if (voteWeighting.getHoldingId() != 0) {
             json.put("holding", Long.toUnsignedString(voteWeighting.getHoldingId()));
         }
+    }
+
+    static JSONObject phasingOnly(AccountRestrictions.PhasingOnly phasingOnly) {
+        JSONObject json = new JSONObject();
+        putAccount(json, "account", phasingOnly.getAccountId());
+        json.put("quorum", String.valueOf(phasingOnly.getPhasingParams().getQuorum()));
+        JSONArray whitelistJson = new JSONArray();
+        for (long accountId : phasingOnly.getPhasingParams().getWhitelist()) {
+            JSONObject whitelisted = new JSONObject();
+            putAccount(whitelisted, "whitelisted", accountId);
+            whitelistJson.add(whitelisted);
+        }
+        json.put("whitelist", whitelistJson);
+        putVoteWeighting(json, phasingOnly.getPhasingParams().getVoteWeighting());
+        return json;
     }
 
     static JSONObject purchase(DigitalGoodsStore.Purchase purchase) {

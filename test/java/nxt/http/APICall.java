@@ -90,6 +90,10 @@ public class APICall {
             return param("recipient", Long.toUnsignedString(id));
         }
 
+        public String getParam(String key) {
+            return params.get(key).get(0);
+        }
+
         public APICall build() {
             return new APICall(this);
         }

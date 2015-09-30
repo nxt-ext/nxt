@@ -3438,4 +3438,49 @@ public interface Attachment extends Appendix {
 
     }
 
+    final class SetPhasingOnly extends AbstractAttachment {
+
+        private final PhasingParams phasingParams;
+
+        public SetPhasingOnly(PhasingParams params) {
+            phasingParams = params;
+        }
+
+        SetPhasingOnly(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            phasingParams = new PhasingParams(buffer);
+        }
+
+        SetPhasingOnly(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONObject phasingControlParams = (JSONObject) attachmentData.get("phasingControlParams");
+            phasingParams = new PhasingParams(phasingControlParams);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.AccountControl.SET_PHASING_ONLY;
+        }
+
+        @Override
+        int getMySize() {
+            return phasingParams.getMySize();
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            phasingParams.putMyBytes(buffer);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            JSONObject phasingControlParams = new JSONObject();
+            phasingParams.putMyJSON(phasingControlParams);
+            json.put("phasingControlParams", phasingControlParams);
+        }
+
+        public PhasingParams getPhasingParams() {
+            return phasingParams;
+        }
+    }
 }

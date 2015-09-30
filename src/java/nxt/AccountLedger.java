@@ -480,6 +480,7 @@ public class AccountLedger {
             DIGITAL_GOODS_REFUND(31, true),
         // TYPE_ACCOUNT_CONTROL
             ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING(32, true),
+            ACCOUNT_CONTROL_PHASING_ONLY(55, true),
         // TYPE_CURRENCY
             CURRENCY_DELETION(33, true),
             CURRENCY_DISTRIBUTION(34, false),

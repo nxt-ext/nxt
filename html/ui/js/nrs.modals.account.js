@@ -132,22 +132,22 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
             var infoModalTransactionsTable = $("#user_info_modal_transactions_table");
-            if (response.transactions && response.transactions.length) {
+			if (response.transactions && response.transactions.length) {
 				var rows = "";
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
 					var transactionType = $.t(NRS.transactionTypes[transaction.type].subTypes[transaction.subtype].i18nKeyTitle);
 					if (transaction.type == NRS.subtype.AliasSell.type && transaction.subtype == NRS.subtype.AliasSell.subtype) {
-                        if (transaction.attachment.priceNQT == "0") {
-                            if (transaction.sender == transaction.recipient) {
-                                transactionType = $.t("alias_sale_cancellation");
-                            } else {
-                                transactionType = $.t("alias_transfer");
-                            }
-                        } else {
-                            transactionType = $.t("alias_sale");
-                        }
-                    }
+								if (transaction.attachment.priceNQT == "0") {
+									if (transaction.sender == transaction.recipient) {
+										transactionType = $.t("alias_sale_cancellation");
+									} else {
+										transactionType = $.t("alias_transfer");
+									}
+								} else {
+									transactionType = $.t("alias_sale");
+								}
+						}
 					var receiving;
 					if (/^NXT\-/i.test(String(NRS.userInfoModal.user))) {
 						receiving = (transaction.recipientRS == NRS.userInfoModal.user);
