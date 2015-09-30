@@ -123,7 +123,7 @@ var NRS = (function(NRS, $) {
                                 amount = amount * marketInfoData.rate;
                             }
                             apiCall("sendamount", { "amount": amount, "pair": pair}, "POST", function(data) {
-                                if (data.success.quotedRate) {
+                                if (data.success && data.success.quotedRate) {
                                     marketInfoData.quotedRate = data.success.quotedRate;
                                 } else {
                                     marketInfoData.quotedRate = 0;
