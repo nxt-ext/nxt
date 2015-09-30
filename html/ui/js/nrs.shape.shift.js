@@ -507,44 +507,49 @@ var NRS = (function(NRS, $) {
         if (amount == "" || withdrawal == "") {
             return;
         }
+        modal.css('cursor','wait');
         apiCall('sendamount', {
             amount: amount,
             withdrawal: withdrawal,
             pair: pair,
             apiKey: NRS.settings.exchange_api_key
         }, "POST", function(data) {
-            var rate = $("#m_send_amount_buy_rate");
-            var fee = $("#m_send_amount_buy_fee");
-            var depositAmount = $("#m_send_amount_buy_deposit_amount");
-            var depositAddress = $("#m_send_amount_buy_deposit_address");
-            var expiration = $("#m_send_amount_buy_expiration");
-            if (data.error) {
-                rate.val("");
-                fee.val("");
-                depositAmount.val("");
-                depositAddress.val("");
-                expiration.val("");
-                buySubmit.prop('disabled', true);
-                return;
-            }
-            if (amount != data.success.withdrawalAmount) {
-                NRS.showModalError("amount returned from shapeshift " + data.success.withdrawalAmount +
+            try {
+                var rate = $("#m_send_amount_buy_rate");
+                var fee = $("#m_send_amount_buy_fee");
+                var depositAmount = $("#m_send_amount_buy_deposit_amount");
+                var depositAddress = $("#m_send_amount_buy_deposit_address");
+                var expiration = $("#m_send_amount_buy_expiration");
+                if (data.error) {
+                    rate.val("");
+                    fee.val("");
+                    depositAmount.val("");
+                    depositAddress.val("");
+                    expiration.val("");
+                    buySubmit.prop('disabled', true);
+                    return;
+                }
+                if (amount != data.success.withdrawalAmount) {
+                    NRS.showModalError("amount returned from shapeshift " + data.success.withdrawalAmount +
                     " differs from requested amount " + amount, modal);
-                return;
-            }
-            if (withdrawal != data.success.withdrawal) {
-                NRS.showModalError("withdrawal address returned from shapeshift " + data.success.withdrawal +
+                    return;
+                }
+                if (withdrawal != data.success.withdrawal) {
+                    NRS.showModalError("withdrawal address returned from shapeshift " + data.success.withdrawal +
                     " differs from requested address " + withdrawal, modal);
-                return;
+                    return;
+                }
+                modal.find(".error_message").html("").hide();
+                rate.val(data.success.quotedRate);
+                fee.val(data.success.minerFee);
+                // add 1 NXT fee to make sure the net amount is what requested by shape shift
+                depositAmount.val(parseFloat(data.success.depositAmount) + 1);
+                depositAddress.val(data.success.deposit);
+                expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
+                buySubmit.prop('disabled', false);
+            } finally {
+                modal.css('cursor', 'default');
             }
-            modal.find(".error_message").html("").hide();
-            rate.val(data.success.quotedRate);
-            fee.val(data.success.minerFee);
-            // add 1 NXT fee to make sure the net amount is what requested by shape shift
-            depositAmount.val(parseFloat(data.success.depositAmount) + 1);
-            depositAddress.val(data.success.deposit);
-            expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
-            buySubmit.prop('disabled', false);
         }, true, modal)
     });
 
@@ -700,40 +705,45 @@ var NRS = (function(NRS, $) {
             NRS.showModalError("Account has no public key, please login using your passphrase", modal);
             return;
         }
+        modal.css('cursor','wait');
         apiCall('sendamount', { amount: amount, withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key },
                 "POST", function (data) {
-            var rate = $("#m_send_amount_sell_rate");
-            var fee = $("#m_send_amount_sell_fee");
-            var depositAmount = $("#m_send_amount_sell_deposit_amount");
-            var depositAddress = $("#m_send_amount_sell_deposit_address");
-            var expiration = $("#m_send_amount_sell_expiration");
-            if (data.error) {
-                rate.val("");
-                fee.val("");
-                depositAmount.val("");
-                depositAddress.html("");
-                expiration.val("");
-                return;
-            }
-            if (amount != data.success.withdrawalAmount) {
-                NRS.showModalError("amount returned from shapeshift " + data.success.withdrawalAmount +
+            try {
+                var rate = $("#m_send_amount_sell_rate");
+                var fee = $("#m_send_amount_sell_fee");
+                var depositAmount = $("#m_send_amount_sell_deposit_amount");
+                var depositAddress = $("#m_send_amount_sell_deposit_address");
+                var expiration = $("#m_send_amount_sell_expiration");
+                if (data.error) {
+                    rate.val("");
+                    fee.val("");
+                    depositAmount.val("");
+                    depositAddress.html("");
+                    expiration.val("");
+                    return;
+                }
+                if (amount != data.success.withdrawalAmount) {
+                    NRS.showModalError("amount returned from shapeshift " + data.success.withdrawalAmount +
                     " differs from requested amount " + amount, modal);
-                return;
-            }
-            if (NRS.accountRS != data.success.withdrawal) {
-                NRS.showModalError("withdrawal address returned from shapeshift " + data.success.withdrawal +
+                    return;
+                }
+                if (NRS.accountRS != data.success.withdrawal) {
+                    NRS.showModalError("withdrawal address returned from shapeshift " + data.success.withdrawal +
                     " differs from requested address " + NRS.accountRS, modal);
-                return;
+                    return;
+                }
+                modal.find(".error_message").html("").hide();
+                rate.val(invert(data.success.quotedRate));
+                fee.val(data.success.minerFee);
+                depositAmount.val(parseFloat(data.success.depositAmount));
+                depositAddress.html(data.success.deposit);
+                expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
+                NRS.logConsole("sendamount request done, deposit address " + data.success.deposit);
+                NRS.sendRequestQRCode("#m_send_amount_sell_qr_code", "bitcoin:" + data.success.deposit + "?amount=" + data.success.depositAmount, 125, 125);
+                $("#m_send_amount_sell_done").prop('disabled', false);
+            } finally {
+                modal.css('cursor', 'default');
             }
-            modal.find(".error_message").html("").hide();
-            rate.val(invert(data.success.quotedRate));
-            fee.val(data.success.minerFee);
-            depositAmount.val(parseFloat(data.success.depositAmount));
-            depositAddress.html(data.success.deposit);
-            expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
-            NRS.logConsole("sendamount request done, deposit address " + data.success.deposit);
-            NRS.sendRequestQRCode("#m_send_amount_sell_qr_code", "bitcoin:" + data.success.deposit + "?amount=" + data.success.depositAmount, 125, 125);
-            $("#m_send_amount_sell_done").prop('disabled', false);
         }, true, modal)
     });
 
