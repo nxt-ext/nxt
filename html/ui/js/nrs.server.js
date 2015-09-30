@@ -63,7 +63,7 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.sendRequest = function (requestType, data, callback, async) {
+    NRS.sendRequest = function (requestType, data, callback, isAsync) {
         if (requestType == undefined) {
             NRS.logConsole("Undefined request type");
             return;
@@ -96,6 +96,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
         //convert NXT to NQT...
+        var field = "N/A";
         try {
             var nxtFields = [
                 ["feeNXT", "NQT"],
@@ -110,9 +111,9 @@ var NRS = (function (NRS, $, undefined) {
                 ["minBalanceNXT", ""]
             ];
 
-            for (var i = 0; i < nxtFields.length; i++) {
+            for (i = 0; i < nxtFields.length; i++) {
                 var nxtField = nxtFields[i][0];
-                var field = nxtField.replace("NXT", "");
+                field = nxtField.replace("NXT", "");
 
                 if (nxtField in data) {
                     data[field + nxtFields[i][1]] = NRS.convertToNQT(data[nxtField]);
@@ -137,10 +138,10 @@ var NRS = (function (NRS, $, undefined) {
                 ["minBalanceQNTf", "create_poll_ms_decimals"]
             ];
             var toDelete = [];
-            for (var i = 0; i < currencyFields.length; i++) {
+            for (i = 0; i < currencyFields.length; i++) {
                 var decimalUnitField = currencyFields[i][0];
                 var decimalsField = currencyFields[i][1];
-                var field = decimalUnitField.replace("QNTf", "");
+                field = decimalUnitField.replace("QNTf", "");
 
                 if (decimalUnitField in data) {
                     data[field] = NRS.convertToQNT(parseFloat(data[decimalUnitField]), parseInt(data[decimalsField]));
@@ -167,17 +168,15 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         //gets account id from passphrase client side, used only for login.
+        var accountId;
         if (requestType == "getAccountId") {
-            var accountId = NRS.getAccountId(data.secretPhrase);
+            accountId = NRS.getAccountId(data.secretPhrase);
 
             var nxtAddress = new NxtAddress();
-
+            var accountRS = "";
             if (nxtAddress.set(accountId)) {
-                var accountRS = nxtAddress.toString();
-            } else {
-                var accountRS = "";
+                accountRS = nxtAddress.toString();
             }
-
             callback({
                 "account": accountId,
                 "accountRS": accountRS
@@ -187,7 +186,7 @@ var NRS = (function (NRS, $, undefined) {
 
         //check to see if secretPhrase supplied matches logged in account, if not - show error.
         if ("secretPhrase" in data) {
-            var accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
+            accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
             if (accountId != NRS.account) {
                 callback({
                     "errorCode": 1,
@@ -195,25 +194,22 @@ var NRS = (function (NRS, $, undefined) {
                 });
             } else {
                 //ok, accountId matches..continue with the real request.
-                NRS.processAjaxRequest(requestType, data, callback, async);
+                NRS.processAjaxRequest(requestType, data, callback, isAsync);
             }
         } else {
-            NRS.processAjaxRequest(requestType, data, callback, async);
+            NRS.processAjaxRequest(requestType, data, callback, isAsync);
         }
     };
 
-    NRS.processAjaxRequest = function (requestType, data, callback, async) {
+    NRS.processAjaxRequest = function (requestType, data, callback, isAsync) {
         if (!NRS.multiQueue) {
             NRS.multiQueue = $.ajaxMultiQueue(8);
         }
-
+        var extra = null;
         if (data["_extra"]) {
-            var extra = data["_extra"];
+            extra = data["_extra"];
             delete data["_extra"];
-        } else {
-            var extra = null;
         }
-
         var currentPage = null;
         var currentSubPage = null;
 
@@ -226,7 +222,6 @@ var NRS = (function (NRS, $, undefined) {
             var plusCharacter = requestType.indexOf("+");
 
             if (plusCharacter > 0) {
-                var subType = requestType.substr(plusCharacter);
                 requestType = requestType.substr(0, plusCharacter);
                 currentPage = NRS.currentPage;
             }
@@ -236,7 +231,7 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = ("secretPhrase" in data || data.doNotSign || "adminPassword" in data || requestType == "getForging" ? "POST" : "GET");
+        var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
         var url = NRS.server + "/nxt?requestType=" + requestType;
 
         if (type == "GET") {
@@ -247,10 +242,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        var secretPhrase = "";
-
-        //unknown account..
-        if (type == "POST" && (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5)) {
+        if (type == "POST" && NRS.isRequireBlockchain(requestType) && NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
             callback({
                 "errorCode": 2,
                 "errorDescription": $.t("error_new_account")
@@ -268,6 +260,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
+        var secretPhrase = "";
         if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" &&
             requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
             if (NRS.rememberPassword) {
@@ -289,23 +282,18 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         $.support.cors = true;
-
+        var ajaxCall;
         if (type == "GET") {
-            var ajaxCall = NRS.multiQueue.queue;
+            ajaxCall = NRS.multiQueue.queue;
         } else {
-            var ajaxCall = $.ajax;
+            ajaxCall = $.ajax;
         }
 
-        //workaround for 1 specific case.. ugly
+        // Used for passing row query string which is too long for a GET request
         if (data.querystring) {
             data = data.querystring;
             type = "POST";
         }
-
-        if (requestType == "broadcastTransaction" || requestType == "addPeer" || requestType == "blacklistPeer") {
-            type = "POST";
-        }
-
         var contentType;
         var processData;
         var formData = null;
@@ -313,8 +301,7 @@ var NRS = (function (NRS, $, undefined) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
-            // TODO works only for new browsers
-            var formData = new FormData();
+            formData = new FormData();
             for (var key in data) {
                 if (!data.hasOwnProperty(key)) {
                     continue;
@@ -346,7 +333,7 @@ var NRS = (function (NRS, $, undefined) {
             dataType: "json",
             type: type,
             timeout: 30000,
-            async: (async === undefined ? true : async),
+            async: (isAsync === undefined ? true : isAsync),
             currentPage: currentPage,
             currentSubPage: currentSubPage,
             shouldRetry: (type == "GET" ? 2 : undefined),
@@ -354,7 +341,7 @@ var NRS = (function (NRS, $, undefined) {
             data: (formData != null ? formData : data),
             contentType: contentType,
             processData: processData
-        }).done(function (response, status, xhr) {
+        }).done(function (response) {
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -388,15 +375,37 @@ var NRS = (function (NRS, $, undefined) {
                     callback(response, data);
                 } else {
                     if (response.broadcasted == false) {
-                        if (!NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes),
-                                requestType, data)) {
-                            callback({
-                                "errorCode": 1,
-                                "errorDescription": $.t("error_bytes_validation_server")
-                            }, data);
-                            return;
-                        }
-                        NRS.showRawTransactionModal(response);
+                        async.waterfall([
+                            function(callback) {
+                                addMissingData(data);
+                                if (!response.unsignedTransactionBytes) {
+                                    callback(null);
+                                }
+                                if (file) {
+                                    var r = new FileReader();
+                                    r.onload = function (e) {
+                                        data.filebytes = e.target.result;
+                                        data.filename = file.name;
+                                        callback(null);
+                                    };
+                                    r.readAsArrayBuffer(file);
+                                } else {
+                                    callback(null);
+                                }
+                            },
+                            function(callback) {
+                                if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data)) {
+                                    callback({
+                                        "errorCode": 1,
+                                        "errorDescription": $.t("error_bytes_validation_server")
+                                    }, data);
+                                    return;
+                                }
+                                callback(null);
+                            }
+                        ], function() {
+                            NRS.showRawTransactionModal(response);
+                        });
                     } else {
                         if (extra) {
                             data["_extra"] = extra;
@@ -448,6 +457,7 @@ var NRS = (function (NRS, $, undefined) {
         var payload = transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
         if (data.broadcast == "false") {
             response.transactionBytes = payload;
+            response.transactionJSON.signature = signature;
             NRS.showRawTransactionModal(response);
         } else {
             if (extra) {
@@ -511,21 +521,24 @@ var NRS = (function (NRS, $, undefined) {
         } else if (transaction.referencedTransactionFullHash !== "") {
             return false;
         }
-
+        var pos;
         if (transaction.version > 0) {
             //has empty attachment, so no attachmentVersion byte...
             if (requestType == "sendMoney" || requestType == "sendMessage") {
-                var pos = 176;
+                pos = 176;
             } else {
-                var pos = 177;
+                pos = 177;
             }
         } else {
-            var pos = 160;
+            pos = 160;
         }
         return NRS.verifyTransactionTypes(byteArray, transaction, requestType, data, pos);
     };
 
     NRS.verifyTransactionTypes = function (byteArray, transaction, requestType, data, pos) {
+        var length = 0;
+        var i=0;
+        var serverHash, sha256, utfBytes, isText, hashWords, calculatedHash;
         switch (requestType) {
             case "sendMoney":
                 if (transaction.type !== 0 || transaction.subtype !== 0) {
@@ -541,14 +554,14 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 1 || transaction.subtype !== 1) {
                     return false;
                 }
-                var aliasLength = parseInt(byteArray[pos], 10);
+                length = parseInt(byteArray[pos], 10);
                 pos++;
-                transaction.aliasName = converters.byteArrayToString(byteArray, pos, aliasLength);
-                pos += aliasLength;
-                var uriLength = converters.byteArrayToSignedShort(byteArray, pos);
+                transaction.aliasName = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.aliasURI = converters.byteArrayToString(byteArray, pos, uriLength);
-                pos += uriLength;
+                transaction.aliasURI = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 if (transaction.aliasName !== data.aliasName || transaction.aliasURI !== data.aliasURI) {
                     return false;
                 }
@@ -557,20 +570,20 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 1 || transaction.subtype !== 2) {
                     return false;
                 }
-                var nameLength = converters.byteArrayToSignedShort(byteArray, pos);
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.name = converters.byteArrayToString(byteArray, pos, nameLength);
-                pos += nameLength;
-                var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
+                transaction.name = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
-                pos += descriptionLength;
+                transaction.description = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 transaction.finishHeight = converters.byteArrayToSignedInt32(byteArray, pos);
                 pos += 4;
                 var nr_options = byteArray[pos];
                 pos++;
 
-                for (var i = 0; i < nr_options; i++) {
+                for (i = 0; i < nr_options; i++) {
                     var optionLength = converters.byteArrayToSignedShort(byteArray, pos);
                     pos += 2;
                     transaction["option" + (i < 10 ? "0" + i : i)] = converters.byteArrayToString(byteArray, pos, optionLength);
@@ -598,7 +611,7 @@ var NRS = (function (NRS, $, undefined) {
                     return false;
                 }
 
-                for (var i = 0; i < nr_options; i++) {
+                for (i = 0; i < nr_options; i++) {
                     if (transaction["option" + (i < 10 ? "0" + i : i)] !== data["option" + (i < 10 ? "0" + i : i)]) {
                         return false;
                     }
@@ -618,7 +631,7 @@ var NRS = (function (NRS, $, undefined) {
                 pos++;
                 transaction.votes = [];
 
-                for (var i = 0; i < voteLength; i++) {
+                for (i = 0; i < voteLength; i++) {
                     transaction["vote" + (i < 10 ? "0" + i : i)] = byteArray[pos];
                     pos++;
                 }
@@ -630,32 +643,20 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 1 || transaction.subtype != 4) {
                     return false;
                 }
-                var minFeePerByte = String(converters.byteArrayToBigInteger(byteArray, pos));
-                pos += 8;
-                var numberOfUris = parseInt(byteArray[pos], 10);
-                pos++;
-                var uris = [];
-
-                for (var i = 0; i < numberOfUris; i++) {
-                    var uriLength = parseInt(byteArray[pos], 10);
-                    pos++;
-                    uris[i] = converters.byteArrayToString(byteArray, pos, uriLength);
-                    pos += uriLength;
-                }
                 return false;
                 break;
             case "setAccountInfo":
                 if (transaction.type !== 1 || transaction.subtype != 5) {
                     return false;
                 }
-                var nameLength = parseInt(byteArray[pos], 10);
+                length = parseInt(byteArray[pos], 10);
                 pos++;
-                transaction.name = converters.byteArrayToString(byteArray, pos, nameLength);
-                pos += nameLength;
-                var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
+                transaction.name = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
-                pos += descriptionLength;
+                transaction.description = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 if (transaction.name !== data.name || transaction.description !== data.description) {
                     return false;
                 }
@@ -664,10 +665,10 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 1 || transaction.subtype !== 6) {
                     return false;
                 }
-                var aliasLength = parseInt(byteArray[pos], 10);
+                length = parseInt(byteArray[pos], 10);
                 pos++;
-                transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
-                pos += aliasLength;
+                transaction.alias = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 transaction.priceNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 if (transaction.alias !== data.aliasName || transaction.priceNQT !== data.priceNQT) {
@@ -678,10 +679,10 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 1 && transaction.subtype !== 7) {
                     return false;
                 }
-                var aliasLength = parseInt(byteArray[pos], 10);
+                length = parseInt(byteArray[pos], 10);
                 pos++;
-                transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
-                pos += aliasLength;
+                transaction.alias = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 if (transaction.alias !== data.aliasName) {
                     return false;
                 }
@@ -690,10 +691,10 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 1 && transaction.subtype !== 8) {
                     return false;
                 }
-                var aliasLength = parseInt(byteArray[pos], 10);
+                length = parseInt(byteArray[pos], 10);
                 pos++;
-                transaction.alias = converters.byteArrayToString(byteArray, pos, aliasLength);
-                pos += aliasLength;
+                transaction.alias = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 if (transaction.alias !== data.aliasName) {
                     return false;
                 }
@@ -703,6 +704,9 @@ var NRS = (function (NRS, $, undefined) {
                     return false;
                 }
                 var fullHashesLength = byteArray[pos];
+                if (fullHashesLength !== 1) {
+                    return false;
+                }
                 pos++;
                 transaction.transactionFullHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
                 pos += 32;
@@ -724,14 +728,14 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 2 || transaction.subtype !== 0) {
                     return false;
                 }
-                var nameLength = byteArray[pos];
+                length = byteArray[pos];
                 pos++;
-                transaction.name = converters.byteArrayToString(byteArray, pos, nameLength);
-                pos += nameLength;
-                var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
+                transaction.name = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
-                pos += descriptionLength;
+                transaction.description = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 transaction.decimals = String(byteArray[pos]);
@@ -806,18 +810,18 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 3 && transaction.subtype != 0) {
                     return false;
                 }
-                var nameLength = converters.byteArrayToSignedShort(byteArray, pos);
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.name = converters.byteArrayToString(byteArray, pos, nameLength);
-                pos += nameLength;
-                var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
+                transaction.name = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
-                pos += descriptionLength;
-                var tagsLength = converters.byteArrayToSignedShort(byteArray, pos);
+                transaction.description = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.tags = converters.byteArrayToString(byteArray, pos, tagsLength);
-                pos += tagsLength;
+                transaction.tags = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 transaction.quantity = String(converters.byteArrayToSignedInt32(byteArray, pos));
                 pos += 4;
                 transaction.priceNQT = String(converters.byteArrayToBigInteger(byteArray, pos));
@@ -939,18 +943,18 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 5 && transaction.subtype !== 0) {
                     return false;
                 }
-                var nameLength = byteArray[pos];
+                length = byteArray[pos];
                 pos++;
-                transaction.name = converters.byteArrayToString(byteArray, pos, nameLength);
-                pos += nameLength;
+                transaction.name = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 var codeLength = byteArray[pos];
                 pos++;
                 transaction.code = converters.byteArrayToString(byteArray, pos, codeLength);
                 pos += codeLength;
-                var descriptionLength = converters.byteArrayToSignedShort(byteArray, pos);
+                length = converters.byteArrayToSignedShort(byteArray, pos);
                 pos += 2;
-                transaction.description = converters.byteArrayToString(byteArray, pos, descriptionLength);
-                pos += descriptionLength;
+                transaction.description = converters.byteArrayToString(byteArray, pos, length);
+                pos += length;
                 transaction.type = String(byteArray[pos]);
                 pos++;
                 transaction.initialSupply = String(converters.byteArrayToBigInteger(byteArray, pos));
@@ -1110,10 +1114,10 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 6 && transaction.subtype !== 0) {
                     return false;
                 }
-                var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+                serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
                 pos += 32;
-                var sha256 = CryptoJS.algo.SHA256.create();
-                var utfBytes = NRS.getUtf8Bytes(data.name);
+                sha256 = CryptoJS.algo.SHA256.create();
+                utfBytes = NRS.getUtf8Bytes(data.name);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.description);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
@@ -1123,19 +1127,19 @@ var NRS = (function (NRS, $, undefined) {
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.channel);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
-                var isText = [];
-                if (data.isText == "true") {
+                isText = [];
+                if (String(data.isText) == "true") {
                     isText.push(1);
                 } else {
                     isText.push(0);
                 }
                 sha256.update(converters.byteArrayToWordArrayEx(isText));
-                var utfBytes = NRS.getUtf8Bytes(data.filename);
+                utfBytes = NRS.getUtf8Bytes(data.filename);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 var dataBytes = new Int8Array(data.filebytes);
                 sha256.update(converters.byteArrayToWordArrayEx(dataBytes));
-                var hashWords = sha256.finalize();
-                var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
+                hashWords = sha256.finalize();
+                calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
                 if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                     return false;
                 }
@@ -1156,11 +1160,14 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var position = 1;
-
+        var attachmentVersion;
         //non-encrypted message
         if ((transaction.flags & position) != 0 ||
             ((requestType == "sendMessage" && data.message && !(data.messageIsPrunable === "true")))) {
-            var attachmentVersion = byteArray[pos];
+            attachmentVersion = byteArray[pos];
+            if (attachmentVersion < 0 || attachmentVersion > 2) {
+                return false;
+            }
             pos++;
             var messageLength = converters.byteArrayToSignedInt32(byteArray, pos);
             transaction.messageIsText = messageLength < 0; // ugly hack??
@@ -1190,7 +1197,10 @@ var NRS = (function (NRS, $, undefined) {
 
         //encrypted note
         if ((transaction.flags & position) != 0) {
-            var attachmentVersion = byteArray[pos];
+            attachmentVersion = byteArray[pos];
+            if (attachmentVersion < 0 || attachmentVersion > 2) {
+                return false;
+            }
             pos++;
             var encryptedMessageLength = converters.byteArrayToSignedInt32(byteArray, pos);
             transaction.messageToEncryptIsText = encryptedMessageLength < 0;
@@ -1216,7 +1226,10 @@ var NRS = (function (NRS, $, undefined) {
         position <<= 1;
 
         if ((transaction.flags & position) != 0) {
-            var attachmentVersion = byteArray[pos];
+            attachmentVersion = byteArray[pos];
+            if (attachmentVersion < 0 || attachmentVersion > 2) {
+                return false;
+            }
             pos++;
             var recipientPublicKey = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
             if (recipientPublicKey != data.recipientPublicKey) {
@@ -1230,7 +1243,10 @@ var NRS = (function (NRS, $, undefined) {
         position <<= 1;
 
         if ((transaction.flags & position) != 0) {
-            var attachmentVersion = byteArray[pos];
+            attachmentVersion = byteArray[pos];
+            if (attachmentVersion < 0 || attachmentVersion > 2) {
+                return false;
+            }
             pos++;
             var encryptedToSelfMessageLength = converters.byteArrayToSignedInt32(byteArray, pos);
             transaction.messageToEncryptToSelfIsText = encryptedToSelfMessageLength < 0;
@@ -1256,7 +1272,10 @@ var NRS = (function (NRS, $, undefined) {
         position <<= 1;
 
         if ((transaction.flags & position) != 0) {
-            var attachmentVersion = byteArray[pos];
+            attachmentVersion = byteArray[pos];
+            if (attachmentVersion < 0 || attachmentVersion > 2) {
+                return false;
+            }
             pos++;
             if (String(converters.byteArrayToSignedInt32(byteArray, pos)) !== data.phasingFinishHeight) {
                 return false;
@@ -1266,7 +1285,7 @@ var NRS = (function (NRS, $, undefined) {
                 return false;
             }
             pos++;
-            if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== data.phasingQuorum) {
+            if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== String(data.phasingQuorum)) {
                 return false;
             }
             pos += 8;
@@ -1277,7 +1296,7 @@ var NRS = (function (NRS, $, undefined) {
             pos += 8;
             var whiteListLength = byteArray[pos];
             pos++;
-            for (var i = 0; i < whiteListLength; i++) {
+            for (i = 0; i < whiteListLength; i++) {
                 var accountId = NRS.convertNumericToRSAccountFormat(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 if (String(accountId) !== data.phasingWhitelisted[i]) {
@@ -1289,13 +1308,13 @@ var NRS = (function (NRS, $, undefined) {
                 return false;
             }
             pos += 8;
-            if (String(byteArray[pos]) !== data.phasingMinBalanceModel) {
+            if (String(byteArray[pos]) !== String(data.phasingMinBalanceModel)) {
                 return false;
             }
             pos++;
             var linkedFullHashesLength = byteArray[pos];
             pos++;
-            for (var i = 0; i < linkedFullHashesLength; i++) {
+            for (i = 0; i < linkedFullHashesLength; i++) {
                 var fullHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
                 pos += 32;
                 if (fullHash !== data.phasingLinkedFullHash[i]) {
@@ -1318,22 +1337,25 @@ var NRS = (function (NRS, $, undefined) {
         position <<= 1;
 
         if ((transaction.flags & position) != 0) {
-            var attachmentVersion = byteArray[pos];
+            attachmentVersion = byteArray[pos];
+            if (attachmentVersion < 0 || attachmentVersion > 2) {
+                return false;
+            }
             pos++;
-            var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+            serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
             pos += 32;
-            var sha256 = CryptoJS.algo.SHA256.create();
-            var isText = [];
+            sha256 = CryptoJS.algo.SHA256.create();
+            isText = [];
             if (data.messageIsText == "true") {
                 isText.push(1);
             } else {
                 isText.push(0);
             }
             sha256.update(converters.byteArrayToWordArrayEx(isText));
-            var utfBytes = NRS.getUtf8Bytes(data.message);
+            utfBytes = NRS.getUtf8Bytes(data.message);
             sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
-            var hashWords = sha256.finalize();
-            var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
+            hashWords = sha256.finalize();
+            calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
             if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                 return false;
             }
@@ -1341,11 +1363,13 @@ var NRS = (function (NRS, $, undefined) {
         position <<= 1;
 
         if ((transaction.flags & position) != 0) {
-            var attachmentVersion = byteArray[pos];
+            attachmentVersion = byteArray[pos];
+            if (attachmentVersion < 0 || attachmentVersion > 2) {
+                return false;
+            }
             pos++;
-            var serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
-            pos += 32;
-            var sha256 = CryptoJS.algo.SHA256.create();
+            serverHash = converters.byteArrayToHexString(byteArray.slice(pos, pos + 32));
+            sha256 = CryptoJS.algo.SHA256.create();
             if (data.messageToEncryptIsText == "true") {
                 sha256.update(converters.byteArrayToWordArrayEx([1]));
             } else {
@@ -1354,8 +1378,8 @@ var NRS = (function (NRS, $, undefined) {
             sha256.update(converters.byteArrayToWordArrayEx([1])); // compression
             sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageData)));
             sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageNonce)));
-            var hashWords = sha256.finalize();
-            var calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
+            hashWords = sha256.finalize();
+            calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
             if (serverHash !== converters.byteArrayToHexString(calculatedHash)) {
                 return false;
             }
@@ -1376,7 +1400,7 @@ var NRS = (function (NRS, $, undefined) {
                 "transactionBytes": transactionData,
                 "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment)
             }
-        }).done(function (response, status, xhr) {
+        }).done(function (response) {
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -1418,17 +1442,36 @@ var NRS = (function (NRS, $, undefined) {
             }, {});
         });
     };
+    
+    NRS.sendRequestQRCode = function(target, qrCodeData, width, height) {
+        width = width || 0;
+        height = height || 0;
+        NRS.sendRequest("encodeQRCode",
+            {
+                "qrCodeData": qrCodeData,
+                "width": width,
+                "height": height
+            },
+            function(response) {
+                if('qrCodeBase64' in response) {
+                    $(target).empty().append(
+                        $("<img src='data:image/jpeg;base64,"+response.qrCodeBase64+"'>")
+                    );
+                }
+            },
+            true
+        );
+    };
 
     function addAddressData(data) {
         if (typeof data == "object" && ("recipient" in data)) {
+            var address = new NxtAddress();
             if (/^NXT\-/i.test(data.recipient)) {
                 data.recipientRS = data.recipient;
-                var address = new NxtAddress();
                 if (address.set(data.recipient)) {
                     data.recipient = address.account_id();
                 }
             } else {
-                var address = new NxtAddress();
                 if (address.set(data.recipient)) {
                     data.recipientRS = address.toString();
                 }

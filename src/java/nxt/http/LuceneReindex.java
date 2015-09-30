@@ -17,6 +17,7 @@
 package nxt.http;
 
 import nxt.Db;
+import nxt.db.FullTextTrigger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -36,7 +37,7 @@ public final class LuceneReindex extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         try (Connection con = Db.db.getConnection()) {
-            org.h2.fulltext.FullTextLucene.reindex(con);
+            FullTextTrigger.reindex(con);
             response.put("done", true);
         } catch (SQLException e) {
             JSONData.putException(response, e);
@@ -56,6 +57,11 @@ public final class LuceneReindex extends APIServlet.APIRequestHandler {
 
     @Override
     boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
+    @Override
+    boolean requireBlockchain() {
         return false;
     }
 

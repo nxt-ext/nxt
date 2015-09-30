@@ -40,7 +40,11 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     boolean isDownloading();
 
+    boolean isProcessingBlock();
+
     int getMinRollbackHeight();
+
+    int getInitialScanHeight();
 
     void processPeerBlock(JSONObject request) throws NxtException;
 
@@ -57,6 +61,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
     void registerDerivedTable(DerivedDbTable table);
 
     void trimDerivedTables();
+
+    int restorePrunedData();
 
     class BlockNotAcceptedException extends NxtException {
 

@@ -28,6 +28,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 
 import static nxt.http.JSONResponses.INCORRECT_TRANSACTION;
 import static nxt.http.JSONResponses.MISSING_TRANSACTION;
@@ -61,7 +62,6 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
         }
 
         JSONObject response = new JSONObject();
-        Account senderAccount = Account.getAccount(transaction.getSenderId());
         Appendix.Message message = transaction.getMessage();
         Appendix.EncryptedMessage encryptedMessage = transaction.getEncryptedMessage();
         Appendix.EncryptToSelfMessage encryptToSelfMessage = transaction.getEncryptToSelfMessage();
@@ -94,11 +94,13 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                 response.put("encryptedMessageIsPrunable", true);
             }
             if (encryptedData != null) {
-                long readerAccountId = Account.getId(Crypto.getPublicKey(secretPhrase));
-                Account account = senderAccount.getId() == readerAccountId ? Account.getAccount(transaction.getRecipientId()) : senderAccount;
-                if (account != null) {
+                byte[] readerPublicKey = Crypto.getPublicKey(secretPhrase);
+                byte[] senderPublicKey = Account.getPublicKey(transaction.getSenderId());
+                byte[] recipientPublicKey = Account.getPublicKey(transaction.getRecipientId());
+                byte[] publicKey = Arrays.equals(senderPublicKey, readerPublicKey) ? recipientPublicKey : senderPublicKey;
+                if (publicKey != null) {
                     try {
-                        byte[] decrypted = account.decryptFrom(encryptedData, secretPhrase, uncompress);
+                        byte[] decrypted = Account.decryptFrom(publicKey, encryptedData, secretPhrase, uncompress);
                         response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
@@ -107,14 +109,12 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                 }
             }
             if (encryptToSelfMessage != null) {
-                Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
-                if (account != null) {
-                    try {
-                        byte[] decrypted = account.decryptFrom(encryptToSelfMessage.getEncryptedData(), secretPhrase, encryptToSelfMessage.isCompressed());
-                        response.put("decryptedMessageToSelf", encryptToSelfMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
-                    } catch (RuntimeException e) {
-                        Logger.logDebugMessage("Decryption of message to self failed: " + e.toString());
-                    }
+                byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+                try {
+                    byte[] decrypted = Account.decryptFrom(publicKey, encryptToSelfMessage.getEncryptedData(), secretPhrase, encryptToSelfMessage.isCompressed());
+                    response.put("decryptedMessageToSelf", encryptToSelfMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                } catch (RuntimeException e) {
+                    Logger.logDebugMessage("Decryption of message to self failed: " + e.toString());
                 }
             }
         }

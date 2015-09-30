@@ -34,11 +34,11 @@ public final class GetAccountCurrencyCount extends APIServlet.APIRequestHandler 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         int height = ParameterParser.getHeight(req);
 
         JSONObject response = new JSONObject();
-        response.put("numberOfCurrencies", Account.getAccountCurrencyCount(account.getId(), height));
+        response.put("numberOfCurrencies", Account.getAccountCurrencyCount(accountId, height));
         return response;
     }
 

@@ -106,6 +106,10 @@ public final class APIServlet extends HttpServlet {
             return true;
     }
 
+        boolean requireBlockchain() {
+            return true;
+        }
+
     }
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
@@ -128,6 +132,7 @@ public final class APIServlet extends HttpServlet {
         map.put("currencyReserveClaim", CurrencyReserveClaim.instance);
         map.put("currencyMint", CurrencyMint.instance);
         map.put("decryptFrom", DecryptFrom.instance);
+        map.put("deleteAssetShares", DeleteAssetShares.instance);
         map.put("dgsListing", DGSListing.instance);
         map.put("dgsDelisting", DGSDelisting.instance);
         map.put("dgsDelivery", DGSDelivery.instance);
@@ -139,6 +144,8 @@ public final class APIServlet extends HttpServlet {
         map.put("decodeHallmark", DecodeHallmark.instance);
         map.put("decodeToken", DecodeToken.instance);
         map.put("decodeFileToken", DecodeFileToken.instance);
+        map.put("decodeQRCode", DecodeQRCode.instance);
+        map.put("encodeQRCode", EncodeQRCode.instance);
         map.put("encryptTo", EncryptTo.instance);
         map.put("eventRegister", EventRegister.instance);
         map.put("eventWait", EventWait.instance);
@@ -149,13 +156,13 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountBlockIds", GetAccountBlockIds.instance);
         map.put("getAccountBlocks", GetAccountBlocks.instance);
         map.put("getAccountId", GetAccountId.instance);
+        map.put("getAccountLedger", GetAccountLedger.instance);
+        map.put("getAccountLedgerEntry", GetAccountLedgerEntry.instance);
         map.put("getVoterPhasedTransactions", GetVoterPhasedTransactions.instance);
         map.put("getPolls", GetPolls.instance);
         map.put("getAccountPhasedTransactions", GetAccountPhasedTransactions.instance);
         map.put("getAccountPhasedTransactionCount", GetAccountPhasedTransactionCount.instance);
         map.put("getAccountPublicKey", GetAccountPublicKey.instance);
-        map.put("getAccountTransactionIds", GetAccountTransactionIds.instance);
-        map.put("getAccountTransactions", GetAccountTransactions.instance);
         map.put("getAccountLessors", GetAccountLessors.instance);
         map.put("getAccountAssets", GetAccountAssets.instance);
         map.put("getAccountCurrencies", GetAccountCurrencies.instance);
@@ -238,6 +245,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getTransactionBytes", GetTransactionBytes.instance);
         map.put("getUnconfirmedTransactionIds", GetUnconfirmedTransactionIds.instance);
         map.put("getUnconfirmedTransactions", GetUnconfirmedTransactions.instance);
+        map.put("getExpectedTransactions", GetExpectedTransactions.instance);
         map.put("getAccountCurrentAskOrderIds", GetAccountCurrentAskOrderIds.instance);
         map.put("getAccountCurrentBidOrderIds", GetAccountCurrentBidOrderIds.instance);
         map.put("getAccountCurrentAskOrders", GetAccountCurrentAskOrders.instance);
@@ -309,6 +317,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getDataTagCount", GetDataTagCount.instance);
         map.put("getDataTagsLike", GetDataTagsLike.instance);
         map.put("verifyTaggedData", VerifyTaggedData.instance);
+        map.put("getTaggedDataExtendTransactions", GetTaggedDataExtendTransactions.instance);
         map.put("clearUnconfirmedTransactions", ClearUnconfirmedTransactions.instance);
         map.put("requeueUnconfirmedTransactions", RequeueUnconfirmedTransactions.instance);
         map.put("rebroadcastUnconfirmedTransactions", RebroadcastUnconfirmedTransactions.instance);
@@ -323,6 +332,7 @@ public final class APIServlet extends HttpServlet {
         map.put("dumpPeers", DumpPeers.instance);
         map.put("getLog", GetLog.instance);
         map.put("getStackTraces", GetStackTraces.instance);
+        map.put("retrievePrunedData", RetrievePrunedData.instance);
         map.put("setLogging", SetLogging.instance);
         map.put("shutdown", Shutdown.instance);
         map.put("trimDerivedTables", TrimDerivedTables.instance);

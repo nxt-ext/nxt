@@ -20,6 +20,7 @@ import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
 import nxt.db.DerivedDbTable;
 import nxt.db.FilteringIterator;
+import nxt.db.FullTextTrigger;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
@@ -28,7 +29,6 @@ import nxt.util.Listener;
 import nxt.util.Listeners;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
-import org.h2.fulltext.FullTextLucene;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -46,9 +46,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -107,7 +109,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
             ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
 
+    private int initialScanHeight;
     private volatile int lastTrimHeight;
+    private volatile int lastRestoreTime = 0;
+    private final Set<Long> prunableTransactions = new HashSet<>();
 
     private final Listeners<Block, Event> blockListeners = new Listeners<>();
     private volatile Peer lastBlockchainFeeder;
@@ -117,6 +122,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private volatile boolean isTrimming;
     private volatile boolean isScanning;
     private volatile boolean isDownloading;
+    private volatile boolean isProcessingBlock;
+    private volatile boolean isRestoring;
     private volatile boolean alreadyInitialized = false;
 
     private final Runnable getMoreBlocksThread = new Runnable() {
@@ -154,6 +161,15 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
                         break;
                     }
+                }
+                //
+                // Restore prunable data
+                //
+                int now = Nxt.getEpochTime();
+                if (!isRestoring && !prunableTransactions.isEmpty() && now - lastRestoreTime > 60 * 60) {
+                    isRestoring = true;
+                    lastRestoreTime = now;
+                    networkService.submit(new RestorePrunableDataTask());
                 }
             } catch (InterruptedException e) {
                 Logger.logDebugMessage("Blockchain download thread interrupted");
@@ -800,6 +816,98 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
+    /**
+     * Task to restore prunable data for downloaded blocks
+     */
+    private class RestorePrunableDataTask implements Runnable {
+
+        @Override
+        public void run() {
+            Peer peer = null;
+            try {
+                //
+                // Locate an archive peer
+                //
+                List<Peer> peers = Peers.getPeers(chkPeer -> chkPeer.providesService(Peer.Service.PRUNABLE) &&
+                        !chkPeer.isBlacklisted() && chkPeer.getAnnouncedAddress() != null);
+                while (!peers.isEmpty()) {
+                    Peer chkPeer = peers.get(ThreadLocalRandom.current().nextInt(peers.size()));
+                    if (chkPeer.getState() != Peer.State.CONNECTED) {
+                        Peers.connectPeer(chkPeer);
+                    }
+                    if (chkPeer.getState() == Peer.State.CONNECTED) {
+                        peer = chkPeer;
+                        break;
+                    }
+                }
+                if (peer == null) {
+                    Logger.logDebugMessage("Cannot find any archive peers");
+                    return;
+                }
+                Logger.logDebugMessage("Connected to archive peer " + peer.getHost());
+                //
+                // Make a copy of the prunable transaction list so we can remove entries
+                // as we process them while still retaining the entry if we need to
+                // retry later using a different archive peer
+                //
+                Set<Long> processing;
+                synchronized (prunableTransactions) {
+                    processing = new HashSet<>(prunableTransactions.size());
+                    processing.addAll(prunableTransactions);
+                }
+                Logger.logDebugMessage("Need to restore " + processing.size() + " pruned data");
+                //
+                // Request transactions in batches of 100 until all transactions have been processed
+                //
+                while (!processing.isEmpty()) {
+                    //
+                    // Get the pruned transactions from the archive peer
+                    //
+                    JSONObject request = new JSONObject();
+                    JSONArray requestList = new JSONArray();
+                    synchronized (prunableTransactions) {
+                        Iterator<Long> it = processing.iterator();
+                        while (it.hasNext()) {
+                            long id = it.next();
+                            requestList.add(Long.toUnsignedString(id));
+                            it.remove();
+                            if (requestList.size() == 100)
+                                break;
+                        }
+                    }
+                    request.put("requestType", "getTransactions");
+                    request.put("transactionIds", requestList);
+                    JSONObject response = peer.send(JSON.prepareRequest(request));
+                    if (response == null) {
+                        return;
+                    }
+                    //
+                    // Restore the prunable data
+                    //
+                    JSONArray transactions = (JSONArray)response.get("transactions");
+                    if (transactions == null || transactions.isEmpty()) {
+                        return;
+                    }
+                    List<Transaction> processed = Nxt.getTransactionProcessor().restorePrunableData(transactions);
+                    //
+                    // Remove transactions that have been successfully processed
+                    //
+                    synchronized (prunableTransactions) {
+                        processed.forEach(transaction -> prunableTransactions.remove(transaction.getId()));
+                    }
+                }
+            } catch (NxtException.ValidationException e) {
+                Logger.logErrorMessage("Peer " + peer.getHost() + " returned invalid prunable transaction", e);
+                peer.blacklist(e);
+            } catch (RuntimeException e) {
+                Logger.logErrorMessage("Unable to restore prunable data", e);
+            } finally {
+                isRestoring = false;
+                Logger.logDebugMessage("Done retrieving prunable transactions from " + peer.getHost() + ", remaining " + prunableTransactions.size());
+            }
+        }
+    }
+
     private final Listener<Block> checksumListener = block -> {
         if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK
                 && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING, 0, Constants.TRANSPARENT_FORGING_BLOCK)) {
@@ -900,21 +1008,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public void trimDerivedTables() {
-        blockchain.readLock();
         try {
-            try {
-                Db.db.beginTransaction();
-                doTrimDerivedTables();
-                Db.db.commitTransaction();
-            } catch (Exception e) {
-                Logger.logMessage(e.toString(), e);
-                Db.db.rollbackTransaction();
-                throw e;
-            } finally {
-                Db.db.endTransaction();
-            }
+            Db.db.beginTransaction();
+            doTrimDerivedTables();
+            Db.db.commitTransaction();
+        } catch (Exception e) {
+            Logger.logMessage(e.toString(), e);
+            Db.db.rollbackTransaction();
+            throw e;
         } finally {
-            blockchain.readUnlock();
+            Db.db.endTransaction();
         }
     }
 
@@ -922,8 +1025,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         lastTrimHeight = Math.max(blockchain.getHeight() - Constants.MAX_ROLLBACK, 0);
         if (lastTrimHeight > 0) {
             for (DerivedDbTable table : derivedTables) {
-                table.trim(lastTrimHeight);
-                Db.db.commitTransaction();
+                blockchain.readLock();
+                try {
+                    table.trim(lastTrimHeight);
+                    Db.db.commitTransaction();
+                } finally {
+                    blockchain.readUnlock();
+                }
             }
         }
     }
@@ -948,8 +1056,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     @Override
+    public int getInitialScanHeight() {
+        return initialScanHeight;
+    }
+
+    @Override
     public boolean isDownloading() {
         return isDownloading;
+    }
+
+    @Override
+    public boolean isProcessingBlock() {
+        return isProcessingBlock;
     }
 
     @Override
@@ -1019,6 +1137,45 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public void setGetMoreBlocks(boolean getMoreBlocks) {
         this.getMoreBlocks = getMoreBlocks;
+    }
+
+    @Override
+    public int restorePrunedData() {
+        Db.db.beginTransaction();
+        try (Connection con = Db.db.getConnection()) {
+            int now = Nxt.getEpochTime();
+            int minTimestamp = Math.max(1, now - Constants.MAX_PRUNABLE_LIFETIME);
+            int maxTimestamp = Math.max(minTimestamp, now - Constants.MIN_PRUNABLE_LIFETIME) - 1;
+            List<TransactionDb.PrunableTransaction> transactionList =
+                    TransactionDb.findPrunableTransactions(con, minTimestamp, maxTimestamp);
+            transactionList.forEach(prunableTransaction -> {
+                long id = prunableTransaction.getId();
+                if (prunableTransaction.hasPrunableAttachment()) {
+                    if (prunableTransaction.getTransactionType().isPruned(id)) {
+                        synchronized (prunableTransactions) {
+                            prunableTransactions.add(id);
+                        }
+                    }
+                }
+                if (prunableTransaction.hasPrunableMessage()) {
+                    if (PrunableMessage.isPruned(id)) {
+                        synchronized (prunableTransactions) {
+                            prunableTransactions.add(id);
+                        }
+                    }
+                }
+            });
+            if (!prunableTransactions.isEmpty()) {
+                lastRestoreTime = 0;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } finally {
+            Db.db.endTransaction();
+        }
+        synchronized (prunableTransactions) {
+            return prunableTransactions.size();
+        }
     }
 
     private void addBlock(BlockImpl block) {
@@ -1258,30 +1415,50 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private void accept(BlockImpl block, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions) throws TransactionNotAcceptedException {
-        for (TransactionImpl transaction : block.getTransactions()) {
-            if (! transaction.applyUnconfirmed()) {
-                throw new TransactionNotAcceptedException("Double spending", transaction);
+        try {
+            isProcessingBlock = true;
+            for (TransactionImpl transaction : block.getTransactions()) {
+                if (! transaction.applyUnconfirmed()) {
+                    throw new TransactionNotAcceptedException("Double spending", transaction);
+                }
             }
-        }
-        blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
-        block.apply();
-        for (TransactionImpl transaction : validPhasedTransactions) {
-            transaction.getPhasing().countVotes(transaction);
-        }
-        for (TransactionImpl transaction : invalidPhasedTransactions) {
-            transaction.getPhasing().reject(transaction);
-        }
-        for (TransactionImpl transaction : block.getTransactions()) {
-            try {
-                transaction.apply();
-            } catch (RuntimeException e) {
-                Logger.logErrorMessage(e.toString(), e);
-                throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
+            blockListeners.notify(block, Event.BEFORE_BLOCK_APPLY);
+            block.apply();
+            for (TransactionImpl transaction : validPhasedTransactions) {
+                transaction.getPhasing().countVotes(transaction);
             }
-        }
-        blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
-        if (block.getTransactions().size() > 0) {
-            TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
+            for (TransactionImpl transaction : invalidPhasedTransactions) {
+                transaction.getPhasing().reject(transaction);
+            }
+            int fromTimestamp = Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME;
+            for (TransactionImpl transaction : block.getTransactions()) {
+                try {
+                    transaction.apply();
+                    if (transaction.getTimestamp() > fromTimestamp) {
+                        for (Appendix.AbstractAppendix appendage : transaction.getAppendages(true)) {
+                            if ((appendage instanceof Appendix.Prunable) &&
+                                        !((Appendix.Prunable)appendage).hasPrunableData()) {
+                                synchronized (prunableTransactions) {
+                                    prunableTransactions.add(transaction.getId());
+                                }
+                                lastRestoreTime = 0;
+                                break;
+                            }
+                        }
+                    }
+                } catch (RuntimeException e) {
+                    Logger.logErrorMessage(e.toString(), e);
+                    throw new BlockchainProcessor.TransactionNotAcceptedException(e, transaction);
+                }
+            }
+            blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
+            if (block.getTransactions().size() > 0) {
+                TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
+            }
+            AccountLedger.commitEntries();
+        } finally {
+            isProcessingBlock = false;
+            AccountLedger.clearEntries();
         }
     }
 
@@ -1318,6 +1495,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 for (DerivedDbTable table : derivedTables) {
                     table.rollback(commonBlock.getHeight());
                 }
+                Db.db.clearCache();
                 Db.db.commitTransaction();
             } catch (RuntimeException e) {
                 Logger.logErrorMessage("Error popping off to " + commonBlock.getHeight() + ", " + e.toString());
@@ -1585,6 +1763,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                  PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block " + (height > 0 ? "WHERE height >= ? " : "") + "ORDER BY db_id ASC");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
+                initialScanHeight = blockchain.getHeight();
                 if (height > blockchain.getHeight() + 1) {
                     Logger.logMessage("Rollback height " + (height - 1) + " exceeds current blockchain height of " + blockchain.getHeight() + ", no scan needed");
                     pstmtDone.executeUpdate();
@@ -1593,7 +1772,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 }
                 if (height == 0) {
                     Logger.logDebugMessage("Dropping all full text search indexes");
-                    FullTextLucene.dropAll(con);
+                    FullTextTrigger.dropAll(con);
                 }
                 for (DerivedDbTable table : derivedTables) {
                     if (height == 0) {
@@ -1602,6 +1781,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         table.rollback(height - 1);
                     }
                 }
+                Db.db.clearCache();
                 Db.db.commitTransaction();
                 Logger.logDebugMessage("Rolled back derived tables");
                 BlockImpl currentBlock = BlockDb.findBlockAtHeight(height);
@@ -1662,6 +1842,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             blockchain.setLastBlock(currentBlock);
                             accept(currentBlock, validPhasedTransactions, invalidPhasedTransactions);
                             currentBlockId = currentBlock.getNextBlockId();
+                            Db.db.clearCache();
                             Db.db.commitTransaction();
                         } catch (NxtException | RuntimeException e) {
                             Db.db.rollbackTransaction();
@@ -1703,6 +1884,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (height == 0 && validate) {
                     Logger.logMessage("SUCCESSFULLY PERFORMED FULL RESCAN WITH VALIDATION");
                 }
+                lastRestoreTime = 0;
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             } finally {

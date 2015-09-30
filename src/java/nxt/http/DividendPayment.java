@@ -40,6 +40,9 @@ public class DividendPayment extends CreateTransaction {
         final long amountNQTPerQNT = ParameterParser.getAmountNQTPerQNT(request);
         final Account account = ParameterParser.getSenderAccount(request);
         final Asset asset = ParameterParser.getAsset(request);
+        if (Asset.getAsset(asset.getId(), height) == null) {
+            return JSONResponses.ASSET_NOT_ISSUED_YET;
+        }
         final Attachment attachment = new Attachment.ColoredCoinsDividendPayment(asset.getId(), height, amountNQTPerQNT);
         return this.createTransaction(request, account, attachment);
     }

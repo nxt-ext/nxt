@@ -798,29 +798,31 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getAccountTitle = function (object, acc) {
-		var type = typeof object;
+        var type = typeof object;
 
-		var formattedAcc = "";
+        var formattedAcc = "";
 
-		if (type == "string" || type == "number") {
-			formattedAcc = object;
-			object = null;
-		} else {
-			if (object == null || typeof object[acc + "RS"] == "undefined") {
-				return "/";
-			} else {
-				formattedAcc = String(object[acc + "RS"]).escapeHTML();
-			}
-		}
+        if (type == "string" || type == "number") {
+            formattedAcc = object;
+            object = null;
+        } else {
+            if (object == null || typeof object[acc + "RS"] == "undefined") {
+                return "/";
+            } else {
+                formattedAcc = String(object[acc + "RS"]).escapeHTML();
+            }
+        }
 
-		if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
-			return $.t("you");
-		} else if (formattedAcc in NRS.contacts) {
-			return NRS.contacts[formattedAcc].name.escapeHTML();
-		} else {
-			return String(formattedAcc).escapeHTML();
-		}
-	};
+        if (formattedAcc == NRS.account || formattedAcc == NRS.accountRS) {
+            return $.t("you");
+        } else if (formattedAcc == NRS.constants.GENESIS || formattedAcc == NRS.constants.GENESIS_RS) {
+            return $.t("genesis");
+        } else if (formattedAcc in NRS.contacts) {
+            return NRS.contacts[formattedAcc].name.escapeHTML();
+        } else {
+            return String(formattedAcc).escapeHTML();
+        }
+    };
 
     NRS.getAccountFormatted = function (object, acc) {
 		var type = typeof object;
@@ -1418,26 +1420,25 @@ var NRS = (function (NRS, $, undefined) {
 					}).capitalize();
 				}
 
-                match = response.errorDescription.match(/At least one of (.*) must be specified/i);
-				if (match && match[1]) {
-					var fieldNames = match[1].split(",");
-					var translatedFieldNames = [];
+                match = response.errorDescription.match(/At least one of \[(.*)\] must be specified/i);
+                if (match && match[1]) {
+                    var fieldNames = match[1].split(",");
+                    var translatedFieldNames = [];
+                    for (var i=0; i<fieldNames.length; i++) {
+                        translatedFieldNames.push(NRS.getTranslatedFieldName(fieldNames[i].toLowerCase()));
+                    }
 
-                    $.each(fieldNames, function (fieldName) {
-						translatedFieldNames.push(NRS.getTranslatedFieldName(fieldName).toLowerCase());
-					});
+                    var translatedFieldNamesJoined = translatedFieldNames.join(", ");
 
-					var translatedFieldNamesJoined = translatedFieldNames.join(", ");
-
-					return $.t("error_not_specified", {
-						"names": translatedFieldNamesJoined,
-						"count": translatedFieldNames.length
-					}).capitalize();
-				} else {
-					return response.errorDescription;
-				}
-				break;
-			case 4:
+                    return $.t("error_not_specified", {
+                        "names": translatedFieldNamesJoined,
+                        "count": translatedFieldNames.length
+                    }).capitalize();
+                } else {
+                    return response.errorDescription;
+                }
+                break;
+            case 4:
                 match = response.errorDescription.match(/Incorrect "(.*)"(.*)/i);
 				if (match && match[1] && match[2]) {
                     return $.t("error_incorrect_name", {

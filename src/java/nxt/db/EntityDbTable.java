@@ -18,7 +18,6 @@ package nxt.db;
 
 import nxt.Nxt;
 import nxt.util.Logger;
-import org.h2.fulltext.FullTextLucene;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -57,7 +56,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     protected void clearCache() {
-        db.getCache(table).clear();
+        db.clearCache(table);
     }
 
     public void checkAvailable(int height) {
@@ -69,8 +68,27 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         }
     }
 
+    public final T newEntity(DbKey dbKey) {
+        boolean cache = db.isInTransaction();
+        if (cache) {
+            T t = (T) db.getCache(table).get(dbKey);
+            if (t != null) {
+                return t;
+            }
+        }
+        T t = dbKeyFactory.newEntity(dbKey);
+        if (cache) {
+            db.getCache(table).put(dbKey, t);
+        }
+        return t;
+    }
+
     public final T get(DbKey dbKey) {
-        if (db.isInTransaction()) {
+        return get(dbKey, true);
+    }
+
+    public final T get(DbKey dbKey, boolean cache) {
+        if (cache && db.isInTransaction()) {
             T t = (T) db.getCache(table).get(dbKey);
             if (t != null) {
                 return t;
@@ -80,7 +98,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM " + table + dbKeyFactory.getPKClause()
              + (multiversion ? " AND latest = TRUE LIMIT 1" : ""))) {
             dbKey.setPK(pstmt);
-            return get(con, pstmt, true);
+            return get(con, pstmt, cache);
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
@@ -247,13 +265,14 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         Connection con = null;
         try {
             con = db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT " + table + ".*, ft.score FROM " + table + ", ftl_search_data(?, 2147483647, 0) ft "
-                    + " WHERE " + table + ".db_id = ft.keys[0] AND ft.table = ? " + (multiversion ? " AND " + table + ".latest = TRUE " : " ")
+            PreparedStatement pstmt = con.prepareStatement("SELECT " + table + ".*, ft.score FROM " + table +
+                    ", ftl_search('PUBLIC', '" + table + "', ?, 2147483647, 0) ft "
+                    + " WHERE " + table + ".db_id = ft.keys[0] "
+                    + (multiversion ? " AND " + table + ".latest = TRUE " : " ")
                     + " AND " + dbClause.getClause() + sort
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setString(++i, query);
-            pstmt.setString(++i, table.toUpperCase());
             i = dbClause.set(pstmt, ++i);
             i = DbUtils.setLimits(i, pstmt, from, to);
             return getManyBy(con, pstmt, true);
@@ -388,6 +407,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         if (cachedT == null) {
             db.getCache(table).put(dbKey, t);
         } else if (t != cachedT) { // not a bug
+            Logger.logDebugMessage("In cache : " + cachedT.toString() + ", inserting " + t.toString());
             throw new IllegalStateException("Different instance found in Db cache, perhaps trying to save an object "
                     + "that was read outside the current transaction");
         }
@@ -411,7 +431,6 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             VersionedEntityDbTable.rollback(db, table, height, dbKeyFactory);
         } else {
             super.rollback(height);
-            db.getCache(table).clear();
         }
     }
 
@@ -425,16 +444,10 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     @Override
-    public void truncate() {
-        super.truncate();
-        db.getCache(table).clear();
-    }
-
-    @Override
     public final void createSearchIndex(Connection con) throws SQLException {
         if (fullTextSearchColumns != null) {
             Logger.logDebugMessage("Creating search index on " + table + " (" + fullTextSearchColumns + ")");
-            FullTextLucene.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
+            FullTextTrigger.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
         }
     }
 

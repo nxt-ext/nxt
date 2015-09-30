@@ -106,6 +106,18 @@ public abstract class NxtException extends Exception {
         
     }
     
+    public static final class NotYetEncryptedException extends IllegalStateException {
+
+        public NotYetEncryptedException(String message) {
+            super(message);
+        }
+
+        public NotYetEncryptedException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+    }
+
     public static final class StopException extends RuntimeException {
 
         public StopException(String message) {

@@ -40,6 +40,9 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
     JSONStreamAware processRequest(JSONObject request, Peer peer) {
         PeerImpl peerImpl = (PeerImpl)peer;
         peerImpl.setLastUpdated(Nxt.getEpochTime());
+        long origServices = peerImpl.getServices();
+        String servicesString = (String)request.get("services");
+        peerImpl.setServices(servicesString != null ? Long.parseUnsignedLong(servicesString) : 0);
         peerImpl.analyzeHallmark((String)request.get("hallmark"));
         if (!Peers.ignorePeerAnnouncedAddress) {
             String announcedAddress = Convert.emptyToNull((String) request.get("announcedAddress"));
@@ -88,6 +91,10 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         peerImpl.setPlatform(platform.trim());
 
         peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
+
+        if (peerImpl.getServices() != origServices) {
+            Peers.notifyListeners(peerImpl, Peers.Event.CHANGED_SERVICES);
+        }
 
         return Peers.myPeerInfoResponse;
 

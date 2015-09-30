@@ -147,6 +147,10 @@ var NRS = (function(NRS, $, undefined) {
 
 	//Reset form to initial state when modal is closed
 	modal.on("hidden.bs.modal", function() {
+		if(this.id === 'raw_transaction_modal') {
+			var reader = $('#raw_transaction_modal_signature_reader');
+			if(reader.data('stream')) reader.html5_qrcode_stop();
+		}
 		$(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]").trigger("unmask");
 		$(this).find(":input:not(button)").each(function() {
 			var defaultValue = $(this).data("default");

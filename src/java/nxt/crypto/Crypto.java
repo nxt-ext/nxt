@@ -116,30 +116,37 @@ public final class Crypto {
     }
 
     public static boolean verify(byte[] signature, byte[] message, byte[] publicKey, boolean enforceCanonical) {
+        try {
+            if (signature.length != 64) {
+                return false;
+            }
+            if (enforceCanonical && !Curve25519.isCanonicalSignature(signature)) {
+                Logger.logDebugMessage("Rejecting non-canonical signature");
+                return false;
+            }
 
-        if (enforceCanonical && !Curve25519.isCanonicalSignature(signature)) {
-            Logger.logDebugMessage("Rejecting non-canonical signature");
+            if (enforceCanonical && !Curve25519.isCanonicalPublicKey(publicKey)) {
+                Logger.logDebugMessage("Rejecting non-canonical public key");
+                return false;
+            }
+
+            byte[] Y = new byte[32];
+            byte[] v = new byte[32];
+            System.arraycopy(signature, 0, v, 0, 32);
+            byte[] h = new byte[32];
+            System.arraycopy(signature, 32, h, 0, 32);
+            Curve25519.verify(Y, v, h, publicKey);
+
+            MessageDigest digest = Crypto.sha256();
+            byte[] m = digest.digest(message);
+            digest.update(m);
+            byte[] h2 = digest.digest(Y);
+
+            return Arrays.equals(h, h2);
+        } catch (RuntimeException e) {
+            Logger.logErrorMessage("Error verifying signature", e);
             return false;
         }
-
-        if (enforceCanonical && !Curve25519.isCanonicalPublicKey(publicKey)) {
-            Logger.logDebugMessage("Rejecting non-canonical public key");
-            return false;
-        }
-
-        byte[] Y = new byte[32];
-        byte[] v = new byte[32];
-        System.arraycopy(signature, 0, v, 0, 32);
-        byte[] h = new byte[32];
-        System.arraycopy(signature, 32, h, 0, 32);
-        Curve25519.verify(Y, v, h, publicKey);
-
-        MessageDigest digest = Crypto.sha256();
-        byte[] m = digest.digest(message);
-        digest.update(m);
-        byte[] h2 = digest.digest(Y);
-
-        return Arrays.equals(h, h2);
     }
 
     public static byte[] aesEncrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {

@@ -59,7 +59,7 @@ public final class PopOff extends APIServlet.APIRequestHandler {
             Nxt.getBlockchainProcessor().setGetMoreBlocks(true);
         }
         JSONArray blocksJSON = new JSONArray();
-        blocks.forEach(block -> blocksJSON.add(JSONData.block(block, true)));
+        blocks.forEach(block -> blocksJSON.add(JSONData.block(block, true, false)));
         JSONObject response = new JSONObject();
         response.put("blocks", blocksJSON);
         return response;
@@ -77,6 +77,11 @@ public final class PopOff extends APIServlet.APIRequestHandler {
 
     @Override
     final boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
+    @Override
+    boolean requireBlockchain() {
         return false;
     }
 

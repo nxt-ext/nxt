@@ -16,13 +16,10 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Currency;
 import nxt.Exchange;
 import nxt.NxtException;
 import nxt.db.DbIterator;
 import nxt.db.DbUtils;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -41,9 +38,12 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         int timestamp = ParameterParser.getTimestamp(req);
-        String currencyId = Convert.emptyToNull(req.getParameter("currency"));
-        String accountId = Convert.emptyToNull(req.getParameter("account"));
-        boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
+        long accountId = ParameterParser.getAccountId(req, false);
+        if (currencyId == 0 && accountId == 0) {
+            return JSONResponses.MISSING_CURRENCY_ACCOUNT;
+        }
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
 
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
@@ -52,16 +52,12 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
         JSONArray exchangesData = new JSONArray();
         DbIterator<Exchange> exchanges = null;
         try {
-            if (accountId == null) {
-                Currency currency = ParameterParser.getCurrency(req);
-                exchanges = currency.getExchanges(firstIndex, lastIndex);
-            } else if (currencyId == null) {
-                Account account = ParameterParser.getAccount(req);
-                exchanges = account.getExchanges(firstIndex, lastIndex);
+            if (accountId == 0) {
+                exchanges = Exchange.getCurrencyExchanges(currencyId, firstIndex, lastIndex);
+            } else if (currencyId == 0) {
+                exchanges = Exchange.getAccountExchanges(accountId, firstIndex, lastIndex);
             } else {
-                Currency currency = ParameterParser.getCurrency(req);
-                Account account = ParameterParser.getAccount(req);
-                exchanges = Exchange.getAccountCurrencyExchanges(account.getId(), currency.getId(), firstIndex, lastIndex);
+                exchanges = Exchange.getAccountCurrencyExchanges(accountId, currencyId, firstIndex, lastIndex);
             }
             while (exchanges.hasNext()) {
                 Exchange exchange = exchanges.next();

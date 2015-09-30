@@ -20,44 +20,36 @@ import nxt.Nxt;
 import nxt.Transaction;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.INCORRECT_ACCOUNT;
+import java.util.Set;
 
 public final class GetUnconfirmedTransactions extends APIServlet.APIRequestHandler {
 
     static final GetUnconfirmedTransactions instance = new GetUnconfirmedTransactions();
 
     private GetUnconfirmedTransactions() {
-        super(new APITag[] {APITag.TRANSACTIONS, APITag.ACCOUNTS}, "account");
+        super(new APITag[] {APITag.TRANSACTIONS, APITag.ACCOUNTS}, "account", "account", "account");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        String accountIdString = Convert.emptyToNull(req.getParameter("account"));
-        long accountId = 0;
-
-        if (accountIdString != null) {
-            try {
-                accountId = Convert.parseAccountId(accountIdString);
-            } catch (RuntimeException e) {
-                return INCORRECT_ACCOUNT;
-            }
-        }
+        Set<Long> accountIds = Convert.toSet(ParameterParser.getAccountIds(req, false));
+        Filter<Transaction> filter = accountIds.isEmpty() ? transaction -> true :
+                transaction -> accountIds.contains(transaction.getSenderId()) || accountIds.contains(transaction.getRecipientId());
 
         JSONArray transactions = new JSONArray();
         try (DbIterator<? extends Transaction> transactionsIterator = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
             while (transactionsIterator.hasNext()) {
                 Transaction transaction = transactionsIterator.next();
-                if (accountId != 0 && !(accountId == transaction.getSenderId() || accountId == transaction.getRecipientId())) {
-                    continue;
+                if (filter.ok(transaction)) {
+                    transactions.add(JSONData.unconfirmedTransaction(transaction));
                 }
-                transactions.add(JSONData.unconfirmedTransaction(transaction));
             }
         }
 

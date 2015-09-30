@@ -40,10 +40,10 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Account account = ParameterParser.getAccount(req);
-        boolean includeLessors = !"false".equalsIgnoreCase(req.getParameter("includeLessors"));
-        boolean includeAssets = !"false".equalsIgnoreCase(req.getParameter("includeAssets"));
-        boolean includeCurrencies = !"false".equalsIgnoreCase(req.getParameter("includeCurrencies"));
-        boolean includeEffectiveBalance = !"false".equalsIgnoreCase(req.getParameter("includeEffectiveBalance"));
+        boolean includeLessors = "true".equalsIgnoreCase(req.getParameter("includeLessors"));
+        boolean includeAssets = "true".equalsIgnoreCase(req.getParameter("includeAssets"));
+        boolean includeCurrencies = "true".equalsIgnoreCase(req.getParameter("includeCurrencies"));
+        boolean includeEffectiveBalance = "true".equalsIgnoreCase(req.getParameter("includeEffectiveBalance"));
 
         JSONObject response = JSONData.accountBalance(account, includeEffectiveBalance);
         JSONData.putAccount(response, "account", account.getId());

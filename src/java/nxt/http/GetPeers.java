@@ -31,7 +31,7 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
     static final GetPeers instance = new GetPeers();
 
     private GetPeers() {
-        super(new APITag[] {APITag.NETWORK}, "active", "state", "includePeerInfo");
+        super(new APITag[] {APITag.NETWORK}, "active", "state", "service", "includePeerInfo");
     }
 
     @Override
@@ -39,14 +39,51 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
 
         boolean active = "true".equalsIgnoreCase(req.getParameter("active"));
         String stateValue = Convert.emptyToNull(req.getParameter("state"));
+        String serviceValue = Convert.emptyToNull(req.getParameter("service"));
         boolean includePeerInfo = "true".equalsIgnoreCase(req.getParameter("includePeerInfo"));
-
-        Collection<? extends Peer> peers = active ? Peers.getActivePeers() : stateValue != null ? Peers.getPeers(Peer.State.valueOf(stateValue)) : Peers.getAllPeers();
-        JSONArray peersJSON = new JSONArray();
-        if (includePeerInfo) {
-            peers.forEach(peer -> peersJSON.add(JSONData.peer(peer)));
+        Peer.State state;
+        if (stateValue != null) {
+            try {
+                state = Peer.State.valueOf(stateValue);
+            } catch (RuntimeException exc) {
+                return JSONResponses.incorrect("state", "- '" + stateValue + "' is not defined");
+            }
         } else {
-            peers.forEach(peer -> peersJSON.add(peer.getHost()));
+            state = null;
+        }
+        Peer.Service service;
+        if (serviceValue != null) {
+            try {
+                service = Peer.Service.valueOf(serviceValue);
+            } catch (RuntimeException exc) {
+                return JSONResponses.incorrect("service", "- '" + serviceValue + "' is not defined");
+            }
+        } else {
+            service = null;
+        }
+
+        Collection<? extends Peer> peers = active ? Peers.getActivePeers() : state != null ? Peers.getPeers(state) : Peers.getAllPeers();
+        JSONArray peersJSON = new JSONArray();
+        if (service != null) {
+            if (includePeerInfo) {
+                peers.forEach(peer -> {
+                    if (peer.providesService(service)) {
+                        peersJSON.add(JSONData.peer(peer));
+                    }
+                });
+            } else {
+                peers.forEach(peer -> {
+                    if (peer.providesService(service)) {
+                        peersJSON.add(peer.getHost());
+                    }
+                });
+            }
+        } else {
+            if (includePeerInfo) {
+                peers.forEach(peer -> peersJSON.add(JSONData.peer(peer)));
+            } else {
+                peers.forEach(peer -> peersJSON.add(peer.getHost()));
+            }
         }
 
         JSONObject response = new JSONObject();

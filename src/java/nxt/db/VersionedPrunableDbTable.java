@@ -47,7 +47,6 @@ public abstract class VersionedPrunableDbTable<T> extends PrunableDbTable<T> {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
-        db.getCache(table).clear();
     }
 
 }

@@ -16,8 +16,8 @@
 
 package nxt.peer;
 
-import nxt.Nxt;
 import nxt.util.Logger;
+import nxt.util.QueuedThreadPool;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.UpgradeException;
 import org.eclipse.jetty.websocket.api.WebSocketException;
@@ -43,9 +43,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
@@ -57,15 +56,6 @@ import java.util.zip.GZIPOutputStream;
  */
 @WebSocket
 public class PeerWebSocket {
-
-    /** Message compression enabled */
-    private static final boolean isGzipEnabled = Nxt.getBooleanProperty("nxt.enablePeerServerGZIPFilter");
-
-    /** Maximum message size */
-    static final int MAX_MESSAGE_SIZE = 10*1024*1024;
-
-    /** Minimum compressed message size */
-    private static final int MIN_COMPRESS_SIZE = 256;
 
     /** Compressed message flag */
     private static final int FLAG_COMPRESSED = 1;
@@ -79,7 +69,7 @@ public class PeerWebSocket {
         try {
             peerClient = new WebSocketClient();
             peerClient.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
-            peerClient.getPolicy().setMaxBinaryMessageSize(MAX_MESSAGE_SIZE);
+            peerClient.getPolicy().setMaxBinaryMessageSize(Peers.MAX_MESSAGE_SIZE);
             peerClient.setConnectTimeout(Peers.connectTimeout);
             peerClient.start();
         } catch (Exception exc) {
@@ -92,10 +82,9 @@ public class PeerWebSocket {
     private int version = VERSION;
 
     /** Thread pool for server request processing */
-    private static final ThreadPoolExecutor threadPool =
-            new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
-                                   Runtime.getRuntime().availableProcessors()*4,
-                                   60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    private static final ExecutorService threadPool = new QueuedThreadPool(
+                Runtime.getRuntime().availableProcessors(),
+                Runtime.getRuntime().availableProcessors() * 4);
 
     /** WebSocket session */
     private volatile Session session;
@@ -155,11 +144,11 @@ public class PeerWebSocket {
         try {
             if (session != null) {
                 useWebSocket = true;
-            } else if (System.currentTimeMillis() > connectTime+10*1000) {
+            } else if (System.currentTimeMillis() > connectTime + 10 * 1000) {
                 connectTime = System.currentTimeMillis();
                 ClientUpgradeRequest req = new ClientUpgradeRequest();
                 Future<Session> conn = peerClient.connect(this, uri, req);
-                conn.get(Peers.connectTimeout+100, TimeUnit.MILLISECONDS);
+                conn.get(Peers.connectTimeout + 100, TimeUnit.MILLISECONDS);
                 useWebSocket = true;
             }
         } catch (ExecutionException exc) {
@@ -249,7 +238,7 @@ public class PeerWebSocket {
             byte[] requestBytes = request.getBytes("UTF-8");
             int requestLength = requestBytes.length;
             int flags = 0;
-            if (isGzipEnabled && requestLength>=MIN_COMPRESS_SIZE) {
+            if (Peers.isGzipEnabled && requestLength >= Peers.MIN_COMPRESS_SIZE) {
                 flags |= FLAG_COMPRESSED;
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream(requestLength);
                 try (GZIPOutputStream gzipStream = new GZIPOutputStream(outStream)) {
@@ -257,14 +246,14 @@ public class PeerWebSocket {
                 }
                 requestBytes = outStream.toByteArray();
             }
-            ByteBuffer buf = ByteBuffer.allocate(requestBytes.length+20);
+            ByteBuffer buf = ByteBuffer.allocate(requestBytes.length + 20);
             buf.putInt(version)
                .putLong(requestId)
                .putInt(flags)
                .putInt(requestLength)
                .put(requestBytes)
                .flip();
-            if (buf.limit() > MAX_MESSAGE_SIZE) {
+            if (buf.limit() > Peers.MAX_MESSAGE_SIZE) {
                 throw new ProtocolException("POST request length exceeds max message size");
             }
             session.getRemote().sendBytes(buf);
@@ -303,7 +292,7 @@ public class PeerWebSocket {
                 byte[] responseBytes = response.getBytes("UTF-8");
                 int responseLength = responseBytes.length;
                 int flags = 0;
-                if (isGzipEnabled && responseLength>=MIN_COMPRESS_SIZE) {
+                if (Peers.isGzipEnabled && responseLength >= Peers.MIN_COMPRESS_SIZE) {
                     flags |= FLAG_COMPRESSED;
                     ByteArrayOutputStream outStream = new ByteArrayOutputStream(responseLength);
                     try (GZIPOutputStream gzipStream = new GZIPOutputStream(outStream)) {
@@ -318,7 +307,7 @@ public class PeerWebSocket {
                    .putInt(responseLength)
                    .put(responseBytes)
                    .flip();
-                if (buf.limit() > MAX_MESSAGE_SIZE) {
+                if (buf.limit() > Peers.MAX_MESSAGE_SIZE) {
                     throw new ProtocolException("POST response length exceeds max message size");
                 }
                 session.getRemote().sendBytes(buf);

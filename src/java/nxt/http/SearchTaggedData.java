@@ -41,7 +41,7 @@ public final class SearchTaggedData extends APIServlet.APIRequestHandler {
         String channel = Convert.emptyToNull(req.getParameter("channel"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
+        boolean includeData = "true".equalsIgnoreCase(req.getParameter("includeData"));
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();

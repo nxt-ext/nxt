@@ -70,11 +70,11 @@ public final class DGSDelivery extends CreateTransaction {
 
         Account buyerAccount = Account.getAccount(purchase.getBuyerId());
         boolean goodsIsText = !"false".equalsIgnoreCase(req.getParameter("goodsIsText"));
-        EncryptedData encryptedGoods = ParameterParser.getEncryptedGoods(req);
+        EncryptedData encryptedGoods = ParameterParser.getEncryptedData(req, "goods");
+        byte[] goodsBytes = null;
+        boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast"));
 
         if (encryptedGoods == null) {
-            String secretPhrase = ParameterParser.getSecretPhrase(req);
-            byte[] goodsBytes;
             try {
                 String plainGoods = Convert.nullToEmpty(req.getParameter("goodsToEncrypt"));
                 if (plainGoods.length() == 0) {
@@ -84,10 +84,15 @@ public final class DGSDelivery extends CreateTransaction {
             } catch (RuntimeException e) {
                 return INCORRECT_DGS_GOODS;
             }
-            encryptedGoods = buyerAccount.encryptTo(goodsBytes, secretPhrase, true);
+            String secretPhrase = ParameterParser.getSecretPhrase(req, broadcast);
+            if (secretPhrase != null) {
+                encryptedGoods = buyerAccount.encryptTo(goodsBytes, secretPhrase, true);
+            }
         }
 
-        Attachment attachment = new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, goodsIsText, discountNQT);
+        Attachment attachment = encryptedGoods == null ?
+                new Attachment.UnencryptedDigitalGoodsDelivery(purchase.getId(), goodsBytes, goodsIsText, discountNQT, buyerAccount.getPublicKey()) :
+                new Attachment.DigitalGoodsDelivery(purchase.getId(), encryptedGoods, goodsIsText, discountNQT);
         return createTransaction(req, sellerAccount, buyerAccount.getId(), 0, attachment);
 
     }
