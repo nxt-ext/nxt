@@ -586,6 +586,7 @@ var NRS = (function(NRS, $) {
         var coin = pairToCoin(pair);
         NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
         $("#m_shape_shift_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: coin }));
+        $("#m_shape_shift_sell_qr_code").html("");
         var data = invoker.data;
         async.waterfall([
             function(callback) {
@@ -705,6 +706,7 @@ var NRS = (function(NRS, $) {
             NRS.showModalError("Account has no public key, please login using your passphrase", modal);
             return;
         }
+        $("#m_send_amount_sell_qr_code").html("");
         modal.css('cursor','wait');
         apiCall('sendamount', { amount: amount, withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key },
                 "POST", function (data) {
