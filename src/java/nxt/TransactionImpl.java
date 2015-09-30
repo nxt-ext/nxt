@@ -1017,7 +1017,7 @@ final class TransactionImpl implements Transaction {
                     ((double)feeNQT)/Constants.ONE_NXT, ((double)minimumFeeNQT)/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
         }
         
-        AccountControlTxBlocking.checkTransaction(this);
+        AccountRestrictions.checkTransaction(this);
     }
 
     // returns false iff double spending

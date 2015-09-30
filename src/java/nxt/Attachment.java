@@ -19,7 +19,6 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -33,8 +32,6 @@ import java.util.List;
 import java.util.Set;
 
 public interface Attachment extends Appendix {
-
-    
 
     TransactionType getTransactionType();
 
@@ -3441,7 +3438,7 @@ public interface Attachment extends Appendix {
 
     }
 
-    public class SetPhasingOnly extends AbstractAttachment {
+    final class SetPhasingOnly extends AbstractAttachment {
 
         private final PhasingParams phasingParams;
 
@@ -3449,12 +3446,12 @@ public interface Attachment extends Appendix {
             phasingParams = params;
         }
 
-        public SetPhasingOnly(ByteBuffer buffer, byte transactionVersion) {
+        SetPhasingOnly(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             phasingParams = new PhasingParams(buffer);
         }
 
-        public SetPhasingOnly(JSONObject attachmentData) {
+        SetPhasingOnly(JSONObject attachmentData) {
             super(attachmentData);
             JSONObject phasingControlParams = (JSONObject) attachmentData.get("phasingControlParams");
             phasingParams = new PhasingParams(phasingControlParams);

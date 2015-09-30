@@ -177,6 +177,22 @@ public final class Convert {
         return result;
     }
 
+    public static Long[] toArray(long[] array) {
+        Long[] result = new Long[array.length];
+        for (int i = 0; i < array.length; i++) {
+            result[i] = array[i];
+        }
+        return result;
+    }
+
+    public static long[] toArray(Long[] array) {
+        long[] result = new long[array.length];
+        for (int i = 0; i < array.length; i++) {
+            result[i] = array[i];
+        }
+        return result;
+    }
+
     public static Set<Long> toSet(long[] array) {
         if (array == null || array.length ==0) {
             return Collections.emptySet();

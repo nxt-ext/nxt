@@ -17,13 +17,11 @@
 package nxt;
 
 import nxt.Account.ControlType;
+import nxt.AccountLedger.LedgerEvent;
 import nxt.Attachment.AbstractAttachment;
-import nxt.NxtException.NotValidException;
 import nxt.NxtException.ValidationException;
 import nxt.VoteWeighting.VotingModel;
-import nxt.AccountLedger.LedgerEvent;
 import nxt.util.Convert;
-
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -160,9 +158,9 @@ public abstract class TransactionType {
             case TYPE_ACCOUNT_CONTROL:
                 switch (subtype) {
                     case SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING:
-                        return AccountControl.EFFECTIVE_BALANCE_LEASING;
+                        return TransactionType.AccountControl.EFFECTIVE_BALANCE_LEASING;
                     case SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY:
-                        return AccountControl.SET_PHASING_ONLY;
+                        return TransactionType.AccountControl.SET_PHASING_ONLY;
                     default:
                         return null;
                 }
@@ -2554,7 +2552,7 @@ public abstract class TransactionType {
 
         };
 
-        public static final TransactionType SET_PHASING_ONLY = new AccountControl(){
+        public static final TransactionType SET_PHASING_ONLY = new AccountControl() {
 
             @Override
             public byte getSubtype() {
@@ -2563,38 +2561,44 @@ public abstract class TransactionType {
 
             @Override
             public LedgerEvent getLedgerEvent() {
-                return null;
+                return LedgerEvent.ACCOUNT_CONTROL_PHASING_ONLY;
             }
 
             @Override
-            AbstractAttachment parseAttachment(ByteBuffer buffer,
-                    byte transactionVersion) throws NotValidException {
+            AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
                 return new Attachment.SetPhasingOnly(buffer, transactionVersion);
             }
 
             @Override
-            AbstractAttachment parseAttachment(JSONObject attachmentData)
-                    throws NotValidException {
+            AbstractAttachment parseAttachment(JSONObject attachmentData) {
                 return new Attachment.SetPhasingOnly(attachmentData);
             }
 
             @Override
             void validateAttachment(Transaction transaction) throws ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Phasing only account control not yet enabled");
+                }
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
                 attachment.getPhasingParams().validate();
-                Account senderAccount = Account.getAccount(transaction.getSenderId());
                 if (attachment.getPhasingParams().getVoteWeighting().getVotingModel() == VotingModel.NONE) {
+                    Account senderAccount = Account.getAccount(transaction.getSenderId());
                     if (!senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
-                        new NxtException.NotCurrentlyValidException("Phasing only account control is not enabled for account " + transaction.getSenderId() +
-                                ", consequently cannot be removed");
+                        new NxtException.NotCurrentlyValidException("Phasing only account control is not enabled for account "
+                                + Long.toUnsignedString(transaction.getSenderId()) + ", consequently cannot be removed");
                     }
                 }
             }
 
             @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                return TransactionType.isDuplicate(SET_PHASING_ONLY, Long.toUnsignedString(transaction.getSenderId()), duplicates, true);
+            }
+
+            @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
-                AccountControlTxBlocking.PhasingOnly.set(transaction, attachment);
+                AccountRestrictions.PhasingOnly.set(senderAccount, attachment);
             }
 
             @Override
@@ -2609,7 +2613,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean isPhasingSafe() {
-                return true;
+                return false;
             }
             
         };

@@ -352,9 +352,9 @@ public final class APIServlet extends HttpServlet {
         map.put("trimDerivedTables", TrimDerivedTables.instance);
         map.put("hash", Hash.instance);
         map.put("fullHashToId", FullHashToId.instance);
-
         map.put("setPhasingOnlyControl", SetPhasingOnlyControl.instance);
         map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
+        map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
         
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }

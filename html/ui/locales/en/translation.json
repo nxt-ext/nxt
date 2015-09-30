@@ -1360,7 +1360,7 @@
   "forging_stopped_tooltip": "Forging stopped",
   "phasing_only": "Mandatory Approval",
   "mandatory_approval_info": "All subsequent transactions will be mandatory approved (phased) according to whatever is set below. Once set, this account control can only be removed with the approval of the accounts/stake holders set below.",
-  "mandatory_approval_enabled": "Mandatory approval is enabled. The transaction must be approved according to the setup below. Please set Finish Height."
+  "mandatory_approval_enabled": "Mandatory approval is enabled. The transaction must be approved according to the setup below. Please set Finish Height.",
   "forging_current_account_true": "current account is forging",
   "forging_current_account_false": "current account is not forging",
   "dgs_welcome": "Welcome to the Marketplace",

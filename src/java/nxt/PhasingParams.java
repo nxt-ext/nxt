@@ -1,18 +1,18 @@
 package nxt;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 import nxt.NxtException.ValidationException;
 import nxt.util.Convert;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 /**
- * Class for handling phasing parameters shared between {@link Appendix.Phasing} and {@link AccountControlTxBlocking.PhasingOnly}
+ * Class for handling phasing parameters shared between {@link Appendix.Phasing} and {@link AccountRestrictions.PhasingOnly}
  */
-public class PhasingParams {
+public final class PhasingParams {
+
     private final long quorum;
     private final long[] whitelist;
     private final VoteWeighting voteWeighting;
@@ -22,16 +22,20 @@ public class PhasingParams {
         quorum = buffer.getLong();
         long minBalance = buffer.getLong();
         byte whitelistSize = buffer.get();
-        whitelist = new long[whitelistSize];
-        for (int i = 0; i < whitelistSize; i++) {
-            whitelist[i] = buffer.getLong();
+        if (whitelistSize > 0) {
+            whitelist = new long[whitelistSize];
+            for (int i = 0; i < whitelistSize; i++) {
+                whitelist[i] = buffer.getLong();
+            }
+        } else {
+            whitelist = Convert.EMPTY_LONG;
         }
         long holdingId = buffer.getLong();
         byte minBalanceModel = buffer.get();
         voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
     }
     
-    public PhasingParams(JSONObject attachmentData) {
+    PhasingParams(JSONObject attachmentData) {
         quorum = Convert.parseLong(attachmentData.get("phasingQuorum"));
         long minBalance = Convert.parseLong(attachmentData.get("phasingMinBalance"));
         byte votingModel = ((Long) attachmentData.get("phasingVotingModel")).byteValue();
@@ -49,8 +53,7 @@ public class PhasingParams {
         voteWeighting = new VoteWeighting(votingModel, holdingId, minBalance, minBalanceModel);
     }
     
-    public PhasingParams(byte votingModel, long holdingId, long quorum,
-            long minBalance, byte minBalanceModel, long[] whitelist) {
+    public PhasingParams(byte votingModel, long holdingId, long quorum, long minBalance, byte minBalanceModel, long[] whitelist) {
         this.quorum = quorum;
         this.whitelist = Convert.nullToEmpty(whitelist);
         if (this.whitelist.length > 0) {
@@ -75,20 +78,22 @@ public class PhasingParams {
         buffer.put(voteWeighting.getMinBalanceModel().getCode());
     }
     
-    public void putMyJSON(JSONObject json) {
+    void putMyJSON(JSONObject json) {
         json.put("phasingQuorum", quorum);
         json.put("phasingMinBalance", voteWeighting.getMinBalance());
         json.put("phasingVotingModel", voteWeighting.getVotingModel().getCode());
         json.put("phasingHolding", Long.toUnsignedString(voteWeighting.getHoldingId()));
-        JSONArray whitelistJson = new JSONArray();
-        for (long accountId : whitelist) {
-            whitelistJson.add(Long.toUnsignedString(accountId));
-        }
-        json.put("phasingWhitelist", whitelistJson);
         json.put("phasingMinBalanceModel", voteWeighting.getMinBalanceModel().getCode());
+        if (whitelist.length > 0) {
+            JSONArray whitelistJson = new JSONArray();
+            for (long accountId : whitelist) {
+                whitelistJson.add(Long.toUnsignedString(accountId));
+            }
+            json.put("phasingWhitelist", whitelistJson);
+        }
     }
 
-    public void validate() throws ValidationException {
+    void validate() throws ValidationException {
         if (whitelist.length > Constants.MAX_PHASING_WHITELIST_SIZE) {
             throw new NxtException.NotValidException("Whitelist is too big");
         }

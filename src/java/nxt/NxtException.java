@@ -92,9 +92,7 @@ public abstract class NxtException extends Exception {
 
     }
 
-    public static class AccountControlException extends ValidationException {
-
-        private static final long serialVersionUID = 8481308766412568946L;
+    public static class AccountControlException extends NotCurrentlyValidException {
 
         public AccountControlException(String message) {
             super(message);

@@ -25,8 +25,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public final class GetAccount extends APIServlet.APIRequestHandler {
 
@@ -69,7 +67,8 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         }
 
         if (!account.getControls().isEmpty()) {
-            JSONArray accountControlsJson = account.getControls().stream().map(Account.ControlType::toString).collect(Collectors.toCollection(JSONArray::new));
+            JSONArray accountControlsJson = new JSONArray();
+            account.getControls().forEach(accountControl -> accountControlsJson.add(accountControl.toString()));
             response.put("accountControls", accountControlsJson);
         }
 

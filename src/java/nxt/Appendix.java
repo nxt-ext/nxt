@@ -1056,7 +1056,7 @@ public interface Appendix {
 
     }
 
-    class PublicKeyAnnouncement extends AbstractAppendix {
+    final class PublicKeyAnnouncement extends AbstractAppendix {
 
         private static final String appendixName = "PublicKeyAnnouncement";
 
@@ -1140,7 +1140,7 @@ public interface Appendix {
 
     }
 
-    class Phasing extends AbstractAppendix {
+    final class Phasing extends AbstractAppendix {
 
         private static final String appendixName = "Phasing";
 
@@ -1257,62 +1257,59 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-
-                int currentHeight = Nxt.getBlockchain().getHeight();
-
-                if (params.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
-                    if (linkedFullHashes.length == 0 || linkedFullHashes.length > Constants.MAX_PHASING_LINKED_TRANSACTIONS) {
-                        throw new NxtException.NotValidException("Invalid number of linkedFullHashes " + linkedFullHashes.length);
+            params.validate();
+            int currentHeight = Nxt.getBlockchain().getHeight();
+            if (params.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
+                if (linkedFullHashes.length == 0 || linkedFullHashes.length > Constants.MAX_PHASING_LINKED_TRANSACTIONS) {
+                    throw new NxtException.NotValidException("Invalid number of linkedFullHashes " + linkedFullHashes.length);
+                }
+                for (byte[] hash : linkedFullHashes) {
+                    if (Convert.emptyToNull(hash) == null || hash.length != 32) {
+                        throw new NxtException.NotValidException("Invalid linkedFullHash " + Convert.toHexString(hash));
                     }
-                    for (byte[] hash : linkedFullHashes) {
-                        if (Convert.emptyToNull(hash) == null || hash.length != 32) {
-                            throw new NxtException.NotValidException("Invalid linkedFullHash " + Convert.toHexString(hash));
+                    TransactionImpl linkedTransaction = TransactionDb.findTransactionByFullHash(hash, currentHeight);
+                    if (linkedTransaction != null) {
+                        if (transaction.getTimestamp() - linkedTransaction.getTimestamp() > Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN) {
+                            throw new NxtException.NotValidException("Linked transaction cannot be more than 60 days older than the phased transaction");
                         }
-                        TransactionImpl linkedTransaction = TransactionDb.findTransactionByFullHash(hash, currentHeight);
-                        if (linkedTransaction != null) {
-                            if (transaction.getTimestamp() - linkedTransaction.getTimestamp() > Constants.MAX_REFERENCED_TRANSACTION_TIMESPAN) {
-                                throw new NxtException.NotValidException("Linked transaction cannot be more than 60 days older than the phased transaction");
-                            }
-                            if (linkedTransaction.getPhasing() != null) {
-                                throw new NxtException.NotCurrentlyValidException("Cannot link to an already existing phased transaction");
-                            }
+                        if (linkedTransaction.getPhasing() != null) {
+                            throw new NxtException.NotCurrentlyValidException("Cannot link to an already existing phased transaction");
                         }
                     }
-                    if (params.getQuorum() > linkedFullHashes.length) {
-                        throw new NxtException.NotValidException("Quorum of " + params.getQuorum() + " cannot be achieved in by-transaction voting with "
-                                + linkedFullHashes.length + " linked full hashes only");
-                    }
-                } else {
-                    if (linkedFullHashes.length != 0) {
-                        throw new NxtException.NotValidException("LinkedFullHashes can only be used with VotingModel.TRANSACTION");
-                    }
                 }
-
-                if (params.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.HASH) {
-                    if (params.getQuorum() != 1) {
-                        throw new NxtException.NotValidException("Quorum must be 1 for by-hash voting");
-                    }
-                    if (hashedSecret.length == 0 || hashedSecret.length > Byte.MAX_VALUE) {
-                        throw new NxtException.NotValidException("Invalid hashedSecret " + Convert.toHexString(hashedSecret));
-                    }
-                    if (PhasingPoll.getHashFunction(algorithm) == null) {
-                        throw new NxtException.NotValidException("Invalid hashedSecretAlgorithm " + algorithm);
-                    }
-                } else {
-                    if (hashedSecret.length != 0) {
-                        throw new NxtException.NotValidException("HashedSecret can only be used with VotingModel.HASH");
-                    }
-                    if (algorithm != 0) {
-                        throw new NxtException.NotValidException("HashedSecretAlgorithm can only be used with VotingModel.HASH");
-                    }
+                if (params.getQuorum() > linkedFullHashes.length) {
+                    throw new NxtException.NotValidException("Quorum of " + params.getQuorum() + " cannot be achieved in by-transaction voting with "
+                            + linkedFullHashes.length + " linked full hashes only");
                 }
-
-                if (finishHeight <= currentHeight + (params.getVoteWeighting().acceptsVotes() ? 2 : 1)
-                        || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
+            } else {
+                if (linkedFullHashes.length != 0) {
+                    throw new NxtException.NotValidException("LinkedFullHashes can only be used with VotingModel.TRANSACTION");
                 }
+            }
 
-            params.getVoteWeighting().validate();
+            if (params.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.HASH) {
+                if (params.getQuorum() != 1) {
+                    throw new NxtException.NotValidException("Quorum must be 1 for by-hash voting");
+                }
+                if (hashedSecret.length == 0 || hashedSecret.length > Byte.MAX_VALUE) {
+                    throw new NxtException.NotValidException("Invalid hashedSecret " + Convert.toHexString(hashedSecret));
+                }
+                if (PhasingPoll.getHashFunction(algorithm) == null) {
+                    throw new NxtException.NotValidException("Invalid hashedSecretAlgorithm " + algorithm);
+                }
+            } else {
+                if (hashedSecret.length != 0) {
+                    throw new NxtException.NotValidException("HashedSecret can only be used with VotingModel.HASH");
+                }
+                if (algorithm != 0) {
+                    throw new NxtException.NotValidException("HashedSecretAlgorithm can only be used with VotingModel.HASH");
+                }
+            }
+
+            if (finishHeight <= currentHeight + (params.getVoteWeighting().acceptsVotes() ? 2 : 1)
+                    || finishHeight >= currentHeight + Constants.MAX_PHASING_DURATION) {
+                throw new NxtException.NotCurrentlyValidException("Invalid finish height " + finishHeight);
+            }
         }
 
         @Override

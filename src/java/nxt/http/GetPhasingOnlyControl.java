@@ -1,19 +1,10 @@
 package nxt.http;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import nxt.AccountRestrictions.PhasingOnly;
+import nxt.util.JSON;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import nxt.Account;
-import nxt.Account.ControlType;
-import nxt.AccountControlTxBlocking.PhasingOnly;
-import nxt.VoteWeighting.VotingModel;
-import nxt.util.Convert;
-
-import org.json.simple.JSONObject;
-import org.json.simple.JSONStreamAware;
 
 /**
  * Returns the phasing control certain account. The result contains the following entries similar to the control* parameters of {@link SetPhasingOnlyControl}
@@ -37,7 +28,7 @@ import org.json.simple.JSONStreamAware;
  * @see SetPhasingOnlyControl
  * 
  */
-public class GetPhasingOnlyControl extends APIServlet.APIRequestHandler {
+public final class GetPhasingOnlyControl extends APIServlet.APIRequestHandler {
 
     static final GetPhasingOnlyControl instance = new GetPhasingOnlyControl();
     
@@ -47,17 +38,9 @@ public class GetPhasingOnlyControl extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        Account account = ParameterParser.getAccount(req);
-        JSONObject response = new JSONObject();
-        if (account.getControls().contains(ControlType.PHASING_ONLY)) {
-            final long accountId = account.getId();
-            
-            PhasingOnly phasingOnly = PhasingOnly.get(accountId);
-            phasingOnly.getPhasingParams().putMyJSON(response);
-        } else {
-            response.put("phasingVotingModel", VotingModel.NONE.getCode());
-        }
-        return response;
+        long accountId = ParameterParser.getAccountId(req, true);
+        PhasingOnly phasingOnly = PhasingOnly.get(accountId);
+        return phasingOnly == null ? JSON.emptyJSON : JSONData.phasingOnly(phasingOnly);
     }
 
 }

@@ -1,7 +1,5 @@
 package nxt.http.accountControl;
 
-import java.util.Arrays;
-
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Nxt;
@@ -10,11 +8,14 @@ import nxt.VoteWeighting.MinBalanceModel;
 import nxt.VoteWeighting.VotingModel;
 import nxt.http.APICall;
 import nxt.http.APICall.Builder;
+import nxt.util.Convert;
 import nxt.util.Logger;
-
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 public class PhasingOnlyTest extends BlockchainTest {
     @Test
@@ -71,10 +72,7 @@ public class PhasingOnlyTest extends BlockchainTest {
         ACTestUtils.assertTransactionSuccess(builder);
         
         generateBlock();
-        
-        //setPhasingOnlyControl is applied here
-        generateBlock();
-        
+
         assertNoPhasingOnlyControl();
     }
     
@@ -107,10 +105,10 @@ public class PhasingOnlyTest extends BlockchainTest {
         ACTestUtils.assertTransactionSuccess(builder);
         
         generateBlock();
-        
+
         //the sendMoney finish height
         generateBlock();
-        
+
         //Assert the unconfirmed balance is recovered
         Assert.assertEquals(balanceBeforeTransactionRejection + 1 * Constants.ONE_NXT, 
                 ACTestUtils.getAccountBalance(ALICE.getId(), "unconfirmedBalanceNQT"));
@@ -198,10 +196,7 @@ public class PhasingOnlyTest extends BlockchainTest {
             .param("account", Long.toUnsignedString(ALICE.getId()));
         
         JSONObject response = builder.build().invoke();
-        
-        byte votingMode = ((Long) response.get("phasingVotingModel")).byteValue();
-        
-        Assert.assertEquals(VotingModel.NONE.getCode(), votingMode);
+        Assert.assertTrue(response.isEmpty());
     }
     
     private void assertPhasingOnly(PhasingParams expected) {
@@ -209,9 +204,13 @@ public class PhasingOnlyTest extends BlockchainTest {
             .param("account", Long.toUnsignedString(ALICE.getId()));
 
         JSONObject response = builder.build().invoke();
-
-        PhasingParams actual = new PhasingParams(response);
-        Assert.assertEquals(expected, actual);
+        Logger.logMessage("getPhasingOnlyControl response: " + response.toJSONString());
+        Assert.assertEquals(expected.getVoteWeighting().getVotingModel().getCode(), ((Long) response.get("votingModel")).byteValue());
+        Assert.assertEquals(expected.getQuorum(), Convert.parseLong(response.get("quorum")));
+        Assert.assertEquals(expected.getWhitelist().length, ((JSONArray) response.get("whitelist")).size());
+        Assert.assertEquals(expected.getVoteWeighting().getHoldingId(), Convert.parseUnsignedLong((String)response.get("holding")));
+        Assert.assertEquals(expected.getVoteWeighting().getMinBalance(), Convert.parseLong(response.get("minBalance")));
+        Assert.assertEquals(expected.getVoteWeighting().getMinBalanceModel().getCode(), ((Long) response.get("minBalanceModel")).byteValue());
     }
     
     private void setPhasingOnlyControl(VotingModel votingModel, String holdingId, Long quorum,

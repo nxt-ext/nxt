@@ -16,39 +16,35 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Attachment;
-import nxt.Constants;
-import nxt.NxtException;
+import nxt.AccountRestrictions.PhasingOnly;
+import nxt.db.DbIterator;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class LeaseBalance extends CreateTransaction {
+public final class GetAllPhasingOnlyControls extends APIServlet.APIRequestHandler {
 
-    static final LeaseBalance instance = new LeaseBalance();
+    static final GetAllPhasingOnlyControls instance = new GetAllPhasingOnlyControls();
 
-    private LeaseBalance() {
-        super(new APITag[] {APITag.FORGING, APITag.ACCOUNT_CONTROL, APITag.CREATE_TRANSACTION}, "period", "recipient");
+    private GetAllPhasingOnlyControls() {
+        super(new APITag[] {APITag.ACCOUNT_CONTROL}, "firstIndex", "lastIndex");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-
-        short period = (short)ParameterParser.getInt(req, "period", Constants.LEASING_DELAY, Short.MAX_VALUE, true);
-        Account account = ParameterParser.getSenderAccount(req);
-        long recipient = ParameterParser.getAccountId(req, "recipient", true);
-        Account recipientAccount = Account.getAccount(recipient);
-        if (recipientAccount == null || recipientAccount.getPublicKey() == null) {
-            JSONObject response = new JSONObject();
-            response.put("errorCode", 8);
-            response.put("errorDescription", "recipient account does not have public key");
-            return response;
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+        int firstIndex = ParameterParser.getFirstIndex(req);
+        int lastIndex = ParameterParser.getLastIndex(req);
+        JSONObject response = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        try (DbIterator<PhasingOnly> iterator = PhasingOnly.getAll(firstIndex, lastIndex)) {
+            for (PhasingOnly phasingOnly : iterator) {
+                jsonArray.add(JSONData.phasingOnly(phasingOnly));
+            }
         }
-        Attachment attachment = new Attachment.AccountControlEffectiveBalanceLeasing(period);
-        return createTransaction(req, account, recipient, 0, attachment);
-
+        response.put("phasingOnlyControls", jsonArray);
+        return response;
     }
 
 }

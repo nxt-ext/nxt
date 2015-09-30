@@ -52,7 +52,7 @@ public final class Account {
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
     }
 
-    public static enum ControlType {
+    public enum ControlType {
         PHASING_ONLY
     }
 
@@ -739,8 +739,8 @@ public final class Account {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement(
                     "SELECT * FROM account_lease WHERE current_leasing_height_from = ? AND latest = TRUE "
-                    + "UNION ALL SELECT * FROM account_lease WHERE current_leasing_height_to = ? AND latest = TRUE "
-                    + "ORDER BY current_lessee_id, lessor_id");
+                            + "UNION ALL SELECT * FROM account_lease WHERE current_leasing_height_to = ? AND latest = TRUE "
+                            + "ORDER BY current_lessee_id, lessor_id");
             int i = 0;
             pstmt.setInt(++i, height);
             pstmt.setInt(++i, height);
@@ -749,7 +749,7 @@ public final class Account {
             DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
-        }
+    }
 
     public static DbIterator<AccountAsset> getAccountAssets(long accountId, int from, int to) {
         return accountAssetTable.getManyBy(new DbClause.LongClause("account_id", accountId), from, to);
@@ -889,7 +889,7 @@ public final class Account {
     private long unconfirmedBalanceNQT;
     private long forgedBalanceNQT;
     private long activeLesseeId;
-    private final EnumSet<ControlType> controls;
+    private Set<ControlType> controls;
 
     private Account(long id) {
         if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
@@ -897,7 +897,7 @@ public final class Account {
         }
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
-        controls = EnumSet.noneOf(ControlType.class);
+        this.controls = Collections.emptySet();
     }
 
     private Account(ResultSet rs) throws SQLException {
@@ -907,10 +907,10 @@ public final class Account {
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
         this.forgedBalanceNQT = rs.getLong("forged_balance");
         this.activeLesseeId = rs.getLong("active_lessee_id");
-        
-        controls = EnumSet.noneOf(ControlType.class);
         if (rs.getBoolean("has_control_phasing")) {
-            controls.add(ControlType.PHASING_ONLY);
+            controls = Collections.unmodifiableSet(EnumSet.of(ControlType.PHASING_ONLY));
+        } else {
+            controls = Collections.emptySet();
         }
     }
 
@@ -932,7 +932,7 @@ public final class Account {
     }
 
     private void save() {
-        if (balanceNQT == 0 && unconfirmedBalanceNQT == 0 && forgedBalanceNQT == 0 && activeLesseeId == 0) {
+        if (balanceNQT == 0 && unconfirmedBalanceNQT == 0 && forgedBalanceNQT == 0 && activeLesseeId == 0 && controls.isEmpty()) {
             accountTable.delete(this, true);
         } else {
             accountTable.insert(this);
@@ -1196,7 +1196,7 @@ public final class Account {
     }
 
     public Set<ControlType> getControls() {
-        return Collections.unmodifiableSet(controls);
+        return controls;
     }
 
     void leaseEffectiveBalance(long lesseeId, short period) {
@@ -1223,18 +1223,24 @@ public final class Account {
         leaseListeners.notify(accountLease, Event.LEASE_SCHEDULED);
     }
 
-    public void addControl(ControlType control) {
-        if (!controls.contains(control)) {
-            controls.add(control);
-            accountTable.insert(this);
+    void addControl(ControlType control) {
+        if (controls.contains(control)) {
+            return;
         }
+        EnumSet<ControlType> newControls = EnumSet.of(control);
+        newControls.addAll(controls);
+        controls = Collections.unmodifiableSet(newControls);
+        accountTable.insert(this);
     }
 
-    public void removeControl(ControlType control) {
-        if (controls.contains(control)) {
-            controls.remove(control);
-            accountTable.insert(this);
+    void removeControl(ControlType control) {
+        if (!controls.contains(control)) {
+            return;
         }
+        EnumSet<ControlType> newControls = EnumSet.copyOf(controls);
+        newControls.remove(control);
+        controls = Collections.unmodifiableSet(newControls);
+        accountTable.insert(this);
     }
 
     static boolean setOrVerify(long accountId, byte[] key) {

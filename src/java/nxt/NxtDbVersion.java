@@ -1031,18 +1031,17 @@ class NxtDbVersion extends DbVersion {
                 apply(null);
             case 433:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing (db_id IDENTITY, account_id BIGINT NOT NULL, "
-                        + "whitelist_size TINYINT NOT NULL DEFAULT 0, "
+                        + "whitelist ARRAY, "
                         + "voting_model TINYINT NOT NULL, quorum BIGINT, "
                         + "min_balance BIGINT, holding_id BIGINT, min_balance_model TINYINT, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 434:
-                apply("CREATE TABLE IF NOT EXISTS account_control_phasing_voter (db_id IDENTITY, account_id BIGINT NOT NULL, "
-                        + "voter_id BIGINT NOT NULL, "
-                        + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-                
-            case 435:
                 apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS has_control_phasing BOOLEAN NOT NULL DEFAULT FALSE");
+            case 435:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_control_phasing_id_height_idx ON account_control_phasing (account_id, height DESC)");
             case 436:
+                apply("CREATE INDEX IF NOT EXISTS account_control_phasing_height_id_idx ON account_control_phasing (height, account_id)");
+            case 437:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

@@ -26,12 +26,10 @@ import nxt.PhasingParams;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
-
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.Arrays;
 
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
@@ -102,21 +100,15 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         byte[] hashedSecret = Convert.parseHexString(Convert.emptyToNull(req.getParameter("phasingHashedSecret")));
         byte algorithm = ParameterParser.getByte(req, "phasingHashedSecretAlgorithm", (byte) 0, Byte.MAX_VALUE, false);
 
-        return new Appendix.Phasing(finishHeight, phasingParams,
-                linkedFullHashes, hashedSecret, algorithm);
+        return new Appendix.Phasing(finishHeight, phasingParams, linkedFullHashes, hashedSecret, algorithm);
     }
 
-    protected PhasingParams parsePhasingParams(HttpServletRequest req, String parameterPrefix) throws ParameterException {
+    final PhasingParams parsePhasingParams(HttpServletRequest req, String parameterPrefix) throws ParameterException {
         byte votingModel = ParameterParser.getByte(req, parameterPrefix + "VotingModel", (byte)-1, (byte)5, true);
-
         long quorum = ParameterParser.getLong(req, parameterPrefix + "Quorum", 0, Long.MAX_VALUE, false);
-
         long minBalance = ParameterParser.getLong(req, parameterPrefix + "MinBalance", 0, Long.MAX_VALUE, false);
-
         byte minBalanceModel = ParameterParser.getByte(req, parameterPrefix + "MinBalanceModel", (byte)0, (byte)3, false);
-
         long holdingId = ParameterParser.getUnsignedLong(req, parameterPrefix + "Holding", false);
-
         long[] whitelist = null;
         String[] whitelistValues = req.getParameterValues(parameterPrefix + "Whitelisted");
         if (whitelistValues != null && whitelistValues.length > 0) {
@@ -132,8 +124,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
-                                            long amountNQT, Attachment attachment)
-            throws NxtException {
+                                            long amountNQT, Attachment attachment) throws NxtException {
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));

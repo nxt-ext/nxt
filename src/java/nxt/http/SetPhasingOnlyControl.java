@@ -1,13 +1,12 @@
 package nxt.http;
 
-import javax.servlet.http.HttpServletRequest;
-
 import nxt.Account;
 import nxt.Attachment;
 import nxt.NxtException;
 import nxt.PhasingParams;
-
 import org.json.simple.JSONStreamAware;
+
+import javax.servlet.http.HttpServletRequest;
 /**
  * Sets an account control that blocks transactions unless they are phased with certain parameters<br/>
  * 
@@ -39,23 +38,19 @@ import org.json.simple.JSONStreamAware;
  * </p>
  * 
  */
-public class SetPhasingOnlyControl extends CreateTransaction {
+public final class SetPhasingOnlyControl extends CreateTransaction {
 
     static final SetPhasingOnlyControl instance = new SetPhasingOnlyControl();
 
     private SetPhasingOnlyControl() {
-        super(new APITag[] {APITag.ACCOUNT_CONTROL}, "controlVotingModel", "controlQuorum", "controlMinBalance", 
+        super(new APITag[] {APITag.ACCOUNT_CONTROL, APITag.CREATE_TRANSACTION}, "controlVotingModel", "controlQuorum", "controlMinBalance",
                 "controlMinBalanceModel", "controlHolding", "controlWhitelisted", "controlWhitelisted", "controlWhitelisted");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest request)
-            throws NxtException {
-        
+    JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
         Account account = ParameterParser.getSenderAccount(request);
-        
         PhasingParams phasingParams = parsePhasingParams(request, "control");
-        
         return createTransaction(request, account, new Attachment.SetPhasingOnly(phasingParams));
     }
 
