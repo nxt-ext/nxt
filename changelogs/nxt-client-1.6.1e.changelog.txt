@@ -64,6 +64,7 @@ the 1.7 hard fork.
 The default search query operator, used when searching the MS currencies or
 the marketplace, is now AND instead of OR.
 
-The Lucene full text search library has been updated to version 5.3.1. Remove
-the old lib subdirectory if unpacking on top of a previous installation.
+The Lucene full text search library has been updated to version 5.3.1, and
+Jetty has been updated to version 9.3.3. Remove the old lib subdirectory if
+unpacking on top of a previous installation.
 
