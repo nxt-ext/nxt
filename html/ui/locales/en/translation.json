@@ -1467,5 +1467,7 @@
   "no_recent_transactions_found": "No recent transactions found.",
   "latest_exchanges": "Latest NXT Exchanges",
   "no_trading_pairs": "No trading pairs.",
-  "nxt_available": "NXT available for exchange"
+  "nxt_available": "NXT available for exchange",
+  "outdated": "Outdated!",
+  "new_beta": "New Beta"
 }

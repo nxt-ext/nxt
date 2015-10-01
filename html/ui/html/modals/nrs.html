@@ -82,22 +82,31 @@
                         <span id="nrs_update_explanation_new_release">
                             <span data-i18n="update_available">A new NRS release is available. It is recommended that you update.</span>
                             <br /><br />
-                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_new_version_nr"></span></button></span>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_new_version_nr"></span></button>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_new_version_nr"></span></button>
+                        </span>
                         <span id="nrs_update_explanation_new_beta">
                             <span data-i18n="update_beta_available">A new experimental release is available. It is not recommended that you install this unless you know what you're doing.</span>
                             <br /><br />
-                            <button type="button" class="btn btn-success btn-xs ignore" onclick="NRS.downloadClientUpdate('beta')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_beta_version_nr"></span></button></span>
+                            <button type="button" class="btn btn-success btn-xs ignore" onclick="NRS.downloadClientUpdate('beta', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_beta_version_nr"></span></button>
+                            <button type="button" class="btn btn-success btn-xs ignore" onclick="NRS.downloadClientUpdate('beta', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_beta_version_nr"></span></button>
+                        </span>
                         <span id="nrs_update_explanation_new_choice">
                             <span data-i18n="update_multiple_available">
                             Both a general and experimental release are available. It is not recommended that you install the experimental release unless you know what you're doing.
                             </span>
                             <br /><br />
-                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_new_version_nr"></span> - <span data-i18n="general_release">General Release</span></button>
-                            <button type="button" class="btn btn-default ignore" onclick="NRS.downloadClientUpdate('beta')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_beta_version_nr"></span> - <span data-i18n="experimental_release">Experimental Release</span></button>
+                            <span data-i18n="general_release">General Release</span>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_new_version_nr"></span></button>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_new_version_nr"></span></button>
+                            <br /><br />
+                            <span data-i18n="experimental_release">Experimental Release</span>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('beta', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_beta_version_nr"></span></button>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('beta', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_beta_version_nr"></span></button>
                         </span>
                     </div>
                         
-                    <div id="nrs_update_drop_zone" data-i18n="drop_update">Drop client update (zip file) here when downloaded or click to select.</div>
+                    <div id="nrs_update_drop_zone" data-i18n="drop_update_v2"></div>
                     <div id="nrs_update_result"></div>
                     <div id="nrs_update_hashes" style="display:none;padding-top:10px;">
                         <table style="width:100%">
@@ -327,7 +336,7 @@
                         <div class="callout callout-info" id="decode_token_output" style="display:none;"></div>
                         <div class="form-group">
                             <label for="decode_token_data" data-i18n="data">DATA</label>
-                            <textarea type="text" class="form-control" name="website" id="decode_token_data" placeholder="Website or Text" data-i18n="[placeholder]website_or_text" tabindex="1" rows="3"></textarea>
+                            <textarea class="form-control" name="website" id="decode_token_data" placeholder="Website or Text" data-i18n="[placeholder]website_or_text" tabindex="1" rows="3"></textarea>
                         </div>
                         <input type="hidden" name="request_type" value="decodeToken" />
                         <div class="form-group">
