@@ -84,13 +84,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.incoming = {};
 	NRS.setup = {};
 
-	if (!_checkDOMenabled()) {
-		NRS.hasLocalStorage = false;
-	} else {
-	NRS.hasLocalStorage = true;
-   }
-	
-	NRS.inApp = false;
+    NRS.hasLocalStorage = _checkDOMenabled();
 	NRS.appVersion = "";
 	NRS.appPlatform = "";
 	NRS.assetTableKeys = [];
@@ -177,38 +171,6 @@ var NRS = (function(NRS, $, undefined) {
 		});
 
 		NRS.showLockscreen();
-
-		if (window.parent) {
-			var match = window.location.href.match(/\?app=?(win|mac|lin)?\-?([\d\.]+)?/i);
-
-			if (match) {
-				NRS.inApp = true;
-				if (match[1]) {
-					NRS.appPlatform = match[1];
-				}
-				if (match[2]) {
-					NRS.appVersion = match[2];
-				}
-
-				if (!NRS.appPlatform || NRS.appPlatform == "mac") {
-					var macVersion = navigator.userAgent.match(/OS X 10_([0-9]+)/i);
-					if (macVersion && macVersion[1]) {
-						macVersion = parseInt(macVersion[1]);
-
-						if (macVersion < 9) {
-							$(".modal").removeClass("fade");
-						}
-					}
-				}
-
-				$("#show_console").hide();
-
-				parent.postMessage("loaded", "*");
-
-				window.addEventListener("message", receiveMessage, false);
-			}
-		}
-
 		NRS.setStateInterval(30);
 
 		if (!NRS.isTestNet) {
@@ -216,7 +178,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		NRS.allowLoginViaEnter();
-
 		NRS.automaticallyCheckRecipient();
 
 		$("#dashboard_table, #transactions_table").on("mouseenter", "td.confirmations", function() {

@@ -263,9 +263,6 @@ var NRS = (function(NRS, $) {
         if (NRS.settings["exchange"] != -1) {
             $("#settings_exchange_initial").remove();
         }
-		if (NRS.inApp) {
-			$("#settings_console_log_div").hide();
-		}
 		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
 			$("#settings_db_warning").show();
 		}
@@ -555,12 +552,6 @@ var NRS = (function(NRS, $) {
 				if (key && window.localstorage) {
 					window.localStorage.setItem('i18next_lng', NRS.settings["language"]);
 				}
-				if (NRS.inApp) {
-					parent.postMessage({
-						"type": "language",
-						"version": NRS.settings["language"]
-					}, "*");
-				}
 			}
 		}
 
@@ -596,7 +587,7 @@ var NRS = (function(NRS, $) {
 			NRS.itemsPerPage = parseInt(NRS.settings["items_page"], 10);
 		}
 
-		if (!NRS.inApp && !NRS.downloadingBlockchain) {
+		if (!NRS.downloadingBlockchain) {
 			if (!key || key == "console_log") {
 				if (NRS.settings["console_log"] == "0") {
 					$("#show_console").hide();
@@ -604,8 +595,6 @@ var NRS = (function(NRS, $) {
 					$("#show_console").show();
 				}
 			}
-		} else if (NRS.inApp) {
-			$("#show_console").hide();
 		}
 
 		if (key == "24_hour_format") {
