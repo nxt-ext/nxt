@@ -21,9 +21,10 @@ var NRS = (function(NRS, $) {
 	NRS.defaultSettings = {
 		"submit_on_enter": "0",
 		"animate_forging": "1",
-		"news": "-1",
-		"marketplace": "-1",
-		"console_log": "0",
+        "news": "-1",
+        "marketplace": "-1",
+        "exchange": "-1",
+        "console_log": "0",
 		"fee_warning": "100000000000",
 		"amount_warning": "10000000000000",
 		"asset_transfer_warning": "10000",
@@ -34,7 +35,12 @@ var NRS = (function(NRS, $) {
 		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default",
-        "admin_password": ""
+        "admin_password": "",
+        "exchange_url": "https://cors.shapeshift.io/",
+        "exchange_api_key": "773ecd081abd54e760a45b3551bbd4d725cf788590619e3f4bdeb81d01994d1dcad8a1d35771f669cfa47742af38e2207e297bc0eeeaea733853c2235548fba3",
+        "exchange_coin0": "BTC",
+        "exchange_coin1": "LTC",
+        "exchange_coin2": "ETH"
 	};
 
 	NRS.defaultColors = {
@@ -248,18 +254,15 @@ var NRS = (function(NRS, $) {
 				}
 			}
 		}
-
-		if (NRS.settings["news"] != -1) {
-			$("#settings_news_initial").remove();
-		}
-
-		if (NRS.settings["marketplace"] != -1) {
-			$("#settings_marketplace_initial").remove();
-		}
-
-		if (NRS.inApp) {
-			$("#settings_console_log_div").hide();
-		}
+        if (NRS.settings["news"] != -1) {
+            $("#settings_news_initial").remove();
+        }
+        if (NRS.settings["marketplace"] != -1) {
+            $("#settings_marketplace_initial").remove();
+        }
+        if (NRS.settings["exchange"] != -1) {
+            $("#settings_exchange_initial").remove();
+        }
 		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
 			$("#settings_db_warning").show();
 		}
@@ -549,12 +552,6 @@ var NRS = (function(NRS, $) {
 				if (key && window.localstorage) {
 					window.localStorage.setItem('i18next_lng', NRS.settings["language"]);
 				}
-				if (NRS.inApp) {
-					parent.postMessage({
-						"type": "language",
-						"version": NRS.settings["language"]
-					}, "*");
-				}
 			}
 		}
 
@@ -590,7 +587,7 @@ var NRS = (function(NRS, $) {
 			NRS.itemsPerPage = parseInt(NRS.settings["items_page"], 10);
 		}
 
-		if (!NRS.inApp && !NRS.downloadingBlockchain) {
+		if (!NRS.downloadingBlockchain) {
 			if (!key || key == "console_log") {
 				if (NRS.settings["console_log"] == "0") {
 					$("#show_console").hide();
@@ -598,8 +595,6 @@ var NRS = (function(NRS, $) {
 					$("#show_console").show();
 				}
 			}
-		} else if (NRS.inApp) {
-			$("#show_console").hide();
 		}
 
 		if (key == "24_hour_format") {
