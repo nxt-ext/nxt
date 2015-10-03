@@ -87,7 +87,9 @@ var NRS = (function(NRS, $) {
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
-                $("#shape_shift_status").html($.t("error"));
+                if (action != "txStat") {
+                    $("#shape_shift_status").html($.t("error"));
+                }
             }
             doneCallback(response);
         }).fail(function (xhr, textStatus, error) {
