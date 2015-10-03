@@ -845,57 +845,43 @@ var NRS = (function (NRS, $, undefined) {
 			$("#account_id_dropdown li.remote_only, #asset_info_dropdown li.remote_only").remove();
 		}
 
-		var $el = $(elements);
+        var $el = $(elements);
+        var clipboard = new ZeroClipboard($el, {
+            moviePath: "js/3rdparty/zeroclipboard.swf"
+        });
 
-		if (NRS.inApp) {
-            $el.on("click", function () {
-				parent.postMessage({
-					"type": "copy",
-					"text": NRS.getClipboardText($(this).data("type"))
-				}, "*");
+        clipboard.on("dataRequested", function (client) {
+            client.setText(NRS.getClipboardText($(this).data("type")));
+        });
 
-				$.growl($.t("success_clipboard_copy"), {
-					"type": "success"
-				});
-			});
-		} else {
-			var clipboard = new ZeroClipboard($el, {
-				moviePath: "js/3rdparty/zeroclipboard.swf"
-			});
+        if ($el.hasClass("dropdown-toggle")) {
+            $el.removeClass("dropdown-toggle").data("toggle", "");
+            $el.parent().remove(".dropdown-menu");
+        }
 
-            clipboard.on("dataRequested", function (client) {
-				client.setText(NRS.getClipboardText($(this).data("type")));
-			});
+        clipboard.on("complete", function () {
+            $.growl($.t("success_clipboard_copy"), {
+                "type": "success"
+            });
+        });
 
-			if ($el.hasClass("dropdown-toggle")) {
-				$el.removeClass("dropdown-toggle").data("toggle", "");
-				$el.parent().remove(".dropdown-menu");
-			}
+        if (!NRS.getCookie("clipboard_warning_shown")) {
+            clipboard.on("noflash", function () {
+                $("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+                $("#account_id_dropdown, #asset_id").data("toggle", "");
+                $.growl($.t("error_clipboard_copy_noflash"), {
+                    "type": "danger"
+                });
+            });
+            NRS.setCookie("clipboard_warning_shown", "1", 30);
+        }
 
-            clipboard.on("complete", function () {
-				$.growl($.t("success_clipboard_copy"), {
-					"type": "success"
-				});
-			});
-
-			if (!NRS.getCookie("clipboard_warning_shown")) {
-                clipboard.on("noflash", function () {
-					$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
-					$("#account_id_dropdown, #asset_id").data("toggle", "");
-					$.growl($.t("error_clipboard_copy_noflash"), {
-						"type": "danger"
-					});
-				});
-				NRS.setCookie("clipboard_warning_shown", "1", 30);
-			}
-
-            clipboard.on("wrongflash", function () {
-				$("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
-				$("#account_id_dropdown, #asset_id").data("toggle", "");
-				$.growl($.t("error_clipboard_copy_wrongflash"));
-			});
-		}
-	};
+        clipboard.on("wrongflash", function () {
+            $("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
+            $("#account_id_dropdown, #asset_id").data("toggle", "");
+            $.growl($.t("error_clipboard_copy_wrongflash"));
+        });
+    };
 
     NRS.getClipboardText = function (type) {
         var assetId = $("#asset_id");

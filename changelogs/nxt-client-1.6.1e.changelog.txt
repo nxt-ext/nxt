@@ -1,4 +1,14 @@
-This experimental release adds several API changes and optimizations.
+This is an experimental release.
+
+New feature: ShapeShift exchange integration.
+
+The ShapeShift plugin is now integrated in the core NRS package. A detailed
+description of this in-client coin exchange functionality is available at:
+
+https://bitbucket.org/JeanLucPicard/nxt/issues/316/shapeshift-integration
+
+
+This release also adds several API changes and optimizations.
 
 Added getExpectedTransactions API, to return the non-phased unconfirmed
 transactions expected to be included in the next block (only), plus the phased
@@ -64,6 +74,7 @@ the 1.7 hard fork.
 The default search query operator, used when searching the MS currencies or
 the marketplace, is now AND instead of OR.
 
-The Lucene full text search library has been updated to version 5.3.1. Remove
-the old lib subdirectory if unpacking on top of a previous installation.
+The Lucene full text search library has been updated to version 5.3.1, and
+Jetty has been updated to version 9.3.3. Remove the old lib subdirectory if
+unpacking on top of a previous installation.
 

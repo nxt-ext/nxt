@@ -17,7 +17,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	NRS.blocksPageType = null;
 	NRS.tempBlocks = [];
 	var trackBlockchain = false;
@@ -71,9 +71,6 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.setStateInterval(10);
 					}
 					NRS.downloadingBlockchain = true;
-					if (NRS.inApp) {
-						parent.postMessage("downloadingBlockchain", "*");
-					}
 					$("#nrs_update_explanation").find("span").hide();
 					$("#nrs_update_explanation_wait").attr("style", "display: none !important");
 					$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
@@ -167,13 +164,10 @@ var NRS = (function(NRS, $, undefined) {
 						trackBlockchain = true;
 					}
 					NRS.downloadingBlockchain = false;
-					if (NRS.inApp) {
-						parent.postMessage("downloadedBlockchain", "*");
-					}
 					$("#dashboard_message").hide();
 					$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
 					$("#nrs_update_explanation_wait").removeAttr("style");
-					if (NRS.settings["console_log"] && !NRS.inApp) {
+					if (NRS.settings["console_log"]) {
 						$("#show_console").show();
 					}
 					//todo: update the dashboard blocks!

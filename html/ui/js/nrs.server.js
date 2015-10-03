@@ -273,7 +273,7 @@ var NRS = (function (NRS, $, undefined) {
 
             if (NRS.accountInfo && NRS.accountInfo.publicKey) {
                 data.publicKey = NRS.accountInfo.publicKey;
-            } else if (!data.doNotSign) {
+            } else if (!data.doNotSign && secretPhrase) {
                 data.publicKey = NRS.generatePublicKey(secretPhrase);
                 NRS.accountInfo.publicKey = data.publicKey;
             }
