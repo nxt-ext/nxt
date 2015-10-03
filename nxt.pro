@@ -15,7 +15,7 @@
 
 -keepattributes EnclosingMethod,Signature,*Annotation*
 -keep,allowshrinking class nxt.util.NxtLogManager,nxt.util.MemoryHandler
--keep,includedescriptorclasses class nxt.peer.PeerWebSocket {
+-keep,includedescriptorclasses class nxt.peer.PeerWebSocket,nxt.db.FullTextTrigger {
     <methods>;
 }
 -keep class nxt.env.service.NxtService_ServiceManagement
