@@ -628,7 +628,7 @@ var NRS = (function(NRS, $) {
                 }
                 apiCall('shift', {
                     withdrawal: NRS.accountRS,
-                    rsAddress: publicKey,
+                    pubKey: publicKey,
                     pair: pair,
                     apiKey: NRS.settings.exchange_api_key
                 }, "POST", function (data) {
@@ -714,7 +714,7 @@ var NRS = (function(NRS, $) {
         }
         $("#m_send_amount_sell_qr_code").html("");
         modal.css('cursor','wait');
-        apiCall('sendamount', { amount: amount, withdrawal: NRS.accountRS, rsAddress: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key },
+        apiCall('sendamount', { amount: amount, withdrawal: NRS.accountRS, pubKey: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key },
                 "POST", function (data) {
             try {
                 var rate = $("#m_send_amount_sell_rate");
