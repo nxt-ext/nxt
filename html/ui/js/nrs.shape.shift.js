@@ -87,7 +87,7 @@ var NRS = (function(NRS, $) {
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
-                if (action != "txStat") {
+                if (!action.startsWith("txStat/") && !action.startsWith("cancelpending")) {
                     $("#shape_shift_status").html($.t("error"));
                 }
             }
@@ -630,7 +630,7 @@ var NRS = (function(NRS, $) {
                 }
                 apiCall('shift', {
                     withdrawal: NRS.accountRS,
-                    pubKey: publicKey,
+                    rsAddress: publicKey,
                     pair: pair,
                     apiKey: NRS.settings.exchange_api_key
                 }, "POST", function (data) {
