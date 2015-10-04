@@ -127,6 +127,7 @@ public final class Peers {
     static final int MAX_APPLICATION_LENGTH = 20;
     static final int MAX_PLATFORM_LENGTH = 30;
     static final int MAX_ANNOUNCED_ADDRESS_LENGTH = 100;
+    static final boolean hideErrorDetails = Nxt.getBooleanProperty("nxt.hideErrorDetails");
 
     static final JSONStreamAware myPeerInfoRequest;
     static final JSONStreamAware myPeerInfoResponse;

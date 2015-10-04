@@ -299,7 +299,7 @@ final class PeerImpl implements Peer {
                 Logger.logDebugMessage("Blacklisting " + host + " because of: " + cause.toString(), cause);
             }
         }
-        blacklist(cause.toString() == null ? cause.getClass().getName() : cause.toString());
+        blacklist(cause.toString() == null || Peers.hideErrorDetails ? cause.getClass().getName() : cause.toString());
     }
 
     @Override
