@@ -983,6 +983,16 @@ class NxtDbVersion extends DbVersion {
                 nxt.db.FullTextTrigger.init();
                 apply(null);
             case 416:
+                apply("DROP INDEX IF EXISTS asset_height_idx");
+            case 417:
+                apply("DROP INDEX IF EXISTS asset_height_db_id_idx");
+            case 418:
+                apply("DROP INDEX IF EXISTS asset_id_height_idx");
+            case 419:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_id_height_idx ON asset (id, height DESC)");
+            case 420:
+                apply("CREATE INDEX IF NOT EXISTS asset_height_id_idx ON asset (height, id)");
+            case 421:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
