@@ -113,6 +113,12 @@ public final class PeerServlet extends WebSocketServlet {
 
     private static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
 
+    static JSONStreamAware error(Exception e) {
+        JSONObject response = new JSONObject();
+        response.put("error", Peers.hideErrorDetails ? e.getClass().getName() : e.toString());
+        return response;
+    }
+
     /**
      * Configure the WebSocket factory
      *
@@ -272,9 +278,7 @@ public final class PeerServlet extends WebSocketServlet {
         } catch (RuntimeException|ParseException|IOException e) {
             Logger.logDebugMessage("Error processing POST request: " + e.toString());
             peer.blacklist(e);
-            JSONObject json = new JSONObject();
-            json.put("error", e.toString());
-            return json;
+            return error(e);
         }
     }
 

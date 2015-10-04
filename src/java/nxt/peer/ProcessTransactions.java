@@ -38,9 +38,7 @@ final class ProcessTransactions extends PeerServlet.PeerRequestHandler {
         } catch (RuntimeException | NxtException.ValidationException e) {
             //Logger.logDebugMessage("Failed to parse peer transactions: " + request.toJSONString());
             peer.blacklist(e);
-            JSONObject response = new JSONObject();
-            response.put("error", e.toString());
-            return response;
+            return PeerServlet.error(e);
         }
 
     }
