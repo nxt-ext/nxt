@@ -32,6 +32,11 @@ public final class Constants {
     public static final long MAX_BALANCE_NQT = MAX_BALANCE_NXT * ONE_NXT;
     public static final long INITIAL_BASE_TARGET = 153722867;
     public static final long MAX_BASE_TARGET = MAX_BALANCE_NXT * INITIAL_BASE_TARGET;
+    public static final long MAX_BASE_TARGET_2 = isTestnet ? MAX_BASE_TARGET : INITIAL_BASE_TARGET * 50;
+    public static final long MIN_BASE_TARGET = INITIAL_BASE_TARGET * 9 / 10;
+    public static final int MIN_BLOCKTIME_LIMIT = 53;
+    public static final int MAX_BLOCKTIME_LIMIT = 67;
+    public static final int BASE_TARGET_GAMMA = 64;
     public static final int MAX_ROLLBACK = Math.max(Nxt.getIntProperty("nxt.maxRollback"), 720);
     public static final int GUARANTEED_BALANCE_CONFIRMATIONS = isTestnet ? Nxt.getIntProperty("nxt.testnetGuaranteedBalanceConfirmations", 1440) : 1440;
     public static final int LEASING_DELAY = isTestnet ? Nxt.getIntProperty("nxt.testnetLeasingDelay", 1440) : 1440;
@@ -137,6 +142,7 @@ public final class Constants {
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
     public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
     public static final int SHUFFLING_BLOCK = isTestnet ? 428000 : Integer.MAX_VALUE;
+    public static final int BASE_TARGET_BLOCK = Integer.MAX_VALUE;
 
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 400000 : 535000;
 
