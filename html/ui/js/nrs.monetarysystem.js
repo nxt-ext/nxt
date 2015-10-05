@@ -932,6 +932,38 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
+    NRS.pages.currency_transfer_history = function () {
+        NRS.sendRequest("getCurrencyTransfers+", {
+            "account": NRS.accountRS,
+            "includeCurrencyInfo": true,
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+        }, function (response) {
+            if (response.transfers && response.transfers.length) {
+                if (response.transfers.length > NRS.itemsPerPage) {
+                    NRS.hasMorePages = true;
+                    response.transfers.pop();
+                }
+                var transfers = response.transfers;
+                var rows = "";
+                for (var i = 0; i < transfers.length; i++) {
+                    transfers[i].units = new BigInteger(transfers[i].units);
+                    var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
+                    rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transfers[i].transfer).escapeHTML() + "'>" + String(transfers[i].currency).escapeHTML() + "</a></td>" +
+                    "<td><a href='#' data-goto-currency='" + String(transfers[i].code).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td>" +
+                    "<td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td>" +
+                    "<td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals) + "</td>" +
+                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
+                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
+                    "</tr>";
+                }
+                NRS.dataLoaded(rows);
+            } else {
+                NRS.dataLoaded();
+            }
+        });
+    };
+
     var _selectedApprovalCurrency = "";
 
     NRS.buildApprovalRequestCurrencyNavi = function () {
@@ -1028,6 +1060,12 @@ var NRS = (function (NRS, $, undefined) {
             "titleHTML": '<span data-i18n="exchange_history">Exchange History</span>',
             "type": 'PAGE',
             "page": 'exchange_history'
+        };
+        NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+        options = {
+            "titleHTML": '<span data-i18n="transfer_history">Transfer History</span>',
+            "type": 'PAGE',
+            "page": 'currency_transfer_history'
         };
         NRS.appendMenuItemToTSMenuItem(sidebarId, options);
         options = {
