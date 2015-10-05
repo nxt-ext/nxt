@@ -33,17 +33,17 @@ public final class BaseTargetTest {
     private static final long MIN_BASE_TARGET = Constants.INITIAL_BASE_TARGET * 9 / 10;
     private static final long MAX_BASE_TARGET = Constants.INITIAL_BASE_TARGET * 50;
 
-    private static final int MIN_BLOCKTIME_LIMIT = 54;
-    private static final int MAX_BLOCKTIME_LIMIT = 66;
+    private static final int MIN_BLOCKTIME_LIMIT = 53;
+    private static final int MAX_BLOCKTIME_LIMIT = 67;
 
-    private static final int GAMMA = 70;
+    private static final int GAMMA = 64;
 
     private static final int START_HEIGHT = 170000;
 
     private static final boolean USE_EWMA = false;
     private static final int EWMA_N = 8;
-    private static final int SMA_N = 6;
-    private static final int FREQUENCY = 3;
+    private static final int SMA_N = 3;
+    private static final int FREQUENCY = 2;
 
     private static long calculateBaseTarget(long previousBaseTarget, long blocktimeEMA) {
         long baseTarget;
