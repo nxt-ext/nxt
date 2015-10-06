@@ -41,7 +41,7 @@ public abstract class CurrencyExchangeOffer {
                     expired.add(offer);
                 }
             }
-            expired.forEach((offer) -> CurrencyExchangeOffer.removeOffer(LedgerEvent.CURRENCY_OFFER_EXPIRED, block.getId(), offer));
+            expired.forEach((offer) -> CurrencyExchangeOffer.removeOffer(LedgerEvent.CURRENCY_OFFER_EXPIRED, offer));
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
     }
@@ -49,7 +49,7 @@ public abstract class CurrencyExchangeOffer {
     static void publishOffer(Transaction transaction, Attachment.MonetarySystemPublishExchangeOffer attachment) {
         CurrencyBuyOffer previousOffer = CurrencyBuyOffer.getOffer(attachment.getCurrencyId(), transaction.getSenderId());
         if (previousOffer != null) {
-            CurrencyExchangeOffer.removeOffer(LedgerEvent.CURRENCY_OFFER_REPLACED, transaction.getId(), previousOffer);
+            CurrencyExchangeOffer.removeOffer(LedgerEvent.CURRENCY_OFFER_REPLACED, previousOffer);
         }
         CurrencyBuyOffer.addOffer(transaction, attachment);
         CurrencySellOffer.addOffer(transaction, attachment);
@@ -159,15 +159,15 @@ public abstract class CurrencyExchangeOffer {
         account.addToUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId, remainingAmountNQT);
     }
 
-    static void removeOffer(LedgerEvent event, long eventId, CurrencyBuyOffer buyOffer) {
+    static void removeOffer(LedgerEvent event, CurrencyBuyOffer buyOffer) {
         CurrencySellOffer sellOffer = buyOffer.getCounterOffer();
 
         CurrencyBuyOffer.remove(buyOffer);
         CurrencySellOffer.remove(sellOffer);
 
         Account account = Account.getAccount(buyOffer.getAccountId());
-        account.addToUnconfirmedBalanceNQT(event, eventId, Math.multiplyExact(buyOffer.getSupply(), buyOffer.getRateNQT()));
-        account.addToUnconfirmedCurrencyUnits(event, eventId, buyOffer.getCurrencyId(), sellOffer.getSupply());
+        account.addToUnconfirmedBalanceNQT(event, buyOffer.getId(), Math.multiplyExact(buyOffer.getSupply(), buyOffer.getRateNQT()));
+        account.addToUnconfirmedCurrencyUnits(event, buyOffer.getId(), buyOffer.getCurrencyId(), sellOffer.getSupply());
     }
 
 

@@ -57,7 +57,7 @@ public final class DigitalGoodsStore {
             }
             for (Purchase purchase : expiredPurchases) {
                 Account buyer = Account.getAccount(purchase.getBuyerId());
-                buyer.addToUnconfirmedBalanceNQT(LedgerEvent.DIGITAL_GOODS_PURCHASE_EXPIRED, block.getId(),
+                buyer.addToUnconfirmedBalanceNQT(LedgerEvent.DIGITAL_GOODS_PURCHASE_EXPIRED, purchase.getId(),
                         Math.multiplyExact((long) purchase.getQuantity(), purchase.getPriceNQT()));
                 Goods.getGoods(purchase.getGoodsId()).changeQuantity(purchase.getQuantity());
                 purchase.setPending(false);
