@@ -1471,5 +1471,6 @@
   "outdated": "Outdated!",
   "new_beta": "New Beta",
   "no_currency_transfer_history": "No currency transfer history available.",
-  "currency_transfer_history": "Currency Transfer History"
+  "currency_transfer_history": "Currency Transfer History",
+  "min_reserve_v2": "Minimum Amount of NXT to Reserve Per Unit"
 }
