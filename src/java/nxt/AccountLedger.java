@@ -502,8 +502,8 @@ public class AccountLedger {
         // TYPE_SHUFFLING
             SHUFFLING_REGISTRATION(51, true),
             SHUFFLING_PROCESSING(52, true),
-            SHUFFLING_CANCELLATION(53, false),
-            SHUFFLING_DISTRIBUTION(54, false);
+            SHUFFLING_CANCELLATION(53, true),
+            SHUFFLING_DISTRIBUTION(54, true);
 
 
         /** Event code mapping */

@@ -664,28 +664,27 @@ public final class Shuffling {
 
     private void cancel(Block block) {
         AccountLedger.LedgerEvent event = AccountLedger.LedgerEvent.SHUFFLING_CANCELLATION;
-        long eventId = block.getId();
         long blamedAccountId = blame();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
             for (ShufflingParticipant participant : participants) {
                 Account participantAccount = Account.getAccount(participant.getAccountId());
-                holdingType.addToUnconfirmedBalance(participantAccount, event, eventId, this.holdingId, this.amount);
+                holdingType.addToUnconfirmedBalance(participantAccount, event, this.id, this.holdingId, this.amount);
                 if (participantAccount.getId() != blamedAccountId) {
                     if (holdingType != HoldingType.NXT) {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
+                        participantAccount.addToUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
                     }
                 } else {
                     if (holdingType == HoldingType.NXT) {
-                        participantAccount.addToUnconfirmedBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
+                        participantAccount.addToUnconfirmedBalanceNQT(event, this.id, -Constants.SHUFFLING_DEPOSIT_NQT);
                     }
-                    participantAccount.addToBalanceNQT(event, eventId, -Constants.SHUFFLING_DEPOSIT_NQT);
+                    participantAccount.addToBalanceNQT(event, this.id, -Constants.SHUFFLING_DEPOSIT_NQT);
                 }
             }
         }
         if (blamedAccountId != 0) {
             // as a penalty the deposit goes to the generator of the finish block
             Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
-            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Constants.SHUFFLING_DEPOSIT_NQT);
+            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
             blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
         }
         this.assigneeAccountId = 0;
