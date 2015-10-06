@@ -688,13 +688,15 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.displayUnconfirmedTransactions = function(account) {
-		NRS.sendRequest("getUnconfirmedTransactions", {
-			"account": account,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
-		}, function(response) {
+        var params = {
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+        };
+        if (account != "") {
+            params["account"] = account;
+        }
+        NRS.sendRequest("getUnconfirmedTransactions", params, function(response) {
 			var rows = "";
-
 			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
 				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
 					rows += NRS.getTransactionRowHTML(response.unconfirmedTransactions[i]);
