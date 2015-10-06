@@ -993,6 +993,8 @@ class NxtDbVersion extends DbVersion {
             case 420:
                 apply("CREATE INDEX IF NOT EXISTS asset_height_id_idx ON asset (height, id)");
             case 421:
+                apply("TRUNCATE TABLE account_ledger");
+            case 422:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate + ", probably trying to run older code on newer database");
