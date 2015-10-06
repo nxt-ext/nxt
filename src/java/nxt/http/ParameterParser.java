@@ -139,7 +139,7 @@ final class ParameterParser {
         try {
             for (int i = 0; i < paramValues.length; i++) {
                 if (paramValues[i] == null || paramValues[i].isEmpty()) {
-                    continue;
+                    throw new ParameterException(incorrect(name));
                 }
                 values[i] = Long.parseUnsignedLong(paramValues[i]);
                 if (values[i] == 0) {
@@ -188,7 +188,7 @@ final class ParameterParser {
         try {
             for (int i = 0; i < paramValues.length; i++) {
                 if (paramValues[i] == null || paramValues[i].isEmpty()) {
-                    continue;
+                    throw new ParameterException(INCORRECT_ACCOUNT);
                 }
                 values[i] = Convert.parseAccountId(paramValues[i]);
                 if (values[i] == 0) {
