@@ -21,16 +21,8 @@ import nxt.util.Convert;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.SecureRandom;
 
 public final class EncryptedData {
-
-    private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
-        @Override
-        protected SecureRandom initialValue() {
-            return new SecureRandom();
-        }
-    };
 
     public static final EncryptedData EMPTY_DATA = new EncryptedData(new byte[0], new byte[0]);
 
@@ -39,7 +31,7 @@ public final class EncryptedData {
             return EMPTY_DATA;
         }
         byte[] nonce = new byte[32];
-        secureRandom.get().nextBytes(nonce);
+        Crypto.getSecureRandom().nextBytes(nonce);
         byte[] data = Crypto.aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce);
         return new EncryptedData(data, nonce);
     }
