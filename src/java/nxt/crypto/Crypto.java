@@ -39,7 +39,14 @@ public final class Crypto {
     private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
         @Override
         protected SecureRandom initialValue() {
-            return new SecureRandom();
+            try {
+                SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+                secureRandom.nextBoolean();
+                return secureRandom;
+            } catch (NoSuchAlgorithmException e) {
+                Logger.logErrorMessage("No secure random provider available");
+                throw new RuntimeException(e.getMessage(), e);
+            }
         }
     };
 

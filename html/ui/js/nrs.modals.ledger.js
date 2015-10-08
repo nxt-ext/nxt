@@ -46,9 +46,7 @@ var NRS = (function(NRS, $, undefined) {
             entryDetails.height_formatted_html = "<a href='#' class='show_block_modal_action' data-block='" + String(entry.height).escapeHTML() + "'>" + String(entry.height).escapeHTML() + "</a>";
             delete entryDetails.block;
             delete entryDetails.height;
-            if (entryDetails.isTransactionEvent) {
-                entryDetails.transaction_formatted_html = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(entry.event).escapeHTML() + "'>" + String(entry.event).escapeHTML() + "</a>";
-            }
+            entryDetails.transaction_formatted_html = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(entry.event).escapeHTML() + "'>" + String(entry.event).escapeHTML() + "</a>";
             delete entryDetails.event;
             delete entryDetails.isTransactionEvent;
             entryDetails.change_formatted_html = change;
