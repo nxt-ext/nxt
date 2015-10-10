@@ -715,6 +715,9 @@ final class TransactionImpl implements Transaction {
             if ((flags & position) != 0) {
                 builder.appendix(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
+            if (buffer.hasRemaining()) {
+                throw new NxtException.NotValidException("Transaction bytes too long, " + buffer.remaining() + " extra bytes");
+            }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
