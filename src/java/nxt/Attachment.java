@@ -2843,15 +2843,15 @@ public interface Attachment extends Appendix {
         public byte[] getHash() {
             if (hash != null) {
                 return hash;
+            } else if (data != null) {
+                MessageDigest digest = Crypto.sha256();
+                for (byte[] bytes : data) {
+                    digest.update(bytes);
+                }
+                return digest.digest();
+            } else {
+                throw new IllegalStateException("Both hash and data are null");
             }
-            if (data == null) {
-                return null;
-            }
-            MessageDigest digest = Crypto.sha256();
-            for (byte[] bytes : data) {
-                digest.update(bytes);
-            }
-            return digest.digest();
         }
 
         public byte[][] getData() {
