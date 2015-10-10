@@ -103,7 +103,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_DGS_REFUND = incorrect("refundNQT");
     public static final JSONStreamAware INCORRECT_ENCRYPTED_MESSAGE = incorrect("encryptedMessageData");
     public static final JSONStreamAware INCORRECT_DGS_ENCRYPTED_GOODS = incorrect("goodsData");
-    public static final JSONStreamAware MISSING_SECRET_PHRASE_OR_PUBLIC_KEY = missing("secretPhrase", "publicKey");
     public static final JSONStreamAware INCORRECT_HEIGHT = incorrect("height");
     public static final JSONStreamAware MISSING_HEIGHT = missing("height");
     public static final JSONStreamAware INCORRECT_MESSAGE_TO_ENCRYPT = incorrect("messageToEncrypt");
@@ -144,7 +143,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_HASH_ALGORITHM = incorrect("hashAlgorithm");
     public static final JSONStreamAware MISSING_SECRET = missing("secret");
     public static final JSONStreamAware INCORRECT_SECRET = incorrect("secret");
-    public static final JSONStreamAware MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY = missing("recipientSecretPhrase", "recipientPublicKey");
     public static final JSONStreamAware MISSING_RECIPIENT_PUBLIC_KEY = missing("recipientPublicKey");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;

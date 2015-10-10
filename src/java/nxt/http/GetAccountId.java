@@ -17,14 +17,11 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
 
 public final class GetAccountId extends APIServlet.APIRequestHandler {
 
@@ -35,30 +32,24 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        long accountId;
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
-        if (secretPhrase != null) {
-            byte[] publicKey = Crypto.getPublicKey(secretPhrase);
-            accountId = Account.getId(publicKey);
-            publicKeyString = Convert.toHexString(publicKey);
-        } else if (publicKeyString != null) {
-            accountId = Account.getId(Convert.parseHexString(publicKeyString));
-        } else {
-            return MISSING_SECRET_PHRASE_OR_PUBLIC_KEY;
-        }
-
+        byte[] publicKey = ParameterParser.getPublicKey(req);
+        long accountId = Account.getId(publicKey);
         JSONObject response = new JSONObject();
         JSONData.putAccount(response, "account", accountId);
-        response.put("publicKey", publicKeyString);
+        response.put("publicKey", Convert.toHexString(publicKey));
 
         return response;
     }
 
     @Override
     final boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
+    @Override
+    final boolean requireBlockchain() {
         return false;
     }
 
