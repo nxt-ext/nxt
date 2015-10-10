@@ -282,6 +282,7 @@ public final class ShufflingParticipant {
         return state;
     }
 
+    // caller must update database
     private void setState(State state) {
         if (!this.state.canBecome(state)) {
             throw new IllegalStateException(String.format("Shuffling participant in state %s cannot go to state %s", this.state, state));

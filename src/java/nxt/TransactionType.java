@@ -75,7 +75,7 @@ public abstract class TransactionType {
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
     private static final byte SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY = 1;
-    
+
     private static final byte SUBTYPE_DATA_TAGGED_DATA_UPLOAD = 0;
     private static final byte SUBTYPE_DATA_TAGGED_DATA_EXTEND = 1;
 
@@ -1700,7 +1700,7 @@ public abstract class TransactionType {
                 if (ask.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
                             + Long.toUnsignedString(ask.getAccountId()));
-            }
+                }
             }
 
         };
@@ -1753,7 +1753,7 @@ public abstract class TransactionType {
                 if (bid.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
                             + Long.toUnsignedString(bid.getAccountId()));
-            }
+                }
             }
 
         };
@@ -2615,9 +2615,9 @@ public abstract class TransactionType {
             public boolean isPhasingSafe() {
                 return false;
             }
-            
+
         };
-        
+
     }
 
     public static abstract class Data extends TransactionType {
