@@ -398,6 +398,9 @@ final class ParameterParser {
                 if (publicKey == null) {
                     throw new ParameterException(missing(secretPhraseParam, publicKeyParam));
                 }
+                if (publicKey.length != 32) {
+                    throw new ParameterException(incorrect(publicKeyParam));
+                }
                 return publicKey;
             } catch (RuntimeException e) {
                 throw new ParameterException(incorrect(publicKeyParam));
