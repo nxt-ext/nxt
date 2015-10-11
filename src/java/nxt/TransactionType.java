@@ -298,12 +298,20 @@ public abstract class TransactionType {
         return true;
     }
 
-    public Fee getBaselineFee(Transaction transaction) {
+    Fee getBaselineFee(Transaction transaction) {
         return Fee.DEFAULT_FEE;
     }
 
-    public Fee getNextFee(Transaction transaction) {
+    Fee getNextFee(Transaction transaction) {
         return getBaselineFee(transaction);
+    }
+
+    int getBaselineFeeHeight() {
+        return 1;
+    }
+
+    int getNextFeeHeight() {
+        return Integer.MAX_VALUE;
     }
 
     public abstract String getName();
@@ -1229,6 +1237,15 @@ public abstract class TransactionType {
 
             private final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
 
+            private final Fee ASSET_ISSUANCE_FEE_2 = (transaction, appendage) -> {
+                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance) appendage;
+                if (attachment.getQuantityQNT() == 1 && attachment.getDecimals() == 0
+                        && attachment.getDescription().length() <= Constants.MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH) {
+                    return Constants.ONE_NXT;
+                }
+                return 1000 * Constants.ONE_NXT;
+            };
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE;
@@ -1245,8 +1262,18 @@ public abstract class TransactionType {
             }
 
             @Override
-            public Fee getBaselineFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return ASSET_ISSUANCE_FEE;
+            }
+
+            @Override
+            Fee getNextFee(Transaction transaction) {
+                return ASSET_ISSUANCE_FEE_2;
+            }
+
+            @Override
+            int getNextFeeHeight() {
+                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override

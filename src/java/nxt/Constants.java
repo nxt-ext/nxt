@@ -78,6 +78,7 @@ public final class Constants {
     public static final int MIN_ASSET_NAME_LENGTH = 3;
     public static final int MAX_ASSET_NAME_LENGTH = 10;
     public static final int MAX_ASSET_DESCRIPTION_LENGTH = 1000;
+    public static final int MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH = 100;
     public static final int MAX_ASSET_TRANSFER_COMMENT_LENGTH = 1000;
     public static final int MAX_DIVIDEND_PAYMENT_ROLLBACK = 1441;
 

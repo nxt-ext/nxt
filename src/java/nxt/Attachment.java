@@ -61,13 +61,29 @@ public interface Attachment extends Appendix {
             getTransactionType().validateAttachment(transaction);
         }
 
+        @Override
         final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             getTransactionType().apply((TransactionImpl) transaction, senderAccount, recipientAccount);
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) {
+        public final Fee getBaselineFee(Transaction transaction) {
             return getTransactionType().getBaselineFee(transaction);
+        }
+
+        @Override
+        public final Fee getNextFee(Transaction transaction) {
+            return getTransactionType().getNextFee(transaction);
+        }
+
+        @Override
+        public final int getBaselineFeeHeight() {
+            return getTransactionType().getBaselineFeeHeight();
+        }
+
+        @Override
+        public final int getNextFeeHeight() {
+            return getTransactionType().getNextFeeHeight();
         }
 
         @Override
