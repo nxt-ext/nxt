@@ -1931,7 +1931,8 @@ var NRS = (function (NRS, $, undefined) {
         var $noneOption = $('<option value=""></option>');
 
         NRS.sendRequest("getAccountAssets", {
-            "account": NRS.accountRS
+            "account": NRS.accountRS,
+            "includeAssetInfo": true
         }, function (response) {
             if (response.accountAssets) {
                 if (response.accountAssets.length > 0) {

@@ -34,7 +34,7 @@ public final class GetExpectedAssetTransfers extends APIServlet.APIRequestHandle
     static final GetExpectedAssetTransfers instance = new GetExpectedAssetTransfers();
 
     private GetExpectedAssetTransfers() {
-        super(new APITag[] {APITag.AE}, "asset", "account");
+        super(new APITag[] {APITag.AE}, "asset", "account", "includeAssetInfo");
     }
 
     @Override
@@ -42,6 +42,7 @@ public final class GetExpectedAssetTransfers extends APIServlet.APIRequestHandle
 
         long assetId = ParameterParser.getUnsignedLong(req, "asset", false);
         long accountId = ParameterParser.getAccountId(req, "account", false);
+        boolean includeAssetInfo = "true".equalsIgnoreCase(req.getParameter("includeAssetInfo"));
 
         Filter<Transaction> filter = transaction -> {
             if (transaction.getType() != TransactionType.ColoredCoins.ASSET_TRANSFER) {
@@ -58,7 +59,7 @@ public final class GetExpectedAssetTransfers extends APIServlet.APIRequestHandle
 
         JSONObject response = new JSONObject();
         JSONArray transfersData = new JSONArray();
-        transactions.forEach(transaction -> transfersData.add(JSONData.expectedAssetTransfer(transaction)));
+        transactions.forEach(transaction -> transfersData.add(JSONData.expectedAssetTransfer(transaction, includeAssetInfo)));
         response.put("transfers", transfersData);
 
         return response;
