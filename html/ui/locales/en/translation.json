@@ -122,6 +122,7 @@
   "automatically_generated_passphrase_is": "Your automatically generated passphrase is:",
   "available_balance": "Available Balance",
   "available_for_transfer": "__qty__ available for transfer",
+  "available_qty": "__qty__ available",
   "available_units": "Currency units available",
   "avg_amount_per_block": "Avg. Amount Per Block",
   "avg_fee_per_block": "Avg. Fee Per Block",
