@@ -1037,10 +1037,11 @@ public final class Account {
             }
             return (balanceNQT - receivedInLastBlock) / Constants.ONE_NXT;
         }
+        long effectiveBalanceNQT = getLessorsGuaranteedBalanceNQT(height);
         if (activeLesseeId == 0) {
-            return (getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;
+            effectiveBalanceNQT += getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height);
         }
-        return getLessorsGuaranteedBalanceNQT(height) / Constants.ONE_NXT;
+        return (height > Constants.SHUFFLING_BLOCK && effectiveBalanceNQT < Constants.MIN_FORGING_BALANCE_NQT) ? 0 : effectiveBalanceNQT / Constants.ONE_NXT;
     }
 
     private long getLessorsGuaranteedBalanceNQT(int height) {
