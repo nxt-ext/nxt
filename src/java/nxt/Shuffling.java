@@ -690,7 +690,7 @@ public final class Shuffling {
         if (blamedAccountId != 0) {
             // as a penalty the deposit goes to the generator of the finish block
             Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
-            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
+            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, block.getId(), Constants.SHUFFLING_DEPOSIT_NQT);
             blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
         }
         this.assigneeAccountId = 0;
