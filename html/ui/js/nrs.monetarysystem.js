@@ -126,7 +126,8 @@ var NRS = (function (NRS, $, undefined) {
             function(callback) {
                 NRS.sendRequest("getAccountCurrencies+", {
                     "account": NRS.accountRS,
-                    "currency": currencyId
+                    "currency": currencyId,
+                    "includeCurrencyInfo": true
                 }, function (response) {
                     if (response.unconfirmedUnits) {
                         $("#your_currency_balance").html(NRS.formatQuantity(response.unconfirmedUnits, response.decimals));
@@ -701,6 +702,7 @@ var NRS = (function (NRS, $, undefined) {
         if (NRS.currenciesPageType == "my_currencies") {
             NRS.sendRequest("getAccountCurrencies+", {
                 "account": NRS.accountRS,
+                "includeCurrencyInfo": true,
                 "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
                 "lastIndex": NRS.pageNumber * NRS.itemsPerPage
             }, function (response) {
@@ -856,7 +858,8 @@ var NRS = (function (NRS, $, undefined) {
     NRS.updateAvailableCurrency = function (currency) {
         NRS.sendRequest("getAccountCurrencies", {
             "currency": currency,
-            "account": NRS.accountRS
+            "account": NRS.accountRS,
+            "includeCurrencyInfo": true
         }, function (response) {
             var availableCurrencyMessage = "None Available for Transfer";
             if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
@@ -876,7 +879,8 @@ var NRS = (function (NRS, $, undefined) {
 
         NRS.sendRequest("getAccountCurrencies", {
             "currency": $invoker.data("currency"),
-            "account": NRS.accountRS
+            "account": NRS.accountRS,
+            "includeCurrencyInfo": true
         }, function (response) {
             var availablecurrencysMessage = " - None Available";
             if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
@@ -974,7 +978,8 @@ var NRS = (function (NRS, $, undefined) {
         var $noneOption = $('<option value=""></option>');
 
         NRS.sendRequest("getAccountCurrencies", {
-            "account": NRS.accountRS
+            "account": NRS.accountRS,
+            "includeCurrencyInfo": true
         }, function (response) {
             if (response.accountCurrencies) {
                 if (response.accountCurrencies.length > 0) {
@@ -1414,7 +1419,8 @@ var NRS = (function (NRS, $, undefined) {
 
         NRS.sendRequest("getAccountCurrencies", {
             "currency": currency,
-            "account": NRS.accountRS
+            "account": NRS.accountRS,
+            "includeCurrencyInfo": true
         }, function (response) {
             var availableUnits = "0";
             if (response.units) {

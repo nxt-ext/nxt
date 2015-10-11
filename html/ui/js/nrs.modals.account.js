@@ -252,7 +252,8 @@ var NRS = (function(NRS, $) {
 	
 	NRS.userInfoModal.currencies = function() {
 		NRS.sendRequest("getAccountCurrencies+", {
-			"account": NRS.userInfoModal.user
+			"account": NRS.userInfoModal.user,
+			"includeCurrencyInfo": true
 		}, function(response) {
 			var rows = "";
 			if (response.accountCurrencies && response.accountCurrencies.length) {
