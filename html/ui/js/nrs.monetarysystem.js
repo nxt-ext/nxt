@@ -1396,7 +1396,7 @@ var NRS = (function (NRS, $, undefined) {
         var amountNQT = NRS.convertToNQT(this.value);
         var unitAmountNQT = new BigInteger(amountNQT).divide(new BigInteger(resSupply));
         var roundUnitAmountNQT = NRS.convertToNQT(NRS.amountToPrecision(NRS.convertToNXT(unitAmountNQT), decimals));
-        $("#reserve_currency_total").val(NRS.formatAmount(roundUnitAmountNQT));
+        $("#reserve_currency_total").val(NRS.convertToNXT(roundUnitAmountNQT));
         reserveCurrencyAmount.val(NRS.convertToNXT(new BigInteger(roundUnitAmountNQT).multiply(new BigInteger(resSupply)).toString()));
     });
 
