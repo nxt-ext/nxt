@@ -457,6 +457,8 @@ public class AccountLedger {
             PHASING_VOTE_CASTING(11, true),
             POLL_CREATION(12, true),
             VOTE_CASTING(13, true),
+            ACCOUNT_PROPERTY(56, true),
+            ACCOUNT_PROPERTY_DELETE(57, true),
         // TYPE_COLORED_COINS
             ASSET_ASK_ORDER_CANCELLATION(14, true),
             ASSET_ASK_ORDER_PLACEMENT(15, true),

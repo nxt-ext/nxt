@@ -144,6 +144,11 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_SECRET = missing("secret");
     public static final JSONStreamAware INCORRECT_SECRET = incorrect("secret");
     public static final JSONStreamAware MISSING_RECIPIENT_PUBLIC_KEY = missing("recipientPublicKey");
+    public static final JSONStreamAware INCORRECT_ACCOUNT_PROPERTY_NAME_LENGTH = incorrect("property", "(length must be > 0 but less than " + Constants.MAX_ACCOUNT_PROPERTY_NAME_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_ACCOUNT_PROPERTY_VALUE_LENGTH = incorrect("value", "(length must be less than " + Constants.MAX_ACCOUNT_PROPERTY_VALUE_LENGTH + " characters)");
+    public static final JSONStreamAware INCORRECT_PROPERTY = incorrect("property", "(cannot be deleted by this account)");
+    public static final JSONStreamAware UNKNOWN_PROPERTY = unknown("property");
+    public static final JSONStreamAware MISSING_PROPERTY = missing("property");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

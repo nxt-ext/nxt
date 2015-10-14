@@ -17,8 +17,8 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.AccountRestrictions;
 import nxt.AccountLedger.LedgerEntry;
+import nxt.AccountRestrictions;
 import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
@@ -209,6 +209,19 @@ final class JSONData {
         if (includeCurrencyInfo) {
             putCurrencyInfo(json, accountCurrency.getCurrencyId());
         }
+        return json;
+    }
+
+    static JSONObject accountProperty(Account.AccountProperty accountProperty, boolean includeAccount, boolean includeSetter) {
+        JSONObject json = new JSONObject();
+        if (includeAccount) {
+            putAccount(json, "account", accountProperty.getAccountId());
+        }
+        if (includeSetter) {
+            putAccount(json, "setter", accountProperty.getSetterId());
+        }
+        json.put("property", accountProperty.getProperty());
+        json.put("value", accountProperty.getValue());
         return json;
     }
 

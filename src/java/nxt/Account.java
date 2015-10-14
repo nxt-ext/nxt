@@ -228,7 +228,7 @@ public final class Account {
             this.nextLeasingHeightFrom = rs.getInt("next_leasing_height_from");
             this.nextLeasingHeightTo = rs.getInt("next_leasing_height_to");
             this.nextLesseeId = rs.getLong("next_lessee_id");
-    }
+        }
 
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_lease "
@@ -330,6 +330,71 @@ public final class Account {
             } else {
                 accountInfoTable.delete(this);
             }
+        }
+
+    }
+
+    public static final class AccountProperty {
+
+        private final long id;
+        private final DbKey dbKey;
+        private final long accountId;
+        private final long setterId;
+        private String property;
+        private String value;
+
+        private AccountProperty(long id, long accountId, long setterId, String property, String value) {
+            this.id = id;
+            this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
+            this.accountId = accountId;
+            this.setterId = setterId;
+            this.property = property;
+            this.value = value;
+        }
+
+        private AccountProperty(ResultSet rs) throws SQLException {
+            this.id = rs.getLong("id");
+            this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
+            this.accountId = rs.getLong("account_id");
+            long setterId = rs.getLong("setter_id");
+            this.setterId = setterId == 0 ? accountId : setterId;
+            this.property = rs.getString("property");
+            this.value = rs.getString("value");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_property "
+                    + "(id, account_id, setter_id, property, value, height, latest) "
+                    + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.id);
+                pstmt.setLong(++i, this.accountId);
+                DbUtils.setLongZeroToNull(pstmt, ++i, this.setterId != this.accountId ? this.setterId : 0);
+                DbUtils.setString(pstmt, ++i, this.property);
+                DbUtils.setString(pstmt, ++i, this.value);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public long getAccountId() {
+            return accountId;
+        }
+
+        public long getSetterId() {
+            return setterId;
+        }
+
+        public String getProperty() {
+            return property;
+        }
+
+        public String getValue() {
+            return value;
         }
 
     }
@@ -580,6 +645,30 @@ public final class Account {
 
     };
 
+    private static final DbKey.LongKeyFactory<AccountProperty> accountPropertyDbKeyFactory = new DbKey.LongKeyFactory<AccountProperty>("id") {
+
+        @Override
+        public DbKey newKey(AccountProperty accountProperty) {
+            return accountProperty.dbKey;
+        }
+
+    };
+
+    private static final VersionedEntityDbTable<AccountProperty> accountPropertyTable = new VersionedEntityDbTable<AccountProperty>("account_property", accountPropertyDbKeyFactory) {
+
+        @Override
+        protected AccountProperty load(Connection con, ResultSet rs) throws SQLException {
+            return new AccountProperty(rs);
+        }
+
+        @Override
+        protected void save(Connection con, AccountProperty accountProperty) throws SQLException {
+            accountProperty.save(con);
+        }
+
+    };
+
+
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
     private static final Listeners<AccountAsset,Event> assetListeners = new Listeners<>();
@@ -662,6 +751,73 @@ public final class Account {
 
     public static int getActiveLeaseCount() {
         return accountTable.getCount(new DbClause.NotNullClause("active_lessee_id"));
+    }
+
+    public static AccountProperty getProperty(long propertyId) {
+        return accountPropertyTable.get(accountPropertyDbKeyFactory.newKey(propertyId));
+    }
+
+    public static DbIterator<AccountProperty> getProperties(long accountId, long setterId, String property, int from, int to) {
+        if (accountId == 0 && setterId == 0) {
+            throw new IllegalArgumentException("At least one of accountId and setterId must be specified");
+        }
+        DbClause dbClause = null;
+        if (setterId == accountId) {
+            dbClause = new DbClause.NullClause("setter_id");
+        } else if (setterId != 0) {
+            dbClause = new DbClause.LongClause("setter_id", setterId);
+        }
+        if (accountId != 0) {
+            if (dbClause != null) {
+                dbClause = dbClause.and(new DbClause.LongClause("account_id", accountId));
+            } else {
+                dbClause = new DbClause.LongClause("account_id", accountId);
+            }
+        }
+        if (property != null) {
+            dbClause = dbClause.and(new DbClause.StringClause("property", property));
+        }
+        return accountPropertyTable.getManyBy(dbClause, from, to, " ORDER BY property ");
+    }
+
+    public static AccountProperty getProperty(long accountId, String property) {
+        return getProperty(accountId, property, accountId);
+    }
+
+    public static AccountProperty getProperty(long accountId, String property, long setterId) {
+        if (accountId == 0 || setterId == 0) {
+            throw new IllegalArgumentException("Both accountId and setterId must be specified");
+        }
+        DbClause dbClause = new DbClause.LongClause("account_id", accountId);
+        dbClause = dbClause.and(new DbClause.StringClause("property", property));
+        if (setterId != accountId) {
+            dbClause = dbClause.and(new DbClause.LongClause("setter_id", setterId));
+        } else {
+            dbClause = dbClause.and(new DbClause.NullClause("setter_id"));
+        }
+        return accountPropertyTable.getBy(dbClause);
+    }
+
+    void setProperty(Transaction transaction, Account setterAccount, String property, String value) {
+        value = Convert.emptyToNull(value);
+        AccountProperty accountProperty = getProperty(this.id, property, setterAccount.id);
+        if (accountProperty == null) {
+            accountProperty = new AccountProperty(transaction.getId(), this.id, setterAccount.id, property, value);
+        } else {
+            accountProperty.value = value;
+        }
+        accountPropertyTable.insert(accountProperty);
+    }
+
+    void deleteProperty(long propertyId) {
+        AccountProperty accountProperty = accountPropertyTable.get(accountPropertyDbKeyFactory.newKey(propertyId));
+        if (accountProperty == null) {
+            return;
+        }
+        if (accountProperty.getSetterId() != this.id && accountProperty.getAccountId() != this.id) {
+            throw new RuntimeException("Property " + Long.toUnsignedString(propertyId) + " cannot be deleted by " + Long.toUnsignedString(this.id));
+        }
+        accountPropertyTable.delete(accountProperty);
     }
 
     public static Account getAccount(long id) {
@@ -956,7 +1112,7 @@ public final class Account {
         } else {
             accountInfo.name = name;
             accountInfo.description = description;
-    }
+        }
         accountInfo.save();
     }
 
@@ -1060,7 +1216,7 @@ public final class Account {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT account_id, SUM (additions) AS additions "
                      + "FROM account_guaranteed_balance, TABLE (id BIGINT=?) T WHERE account_id = T.id AND height > ? "
-                             + (height < Nxt.getBlockchain().getHeight() ? " AND height <= ? " : "")
+                     + (height < Nxt.getBlockchain().getHeight() ? " AND height <= ? " : "")
                      + " GROUP BY account_id ORDER BY account_id")) {
             pstmt.setObject(1, lessorIds);
             pstmt.setInt(2, height - Constants.GUARANTEED_BALANCE_CONFIRMATIONS);

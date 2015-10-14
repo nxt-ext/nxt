@@ -54,6 +54,8 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
     private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
     private static final byte SUBTYPE_MESSAGING_PHASING_VOTE_CASTING = 9;
+    private static final byte SUBTYPE_MESSAGING_ACCOUNT_PROPERTY = 10;
+    private static final byte SUBTYPE_MESSAGING_ACCOUNT_PROPERTY_DELETE = 11;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -110,6 +112,10 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_DELETE;
                     case SUBTYPE_MESSAGING_PHASING_VOTE_CASTING:
                         return Messaging.PHASING_VOTE_CASTING;
+                    case SUBTYPE_MESSAGING_ACCOUNT_PROPERTY:
+                        return Messaging.ACCOUNT_PROPERTY;
+                    case SUBTYPE_MESSAGING_ACCOUNT_PROPERTY_DELETE:
+                        return Messaging.ACCOUNT_PROPERTY_DELETE;
                     default:
                         return null;
                 }
@@ -1208,6 +1214,138 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo) transaction.getAttachment();
                 senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription());
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
+        };
+
+        public static final Messaging ACCOUNT_PROPERTY = new Messaging() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_PROPERTY;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ACCOUNT_PROPERTY;
+            }
+
+            @Override
+            public String getName() {
+                return "AccountProperty";
+            }
+
+            @Override
+            Attachment.MessagingAccountProperty parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountProperty(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingAccountProperty parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountProperty(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
+                }
+                Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty)transaction.getAttachment();
+                if (attachment.getProperty().length() > Constants.MAX_ACCOUNT_PROPERTY_NAME_LENGTH
+                        || attachment.getProperty().length() == 0
+                        || attachment.getValue().length() > Constants.MAX_ACCOUNT_PROPERTY_VALUE_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid account property: " + attachment.getJSONObject());
+                }
+                if (transaction.getRecipientId() == transaction.getSenderId()) {
+                    throw new NxtException.NotValidException("Transaction should not have recipient when setting account's own property, recipient is: "
+                            + Long.toUnsignedString(transaction.getRecipientId()));
+                }
+                if (transaction.getAmountNQT() != 0) {
+                    throw new NxtException.NotValidException("Account property transaction cannot be used to send NXT");
+                }
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty) transaction.getAttachment();
+                Account account = recipientAccount == null ? senderAccount : recipientAccount;
+                account.setProperty(transaction, senderAccount, attachment.getProperty(), attachment.getValue());
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return true;
+            }
+
+            @Override
+            public boolean mustHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
+        };
+
+        public static final Messaging ACCOUNT_PROPERTY_DELETE = new Messaging() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_PROPERTY_DELETE;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ACCOUNT_PROPERTY_DELETE;
+            }
+
+            @Override
+            public String getName() {
+                return "AccountPropertyDelete";
+            }
+
+            @Override
+            Attachment.MessagingAccountPropertyDelete parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountPropertyDelete(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingAccountPropertyDelete parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountPropertyDelete(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
+                }
+                Attachment.MessagingAccountPropertyDelete attachment = (Attachment.MessagingAccountPropertyDelete)transaction.getAttachment();
+                Account.AccountProperty accountProperty = Account.getProperty(attachment.getPropertyId());
+                if (accountProperty == null) {
+                    throw new NxtException.NotCurrentlyValidException("No such property " + Long.toUnsignedString(attachment.getPropertyId()));
+                }
+                if (accountProperty.getAccountId() != transaction.getSenderId() && accountProperty.getSetterId() != transaction.getSenderId()) {
+                    throw new NxtException.NotValidException("Account " + Long.toUnsignedString(transaction.getSenderId())
+                            + " cannot delete property " + Long.toUnsignedString(attachment.getPropertyId()));
+                }
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MessagingAccountPropertyDelete attachment = (Attachment.MessagingAccountPropertyDelete) transaction.getAttachment();
+                senderAccount.deleteProperty(attachment.getPropertyId());
             }
 
             @Override

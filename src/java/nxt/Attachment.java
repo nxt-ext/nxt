@@ -155,8 +155,8 @@ public interface Attachment extends Appendix {
 
         MessagingAliasAssignment(JSONObject attachmentData) {
             super(attachmentData);
-            aliasName = (Convert.nullToEmpty((String) attachmentData.get("alias"))).trim();
-            aliasURI = (Convert.nullToEmpty((String) attachmentData.get("uri"))).trim();
+            aliasName = Convert.nullToEmpty((String) attachmentData.get("alias")).trim();
+            aliasURI = Convert.nullToEmpty((String) attachmentData.get("uri")).trim();
         }
 
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
@@ -834,7 +834,6 @@ public interface Attachment extends Appendix {
         }
 
         public MessagingAccountInfo(String name, String description) {
-            super(1);
             this.name = name;
             this.description = description;
         }
@@ -871,6 +870,108 @@ public interface Attachment extends Appendix {
 
         public String getDescription() {
             return description;
+        }
+
+    }
+
+    final class MessagingAccountProperty extends AbstractAttachment {
+
+        private final String property;
+        private final String value;
+
+        MessagingAccountProperty(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.property = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_PROPERTY_NAME_LENGTH).trim();
+            this.value = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_PROPERTY_VALUE_LENGTH).trim();
+        }
+
+        MessagingAccountProperty(JSONObject attachmentData) {
+            super(attachmentData);
+            this.property = Convert.nullToEmpty((String) attachmentData.get("property")).trim();
+            this.value = Convert.nullToEmpty((String) attachmentData.get("value")).trim();
+        }
+
+        public MessagingAccountProperty(String property, String value) {
+            this.property = property.trim();
+            this.value = Convert.nullToEmpty(value).trim();
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + Convert.toBytes(property).length + 1 + Convert.toBytes(value).length;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            byte[] property = Convert.toBytes(this.property);
+            byte[] value = Convert.toBytes(this.value);
+            buffer.put((byte)property.length);
+            buffer.put(property);
+            buffer.put((byte)value.length);
+            buffer.put(value);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("property", property);
+            attachment.put("value", value);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ACCOUNT_PROPERTY;
+        }
+
+        public String getProperty() {
+            return property;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+    }
+
+    final class MessagingAccountPropertyDelete extends AbstractAttachment {
+
+        private final long propertyId;
+
+        MessagingAccountPropertyDelete(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.propertyId = buffer.getLong();
+        }
+
+        MessagingAccountPropertyDelete(JSONObject attachmentData) {
+            super(attachmentData);
+            this.propertyId = Convert.parseUnsignedLong((String)attachmentData.get("property"));
+        }
+
+        public MessagingAccountPropertyDelete(long propertyId) {
+            this.propertyId = propertyId;
+        }
+
+        @Override
+        int getMySize() {
+            return 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(propertyId);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("property", Long.toUnsignedString(propertyId));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ACCOUNT_PROPERTY_DELETE;
+        }
+
+        public long getPropertyId() {
+            return propertyId;
         }
 
     }
