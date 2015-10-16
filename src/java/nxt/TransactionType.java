@@ -1288,6 +1288,9 @@ public abstract class TransactionType {
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Account property transaction cannot be used to send NXT");
                 }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
+                    throw new NxtException.NotValidException("Setting Genesis account properties not allowed");
+                }
             }
 
             @Override
