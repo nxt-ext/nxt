@@ -367,6 +367,10 @@ final class TransactionImpl implements Transaction {
         return feeNQT;
     }
 
+    long[] getBackFees() {
+        return type.getBackFees(feeNQT);
+    }
+
     @Override
     public String getReferencedTransactionFullHash() {
         return Convert.toHexString(referencedTransactionFullHash);

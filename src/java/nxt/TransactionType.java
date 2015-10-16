@@ -325,6 +325,10 @@ public abstract class TransactionType {
         return Integer.MAX_VALUE;
     }
 
+    long[] getBackFees(long feeNQT) {
+        return Convert.EMPTY_LONG;
+    }
+
     public abstract String getName();
 
     @Override
@@ -1423,6 +1427,11 @@ public abstract class TransactionType {
             @Override
             int getNextFeeHeight() {
                 return Constants.SHUFFLING_BLOCK;
+            }
+
+            @Override
+            long[] getBackFees(long feeNQT) {
+                return new long[] {feeNQT * 3 / 10, feeNQT * 2 / 10, feeNQT / 10};
             }
 
             @Override

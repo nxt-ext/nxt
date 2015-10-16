@@ -126,6 +126,11 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        long[] getBackFees(long feeNQT) {
+            return new long[] {feeNQT * 3 / 10, feeNQT * 2 / 10, feeNQT / 10};
+        }
+
+        @Override
         Attachment.MonetarySystemCurrencyIssuance parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.MonetarySystemCurrencyIssuance(buffer, transactionVersion);
         }
