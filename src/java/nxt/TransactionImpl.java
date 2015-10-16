@@ -1057,13 +1057,22 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    boolean attachmentIsDuplicate(Map<TransactionType, Map<String, Integer>> duplicates, boolean atFinishHeight) {
-        if (attachmentIsPhased() && !atFinishHeight) {
+    boolean attachmentIsDuplicate(Map<TransactionType, Map<String, Integer>> duplicates, boolean atAcceptanceHeight) {
+        if (!attachmentIsPhased() && !atAcceptanceHeight) {
+            // can happen for phased transactions having non-phasable attachment
             return false;
         }
-        if (!attachmentIsPhased() && atFinishHeight) {
-            return false;
+        if (atAcceptanceHeight) {
+            // all are checked at acceptance height for block duplicates
+            if (type.isBlockDuplicate(this, duplicates)) {
+                return true;
+            }
+            // phased are not further checked at acceptance height
+            if (attachmentIsPhased()) {
+                return false;
+            }
         }
+        // non-phased at acceptance height, and phased at execution height
         return type.isDuplicate(this, duplicates);
     }
 

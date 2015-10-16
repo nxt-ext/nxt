@@ -1293,7 +1293,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     try {
                         phasedTransaction.validate();
-                        if (!phasedTransaction.attachmentIsDuplicate(duplicates, true)) {
+                        if (!phasedTransaction.attachmentIsDuplicate(duplicates, false)) {
                             validPhasedTransactions.add(phasedTransaction);
                         } else {
                             Logger.logDebugMessage("At height " + height + " phased transaction " + phasedTransaction.getStringId() + " is duplicate, will not apply");
@@ -1398,7 +1398,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } catch (NxtException.ValidationException e) {
                 throw new TransactionNotAcceptedException(e.getMessage(), transaction);
             }
-            if (transaction.attachmentIsDuplicate(duplicates, false)) {
+            if (transaction.attachmentIsDuplicate(duplicates, true)) {
                 throw new TransactionNotAcceptedException("Transaction is a duplicate", transaction);
             }
             calculatedTotalAmount += transaction.getAmountNQT();
@@ -1672,7 +1672,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 } catch (NxtException.ValidationException e) {
                     continue;
                 }
-                if (unconfirmedTransaction.getTransaction().attachmentIsDuplicate(duplicates, false)) {
+                if (unconfirmedTransaction.getTransaction().attachmentIsDuplicate(duplicates, true)) {
                     continue;
                 }
                 /*
@@ -1706,7 +1706,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 for (TransactionImpl phasedTransaction : phasedTransactions) {
                     try {
                         phasedTransaction.validate();
-                        phasedTransaction.attachmentIsDuplicate(duplicates, true); // pre-populate duplicates map
+                        phasedTransaction.attachmentIsDuplicate(duplicates, false); // pre-populate duplicates map
                     } catch (NxtException.ValidationException ignore) {
                     }
                 }

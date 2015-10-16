@@ -259,6 +259,11 @@ public abstract class TransactionType {
         return false;
     }
 
+    // isBlockDuplicate and isDuplicate share the same duplicates map, but isBlockDuplicate check is done first
+    boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+        return false;
+    }
+
     boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
         return false;
     }
@@ -513,6 +518,12 @@ public abstract class TransactionType {
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
                 return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+            }
+
+            @Override
+            boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                        && isDuplicate(Messaging.ALIAS_ASSIGNMENT, "", duplicates, true);
             }
 
             @Override
@@ -1459,6 +1470,19 @@ public abstract class TransactionType {
                         throw new NxtException.NotValidException("Invalid asset name: " + normalizedName);
                     }
                 }
+            }
+
+            @Override
+            boolean isBlockDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
+                if (Nxt.getBlockchain().getHeight() <= Constants.BASE_TARGET_BLOCK) {
+                    return false;
+                }
+                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
+                if (attachment.getQuantityQNT() == 1 && attachment.getDecimals() == 0
+                        && attachment.getDescription().length() <= Constants.MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH) {
+                    return false;
+                }
+                return isDuplicate(ColoredCoins.ASSET_ISSUANCE, getName(), duplicates, true);
             }
 
             @Override

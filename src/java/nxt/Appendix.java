@@ -1380,7 +1380,7 @@ public interface Appendix {
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
             long result = poll.countVotes();
             if (result >= poll.getQuorum()) {
-                if (!transaction.attachmentIsDuplicate(duplicates, true)) {
+                if (!transaction.attachmentIsDuplicate(duplicates, false)) {
                     try {
                         release(transaction);
                         poll.finish(result);

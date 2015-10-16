@@ -148,6 +148,12 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
+        boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+            return Nxt.getBlockchain().getHeight() >= Constants.BASE_TARGET_BLOCK
+                    && isDuplicate(CURRENCY_ISSUANCE, getName(), duplicates, true);
+        }
+
+        @Override
         void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (attachment.getMaxSupply() > Constants.MAX_CURRENCY_TOTAL_SUPPLY
@@ -725,8 +731,8 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
-            return super.isDuplicate(transaction, duplicates) ||
-                    TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true);
+            return TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true)
+                    || super.isDuplicate(transaction, duplicates);
         }
 
         @Override
