@@ -527,6 +527,7 @@ public abstract class TransactionType {
             @Override
             boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                        && Alias.getAlias(((Attachment.MessagingAliasAssignment) transaction.getAttachment()).getAliasName()) == null
                         && isDuplicate(Messaging.ALIAS_ASSIGNMENT, "", duplicates, true);
             }
 
