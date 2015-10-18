@@ -1,0 +1,24 @@
+The account ledger now uses transaction id as event id for all events except
+block generation. To apply this change, the account ledger table will be
+automatically truncated on upgrade to this release. Users who desire to
+restore the deleted past account ledger entries should run a full rescan from
+the API test page. Note that account ledger records are only kept for 30000
+blocks by default.
+
+Added currency transfers history page to the Monetary System UI.
+
+Added includeAssetInfo or includeCurrencyInfo parameters, default false, to
+the getAccountAssets, getAccountCurrencies, getAccountExchangeRequests,
+getExpectedAssetTransfers, and getExpectedCurrencyTransfers APIs.
+
+Tabs are now sorted mostly alphabetically on the API test page.
+
+Added nxt.hideErrorDetails property, default false, to allow suppressing node
+specific configuration details in error messages returned to peers.
+
+The UPnP connection timeouts are now also configurable in nxt.properties.
+
+Updated Bouncy Castle library to version 1.53, Jetty to version 9.3.5, IzPack
+installer to 5.0.5, and weupnp to 0.1.4. Make sure to delete the old lib
+folder if unpacking over a previous installation.
+
