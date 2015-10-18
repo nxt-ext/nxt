@@ -607,7 +607,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += "<tr>";
 		html += "<td style='vertical-align:middle;'>";
   		html += "<a class='show_ledger_modal_action' href='#' data-entry='" + String(entry.ledgerId).escapeHTML() +"'";
-        html += "data-change='" + (entry.change < 0 ? -change : change) + "' data-balance='" + balance + "'>";
+        html += "data-change='" + (entry.change < 0 ? ("-" + change) : change) + "' data-balance='" + balance + "'>";
   		html += NRS.formatTimestamp(entry.timestamp) + "</a>";
   		html += "</td>";
 		html += '<td style="vertical-align:middle;">';
