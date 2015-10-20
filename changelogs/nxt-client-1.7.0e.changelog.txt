@@ -1,0 +1,112 @@
+Coin Shuffling. This feature is based on the paper by Tim Ruffing et al,
+http://crypsys.mmci.uni-saarland.de/projects/CoinShuffle/coinshuffle.pdf .
+
+Coin shuffling can be used to perform mixing of NXT, MS currencies (unless
+created as non-shuffleable), or AE assets. Any account can create a new
+shuffling, specifying the holding to be shuffled, the shuffle amount, number
+of participants required, and registration deadline. This is done using the
+shufflingCreate API. The subsequent shuffling steps can be done either
+manually, by using the shufflingRegister (for accounts other than the
+creator), shufflingProcess, shufflingVerify or shufflingCancel APIs, or, much
+more conveniently, by starting an automated Shuffler, using the startShuffler
+API. Once started, the Shuffler monitors the blockchain state for transactions
+relevant to the specified shuffle, and automatically submits the required
+transactions on behalf of the user, performing shuffle processing,
+verification, or cancellation as needed. To do this, the Shuffler is required
+to keep the user secret phrase in memory, therefore it should be run on a
+trusted local machine only. A restart or a crash of the node requires the
+shuffler to be started again using the startShuffler API, as it should never
+save the user secret phrase on disk.
+
+To participate in a shuffling, a deposit of 1000 NXT is needed, in addition
+to the amount of currency or asset being shuffled. Or if shuffling NXT, the
+amount of the shuffle must exceed this 1000 NXT minimum. If the shuffling
+completes successfully, this amount is added to the recipient account balance,
+to allow it to send outgoing transactions (as it is required that only new,
+unused accounts are specified as recipients). If the shuffle fails due to
+a registered participant failing to participate as required, or intentionally
+submitting false data, the participant responsible for the shuffle
+cancellation is penalized by retaining this deposit and sending it to the
+forger of the shuffle finish block instead. If a shuffle is cancelled because
+the required number of participants is not met, nobody is penalized and all
+deposits are refunded.
+
+Query APIs to retrieve currently running shufflers, shufflings, and shuffling
+participants are: getAllShufflings, getAccountShufflings,
+getAssignedShufflings, getHoldingShufflings, getShufflers, getShuffling, and
+getShufflingParticipants.
+
+If desired, finished shufflings can be automatically deleted from the database
+if the nxt.deleteFinishedShufflings property is set to true (default is false).
+
+
+Account control for phased transactions. Any account can be restricted to only
+be allowed to issue phased transactions subject to a specific voting model.
+This is achieved by the account submitting a setPhasingOnly transaction using
+the setPhasingOnlyControl API. The getPhasingOnlyControl API can be used to
+retrieve the status of an account phasing control, and
+getAllPhasingOnlyControls to get all accounts subject to phasing control with
+their respective restrictions.
+
+Once set, the phasing only account control can only be disabled or changed
+with another setPhasingOnly transaction, itself subject to the currently set
+phasing restrictions.
+
+Note that by-transaction and by-hash voting models are not allowed for phasing
+control, and setting voting model to none is used to disable the control.
+
+
+Immediate release of phased transactions on approval. Phased transactions with
+a voting model that does not depend on account balance (such as by-transaction
+or by-hash), or by-account with no minimum balance and with a whitelist, will
+be released before their finish height as soon as approved (in the block in
+which the transaction causing their approval is executed), if possible. Such
+early finish is guaranteed for transaction types known to be phasing safe. For
+others, if the early finish does not succeed due to the transaction failing
+validation at this height or conflicting with another transaction in the same
+block, a second, final release attempt will be performed at finish height.
+
+
+New base target adjustment algorithm. Average block times will be 60 s, with
+1440 blocks per day. Block times should practically never exceed 10 min.
+
+Limit of 1000 NXT on minimum forging balance. This applies to the total of the
+account own guaranteed balance plus any balances leased to it, but not to each
+individual balance lease. An account with balance lower than the limit can
+still lease its balance to another.
+
+
+Account properties. Those are name / value pairs that can be set on any
+account (except Genesis), by either the account owner, or by another account.
+Names are limited to 20 characters, and values to 100 characters. Names are
+unique per account and per setter account, but not globally unique. Account
+properties cannot be transferred between accounts. The setter of an account
+property can edit it by replacing its value with another. Either the setter,
+or the recipient (if different) of an account property can delete it. There
+is no limit on the number of properties an account can have.
+
+Account properties are managed using the setAccountProperty and
+deleteAccountProperty APIs. To query the properties of an account, or those
+set by an account, the getAccountProperties API can be used.
+
+
+Singleton assets. Issuing an asset with a quantity of 1, decimals 0, and
+description length not exceeding 100 characters, will require a minimum fee of
+1 NXT only, instead of the regular 1000 NXT asset issuance fee.
+
+
+Throttling of unique resource allocation transactions. Asset issuance
+(excluding singleton assets), monetary system currency issuance, and alias
+assignment (excluding re-assignment), will be limited to only one transaction
+of each type accepted per block.
+
+
+Spreading back block fees for asset and currency issuance. The transaction
+fees for asset (excluding singleton assets) and currency issuance will be
+split between the forgers of the current and the previous three blocks in a
+4:3:2:1 ratio.
+
+
+Deletion of asset shares will be performed as a separate AssetDelete
+transaction type instead of as sending the shares to Genesis. Sending shares
+to Genesis will no longer be allowed.
