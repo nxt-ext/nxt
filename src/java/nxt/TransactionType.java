@@ -2788,13 +2788,16 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Phasing only account control not yet enabled");
                 }
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
+                VotingModel votingModel = attachment.getPhasingParams().getVoteWeighting().getVotingModel();
                 attachment.getPhasingParams().validate();
-                if (attachment.getPhasingParams().getVoteWeighting().getVotingModel() == VotingModel.NONE) {
+                if (votingModel == VotingModel.NONE) {
                     Account senderAccount = Account.getAccount(transaction.getSenderId());
                     if (!senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
                         new NxtException.NotCurrentlyValidException("Phasing only account control is not enabled for account "
                                 + Long.toUnsignedString(transaction.getSenderId()) + ", consequently cannot be removed");
                     }
+                } else if (votingModel == VotingModel.TRANSACTION || votingModel == VotingModel.HASH) {
+                    throw new NxtException.NotValidException("Invalid voting model " + votingModel + " for account control");
                 }
             }
 
