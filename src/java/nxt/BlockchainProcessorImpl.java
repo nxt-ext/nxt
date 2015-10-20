@@ -1483,22 +1483,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         }
                     }
                 });
-                for (TransactionImpl phasedTransaction : validPhasedTransactions) {
-                    if (phasedTransaction.getType() != TransactionType.Messaging.PHASING_VOTE_CASTING) {
-                        continue;
-                    }
-                    PhasingPoll.PhasingPollResult result = PhasingPoll.getResult(phasedTransaction.getId());
-                    if (result == null || !result.isApproved()) {
-                        continue;
-                    }
-                    Attachment.MessagingPhasingVoteCasting phasingVoteCasting = (Attachment.MessagingPhasingVoteCasting)phasedTransaction.getAttachment();
-                    phasingVoteCasting.getTransactionFullHashes().forEach(hash -> {
-                        PhasingPoll phasingPoll = PhasingPoll.getPoll(Convert.fullHashToId(hash));
-                        if (phasingPoll.allowEarlyFinish() && phasingPoll.getFinishHeight() > block.getHeight()) {
-                            possiblyApprovedTransactions.add(TransactionDb.findTransaction(phasingPoll.getId()));
-                        }
-                    });
-                }
                 possiblyApprovedTransactions.forEach(transaction -> {
                     if (PhasingPoll.getResult(transaction.getId()) == null) {
                         try {
