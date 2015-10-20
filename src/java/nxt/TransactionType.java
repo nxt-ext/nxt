@@ -325,7 +325,7 @@ public abstract class TransactionType {
         return Integer.MAX_VALUE;
     }
 
-    long[] getBackFees(long feeNQT) {
+    long[] getBackFees(Transaction transaction) {
         return Convert.EMPTY_LONG;
     }
 
@@ -1395,9 +1395,7 @@ public abstract class TransactionType {
             private final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
 
             private final Fee ASSET_ISSUANCE_FEE_2 = (transaction, appendage) -> {
-                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance) appendage;
-                if (attachment.getQuantityQNT() == 1 && attachment.getDecimals() == 0
-                        && attachment.getDescription().length() <= Constants.MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH) {
+                if (isSingletonIssuance(transaction)) {
                     return Constants.ONE_NXT;
                 }
                 return 1000 * Constants.ONE_NXT;
@@ -1434,7 +1432,11 @@ public abstract class TransactionType {
             }
 
             @Override
-            long[] getBackFees(long feeNQT) {
+            long[] getBackFees(Transaction transaction) {
+                if (isSingletonIssuance(transaction)) {
+                    return Convert.EMPTY_LONG;
+                }
+                long feeNQT = transaction.getFeeNQT();
                 return new long[] {feeNQT * 3 / 10, feeNQT * 2 / 10, feeNQT / 10};
             }
 
@@ -1490,9 +1492,7 @@ public abstract class TransactionType {
                 if (Nxt.getBlockchain().getHeight() <= Constants.BASE_TARGET_BLOCK) {
                     return false;
                 }
-                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
-                if (attachment.getQuantityQNT() == 1 && attachment.getDecimals() == 0
-                        && attachment.getDescription().length() <= Constants.MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH) {
+                if (isSingletonIssuance(transaction)) {
                     return false;
                 }
                 return isDuplicate(ColoredCoins.ASSET_ISSUANCE, getName(), duplicates, true);
@@ -1506,6 +1506,12 @@ public abstract class TransactionType {
             @Override
             public boolean isPhasingSafe() {
                 return true;
+            }
+
+            private boolean isSingletonIssuance(Transaction transaction) {
+                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
+                return attachment.getQuantityQNT() == 1 && attachment.getDecimals() == 0
+                        && attachment.getDescription().length() <= Constants.MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH;
             }
 
         };

@@ -126,7 +126,8 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        long[] getBackFees(long feeNQT) {
+        long[] getBackFees(Transaction transaction) {
+            long feeNQT = transaction.getFeeNQT();
             return new long[] {feeNQT * 3 / 10, feeNQT * 2 / 10, feeNQT / 10};
         }
 
