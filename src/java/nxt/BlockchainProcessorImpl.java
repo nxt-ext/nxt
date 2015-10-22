@@ -1348,6 +1348,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         long calculatedTotalAmount = 0;
         long calculatedTotalFee = 0;
         MessageDigest digest = Crypto.sha256();
+        boolean hasPrunedTransactions = false;
         for (TransactionImpl transaction : block.getTransactions()) {
             if (transaction.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT) {
                 throw new BlockOutOfOrderException("Invalid transaction timestamp: " + transaction.getTimestamp()
@@ -1398,6 +1399,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (transaction.getPhasing() == null && transaction.isDuplicate(duplicates)) {
                 throw new TransactionNotAcceptedException("Transaction is a duplicate", transaction);
             }
+            if (!hasPrunedTransactions) {
+                for (Appendix.AbstractAppendix appendage : transaction.getAppendages()) {
+                    if ((appendage instanceof Appendix.Prunable) && !((Appendix.Prunable)appendage).hasPrunableData()) {
+                        hasPrunedTransactions = true;
+                        break;
+                    }
+                }
+            }
             calculatedTotalAmount += transaction.getAmountNQT();
             calculatedTotalFee += transaction.getFeeNQT();
             payloadLength += transaction.getFullSize();
@@ -1409,8 +1418,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (!Arrays.equals(digest.digest(), block.getPayloadHash())) {
             throw new BlockNotAcceptedException("Payload hash doesn't match", block);
         }
-        if (payloadLength > block.getPayloadLength()) {
-            throw new BlockNotAcceptedException("Transaction payload length " + payloadLength + " exceeds declared block payload length " + block.getPayloadLength(), block);
+        if (hasPrunedTransactions ? payloadLength > block.getPayloadLength() : payloadLength != block.getPayloadLength()) {
+            throw new BlockNotAcceptedException("Transaction payload length " + payloadLength + " does not match block payload length "
+                    + block.getPayloadLength(), block);
         }
     }
 
