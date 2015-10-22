@@ -354,6 +354,87 @@
     </div>
 </div>
 
+<div class="modal fade modal-no-hide" id="hallmark_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="hallmark_generation_parsing">Hallmark Generation / Parsing</h4>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+                    <li class="active" id="generate_hallmark_nav" data-tab="generate_hallmark"><a href="#" data-i18n="generate_hallmark">Generate Hallmark</a></li>
+                    <li data-tab="parse_hallmark"><a href="#" data-i18n="parse_hallmark">Parse Hallmark</a></li>
+                </ul>
+
+                <div id="hallmark_modal_generate_hallmark" class="hallmark_modal_content" style="display:none">
+                    <form role="form" id="generate_hallmark_form" autocomplete="off">
+                        <div class="callout callout-danger remote_warning" style="display:none">
+                            <strong><span data-i18n="warning">Warning</span>:</strong>
+                            <span data-i18n="passphrase_remote_warning">Your passphrase will be sent to the server!</span>
+                        </div>
+                        <div class="callout callout-danger error_message" style="display:none"></div>
+                        <div class="callout callout-info" id="generate_hallmark_output" style="display:none;"></div>
+                        <div class="form-group">
+                            <label for="generate_hallmark_host" data-i18n="host">HOST</label>
+                            <input type="text" class="form-control" name="host" id="generate_hallmark_host" placeholder="Public Host Address" data-i18n="[placeholder]public_host_address" autofocus tabindex="1" />
+                        </div>
+                        <div class="form-group">
+                            <label for="generate_hallmark_weight" data-i18n="weight">WEIGHT</label>
+                            <input type="text" class="form-control" name="weight" id="generate_hallmark_weight" placeholder="Proportional Weight [0-1000000000]" data-i18n="[placeholder]weight_placeholder" tabindex="2" />
+                        </div>
+                        <div class="form-group">
+                            <label for="generate_hallmark_date" data-i18n="date">DATE</label>
+                            <input type="text" class="form-control" name="date" id="generate_hallmark_date" placeholder="YYYY/MM/DD" data-i18n="[placeholder]hallmark_date_placeholder" tabindex="3" />
+                        </div>
+                        <input type="hidden" name="request_type" value="markHost" />
+                        <div class="form-group secret_phrase">
+                            <label for="generate_hallmark_password" data-i18n="passphrase">PASSPHRASE</label>
+                            <input type="password" name="secretPhrase" id="generate_hallmark_password" class="form-control" placeholder="" tabindex="4">
+                        </div>
+                    </form>
+                </div>
+
+                <div id="hallmark_modal_parse_hallmark" class="hallmark_modal_content" style="display:none">
+                    <form role="form" id="parse_hallmark_form" autocomplete="off">
+                        <div class="callout callout-danger error_message" style="display:none"></div>
+                        <div class="callout callout-info" id="parse_hallmark_output" style="display:none;"></div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_data" data-i18n="hallmark">HALLMARK</label>
+                            <textarea class="form-control" name="hallmark" id="parse_hallmark_data" placeholder="Hallmark" data-i18n="[placeholder]hallmark" tabindex="1" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_host" data-i18n="host">HOST</label>
+                            <input type="text" class="form-control" name="host" id="parse_hallmark_host" placeholder="Host" data-i18n="[placeholder]host" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_port" data-i18n="port">PORT</label>
+                            <input type="text" class="form-control" name="port" id="parse_hallmark_port" placeholder="Port" data-i18n="[placeholder]port" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_weight" data-i18n="weight">WEIGHT</label>
+                            <input type="text" class="form-control" name="host" id="parse_hallmark_weight" placeholder="Weight" data-i18n="[placeholder]weight" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_date" data-i18n="date">DATE</label>
+                            <input type="text" class="form-control" name="date" id="parse_hallmark_date" placeholder="date" data-i18n="[placeholder]date" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_valid" data-i18n="valid">VALID</label>
+                            <input type="text" class="form-control" name="valid" id="parse_hallmark_valid" placeholder="valid" data-i18n="[placeholder]valid" readonly value="" />
+                        </div>
+                        <input type="hidden" name="request_type" value="decodeHallmark" />
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="hallmark_modal_button" data-i18n="generate">Generate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade modal-no-hide" id="hash_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

@@ -1476,5 +1476,16 @@
   "min_reserve_v2": "Minimum Amount of NXT to Reserve Per Unit",
   "fund_account_warning_1": "You can fund your new account immediately using the ShapeShift exchange.",
   "fund_account_warning_2": "Note that this is a third-party service, therefore using it will reveal",
-  "fund_account_warning_3": "your NXT account and current IP address to their servers."
+  "fund_account_warning_3": "your NXT account and current IP address to their servers.",
+  "hallmark_generation_parsing": "Hallmark Generation / Parsing",
+  "generate_hallmark": "Generate Hallmark",
+  "parse_hallmark": "Parse Hallmark",
+  "public_host_address": "Public Host Address",
+  "weight_placeholder": "Proportional Weight [0-1000000000]",
+  "hallmark_date": "Hallmark Date",
+  "hallmark_date_placeholder": "Date [YYYY/MM/DD]",
+  "generated_hallmark_is": "The generated hallmark is:",
+  "success_hallmark_parsing": "Hallmark parsed successfully",
+  "error_invalid_hallmark": "Error generating hallmark: __error__",
+  "parse": "Parse"
 }
