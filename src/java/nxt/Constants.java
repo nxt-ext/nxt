@@ -149,6 +149,7 @@ public final class Constants {
     public static final int BASE_TARGET_BLOCK = isTestnet ? 438000 : Integer.MAX_VALUE;
 
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 400000 : 535000;
+    public static final int LAST_CHECKSUM_BLOCK = PHASING_BLOCK;
 
     public static final int[] MIN_VERSION = new int[] {1, 5};
 

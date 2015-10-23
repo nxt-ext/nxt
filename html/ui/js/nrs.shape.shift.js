@@ -2,6 +2,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
+    var DEPOSIT_ADDRESSES_KEY = "shapeshift.depositAddresses.";
     var SUPPORTED_COINS = {};
 
     var coinToPair = function (op, coin) {
@@ -38,7 +39,7 @@ var NRS = (function(NRS, $) {
     };
 
     var addDepositAddress = function(address, pair) {
-        var json = localStorage["shapeshift.depositAddresses." + NRS.accountRS];
+        var json = localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS];
         var addresses;
         if (json == undefined) {
             addresses = [];
@@ -50,7 +51,7 @@ var NRS = (function(NRS, $) {
         }
         addresses.splice(0, 0, { address: address, pair: pair, time: Date.now() });
         NRS.logConsole("deposit address " + address + " pair " + pair + " added");
-        localStorage["shapeshift.depositAddresses." + NRS.accountRS] = JSON.stringify(addresses);
+        localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS] = JSON.stringify(addresses);
     };
 
     var apiCall = function(action, requestData, method, doneCallback, ignoreError, modal) {
@@ -225,7 +226,7 @@ var NRS = (function(NRS, $) {
     };
 
     var renderMyExchangesTable = function () {
-        var depositAddressesJSON = localStorage["shapeshift.depositAddresses." + NRS.accountRS];
+        var depositAddressesJSON = localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS];
         var depositAddresses = [];
         if (depositAddressesJSON) {
             depositAddresses = JSON.parse(depositAddressesJSON);
@@ -396,6 +397,12 @@ var NRS = (function(NRS, $) {
    		e.preventDefault();
    		NRS.updateSettings("exchange", "1");
         NRS.pages.exchange();
+   	});
+
+    $("#clear_my_exchanges").on("click", function(e) {
+   		e.preventDefault();
+   		localStorage.removeItem(DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
+        renderMyExchangesTable();
    	});
 
     NRS.getFundAccountLink = function() {
