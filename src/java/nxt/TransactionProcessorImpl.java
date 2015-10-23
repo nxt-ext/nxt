@@ -580,7 +580,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     private void processPeerTransactions(JSONArray transactionsData) throws NxtException.NotValidException {
-        if (Nxt.getBlockchain().getHeight() <= Constants.NQT_BLOCK) {
+        if (Nxt.getBlockchain().getHeight() <= Constants.LAST_CHECKSUM_BLOCK) {
             return;
         }
         if (transactionsData == null || transactionsData.isEmpty()) {
@@ -644,7 +644,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         try {
             try {
                 Db.db.beginTransaction();
-                if (Nxt.getBlockchain().getHeight() < Constants.NQT_BLOCK) {
+                if (Nxt.getBlockchain().getHeight() <= Constants.LAST_CHECKSUM_BLOCK) {
                     throw new NxtException.NotCurrentlyValidException("Blockchain not ready to accept transactions");
                 }
 
