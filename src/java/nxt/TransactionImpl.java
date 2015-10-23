@@ -910,7 +910,8 @@ final class TransactionImpl implements Transaction {
         return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
-    int getFullSize() {
+    @Override
+    public int getFullSize() {
         int fullSize = getSize() - appendagesSize;
         for (Appendix.AbstractAppendix appendage : getAppendages()) {
             fullSize += appendage.getFullSize();

@@ -16,10 +16,18 @@
 
 package nxt.http.shuffling;
 
+import nxt.Block;
+import nxt.BlockchainProcessor;
 import nxt.BlockchainTest;
 import nxt.Constants;
+import nxt.Nxt;
 import nxt.Shuffling;
+import nxt.ShufflingTransaction;
+import nxt.Tester;
+import nxt.Transaction;
+import nxt.http.ParseTransaction;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
@@ -1589,6 +1597,133 @@ public class TestAutomatedShuffling extends BlockchainTest {
         Assert.assertEquals(11 * Constants.ONE_NXT + Constants.SHUFFLING_DEPOSIT_NQT, FORGY.getBalanceDiff());
         Assert.assertEquals(11 * Constants.ONE_NXT + Constants.SHUFFLING_DEPOSIT_NQT, FORGY.getUnconfirmedBalanceDiff());
 
+    }
+
+    @Test
+    public void maxShufflingSize() {
+        int n = Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS;
+        Tester[] participants = new Tester[n];
+        Tester[] recipients = new Tester[n];
+        participants[0] = ALICE;
+        recipients[0] = ALICE_RECIPIENT;
+        for (int i = 1; i < n; i++) {
+            participants[i] = new Tester("tester " + i);
+            ShufflingUtil.sendMoney(ALICE, participants[i], 100);
+            recipients[i] = new Tester("recipient " + i);
+        }
+        generateBlock();
+        JSONObject shufflingCreate = create(ALICE, n);
+        String shufflingId = (String)shufflingCreate.get("transaction");
+        String shufflingFullHash = (String)shufflingCreate.get("fullHash");
+        generateBlock();
+
+        for (int i = 0; i < n - 1; i++) {
+            startShuffler(participants[i], recipients[i], shufflingFullHash);
+        }
+        generateBlock();
+        register(shufflingFullHash, participants[n - 1]);
+        generateBlock();
+        JSONObject getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.PROCESSING.getCode(), getShufflingResponse.get("stage"));
+
+        int maxBlockJsonSize = 0;
+        int maxBlockPayload = 0;
+        int maxProcessTransactionFullSize = 0;
+        int maxCancelTransactionFullSize = 0;
+        int maxProcessTransactionJsonSize = 0;
+        int maxCancelTransactionJsonSize = 0;
+        for (int i = 0; i < n + 5; i++) {
+            generateBlock();
+            Block block = Nxt.getBlockchain().getLastBlock();
+            int blockJsonSize = block.getJSONObject().toJSONString().length();
+            Logger.logMessage("Block size " + blockJsonSize + " block payload " + block.getPayloadLength() + " tx count " + block.getTransactions().size());
+            if (blockJsonSize > maxBlockJsonSize) {
+                maxBlockJsonSize = blockJsonSize;
+            }
+            if (block.getPayloadLength() > maxBlockPayload) {
+                maxBlockPayload = block.getPayloadLength();
+            }
+            for (Transaction transaction : block.getTransactions()) {
+                if (transaction.getType() == ShufflingTransaction.SHUFFLING_PROCESSING) {
+                    if (transaction.getFullSize() > maxProcessTransactionFullSize) {
+                        maxProcessTransactionFullSize = transaction.getFullSize();
+                    }
+                    if (transaction.getJSONObject().toString().length() > maxProcessTransactionJsonSize) {
+                        maxProcessTransactionJsonSize = transaction.getJSONObject().toString().length();
+                    }
+                }
+                if (transaction.getType() == ShufflingTransaction.SHUFFLING_CANCELLATION) {
+                    if (transaction.getFullSize() > maxProcessTransactionFullSize) {
+                        maxCancelTransactionFullSize = transaction.getFullSize();
+                    }
+                    if (transaction.getJSONObject().toString().length() > maxCancelTransactionJsonSize) {
+                        maxCancelTransactionJsonSize = transaction.getJSONObject().toString().length();
+                    }
+                }
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignore) {}
+        }
+
+        JSONObject processResponse = process(shufflingId, participants[n - 1], recipients[n - 1], false);
+        JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
+        JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("recipientPublicKeys");
+        String s = (String)data.get(0);
+        if (!s.equals(recipients[n - 1].getPublicKeyStr())) {
+            data.set(0, "0000000000" + s.substring(10));
+        } else {
+            s = (String)data.get(1);
+            data.set(1, "0000000000" + s.substring(10));
+        }
+        broadcast(transactionJSON, participants[n - 1]);
+        generateBlock();
+
+        for (int i = 0; i < n + 20; i++) {
+            generateBlock();
+            Block block = Nxt.getBlockchain().getLastBlock();
+            int blockJsonSize = block.getJSONObject().toJSONString().length();
+            Logger.logMessage("Block size " + blockJsonSize + " block payload " + block.getPayloadLength() + " tx count " + block.getTransactions().size());
+            if (blockJsonSize > maxBlockJsonSize) {
+                maxBlockJsonSize = blockJsonSize;
+            }
+            if (block.getPayloadLength() > maxBlockPayload) {
+                maxBlockPayload = block.getPayloadLength();
+            }
+            for (Transaction transaction : block.getTransactions()) {
+                if (transaction.getType() == ShufflingTransaction.SHUFFLING_PROCESSING) {
+                    if (transaction.getFullSize() > maxProcessTransactionFullSize) {
+                        maxProcessTransactionFullSize = transaction.getFullSize();
+                    }
+                    if (transaction.getJSONObject().toString().length() > maxProcessTransactionJsonSize) {
+                        maxProcessTransactionJsonSize = transaction.getJSONObject().toString().length();
+                    }
+                }
+                if (transaction.getType() == ShufflingTransaction.SHUFFLING_CANCELLATION) {
+                    if (transaction.getFullSize() > maxProcessTransactionFullSize) {
+                        maxCancelTransactionFullSize = transaction.getFullSize();
+                    }
+                    if (transaction.getJSONObject().toString().length() > maxCancelTransactionJsonSize) {
+                        maxCancelTransactionJsonSize = transaction.getJSONObject().toString().length();
+                    }
+                }
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ignore) {}
+        }
+
+        getShufflingResponse = getShuffling(shufflingId);
+        Assert.assertEquals((long) Shuffling.Stage.CANCELLED.getCode(), getShufflingResponse.get("stage"));
+
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT) + 100 * Constants.ONE_NXT, participants[n - 1].getBalanceDiff());
+        Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + 2 * Constants.ONE_NXT) + 100 * Constants.ONE_NXT, participants[n - 1].getUnconfirmedBalanceDiff());
+        Logger.logMessage("Max block json size " + maxBlockJsonSize);
+        Logger.logMessage("Max block payload " + maxBlockPayload);
+        Logger.logMessage("Max process transaction full size " + maxProcessTransactionFullSize);
+        Logger.logMessage("Max cancel transaction full size " + maxCancelTransactionFullSize);
+        Logger.logMessage("Max process transaction json size " + maxProcessTransactionJsonSize);
+        Logger.logMessage("Max cancel transaction json size " + maxCancelTransactionJsonSize);
     }
 
 }

@@ -232,6 +232,11 @@ class UnconfirmedTransaction implements Transaction {
     }
 
     @Override
+    public int getFullSize() {
+        return transaction.getFullSize();
+    }
+
+    @Override
     public Appendix.Message getMessage() {
         return transaction.getMessage();
     }

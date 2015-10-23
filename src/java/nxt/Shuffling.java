@@ -706,7 +706,7 @@ public final class Shuffling {
 
     private long blame() {
         if (stage == Stage.REGISTRATION) {
-            Logger.logDebugMessage("Registration never completed");
+            Logger.logDebugMessage("Registration never completed for shuffling %s", Long.toUnsignedString(id));
             return 0;
         }
         List<ShufflingParticipant> participants = new ArrayList<>();
@@ -822,9 +822,9 @@ public final class Shuffling {
     private boolean isFull(Block block) {
         int transactionSize = Constants.MIN_TRANSACTION_SIZE; // min transaction size with no attachment
         if (stage == Stage.REGISTRATION) {
-            transactionSize += 1 + 8;
+            transactionSize += 1 + 32;
         } else { // must use same for PROCESSING/VERIFICATION/BLAME
-            transactionSize += 1 + 8; // TODO: determine max processing attachment size
+            transactionSize = 16384; // max observed was 15647 for 30 participants
         }
         return block.getPayloadLength() + transactionSize > Constants.MAX_PAYLOAD_LENGTH;
     }

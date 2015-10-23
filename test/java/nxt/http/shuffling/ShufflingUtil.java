@@ -206,6 +206,17 @@ class ShufflingUtil {
         return response;
     }
 
+    static JSONObject sendMoney(Tester sender, Tester recipient, long amountNXT) {
+        JSONObject response = new APICall.Builder("sendMoney").
+                param("secretPhrase", sender.getSecretPhrase()).
+                param("recipient", recipient.getStrId()).
+                param("amountNQT", amountNXT * Constants.ONE_NXT).
+                param("feeNQT", Constants.ONE_NXT).
+                build().invoke();
+        Logger.logMessage("sendMoneyReponse: " + response.toJSONString());
+        return response;
+    }
+
     private ShufflingUtil() {}
 
 }

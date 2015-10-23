@@ -2924,7 +2924,7 @@ public interface Attachment extends Appendix {
                     size += bytes.length;
                 }
             }
-            return size;
+            return size / 2; // just lie
         }
 
         @Override

@@ -53,6 +53,9 @@ public abstract class ShufflingTransaction extends TransactionType {
         }
     }
 
+    //TODO: set to 10 NXT
+    private final static Fee SHUFFLING_PROCESSING_FEE = new Fee.ConstantFee(Constants.ONE_NXT);
+
     private ShufflingTransaction() {}
 
     @Override
@@ -136,7 +139,7 @@ public abstract class ShufflingTransaction extends TransactionType {
                 throw new NxtException.NotValidException(String.format("Number of participants %d is not between %d and %d",
                         attachment.getParticipantCount(), Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS, Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS));
             }
-            if (attachment.getRegistrationPeriod() < attachment.getParticipantCount() || attachment.getRegistrationPeriod() > Constants.MAX_SHUFFLING_REGISTRATION_PERIOD) {
+            if (attachment.getRegistrationPeriod() < 1 || attachment.getRegistrationPeriod() > Constants.MAX_SHUFFLING_REGISTRATION_PERIOD) {
                 throw new NxtException.NotValidException("Invalid registration period: " + attachment.getRegistrationPeriod());
             }
         }
@@ -321,6 +324,11 @@ public abstract class ShufflingTransaction extends TransactionType {
         }
 
         @Override
+        Fee getBaselineFee(Transaction transaction) {
+            return SHUFFLING_PROCESSING_FEE;
+        }
+
+        @Override
         Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
             return new Attachment.ShufflingProcessing(buffer, transactionVersion);
         }
@@ -433,6 +441,11 @@ public abstract class ShufflingTransaction extends TransactionType {
         @Override
         public String getName() {
             return "ShufflingRecipients";
+        }
+
+        @Override
+        Fee getBaselineFee(Transaction transaction) {
+            return SHUFFLING_PROCESSING_FEE;
         }
 
         @Override
@@ -628,6 +641,11 @@ public abstract class ShufflingTransaction extends TransactionType {
         @Override
         public String getName() {
             return "ShufflingCancellation";
+        }
+
+        @Override
+        Fee getBaselineFee(Transaction transaction) {
+            return SHUFFLING_PROCESSING_FEE;
         }
 
         @Override
