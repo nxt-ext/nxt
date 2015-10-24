@@ -16,6 +16,9 @@ Tabs are now sorted mostly alphabetically on the API test page.
 Added nxt.hideErrorDetails property, default false, to allow suppressing node
 specific configuration details in error messages returned to peers.
 
+Increased default prunable lifetime setting to 90 days. Minimum enforced is
+still 2 weeks.
+
 The UPnP connection timeouts are now also configurable in nxt.properties.
 
 Updated Bouncy Castle library to version 1.53, Jetty to version 9.3.5, IzPack

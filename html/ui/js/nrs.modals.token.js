@@ -39,7 +39,8 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.forms.generateTokenComplete = function(response) {
-		$("#token_modal").find(".error_message").hide();
+        var tokenModal = $("#token_modal");
+        tokenModal.find(".error_message").hide();
 
 		if (response.token) {
 			$("#generate_token_output").html($.t("generated_token_is") + "<br /><br /><textarea readonly style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
@@ -47,7 +48,7 @@ var NRS = (function(NRS, $) {
 			$.growl($.t("error_generate_token"), {
 				"type": "danger"
 			});
-			$("#generate_token_modal").modal("hide");
+			tokenModal.modal("hide");
 		}
 	};
 
