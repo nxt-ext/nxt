@@ -798,28 +798,6 @@ public final class Account {
         return accountPropertyTable.getBy(dbClause);
     }
 
-    void setProperty(Transaction transaction, Account setterAccount, String property, String value) {
-        value = Convert.emptyToNull(value);
-        AccountProperty accountProperty = getProperty(this.id, property, setterAccount.id);
-        if (accountProperty == null) {
-            accountProperty = new AccountProperty(transaction.getId(), this.id, setterAccount.id, property, value);
-        } else {
-            accountProperty.value = value;
-        }
-        accountPropertyTable.insert(accountProperty);
-    }
-
-    void deleteProperty(long propertyId) {
-        AccountProperty accountProperty = accountPropertyTable.get(accountPropertyDbKeyFactory.newKey(propertyId));
-        if (accountProperty == null) {
-            return;
-        }
-        if (accountProperty.getSetterId() != this.id && accountProperty.getAccountId() != this.id) {
-            throw new RuntimeException("Property " + Long.toUnsignedString(propertyId) + " cannot be deleted by " + Long.toUnsignedString(this.id));
-        }
-        accountPropertyTable.delete(accountProperty);
-    }
-
     public static Account getAccount(long id) {
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey);
@@ -1398,6 +1376,28 @@ public final class Account {
         newControls.remove(control);
         controls = Collections.unmodifiableSet(newControls);
         accountTable.insert(this);
+    }
+
+    void setProperty(Transaction transaction, Account setterAccount, String property, String value) {
+        value = Convert.emptyToNull(value);
+        AccountProperty accountProperty = getProperty(this.id, property, setterAccount.id);
+        if (accountProperty == null) {
+            accountProperty = new AccountProperty(transaction.getId(), this.id, setterAccount.id, property, value);
+        } else {
+            accountProperty.value = value;
+        }
+        accountPropertyTable.insert(accountProperty);
+    }
+
+    void deleteProperty(long propertyId) {
+        AccountProperty accountProperty = accountPropertyTable.get(accountPropertyDbKeyFactory.newKey(propertyId));
+        if (accountProperty == null) {
+            return;
+        }
+        if (accountProperty.getSetterId() != this.id && accountProperty.getAccountId() != this.id) {
+            throw new RuntimeException("Property " + Long.toUnsignedString(propertyId) + " cannot be deleted by " + Long.toUnsignedString(this.id));
+        }
+        accountPropertyTable.delete(accountProperty);
     }
 
     static boolean setOrVerify(long accountId, byte[] key) {
