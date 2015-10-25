@@ -1337,7 +1337,7 @@ public interface Appendix {
 
         private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
-            Account recipientAccount = Account.getAccount(transaction.getRecipientId());
+            Account recipientAccount = transaction.getRecipientId() == 0 ? null : Account.getAccount(transaction.getRecipientId());
             transaction.getAppendages().forEach(appendage -> {
                 if (appendage.isPhasable()) {
                     appendage.apply(transaction, senderAccount, recipientAccount);

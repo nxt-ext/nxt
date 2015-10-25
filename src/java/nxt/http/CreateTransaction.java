@@ -132,7 +132,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast")) && secretPhrase != null;
         Appendix.EncryptedMessage encryptedMessage = null;
         Appendix.PrunableEncryptedMessage prunableEncryptedMessage = null;
-        if (attachment.getTransactionType().canHaveRecipient()) {
+        if (attachment.getTransactionType().canHaveRecipient() && recipientId != 0) {
             Account recipient = Account.getAccount(recipientId);
             if ("true".equalsIgnoreCase(req.getParameter("encryptedMessageIsPrunable"))) {
                 prunableEncryptedMessage = (Appendix.PrunableEncryptedMessage) ParameterParser.getEncryptedMessage(req, recipient, true);
