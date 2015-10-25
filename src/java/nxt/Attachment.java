@@ -87,7 +87,7 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        public final boolean isPhasable() {
+        final boolean isPhasable() {
             return !(this instanceof Prunable) && getTransactionType().isPhasable();
         }
 
