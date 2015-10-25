@@ -314,11 +314,7 @@ final class TransactionImpl implements Transaction {
         this.appendagesSize = appendagesSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-            if (this.phasing == null) {
-                feeNQT = getMinimumFeeNQT(effectiveHeight);
-            } else {
-                feeNQT = Math.max(getMinimumFeeNQT(effectiveHeight), getMinimumFeeNQT(phasing.getFinishHeight()));
-            }
+            feeNQT = getMinimumFeeNQT(effectiveHeight);
         } else {
             feeNQT = builder.feeNQT;
         }
@@ -1019,12 +1015,13 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotValidException("Transaction size " + getFullSize() + " exceeds maximum payload size");
         }
 
-        long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
-        if (feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
-                    ((double)feeNQT)/Constants.ONE_NXT, ((double)minimumFeeNQT)/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+        if (!validatingAtFinish) {
+            long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
+            if (feeNQT < minimumFeeNQT) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
+                        ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+            }
         }
-        
         AccountRestrictions.checkTransaction(this);
     }
 
