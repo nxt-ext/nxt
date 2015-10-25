@@ -57,6 +57,8 @@ public final class Constants {
 
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
     public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
+    public static final int MAX_ARBITRARY_MESSAGE_LENGTH_2 = 160;
+    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH_2 = 160;
 
     public static final int MAX_PRUNABLE_MESSAGE_LENGTH = 42 * 1024;
     public static final int MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH = 42 * 1024;
@@ -74,14 +76,14 @@ public final class Constants {
     public static final int MAX_ACCOUNT_NAME_LENGTH = 100;
     public static final int MAX_ACCOUNT_DESCRIPTION_LENGTH = 1000;
 
-    public static final int MAX_ACCOUNT_PROPERTY_NAME_LENGTH = 20;
-    public static final int MAX_ACCOUNT_PROPERTY_VALUE_LENGTH = 100;
+    public static final int MAX_ACCOUNT_PROPERTY_NAME_LENGTH = 32;
+    public static final int MAX_ACCOUNT_PROPERTY_VALUE_LENGTH = 160;
 
     public static final long MAX_ASSET_QUANTITY_QNT = 1000000000L * 100000000L;
     public static final int MIN_ASSET_NAME_LENGTH = 3;
     public static final int MAX_ASSET_NAME_LENGTH = 10;
     public static final int MAX_ASSET_DESCRIPTION_LENGTH = 1000;
-    public static final int MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH = 100;
+    public static final int MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH = 160;
     public static final int MAX_ASSET_TRANSFER_COMMENT_LENGTH = 1000;
     public static final int MAX_DIVIDEND_PAYMENT_ROLLBACK = 1441;
 
@@ -100,6 +102,7 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
     public static final int MAX_DGS_GOODS_LENGTH = 1000;
+    public static final int MAX_DGS_GOODS_LENGTH_2 = 160;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
@@ -154,7 +157,7 @@ public final class Constants {
     public static final int[] MIN_VERSION = new int[] {1, 5};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
-    public static final long SHUFFLING_DEPOSIT_NQT = (isTestnet ? 10 : 1000) * ONE_NXT;
+    public static final long SHUFFLING_DEPOSIT_NQT = (isTestnet ? 7 : 1000) * ONE_NXT;
 
     public static final long EPOCH_BEGINNING;
     static {

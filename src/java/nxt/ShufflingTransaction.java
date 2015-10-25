@@ -53,8 +53,9 @@ public abstract class ShufflingTransaction extends TransactionType {
         }
     }
 
-    //TODO: set to 10 NXT
-    private final static Fee SHUFFLING_PROCESSING_FEE = new Fee.ConstantFee(Constants.ONE_NXT);
+    private final static Fee SHUFFLING_PROCESSING_FEE = new Fee.ConstantFee(10 * Constants.ONE_NXT);
+    private final static Fee SHUFFLING_RECIPIENTS_FEE = new Fee.ConstantFee(11 * Constants.ONE_NXT);
+
 
     private ShufflingTransaction() {}
 
@@ -445,7 +446,7 @@ public abstract class ShufflingTransaction extends TransactionType {
 
         @Override
         Fee getBaselineFee(Transaction transaction) {
-            return SHUFFLING_PROCESSING_FEE;
+            return SHUFFLING_RECIPIENTS_FEE;
         }
 
         @Override

@@ -42,21 +42,31 @@ public interface Fee {
     abstract class SizeBasedFee implements Fee {
 
         private final long constantFee;
-        private final long feePerKByte;
+        private final long feePerSize;
+        private final int unitSize;
 
-        public SizeBasedFee(long feePerKByte) {
-            this(0, feePerKByte);
+        public SizeBasedFee(long feePerSize) {
+            this(0, feePerSize);
         }
 
-        public SizeBasedFee(long constantFee, long feePerKByte) {
+        public SizeBasedFee(long constantFee, long feePerSize) {
+            this(constantFee, feePerSize, 1024);
+        }
+
+        public SizeBasedFee(long constantFee, long feePerSize, int unitSize) {
             this.constantFee = constantFee;
-            this.feePerKByte = feePerKByte;
+            this.feePerSize = feePerSize;
+            this.unitSize = unitSize;
         }
 
-        // the first 1024 bytes are free
+        // the first size unit is free if constantFee is 0
         @Override
         public final long getFee(TransactionImpl transaction, Appendix appendage) {
-            return Math.addExact(constantFee, Math.multiplyExact((long) (getSize(transaction, appendage) / 1024), feePerKByte));
+            int size = getSize(transaction, appendage);
+            if (size > 0 && Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK) {
+                size -= 1;
+            }
+            return Math.addExact(constantFee, Math.multiplyExact((long) (size / unitSize), feePerSize));
         }
 
         public abstract int getSize(TransactionImpl transaction, Appendix appendage);

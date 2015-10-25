@@ -121,7 +121,7 @@ class ShufflingUtil {
                 param("shuffling", shufflingId).
                 param("secretPhrase", tester.getSecretPhrase()).
                 param("recipientSecretPhrase", recipient.getSecretPhrase()).
-                feeNQT(Constants.ONE_NXT);
+                feeNQT(0);
         if (!broadcast) {
             builder.param("broadcast", "false");
         }
@@ -152,7 +152,7 @@ class ShufflingUtil {
                 param("shuffling", shufflingId).
                 param("secretPhrase", tester.getSecretPhrase()).
                 param("shufflingStateHash", shufflingStateHash).
-                feeNQT(Constants.ONE_NXT);
+                feeNQT(10 * Constants.ONE_NXT);
         if (cancellingAccountId != 0) {
             builder.param("cancellingAccount", Long.toUnsignedString(cancellingAccountId));
         }
@@ -178,7 +178,6 @@ class ShufflingUtil {
         }
         apiCall = new APICall.Builder("broadcastTransaction").
                 param("transactionJSON", ((JSONObject)response.get("transactionJSON")).toJSONString()).
-                feeNQT(Constants.ONE_NXT).
                 build();
         response = apiCall.invoke();
         Logger.logDebugMessage("broadcastTransactionResponse:" + response);
