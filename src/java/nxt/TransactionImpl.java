@@ -1022,9 +1022,12 @@ final class TransactionImpl implements Transaction {
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
         senderAccount.apply(getSenderPublicKey());
-        Account recipientAccount = Account.getAccount(recipientId);
-        if (recipientAccount == null && recipientId != 0) {
-            recipientAccount = Account.addOrGetAccount(recipientId);
+        Account recipientAccount = null;
+        if (recipientId != 0) {
+            recipientAccount = Account.getAccount(recipientId);
+            if (recipientAccount == null) {
+                recipientAccount = Account.addOrGetAccount(recipientId);
+            }
         }
         if (referencedTransactionFullHash != null
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
