@@ -63,37 +63,51 @@ import java.util.concurrent.ThreadLocalRandom;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
-    private static final byte[] CHECKSUM_TRANSPARENT_FORGING = new byte[] {
-            -122, -111, -35, 76, 59, 79, -75, 117, 34, 2, -70, -65, -38, 59, 0, 57,
-            120, 0, -107, 11, 97, -48, 21, 36, 48, -94, 88, 54, -14, 60, -101, -80
-    };
+    private static final byte[] CHECKSUM_TRANSPARENT_FORGING =
+            new byte[] {
+                    -122, -111, -35, 76, 59, 79, -75, 117, 34, 2, -70, -65, -38, 59, 0, 57,
+                    120, 0, -107, 11, 97, -48, 21, 36, 48, -94, 88, 54, -14, 60, -101, -80
+            };
     private static final byte[] CHECKSUM_NQT_BLOCK = Constants.isTestnet ?
             new byte[] {
                     110, -1, -56, -56, -58, 48, 43, 12, -41, -37, 90, -93, 80, 20, 3, -76, -84,
                     -15, -113, -34, 30, 32, 57, 85, -30, 16, -10, 127, -101, 17, 121, 124
             }
-            : new byte[] {
-            -90, -42, -57, -76, 88, -49, 127, 6, -47, -72, -39, -56, 51, 90, -90, -105,
-            121, 71, -94, -97, 49, -24, -12, 86, 7, -48, 90, -91, -24, -105, -17, -104
-    };
+            :
+            new byte[] {
+                    -90, -42, -57, -76, 88, -49, 127, 6, -47, -72, -39, -56, 51, 90, -90, -105,
+                    121, 71, -94, -97, 49, -24, -12, 86, 7, -48, 90, -91, -24, -105, -17, -104
+            };
     private static final byte[] CHECKSUM_MONETARY_SYSTEM_BLOCK = Constants.isTestnet ?
             new byte[] {
                     119, 51, 105, -101, -74, -49, -49, 19, 11, 103, -84, 80, -46, -5, 51, 42,
                     84, 88, 87, -115, -19, 104, 49, -93, -41, 84, -34, -92, 103, -48, 29, 44
             }
-            : new byte[] {
-            -117, -101, 74, 111, -114, 39, 80, -67, 48, 86, 68, 106, -105, 2, 84, -109,
-            1, 4, -20, -82, -112, -112, 25, 119, 23, -113, 126, -121, -36, 15, -32, -24
-    };
+            :
+            new byte[] {
+                    -117, -101, 74, 111, -114, 39, 80, -67, 48, 86, 68, 106, -105, 2, 84, -109,
+                    1, 4, -20, -82, -112, -112, 25, 119, 23, -113, 126, -121, -36, 15, -32, -24
+            };
     private static final byte[] CHECKSUM_PHASING_BLOCK = Constants.isTestnet ?
-            new byte [] {
+            new byte[] {
                     4, -100, -26, 47, 93, 1, -114, 86, -42, 46, -103, 13, 120, 0, 2, 100, -52,
                     -67, 109, -90, 87, 13, 30, -110, -58, -70, -94, 21, 105, -58, 20, 0
             }
-            : new byte[] {
-            -88, -128, 68, -118, 10, -62, 110, 19, -73, 61, 34, -76, 35, 73, -101, 9,
-            33, -111, 40, 114, 27, 105, 54, 0, 16, -97, 115, -12, -110, -88, 1, -15
-    };
+            :
+            new byte[] {
+                    -88, -128, 68, -118, 10, -62, 110, 19, -73, 61, 34, -76, 35, 73, -101, 9,
+                    33, -111, 40, 114, 27, 105, 54, 0, 16, -97, 115, -12, -110, -88, 1, -15
+            };
+    private static final byte[] LAST_CHECKSUM = Constants.isTestnet ?
+            new byte[] {
+                    68, 64, 21, 90, 71, 126, -117, 78, -118, 114, 21, 103, -5, -8, 13, 23, -99,
+                    63, 114, 62, -60, 112, 107, 43, -66, -6, -113, -39, -76, 100, 33, 61
+            }
+            :
+            new byte[] {
+                    -87, 84, 85, -34, -125, 124, 7, -81, 29, 27, -34, -81, 6, 106, 127, -32,
+                    64, 111, -103, 30, 77, 125, -28, -85, 115, -107, 56, 41, -99, -36, 75, -25
+            };
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -182,7 +196,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         private void downloadPeer() throws InterruptedException {
             try {
                 long startTime = System.currentTimeMillis();
-                int numberOfForkConfirmations = blockchain.getHeight() > Constants.PHASING_BLOCK - 720 ?
+                int numberOfForkConfirmations = blockchain.getHeight() > Constants.LAST_CHECKSUM_BLOCK - 720 ?
                         defaultNumberOfForkConfirmations : Math.min(1, defaultNumberOfForkConfirmations);
                 connectedPublicPeers = Peers.getPublicPeers(Peer.State.CONNECTED, true);
                 if (connectedPublicPeers.size() <= numberOfForkConfirmations) {
@@ -924,6 +938,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getHeight() == Constants.PHASING_BLOCK
                 && ! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
             popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
+        }
+        if (block.getHeight() == Constants.LAST_CHECKSUM_BLOCK
+                && ! verifyChecksum(LAST_CHECKSUM, Constants.PHASING_BLOCK, Constants.LAST_CHECKSUM_BLOCK)) {
+            popOffTo(Constants.PHASING_BLOCK);
         }
     };
 
