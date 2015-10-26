@@ -56,7 +56,7 @@ public class SendMessageTest extends BlockchainTest {
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).
                 param("messageToEncrypt", "hello world").
-                param("feeNQT", Constants.ONE_NXT).
+                param("feeNQT", 0).
                 build().invoke();
         Logger.logDebugMessage("sendMessage: " + response);
         String transaction = (String) response.get("transaction");
@@ -81,7 +81,7 @@ public class SendMessageTest extends BlockchainTest {
                 param("recipient", BOB.getStrId()).
                 param("encryptedMessageData", Convert.toHexString(encryptedData.getData())).
                 param("encryptedMessageNonce", Convert.toHexString(encryptedData.getNonce())).
-                param("feeNQT", Constants.ONE_NXT).
+                param("feeNQT", 0).
                 build().invoke();
         Logger.logDebugMessage("sendMessage: " + response);
         String transaction = (String) response.get("transaction");
@@ -104,7 +104,7 @@ public class SendMessageTest extends BlockchainTest {
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).
                 param("messageToEncryptToSelf", "hello world").
-                param("feeNQT", Constants.ONE_NXT).
+                param("feeNQT", 0).
                 build().invoke();
         Logger.logDebugMessage("sendMessage: " + response);
         String transaction = (String) response.get("transaction");
@@ -129,7 +129,7 @@ public class SendMessageTest extends BlockchainTest {
                 param("recipient", BOB.getStrId()).
                 param("encryptToSelfMessageData", Convert.toHexString(encryptedData.getData())).
                 param("encryptToSelfMessageNonce", Convert.toHexString(encryptedData.getNonce())).
-                param("feeNQT", Constants.ONE_NXT).
+                param("feeNQT", 0).
                 build().invoke();
         Logger.logDebugMessage("sendMessage: " + response);
         String transaction = (String) response.get("transaction");

@@ -160,16 +160,7 @@ public class TestApproveTransaction extends BlockchainTest {
         Logger.logDebugMessage("broadcastTransaction: " + response);
         generateBlock();
 
-        // Transaction is still not applied since finish height not reached
-        // Sender
-        Assert.assertEquals(-fee, ALICE.getBalanceDiff());
-        Assert.assertEquals(-100 * Constants.ONE_NXT - fee, ALICE.getUnconfirmedBalanceDiff());
-        // Recipient
-        Assert.assertEquals(0, BOB.getBalanceDiff());
-        Assert.assertEquals(0, BOB.getUnconfirmedBalanceDiff());
-
-        generateBlock();
-        // Transaction is applied
+        // Transaction is applied before finish height
         // Sender
         Assert.assertEquals(-100 * Constants.ONE_NXT - fee, ALICE.getBalanceDiff());
         Assert.assertEquals(-100 * Constants.ONE_NXT - fee, ALICE.getUnconfirmedBalanceDiff());
