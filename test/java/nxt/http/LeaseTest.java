@@ -47,6 +47,7 @@ public class LeaseTest extends BlockchainTest {
         // effective balance hasn't changed since lease is not in effect yet
         JSONObject lesseeResponse = new APICall.Builder("getAccount").
                 param("account", ALICE.getRsAccount()).
+                param("includeEffectiveBalance", "true").
                 build().invoke();
         Logger.logDebugMessage("getLesseeAccount: " + lesseeResponse);
         Assert.assertEquals(ALICE.getInitialEffectiveBalance(), lesseeResponse.get("effectiveBalanceNXT"));
@@ -71,14 +72,16 @@ public class LeaseTest extends BlockchainTest {
 
         lesseeResponse = new APICall.Builder("getAccount").
                 param("account", ALICE.getRsAccount()).
+                param("includeEffectiveBalance", "true").
                 build().invoke();
         Logger.logDebugMessage("getLesseeAccount: " + lesseeResponse);
-        Assert.assertEquals(ALICE.getInitialEffectiveBalance() + BOB.getInitialEffectiveBalance() + CHUCK.getInitialEffectiveBalance() - 2 + 1,
+        Assert.assertEquals(ALICE.getInitialEffectiveBalance() + BOB.getInitialEffectiveBalance() + CHUCK.getInitialEffectiveBalance() - 2,
                 lesseeResponse.get("effectiveBalanceNXT"));
         generateBlock();
         generateBlock();
         lesseeResponse = new APICall.Builder("getAccount").
                 param("account", ALICE.getRsAccount()).
+                param("includeEffectiveBalance", "true").
                 build().invoke();
         Logger.logDebugMessage("getLesseeAccount: " + lesseeResponse);
         Assert.assertEquals((ALICE.getInitialBalance() + CHUCK.getInitialBalance()) / Constants.ONE_NXT - 1 /* fees */,
@@ -86,6 +89,7 @@ public class LeaseTest extends BlockchainTest {
         generateBlock();
         lesseeResponse = new APICall.Builder("getAccount").
                 param("account", ALICE.getRsAccount()).
+                param("includeEffectiveBalance", "true").
                 build().invoke();
         Logger.logDebugMessage("getLesseeAccount: " + lesseeResponse);
         Assert.assertEquals((ALICE.getInitialBalance()) / Constants.ONE_NXT,
