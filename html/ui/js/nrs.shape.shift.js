@@ -608,6 +608,7 @@ var NRS = (function(NRS, $) {
         $("#m_shape_shift_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: coin }));
         $("#m_shape_shift_sell_qr_code").html("");
         var data = invoker.data;
+        modal.css('cursor','wait');
         async.waterfall([
             function(callback) {
                 if (data.rate) {
@@ -622,7 +623,7 @@ var NRS = (function(NRS, $) {
                     })
                 }
             },
-            function() {
+            function(callback) {
                 $("#m_shape_shift_sell_min").val(data.min);
                 $("#m_shape_shift_sell_min_coin").html(coin);
                 $("#m_shape_shift_sell_max").val(data.max);
@@ -652,26 +653,32 @@ var NRS = (function(NRS, $) {
                         msg = "incorrect deposit coin " + data.depositType;
                         NRS.logConsole(msg);
                         NRS.showModalError(msg, modal);
+                        callback(null);
                         return;
                     }
                     if (data.withdrawalType != "NXT") {
                         msg = "incorrect withdrawal coin " + data.withdrawalType;
                         NRS.logConsole(msg);
                         NRS.showModalError(msg, modal);
+                        callback(null);
                         return;
                     }
                     if (data.withdrawal != NRS.accountRS) {
                         msg = "incorrect withdrawal address " + data.withdrawal;
                         NRS.logConsole(msg);
                         NRS.showModalError(msg, modal);
+                        callback(null);
                         return;
                     }
                     NRS.logConsole("shift request done, deposit address " + data.deposit);
                     $("#m_shape_shift_sell_deposit_address").html(data.deposit);
                     NRS.sendRequestQRCode("#m_shape_shift_sell_qr_code", data.deposit, 125, 125);
+                    callback(null);
                 })
             }
-        ])
+        ], function (err, result) {
+            modal.css('cursor', 'default');
+        })
     });
 
     $("#m_shape_shift_sell_done").on("click", function(e) {
