@@ -39,6 +39,10 @@ getShufflingParticipants.
 If desired, finished shufflings can be automatically deleted from the database
 if the nxt.deleteFinishedShufflings property is set to true (default is false).
 
+The fee for creating a shuffling or registering in one is 1 NXT, for the
+shuffling process or shuffling cancel transactions 10 NXT, and for the verify
+transaction 1 NXT.
+
 
 Account control for phased transactions. Any account can be restricted to only
 be allowed to issue phased transactions subject to a specific voting model.
@@ -78,12 +82,14 @@ still lease its balance to another.
 
 Account properties. Those are name / value pairs that can be set on any
 account (except Genesis), by either the account owner, or by another account.
-Names are limited to 20 characters, and values to 100 characters. Names are
+Names are limited to 32 characters, and values to 160 characters. Names are
 unique per account and per setter account, but not globally unique. Account
 properties cannot be transferred between accounts. The setter of an account
 property can edit it by replacing its value with another. Either the setter,
 or the recipient (if different) of an account property can delete it. There
-is no limit on the number of properties an account can have.
+is no limit on the number of properties an account can have. Fee for setting
+account property is 1 NXT for value up to 32 chars, with additional 1 NXT fee
+for every 32 chars after that.
 
 Account properties are managed using the setAccountProperty and
 deleteAccountProperty APIs. To query the properties of an account, or those
@@ -91,9 +97,11 @@ set by an account, the getAccountProperties API can be used.
 
 
 Singleton assets. Issuing an asset with a quantity of 1, decimals 0, and
-description length not exceeding 100 characters, will require a minimum fee of
-1 NXT only, instead of the regular 1000 NXT asset issuance fee.
-
+description length not exceeding 160 characters, will require a base minimum
+fee of 1 NXT only, instead of the regular 1000 NXT asset issuance fee. For
+description of more than 32 chars, an extra 1 NXT fee is added for each 32
+chars. Asset name for singleton assets is limited to 10 chars, same as for
+regular assets.
 
 Throttling of unique resource allocation transactions. Asset issuance
 (excluding singleton assets), monetary system currency issuance, and alias
@@ -110,3 +118,45 @@ split between the forgers of the current and the previous three blocks in a
 Deletion of asset shares will be performed as a separate AssetDelete
 transaction type instead of as sending the shares to Genesis. Sending shares
 to Genesis will no longer be allowed.
+
+
+Fees and size limit changes. Several transaction types or attachments will
+have new fees and size limits, to encourage users to utilize the prunable
+versions when available, and to make fees proportionate to actual blockchain
+space consumed.
+
+Aliases:
+Base fee 2 NXT, with 2 NXT additional fee for each 32 chars of name plus URI
+total length, after the first 32 chars. Name and URI size limits remain at
+100 and 1000 chars respectively.
+
+Messages and EncryptedMessages (non-prunable):
+Maximum length reduced to 160 bytes. 1 NXT fee for each 32 bytes after the
+first 32 bytes. For encrypted messages, the length is measured excluding the
+nonce and the 16 byte AES initialization vector.
+Fees and size limit for prunable messages remain unchanged.
+
+AccountInfo:
+Base fee 1 NXT, with 2 NXT additional fee for each 32 chars of name plus
+description total length, after the first 32 chars. Name and description size
+limits remain at 100 and 1000 chars. AccountInfo transactions throttled at
+one per block.
+
+Polls:
+Base fee 10 NXT for polls with up to 20 options, and total size of poll name
+plus poll description plus total option length not exceeding 320 chars. For
+each option above 20, an additional fee of 1 NXT, and for each 32 chars after
+320, an additional fee of 2 NXT. Poll creation throttled to one per block.
+Name, description, and option length limits remain at 100, 1000, and 100 chars
+respectively.
+
+DGS Listing:
+Base fee 2 NXT, with 2 NXT additional fee for each 32 chars of name plus
+description total length, after the first 32 chars. Name and description size
+limits remain at 100 and 1000 max. DGS Listing throttled at one per block.
+
+DGS Delivery:
+Base fee 1 NXT, with 1 NXT additional fee for each 32 bytes of encrypted goods
+data after the first 32 bytes, nonce and AES initialization bytes excluded.
+Encrypted goods data size limit reduced to 160 bytes.
+
