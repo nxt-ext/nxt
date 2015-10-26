@@ -61,7 +61,8 @@ public class Helper {
     public static class BlockListener implements Listener<Block> {
         @Override
         public void notify(Block block) {
-            Logger.logDebugMessage("Block Generated at height %d with %d transactions\n", block.getHeight(), block.getTransactions().size());
+            Logger.logDebugMessage("Block Generated at height %d with %d transactions", block.getHeight(), block.getTransactions().size());
+            block.getTransactions().forEach(transaction -> Logger.logDebugMessage("transaction: " + transaction.getStringId()));
         }
     }
     

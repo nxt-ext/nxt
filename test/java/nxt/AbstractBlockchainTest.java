@@ -55,6 +55,7 @@ public abstract class AbstractBlockchainTest {
         blockchain = BlockchainImpl.getInstance();
         blockchainProcessor = BlockchainProcessorImpl.getInstance();
         blockchainProcessor.setGetMoreBlocks(false);
+        TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions();
         Listener<Block> countingListener = block -> {
             if (block.getHeight() % 1000 == 0) {
                 Logger.logMessage("downloaded block " + block.getHeight());
@@ -64,8 +65,7 @@ public abstract class AbstractBlockchainTest {
     }
 
     protected static void shutdown() {
-        TransactionProcessorImpl transactionProcessor = TransactionProcessorImpl.getInstance();
-        transactionProcessor.clearUnconfirmedTransactions();
+        TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions();
     }
 
     protected static void downloadTo(final int endHeight) {

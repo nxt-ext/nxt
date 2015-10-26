@@ -64,8 +64,7 @@ public class TestCurrencyReserveAndClaim extends BlockchainTest {
                 build();
         JSONObject getFoundersResponse = apiCall.invoke();
         Logger.logMessage("getFoundersResponse: " + getFoundersResponse);
-        Assert.assertEquals(5L, getFoundersResponse.get("errorCode"));
-        Assert.assertEquals("Unknown currency", getFoundersResponse.get("errorDescription"));
+        Assert.assertTrue(((JSONArray)getFoundersResponse.get("founders")).size() == 0);
         Assert.assertEquals(balanceNQT1 - Constants.ONE_NXT, ALICE.getBalance());
         Assert.assertEquals(balanceNQT2 - 2*Constants.ONE_NXT, BOB.getBalance());
     }
