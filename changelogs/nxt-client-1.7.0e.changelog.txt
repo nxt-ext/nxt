@@ -146,7 +146,7 @@ Polls:
 Base fee 10 NXT for polls with up to 20 options, and total size of poll name
 plus poll description plus total option length not exceeding 320 chars. For
 each option above 20, an additional fee of 1 NXT, and for each 32 chars after
-320, an additional fee of 2 NXT. Poll creation throttled to one per block.
+320, an additional fee of 1 NXT. Poll creation throttled to one per block.
 Name, description, and option length limits remain at 100, 1000, and 100 chars
 respectively.
 
@@ -156,7 +156,7 @@ description total length, after the first 32 chars. Name and description size
 limits remain at 100 and 1000 max. DGS Listing throttled at one per block.
 
 DGS Delivery:
-Base fee 1 NXT, with 1 NXT additional fee for each 32 bytes of encrypted goods
+Base fee 1 NXT, with 2 NXT additional fee for each 32 bytes of encrypted goods
 data after the first 32 bytes, nonce and AES initialization bytes excluded.
-Encrypted goods data size limit reduced to 160 bytes.
+Encrypted goods data size limit remains 1000 bytes.
 

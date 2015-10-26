@@ -837,7 +837,7 @@ public abstract class TransactionType {
                 }
             };
 
-            private final Fee POLL_SIZE_FEE = new Fee.SizeBasedFee(0, 2 * Constants.ONE_NXT, 32) {
+            private final Fee POLL_SIZE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
                     Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)appendage;
@@ -2566,7 +2566,7 @@ public abstract class TransactionType {
 
         public static final TransactionType DELIVERY = new DigitalGoods() {
 
-            private final Fee DGS_DELIVERY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT, 32) {
+            private final Fee DGS_DELIVERY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, 2 * Constants.ONE_NXT, 32) {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
                     Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
@@ -2625,8 +2625,7 @@ public abstract class TransactionType {
                 if (attachment.getGoods() == null) {
                     throw new NxtException.NotYetEncryptedException("Goods data not yet encrypted");
                 }
-                if (attachment.getGoods().getData().length > (attachment.getFinishValidationHeight(transaction) > Constants.BASE_TARGET_BLOCK
-                        ? Constants.MAX_DGS_GOODS_LENGTH_2 : Constants.MAX_DGS_GOODS_LENGTH)
+                if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
                         || attachment.getGoods().getData().length == 0
                         || attachment.getGoods().getNonce().length != 32
                         || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
