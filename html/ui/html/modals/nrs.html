@@ -555,6 +555,7 @@
                     
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
                     <li class="active" id="user_info_transactions" data-tab="transactions"><a href="#" data-i18n="transactions">Transactions</a></li>
+                    <li id="user_info_ledger" data-tab="ledger"><a href="#" data-i18n="ledger">Ledger</a></li>
                     <li id="user_info_assets" data-tab="assets"><a href="#" data-i18n="assets">Assets</a></li>
                     <li id="user_info_trade_history" data-tab="trade_history"><a href="#" data-i18n="trade_history">Trade History</a></li>
                     <li id="user_info_currencies" data-tab="currencies"><a href="#" data-i18n="currencies">Currencies</a></li>
@@ -582,7 +583,28 @@
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_transactions">This user has no transactions.</div>
                 </div>
-                
+
+                <div class="data-container data-loading user_info_modal_content" id="user_info_modal_ledger" style="display:none;max-height:350px;overflow:auto;">
+                    <table class="table table-striped" id="user_info_modal_ledger_table">
+                        <thead>
+                        <tr>
+                            <th data-i18n="entry">ENTRY</th>
+                            <th data-i18n="type">TYPE</th>
+                            <th data-i18n="change">CHANGE</th>
+                            <th data-i18n="balance">BALANCE</th>
+                            <th data-i18n="holding">HOLDING</th>
+                            <th data-i18n="change">CHANGE</th>
+                            <th data-i18n="balance">BALANCE</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_ledger">This user has no ledger entries.</div>
+                </div>
+
                 <div class="data-container data-loading user_info_modal_content" id="user_info_modal_aliases" style="display:none;max-height:350px;overflow:auto;">
                     <table class="table table-striped" id="user_info_modal_aliases_table">
                         <thead>

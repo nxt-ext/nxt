@@ -1487,5 +1487,7 @@
   "generated_hallmark_is": "The generated hallmark is:",
   "success_hallmark_parsing": "Hallmark parsed successfully",
   "error_invalid_hallmark": "Error generating hallmark: __error__",
-  "parse": "Parse"
+  "parse": "Parse",
+  "ledger": "Ledger",
+  "user_no_ledger": "This user has no ledger entries."
 }

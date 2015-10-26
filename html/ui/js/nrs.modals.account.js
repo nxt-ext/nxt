@@ -175,6 +175,28 @@ var NRS = (function(NRS, $) {
 		});
 	};
 
+    NRS.userInfoModal.ledger = function() {
+        NRS.sendRequest("getAccountLedger", {
+            "account": NRS.userInfoModal.user,
+            "firstIndex": 0,
+            "lastIndex": 100
+        }, function (response) {
+            var infoModalLedgerTable = $("#user_info_modal_ledger_table");
+            if (response.entries && response.entries.length) {
+                var rows = "";
+                for (var i = 0; i < response.entries.length; i++) {
+                    var entry = response.entries[i];
+                    rows += NRS.getLedgerEntryRow(entry);
+                }
+                infoModalLedgerTable.find("tbody").empty().append(rows);
+                NRS.dataLoadFinished(infoModalLedgerTable);
+            } else {
+                infoModalLedgerTable.find("tbody").empty();
+                NRS.dataLoadFinished(infoModalLedgerTable);
+            }
+        });
+	};
+
 	NRS.userInfoModal.aliases = function() {
 		NRS.sendRequest("getAliases", {
 			"account": NRS.userInfoModal.user,
