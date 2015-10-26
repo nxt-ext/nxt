@@ -2570,7 +2570,7 @@ public abstract class TransactionType {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
                     Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
-                    return attachment.getGoods().getData().length;
+                    return attachment.getGoods().getData().length - 16;
                 }
             };
 

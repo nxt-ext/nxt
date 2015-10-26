@@ -486,7 +486,7 @@ public interface Appendix {
         private static final Fee ENCRYPTED_MESSAGE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendage) {
-                return ((AbstractEncryptedMessage)appendage).getEncryptedData().getData().length;
+                return ((AbstractEncryptedMessage)appendage).getEncryptedData().getData().length - 16;
             }
         };
 

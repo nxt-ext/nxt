@@ -63,7 +63,10 @@ public interface Fee {
         @Override
         public final long getFee(TransactionImpl transaction, Appendix appendage) {
             int size = getSize(transaction, appendage);
-            if (size > 0 && Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK) {
+            if (size <= 0) {
+                return constantFee;
+            }
+            if (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK) {
                 size -= 1;
             }
             return Math.addExact(constantFee, Math.multiplyExact((long) (size / unitSize), feePerSize));

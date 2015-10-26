@@ -58,7 +58,7 @@ public final class Constants {
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
     public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
     public static final int MAX_ARBITRARY_MESSAGE_LENGTH_2 = 160;
-    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH_2 = 160;
+    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH_2 = 160 + 16;
 
     public static final int MAX_PRUNABLE_MESSAGE_LENGTH = 42 * 1024;
     public static final int MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH = 42 * 1024;
@@ -102,7 +102,7 @@ public final class Constants {
     public static final int MAX_DGS_LISTING_DESCRIPTION_LENGTH = 1000;
     public static final int MAX_DGS_LISTING_TAGS_LENGTH = 100;
     public static final int MAX_DGS_GOODS_LENGTH = 1000;
-    public static final int MAX_DGS_GOODS_LENGTH_2 = 160;
+    public static final int MAX_DGS_GOODS_LENGTH_2 = 160 + 16;
 
     public static final int MAX_HUB_ANNOUNCEMENT_URIS = 100;
     public static final int MAX_HUB_ANNOUNCEMENT_URI_LENGTH = 1000;
