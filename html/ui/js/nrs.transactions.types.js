@@ -286,6 +286,43 @@ var NRS = (function(NRS, $, undefined) {
                     'iconHTML': '<i class="fa fa-expand"></i>'
                 }
             }
+        },
+        7: {
+            'title': "Shuffling",
+            'i18nKeyTitle': 'shuffling',
+            'iconHTML': '<i class="fa fa-random"></i>',
+            'subTypes': {
+                0: {
+                    'title': "Shuffling Creation",
+                    'i18nKeyTitle': 'shuffling_creation',
+                    'iconHTML': '<i class="fa fa-question"></i>'
+                },
+                1: {
+                    'title': "Shuffling Registration",
+                    'i18nKeyTitle': 'shuffling_registration',
+                    'iconHTML': '<i class="fa fa-question"></i>'
+                },
+                2: {
+                    'title': "Shuffling Processing",
+                    'i18nKeyTitle': 'shuffling_processing',
+                    'iconHTML': '<i class="fa fa-question"></i>'
+                },
+                3: {
+                    'title': "Shuffling Recipients",
+                    'i18nKeyTitle': 'shuffling_recipients',
+                    'iconHTML': '<i class="fa fa-question"></i>'
+                },
+                4: {
+                    'title': "Shuffling Verification",
+                    'i18nKeyTitle': 'shuffling_verification',
+                    'iconHTML': '<i class="fa fa-question"></i>'
+                },
+                5: {
+                    'title': "Shuffling Cancellation",
+                    'i18nKeyTitle': 'shuffling_cancellation',
+                    'iconHTML': '<i class="fa fa-question"></i>'
+                }
+            }
         }
     };
 
