@@ -168,6 +168,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountCurrencies", GetAccountCurrencies.instance);
         map.put("getAccountCurrencyCount", GetAccountCurrencyCount.instance);
         map.put("getAccountAssetCount", GetAccountAssetCount.instance);
+        map.put("getAccountProperties", GetAccountProperties.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
@@ -295,6 +296,8 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
+        map.put("setAccountProperty", SetAccountProperty.instance);
+        map.put("deleteAccountProperty", DeleteAccountProperty.instance);
         map.put("setAlias", SetAlias.instance);
         map.put("shufflingCreate", ShufflingCreate.instance);
         map.put("shufflingRegister", ShufflingRegister.instance);

@@ -106,7 +106,7 @@ public abstract class MonetarySystem extends TransactionType {
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) {
+        Fee getBaselineFee(Transaction transaction) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
             if (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName()) != null
                     || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null) {
@@ -123,6 +123,12 @@ public abstract class MonetarySystem extends TransactionType {
                     // never, invalid code length will be checked and caught later
                     return THREE_LETTER_CURRENCY_ISSUANCE_FEE;
             }
+        }
+
+        @Override
+        long[] getBackFees(Transaction transaction) {
+            long feeNQT = transaction.getFeeNQT();
+            return new long[] {feeNQT * 3 / 10, feeNQT * 2 / 10, feeNQT / 10};
         }
 
         @Override
@@ -145,6 +151,12 @@ public abstract class MonetarySystem extends TransactionType {
                 isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates, true);
             }
             return isDuplicate;
+        }
+
+        @Override
+        boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+            return Nxt.getBlockchain().getHeight() >= Constants.BASE_TARGET_BLOCK
+                    && isDuplicate(CURRENCY_ISSUANCE, getName(), duplicates, true);
         }
 
         @Override
@@ -725,8 +737,8 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyMinting attachment = (Attachment.MonetarySystemCurrencyMinting) transaction.getAttachment();
-            return super.isDuplicate(transaction, duplicates) ||
-                    TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true);
+            return TransactionType.isDuplicate(CURRENCY_MINTING, attachment.getCurrencyId() + ":" + transaction.getSenderId(), duplicates, true)
+                    || super.isDuplicate(transaction, duplicates);
         }
 
         @Override

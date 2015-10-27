@@ -17,8 +17,8 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.AccountRestrictions;
 import nxt.AccountLedger.LedgerEntry;
+import nxt.AccountRestrictions;
 import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
@@ -209,6 +209,19 @@ final class JSONData {
         if (includeCurrencyInfo) {
             putCurrencyInfo(json, accountCurrency.getCurrencyId());
         }
+        return json;
+    }
+
+    static JSONObject accountProperty(Account.AccountProperty accountProperty, boolean includeAccount, boolean includeSetter) {
+        JSONObject json = new JSONObject();
+        if (includeAccount) {
+            putAccount(json, "account", accountProperty.getAccountId());
+        }
+        if (includeSetter) {
+            putAccount(json, "setter", accountProperty.getSetterId());
+        }
+        json.put("property", accountProperty.getProperty());
+        json.put("value", accountProperty.getValue());
         return json;
     }
 
@@ -736,7 +749,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject expectedAssetTransfer(Transaction transaction) {
+    static JSONObject expectedAssetTransfer(Transaction transaction, boolean includeAssetInfo) {
         JSONObject json = new JSONObject();
         Attachment.ColoredCoinsAssetTransfer attachment = (Attachment.ColoredCoinsAssetTransfer)transaction.getAttachment();
         json.put("assetTransfer", transaction.getStringId());
@@ -744,7 +757,9 @@ final class JSONData {
         putAccount(json, "sender", transaction.getSenderId());
         putAccount(json, "recipient", transaction.getRecipientId());
         json.put("quantityQNT", String.valueOf(attachment.getQuantityQNT()));
-        putAssetInfo(json, attachment.getAssetId());
+        if (includeAssetInfo) {
+            putAssetInfo(json, attachment.getAssetId());
+        }
         putExpectedTransaction(json, transaction);
         return json;
     }
@@ -764,7 +779,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject expectedCurrencyTransfer(Transaction transaction) {
+    static JSONObject expectedCurrencyTransfer(Transaction transaction, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
         Attachment.MonetarySystemCurrencyTransfer attachment = (Attachment.MonetarySystemCurrencyTransfer)transaction.getAttachment();
         json.put("transfer", transaction.getStringId());
@@ -772,7 +787,9 @@ final class JSONData {
         putAccount(json, "sender", transaction.getSenderId());
         putAccount(json, "recipient", transaction.getRecipientId());
         json.put("units", String.valueOf(attachment.getUnits()));
-        putCurrencyInfo(json, attachment.getCurrencyId());
+        if (includeCurrencyInfo) {
+            putCurrencyInfo(json, attachment.getCurrencyId());
+        }
         putExpectedTransaction(json, transaction);
         return json;
     }

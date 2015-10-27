@@ -38,7 +38,7 @@ public class TestTrustlessAssetSwap extends BlockchainTest {
                 param("decimals", 0).
                 param("feeNQT", 1000 * Constants.ONE_NXT).
                 build().invoke();
-
+        generateBlock();
         JSONObject bobAsset = new APICall.Builder("issueAsset").
                 param("secretPhrase", BOB.getSecretPhrase()).
                 param("name", "BobAsset").
@@ -58,10 +58,7 @@ public class TestTrustlessAssetSwap extends BlockchainTest {
                 param("recipient", BOB.getStrId()).
                 param("asset", aliceAssetId).
                 param("quantityQNT", 100).
-                param("feeNQT", 2*Constants.ONE_NXT).
-                param("phased", "true").
-                param("phasingFinishHeight", baseHeight + 4).
-                param("phasingVotingModel", -1).
+                param("feeNQT", Constants.ONE_NXT).
                 build().invoke();
 
         JSONObject aliceSignedTransfer = new APICall.Builder("signTransaction").
@@ -83,7 +80,7 @@ public class TestTrustlessAssetSwap extends BlockchainTest {
                 param("quantityQNT", 200).
                 param("feeNQT", 2 * Constants.ONE_NXT).
                 param("phased", "true").
-                param("phasingFinishHeight", baseHeight + 4).
+                param("phasingFinishHeight", baseHeight + 5).
                 param("phasingVotingModel", 4).
                 param("phasingLinkedFullHash", aliceTransferFullHash).
                 param("phasingQuorum", 1).
@@ -99,16 +96,10 @@ public class TestTrustlessAssetSwap extends BlockchainTest {
         // She then submits her transaction #1.
         new APICall.Builder("broadcastTransaction").
                 param("transactionBytes", aliceTransferTransactionBytes).
-                param("feeNQT", Constants.ONE_NXT).
                 build().invoke();
         generateBlock();
 
-        // Both transactions are still phased
-        Assert.assertEquals(0, Account.getAssetBalanceQNT(ALICE.getId(), Convert.parseUnsignedLong(bobAssetId)));
-        Assert.assertEquals(0, Account.getAssetBalanceQNT(BOB.getId(), Convert.parseUnsignedLong(aliceAssetId)));
-        generateBlock();
-
-        // Both transactions has executed
+        // Both transactions have executed
         Assert.assertEquals(200, Account.getAssetBalanceQNT(ALICE.getId(), Convert.parseUnsignedLong(bobAssetId)));
         Assert.assertEquals(100, Account.getAssetBalanceQNT(BOB.getId(), Convert.parseUnsignedLong(aliceAssetId)));
     }

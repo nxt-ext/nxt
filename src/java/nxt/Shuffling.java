@@ -210,6 +210,8 @@ public final class Shuffling {
         long shufflingId = Convert.fullHashToId(fullHash);
         Shuffling shuffling = shufflingTable.get(shufflingDbKeyFactory.newKey(shufflingId));
         if (shuffling != null && !Arrays.equals(shuffling.getFullHash(), fullHash)) {
+            Logger.logDebugMessage("Shuffling with different hash %s but same id found for hash %s",
+                    Convert.toHexString(shuffling.getFullHash()), Convert.toHexString(fullHash));
             return null;
         }
         return shuffling;
@@ -366,6 +368,7 @@ public final class Shuffling {
         return stage;
     }
 
+    // caller must update database
     private void setStage(Stage stage) {
         if (!this.stage.canBecome(stage)) {
             throw new IllegalStateException(String.format("Shuffling in stage %s cannot go to stage %s", this.stage, stage));
@@ -605,14 +608,17 @@ public final class Shuffling {
 
     void cancelBy(ShufflingParticipant participant, byte[][] blameData, byte[][] keySeeds) {
         participant.cancel(blameData, keySeeds);
-        if (this.cancellingAccountId == 0) {
+        boolean startingBlame = this.cancellingAccountId == 0;
+        if (startingBlame) {
             this.cancellingAccountId = participant.getAccountId();
-            this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
+            this.blocksRemaining = (short) (Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
             this.assigneeAccountId = 0;
             setStage(Stage.BLAME);
-            listeners.notify(this, Event.SHUFFLING_BLAME_STARTED);
         }
         shufflingTable.insert(this);
+        if (startingBlame) {
+            listeners.notify(this, Event.SHUFFLING_BLAME_STARTED);
+        }
     }
 
     private void cancelBy(ShufflingParticipant participant) {
@@ -684,7 +690,7 @@ public final class Shuffling {
         if (blamedAccountId != 0) {
             // as a penalty the deposit goes to the generator of the finish block
             Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
-            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
+            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, block.getId(), Constants.SHUFFLING_DEPOSIT_NQT);
             blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
         }
         this.assigneeAccountId = 0;
@@ -700,7 +706,7 @@ public final class Shuffling {
 
     private long blame() {
         if (stage == Stage.REGISTRATION) {
-            Logger.logDebugMessage("Registration never completed");
+            Logger.logDebugMessage("Registration never completed for shuffling %s", Long.toUnsignedString(id));
             return 0;
         }
         List<ShufflingParticipant> participants = new ArrayList<>();
@@ -764,7 +770,7 @@ public final class Shuffling {
                 }
                 boolean isLast = k == participantCount - 1;
                 if (isLast) {
-                    // else it is not encrypted data but plaintext recipient public key, at the last participant
+                    // not encrypted data but plaintext recipient public key
                     if (participantBytes.length != 32) {
                         // cannot be a valid public key
                         Logger.logDebugMessage("Participant %s submitted invalid recipient public key", Long.toUnsignedString(participant.getAccountId()));
@@ -816,9 +822,9 @@ public final class Shuffling {
     private boolean isFull(Block block) {
         int transactionSize = Constants.MIN_TRANSACTION_SIZE; // min transaction size with no attachment
         if (stage == Stage.REGISTRATION) {
-            transactionSize += 1 + 8;
+            transactionSize += 1 + 32;
         } else { // must use same for PROCESSING/VERIFICATION/BLAME
-            transactionSize += 1 + 8; // TODO: determine max processing attachment size
+            transactionSize = 16384; // max observed was 15647 for 30 participants
         }
         return block.getPayloadLength() + transactionSize > Constants.MAX_PAYLOAD_LENGTH;
     }

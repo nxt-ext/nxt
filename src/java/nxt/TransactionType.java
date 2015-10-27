@@ -54,6 +54,8 @@ public abstract class TransactionType {
     private static final byte SUBTYPE_MESSAGING_ALIAS_BUY = 7;
     private static final byte SUBTYPE_MESSAGING_ALIAS_DELETE = 8;
     private static final byte SUBTYPE_MESSAGING_PHASING_VOTE_CASTING = 9;
+    private static final byte SUBTYPE_MESSAGING_ACCOUNT_PROPERTY = 10;
+    private static final byte SUBTYPE_MESSAGING_ACCOUNT_PROPERTY_DELETE = 11;
 
     private static final byte SUBTYPE_COLORED_COINS_ASSET_ISSUANCE = 0;
     private static final byte SUBTYPE_COLORED_COINS_ASSET_TRANSFER = 1;
@@ -75,7 +77,7 @@ public abstract class TransactionType {
 
     private static final byte SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
     private static final byte SUBTYPE_ACCOUNT_CONTROL_PHASING_ONLY = 1;
-    
+
     private static final byte SUBTYPE_DATA_TAGGED_DATA_UPLOAD = 0;
     private static final byte SUBTYPE_DATA_TAGGED_DATA_EXTEND = 1;
 
@@ -110,6 +112,10 @@ public abstract class TransactionType {
                         return Messaging.ALIAS_DELETE;
                     case SUBTYPE_MESSAGING_PHASING_VOTE_CASTING:
                         return Messaging.PHASING_VOTE_CASTING;
+                    case SUBTYPE_MESSAGING_ACCOUNT_PROPERTY:
+                        return Messaging.ACCOUNT_PROPERTY;
+                    case SUBTYPE_MESSAGING_ACCOUNT_PROPERTY_DELETE:
+                        return Messaging.ACCOUNT_PROPERTY_DELETE;
                     default:
                         return null;
                 }
@@ -253,6 +259,11 @@ public abstract class TransactionType {
         return false;
     }
 
+    // isBlockDuplicate and isDuplicate share the same duplicates map, but isBlockDuplicate check is done first
+    boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+        return false;
+    }
+
     boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
         return false;
     }
@@ -298,12 +309,24 @@ public abstract class TransactionType {
         return true;
     }
 
-    public Fee getBaselineFee(Transaction transaction) {
+    Fee getBaselineFee(Transaction transaction) {
         return Fee.DEFAULT_FEE;
     }
 
-    public Fee getNextFee(Transaction transaction) {
+    Fee getNextFee(Transaction transaction) {
         return getBaselineFee(transaction);
+    }
+
+    int getBaselineFeeHeight() {
+        return 1;
+    }
+
+    int getNextFeeHeight() {
+        return Integer.MAX_VALUE;
+    }
+
+    long[] getBackFees(Transaction transaction) {
+        return Convert.EMPTY_LONG;
     }
 
     public abstract String getName();
@@ -464,6 +487,14 @@ public abstract class TransactionType {
 
         public static final TransactionType ALIAS_ASSIGNMENT = new Messaging() {
 
+            private final Fee ALIAS_FEE = new Fee.SizeBasedFee(2 * Constants.ONE_NXT, 2 * Constants.ONE_NXT, 32) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
+                    return attachment.getAliasName().length() + attachment.getAliasURI().length();
+                }
+            };
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ALIAS_ASSIGNMENT;
@@ -477,6 +508,16 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "AliasAssignment";
+            }
+
+            @Override
+            Fee getNextFee(Transaction transaction) {
+                return ALIAS_FEE;
+            }
+
+            @Override
+            int getNextFeeHeight() {
+                return Constants.BASE_TARGET_BLOCK;
             }
 
             @Override
@@ -499,6 +540,13 @@ public abstract class TransactionType {
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
                 return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+            }
+
+            @Override
+            boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                        && Alias.getAlias(((Attachment.MessagingAliasAssignment) transaction.getAttachment()).getAliasName()) == null
+                        && isDuplicate(Messaging.ALIAS_ASSIGNMENT, "", duplicates, true);
             }
 
             @Override
@@ -561,8 +609,7 @@ public abstract class TransactionType {
 
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
-                final Attachment.MessagingAliasSell attachment =
-                        (Attachment.MessagingAliasSell) transaction.getAttachment();
+                Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
                 Alias.sellAlias(transaction, attachment);
             }
 
@@ -782,6 +829,29 @@ public abstract class TransactionType {
                 return numOptions <= 20 ? 10 * Constants.ONE_NXT : (10 + numOptions - 20) * Constants.ONE_NXT;
             };
 
+            private final Fee POLL_OPTIONS_FEE = new Fee.SizeBasedFee(10 * Constants.ONE_NXT, Constants.ONE_NXT, 1) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    int numOptions = ((Attachment.MessagingPollCreation)appendage).getPollOptions().length;
+                    return numOptions <= 19 ? 0 : numOptions - 19;
+                }
+            };
+
+            private final Fee POLL_SIZE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)appendage;
+                    int size = attachment.getPollName().length() + attachment.getPollDescription().length();
+                    for (String option : ((Attachment.MessagingPollCreation)appendage).getPollOptions()) {
+                        size += option.length();
+                    }
+                    return size <= 288 ? 0 : size - 288;
+                }
+            };
+
+            private final Fee POLL_FEE_2 = (transaction, appendage) ->
+                    POLL_OPTIONS_FEE.getFee(transaction, appendage) + POLL_SIZE_FEE.getFee(transaction, appendage);
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_POLL_CREATION;
@@ -798,8 +868,18 @@ public abstract class TransactionType {
             }
 
             @Override
-            public Fee getBaselineFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return POLL_FEE;
+            }
+
+            @Override
+            Fee getNextFee(Transaction transaction) {
+                return POLL_FEE_2;
+            }
+
+            @Override
+            int getNextFeeHeight() {
+                return Constants.BASE_TARGET_BLOCK;
             }
 
             @Override
@@ -867,6 +947,12 @@ public abstract class TransactionType {
 
                 attachment.getVoteWeighting().validate();
 
+            }
+
+            @Override
+            boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                        && isDuplicate(Messaging.POLL_CREATION, getName(), duplicates, true);
             }
 
             @Override
@@ -998,7 +1084,7 @@ public abstract class TransactionType {
             }
 
             @Override
-            public Fee getBaselineFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return PHASING_VOTE_FEE;
             }
 
@@ -1162,6 +1248,14 @@ public abstract class TransactionType {
 
         public static final Messaging ACCOUNT_INFO = new Messaging() {
 
+            private final Fee ACCOUNT_INFO_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, 2 * Constants.ONE_NXT, 32) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo) transaction.getAttachment();
+                    return attachment.getName().length() + attachment.getDescription().length();
+                }
+            };
+
             @Override
             public byte getSubtype() {
                 return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_INFO;
@@ -1175,6 +1269,16 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "AccountInfo";
+            }
+
+            @Override
+            Fee getNextFee(Transaction transaction) {
+                return ACCOUNT_INFO_FEE;
+            }
+
+            @Override
+            int getNextFeeHeight() {
+                return Constants.BASE_TARGET_BLOCK;
             }
 
             @Override
@@ -1200,6 +1304,160 @@ public abstract class TransactionType {
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAccountInfo attachment = (Attachment.MessagingAccountInfo) transaction.getAttachment();
                 senderAccount.setAccountInfo(attachment.getName(), attachment.getDescription());
+            }
+
+            @Override
+            boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                        && isDuplicate(Messaging.ACCOUNT_INFO, getName(), duplicates, true);
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
+        };
+
+        public static final Messaging ACCOUNT_PROPERTY = new Messaging() {
+
+            private final Fee ACCOUNT_PROPERTY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT, 32) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty) transaction.getAttachment();
+                    return attachment.getValue().length();
+                }
+            };
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_PROPERTY;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ACCOUNT_PROPERTY;
+            }
+
+            @Override
+            public String getName() {
+                return "AccountProperty";
+            }
+
+            @Override
+            Fee getBaselineFee(Transaction transaction) {
+                return ACCOUNT_PROPERTY_FEE;
+            }
+
+            @Override
+            Attachment.MessagingAccountProperty parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountProperty(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingAccountProperty parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountProperty(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
+                }
+                Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty)transaction.getAttachment();
+                if (attachment.getProperty().length() > Constants.MAX_ACCOUNT_PROPERTY_NAME_LENGTH
+                        || attachment.getProperty().length() == 0
+                        || attachment.getValue().length() > Constants.MAX_ACCOUNT_PROPERTY_VALUE_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid account property: " + attachment.getJSONObject());
+                }
+                if (transaction.getRecipientId() == transaction.getSenderId()) {
+                    throw new NxtException.NotValidException("Transaction should not have recipient when setting account's own property, recipient is: "
+                            + Long.toUnsignedString(transaction.getRecipientId()));
+                }
+                if (transaction.getAmountNQT() != 0) {
+                    throw new NxtException.NotValidException("Account property transaction cannot be used to send NXT");
+                }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
+                    throw new NxtException.NotValidException("Setting Genesis account properties not allowed");
+                }
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty) transaction.getAttachment();
+                Account account = recipientAccount == null ? senderAccount : recipientAccount;
+                account.setProperty(transaction, senderAccount, attachment.getProperty(), attachment.getValue());
+            }
+
+            @Override
+            public boolean canHaveRecipient() {
+                return true;
+            }
+
+            @Override
+            public boolean mustHaveRecipient() {
+                return false;
+            }
+
+            @Override
+            public boolean isPhasingSafe() {
+                return true;
+            }
+
+        };
+
+        public static final Messaging ACCOUNT_PROPERTY_DELETE = new Messaging() {
+
+            @Override
+            public byte getSubtype() {
+                return TransactionType.SUBTYPE_MESSAGING_ACCOUNT_PROPERTY_DELETE;
+            }
+
+            @Override
+            public LedgerEvent getLedgerEvent() {
+                return LedgerEvent.ACCOUNT_PROPERTY_DELETE;
+            }
+
+            @Override
+            public String getName() {
+                return "AccountPropertyDelete";
+            }
+
+            @Override
+            Attachment.MessagingAccountPropertyDelete parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountPropertyDelete(buffer, transactionVersion);
+            }
+
+            @Override
+            Attachment.MessagingAccountPropertyDelete parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+                return new Attachment.MessagingAccountPropertyDelete(attachmentData);
+            }
+
+            @Override
+            void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
+                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
+                }
+                Attachment.MessagingAccountPropertyDelete attachment = (Attachment.MessagingAccountPropertyDelete)transaction.getAttachment();
+                Account.AccountProperty accountProperty = Account.getProperty(attachment.getPropertyId());
+                if (accountProperty == null) {
+                    throw new NxtException.NotCurrentlyValidException("No such property " + Long.toUnsignedString(attachment.getPropertyId()));
+                }
+                if (accountProperty.getAccountId() != transaction.getSenderId() && accountProperty.getSetterId() != transaction.getSenderId()) {
+                    throw new NxtException.NotValidException("Account " + Long.toUnsignedString(transaction.getSenderId())
+                            + " cannot delete property " + Long.toUnsignedString(attachment.getPropertyId()));
+                }
+            }
+
+            @Override
+            void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
+                Attachment.MessagingAccountPropertyDelete attachment = (Attachment.MessagingAccountPropertyDelete) transaction.getAttachment();
+                senderAccount.deleteProperty(attachment.getPropertyId());
             }
 
             @Override
@@ -1229,6 +1487,16 @@ public abstract class TransactionType {
 
             private final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
 
+            private final Fee SINGLETON_ASSET_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT, 32) {
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance) transaction.getAttachment();
+                    return attachment.getDescription().length();
+                }
+            };
+
+            private final Fee ASSET_ISSUANCE_FEE_2 = (transaction, appendage) -> isSingletonIssuance(transaction) ?
+                    SINGLETON_ASSET_FEE.getFee(transaction, appendage) : ASSET_ISSUANCE_FEE.getFee(transaction, appendage);
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_COLORED_COINS_ASSET_ISSUANCE;
@@ -1245,8 +1513,27 @@ public abstract class TransactionType {
             }
 
             @Override
-            public Fee getBaselineFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return ASSET_ISSUANCE_FEE;
+            }
+
+            @Override
+            Fee getNextFee(Transaction transaction) {
+                return ASSET_ISSUANCE_FEE_2;
+            }
+
+            @Override
+            int getNextFeeHeight() {
+                return Constants.BASE_TARGET_BLOCK;
+            }
+
+            @Override
+            long[] getBackFees(Transaction transaction) {
+                if (isSingletonIssuance(transaction)) {
+                    return Convert.EMPTY_LONG;
+                }
+                long feeNQT = transaction.getFeeNQT();
+                return new long[] {feeNQT * 3 / 10, feeNQT * 2 / 10, feeNQT / 10};
             }
 
             @Override
@@ -1297,6 +1584,17 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean isBlockDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
+                if (Nxt.getBlockchain().getHeight() <= Constants.BASE_TARGET_BLOCK) {
+                    return false;
+                }
+                if (isSingletonIssuance(transaction)) {
+                    return false;
+                }
+                return isDuplicate(ColoredCoins.ASSET_ISSUANCE, getName(), duplicates, true);
+            }
+
+            @Override
             public boolean canHaveRecipient() {
                 return false;
             }
@@ -1304,6 +1602,12 @@ public abstract class TransactionType {
             @Override
             public boolean isPhasingSafe() {
                 return true;
+            }
+
+            private boolean isSingletonIssuance(Transaction transaction) {
+                Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance)transaction.getAttachment();
+                return attachment.getQuantityQNT() == 1 && attachment.getDecimals() == 0
+                        && attachment.getDescription().length() <= Constants.MAX_SINGLETON_ASSET_DESCRIPTION_LENGTH;
             }
 
         };
@@ -1376,7 +1680,7 @@ public abstract class TransactionType {
                         || attachment.getAssetId() == 0) {
                     throw new NxtException.NotValidException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
-                if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID && attachment.getFinishValidationHeight(transaction) > Constants.SHUFFLING_BLOCK) {
                     throw new NxtException.NotCurrentlyValidException("Asset transfer to Genesis no longer allowed, "
                             + "use asset delete attachment instead");
                 }
@@ -1700,7 +2004,7 @@ public abstract class TransactionType {
                 if (ask.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
                             + Long.toUnsignedString(ask.getAccountId()));
-            }
+                }
             }
 
         };
@@ -1753,7 +2057,7 @@ public abstract class TransactionType {
                 if (bid.getAccountId() != transaction.getSenderId()) {
                     throw new NxtException.NotValidException("Order " + Long.toUnsignedString(attachment.getOrderId()) + " was created by account "
                             + Long.toUnsignedString(bid.getAccountId()));
-            }
+                }
             }
 
         };
@@ -1886,6 +2190,14 @@ public abstract class TransactionType {
 
         public static final TransactionType LISTING = new DigitalGoods() {
 
+            private final Fee DGS_LISTING_FEE = new Fee.SizeBasedFee(2 * Constants.ONE_NXT, 2 * Constants.ONE_NXT, 32) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    Attachment.DigitalGoodsListing attachment = (Attachment.DigitalGoodsListing) transaction.getAttachment();
+                    return attachment.getName().length() + attachment.getDescription().length();
+                }
+            };
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_LISTING;
@@ -1899,6 +2211,16 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "DigitalGoodsListing";
+            }
+
+            @Override
+            Fee getNextFee(Transaction transaction) {
+                return DGS_LISTING_FEE;
+            }
+
+            @Override
+            int getNextFeeHeight() {
+                return Constants.BASE_TARGET_BLOCK;
             }
 
             @Override
@@ -1928,6 +2250,12 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
+            }
+
+            @Override
+            boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                        && isDuplicate(DigitalGoods.LISTING, getName(), duplicates, true);
             }
 
             @Override
@@ -2238,6 +2566,14 @@ public abstract class TransactionType {
 
         public static final TransactionType DELIVERY = new DigitalGoods() {
 
+            private final Fee DGS_DELIVERY_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, 2 * Constants.ONE_NXT, 32) {
+                @Override
+                public int getSize(TransactionImpl transaction, Appendix appendage) {
+                    Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
+                    return attachment.getGoods().getData().length - 16;
+                }
+            };
+
             @Override
             public final byte getSubtype() {
                 return TransactionType.SUBTYPE_DIGITAL_GOODS_DELIVERY;
@@ -2251,6 +2587,16 @@ public abstract class TransactionType {
             @Override
             public String getName() {
                 return "DigitalGoodsDelivery";
+            }
+
+            @Override
+            Fee getNextFee(Transaction transaction) {
+                return DGS_DELIVERY_FEE;
+            }
+
+            @Override
+            int getNextFeeHeight() {
+                return Constants.BASE_TARGET_BLOCK;
             }
 
             @Override
@@ -2580,13 +2926,16 @@ public abstract class TransactionType {
                     throw new NxtException.NotYetEnabledException("Phasing only account control not yet enabled");
                 }
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
+                VotingModel votingModel = attachment.getPhasingParams().getVoteWeighting().getVotingModel();
                 attachment.getPhasingParams().validate();
-                if (attachment.getPhasingParams().getVoteWeighting().getVotingModel() == VotingModel.NONE) {
+                if (votingModel == VotingModel.NONE) {
                     Account senderAccount = Account.getAccount(transaction.getSenderId());
                     if (!senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
                         new NxtException.NotCurrentlyValidException("Phasing only account control is not enabled for account "
                                 + Long.toUnsignedString(transaction.getSenderId()) + ", consequently cannot be removed");
                     }
+                } else if (votingModel == VotingModel.TRANSACTION || votingModel == VotingModel.HASH) {
+                    throw new NxtException.NotValidException("Invalid voting model " + votingModel + " for account control");
                 }
             }
 
@@ -2615,9 +2964,9 @@ public abstract class TransactionType {
             public boolean isPhasingSafe() {
                 return false;
             }
-            
+
         };
-        
+
     }
 
     public static abstract class Data extends TransactionType {
@@ -2638,7 +2987,7 @@ public abstract class TransactionType {
         }
 
         @Override
-        public final Fee getBaselineFee(Transaction transaction) {
+        final Fee getBaselineFee(Transaction transaction) {
             return TAGGED_DATA_FEE;
         }
 

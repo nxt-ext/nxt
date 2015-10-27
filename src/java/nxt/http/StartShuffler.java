@@ -18,14 +18,10 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Shuffler;
-import nxt.crypto.Crypto;
-import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static nxt.http.JSONResponses.MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY;
 
 public final class StartShuffler extends APIServlet.APIRequestHandler {
 
@@ -39,16 +35,7 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         byte[] shufflingFullHash = ParameterParser.getBytes(req, "shufflingFullHash", true);
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
-        String recipientSecretPhrase = Convert.emptyToNull(req.getParameter("recipientSecretPhrase"));
-        byte[] recipientPublicKey;
-        if (recipientSecretPhrase == null) {
-            recipientPublicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter("recipientPublicKey")));
-            if (recipientPublicKey == null) {
-                return MISSING_RECIPIENT_SECRET_PHRASE_OR_PUBLIC_KEY;
-            }
-        } else {
-            recipientPublicKey = Crypto.getPublicKey(recipientSecretPhrase);
-        }
+        byte[] recipientPublicKey = ParameterParser.getPublicKey(req, "recipient");
         Shuffler shuffler = Shuffler.addOrGetShuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
         return shuffler != null ? JSONData.shuffler(shuffler) : JSON.emptyJSON;
     }

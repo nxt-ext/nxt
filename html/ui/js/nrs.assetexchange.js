@@ -1659,11 +1659,11 @@ var NRS = (function (NRS, $, undefined) {
         var availableAssetsMessage = "";
 
         if (confirmedBalance == unconfirmedBalance) {
-            availableAssetsMessage = " - " + $.t("available", {
+            availableAssetsMessage = " - " + $.t("available_qty", {
                 "qty": NRS.formatQuantity(confirmedBalance, decimals)
             });
         } else {
-            availableAssetsMessage = " - " + $.t("available", {
+            availableAssetsMessage = " - " + $.t("available_qty", {
                 "qty": NRS.formatQuantity(unconfirmedBalance, decimals)
             }) + " (" + NRS.formatQuantity(confirmedBalance, decimals) + " " + $.t("total_lowercase") + ")";
         }
@@ -1931,7 +1931,8 @@ var NRS = (function (NRS, $, undefined) {
         var $noneOption = $('<option value=""></option>');
 
         NRS.sendRequest("getAccountAssets", {
-            "account": NRS.accountRS
+            "account": NRS.accountRS,
+            "includeAssetInfo": true
         }, function (response) {
             if (response.accountAssets) {
                 if (response.accountAssets.length > 0) {

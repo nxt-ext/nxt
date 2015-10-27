@@ -31,7 +31,7 @@ import java.util.List;
 public final class BaseTargetTest {
 
     private static final long MIN_BASE_TARGET = Constants.INITIAL_BASE_TARGET * 9 / 10;
-    private static final long MAX_BASE_TARGET = Constants.INITIAL_BASE_TARGET * 50;
+    private static final long MAX_BASE_TARGET = Constants.isTestnet ? Constants.MAX_BASE_TARGET : Constants.INITIAL_BASE_TARGET * 50;
 
     private static final int MIN_BLOCKTIME_LIMIT = 53;
     private static final int MAX_BLOCKTIME_LIMIT = 67;
@@ -102,7 +102,9 @@ public final class BaseTargetTest {
 
             int count = 0;
 
-            try (Connection con = DriverManager.getConnection("jdbc:h2:./nxt_db/nxt;DB_CLOSE_ON_EXIT=FALSE;MVCC=TRUE", "sa", "sa");
+            String dbLocation = Constants.isTestnet ? "nxt_test_db" : "nxt_db";
+
+            try (Connection con = DriverManager.getConnection("jdbc:h2:./" + dbLocation + "/nxt;DB_CLOSE_ON_EXIT=FALSE;MVCC=TRUE", "sa", "sa");
                  PreparedStatement selectBlocks = con.prepareStatement("SELECT * FROM block WHERE height > " + height + " ORDER BY db_id ASC");
                  ResultSet rs = selectBlocks.executeQuery()) {
 
@@ -144,7 +146,9 @@ public final class BaseTargetTest {
                     }
                     testBlocktimeSMA = testBlocktimeSMA / testBlocktimes.size();
 
-                    if (height % FREQUENCY == 0) {
+                    if (testBlocktimes.size() < SMA_N) {
+                        testBaseTarget = baseTarget;
+                    } else if ((height - 1) % FREQUENCY == 0) {
                         testBaseTarget = calculateBaseTarget(previousTestBaseTarget, USE_EWMA ? testBlocktimeEMA : testBlocktimeSMA);
                     } else {
                         testBaseTarget = previousTestBaseTarget;

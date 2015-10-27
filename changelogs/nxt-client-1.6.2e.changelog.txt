@@ -1,0 +1,40 @@
+The account ledger now uses transaction id as event id for all events except
+block generation. To apply this change, the account ledger table will be
+automatically truncated on upgrade to this release. Users who desire to
+restore the deleted past account ledger entries should run a full rescan from
+the API test page. Note that account ledger records are only kept for 30000
+blocks by default.
+
+Added currency transfers history page to the Monetary System UI.
+
+Added generate hallmark dialog to facilitate hallmarking your node. The host
+field is pre-populated with the external node address as detected by UPnP.
+Note that when using dynamic IP address you should set up and use a dynamic
+DNS hostname instead of the numeric IP for the hallmark. And when using a
+non-default port, the host field should be filled as host:port.
+
+Added "clear results" link in the ShapeShift My Exchanges section, to allow
+clearing past transaction history. As this history data is being retrieved
+from the ShapeShift servers, it allows correlating Nxt accounts previously
+used for exchange transactions with the current user IP address and with each
+other, thus clearing history after no longer needed is important for the user
+privacy.
+
+Added includeAssetInfo or includeCurrencyInfo parameters, default false, to
+the getAccountAssets, getAccountCurrencies, getAccountExchangeRequests,
+getExpectedAssetTransfers, and getExpectedCurrencyTransfers APIs.
+
+Tabs are now sorted mostly alphabetically on the API test page.
+
+Added nxt.hideErrorDetails property, default false, to allow suppressing node
+specific configuration details in error messages returned to peers.
+
+Increased default prunable lifetime setting to 90 days. Minimum enforced is
+still 2 weeks.
+
+The UPnP connection timeouts are now also configurable in nxt.properties.
+
+Updated Bouncy Castle library to version 1.53, Jetty to version 9.3.5, IzPack
+installer to 5.0.5, and weupnp to 0.1.4. Make sure to delete the old lib
+folder if unpacking over a previous installation.
+

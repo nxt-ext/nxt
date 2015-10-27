@@ -25,9 +25,7 @@ var NRS = (function(NRS, $) {
 	
 	$("body").on("click", ".show_account_modal_action, a[data-user].user_info", function(e) {
 		e.preventDefault();
-
 		var account = $(this).data("user");
-
 		NRS.showAccountModal(account);
 	});
 
@@ -65,9 +63,7 @@ var NRS = (function(NRS, $) {
 		} else {
 			NRS.processAccountModalData(account);
 		}
-
 		$("#user_info_modal_transactions").show();
-
 		NRS.userInfoModal.transactions();
 	};
 
@@ -107,26 +103,36 @@ var NRS = (function(NRS, $) {
 
 	userInfoModal.find("ul.nav li").click(function(e) {
 		e.preventDefault();
-
 		var tab = $(this).data("tab");
-
 		$(this).siblings().removeClass("active");
 		$(this).addClass("active");
-
 		$(".user_info_modal_content").hide();
 
 		var content = $("#user_info_modal_" + tab);
-
 		content.show();
-
 		if (content.hasClass("data-loading")) {
 			NRS.userInfoModal[tab]();
 		}
 	});
 
-	/*some duplicate methods here...*/
-	NRS.userInfoModal.transactions = function() {
-		NRS.sendRequest("getBlockchainTransactions", {
+    function getTransactionType(transaction) {
+        var transactionType = $.t(NRS.transactionTypes[transaction.type].subTypes[transaction.subtype].i18nKeyTitle);
+        if (transaction.type == NRS.subtype.AliasSell.type && transaction.subtype == NRS.subtype.AliasSell.subtype) {
+            if (transaction.attachment.priceNQT == "0") {
+                if (transaction.sender == transaction.recipient) {
+                    transactionType = $.t("alias_sale_cancellation");
+                } else {
+                    transactionType = $.t("alias_transfer");
+                }
+            } else {
+                transactionType = $.t("alias_sale");
+            }
+        }
+        return transactionType;
+    }
+
+    NRS.userInfoModal.transactions = function() {
+        NRS.sendRequest("getBlockchainTransactions", {
 			"account": NRS.userInfoModal.user,
 			"firstIndex": 0,
 			"lastIndex": 100
@@ -136,19 +142,8 @@ var NRS = (function(NRS, $) {
 				var rows = "";
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
-					var transactionType = $.t(NRS.transactionTypes[transaction.type].subTypes[transaction.subtype].i18nKeyTitle);
-					if (transaction.type == NRS.subtype.AliasSell.type && transaction.subtype == NRS.subtype.AliasSell.subtype) {
-								if (transaction.attachment.priceNQT == "0") {
-									if (transaction.sender == transaction.recipient) {
-										transactionType = $.t("alias_sale_cancellation");
-									} else {
-										transactionType = $.t("alias_transfer");
-									}
-								} else {
-									transactionType = $.t("alias_sale");
-								}
-						}
-					var receiving;
+                    var transactionType = getTransactionType(transaction);
+                    var receiving;
 					if (/^NXT\-/i.test(String(NRS.userInfoModal.user))) {
 						receiving = (transaction.recipientRS == NRS.userInfoModal.user);
 					} else {
@@ -180,6 +175,28 @@ var NRS = (function(NRS, $) {
 		});
 	};
 
+    NRS.userInfoModal.ledger = function() {
+        NRS.sendRequest("getAccountLedger", {
+            "account": NRS.userInfoModal.user,
+            "firstIndex": 0,
+            "lastIndex": 100
+        }, function (response) {
+            var infoModalLedgerTable = $("#user_info_modal_ledger_table");
+            if (response.entries && response.entries.length) {
+                var rows = "";
+                for (var i = 0; i < response.entries.length; i++) {
+                    var entry = response.entries[i];
+                    rows += NRS.getLedgerEntryRow(entry);
+                }
+                infoModalLedgerTable.find("tbody").empty().append(rows);
+                NRS.dataLoadFinished(infoModalLedgerTable);
+            } else {
+                infoModalLedgerTable.find("tbody").empty();
+                NRS.dataLoadFinished(infoModalLedgerTable);
+            }
+        });
+	};
+
 	NRS.userInfoModal.aliases = function() {
 		NRS.sendRequest("getAliases", {
 			"account": NRS.userInfoModal.user,
@@ -187,10 +204,8 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
 			var rows = "";
-
 			if (response.aliases && response.aliases.length) {
 				var aliases = response.aliases;
-
 				aliases.sort(function(a, b) {
 					if (a.aliasName.toLowerCase() > b.aliasName.toLowerCase()) {
 						return 1;
@@ -200,26 +215,11 @@ var NRS = (function(NRS, $) {
 						return 0;
 					}
 				});
-
-				var alias_account_count = 0,
-					alias_uri_count = 0,
-					empty_alias_count = 0,
-					alias_count = aliases.length;
-
-				for (var i = 0; i < alias_count; i++) {
+				for (var i = 0; i < aliases.length; i++) {
 					var alias = aliases[i];
-
 					rows += "<tr data-alias='" + String(alias.aliasName).toLowerCase().escapeHTML() + "'><td class='alias'>" + String(alias.aliasName).escapeHTML() + "</td><td class='uri'>" + (alias.aliasURI.indexOf("http") === 0 ? "<a href='" + String(alias.aliasURI).escapeHTML() + "' target='_blank'>" + String(alias.aliasURI).escapeHTML() + "</a>" : String(alias.aliasURI).escapeHTML()) + "</td></tr>";
-					if (!alias.uri) {
-						empty_alias_count++;
-					} else if (alias.aliasURI.indexOf("http") === 0) {
-						alias_uri_count++;
-					} else if (alias.aliasURI.indexOf("acct:") === 0 || alias.aliasURI.indexOf("nacc:") === 0) {
-						alias_account_count++;
-					}
 				}
 			}
-
             var infoModalAliasesTable = $("#user_info_modal_aliases_table");
             infoModalAliasesTable.find("tbody").empty().append(rows);
 			NRS.dataLoadFinished(infoModalAliasesTable);
@@ -233,7 +233,6 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
 			var rows = "";
-
 			if (response.goods && response.goods.length) {
 				for (var i = 0; i < response.goods.length; i++) {
 					var good = response.goods[i];
@@ -243,7 +242,6 @@ var NRS = (function(NRS, $) {
 					rows += "<tr><td><a href='#' data-goto-goods='" + String(good.goods).escapeHTML() + "' data-seller='" + String(NRS.userInfoModal.user).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td>" + NRS.format(good.quantity) + "</td></tr>";
 				}
 			}
-
             var infoModalMarketplaceTable = $("#user_info_modal_marketplace_table");
             infoModalMarketplaceTable.find("tbody").empty().append(rows);
 			NRS.dataLoadFinished(infoModalMarketplaceTable);
@@ -252,7 +250,8 @@ var NRS = (function(NRS, $) {
 	
 	NRS.userInfoModal.currencies = function() {
 		NRS.sendRequest("getAccountCurrencies+", {
-			"account": NRS.userInfoModal.user
+			"account": NRS.userInfoModal.user,
+			"includeCurrencyInfo": true
 		}, function(response) {
 			var rows = "";
 			if (response.accountCurrencies && response.accountCurrencies.length) {
@@ -282,12 +281,11 @@ var NRS = (function(NRS, $) {
 			if (response.assetBalances && response.assetBalances.length) {
 				var assets = {};
 				var nrAssets = 0;
-				var ignoredAssets = 0; // TODO need to understand the purpose of this variable
+				var ignoredAssets = 0; // Optimization to reduce number of getAsset calls
 
 				for (var i = 0; i < response.assetBalances.length; i++) {
 					if (response.assetBalances[i].balanceQNT == "0") {
 						ignoredAssets++;
-
 						if (nrAssets + ignoredAssets == response.assetBalances.length) {
 							NRS.userInfoModal.addIssuedAssets(assets);
 						}
@@ -302,11 +300,13 @@ var NRS = (function(NRS, $) {
 					}, function(asset, input) {
 						asset.asset = input.asset;
 						asset.balanceQNT = input["_extra"].balanceQNT;
-
 						assets[asset.asset] = asset;
 						nrAssets++;
 
-						if (nrAssets + ignoredAssets == response.assetBalances.length) {
+                        // This will work since eventually the condition below or in the previous
+                        // if statement would be met
+						//noinspection JSReferencingMutableVariableFromClosure
+                        if (nrAssets + ignoredAssets == response.assetBalances.length) {
 							NRS.userInfoModal.addIssuedAssets(assets);
 						}
 					});
@@ -331,9 +331,7 @@ var NRS = (function(NRS, $) {
 					trades[i].priceNQT = new BigInteger(trades[i].priceNQT);
 					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
 					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
-
 					var type = (trades[i].buyerRS == NRS.userInfoModal.user ? "buy" : "sell");
-
 					rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td style='color:" + (type == "buy" ? "green" : "red") + "'>" + $.t(type) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals) + "</td><td style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td></tr>";
 				}
 			}
@@ -357,7 +355,6 @@ var NRS = (function(NRS, $) {
 						assets[issuedAsset.asset] = issuedAsset;
 					}
 				});
-
 				NRS.userInfoModal.assetsLoaded(assets);
 			} else if (!$.isEmptyObject(assets)) {
 				NRS.userInfoModal.assetsLoaded(assets);
@@ -372,11 +369,9 @@ var NRS = (function(NRS, $) {
 	NRS.userInfoModal.assetsLoaded = function(assets) {
 		var assetArray = [];
 		var rows = "";
-
 		$.each(assets, function(key, asset) {
 			assetArray.push(asset);
 		});
-
 		assetArray.sort(function(a, b) {
 			if (a.issued && b.issued) {
 				if (a.name.toLowerCase() > b.name.toLowerCase()) {
@@ -403,9 +398,7 @@ var NRS = (function(NRS, $) {
 
 		for (var i = 0; i < assetArray.length; i++) {
 			var asset = assetArray[i];
-
 			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
-
 			rows += "<tr" + (asset.issued ? " class='asset_owner'" : "") + "><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'" + (asset.issued ? " style='font-weight:bold'" : "") + ">" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
 		}
 

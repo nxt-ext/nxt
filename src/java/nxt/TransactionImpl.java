@@ -314,11 +314,7 @@ final class TransactionImpl implements Transaction {
         this.appendagesSize = appendagesSize;
         if (builder.feeNQT <= 0) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-            if (this.phasing == null) {
-                feeNQT = getMinimumFeeNQT(effectiveHeight);
-            } else {
-                feeNQT = Math.max(getMinimumFeeNQT(effectiveHeight), getMinimumFeeNQT(phasing.getFinishHeight()));
-            }
+            feeNQT = getMinimumFeeNQT(effectiveHeight);
         } else {
             feeNQT = builder.feeNQT;
         }
@@ -365,6 +361,10 @@ final class TransactionImpl implements Transaction {
     @Override
     public long getFeeNQT() {
         return feeNQT;
+    }
+
+    long[] getBackFees() {
+        return type.getBackFees(this);
     }
 
     @Override
@@ -719,6 +719,9 @@ final class TransactionImpl implements Transaction {
             if ((flags & position) != 0) {
                 builder.appendix(new Appendix.PrunableEncryptedMessage(buffer, version));
             }
+            if (buffer.hasRemaining()) {
+                throw new NxtException.NotValidException("Transaction bytes too long, " + buffer.remaining() + " extra bytes");
+            }
             return builder;
         } catch (NxtException.NotValidException|RuntimeException e) {
             Logger.logDebugMessage("Failed to parse transaction bytes: " + Convert.toHexString(bytes));
@@ -903,7 +906,8 @@ final class TransactionImpl implements Transaction {
         return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
-    int getFullSize() {
+    @Override
+    public int getFullSize() {
         int fullSize = getSize() - appendagesSize;
         for (Appendix.AbstractAppendix appendage : getAppendages()) {
             fullSize += appendage.getFullSize();
@@ -1011,12 +1015,13 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotValidException("Transaction size " + getFullSize() + " exceeds maximum payload size");
         }
 
-        long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
-        if (feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
-                    ((double)feeNQT)/Constants.ONE_NXT, ((double)minimumFeeNQT)/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+        if (!validatingAtFinish) {
+            long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
+            if (feeNQT < minimumFeeNQT) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
+                        ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+            }
         }
-        
         AccountRestrictions.checkTransaction(this);
     }
 
@@ -1029,9 +1034,12 @@ final class TransactionImpl implements Transaction {
     void apply() {
         Account senderAccount = Account.getAccount(getSenderId());
         senderAccount.apply(getSenderPublicKey());
-        Account recipientAccount = Account.getAccount(recipientId);
-        if (recipientAccount == null && recipientId != 0) {
-            recipientAccount = Account.addOrGetAccount(recipientId);
+        Account recipientAccount = null;
+        if (recipientId != 0) {
+            recipientAccount = Account.getAccount(recipientId);
+            if (recipientAccount == null) {
+                recipientAccount = Account.addOrGetAccount(recipientId);
+            }
         }
         if (referencedTransactionFullHash != null
                 && timestamp > Constants.REFERENCED_TRANSACTION_FULL_HASH_BLOCK_TIMESTAMP) {
@@ -1054,13 +1062,22 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    boolean attachmentIsDuplicate(Map<TransactionType, Map<String, Integer>> duplicates, boolean atFinishHeight) {
-        if (attachmentIsPhased() && !atFinishHeight) {
+    boolean attachmentIsDuplicate(Map<TransactionType, Map<String, Integer>> duplicates, boolean atAcceptanceHeight) {
+        if (!attachmentIsPhased() && !atAcceptanceHeight) {
+            // can happen for phased transactions having non-phasable attachment
             return false;
         }
-        if (!attachmentIsPhased() && atFinishHeight) {
-            return false;
+        if (atAcceptanceHeight) {
+            // all are checked at acceptance height for block duplicates
+            if (type.isBlockDuplicate(this, duplicates)) {
+                return true;
+            }
+            // phased are not further checked at acceptance height
+            if (attachmentIsPhased()) {
+                return false;
+            }
         }
+        // non-phased at acceptance height, and phased at execution height
         return type.isDuplicate(this, duplicates);
     }
 

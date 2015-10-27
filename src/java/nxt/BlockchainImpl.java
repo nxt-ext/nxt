@@ -531,7 +531,7 @@ final class BlockchainImpl implements Blockchain {
                     for (TransactionImpl phasedTransaction : phasedTransactions) {
                         try {
                             phasedTransaction.validate();
-                            if (!phasedTransaction.attachmentIsDuplicate(duplicates, true) && filter.ok(phasedTransaction)) {
+                            if (!phasedTransaction.attachmentIsDuplicate(duplicates, false) && filter.ok(phasedTransaction)) {
                                 result.add(phasedTransaction);
                             }
                         } catch (NxtException.ValidationException ignore) {

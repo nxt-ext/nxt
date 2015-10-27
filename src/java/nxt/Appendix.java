@@ -168,9 +168,7 @@ public interface Appendix {
 
         void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {}
 
-        boolean isPhasable() {
-            return ! (this instanceof Prunable);
-        }
+        abstract boolean isPhasable();
 
         @Override
         public final boolean isPhased(Transaction transaction) {
@@ -193,6 +191,13 @@ public interface Appendix {
             }
             return new Message(attachmentData);
         }
+
+        private static final Fee MESSAGE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendage) {
+                return ((Message)appendage).getMessage().length;
+            }
+        };
 
         private final byte[] message;
         private final boolean isText;
@@ -261,8 +266,19 @@ public interface Appendix {
         }
 
         @Override
+        public Fee getNextFee(Transaction transaction) {
+            return MESSAGE_FEE;
+        }
+
+        @Override
+        public int getNextFeeHeight() {
+            return Constants.BASE_TARGET_BLOCK;
+        }
+
+        @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+            if (message.length > (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                    ? Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2 : Constants.MAX_ARBITRARY_MESSAGE_LENGTH)) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
         }
@@ -276,6 +292,11 @@ public interface Appendix {
 
         public boolean isText() {
             return isText;
+        }
+
+        @Override
+        boolean isPhasable() {
+            return false;
         }
 
         @Override
@@ -445,7 +466,7 @@ public interface Appendix {
         }
 
         @Override
-        public boolean isPhasable() {
+        boolean isPhasable() {
             return false;
         }
 
@@ -461,6 +482,13 @@ public interface Appendix {
     }
 
     abstract class AbstractEncryptedMessage extends AbstractAppendix {
+
+        private static final Fee ENCRYPTED_MESSAGE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
+            @Override
+            public int getSize(TransactionImpl transaction, Appendix appendage) {
+                return ((AbstractEncryptedMessage)appendage).getEncryptedData().getData().length - 16;
+            }
+        };
 
         private EncryptedData encryptedData;
         private final boolean isText;
@@ -515,8 +543,19 @@ public interface Appendix {
         }
 
         @Override
+        public Fee getNextFee(Transaction transaction) {
+            return ENCRYPTED_MESSAGE_FEE;
+        }
+
+        @Override
+        public int getNextFeeHeight() {
+            return Constants.BASE_TARGET_BLOCK;
+        }
+
+        @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (encryptedData.getData().length > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
+            if (encryptedData.getData().length > (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                    ? Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2 : Constants.MAX_ENCRYPTED_MESSAGE_LENGTH)) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
@@ -545,6 +584,11 @@ public interface Appendix {
 
         public final boolean isCompressed() {
             return isCompressed;
+        }
+
+        @Override
+        final boolean isPhasable() {
+            return false;
         }
 
     }
@@ -735,7 +779,7 @@ public interface Appendix {
         }
 
         @Override
-        public final boolean isPhasable() {
+        final boolean isPhasable() {
             return false;
         }
 
@@ -1337,7 +1381,7 @@ public interface Appendix {
 
         private void release(TransactionImpl transaction) {
             Account senderAccount = Account.getAccount(transaction.getSenderId());
-            Account recipientAccount = Account.getAccount(transaction.getRecipientId());
+            Account recipientAccount = transaction.getRecipientId() == 0 ? null : Account.getAccount(transaction.getRecipientId());
             transaction.getAppendages().forEach(appendage -> {
                 if (appendage.isPhasable()) {
                     appendage.apply(transaction, senderAccount, recipientAccount);
@@ -1380,7 +1424,7 @@ public interface Appendix {
             PhasingPoll poll = PhasingPoll.getPoll(transaction.getId());
             long result = poll.countVotes();
             if (result >= poll.getQuorum()) {
-                if (!transaction.attachmentIsDuplicate(duplicates, true)) {
+                if (!transaction.attachmentIsDuplicate(duplicates, false)) {
                     try {
                         release(transaction);
                         poll.finish(result);

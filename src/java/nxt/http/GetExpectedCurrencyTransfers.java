@@ -34,7 +34,7 @@ public final class GetExpectedCurrencyTransfers extends APIServlet.APIRequestHan
     static final GetExpectedCurrencyTransfers instance = new GetExpectedCurrencyTransfers();
 
     private GetExpectedCurrencyTransfers() {
-        super(new APITag[]{APITag.MS}, "currency", "account");
+        super(new APITag[]{APITag.MS}, "currency", "account", "includeCurrencyInfo");
     }
 
     @Override
@@ -42,6 +42,7 @@ public final class GetExpectedCurrencyTransfers extends APIServlet.APIRequestHan
 
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
         long accountId = ParameterParser.getAccountId(req, "account", false);
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
 
         Filter<Transaction> filter = transaction -> {
             if (transaction.getType() != MonetarySystem.CURRENCY_TRANSFER) {
@@ -58,7 +59,7 @@ public final class GetExpectedCurrencyTransfers extends APIServlet.APIRequestHan
 
         JSONObject response = new JSONObject();
         JSONArray transfersData = new JSONArray();
-        transactions.forEach(transaction -> transfersData.add(JSONData.expectedCurrencyTransfer(transaction)));
+        transactions.forEach(transaction -> transfersData.add(JSONData.expectedCurrencyTransfer(transaction, includeCurrencyInfo)));
         response.put("transfers", transfersData);
 
         return response;

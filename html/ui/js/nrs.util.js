@@ -352,9 +352,8 @@ var NRS = (function (NRS, $, undefined) {
 			amount = new BigInteger(String(amount));
 		}
 
-		var fractionalPart = amount.mod(new BigInteger("100000000")).toString(); //.replace(/0+$/, ""); //todo: check if equal to zero first
-
-		amount = amount.divide(new BigInteger("100000000"));
+        var fractionalPart = amount.abs().mod(new BigInteger("100000000")).toString();
+        amount = amount.divide(new BigInteger("100000000"));
 
 		if (amount.compareTo(BigInteger.ZERO) < 0) {
 			amount = amount.abs();

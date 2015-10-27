@@ -26,8 +26,8 @@ import org.bouncycastle.crypto.modes.GCMBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
-import org.bouncycastle.jcajce.provider.digest.SHA3;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -39,7 +39,14 @@ public final class Crypto {
     private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
         @Override
         protected SecureRandom initialValue() {
-            return new SecureRandom();
+            try {
+                SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+                secureRandom.nextBoolean();
+                return secureRandom;
+            } catch (NoSuchAlgorithmException e) {
+                Logger.logErrorMessage("No secure random provider available");
+                throw new RuntimeException(e.getMessage(), e);
+            }
         }
     };
 
@@ -67,7 +74,7 @@ public final class Crypto {
     }
 
     public static MessageDigest sha3() {
-        return new SHA3.DigestSHA3(256);
+        return new Keccak.Digest256();
     }
 
     public static byte[] getKeySeed(String secretPhrase, byte[]... nonces) {

@@ -68,6 +68,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isAccountForging = false;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
+    NRS.upnpExternalAddress;
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
@@ -115,6 +116,9 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				if (key == "needsAdminPassword") {
 					NRS.needsAdminPassword = response[key];
+				}
+				if (key == "upnpExternalAddress") {
+                    NRS.upnpExternalAddress = response[key];
 				}
 			}
 			
