@@ -14,4 +14,177 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div></div>
+<div class="modal fade" id="m_shuffling_create_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="create_shuffling">Create Shuffling</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="m_shuffling_create_holding_type">Holding Type</label>
+                        <select name="holdingType" id="m_shuffling_create_holding_type" class="form-control" data-default="0" tabindex="3">
+                            <option selected value="0" data-i18n="holding_type_nxt">NXT</option>
+                            <option value="1" data-i18n="holding_type_asset">Asset</option>
+                            <option value="2" data-i18n="holding_type_currency">Currency</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_create_holding">Holding</label>
+                        <input type="text" name="holding" id="m_shuffling_create_holding" class="form-control" placeholder="Holding" tabindex="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_create_amount">Amount</label>
+                        <input type="text" name="amount" id="m_shuffling_create_amount" class="form-control" placeholder="Amount" tabindex="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_create_participant_count">Participant Count</label>
+                        <input type="text" name="participantCount" id="m_shuffling_create_participant_count" class="form-control" placeholder="Participant Count" tabindex="1" min="3" max="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_create_registration_period">Registration Period</label>
+                        <input type="text" name="registrationPeriod" id="m_shuffling_create_registration_period" class="form-control" placeholder="Registration Period" tabindex="1">
+                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <input type="hidden" name="request_type" value="shufflingCreate" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="create_shuffling;[placeholder]submitting">Create Shuffling</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="m_shuffling_register_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="register_shuffling">Register Shuffling</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="m_shuffling_register_full_hash">Full Hash</label>
+                        <input type="text" name="holding" id="m_shuffling_register_full_hash" class="form-control" placeholder="Full Hash" tabindex="1">
+                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <input type="hidden" name="request_type" value="shufflingRegister" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="register_shuffling;[placeholder]submitting">Create Shuffling</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="m_shuffling_process_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="process_shuffling">Process Shuffling</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="m_shuffling_process_shuffling">Shuffling</label>
+                        <input type="text" name="holding" id="m_shuffling_process_shuffling" class="form-control" placeholder="Shuffling" tabindex="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_process_shuffling">Recipient Secretphrase</label>
+                        <input type="text" name="holding" id="m_shuffling_process_recipient_secretphrase" class="form-control" placeholder="Recipient Secretphrase" tabindex="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_process_shuffling">Recipient Public Key</label>
+                        <input type="text" name="holding" id="m_shuffling_process_recipient_public_key" class="form-control" placeholder="Recipient Public Key" tabindex="1">
+                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <input type="hidden" name="request_type" value="shufflingProcess" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="process_shuffling;[placeholder]submitting">Process Shuffling</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="m_shuffling_verify_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="verify_shuffling">Verify Shuffling</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="m_shuffling_verify_shuffling">Shuffling</label>
+                        <input type="text" name="holding" id="m_shuffling_verify_shuffling" class="form-control" placeholder="Shuffling" tabindex="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_verify_state_hash">State Hash</label>
+                        <input type="text" name="holding" id="m_shuffling_verify_state_hash" class="form-control" placeholder="State Hash" tabindex="1">
+                    </div>
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <input type="hidden" name="request_type" value="shufflingVerify" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="verify_shuffling;[placeholder]submitting">Verify Shuffling</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="m_shuffling_cancel_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="cancel_shuffling">Cancel Shuffling</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="form-group">
+                        <label for="m_shuffling_cancel_shuffling">Shuffling</label>
+                        <input type="text" name="holding" id="m_shuffling_cancel_shuffling" class="form-control" placeholder="Shuffling" tabindex="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_cancel_cancelling_account">Cancelling Account</label>
+                        <input type="text" name="holding" id="m_shuffling_cancel_cancelling_account" class="form-control" placeholder="Cancelling Account" tabindex="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="m_shuffling_cancel_state_hash">State Hash</label>
+                        <input type="text" name="holding" id="m_shuffling_cancel_state_hash" class="form-control" placeholder="State Hash" tabindex="1">
+                    </div>                    
+                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <input type="hidden" name="request_type" value="shufflingCancel" />
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span></div>
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="cancel_shuffling;[placeholder]submitting">Cancel Shuffling</button>
+            </div>
+        </div>
+    </div>
+</div>
