@@ -231,9 +231,9 @@ var NRS = (function (NRS, $, undefined) {
         "es-US": "M/d/yyyy"
     };
 
-    var LANG = window.navigator.userLanguage || window.navigator.language;
+        var LANG = window.navigator.userLanguage || window.navigator.language;
 
-    var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
+        var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
 
     NRS.formatVolume = function (volume) {
         var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -352,13 +352,13 @@ var NRS = (function (NRS, $, undefined) {
             amount = new BigInteger(String(amount));
         }
 
-        var fractionalPart = amount.abs().mod(new BigInteger("100000000")).toString();
-        amount = amount.divide(new BigInteger("100000000"));
-
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             amount = amount.abs();
             negative = "-";
         }
+
+        var fractionalPart = amount.mod(new BigInteger("100000000")).toString();
+        amount = amount.divide(new BigInteger("100000000"));
 
         if (fractionalPart && fractionalPart != "0") {
             afterComma = ".";
