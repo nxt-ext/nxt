@@ -575,7 +575,7 @@ public final class Shuffling {
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
         participant.setData(data, transaction.getTimestamp());
         participant.setProcessed(((TransactionImpl) transaction).fullHash());
-        if (data.length == 0) {
+        if (data != null && data.length == 0) {
             // couldn't decrypt all data from previous participants
             cancelBy(participant);
             return;

@@ -257,9 +257,16 @@ public final class DebugTrace {
         long blamedAccountId = shuffling.getAssigneeAccountId();
         if (blamedAccountId != 0 && include(blamedAccountId)) {
             Map<String,String> map = getValues(blamedAccountId, false);
-            map.put("transaction fee", String.valueOf(Constants.SHUFFLING_DEPOSIT_NQT));
+            map.put("transaction fee", String.valueOf(-Constants.SHUFFLING_DEPOSIT_NQT));
             map.put("event", "shuffling blame");
             log(map);
+            long generatorId = Nxt.getBlockchain().getLastBlock().getGeneratorId();
+            if (include(generatorId)) {
+                Map<String,String> generatorMap = getValues(generatorId, false);
+                generatorMap.put("generation fee", String.valueOf(Constants.SHUFFLING_DEPOSIT_NQT));
+                generatorMap.put("event", "shuffling blame");
+                log(generatorMap);
+            }
         }
     }
 
