@@ -231,9 +231,8 @@ var NRS = (function (NRS, $, undefined) {
         "es-US": "M/d/yyyy"
     };
 
-        var LANG = window.navigator.userLanguage || window.navigator.language;
-
-        var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
+    var LANG = window.navigator.userLanguage || window.navigator.language;
+    var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
 
     NRS.formatVolume = function (volume) {
         var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -305,30 +304,22 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.calculateOrderTotalNQT = function (quantityQNT, priceNQT) {
+    function calculateOrderTotalImpl(quantityQNT, priceNQT) {
         if (typeof quantityQNT != "object") {
             quantityQNT = new BigInteger(String(quantityQNT));
         }
-
         if (typeof priceNQT != "object") {
             priceNQT = new BigInteger(String(priceNQT));
         }
+        return quantityQNT.multiply(priceNQT);
+    }
 
-        var orderTotal = quantityQNT.multiply(priceNQT);
-
-        return orderTotal.toString();
+    NRS.calculateOrderTotalNQT = function (quantityQNT, priceNQT) {
+        return calculateOrderTotalImpl(quantityQNT, priceNQT).toString();
     };
 
     NRS.calculateOrderTotal = function (quantityQNT, priceNQT) {
-        if (typeof quantityQNT != "object") {
-            quantityQNT = new BigInteger(String(quantityQNT));
-        }
-
-        if (typeof priceNQT != "object") {
-            priceNQT = new BigInteger(String(priceNQT));
-        }
-
-        return NRS.convertToNXT(quantityQNT.multiply(priceNQT));
+        return NRS.convertToNXT(calculateOrderTotalImpl(quantityQNT, priceNQT));
     };
 
     NRS.calculatePercentage = function (a, b, rounding_mode) {
@@ -346,7 +337,7 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.convertToNXT = function (amount, returnAsObject) {
         var negative = "";
-        var afterComma = "";
+        var mantissa = "";
 
         if (typeof amount != "object") {
             amount = new BigInteger(String(amount));
@@ -361,13 +352,13 @@ var NRS = (function (NRS, $, undefined) {
         amount = amount.divide(new BigInteger("100000000"));
 
         if (fractionalPart && fractionalPart != "0") {
-            afterComma = ".";
+            mantissa = ".";
 
             for (var i = fractionalPart.length; i < 8; i++) {
-                afterComma += "0";
+                mantissa += "0";
             }
 
-            afterComma += fractionalPart.replace(/0+$/, "");
+            mantissa += fractionalPart.replace(/0+$/, "");
         }
 
         amount = amount.toString();
@@ -376,10 +367,10 @@ var NRS = (function (NRS, $, undefined) {
             return {
                 "negative": negative,
                 "amount": amount,
-                "afterComma": afterComma
+                "mantissa": mantissa
             };
         } else {
-            return negative + amount + afterComma;
+            return negative + amount + mantissa;
         }
     };
 
@@ -456,30 +447,30 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        var afterComma = "";
+        var mantissa = "";
 
         if (decimals) {
-            afterComma = "." + quantity.substring(quantity.length - decimals);
+            mantissa = "." + quantity.substring(quantity.length - decimals);
             quantity = quantity.substring(0, quantity.length - decimals);
 
             if (!quantity) {
                 quantity = "0";
             }
 
-            afterComma = afterComma.replace(/0+$/, "");
+            mantissa = mantissa.replace(/0+$/, "");
 
-            if (afterComma == ".") {
-                afterComma = "";
+            if (mantissa == ".") {
+                mantissa = "";
             }
         }
 
         if (returnAsObject) {
             return {
                 "amount": quantity,
-                "afterComma": afterComma
+                "mantissa": mantissa
             };
         } else {
-            return quantity + afterComma;
+            return quantity + mantissa;
         }
     };
 
@@ -540,7 +531,7 @@ var NRS = (function (NRS, $, undefined) {
             params = {
                 "amount": amount,
                 "negative": negative,
-                "afterComma": ""
+                "mantissa": ""
             };
         }
 
@@ -556,7 +547,7 @@ var NRS = (function (NRS, $, undefined) {
             formattedAmount = digits[i] + formattedAmount;
         }
 
-        var output = (params.negative ? params.negative : "") + formattedAmount + params.afterComma;
+        var output = (params.negative ? params.negative : "") + formattedAmount + params.mantissa;
 
         if (!no_escaping) {
             output = output.escapeHTML();
@@ -577,14 +568,14 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var negative = "";
-        var afterComma = "";
+        var mantissa = "";
 
         if (typeof amount == "object") {
             var params = NRS.convertToNXT(amount, true);
 
             negative = params.negative;
             amount = params.amount;
-            afterComma = params.afterComma;
+            mantissa = params.mantissa;
         } else {
             //rounding only applies to non-nqt
             if (round) {
@@ -598,17 +589,17 @@ var NRS = (function (NRS, $, undefined) {
 
             amount = "" + amount;
             if (amount.indexOf(".") !== -1) {
-                afterComma = amount.substr(amount.indexOf("."));
-                amount = amount.replace(afterComma, "");
+                mantissa = amount.substr(amount.indexOf("."));
+                amount = amount.replace(mantissa, "");
             } else {
-                afterComma = "";
+                mantissa = "";
             }
         }
 
         return NRS.format({
             "negative": negative,
             "amount": amount,
-            "afterComma": afterComma
+            "mantissa": mantissa
         }, no_escaping);
     };
 
@@ -1555,10 +1546,10 @@ var NRS = (function (NRS, $, undefined) {
         }
         var input = val + String.fromCharCode(charCode);
 
-        var afterComma = input.match(/\.(\d*)$/);
+        var mantissa = input.match(/\.(\d*)$/);
 
         //only allow as many as there are decimals allowed..
-        if (afterComma && afterComma[1].length > maxFractionLength) {
+        if (mantissa && mantissa[1].length > maxFractionLength) {
             var selectedText = NRS.getSelectedText();
 
             if (selectedText != val) {
