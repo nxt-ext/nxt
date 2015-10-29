@@ -85,6 +85,8 @@ public final class DebugTrace {
         Nxt.getBlockchainProcessor().addListener(debugTrace::traceBeforeAccept, BlockchainProcessor.Event.BEFORE_BLOCK_ACCEPT);
         Nxt.getBlockchainProcessor().addListener(debugTrace::trace, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
         Nxt.getTransactionProcessor().addListener(transactions -> debugTrace.traceRelease(transactions.get(0)), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
+        Shuffling.addListener(debugTrace::traceShufflingDistribute, Shuffling.Event.SHUFFLING_DONE);
+        Shuffling.addListener(debugTrace::traceShufflingCancel, Shuffling.Event.SHUFFLING_CANCELLED);
         return debugTrace;
     }
 
@@ -99,6 +101,7 @@ public final class DebugTrace {
             "crowdfunding", "claim", "mint",
             "asset quantity", "currency units", "transaction", "lessee", "lessor guaranteed balance",
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
+            "shuffling",
             "sender", "recipient", "block", "timestamp"};
 
     private static final Map<String,String> headers = new HashMap<>();
@@ -233,6 +236,30 @@ public final class DebugTrace {
         if (include(recipientId)) {
             log(getValues(recipientId, transaction, true, false, true));
             log(getValues(recipientId, transaction, transaction.getAttachment(), true));
+        }
+    }
+
+    private void traceShufflingDistribute(Shuffling shuffling) {
+        ShufflingParticipant.getParticipants(shuffling.getId()).forEach(shufflingParticipant -> {
+            if (include(shufflingParticipant.getAccountId())) {
+                log(getValues(shufflingParticipant.getAccountId(), shuffling, false));
+            }
+        });
+        for (byte[] recipientPublicKey : shuffling.getRecipientPublicKeys()) {
+            long recipientId = Account.getId(recipientPublicKey);
+            if (include(recipientId)) {
+                log(getValues(recipientId, shuffling, true));
+            }
+        }
+    }
+
+    private void traceShufflingCancel(Shuffling shuffling) {
+        long blamedAccountId = shuffling.getAssigneeAccountId();
+        if (blamedAccountId != 0 && include(blamedAccountId)) {
+            Map<String,String> map = getValues(blamedAccountId, false);
+            map.put("transaction fee", String.valueOf(Constants.SHUFFLING_DEPOSIT_NQT));
+            map.put("event", "shuffling blame");
+            log(map);
         }
     }
 
@@ -378,6 +405,28 @@ public final class DebugTrace {
         long exchangeCost = Math.multiplyExact(exchange.getUnits(), exchange.getRate());
         map.put("exchange cost", String.valueOf((isSell ? exchangeCost : - exchangeCost)));
         map.put("event", "exchange");
+        return map;
+    }
+
+    private Map<String,String> getValues(long accountId, Shuffling shuffling, boolean isRecipient) {
+        Map<String,String> map = getValues(accountId, false);
+        map.put("shuffling", Long.toUnsignedString(shuffling.getId()));
+        String amount = String.valueOf(isRecipient ? shuffling.getAmount() : -shuffling.getAmount());
+        String deposit = String.valueOf(isRecipient ? Constants.SHUFFLING_DEPOSIT_NQT : -Constants.SHUFFLING_DEPOSIT_NQT);
+        if (shuffling.getHoldingType() == HoldingType.NXT) {
+            map.put("transaction amount", amount);
+        } else if (shuffling.getHoldingType() == HoldingType.ASSET) {
+            map.put("asset quantity", amount);
+            map.put("asset", Long.toUnsignedString(shuffling.getHoldingId()));
+            map.put("transaction amount", deposit);
+        } else if (shuffling.getHoldingType() == HoldingType.CURRENCY) {
+            map.put("currency units", amount);
+            map.put("currency", Long.toUnsignedString(shuffling.getHoldingId()));
+            map.put("transaction amount", deposit);
+        } else {
+            throw new RuntimeException("Unsupported holding type " + shuffling.getHoldingType());
+        }
+        map.put("event", "shuffling distribute");
         return map;
     }
 

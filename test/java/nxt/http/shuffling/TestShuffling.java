@@ -381,7 +381,7 @@ public class TestShuffling extends BlockchainTest {
         JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
         Assert.assertEquals(4, participants.size());
         String shufflingAssignee = (String) getShufflingResponse.get("assignee");
-        Assert.assertNull(shufflingAssignee);
+        Assert.assertEquals(ALICE.getStrId(), shufflingAssignee);
 
         Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), ALICE.getBalanceDiff());
         Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), ALICE.getUnconfirmedBalanceDiff());
@@ -424,7 +424,7 @@ public class TestShuffling extends BlockchainTest {
         JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
         Assert.assertEquals(4, participants.size());
         String shufflingAssignee = (String) getShufflingResponse.get("assignee");
-        Assert.assertNull(shufflingAssignee);
+        Assert.assertEquals(ALICE.getStrId(), shufflingAssignee);
 
         Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), ALICE.getBalanceDiff());
         Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), ALICE.getUnconfirmedBalanceDiff());
@@ -475,7 +475,7 @@ public class TestShuffling extends BlockchainTest {
         JSONArray participants = (JSONArray)getParticipantsResponse.get("participants");
         Assert.assertEquals(3, participants.size());
         String shufflingAssignee = (String) getShufflingResponse.get("assignee");
-        Assert.assertNull(shufflingAssignee);
+        Assert.assertEquals(ALICE.getStrId(), shufflingAssignee);
 
         Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), ALICE.getBalanceDiff());
         Assert.assertEquals(-(Constants.SHUFFLING_DEPOSIT_NQT + Constants.ONE_NXT), ALICE.getUnconfirmedBalanceDiff());

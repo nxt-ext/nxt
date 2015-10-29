@@ -693,7 +693,7 @@ public final class Shuffling {
             blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, block.getId(), Constants.SHUFFLING_DEPOSIT_NQT);
             blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
         }
-        this.assigneeAccountId = 0;
+        this.assigneeAccountId = blamedAccountId;
         this.blocksRemaining = 0;
         setStage(Stage.CANCELLED);
         shufflingTable.insert(this);
