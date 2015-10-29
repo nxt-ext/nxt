@@ -347,9 +347,6 @@ final class JSONData {
         if (recipientPublicKeys.size() > 0) {
             json.put("recipientPublicKeys", recipientPublicKeys);
         }
-        if (shuffling.getCancellingAccountId() != 0) {
-            putAccount(json, "cancellingAccount", shuffling.getCancellingAccountId());
-        }
         return json;
     }
 

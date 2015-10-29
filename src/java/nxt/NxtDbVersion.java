@@ -1065,6 +1065,8 @@ class NxtDbVersion extends DbVersion {
             case 447:
                 apply("CREATE INDEX IF NOT EXISTS account_property_setter_account_idx ON account_property (setter_id, account_id)");
             case 448:
+                apply("ALTER TABLE shuffling DROP COLUMN IF EXISTS cancelling_account_id");
+            case 449:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
