@@ -178,7 +178,7 @@ public final class Shuffler {
                 }
                 clearExpiration(shuffling);
             }
-        }, Shuffling.Event.SHUFFLING_ASSIGNED);
+        }, Shuffling.Event.SHUFFLING_PROCESSING_ASSIGNED);
 
         Shuffling.addListener(shuffling -> {
             Map<Long, Shuffler> shufflerMap = getShufflers(shuffling);
@@ -324,7 +324,7 @@ public final class Shuffler {
     }
 
     private void cancel(Shuffling shuffling) {
-        if (accountId == shuffling.getCancellingAccountId()) {
+        if (accountId == shuffling.getAssigneeAccountId()) {
             return;
         }
         if (shuffling.getParticipant(accountId).getIndex() == shuffling.getParticipantCount() - 1) {
@@ -356,7 +356,7 @@ public final class Shuffler {
 
     private void submitCancel(Shuffling shuffling) {
         Logger.logDebugMessage("Account %s cancelling shuffling %s", Long.toUnsignedString(accountId), Long.toUnsignedString(shuffling.getId()));
-        Attachment.ShufflingCancellation attachment = shuffling.revealKeySeeds(secretPhrase, shuffling.getCancellingAccountId(), shuffling.getStateHash());
+        Attachment.ShufflingCancellation attachment = shuffling.revealKeySeeds(secretPhrase, shuffling.getAssigneeAccountId(), shuffling.getStateHash());
         submitTransaction(attachment);
     }
 

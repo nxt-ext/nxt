@@ -44,14 +44,14 @@ public final class StopShuffler extends APIServlet.APIRequestHandler {
                 return JSONResponses.INCORRECT_ACCOUNT;
             }
             accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
-            if (shufflingFullHash == null) {
+            if (shufflingFullHash.length == 0) {
                 return JSONResponses.missing("shufflingFullHash");
             }
             Shuffler shuffler = Shuffler.stopShuffler(accountId, shufflingFullHash);
             response.put("stoppedShuffler", shuffler != null);
         } else {
             API.verifyPassword(req);
-            if (accountId != 0 && shufflingFullHash != null) {
+            if (accountId != 0 && shufflingFullHash.length == 0) {
                 Shuffler shuffler = Shuffler.stopShuffler(accountId, shufflingFullHash);
                 response.put("stoppedShuffler", shuffler != null);
             } else {

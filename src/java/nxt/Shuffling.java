@@ -43,7 +43,7 @@ import java.util.Set;
 public final class Shuffling {
 
     public enum Event {
-        SHUFFLING_CREATED, SHUFFLING_ASSIGNED, SHUFFLING_PROCESSING_FINISHED, SHUFFLING_BLAME_STARTED, SHUFFLING_CANCELLED, SHUFFLING_DONE
+        SHUFFLING_CREATED, SHUFFLING_PROCESSING_ASSIGNED, SHUFFLING_PROCESSING_FINISHED, SHUFFLING_BLAME_STARTED, SHUFFLING_CANCELLED, SHUFFLING_DONE
     }
 
     public enum Stage {
@@ -76,7 +76,7 @@ public final class Shuffling {
         BLAME((byte)3, new byte[]{4}) {
             @Override
             byte[] getHash(Shuffling shuffling) {
-                return shuffling.getParticipant(shuffling.cancellingAccountId).getDataTransactionFullHash();
+                return shuffling.getParticipant(shuffling.assigneeAccountId).getDataTransactionFullHash();
             }
         },
         CANCELLED((byte)4, new byte[]{}) {
@@ -281,7 +281,6 @@ public final class Shuffling {
 
     private Stage stage;
     private long assigneeAccountId;
-    private long cancellingAccountId;
     private byte[][] recipientPublicKeys;
 
     private Shuffling(Transaction transaction, Attachment.ShufflingCreation attachment) {
@@ -309,16 +308,15 @@ public final class Shuffling {
         this.blocksRemaining = rs.getShort("blocks_remaining");
         this.stage = Stage.get(rs.getByte("stage"));
         this.assigneeAccountId = rs.getLong("assignee_account_id");
-        this.cancellingAccountId = rs.getLong("cancelling_account_id");
         this.recipientPublicKeys = DbUtils.getArray(rs, "recipient_public_keys", byte[][].class, Convert.EMPTY_BYTES);
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, holding_id, holding_type, "
                 + "issuer_id, amount, participant_count, blocks_remaining, stage, assignee_account_id, "
-                + "cancelling_account_id, recipient_public_keys, height, latest) "
+                + "recipient_public_keys, height, latest) "
                 + "KEY (id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.holdingId);
@@ -329,7 +327,6 @@ public final class Shuffling {
             DbUtils.setShortZeroToNull(pstmt, ++i, this.blocksRemaining);
             pstmt.setByte(++i, this.getStage().getCode());
             DbUtils.setLongZeroToNull(pstmt, ++i, this.assigneeAccountId);
-            DbUtils.setLongZeroToNull(pstmt, ++i, this.cancellingAccountId);
             DbUtils.setArrayEmptyToNull(pstmt, ++i, this.recipientPublicKeys);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
@@ -369,20 +366,37 @@ public final class Shuffling {
     }
 
     // caller must update database
-    private void setStage(Stage stage) {
+    private void setStage(Stage stage, long assigneeAccountId, short blocksRemaining) {
         if (!this.stage.canBecome(stage)) {
             throw new IllegalStateException(String.format("Shuffling in stage %s cannot go to stage %s", this.stage, stage));
         }
+        if ((stage == Stage.VERIFICATION || stage == Stage.DONE) && assigneeAccountId != 0) {
+            throw new IllegalArgumentException(String.format("Invalid assigneeAccountId %s for stage %s", Long.toUnsignedString(assigneeAccountId), stage));
+        }
+        if ((stage == Stage.REGISTRATION || stage == Stage.PROCESSING || stage == Stage.BLAME) && assigneeAccountId == 0) {
+            throw new IllegalArgumentException(String.format("In stage %s assigneeAccountId cannot be 0", stage));
+        }
+        if ((stage == Stage.DONE || stage == Stage.CANCELLED) && blocksRemaining != 0) {
+            throw new IllegalArgumentException(String.format("For stage %s remaining blocks cannot be %s", stage, blocksRemaining));
+        }
         this.stage = stage;
-        Logger.logDebugMessage("Shuffling %s entered stage %s", Long.toUnsignedString(id), this.stage);
+        this.assigneeAccountId = assigneeAccountId;
+        this.blocksRemaining = blocksRemaining;
+        Logger.logDebugMessage("Shuffling %s entered stage %s, assignee %s, remaining blocks %s",
+                Long.toUnsignedString(id), this.stage, Long.toUnsignedString(this.assigneeAccountId), this.blocksRemaining);
     }
 
+    /*
+     * Meaning of assigneeAccountId in each shuffling stage:
+     *  REGISTRATION: last currently registered participant
+     *  PROCESSING: next participant in turn to submit processing data
+     *  VERIFICATION: 0, not assigned to anyone
+     *  BLAME: the participant who initiated the blame phase
+     *  CANCELLED: the participant who got blamed for the shuffling failure, if any
+     *  DONE: 0, not assigned to anyone
+     */
     public long getAssigneeAccountId() {
         return assigneeAccountId;
-    }
-
-    public long getCancellingAccountId() {
-        return cancellingAccountId;
     }
 
     public byte[][] getRecipientPublicKeys() {
@@ -479,9 +493,9 @@ public final class Shuffling {
     public Attachment.ShufflingCancellation revealKeySeeds(final String secretPhrase, long cancellingAccountId, byte[] shufflingStateHash) {
         Nxt.getBlockchain().readLock();
         try (DbIterator<ShufflingParticipant> participants = ShufflingParticipant.getParticipants(id)) {
-            if (cancellingAccountId != this.cancellingAccountId) {
+            if (cancellingAccountId != this.assigneeAccountId) {
                 throw new RuntimeException(String.format("Current shuffling cancellingAccountId %s does not match %s",
-                        Long.toUnsignedString(this.cancellingAccountId), Long.toUnsignedString(cancellingAccountId)));
+                        Long.toUnsignedString(this.assigneeAccountId), Long.toUnsignedString(cancellingAccountId)));
             }
             if (shufflingStateHash == null || !Arrays.equals(shufflingStateHash, getStateHash())) {
                 throw new RuntimeException("Current shuffling state hash does not match");
@@ -545,15 +559,13 @@ public final class Shuffling {
         ShufflingParticipant.addParticipant(this.id, participantId, index);
         // Check if participant registration is complete and if so update the shuffling
         if (index == this.participantCount - 1) {
-            this.assigneeAccountId = this.issuerId;
-            this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
-            setStage(Stage.PROCESSING);
+            setStage(Stage.PROCESSING, this.issuerId, Constants.SHUFFLING_PROCESSING_DEADLINE);
         } else {
             this.assigneeAccountId = participantId;
         }
         shufflingTable.insert(this);
         if (stage == Stage.PROCESSING) {
-            listeners.notify(this, Event.SHUFFLING_ASSIGNED);
+            listeners.notify(this, Event.SHUFFLING_PROCESSING_ASSIGNED);
         }
     }
 
@@ -563,7 +575,7 @@ public final class Shuffling {
         ShufflingParticipant participant = ShufflingParticipant.getParticipant(this.id, participantId);
         participant.setData(data, transaction.getTimestamp());
         participant.setProcessed(((TransactionImpl) transaction).fullHash());
-        if (data.length == 0) {
+        if (data != null && data.length == 0) {
             // couldn't decrypt all data from previous participants
             cancelBy(participant);
             return;
@@ -571,7 +583,7 @@ public final class Shuffling {
         this.assigneeAccountId = participant.getNextAccountId();
         this.blocksRemaining = Constants.SHUFFLING_PROCESSING_DEADLINE;
         shufflingTable.insert(this);
-        listeners.notify(this, Event.SHUFFLING_ASSIGNED);
+        listeners.notify(this, Event.SHUFFLING_PROCESSING_ASSIGNED);
     }
 
     void updateRecipients(Transaction transaction, Attachment.ShufflingRecipients attachment) {
@@ -592,9 +604,7 @@ public final class Shuffling {
                 Account.addOrGetAccount(recipientId).apply(recipientPublicKey);
             }
         }
-        this.blocksRemaining = (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
-        setStage(Stage.VERIFICATION);
-        this.assigneeAccountId = 0;
+        setStage(Stage.VERIFICATION, 0, (short)(Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount));
         shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_PROCESSING_FINISHED);
     }
@@ -608,12 +618,9 @@ public final class Shuffling {
 
     void cancelBy(ShufflingParticipant participant, byte[][] blameData, byte[][] keySeeds) {
         participant.cancel(blameData, keySeeds);
-        boolean startingBlame = this.cancellingAccountId == 0;
+        boolean startingBlame = this.stage != Stage.BLAME;
         if (startingBlame) {
-            this.cancellingAccountId = participant.getAccountId();
-            this.blocksRemaining = (short) (Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount);
-            this.assigneeAccountId = 0;
-            setStage(Stage.BLAME);
+            setStage(Stage.BLAME, participant.getAccountId(), (short) (Constants.SHUFFLING_PROCESSING_DEADLINE + participantCount));
         }
         shufflingTable.insert(this);
         if (startingBlame) {
@@ -657,9 +664,7 @@ public final class Shuffling {
                 recipientAccount.addToBalanceAndUnconfirmedBalanceNQT(event, this.id, Constants.SHUFFLING_DEPOSIT_NQT);
             }
         }
-        this.assigneeAccountId = 0;
-        this.blocksRemaining = 0;
-        setStage(Stage.DONE);
+        setStage(Stage.DONE, 0, (short)0);
         shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_DONE);
         if (deleteFinished) {
@@ -693,9 +698,7 @@ public final class Shuffling {
             blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, block.getId(), Constants.SHUFFLING_DEPOSIT_NQT);
             blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
         }
-        this.assigneeAccountId = 0;
-        this.blocksRemaining = 0;
-        setStage(Stage.CANCELLED);
+        setStage(Stage.CANCELLED, blamedAccountId, (short)0);
         shufflingTable.insert(this);
         listeners.notify(this, Event.SHUFFLING_CANCELLED);
         if (deleteFinished) {
@@ -705,9 +708,15 @@ public final class Shuffling {
     }
 
     private long blame() {
+        // if registration never completed, no one is to blame
         if (stage == Stage.REGISTRATION) {
             Logger.logDebugMessage("Registration never completed for shuffling %s", Long.toUnsignedString(id));
             return 0;
+        }
+        // if no one submitted cancellation, blame the first one that did not submit processing data
+        if (stage == Stage.PROCESSING) {
+            Logger.logDebugMessage("Participant %s did not submit processing", Long.toUnsignedString(assigneeAccountId));
+            return assigneeAccountId;
         }
         List<ShufflingParticipant> participants = new ArrayList<>();
         try (DbIterator<ShufflingParticipant> iterator = ShufflingParticipant.getParticipants(this.id)) {
@@ -715,15 +724,8 @@ public final class Shuffling {
                 participants.add(iterator.next());
             }
         }
-        if (cancellingAccountId == 0) {
-            // if no one submitted cancellation, blame the first one that did not submit processing data
-            for (ShufflingParticipant participant : participants) {
-                if (participant.getState() == ShufflingParticipant.State.REGISTERED) {
-                    Logger.logDebugMessage("Participant %s did not submit processing", Long.toUnsignedString(participant.getAccountId()));
-                    return participant.getAccountId();
-                }
-            }
-            // or the first one who did not submit verification
+        if (stage == Stage.VERIFICATION) {
+            // if verification started, blame the first one who did not submit verification
             for (ShufflingParticipant participant : participants) {
                 if (participant.getState() != ShufflingParticipant.State.VERIFIED) {
                     Logger.logDebugMessage("Participant %s did not submit verification", Long.toUnsignedString(participant.getAccountId()));
@@ -807,7 +809,7 @@ public final class Shuffling {
                 }
             }
         }
-        return cancellingAccountId;
+        return assigneeAccountId;
     }
 
     private void delete() {

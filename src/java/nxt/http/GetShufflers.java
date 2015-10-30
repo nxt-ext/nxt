@@ -48,19 +48,21 @@ public final class GetShufflers extends APIServlet.APIRequestHandler {
                 return JSONResponses.INCORRECT_ACCOUNT;
             }
             accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
-            if (shufflingFullHash == null) {
+            if (shufflingFullHash.length == 0) {
                 shufflers = Shuffler.getAccountShufflers(accountId);
             } else {
-                shufflers = Collections.singletonList(Shuffler.getShuffler(accountId, shufflingFullHash));
+                Shuffler shuffler = Shuffler.getShuffler(accountId, shufflingFullHash);
+                shufflers = shuffler == null ? Collections.emptyList() : Collections.singletonList(shuffler);
             }
         } else {
             API.verifyPassword(req);
-            if (accountId != 0 && shufflingFullHash == null) {
+            if (accountId != 0 && shufflingFullHash.length == 0) {
                 shufflers = Shuffler.getAccountShufflers(accountId);
-            } else if (accountId == 0 && shufflingFullHash != null) {
+            } else if (accountId == 0 && shufflingFullHash.length > 0) {
                 shufflers = Shuffler.getShufflingShufflers(shufflingFullHash);
-            } else if (accountId != 0 && shufflingFullHash != null) {
-                shufflers = Collections.singletonList(Shuffler.getShuffler(accountId, shufflingFullHash));
+            } else if (accountId != 0 && shufflingFullHash.length > 0) {
+                Shuffler shuffler = Shuffler.getShuffler(accountId, shufflingFullHash);
+                shufflers = shuffler == null ? Collections.emptyList() : Collections.singletonList(shuffler);
             } else {
                 shufflers = Shuffler.getAllShufflers();
             }

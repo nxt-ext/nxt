@@ -673,7 +673,7 @@ public abstract class ShufflingTransaction extends TransactionType {
             if (cancellingAccountId == 0 && !shuffling.getStage().canBecome(Shuffling.Stage.BLAME)) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling in state %s cannot be cancelled", shuffling.getStage()));
             }
-            if (cancellingAccountId != 0 && cancellingAccountId != shuffling.getCancellingAccountId()) {
+            if (cancellingAccountId != 0 && cancellingAccountId != shuffling.getAssigneeAccountId()) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Shuffling %s is not currently being cancelled by account %s",
                         Long.toUnsignedString(shuffling.getId()), Long.toUnsignedString(cancellingAccountId)));
             }

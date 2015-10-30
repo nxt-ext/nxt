@@ -411,7 +411,7 @@ var NRS = (function(NRS, $) {
             "<span>" + $.t("fund_account_warning_2") + "</span><br>" +
             "<span>" + $.t("fund_account_warning_3") + "</span><br>" +
             "</div>" +
-            "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shape_shift_sell_modal' " +
+            "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_send_amount_sell_modal' " +
             "data-pair='BTC_NXT'>" + $.t("fund_account_message") + "</a>";
     };
 

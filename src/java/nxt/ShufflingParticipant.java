@@ -301,11 +301,15 @@ public final class ShufflingParticipant {
     }
 
     void setData(byte[][] data, int timestamp) {
-        shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, Nxt.getBlockchain().getHeight()));
+        if (data != null && Nxt.getEpochTime() - timestamp < Constants.MAX_PRUNABLE_LIFETIME && getData() == null) {
+            shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, Nxt.getBlockchain().getHeight()));
+        }
     }
 
     static void restoreData(long shufflingId, long accountId, byte[][] data, int timestamp, int height) {
-        shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, height));
+        if (data != null && Nxt.getEpochTime() - timestamp < Constants.MAX_PRUNABLE_LIFETIME && getData(shufflingId, accountId) == null) {
+            shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, height));
+        }
     }
 
     public byte[][] getBlameData() {
