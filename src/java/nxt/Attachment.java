@@ -2871,6 +2871,8 @@ public interface Attachment extends Appendix {
 
     final class ShufflingProcessing extends AbstractShufflingAttachment implements Prunable {
 
+        private static final byte[] emptyDataHash = Crypto.sha256().digest();
+
         static ShufflingProcessing parse(JSONObject attachmentData) throws NxtException.NotValidException {
             if (!Appendix.hasAppendix(ShufflingTransaction.SHUFFLING_PROCESSING.getName(), attachmentData)) {
                 return null;
@@ -2883,9 +2885,9 @@ public interface Attachment extends Appendix {
 
         ShufflingProcessing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.data = null;
             this.hash = new byte[32];
             buffer.get(hash);
+            this.data = Arrays.equals(hash, emptyDataHash) ? Convert.EMPTY_BYTES : null;
         }
 
         ShufflingProcessing(JSONObject attachmentData) throws NxtException.NotValidException {
@@ -2903,8 +2905,8 @@ public interface Attachment extends Appendix {
                 }
                 this.hash = null;
             } else {
-                this.data = null;
                 this.hash = Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("hash")));
+                this.data = Arrays.equals(hash, emptyDataHash) ? Convert.EMPTY_BYTES : null;
             }
         }
 
