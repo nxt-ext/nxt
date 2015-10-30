@@ -233,7 +233,6 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     var LANG = window.navigator.userLanguage || window.navigator.language;
-
     var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
 
     NRS.formatVolume = function (volume) {
@@ -306,31 +305,23 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
+    function calculateOrderTotalImpl(quantityQNT, priceNQT) {
+        if (typeof quantityQNT != "object") {
+            quantityQNT = new BigInteger(String(quantityQNT));
+        }
+        if (typeof priceNQT != "object") {
+            priceNQT = new BigInteger(String(priceNQT));
+        }
+        return quantityQNT.multiply(priceNQT);
+    }
+
     NRS.calculateOrderTotalNQT = function (quantityQNT, priceNQT) {
-		if (typeof quantityQNT != "object") {
-			quantityQNT = new BigInteger(String(quantityQNT));
-		}
-
-		if (typeof priceNQT != "object") {
-			priceNQT = new BigInteger(String(priceNQT));
-		}
-
-		var orderTotal = quantityQNT.multiply(priceNQT);
-
-		return orderTotal.toString();
-	};
+        return calculateOrderTotalImpl(quantityQNT, priceNQT).toString();
+    };
 
     NRS.calculateOrderTotal = function (quantityQNT, priceNQT) {
-		if (typeof quantityQNT != "object") {
-			quantityQNT = new BigInteger(String(quantityQNT));
-		}
-
-		if (typeof priceNQT != "object") {
-			priceNQT = new BigInteger(String(priceNQT));
-		}
-
-		return NRS.convertToNXT(quantityQNT.multiply(priceNQT));
-	};
+        return NRS.convertToNXT(calculateOrderTotalImpl(quantityQNT, priceNQT));
+    };
 
     NRS.calculatePercentage = function (a, b, rounding_mode) {
 		if (rounding_mode != undefined) { // Rounding mode from Big.js
@@ -346,8 +337,8 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.convertToNXT = function (amount, returnAsObject) {
-		var negative = "";
-		var afterComma = "";
+        var negative = "";
+        var mantissa = "";
 
 		if (typeof amount != "object") {
 			amount = new BigInteger(String(amount));
@@ -362,27 +353,27 @@ var NRS = (function (NRS, $, undefined) {
         amount = amount.divide(new BigInteger("100000000"));
 
         if (fractionalPart && fractionalPart != "0") {
-            afterComma = ".";
+            mantissa = ".";
 
-			for (var i = fractionalPart.length; i < 8; i++) {
-				afterComma += "0";
-			}
+            for (var i = fractionalPart.length; i < 8; i++) {
+                mantissa += "0";
+            }
 
-			afterComma += fractionalPart.replace(/0+$/, "");
-		}
+            mantissa += fractionalPart.replace(/0+$/, "");
+        }
 
 		amount = amount.toString();
 
-		if (returnAsObject) {
-			return {
-				"negative": negative,
-				"amount": amount,
-				"afterComma": afterComma
-			};
-		} else {
-			return negative + amount + afterComma;
-		}
-	};
+        if (returnAsObject) {
+            return {
+                "negative": negative,
+                "amount": amount,
+                "mantissa": mantissa
+            };
+        } else {
+            return negative + amount + mantissa;
+        }
+    };
 
     NRS.amountToPrecision = function (amount, decimals) {
 		amount = String(amount);
@@ -457,32 +448,32 @@ var NRS = (function (NRS, $, undefined) {
 			}
 		}
 
-		var afterComma = "";
+        var mantissa = "";
 
-		if (decimals) {
-			afterComma = "." + quantity.substring(quantity.length - decimals);
-			quantity = quantity.substring(0, quantity.length - decimals);
+        if (decimals) {
+            mantissa = "." + quantity.substring(quantity.length - decimals);
+            quantity = quantity.substring(0, quantity.length - decimals);
 
 			if (!quantity) {
 				quantity = "0";
 			}
 
-			afterComma = afterComma.replace(/0+$/, "");
+            mantissa = mantissa.replace(/0+$/, "");
 
-			if (afterComma == ".") {
-				afterComma = "";
-			}
-		}
+            if (mantissa == ".") {
+                mantissa = "";
+            }
+        }
 
-		if (returnAsObject) {
-			return {
-				"amount": quantity,
-				"afterComma": afterComma
-			};
-		} else {
-			return quantity + afterComma;
-		}
-	};
+        if (returnAsObject) {
+            return {
+                "amount": quantity,
+                "mantissa": mantissa
+            };
+        } else {
+            return quantity + mantissa;
+        }
+    };
 
     NRS.convertToQNT = function (quantity, decimals) {
 		quantity = String(quantity);
@@ -534,16 +525,16 @@ var NRS = (function (NRS, $, undefined) {
         var amount;
 		if (typeof params != "object") {
             amount = String(params);
-			var negative = amount.charAt(0) == "-" ? "-" : "";
-			if (negative) {
-				amount = amount.substring(1);
-			}
-			params = {
-				"amount": amount,
-				"negative": negative,
-				"afterComma": ""
-			};
-		}
+            var negative = amount.charAt(0) == "-" ? "-" : "";
+            if (negative) {
+                amount = amount.substring(1);
+            }
+            params = {
+                "amount": amount,
+                "negative": negative,
+                "mantissa": ""
+            };
+        }
 
         amount = String(params.amount);
 
@@ -555,9 +546,9 @@ var NRS = (function (NRS, $, undefined) {
 				formattedAmount = "'" + formattedAmount;
 			}
 			formattedAmount = digits[i] + formattedAmount;
-		}
+        }
 
-		var output = (params.negative ? params.negative : "") + formattedAmount + params.afterComma;
+        var output = (params.negative ? params.negative : "") + formattedAmount + params.mantissa;
 
 		if (!no_escaping) {
 			output = output.escapeHTML();
@@ -571,47 +562,47 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.formatAmount = function (amount, round, no_escaping) {
-		if (typeof amount == "undefined") {
-			return "0";
-		} else if (typeof amount == "string") {
-			amount = new BigInteger(amount);
-		}
+        if (typeof amount == "undefined") {
+            return "0";
+        } else if (typeof amount == "string") {
+            amount = new BigInteger(amount);
+        }
 
-		var negative = "";
-		var afterComma = "";
+        var negative = "";
+        var mantissa = "";
 
-		if (typeof amount == "object") {
-			var params = NRS.convertToNXT(amount, true);
+        if (typeof amount == "object") {
+            var params = NRS.convertToNXT(amount, true);
 
-			negative = params.negative;
-			amount = params.amount;
-			afterComma = params.afterComma;
-		} else {
-			//rounding only applies to non-nqt
-			if (round) {
-				amount = (Math.round(amount * 100) / 100);
-			}
+            negative = params.negative;
+            amount = params.amount;
+            mantissa = params.mantissa;
+        } else {
+            //rounding only applies to non-nqt
+            if (round) {
+                amount = (Math.round(amount * 100) / 100);
+            }
 
-			if (amount < 0) {
-				amount = Math.abs(amount);
-				negative = "-";
-			}
+            if (amount < 0) {
+                amount = Math.abs(amount);
+                negative = "-";
+            }
 
-			amount = "" + amount;
-			if (amount.indexOf(".") !== -1) {
-                afterComma = amount.substr(amount.indexOf("."));
-				amount = amount.replace(afterComma, "");
-			} else {
-                afterComma = "";
-			}
-		}
+            amount = "" + amount;
+            if (amount.indexOf(".") !== -1) {
+                mantissa = amount.substr(amount.indexOf("."));
+                amount = amount.replace(mantissa, "");
+            } else {
+                mantissa = "";
+            }
+        }
 
-		return NRS.format({
-			"negative": negative,
-			"amount": amount,
-			"afterComma": afterComma
-		}, no_escaping);
-	};
+        return NRS.format({
+            "negative": negative,
+            "amount": amount,
+            "mantissa": mantissa
+        }, no_escaping);
+    };
 
     NRS.fromEpochTime = function (epochTime) {
         if (NRS.constants.EPOCH_BEGINNING == 0) {
@@ -1525,70 +1516,70 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.isControlKey = function (charCode) {
-		return !(charCode >= 32 || charCode == 10 || charCode == 13);
-	};
+        return !(charCode >= 32 || charCode == 10 || charCode == 13);
+    };
 
-	NRS.validateDecimals = function (maxFractionLength, charCode, val, e) {
-		if (maxFractionLength) {
-			//allow 1 single period character
-			if (charCode == 110 || charCode == 190) {
-				if (val.indexOf(".") != -1) {
-					e.preventDefault();
-					return false;
-				} else {
-					return true;
-				}
-			}
-		} else {
-			//do not allow period
-			if (charCode == 110 || charCode == 190 || charCode == 188) {
-				$.growl($.t("error_fractions"), {
-					"type": "danger"
-				});
-				e.preventDefault();
-				return false;
-			}
-		}
-		if (charCode >= 96 && charCode <= 105) {
-			// convert numeric keyboard code to normal ascii otherwise String.fromCharCode()
-			// returns the wrong value
-			charCode = charCode + 48 - 96;
-		}
-		var input = val + String.fromCharCode(charCode);
+    NRS.validateDecimals = function (maxFractionLength, charCode, val, e) {
+        if (maxFractionLength) {
+            //allow 1 single period character
+            if (charCode == 110 || charCode == 190) {
+                if (val.indexOf(".") != -1) {
+                    e.preventDefault();
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        } else {
+            //do not allow period
+            if (charCode == 110 || charCode == 190 || charCode == 188) {
+                $.growl($.t("error_fractions"), {
+                    "type": "danger"
+                });
+                e.preventDefault();
+                return false;
+            }
+        }
+        if (charCode >= 96 && charCode <= 105) {
+            // convert numeric keyboard code to normal ascii otherwise String.fromCharCode()
+            // returns the wrong value
+            charCode = charCode + 48 - 96;
+        }
+        var input = val + String.fromCharCode(charCode);
 
-		var afterComma = input.match(/\.(\d*)$/);
+        var mantissa = input.match(/\.(\d*)$/);
 
-		//only allow as many as there are decimals allowed..
-		if (afterComma && afterComma[1].length > maxFractionLength) {
-			var selectedText = NRS.getSelectedText();
+        //only allow as many as there are decimals allowed..
+        if (mantissa && mantissa[1].length > maxFractionLength) {
+            var selectedText = NRS.getSelectedText();
 
-			if (selectedText != val) {
-				var errorMessage = $.t("error_decimals", {
-					"count": maxFractionLength
-				});
-				$.growl(errorMessage, {
-					"type": "danger"
-				});
+            if (selectedText != val) {
+                var errorMessage = $.t("error_decimals", {
+                    "count": maxFractionLength
+                });
+                $.growl(errorMessage, {
+                    "type": "danger"
+                });
 
-				e.preventDefault();
-				return false;
-			}
-		}
+                e.preventDefault();
+                return false;
+            }
+        }
 
-		//numeric characters, left/right key, backspace, delete
-		if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (charCode >= 48 && charCode <= 57 && !isNaN(String.fromCharCode(charCode)))) {
-			return true;
-		} else {
-			//comma
-			if (charCode == 188) {
-				$.growl($.t("error_comma_not_allowed"), {
-					"type": "danger"
-				});
-			}
-			e.preventDefault();
-			return false;
-		}
-	};
+        //numeric characters, left/right key, backspace, delete
+        if (charCode == 8 || charCode == 37 || charCode == 39 || charCode == 46 || (charCode >= 48 && charCode <= 57 && !isNaN(String.fromCharCode(charCode)))) {
+            return true;
+        } else {
+            //comma
+            if (charCode == 188) {
+                $.growl($.t("error_comma_not_allowed"), {
+                    "type": "danger"
+                });
+            }
+            e.preventDefault();
+            return false;
+        }
+    };
 
     NRS.getUrlParameter = function (sParam) {
 		var sPageURL = window.location.search.substring(1);
