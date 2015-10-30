@@ -1,3 +1,7 @@
+The 1.6 series is no longer considered experimental. If upgrading from 1.5.15
+or earlier, see the 1.6.0e and 1.6.1e changelogs for other important changes
+in 1.6.
+
 The account ledger now uses transaction id as event id for all events except
 block generation. To apply this change, the account ledger table will be
 automatically truncated on upgrade to this release. Users who desire to
