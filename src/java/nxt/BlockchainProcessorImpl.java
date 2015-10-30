@@ -910,6 +910,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         processed.forEach(transaction -> prunableTransactions.remove(transaction.getId()));
                     }
                 }
+                Logger.logDebugMessage("Done retrieving prunable transactions from " + peer.getHost());
             } catch (NxtException.ValidationException e) {
                 Logger.logErrorMessage("Peer " + peer.getHost() + " returned invalid prunable transaction", e);
                 peer.blacklist(e);
@@ -917,7 +918,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logErrorMessage("Unable to restore prunable data", e);
             } finally {
                 isRestoring = false;
-                Logger.logDebugMessage("Done retrieving prunable transactions from " + peer.getHost() + ", remaining " + prunableTransactions.size());
+                Logger.logDebugMessage("Remaining " + prunableTransactions.size() + " pruned transactions");
             }
         }
     }
