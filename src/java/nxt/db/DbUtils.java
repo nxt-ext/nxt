@@ -97,11 +97,11 @@ public final class DbUtils {
         }
     }
 
-    public static <T> T[] getArray(ResultSet rs, String columnName, Class<T[]> cls) throws SQLException {
+    public static <T> T[] getArray(ResultSet rs, String columnName, Class<? extends T[]> cls) throws SQLException {
         return getArray(rs, columnName, cls, null);
     }
 
-    public static <T> T[] getArray(ResultSet rs, String columnName, Class<T[]> cls, T[] ifNull) throws SQLException {
+    public static <T> T[] getArray(ResultSet rs, String columnName, Class<? extends T[]> cls, T[] ifNull) throws SQLException {
         Array array = rs.getArray(columnName);
         if (array != null) {
             Object[] objects = (Object[]) array.getArray();
