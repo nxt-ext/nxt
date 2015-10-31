@@ -604,7 +604,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.fromEpochTime = function (epochTime) {
-        if (NRS.constants.EPOCH_BEGINNING == 0) {
+        if (!NRS.constants || NRS.constants.EPOCH_BEGINNING == 0) {
             throw "undefined epoch beginning";
         }
         return epochTime * 1000 + NRS.constants.EPOCH_BEGINNING - 500;
@@ -652,7 +652,7 @@ var NRS = (function (NRS, $, undefined) {
                 var minutes = date.getMinutes();
                 var seconds = date.getSeconds();
 
-                if (NRS.settings["24_hour_format"] == "0") {
+                if (!NRS.settings || NRS.settings["24_hour_format"] == "0") {
                     if (originalHours == 0) {
                         hours += 12;
                     } else if (originalHours >= 13 && originalHours <= 23) {
@@ -667,7 +667,7 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 res += " " + hours + ":" + minutes + ":" + seconds;
 
-                if (NRS.settings["24_hour_format"] == "0") {
+                if (!NRS.settings || NRS.settings["24_hour_format"] == "0") {
                     res += " " + (originalHours >= 12 ? "PM" : "AM");
                 }
             }
