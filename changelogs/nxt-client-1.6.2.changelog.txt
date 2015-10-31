@@ -24,6 +24,12 @@ used for exchange transactions with the current user IP address and with each
 other, thus clearing history after no longer needed is important for the user
 privacy.
 
+Funding a new account using ShapeShift now relies on the ShapeShift sendamount 
+API which provides better conversion rate. The user first specifies the 
+amount of NXT to receive, the dialog then presents a deposit address for the 
+source currency which the user needs to fund with the exact amount within 10 
+minutes.
+
 Added includeAssetInfo or includeCurrencyInfo parameters, default false, to
 the getAccountAssets, getAccountCurrencies, getAccountExchangeRequests,
 getExpectedAssetTransfers, and getExpectedCurrencyTransfers APIs.
