@@ -30,6 +30,8 @@ amount of NXT to receive, the dialog then presents a deposit address for the
 source currency which the user needs to fund with the exact amount within 10 
 minutes.
 
+Added ledger tab to the account info dialog.
+
 Added includeAssetInfo or includeCurrencyInfo parameters, default false, to
 the getAccountAssets, getAccountCurrencies, getAccountExchangeRequests,
 getExpectedAssetTransfers, and getExpectedCurrencyTransfers APIs.
