@@ -49,7 +49,7 @@ public final class GetExchangesByOffer extends APIServlet.APIRequestHandler {
         } catch (RuntimeException e) {
             throw new ParameterException(INCORRECT_OFFER);
         }
-        boolean includeCurrencyInfo = !"false".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
+        boolean includeCurrencyInfo = "true".equalsIgnoreCase(req.getParameter("includeCurrencyInfo"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         JSONObject response = new JSONObject();

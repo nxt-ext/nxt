@@ -125,7 +125,6 @@ public class TransactionalDb extends BasicDb {
             throw new IllegalStateException("Not in transaction");
         }
         localConnection.set(null);
-        transactionCaches.get().clear();
         transactionCaches.set(null);
         long now = System.currentTimeMillis();
         long elapsed = now - ((DbConnection)con).txStart;
@@ -171,6 +170,17 @@ public class TransactionalDb extends BasicDb {
             transactionCaches.get().put(tableName, cacheMap);
         }
         return cacheMap;
+    }
+
+    void clearCache(String tableName) {
+        Map<DbKey,Object> cacheMap = transactionCaches.get().get(tableName);
+        if (cacheMap != null) {
+            cacheMap.clear();
+        }
+    }
+
+    public void clearCache() {
+        transactionCaches.get().values().forEach(Map::clear);
     }
 
     private static void logThreshold(String msg) {

@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.util.Filter;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
@@ -267,6 +268,11 @@ class UnconfirmedTransaction implements Transaction {
     @Override
     public List<? extends Appendix> getAppendages(boolean includeExpiredPrunable) {
         return transaction.getAppendages(includeExpiredPrunable);
+    }
+
+    @Override
+    public List<? extends Appendix> getAppendages(Filter<Appendix> filter, boolean includeExpiredPrunable) {
+        return transaction.getAppendages(filter, includeExpiredPrunable);
     }
 
     @Override

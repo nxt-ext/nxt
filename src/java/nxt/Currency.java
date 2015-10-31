@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.AccountLedger.LedgerEvent;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
@@ -159,19 +160,20 @@ public final class Currency {
         return currencyTable.search(query, DbClause.EMPTY_CLAUSE, from, to, " ORDER BY ft.score DESC, currency.creation_height DESC ");
     }
 
-    static void addCurrency(Transaction transaction, Account senderAccount, Attachment.MonetarySystemCurrencyIssuance attachment) {
+    static void addCurrency(LedgerEvent event, long eventId, Transaction transaction, Account senderAccount,
+                            Attachment.MonetarySystemCurrencyIssuance attachment) {
         Currency oldCurrency;
         if ((oldCurrency = Currency.getCurrencyByCode(attachment.getCode())) != null) {
-            oldCurrency.delete(senderAccount);
+            oldCurrency.delete(event, eventId, senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByCode(attachment.getName())) != null) {
-            oldCurrency.delete(senderAccount);
+            oldCurrency.delete(event, eventId, senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByName(attachment.getName())) != null) {
-            oldCurrency.delete(senderAccount);
+            oldCurrency.delete(event, eventId, senderAccount);
         }
         if ((oldCurrency = Currency.getCurrencyByName(attachment.getCode())) != null) {
-            oldCurrency.delete(senderAccount);
+            oldCurrency.delete(event, eventId, senderAccount);
         }
         Currency currency = new Currency(transaction, attachment);
         currencyTable.insert(currency);
@@ -382,25 +384,27 @@ public final class Currency {
         return currencySupply;
     }
 
-    static void increaseReserve(Account account, long currencyId, long amountPerUnitNQT) {
+    static void increaseReserve(LedgerEvent event, long eventId, Account account, long currencyId, long amountPerUnitNQT) {
         Currency currency = Currency.getCurrency(currencyId);
-        account.addToBalanceNQT(-Math.multiplyExact(currency.getReserveSupply(), amountPerUnitNQT));
+        account.addToBalanceNQT(event, eventId, -Math.multiplyExact(currency.getReserveSupply(), amountPerUnitNQT));
         CurrencySupply currencySupply = currency.getSupplyData();
         currencySupply.currentReservePerUnitNQT += amountPerUnitNQT;
         currencySupplyTable.insert(currencySupply);
         CurrencyFounder.addOrUpdateFounder(currencyId, account.getId(), amountPerUnitNQT);
     }
 
-    static void claimReserve(Account account, long currencyId, long units) {
-        account.addToCurrencyUnits(currencyId, -units);
+    static void claimReserve(LedgerEvent event, long eventId, Account account, long currencyId, long units) {
+        account.addToCurrencyUnits(event, eventId, currencyId, -units);
         Currency currency = Currency.getCurrency(currencyId);
         currency.increaseSupply(- units);
-        account.addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(units, currency.getCurrentReservePerUnitNQT()));
+        account.addToBalanceAndUnconfirmedBalanceNQT(event, eventId,
+                Math.multiplyExact(units, currency.getCurrentReservePerUnitNQT()));
     }
 
-    static void transferCurrency(Account senderAccount, Account recipientAccount, long currencyId, long units) {
-        senderAccount.addToCurrencyUnits(currencyId, -units);
-        recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currencyId, units);
+    static void transferCurrency(LedgerEvent event, long eventId, Account senderAccount, Account recipientAccount,
+                                 long currencyId, long units) {
+        senderAccount.addToCurrencyUnits(event, eventId, currencyId, -units);
+        recipientAccount.addToCurrencyAndUnconfirmedCurrencyUnits(event, eventId, currencyId, units);
     }
 
     void increaseSupply(long units) {
@@ -445,7 +449,7 @@ public final class Currency {
         }
     }
 
-    void delete(Account senderAccount) {
+    void delete(LedgerEvent event, long eventId, Account senderAccount) {
         if (!canBeDeletedBy(senderAccount.getId())) {
             // shouldn't happen as ownership has already been checked in validate, but as a safety check
             throw new IllegalStateException("Currency " + Long.toUnsignedString(currencyId) + " not entirely owned by " + Long.toUnsignedString(senderAccount.getId()));
@@ -453,13 +457,16 @@ public final class Currency {
         listeners.notify(this, Event.BEFORE_DELETE);
         if (is(CurrencyType.RESERVABLE)) {
             if (is(CurrencyType.CLAIMABLE) && isActive()) {
-                senderAccount.addToUnconfirmedCurrencyUnits(currencyId, -senderAccount.getCurrencyUnits(currencyId));
-                Currency.claimReserve(senderAccount, currencyId, senderAccount.getCurrencyUnits(currencyId));
+                senderAccount.addToUnconfirmedCurrencyUnits(event, eventId, currencyId,
+                        -senderAccount.getCurrencyUnits(currencyId));
+                Currency.claimReserve(event, eventId, senderAccount, currencyId, senderAccount.getCurrencyUnits(currencyId));
             }
             if (!isActive()) {
                 try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currencyId, 0, Integer.MAX_VALUE)) {
                     for (CurrencyFounder founder : founders) {
-                        Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(reserveSupply, founder.getAmountPerUnitNQT()));
+                        Account.getAccount(founder.getAccountId())
+                                .addToBalanceAndUnconfirmedBalanceNQT(event, eventId, Math.multiplyExact(reserveSupply,
+                                        founder.getAmountPerUnitNQT()));
                     }
                 }
             }
@@ -472,13 +479,14 @@ public final class Currency {
                     buyOffers.add(offers.next());
                 }
             }
-            buyOffers.forEach(CurrencyExchangeOffer::removeOffer);
+            buyOffers.forEach((offer) -> CurrencyExchangeOffer.removeOffer(event, offer));
         }
         if (is(CurrencyType.MINTABLE)) {
             CurrencyMint.deleteCurrency(this);
         }
-        senderAccount.addToUnconfirmedCurrencyUnits(currencyId, -senderAccount.getUnconfirmedCurrencyUnits(currencyId));
-        senderAccount.addToCurrencyUnits(currencyId, -senderAccount.getCurrencyUnits(currencyId));
+        senderAccount.addToUnconfirmedCurrencyUnits(event, eventId, currencyId,
+                -senderAccount.getUnconfirmedCurrencyUnits(currencyId));
+        senderAccount.addToCurrencyUnits(event, eventId, currencyId, -senderAccount.getCurrencyUnits(currencyId));
         currencyTable.delete(this);
     }
 
@@ -505,10 +513,15 @@ public final class Currency {
         private void undoCrowdFunding(Currency currency) {
             try (DbIterator<CurrencyFounder> founders = CurrencyFounder.getCurrencyFounders(currency.getId(), 0, Integer.MAX_VALUE)) {
                 for (CurrencyFounder founder : founders) {
-                    Account.getAccount(founder.getAccountId()).addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(currency.getReserveSupply(), founder.getAmountPerUnitNQT()));
+                    Account.getAccount(founder.getAccountId())
+                            .addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_UNDO_CROWDFUNDING, currency.getId(),
+                                    Math.multiplyExact(currency.getReserveSupply(),
+                                            founder.getAmountPerUnitNQT()));
                 }
             }
-            Account.getAccount(currency.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), - currency.getInitialSupply());
+            Account.getAccount(currency.getAccountId())
+                    .addToCurrencyAndUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_UNDO_CROWDFUNDING, currency.getId(),
+                            currency.getId(), - currency.getInitialSupply());
             currencyTable.delete(currency);
             CurrencyFounder.remove(currency.getId());
         }
@@ -527,12 +540,16 @@ public final class Currency {
             for (CurrencyFounder founder : currencyFounders) {
                 long units = Math.multiplyExact(remainingSupply, founder.getAmountPerUnitNQT()) / totalAmountPerUnit;
                 currencySupply.currentSupply += units;
-                Account.getAccount(founder.getAccountId()).addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), units);
+                Account.getAccount(founder.getAccountId())
+                        .addToCurrencyAndUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_DISTRIBUTION, currency.getId(),
+                                currency.getId(), units);
             }
             Account issuerAccount = Account.getAccount(currency.getAccountId());
-            issuerAccount.addToCurrencyAndUnconfirmedCurrencyUnits(currency.getId(), currency.getReserveSupply() - currency.getCurrentSupply());
+            issuerAccount.addToCurrencyAndUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_DISTRIBUTION, currency.getId(),
+                    currency.getId(), currency.getReserveSupply() - currency.getCurrentSupply());
             if (!currency.is(CurrencyType.CLAIMABLE)) {
-                issuerAccount.addToBalanceAndUnconfirmedBalanceNQT(Math.multiplyExact(totalAmountPerUnit, currency.getReserveSupply()));
+                issuerAccount.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_DISTRIBUTION, currency.getId(),
+                        Math.multiplyExact(totalAmountPerUnit, currency.getReserveSupply()));
             }
             currencySupply.currentSupply = currency.getReserveSupply();
             currencySupplyTable.insert(currencySupply);

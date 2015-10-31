@@ -33,7 +33,7 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
     static final GetBlock instance = new GetBlock();
 
     private GetBlock() {
-        super(new APITag[] {APITag.BLOCKS}, "block", "height", "timestamp", "includeTransactions");
+        super(new APITag[] {APITag.BLOCKS}, "block", "height", "timestamp", "includeTransactions", "includeExecutedPhased");
     }
 
     @Override
@@ -78,8 +78,9 @@ public final class GetBlock extends APIServlet.APIRequestHandler {
         }
 
         boolean includeTransactions = "true".equalsIgnoreCase(req.getParameter("includeTransactions"));
+        boolean includeExecutedPhased = "true".equalsIgnoreCase(req.getParameter("includeExecutedPhased"));
 
-        return JSONData.block(blockData, includeTransactions);
+        return JSONData.block(blockData, includeTransactions, includeExecutedPhased);
 
     }
 

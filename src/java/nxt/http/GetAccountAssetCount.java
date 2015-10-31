@@ -34,11 +34,11 @@ public final class GetAccountAssetCount extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         int height = ParameterParser.getHeight(req);
 
         JSONObject response = new JSONObject();
-        response.put("numberOfAssets", Account.getAccountAssetCount(account.getId(), height));
+        response.put("numberOfAssets", Account.getAccountAssetCount(accountId, height));
         return response;
     }
 

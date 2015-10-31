@@ -17,7 +17,6 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.Asset;
 import nxt.NxtException;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
@@ -37,13 +36,13 @@ public final class GetAssetAccounts extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        Asset asset = ParameterParser.getAsset(req);
+        long assetId = ParameterParser.getUnsignedLong(req, "asset", true);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         int height = ParameterParser.getHeight(req);
 
         JSONArray accountAssets = new JSONArray();
-        try (DbIterator<Account.AccountAsset> iterator = asset.getAccounts(height, firstIndex, lastIndex)) {
+        try (DbIterator<Account.AccountAsset> iterator = Account.getAssetAccounts(assetId, height, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
                 Account.AccountAsset accountAsset = iterator.next();
                 accountAssets.add(JSONData.accountAsset(accountAsset, true, false));

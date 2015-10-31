@@ -22,8 +22,6 @@ import nxt.util.CountingInputReader;
 import nxt.util.CountingOutputWriter;
 import nxt.util.JSON;
 import nxt.util.Logger;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.servlets.gzip.CompressedResponseWrapper;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
 import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
@@ -34,7 +32,6 @@ import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,13 +62,14 @@ public final class PeerServlet extends WebSocketServlet {
         map.put("getNextBlockIds", GetNextBlockIds.instance);
         map.put("getNextBlocks", GetNextBlocks.instance);
         map.put("getPeers", GetPeers.instance);
+        map.put("getTransactions", GetTransactions.instance);
         map.put("getUnconfirmedTransactions", GetUnconfirmedTransactions.instance);
         map.put("processBlock", ProcessBlock.instance);
         map.put("processTransactions", ProcessTransactions.instance);
         peerRequestHandlers = Collections.unmodifiableMap(map);
     }
 
-    private static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
+    static final JSONStreamAware UNSUPPORTED_REQUEST_TYPE;
     static {
         JSONObject response = new JSONObject();
         response.put("error", Errors.UNSUPPORTED_REQUEST_TYPE);
@@ -115,12 +113,10 @@ public final class PeerServlet extends WebSocketServlet {
 
     private static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
 
-    private boolean isGzipEnabled;
-
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        isGzipEnabled = Boolean.parseBoolean(config.getInitParameter("isGzipEnabled"));
+    static JSONStreamAware error(Exception e) {
+        JSONObject response = new JSONObject();
+        response.put("error", Peers.hideErrorDetails ? e.getClass().getName() : e.toString());
+        return response;
     }
 
     /**
@@ -131,7 +127,7 @@ public final class PeerServlet extends WebSocketServlet {
     @Override
     public void configure(WebSocketServletFactory factory) {
         factory.getPolicy().setIdleTimeout(Peers.webSocketIdleTimeout);
-        factory.getPolicy().setMaxBinaryMessageSize(PeerWebSocket.MAX_MESSAGE_SIZE);
+        factory.getPolicy().setMaxBinaryMessageSize(Peers.MAX_MESSAGE_SIZE);
         factory.setCreator(new PeerSocketCreator());
     }
 
@@ -161,14 +157,8 @@ public final class PeerServlet extends WebSocketServlet {
         resp.setContentType("text/plain; charset=UTF-8");
         try (CountingOutputWriter writer = new CountingOutputWriter(resp.getWriter())) {
             JSON.writeJSONString(jsonResponse, writer);
-            long byteCount;
-            if (isGzipEnabled) {
-                byteCount = ((Response) ((CompressedResponseWrapper) resp).getResponse()).getContentCount();
-            } else {
-                byteCount = writer.getCount();
-            }
             if (peer != null) {
-                peer.updateUploadedVolume(byteCount);
+                peer.updateUploadedVolume(writer.getCount());
             }
         } catch (RuntimeException | IOException e) {
             if (peer != null) {
@@ -177,7 +167,7 @@ public final class PeerServlet extends WebSocketServlet {
                         Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
                     } else {
                         Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
-                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                            peer.getHost(), e.getMessage() != null ? e.getMessage() : e.toString()));
                     }
                 }
                 peer.blacklist(e);
@@ -228,7 +218,7 @@ public final class PeerServlet extends WebSocketServlet {
                         Logger.logDebugMessage("Error sending response to peer " + peer.getHost(), e);
                     } else {
                         Logger.logDebugMessage(String.format("Error sending response to peer %s: %s",
-                            peer.getHost(), e.getMessage()!=null ? e.getMessage() : e.toString()));
+                            peer.getHost(), e.getMessage() != null ? e.getMessage() : e.toString()));
                     }
                 }
                 peer.blacklist(e);
@@ -288,9 +278,7 @@ public final class PeerServlet extends WebSocketServlet {
         } catch (RuntimeException|ParseException|IOException e) {
             Logger.logDebugMessage("Error processing POST request: " + e.toString());
             peer.blacklist(e);
-            JSONObject json = new JSONObject();
-            json.put("error", e.toString());
-            return json;
+            return error(e);
         }
     }
 

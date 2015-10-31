@@ -44,4 +44,9 @@ public final class GetAllWaitingTransactions extends APIServlet.APIRequestHandle
         return response;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

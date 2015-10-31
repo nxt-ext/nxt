@@ -22,11 +22,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.showRawTransactionModal = function(transaction) {
         if (transaction.unsignedTransactionBytes && !transaction.transactionBytes) {
             $("#raw_transaction_modal_unsigned_transaction_bytes").val(transaction.unsignedTransactionBytes);
-            $("#raw_transaction_modal_unsigned_bytes_qr_code").empty().qrcode({
-                "text": transaction.unsignedTransactionBytes,
-                "width": 384,
-                "height": 384
-            });
+            NRS.sendRequestQRCode("#raw_transaction_modal_unsigned_bytes_qr_code", transaction.unsignedTransactionBytes, 400, 400);
             $("#raw_transaction_modal_unsigned_transaction_bytes_container").show();
             $("#raw_transaction_modal_unsigned_bytes_qr_code_container").show();
             $("#raw_transaction_broadcast").show();
@@ -37,18 +33,21 @@ var NRS = (function(NRS, $, undefined) {
         }
 
         if (transaction.transactionJSON) {
+            var namePrefix;
             if (transaction.transactionBytes) {
-                $("#raw_transaction_modal_unsigned_transaction_json_label").html($.t("signed_transaction_json"));
+                $("#raw_transaction_modal_transaction_json_label").html($.t("signed_transaction_json"));
+                namePrefix = "signed";
             } else {
-                $("#raw_transaction_modal_unsigned_transaction_json_label").html($.t("unsigned_transaction_json"));
+                $("#raw_transaction_modal_transaction_json_label").html($.t("unsigned_transaction_json"));
+                namePrefix = "unsigned";
             }
-            var unsignedTransactionJson = $("#raw_transaction_modal_unsigned_transaction_json");
+            var unsignedTransactionJson = $("#raw_transaction_modal_transaction_json");
             var jsonStr = JSON.stringify(transaction.transactionJSON);
             unsignedTransactionJson.val(jsonStr);
-            var downloadLink = $("#raw_transaction_modal_unsigned_transaction_json_download");
+            var downloadLink = $("#raw_transaction_modal_transaction_json_download");
             if (window.URL) {
                 var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
-                downloadLink.prop('download', 'unsigned.transaction.' + transaction.transactionJSON.timestamp + '.json');
+                downloadLink.prop('download', namePrefix + '.transaction.' + transaction.transactionJSON.timestamp + '.json');
                 downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
             } else {
                 downloadLink.hide();
@@ -368,6 +367,8 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
     transactionJSONModal.on("hidden.bs.modal", function() {
+		var reader = $('#unsigned_transaction_bytes_reader');
+		if(reader.data('stream')) reader.html5_qrcode_stop();
 		$(this).find(".tab_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$(this).find("ul.nav li:first").addClass("active");
@@ -443,11 +444,7 @@ var NRS = (function(NRS, $, undefined) {
         }
         $("#signed_json_output").show();
         $("#transaction_signature").val(response.transactionJSON.signature);
-        $("#transaction_signature_qr_code").empty().qrcode({
-            "text": response.transactionJSON.signature,
-            "width": 256,
-            "height": 256
-        });
+        NRS.sendRequestQRCode("#transaction_signature_qr_code", response.transactionJSON.signature, 292, 292);
         $("#signature_output").show();
     };
 

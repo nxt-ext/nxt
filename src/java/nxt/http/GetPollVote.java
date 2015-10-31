@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
@@ -37,9 +36,9 @@ public class GetPollVote extends APIServlet.APIRequestHandler  {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Poll poll = ParameterParser.getPoll(req);
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         boolean includeWeights = "true".equalsIgnoreCase(req.getParameter("includeWeights"));
-        Vote vote = Vote.getVote(poll.getId(), account.getId());
+        Vote vote = Vote.getVote(poll.getId(), accountId);
         if (vote != null) {
             int countHeight;
             JSONData.VoteWeighter weighter = null;

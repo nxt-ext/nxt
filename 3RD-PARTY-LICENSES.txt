@@ -56,3 +56,7 @@ Weupnp:
 Weupnp http://github.com/bitletorg/weupnp is licensed under the Lesser GPL 2.1 license:
 http://www.gnu.org/licenses/lgpl-2.1.html
 
+ZXing:
+
+ZXing https://github.com/zxing/zxing is licensed under the
+Apache License 2.0: http://www.apache.org/licenses/LICENSE-2.0

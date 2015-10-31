@@ -1,0 +1,80 @@
+This is an experimental release.
+
+New feature: ShapeShift exchange integration.
+
+The ShapeShift plugin is now integrated in the core NRS package. A detailed
+description of this in-client coin exchange functionality is available at:
+
+https://bitbucket.org/JeanLucPicard/nxt/issues/316/shapeshift-integration
+
+
+This release also adds several API changes and optimizations.
+
+Added getExpectedTransactions API, to return the non-phased unconfirmed
+transactions expected to be included in the next block (only), plus the phased
+transactions scheduled to finish in that block (whether approved or not).
+Takes an optional multivalued "account" parameter, to filter the result by
+transaction sender or recipient account.
+
+The "account" parameter of getUnconfirmedTransactions and
+getUnconfirmedTransactionIds APIs can also be repeated multiple times now, to
+specify more than one account.
+
+Several APIs have been enhanced to make dealing with phased transactions
+easier.
+
+getBlock and getBlocks now take an optional includeExecutedPhased boolean
+parameter, default false. If true, the phased transactions approved and
+executed in each block (which were accepted in some previous block), if any,
+are included separately in the response, as either an array of transaction ids
+or full transaction json depending on the value of the includeTransactions
+parameter.
+
+getTransaction and getBlockchainTransactions now take an optional boolean
+parameter includePhasingResult, default false. If true, the execution status
+of each phased transaction is also retrieved and included in the result.
+The status of each phased transaction is retrieved in a separate database
+query, so for getBlockchainTransactions requests that retrieve many phased
+transactions at the same time the performance of this API may not be optimal.
+
+getBlockchainTransactions now takes an optional executedOnly boolean
+parameter, default false. If true, phased transactions that were not executed
+are not included in the result.
+
+
+Incompatible changes:
+
+As a performance optimization, many query APIs that accept an object id as
+parameter, i.e. account, asset, currency, and so on, now no longer load this
+object from the database if only having the id is sufficient to retrieve the
+required records. This has the side effect that such APIs now will return an
+empty result list instead of an error when supplied with a non-existent object
+id. Missing or malformed id parameters will still return an error as expected.
+
+For example, getAssetAccounts will now return an empty shareholder list
+instead of unknown asset error, when supplied with a non-existent asset id.
+
+This change affects the query APIs only, not the create transaction APIs.
+
+As another performance optimization, for all APIs that accept optional
+"include" parameters to retrieve additional data, e.g. includeCounts,
+includeAssetInfo, includeCurrencyInfo, and so on, the default value of those
+parameters (i.e. when not explicitly specified) is now assumed to be false.
+API users will have to set those parameters to true when these extra data
+are really needed. One important API affected by this change is getAccount,
+for which now includeLessors, includeAssets, includeCurrencies,
+includeEffectiveBalance are all assumed to be false if not specified, i.e.
+only the account NXT balance and info are returned by default.
+
+As announced with the 1.6.0e release, upgrade to the 1.6 branch is optional,
+users who depend on the current 1.5 API behavior can stay with 1.5 up until
+the 1.7 hard fork.
+
+
+The default search query operator, used when searching the MS currencies or
+the marketplace, is now AND instead of OR.
+
+The Lucene full text search library has been updated to version 5.3.1, and
+Jetty has been updated to version 9.3.3. Remove the old lib subdirectory if
+unpacking on top of a previous installation.
+

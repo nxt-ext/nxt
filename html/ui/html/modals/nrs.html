@@ -82,22 +82,31 @@
                         <span id="nrs_update_explanation_new_release">
                             <span data-i18n="update_available">A new NRS release is available. It is recommended that you update.</span>
                             <br /><br />
-                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_new_version_nr"></span></button></span>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_new_version_nr"></span></button>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_new_version_nr"></span></button>
+                        </span>
                         <span id="nrs_update_explanation_new_beta">
                             <span data-i18n="update_beta_available">A new experimental release is available. It is not recommended that you install this unless you know what you're doing.</span>
                             <br /><br />
-                            <button type="button" class="btn btn-success btn-xs ignore" onclick="NRS.downloadClientUpdate('beta')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_beta_version_nr"></span></button></span>
+                            <button type="button" class="btn btn-success btn-xs ignore" onclick="NRS.downloadClientUpdate('beta', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_beta_version_nr"></span></button>
+                            <button type="button" class="btn btn-success btn-xs ignore" onclick="NRS.downloadClientUpdate('beta', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_beta_version_nr"></span></button>
+                        </span>
                         <span id="nrs_update_explanation_new_choice">
                             <span data-i18n="update_multiple_available">
                             Both a general and experimental release are available. It is not recommended that you install the experimental release unless you know what you're doing.
                             </span>
                             <br /><br />
-                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_new_version_nr"></span> - <span data-i18n="general_release">General Release</span></button>
-                            <button type="button" class="btn btn-default ignore" onclick="NRS.downloadClientUpdate('beta')"><span data-i18n="download_nrs">Download NRS</span> <span class="nrs_beta_version_nr"></span> - <span data-i18n="experimental_release">Experimental Release</span></button>
+                            <span data-i18n="general_release">General Release</span>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_new_version_nr"></span></button>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('release', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_new_version_nr"></span></button>
+                            <br /><br />
+                            <span data-i18n="experimental_release">Experimental Release</span>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('beta', 'zip')"><span data-i18n="download_nrs_zip">Download NRS zip</span> <span class="nrs_beta_version_nr"></span></button>
+                            <button type="button" class="btn btn-success ignore" onclick="NRS.downloadClientUpdate('beta', 'exe')"><span data-i18n="download_nrs_windows_installer">Download NRS Windows installer</span> <span class="nrs_beta_version_nr"></span></button>
                         </span>
                     </div>
                         
-                    <div id="nrs_update_drop_zone" data-i18n="drop_update">Drop client update (zip file) here when downloaded or click to select.</div>
+                    <div id="nrs_update_drop_zone" data-i18n="drop_update_v2"></div>
                     <div id="nrs_update_result"></div>
                     <div id="nrs_update_hashes" style="display:none;padding-top:10px;">
                         <table style="width:100%">
@@ -327,7 +336,7 @@
                         <div class="callout callout-info" id="decode_token_output" style="display:none;"></div>
                         <div class="form-group">
                             <label for="decode_token_data" data-i18n="data">DATA</label>
-                            <textarea type="text" class="form-control" name="website" id="decode_token_data" placeholder="Website or Text" data-i18n="[placeholder]website_or_text" tabindex="1" rows="3"></textarea>
+                            <textarea class="form-control" name="website" id="decode_token_data" placeholder="Website or Text" data-i18n="[placeholder]website_or_text" tabindex="1" rows="3"></textarea>
                         </div>
                         <input type="hidden" name="request_type" value="decodeToken" />
                         <div class="form-group">
@@ -340,6 +349,87 @@
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="token_modal_button" data-i18n="generate">Generate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-no-hide" id="hallmark_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="hallmark_generation_parsing">Hallmark Generation / Parsing</h4>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
+                    <li class="active" id="generate_hallmark_nav" data-tab="generate_hallmark"><a href="#" data-i18n="generate_hallmark">Generate Hallmark</a></li>
+                    <li data-tab="parse_hallmark"><a href="#" data-i18n="parse_hallmark">Parse Hallmark</a></li>
+                </ul>
+
+                <div id="hallmark_modal_generate_hallmark" class="hallmark_modal_content" style="display:none">
+                    <form role="form" id="generate_hallmark_form" autocomplete="off">
+                        <div class="callout callout-danger remote_warning" style="display:none">
+                            <strong><span data-i18n="warning">Warning</span>:</strong>
+                            <span data-i18n="passphrase_remote_warning">Your passphrase will be sent to the server!</span>
+                        </div>
+                        <div class="callout callout-danger error_message" style="display:none"></div>
+                        <div class="callout callout-info" id="generate_hallmark_output" style="display:none;"></div>
+                        <div class="form-group">
+                            <label for="generate_hallmark_host" data-i18n="host">HOST</label>
+                            <input type="text" class="form-control" name="host" id="generate_hallmark_host" placeholder="Public Host Address" data-i18n="[placeholder]public_host_address" autofocus tabindex="1" />
+                        </div>
+                        <div class="form-group">
+                            <label for="generate_hallmark_weight" data-i18n="weight">WEIGHT</label>
+                            <input type="text" class="form-control" name="weight" id="generate_hallmark_weight" placeholder="Proportional Weight [0-1000000000]" data-i18n="[placeholder]weight_placeholder" tabindex="2" />
+                        </div>
+                        <div class="form-group">
+                            <label for="generate_hallmark_date" data-i18n="date">DATE</label>
+                            <input type="text" class="form-control" name="date" id="generate_hallmark_date" placeholder="YYYY/MM/DD" data-i18n="[placeholder]hallmark_date_placeholder" tabindex="3" />
+                        </div>
+                        <input type="hidden" name="request_type" value="markHost" />
+                        <div class="form-group secret_phrase">
+                            <label for="generate_hallmark_password" data-i18n="passphrase">PASSPHRASE</label>
+                            <input type="password" name="secretPhrase" id="generate_hallmark_password" class="form-control" placeholder="" tabindex="4">
+                        </div>
+                    </form>
+                </div>
+
+                <div id="hallmark_modal_parse_hallmark" class="hallmark_modal_content" style="display:none">
+                    <form role="form" id="parse_hallmark_form" autocomplete="off">
+                        <div class="callout callout-danger error_message" style="display:none"></div>
+                        <div class="callout callout-info" id="parse_hallmark_output" style="display:none;"></div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_data" data-i18n="hallmark">HALLMARK</label>
+                            <textarea class="form-control" name="hallmark" id="parse_hallmark_data" placeholder="Hallmark" data-i18n="[placeholder]hallmark" tabindex="1" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_host" data-i18n="host">HOST</label>
+                            <input type="text" class="form-control" name="host" id="parse_hallmark_host" placeholder="Host" data-i18n="[placeholder]host" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_port" data-i18n="port">PORT</label>
+                            <input type="text" class="form-control" name="port" id="parse_hallmark_port" placeholder="Port" data-i18n="[placeholder]port" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_weight" data-i18n="weight">WEIGHT</label>
+                            <input type="text" class="form-control" name="host" id="parse_hallmark_weight" placeholder="Weight" data-i18n="[placeholder]weight" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_date" data-i18n="date">DATE</label>
+                            <input type="text" class="form-control" name="date" id="parse_hallmark_date" placeholder="date" data-i18n="[placeholder]date" readonly value="" />
+                        </div>
+                        <div class="form-group">
+                            <label for="parse_hallmark_valid" data-i18n="valid">VALID</label>
+                            <input type="text" class="form-control" name="valid" id="parse_hallmark_valid" placeholder="valid" data-i18n="[placeholder]valid" readonly value="" />
+                        </div>
+                        <input type="hidden" name="request_type" value="decodeHallmark" />
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="hallmark_modal_button" data-i18n="generate">Generate</button>
             </div>
         </div>
     </div>
@@ -360,10 +450,13 @@
                             <label for="calculate_hash_data" data-i18n="data">DATA</label>
                             <textarea class="form-control" name="secret" id="calculate_hash_data" placeholder="DATA TO HASH" data-i18n="[placeholder]data_to_hash" tabindex="1" rows="3"></textarea>
                         </div>
+                        <div class="input-group">
+                            <input type="checkbox" name="secretIsText" id="secret_is_text" value="true" data-default="checked"/>
+                            <label for="secret_is_text" style="font-weight:normal;" tabindex="3" data-i18n="secret_is_text">SECRET IS TEXT</label>
+                        </div>
                         <div class="form-group hash_algorithm_model_group" data-modal-ui-element="hash_algorithm_model_modal_ui_element"></div>
                         <div class="callout callout-info" id="hash_calculation_output" style="display:none;"></div>
                         <input type="hidden" name="request_type" value="hash" />
-                        <input type="hidden" name="secretIsText" value="true" />
                     </form>
                  </div>
             </div>
@@ -425,6 +518,27 @@
     </div>
 </div>
 
+<div class="modal fade" id="ledger_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-wide">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="ledger_entry">Ledger Entry</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped" id="ledger_info_details_table" style="margin-bottom:0">
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="user_info_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-wider">
         <div class="modal-content">
@@ -441,6 +555,7 @@
                     
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
                     <li class="active" id="user_info_transactions" data-tab="transactions"><a href="#" data-i18n="transactions">Transactions</a></li>
+                    <li id="user_info_ledger" data-tab="ledger"><a href="#" data-i18n="ledger">Ledger</a></li>
                     <li id="user_info_assets" data-tab="assets"><a href="#" data-i18n="assets">Assets</a></li>
                     <li id="user_info_trade_history" data-tab="trade_history"><a href="#" data-i18n="trade_history">Trade History</a></li>
                     <li id="user_info_currencies" data-tab="currencies"><a href="#" data-i18n="currencies">Currencies</a></li>
@@ -468,7 +583,28 @@
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_transactions">This user has no transactions.</div>
                 </div>
-                
+
+                <div class="data-container data-loading user_info_modal_content" id="user_info_modal_ledger" style="display:none;max-height:350px;overflow:auto;">
+                    <table class="table table-striped" id="user_info_modal_ledger_table">
+                        <thead>
+                        <tr>
+                            <th data-i18n="entry">ENTRY</th>
+                            <th data-i18n="type">TYPE</th>
+                            <th data-i18n="change">CHANGE</th>
+                            <th data-i18n="balance">BALANCE</th>
+                            <th data-i18n="holding">HOLDING</th>
+                            <th data-i18n="change">CHANGE</th>
+                            <th data-i18n="balance">BALANCE</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_ledger">This user has no ledger entries.</div>
+                </div>
+
                 <div class="data-container data-loading user_info_modal_content" id="user_info_modal_aliases" style="display:none;max-height:350px;overflow:auto;">
                     <table class="table table-striped" id="user_info_modal_aliases_table">
                         <thead>

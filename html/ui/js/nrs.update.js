@@ -18,205 +18,93 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	NRS.normalVersion = {};
-	NRS.betaVersion = {};
 	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
 		if (NRS.downloadingBlockchain) {
-			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation").find("span").hide();
 			$("#nrs_update_explanation_blockchain_sync").show();
 			return;
 		}
 		if (NRS.isTestNet) {
-			$("#nrs_update_explanation span").hide();
+			$("#nrs_update_explanation").find("span").hide();
 			$("#nrs_update_explanation_testnet").show();
 			return;
 		}
 
-		//Get latest version nr+hash of normal version
-		NRS.sendRequest("getAlias", {
-			"aliasName": "nrsversion"
-		}, function(response) {
-			if (response.aliasURI && (response = response.aliasURI.split(" "))) {
-				NRS.normalVersion.versionNr = response[0];
-				NRS.normalVersion.hash = response[1];
-
-				if (NRS.betaVersion.versionNr) {
-					NRS.checkForNewVersion();
-				}
-			}
-		});
-
-		//Get latest version nr+hash of beta version
-		NRS.sendRequest("getAlias", {
-			"aliasName": "nrsbetaversion"
-		}, function(response) {
-			if (response.aliasURI && (response = response.aliasURI.split(" "))) {
-				NRS.betaVersion.versionNr = response[0];
-				NRS.betaVersion.hash = response[1];
-
-				if (NRS.normalVersion.versionNr) {
-					NRS.checkForNewVersion();
-				}
-			}
-		});
-
-		if (NRS.inApp) {
-			//user uses an old version which does not supply the platform / version
-			if (NRS.appPlatform == "" || NRS.appVersion == "" || version_compare(NRS.appVersion, "2.0.0", "<")) {
-				$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html("A new version of the NXT Wallet application is available for download <a href='http://nxt.org/get-started-nxt/download-nxt-software' target='_blank'>here</a>. You must install it manually due to changes in the NRS startup procedure.").show();
-			}
-
-			/* Old code check
-			var noticeDate = new Date(2014, 9, 28);
-
-			if (new Date() > noticeDate) {
-				$("#secondary_dashboard_message").removeClass("alert-success").addClass("alert-danger").html("A new version of the NXT Wallet application is available for download <a href='http://nxt.org/get-started-nxt/download-nxt-software' target='_blank'>here</a>. You must install it manually due to changes in the NRS startup procedure.").show();
-			}*/
-		}
-	}
+        // Load all version aliases in parallel and call NRS.checkForNewVersion() at the end
+        async.parallel([
+            function(callback){
+                getVersionInfo("nrsVersion", callback);
+            },
+            function(callback){
+                getVersionInfo("nrsBetaVersion", callback);
+            },
+            function(callback){
+                getVersionInfo("nrsVersionWin", callback);
+            },
+            function(callback){
+                getVersionInfo("nrsBetaVersionWin", callback);
+            }
+        ],
+        function(err, results) {
+            if (err == null) {
+                NRS.logConsole("Version aliases: " + JSON.stringify(results));
+            } else {
+                NRS.logConsole("Version aliases lookup error " + err);
+            }
+            NRS.checkForNewVersion();
+        });
+	};
 
 	NRS.checkForNewVersion = function() {
-		var installVersusNormal, installVersusBeta, normalVersusBeta;
-
-		if (NRS.normalVersion && NRS.normalVersion.versionNr) {
-			installVersusNormal = NRS.versionCompare(NRS.state.version, NRS.normalVersion.versionNr);
+        var installVersusNormal, installVersusBeta;
+        if (NRS.nrsVersion && NRS.nrsVersion.versionNr) {
+			installVersusNormal = NRS.versionCompare(NRS.state.version, NRS.nrsVersion.versionNr);
 		}
-		if (NRS.betaVersion && NRS.betaVersion.versionNr) {
-			installVersusBeta = NRS.versionCompare(NRS.state.version, NRS.betaVersion.versionNr);
+		if (NRS.nrsBetaVersion && NRS.nrsBetaVersion.versionNr) {
+			installVersusBeta = NRS.versionCompare(NRS.state.version, NRS.nrsBetaVersion.versionNr);
 		}
 
-		$("#nrs_update_explanation > span").hide();
-
+		$("#nrs_update_explanation").find("> span").hide();
 		$("#nrs_update_explanation_wait").attr("style", "display: none !important");
-
-		$(".nrs_new_version_nr").html(NRS.normalVersion.versionNr).show();
-		$(".nrs_beta_version_nr").html(NRS.betaVersion.versionNr).show();
+		$(".nrs_new_version_nr").html(NRS.nrsVersion.versionNr).show();
+		$(".nrs_beta_version_nr").html(NRS.nrsBetaVersion.versionNr).show();
 
 		if (installVersusNormal == -1 && installVersusBeta == -1) {
 			NRS.isOutdated = true;
-			$("#nrs_update").html("Outdated!").show();
+			$("#nrs_update").html($.t("outdated")).show();
 			$("#nrs_update_explanation_new_choice").show();
 		} else if (installVersusBeta == -1) {
 			NRS.isOutdated = false;
-			$("#nrs_update").html("New Beta").show();
+			$("#nrs_update").html($.t("new_beta")).show();
 			$("#nrs_update_explanation_new_beta").show();
 		} else if (installVersusNormal == -1) {
 			NRS.isOutdated = true;
-			$("#nrs_update").html("Outdated!").show();
+			$("#nrs_update").html($.t("outdated")).show();
 			$("#nrs_update_explanation_new_release").show();
 		} else {
 			NRS.isOutdated = false;
 			$("#nrs_update_explanation_up_to_date").show();
 		}
-	}
-
-	NRS.versionCompare = function(v1, v2) {
-		if (v2 == undefined) {
-			return -1;
-		} else if (v1 == undefined) {
-			return -1;
-		}
-
-		//https://gist.github.com/TheDistantSea/8021359 (based on)
-		var v1last = v1.slice(-1);
-		var v2last = v2.slice(-1);
-
-		if (v1last == 'e') {
-			v1 = v1.substring(0, v1.length - 1);
-		} else {
-			v1last = '';
-		}
-
-		if (v2last == 'e') {
-			v2 = v2.substring(0, v2.length - 1);
-		} else {
-			v2last = '';
-		}
-
-		var v1parts = v1.split('.');
-		var v2parts = v2.split('.');
-
-		function isValidPart(x) {
-			return /^\d+$/.test(x);
-		}
-
-		if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
-			return NaN;
-		}
-
-		v1parts = v1parts.map(Number);
-		v2parts = v2parts.map(Number);
-
-		for (var i = 0; i < v1parts.length; ++i) {
-			if (v2parts.length == i) {
-				return 1;
-			}
-			if (v1parts[i] == v2parts[i]) {
-				continue;
-			} else if (v1parts[i] > v2parts[i]) {
-				return 1;
-			} else {
-				return -1;
-			}
-		}
-
-		if (v1parts.length != v2parts.length) {
-			return -1;
-		}
-
-		if (v1last && v2last) {
-			return 0;
-		} else if (v1last) {
-			return 1;
-		} else if (v2last) {
-			return -1;
-		} else {
-			return 0;
-		}
-	}
-
-	NRS.supportsUpdateVerification = function() {
-		if ((typeof File !== 'undefined') && !File.prototype.slice) {
-			if (File.prototype.webkitSlice) {
-				File.prototype.slice = File.prototype.webkitSlice;
-			}
-
-			if (File.prototype.mozSlice) {
-				File.prototype.slice = File.prototype.mozSlice;
-			}
-		}
-
-		// Check for the various File API support.
-		if (!window.File || !window.FileReader || !window.FileList || !window.Blob || !File.prototype.slice || !window.Worker) {
-			return false;
-		}
-
-		return true;
-	}
+	};
 
 	NRS.verifyClientUpdate = function(e) {
 		e.stopPropagation();
 		e.preventDefault();
-
 		var files = null;
-
 		if (e.originalEvent.target.files && e.originalEvent.target.files.length) {
 			files = e.originalEvent.target.files;
 		} else if (e.originalEvent.dataTransfer.files && e.originalEvent.dataTransfer.files.length) {
 			files = e.originalEvent.dataTransfer.files;
 		}
-
 		if (!files) {
 			return;
 		}
-
-		$("#nrs_update_hash_progress").css("width", "0%");
-		$("#nrs_update_hash_progress").show();
-
+        var updateHashProgress = $("#nrs_update_hash_progress");
+        updateHashProgress.css("width", "0%");
+		updateHashProgress.show();
 		var worker = new Worker("js/crypto/sha256worker.js");
-
 		worker.onmessage = function(e) {
 			if (e.data.progress) {
 				$("#nrs_update_hash_progress").css("width", e.data.progress + "%");
@@ -224,20 +112,19 @@ var NRS = (function(NRS, $, undefined) {
 				$("#nrs_update_hash_progress").hide();
 				$("#nrs_update_drop_zone").hide();
 
-				if (e.data.sha256 == NRS.downloadedVersion.hash) {
-					$("#nrs_update_result").html($.t("success_hash_verification")).attr("class", " ");
+                var nrsUpdateResult = $("#nrs_update_result");
+                if (e.data.sha256 == NRS.downloadedVersion.hash) {
+					nrsUpdateResult.html($.t("success_hash_verification")).attr("class", " ");
 				} else {
-					$("#nrs_update_result").html($.t("error_hash_verification")).attr("class", "incorrect");
+					nrsUpdateResult.html($.t("error_hash_verification")).attr("class", "incorrect");
 				}
 
 				$("#nrs_update_hash_version").html(NRS.downloadedVersion.versionNr);
 				$("#nrs_update_hash_download").html(e.data.sha256);
 				$("#nrs_update_hash_official").html(NRS.downloadedVersion.hash);
 				$("#nrs_update_hashes").show();
-				$("#nrs_update_result").show();
-
+				nrsUpdateResult.show();
 				NRS.downloadedVersion = {};
-
 				$("body").off("dragover.nrs, drop.nrs");
 			}
 		};
@@ -245,57 +132,132 @@ var NRS = (function(NRS, $, undefined) {
 		worker.postMessage({
 			file: files[0]
 		});
-	}
+	};
 
-	NRS.downloadClientUpdate = function(version) {
+	NRS.downloadClientUpdate = function(version, type) {
 		if (version == "release") {
-			NRS.downloadedVersion = NRS.normalVersion;
+			if (type == "exe") {
+                NRS.downloadedVersion = NRS.nrsVersionWin;
+            } else {
+                NRS.downloadedVersion = NRS.nrsVersion;
+            }
 		} else {
-			NRS.downloadedVersion = NRS.betaVersion;
+            if (type == "exe") {
+                NRS.downloadedVersion = NRS.nrsBetaVersionWin;
+            } else {
+                NRS.downloadedVersion = NRS.nrsBetaVersion;
+            }
 		}
 
-		if (NRS.inApp) {
-			parent.postMessage({
-				"type": "update",
-				"update": {
-					"type": version,
-					"version": NRS.downloadedVersion.versionNr,
-					"hash": NRS.downloadedVersion.hash
-				}
-			}, "*");
-			$("#nrs_modal").modal("hide");
-		} else {
-			$("#nrs_update_iframe").attr("src", "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-client-" + NRS.downloadedVersion.versionNr + ".zip");
-			$("#nrs_update_explanation").hide();
-			$("#nrs_update_drop_zone").show();
+        var filename = "nxt-client-" + NRS.downloadedVersion.versionNr + "." + type;
+        var fileurl = "https://bitbucket.org/JeanLucPicard/nxt/downloads/" + filename;
+        $("#nrs_update_iframe").attr("src", fileurl);
+        $("#nrs_update_explanation").hide();
+        var updateDropZone = $("#nrs_update_drop_zone");
+        updateDropZone.html($.t("drop_update_v2", { filename: filename }));
+        updateDropZone.show();
 
-			$("body").on("dragover.nrs", function(e) {
-				e.preventDefault();
-				e.stopPropagation();
+        var body = $("body");
+        body.on("dragover.nrs", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-				if (e.originalEvent && e.originalEvent.dataTransfer) {
-					e.originalEvent.dataTransfer.dropEffect = "copy";
-				}
-			});
+            if (e.originalEvent && e.originalEvent.dataTransfer) {
+                e.originalEvent.dataTransfer.dropEffect = "copy";
+            }
+        });
 
-			$("body").on("drop.nrs", function(e) {
-				NRS.verifyClientUpdate(e);
-			});
+        body.on("drop.nrs", function(e) {
+            NRS.verifyClientUpdate(e);
+        });
 
-			$("#nrs_update_drop_zone").on("click", function(e) {
-				e.preventDefault();
+        updateDropZone.on("click", function(e) {
+            e.preventDefault();
+            $("#nrs_update_file_select").trigger("click");
+        });
 
-				$("#nrs_update_file_select").trigger("click");
-
-			});
-
-			$("#nrs_update_file_select").on("change", function(e) {
-				NRS.verifyClientUpdate(e);
-			});
-		}
+        $("#nrs_update_file_select").on("change", function(e) {
+            NRS.verifyClientUpdate(e);
+        });
 
 		return false;
-	}
+	};
 
+    NRS.versionCompare = function(v1, v2) {
+   		if (v2 == undefined) {
+   			return -1;
+   		} else if (v1 == undefined) {
+   			return -1;
+   		}
+
+   		//https://gist.github.com/TheDistantSea/8021359 (based on)
+   		var v1last = v1.slice(-1);
+   		var v2last = v2.slice(-1);
+
+   		if (v1last == 'e') {
+   			v1 = v1.substring(0, v1.length - 1);
+   		} else {
+   			v1last = '';
+   		}
+
+   		if (v2last == 'e') {
+   			v2 = v2.substring(0, v2.length - 1);
+   		} else {
+   			v2last = '';
+   		}
+
+   		var v1parts = v1.split('.');
+   		var v2parts = v2.split('.');
+
+   		function isValidPart(x) {
+   			return /^\d+$/.test(x);
+   		}
+
+   		if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
+   			return NaN;
+   		}
+
+   		v1parts = v1parts.map(Number);
+   		v2parts = v2parts.map(Number);
+
+   		for (var i = 0; i < v1parts.length; ++i) {
+   			if (v2parts.length == i) {
+   				return 1;
+   			}
+               if (v1parts[i] != v2parts[i]) {
+                   if (v1parts[i] > v2parts[i]) {
+                       return 1;
+                   } else {
+                       return -1;
+                   }
+               }
+   		}
+
+   		if (v1parts.length != v2parts.length) {
+   			return -1;
+   		}
+
+   		if (v1last && v2last) {
+   			return 0;
+   		} else if (v1last) {
+   			return 1;
+   		} else if (v2last) {
+   			return -1;
+   		} else {
+   			return 0;
+   		}
+   	};
+
+    // Get latest version number and hash of version specified by the alias
+    function getVersionInfo(aliasName, callback) {
+        NRS.sendRequest("getAlias", {
+            "aliasName": aliasName
+        }, function (response) {
+            if (response.aliasURI && (response = response.aliasURI.split(" "))) {
+                NRS[aliasName] = { versionNr: response[0], hash: response[1] };
+                callback(null, NRS[aliasName]);
+            }
+        });
+    }
 	return NRS;
 }(NRS || {}, jQuery));

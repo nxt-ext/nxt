@@ -66,7 +66,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" data-i18n="transfer_asset">Transfer Asset</h4>
+                <h4 class="modal-title" id="transfer_asset_title"></h4>
             </div>
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
@@ -76,8 +76,11 @@
                         <p><span id="transfer_asset_name"></span><span id="transfer_asset_available" style="font-style:italic"></span></p>
                         <input type="hidden" name="asset" id="transfer_asset_asset" value="" />
                         <input type="hidden" name="decimals" id="transfer_asset_decimals" value="" />
+                        <input type="hidden" id="transfer_asset_action" value="" />
                     </div>
-                    <div data-replace-with-modal-template="recipient_modal_template"></div>
+                    <div id="transfer_asset_recipient_container">
+                        <div data-replace-with-modal-template="recipient_modal_template"></div>
+                    </div>
                     <div class="form-group">
                         <label for="transfer_asset_quantity" data-i18n="quantity">QUANTITY</label>
                         <div class="input-group">
@@ -103,7 +106,7 @@
                 <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="transfer_asset;[placeholder]submitting">Transfer Asset</button>
+                <button type="button" id="transfer_asset_button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="[placeholder]submitting"></button>
             </div>
         </div>
     </div>

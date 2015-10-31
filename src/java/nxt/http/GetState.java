@@ -37,10 +37,12 @@ import nxt.TaggedData;
 import nxt.Trade;
 import nxt.Vote;
 import nxt.peer.Peers;
+import nxt.util.UPnP;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
 
 public final class GetState extends APIServlet.APIRequestHandler {
 
@@ -55,7 +57,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
 
         JSONObject response = GetBlockchainStatus.instance.processRequest(req);
 
-        if (!"false".equalsIgnoreCase(req.getParameter("includeCounts")) && API.checkPassword(req)) {
+        if ("true".equalsIgnoreCase(req.getParameter("includeCounts")) && API.checkPassword(req)) {
             response.put("numberOfTransactions", Nxt.getBlockchain().getTransactionCount());
             response.put("numberOfAccounts", Account.getCount());
             response.put("numberOfAssets", Asset.getCount());
@@ -94,6 +96,10 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("peerPort", Peers.getDefaultPeerPort());
         response.put("isOffline", Constants.isOffline);
         response.put("needsAdminPassword", !API.disableAdminPassword);
+        InetAddress externalAddress = UPnP.getExternalAddress();
+        if (externalAddress != null) {
+            response.put("upnpExternalAddress", externalAddress.getHostAddress());
+        }
         return response;
     }
 

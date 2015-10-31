@@ -139,7 +139,7 @@ final class ParameterParser {
         try {
             for (int i = 0; i < paramValues.length; i++) {
                 if (paramValues[i] == null || paramValues[i].isEmpty()) {
-                    continue;
+                    throw new ParameterException(incorrect(name));
                 }
                 values[i] = Long.parseUnsignedLong(paramValues[i]);
                 if (values[i] == 0) {
@@ -150,6 +150,10 @@ final class ParameterParser {
             throw new ParameterException(incorrect(name));
         }
         return values;
+    }
+
+    static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        return getAccountId(req, "account", isMandatory);
     }
 
     static long getAccountId(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
@@ -169,6 +173,32 @@ final class ParameterParser {
         } catch (RuntimeException e) {
             throw new ParameterException(incorrect(name));
         }
+    }
+
+    static long[] getAccountIds(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        String[] paramValues = req.getParameterValues("account");
+        if (paramValues == null || paramValues.length == 0) {
+            if (isMandatory) {
+                throw new ParameterException(MISSING_ACCOUNT);
+            } else {
+                return Convert.EMPTY_LONG;
+            }
+        }
+        long[] values = new long[paramValues.length];
+        try {
+            for (int i = 0; i < paramValues.length; i++) {
+                if (paramValues[i] == null || paramValues[i].isEmpty()) {
+                    throw new ParameterException(INCORRECT_ACCOUNT);
+                }
+                values[i] = Convert.parseAccountId(paramValues[i]);
+                if (values[i] == 0) {
+                    throw new ParameterException(INCORRECT_ACCOUNT);
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new ParameterException(INCORRECT_ACCOUNT);
+        }
+        return values;
     }
 
     static Alias getAlias(HttpServletRequest req) throws ParameterException {
@@ -303,8 +333,8 @@ final class ParameterParser {
             }
             String secretPhrase = getSecretPhrase(req, false);
             if (secretPhrase != null) {
-                Account senderAccount = getSenderAccount(req);
-                encryptedData = senderAccount.encryptTo(plainMessageBytes, secretPhrase, compress);
+                byte[] publicKey = Crypto.getPublicKey(secretPhrase);
+                encryptedData = Account.encryptTo(publicKey, plainMessageBytes, secretPhrase, compress);
             }
         }
         if (encryptedData != null) {
@@ -509,14 +539,21 @@ final class ParameterParser {
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
         boolean compress = !"false".equalsIgnoreCase(req.getParameter("compressMessageToEncrypt"));
         byte[] plainMessageBytes = null;
+        byte[] recipientPublicKey = null;
         EncryptedData encryptedData = ParameterParser.getEncryptedData(req, "encryptedMessage");
         if (encryptedData == null) {
             String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
             if (plainMessage == null) {
                 return null;
             }
-            if (recipient == null || recipient.getPublicKey() == null) {
-                throw new ParameterException(INCORRECT_RECIPIENT);
+            if (recipient != null) {
+                recipientPublicKey = recipient.getPublicKey();
+            }
+            if (recipientPublicKey == null) {
+                recipientPublicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter("recipientPublicKey")));
+            }
+            if (recipientPublicKey == null) {
+                throw new ParameterException(MISSING_RECIPIENT_PUBLIC_KEY);
             }
             try {
                 plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
@@ -525,7 +562,7 @@ final class ParameterParser {
             }
             String secretPhrase = getSecretPhrase(req, false);
             if (secretPhrase != null) {
-                encryptedData = recipient.encryptTo(plainMessageBytes, secretPhrase, compress);
+                encryptedData = Account.encryptTo(recipientPublicKey, plainMessageBytes, secretPhrase, compress);
             }
         }
         if (encryptedData != null) {
@@ -536,9 +573,9 @@ final class ParameterParser {
             }
         } else {
             if (prunable) {
-                return new Appendix.UnencryptedPrunableEncryptedMessage(plainMessageBytes, isText, compress, recipient.getPublicKey());
+                return new Appendix.UnencryptedPrunableEncryptedMessage(plainMessageBytes, isText, compress, recipientPublicKey);
             } else {
-                return new Appendix.UnencryptedEncryptedMessage(plainMessageBytes, isText, compress, recipient.getPublicKey());
+                return new Appendix.UnencryptedEncryptedMessage(plainMessageBytes, isText, compress, recipientPublicKey);
             }
         }
     }

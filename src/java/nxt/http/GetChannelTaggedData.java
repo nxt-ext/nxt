@@ -43,7 +43,7 @@ public final class GetChannelTaggedData extends APIServlet.APIRequestHandler {
         long accountId = ParameterParser.getAccountId(req, "account", false);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
+        boolean includeData = "true".equalsIgnoreCase(req.getParameter("includeData"));
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();

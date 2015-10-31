@@ -44,4 +44,9 @@ public final class FullHashToId extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    boolean requireBlockchain() {
+        return false;
+    }
+
 }

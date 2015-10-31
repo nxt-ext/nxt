@@ -24,7 +24,7 @@ public abstract class AbstractForgingTest extends AbstractBlockchainTest {
 
     protected static final int minStartHeight = 150000;
     protected static int startHeight;
-    protected static String testForgingSecretPhrase;
+    protected final static String testForgingSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
 
     protected static Properties newTestProperties() {
         Properties properties = AbstractBlockchainTest.newTestProperties();

@@ -32,12 +32,10 @@ public abstract class PersistentDbTable<T> extends EntityDbTable<T> {
 
     @Override
     public void rollback(int height) {
-        clearCache();
     }
 
     @Override
     public final void truncate() {
-        clearCache();
     }
 
     @Override

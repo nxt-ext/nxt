@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.Currency;
 import nxt.NxtException;
 import org.json.simple.JSONObject;
@@ -35,9 +34,9 @@ public final class CanDeleteCurrency extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
-        Account account = ParameterParser.getAccount(req);
+        long accountId = ParameterParser.getAccountId(req, true);
         JSONObject response = new JSONObject();
-        response.put("canDelete", currency.canBeDeletedBy(account.getId()));
+        response.put("canDelete", currency.canBeDeletedBy(accountId));
         return response;
     }
 

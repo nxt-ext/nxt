@@ -17,13 +17,11 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	NRS.blocksPageType = null;
 	NRS.tempBlocks = [];
 	var trackBlockchain = false;
-
 	NRS.averageBlockGenerationTime = null;
-
 
 	NRS.getBlock = function(blockID, callback, pageRequest) {
 		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
@@ -46,21 +44,19 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		}, true);
-	}
+	};
 
 	NRS.handleInitialBlocks = function(response) {
-		if (response.errorCode) {
-			NRS.dataLoadFinished($("#dashboard_blocks_table"));
+        var dashboardBlocksTable = $("#dashboard_blocks_table");
+        if (response.errorCode) {
+			NRS.dataLoadFinished(dashboardBlocksTable);
 			return;
 		}
-
 		NRS.blocks.push(response);
-
 		if (NRS.blocks.length < 10 && response.previousBlock) {
 			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
 		} else {
 			NRS.checkBlockHeight(NRS.blocks[0].height);
-
 			if (NRS.state) {
 				//if no new blocks in 6 hours, show blockchain download progress..
 				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
@@ -75,10 +71,7 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.setStateInterval(10);
 					}
 					NRS.downloadingBlockchain = true;
-					if (NRS.inApp) {
-						parent.postMessage("downloadingBlockchain", "*");
-					}
-					$("#nrs_update_explanation span").hide();
+					$("#nrs_update_explanation").find("span").hide();
 					$("#nrs_update_explanation_wait").attr("style", "display: none !important");
 					$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").show();
 					$("#show_console").hide();
@@ -96,21 +89,18 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			var rows = "";
-
+            var block;
 			for (var i = 0; i < NRS.blocks.length; i++) {
-				var block = NRS.blocks[i];
-
+				block = NRS.blocks[i];
 				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 			}
-			
-			var block = NRS.blocks[0];			
+			block = NRS.blocks[0];
 			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
 			$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
-
-			$("#dashboard_blocks_table tbody").empty().append(rows);
-			NRS.dataLoadFinished($("#dashboard_blocks_table"));
+			dashboardBlocksTable.find("tbody").empty().append(rows);
+			NRS.dataLoadFinished(dashboardBlocksTable);
 		}
-	}
+	};
 
 	NRS.handleNewBlocks = function(response) {
 		if (NRS.downloadingBlockchain) {
@@ -140,36 +130,32 @@ var NRS = (function(NRS, $, undefined) {
 			if (NRS.blocks.length > 100) {
 				NRS.blocks = NRS.blocks.slice(0, 100);
 			}
-
 			NRS.checkBlockHeight(NRS.blocks[0].height);
-
 			NRS.incoming.updateDashboardBlocks(newBlocks);
 		} else {
 			NRS.tempBlocks.push(response);
 			NRS.getBlock(response.previousBlock, NRS.handleNewBlocks);
 		}
-	}
+	};
 
 	NRS.checkBlockHeight = function(blockHeight) {
 		if (blockHeight) {
 			NRS.lastBlockHeight = blockHeight;
 		}
-
 		//no checks needed at the moment
-	}
+	};
 
 	//we always update the dashboard page..
 	NRS.incoming.updateDashboardBlocks = function(newBlocks) {
 		var newBlockCount = newBlocks.length;
-
 		if (newBlockCount > 10) {
 			newBlocks = newBlocks.slice(0, 10);
 			newBlockCount = newBlocks.length;
 		}
-
+        var timeDiff;
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state) {
-				var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
+				timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
 				if (timeDiff < 60 * 60 * 18) {
 					if (timeDiff < 60 * 60) {
 						NRS.setStateInterval(30);
@@ -178,13 +164,10 @@ var NRS = (function(NRS, $, undefined) {
 						trackBlockchain = true;
 					}
 					NRS.downloadingBlockchain = false;
-					if (NRS.inApp) {
-						parent.postMessage("downloadedBlockchain", "*");
-					}
 					$("#dashboard_message").hide();
 					$("#downloading_blockchain, #nrs_update_explanation_blockchain_sync").hide();
 					$("#nrs_update_explanation_wait").removeAttr("style");
-					if (NRS.settings["console_log"] && !NRS.inApp) {
+					if (NRS.settings["console_log"]) {
 						$("#show_console").show();
 					}
 					//todo: update the dashboard blocks!
@@ -208,9 +191,8 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		} else if (trackBlockchain) {
-			var timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
-
 			//continue with faster state intervals if we still haven't reached current block from within 1 hour
+            timeDiff = NRS.state.time - NRS.blocks[0].timestamp;
 			if (timeDiff < 60 * 60) {
 				NRS.setStateInterval(30);
 				trackBlockchain = false;
@@ -218,40 +200,34 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.setStateInterval(10);
 			}
 		}
-
 		var rows = "";
-
 		for (var i = 0; i < newBlockCount; i++) {
 			var block = newBlocks[i];
-
 			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
 		}
 
-		if (newBlockCount == 1) {
-			$("#dashboard_blocks_table tbody tr:last").remove();
+        var dashboardBlocksTable = $("#dashboard_blocks_table");
+        if (newBlockCount == 1) {
+			dashboardBlocksTable.find("tbody tr:last").remove();
 		} else if (newBlockCount == 10) {
-			$("#dashboard_blocks_table tbody").empty();
+			dashboardBlocksTable.find("tbody").empty();
 		} else {
-			$("#dashboard_blocks_table tbody tr").slice(10 - newBlockCount).remove();
+			dashboardBlocksTable.find("tbody tr").slice(10 - newBlockCount).remove();
 		}
 
-		var block = NRS.blocks[0];			
+		block = NRS.blocks[0];
 		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
 		$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
-		
-		$("#dashboard_blocks_table tbody").prepend(rows);
+		dashboardBlocksTable.find("tbody").prepend(rows);
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
-		$("#dashboard_table tr.confirmed td.confirmations").each(function() {
+		$("#dashboard_table").find("tr.confirmed td.confirmations").each(function() {
 			if ($(this).data("incoming")) {
 				$(this).removeData("incoming");
 				return true;
 			}
-
 			var confirmations = parseInt($(this).data("confirmations"), 10);
-
 			var nrConfirmations = confirmations + newBlocks.length;
-
 			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
 				$(this).attr("data-content", $.t("x_confirmations", {
@@ -268,7 +244,7 @@ var NRS = (function(NRS, $, undefined) {
 				}));
 			}
 		});
-	}
+	};
 
 	NRS.pages.blocks = function() {
 		if (NRS.blocksPageType == "forged_blocks") {
@@ -309,11 +285,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 		}
-	}
+	};
 
 	NRS.incoming.blocks = function() {
 		NRS.loadPage("blocks");
-	}
+	};
 
 	NRS.blocksPageLoaded = function(blocks) {
 		var rows = "";
@@ -323,17 +299,14 @@ var NRS = (function(NRS, $, undefined) {
 
 		for (var i = 0; i < blocks.length; i++) {
 			var block = blocks[i];
-
 			totalAmount = totalAmount.add(new BigInteger(block.totalAmountNQT));
-
 			totalFees = totalFees.add(new BigInteger(block.totalFeeNQT));
-
 			totalTransactions += block.numberOfTransactions;
-
 			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (block.generator != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(block, "generator") + "' class='user_info'>" + NRS.getAccountTitle(block, "generator") + "</a>" : $.t("genesis")) + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
 		}
 
-		if (NRS.blocksPageType == "forged_blocks") {
+        var blocksAverageAmount = $("#blocks_average_amount");
+        if (NRS.blocksPageType == "forged_blocks") {
 			NRS.sendRequest("getAccountBlockCount+", {
 				"account": NRS.account
 			}, function(response) {
@@ -347,29 +320,26 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 			$("#forged_fees_total").html(NRS.formatStyledAmount(NRS.accountInfo.forgedBalanceNQT)).removeClass("loading_dots");
-			$("#blocks_average_amount").removeClass("loading_dots");
-			$("#blocks_average_amount").parent().parent().css('visibility', 'hidden');
-			$("#blocks_page .ion-stats-bars").parent().css('visibility', 'hidden');
+			blocksAverageAmount.removeClass("loading_dots");
+			blocksAverageAmount.parent().parent().css('visibility', 'hidden');
+			$("#blocks_page").find(".ion-stats-bars").parent().css('visibility', 'hidden');
 		} else {
-			if (blocks.length) {
+			var time;
+            if (blocks.length) {
 				var startingTime = blocks[blocks.length - 1].timestamp;
 				var endingTime = blocks[0].timestamp;
-				var time = endingTime - startingTime;
+				time = endingTime - startingTime;
 			} else {
-				var startingTime = endingTime = time = 0;
+				time = 0;
 			}
-
+            var averageFee = 0;
+            var averageAmount = 0;
 			if (blocks.length) {
-				var averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
-				var averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
-			} else {
-				var averageFee = 0;
-				var averageAmount = 0;
+				averageFee = new Big(totalFees.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
+				averageAmount = new Big(totalAmount.toString()).div(new Big("100000000")).div(new Big(String(blocks.length))).toFixed(2);
 			}
-
 			averageFee = NRS.convertToNQT(averageFee);
 			averageAmount = NRS.convertToNQT(averageAmount);
-			
 			if (time == 0) {
 				$("#blocks_transactions_per_hour").html("0").removeClass("loading_dots");
 			} else {
@@ -377,30 +347,25 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			$("#blocks_average_generation_time").html(Math.round(time / NRS.itemsPerPage) + "s").removeClass("loading_dots");
 			$("#blocks_average_fee").html(NRS.formatStyledAmount(averageFee)).removeClass("loading_dots");
-			$("#blocks_average_amount").parent().parent().css('visibility', 'visible');
-			$("#blocks_page .ion-stats-bars").parent().css('visibility', 'visible');
-			$("#blocks_average_amount").html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
+			blocksAverageAmount.parent().parent().css('visibility', 'visible');
+			$("#blocks_page").find(".ion-stats-bars").parent().css('visibility', 'visible');
+			blocksAverageAmount.html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
 		}
-
 		NRS.dataLoaded(rows);
-	}
+	};
 
-	$("#blocks_page_type .btn").click(function(e) {
-		//	$("#blocks_page_type li a").click(function(e) {
+	$("#blocks_page_type").find(".btn").click(function(e) {
 		e.preventDefault();
-
 		NRS.blocksPageType = $(this).data("type");
-
 		$("#blocks_average_amount, #blocks_average_fee, #blocks_transactions_per_hour, #blocks_average_generation_time, #forged_blocks_total, #forged_fees_total").html("<span>.</span><span>.</span><span>.</span></span>").addClass("loading_dots");
-		$("#blocks_table tbody").empty();
-		$("#blocks_table").parent().addClass("data-loading").removeClass("data-empty");
-
+        var blocksTable = $("#blocks_table");
+        blocksTable.find("tbody").empty();
+		blocksTable.parent().addClass("data-loading").removeClass("data-empty");
 		NRS.loadPage("blocks");
 	});
 
 	$("#goto_forged_blocks").click(function(e) {
 		e.preventDefault();
-
 		$("#blocks_page_type").find(".btn:last").button("toggle");
 		NRS.blocksPageType = "forged_blocks";
 		NRS.goToPage("blocks");

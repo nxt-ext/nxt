@@ -16,8 +16,8 @@
 
 package nxt.crypto;
 
+import org.bouncycastle.jcajce.provider.digest.Keccak;
 import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
-import org.bouncycastle.jcajce.provider.digest.SHA3;
 
 public enum HashFunction {
 
@@ -30,11 +30,11 @@ public enum HashFunction {
         }
     },
     /**
-     * Use Bouncy Castle implementation of SHA3 (code 3)
+     * Use Bouncy Castle implementation of SHA3 (code 3). As of Bouncy Castle 1.53, this has been renamed to Keccak.
      */
     SHA3((byte)3) {
         public byte[] hash(byte[] input) {
-            return new SHA3.DigestSHA3(256).digest(input);
+            return new Keccak.Digest256().digest(input);
         }
     },
     /**

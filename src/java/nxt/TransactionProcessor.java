@@ -18,9 +18,11 @@ package nxt;
 
 import nxt.db.DbIterator;
 import nxt.util.Observable;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.List;
+import java.util.SortedSet;
 
 public interface TransactionProcessor extends Observable<List<? extends Transaction>,TransactionProcessor.Event> {
 
@@ -52,4 +54,7 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     void processPeerTransactions(JSONObject request) throws NxtException.ValidationException;
 
+    SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude);
+
+    List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException;
 }
