@@ -1,3 +1,5 @@
+QUnit.module("nrs.util");
+
 QUnit.test("convertToNXT", function (assert) {
     assert.equal(NRS.convertToNXT(200000000), "2", "whole");
     assert.equal(NRS.convertToNXT(20000000), "0.2", "fraction");
@@ -119,4 +121,42 @@ QUnit.test("convertToNQT", function (assert) {
     assert.throws(function () {
         NRS.convertToNQT(0.00000001); // since it's passed as 1e-8
     }, "Invalid input.", "invalid.input");
+});
+
+QUnit.test("convertToQNTf", function (assert) {
+    assert.equal(NRS.convertToQNTf(1, 0), "1", "one");
+    assert.equal(NRS.convertToQNTf(1, 3), "0.001", "milli");
+    assert.equal(NRS.convertToQNTf(1000, 3), "1", "three.decimals");
+    assert.equal(NRS.convertToQNTf(1234567, 3), "1234.567", "multi");
+    assert.deepEqual(NRS.convertToQNTf(1234567, 3, true), { amount: "1234", mantissa: ".567" }, "object");
+});
+
+QUnit.test("convertToQNT", function (assert) {
+    assert.equal(NRS.convertToQNT(1, 0), "1", "one");
+    assert.equal(NRS.convertToQNT(1, 3), "1000", "thousand");
+    assert.equal(NRS.convertToQNT(1000, 3), "1000000", "million");
+    assert.equal(NRS.convertToQNT(1.234, 3), "1234", "multi");
+    assert.equal(NRS.convertToQNT(0.1234, 4), "1234", "decimal");
+    assert.throws(function() { NRS.convertToQNT(0.12345, 4) }, "Fraction can only have 4 decimals max.", "too.many.decimals");
+});
+
+QUnit.test("formatQuantity", function (assert) {
+    assert.equal(NRS.formatQuantity(1, 0), "1", "one");
+    assert.equal(NRS.formatQuantity(10000000, 3, true), "10'000", "thousand");
+    assert.equal(NRS.formatQuantity(1234, 2, true), "12.34", "thousand");
+    assert.equal(NRS.formatQuantity(123456, 2, true), "1'234.56", "thousand");
+    assert.equal(NRS.formatQuantity(1234567, 2, true), "12'345.67", "thousand");
+});
+
+QUnit.test("formatAmount", function (assert) {
+    assert.equal(NRS.formatAmount(1), "1", "one");
+    assert.equal(NRS.formatAmount(10000000, false, true), "10'000'000", "million");
+    assert.equal(NRS.formatAmount(12.34, true), "12.34", "thousand");
+    assert.equal(NRS.formatAmount(12.345, true), "12.35", "thousand");
+});
+
+QUnit.test("formatTimestamp", function (assert) {
+    assert.equal(NRS.formatTimestamp(0, true, true), "1/1/1970", "start.date");
+    assert.equal(NRS.formatTimestamp(0, false, true), "1/1/1970 2:00:00 AM", "start.date.time");
+    assert.equal(NRS.formatTimestamp(1234567890000, false, true), "2/14/2009 1:31:30 AM", "start.date");
 });
