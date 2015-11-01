@@ -257,8 +257,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" &&
-            requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
+        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
             } else {
