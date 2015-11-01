@@ -787,6 +787,14 @@ var NRS = (function (NRS, $, undefined) {
             "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
     };
 
+    NRS.getTransactionLink = function(id, text) {
+        if (!text) {
+            text = id;
+        }
+        return "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(id).escapeHTML() + "'>"
+            + String(text).escapeHTML() + "</a>";
+    };
+
     NRS.getAccountTitle = function (object, acc) {
         var type = typeof object;
 
