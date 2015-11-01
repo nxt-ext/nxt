@@ -43,9 +43,6 @@ public final class StartForging extends APIServlet.APIRequestHandler {
         }
 
         Generator generator = Generator.startForging(secretPhrase);
-        if (generator == null) {
-            return UNKNOWN_ACCOUNT;
-        }
 
         JSONObject response = new JSONObject();
         response.put("deadline", generator.getDeadline());
