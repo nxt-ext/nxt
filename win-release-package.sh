@@ -47,6 +47,10 @@ cp installer/lib/JavaExe.exe nxtservice.exe
 cp -a ${FILES} nxt
 cp -a logs/placeholder.txt nxt/logs
 echo gzip
+for f in `find nxt/html -name *.gz`
+do
+	rm -f "$f"
+done
 for f in `find nxt/html -name *.html -o -name *.js -o -name *.css -o -name *.json  -o -name *.ttf -o -name *.svg -o -name *.otf`
 do
 	gzip -9c "$f" > "$f".gz
