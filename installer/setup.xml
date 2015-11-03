@@ -168,9 +168,16 @@
             <file src="sign.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/sign.sh"/>
 		</pack>
+
         <pack name="jre" os="windows" required="yes" uninstall="false">
-            <description>Java 32 bit</description>
+            <description>Java 64 bit</description>
 			<fileset dir="../jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
+		</pack>
+        <pack name="jre" os="mac" required="yes" uninstall="false">
+            <description>Java 64 bit</description>
+			<fileset dir="../jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
+		<file src="mac-run.sh" targetdir="${INSTALL_PATH}" override="false"/>
+			<executable targetfile="${INSTALL_PATH}/run.sh"/>
 		</pack>
 	</packs>
 </installation>
