@@ -48,8 +48,14 @@ public final class Shuffler {
             if (recipientPublicKey == null) {
                 return shuffler;
             }
+            if (shufflingsMap.size() > 100) {
+                throw new RuntimeException("Cannot run more than 100 shufflers on the same node");
+            }
             if (shuffler == null) {
                 Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
+                if (map.size() >= (shuffling == null ? Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS : shuffling.getParticipantCount())) {
+                    throw new RuntimeException("Cannot run shufflers for more than " + map.size() + " accounts for this shuffling");
+                }
                 shuffler = new Shuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
                 if (shuffling != null) {
                     shuffler.init(shuffling);

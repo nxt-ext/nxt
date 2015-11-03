@@ -605,7 +605,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.fromEpochTime = function (epochTime) {
-        if (NRS.constants.EPOCH_BEGINNING == 0) {
+        if (!NRS.constants || NRS.constants.EPOCH_BEGINNING == 0) {
             throw "undefined epoch beginning";
         }
         return epochTime * 1000 + NRS.constants.EPOCH_BEGINNING - 500;
@@ -639,36 +639,36 @@ var NRS = (function (NRS, $, undefined) {
 			var yyyy = date.getFullYear();
             var yy = String(yyyy).substring(2);
 
-         var res = LOCALE_DATE_FORMAT
-				.replace(/dd/g, dd)
-				.replace(/d/g, d)
-				.replace(/MM/g, MM)
-				.replace(/M/g, M)
-				.replace(/yyyy/g, yyyy)
-				.replace(/yy/g, yy);
+            var res = LOCALE_DATE_FORMAT
+                .replace(/dd/g, dd)
+                .replace(/d/g, d)
+                .replace(/MM/g, MM)
+                .replace(/M/g, M)
+                .replace(/yyyy/g, yyyy)
+                .replace(/yy/g, yy);
 
-			if (!date_only) {
-				var hours = date.getHours();
-				var originalHours = hours;
-				var minutes = date.getMinutes();
-				var seconds = date.getSeconds();
+            if (!date_only) {
+                var hours = date.getHours();
+                var originalHours = hours;
+                var minutes = date.getMinutes();
+                var seconds = date.getSeconds();
 
-				if (NRS.settings["24_hour_format"] == "0") {
+                if (!NRS.settings || NRS.settings["24_hour_format"] == "0") {
                     if (originalHours == 0) {
                         hours += 12;
                     } else if (originalHours >= 13 && originalHours <= 23) {
                         hours -= 12;
-				}
-				}
-				if (minutes < 10) {
-					minutes = "0" + minutes;
-				}
-				if (seconds < 10) {
-					seconds = "0" + seconds;
-				}
-				res += " " + hours + ":" + minutes + ":" + seconds;
+                    }
+                }
+                if (minutes < 10) {
+                    minutes = "0" + minutes;
+                }
+                if (seconds < 10) {
+                    seconds = "0" + seconds;
+                }
+                res += " " + hours + ":" + minutes + ":" + seconds;
 
-				if (NRS.settings["24_hour_format"] == "0") {
+                if (!NRS.settings || NRS.settings["24_hour_format"] == "0") {
                     res += " " + (originalHours >= 12 ? "PM" : "AM");
 				}
 			}

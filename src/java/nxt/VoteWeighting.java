@@ -125,7 +125,7 @@ public final class VoteWeighting {
                     return votingModel;
                 }
             }
-            return null;
+            throw new IllegalArgumentException("Invalid votingModel " + code);
         }
     }
 
@@ -173,7 +173,7 @@ public final class VoteWeighting {
                     return minBalanceModel;
                 }
             }
-            return null;
+            throw new IllegalArgumentException("Invalid minBalanceModel " + code);
         }
     }
 

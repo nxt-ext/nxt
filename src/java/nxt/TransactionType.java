@@ -2931,8 +2931,7 @@ public abstract class TransactionType {
                 if (votingModel == VotingModel.NONE) {
                     Account senderAccount = Account.getAccount(transaction.getSenderId());
                     if (!senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
-                        new NxtException.NotCurrentlyValidException("Phasing only account control is not enabled for account "
-                                + Long.toUnsignedString(transaction.getSenderId()) + ", consequently cannot be removed");
+                        throw new NxtException.NotCurrentlyValidException("Phasing only account control is not currently enabled");
                     }
                 } else if (votingModel == VotingModel.TRANSACTION || votingModel == VotingModel.HASH) {
                     throw new NxtException.NotValidException("Invalid voting model " + votingModel + " for account control");
