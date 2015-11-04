@@ -8,20 +8,7 @@ var NRS = (function(NRS, $) {
 	}
 	
 	NRS.setup.account_control = function() {
-		var sidebarId = 'sidebar_account_control';
-		var options = {
-			"id": sidebarId,
-			"titleHTML": '<i class="fa ion-locked"></i> <span data-i18n="account_control">Account Control</span>',
-			"page": 'account_control',
-			"desiredPosition": 80
-		};
-		NRS.addTreeviewSidebarMenuItem(options);
-		options = {
-			"titleHTML": '<span data-i18n="phasing_only">Mandatory Approval</span>',
-			"type": 'MODAL',
-			"modalId": 'set_mandatory_approval_modal'
-		};
-		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+
 	};
 
 	$("#set_mandatory_approval_modal").on("show.bs.modal", function(e) {
