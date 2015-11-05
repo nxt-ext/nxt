@@ -591,8 +591,8 @@ var NRS = (function (NRS, $, undefined) {
                 "scrollTop": 0
             }, 0);
 
-            $("#asset_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(asset, "account") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(asset, "account") + "</a>");
-            $("#asset_id").html(assetId.escapeHTML());
+            $("#asset_account").html(NRS.getAccountLink(asset, "account"));
+            $("#asset_id").html(NRS.getTransactionLink(assetId));
             $("#asset_decimals").html(String(asset.decimals).escapeHTML());
             $("#asset_name").html(String(asset.name).escapeHTML());
             $("#asset_description").html(String(asset.description).autoLink());

@@ -379,8 +379,6 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
 					}
 
-					NRS.setupClipboardFunctionality();
-
 					if (callback) {
 						callback();
 					}

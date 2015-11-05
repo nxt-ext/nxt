@@ -2949,10 +2949,6 @@ label .popover-content {
 #account_id_dropdown ul.dropdown-menu>li>a {
 	padding:3px 8px;
 }
-.dropdown-menu > li > a.zeroclipboard-is-hover {
-  background-color: #3c8dbc;
-  color: #f9f9f9;
-}
 #remember_password_container,#remember_account_container {
   color:#fff;
   text-align:center;
@@ -2974,7 +2970,7 @@ a.list-group-item.active, a.list-group-item.active:hover, a.list-group-item.acti
 	color:#333 !important;
 }
 .left-side .user-panel .dropdown-menu>li>a { color:#333; }
-.left-side .user-panel .dropdown-menu>li>a.zeroclipboard-is-hover, .left-side .user-panel .dropdown-menu>li>a:hover {
+.left-side .user-panel .dropdown-menu>li>a:hover {
 	color:#fff;
 }
 

@@ -32,6 +32,10 @@ mkdir -p nxt/logs
 echo copy resources
 cp -a ${FILES} nxt
 echo gzip
+for f in `find nxt/html -name *.gz`
+do
+	rm -f "$f"
+done
 for f in `find nxt/html -name *.html -o -name *.js -o -name *.css -o -name *.json -o -name *.ttf -o -name *.svg -o -name *.otf`
 do
 	gzip -9c "$f" > "$f".gz

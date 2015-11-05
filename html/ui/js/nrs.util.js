@@ -788,6 +788,14 @@ var NRS = (function (NRS, $, undefined) {
             "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
     };
 
+    NRS.getTransactionLink = function(id, text) {
+        if (!text) {
+            text = id;
+        }
+        return "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(id).escapeHTML() + "'>"
+            + String(text).escapeHTML() + "</a>";
+    };
+
     NRS.getAccountTitle = function (object, acc) {
         var type = typeof object;
 
@@ -826,75 +834,6 @@ var NRS = (function (NRS, $, undefined) {
 			} else {
 				return String(object[acc + "RS"]).escapeHTML();
 			}
-		}
-	};
-
-    NRS.setupClipboardFunctionality = function () {
-		var elements = "#asset_id_dropdown .dropdown-menu a, #account_id_dropdown .dropdown-menu a";
-
-		if (NRS.isLocalHost) {
-			$("#account_id_dropdown li.remote_only, #asset_info_dropdown li.remote_only").remove();
-		}
-
-        var $el = $(elements);
-        var clipboard = new ZeroClipboard($el, {
-            moviePath: "js/3rdparty/zeroclipboard.swf"
-        });
-
-        clipboard.on("dataRequested", function (client) {
-            client.setText(NRS.getClipboardText($(this).data("type")));
-        });
-
-        if ($el.hasClass("dropdown-toggle")) {
-            $el.removeClass("dropdown-toggle").data("toggle", "");
-            $el.parent().remove(".dropdown-menu");
-        }
-
-        clipboard.on("complete", function () {
-            $.growl($.t("success_clipboard_copy"), {
-                "type": "success"
-            });
-        });
-
-        if (!NRS.getCookie("clipboard_warning_shown")) {
-            clipboard.on("noflash", function () {
-                $("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
-                $("#account_id_dropdown, #asset_id").data("toggle", "");
-                $.growl($.t("error_clipboard_copy_noflash"), {
-                    "type": "danger"
-                });
-            });
-            NRS.setCookie("clipboard_warning_shown", "1", 30);
-        }
-
-        clipboard.on("wrongflash", function () {
-            $("#account_id_dropdown .dropdown-menu, #asset_id_dropdown .dropdown-menu").remove();
-            $("#account_id_dropdown, #asset_id").data("toggle", "");
-            $.growl($.t("error_clipboard_copy_wrongflash"));
-        });
-    };
-
-    NRS.getClipboardText = function (type) {
-        var assetId = $("#asset_id");
-		switch (type) {
-			case "account_rs":
-				return NRS.accountRS;
-				break;
-			case "message_link":
-				return document.URL.replace(/#.*$/, "") + "#message:" + encodeURIComponent(NRS.accountRS);
-				break;
-			case "send_link":
-				return document.URL.replace(/#.*$/, "") + "#send:" + encodeURIComponent(NRS.accountRS);
-				break;
-			case "asset_id":
-                return assetId.text();
-				break;
-			case "asset_link":
-                return document.URL.replace(/#.*/, "") + "#asset:" + assetId.text();
-				break;
-			default:
-				return "";
-				break;
 		}
 	};
 

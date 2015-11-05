@@ -135,6 +135,9 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public static Generator startForging(String secretPhrase) {
+        if (generators.size() >= 100) {
+            throw new RuntimeException("Cannot forge with more than 100 accounts on the same node");
+        }
         Generator generator = new Generator(secretPhrase);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
         if (old != null) {

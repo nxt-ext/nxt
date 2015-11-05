@@ -10,16 +10,15 @@ echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
 OBFUSCATE=$2
 
-FILES="changelogs conf html lib resource contrib logs"
+FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
-FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh compact.sh compact.bat sign.sh"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh mac-run.sh run-tor.sh run-desktop.sh compact.sh compact.bat sign.sh"
 FILES="${FILES} NXT_Wallet.url Dockerfile"
 
-# unix2dos *.bat
 echo compile
-./win-compile.sh
+./compile.sh
 rm -rf html/doc/*
 rm -rf nxt
 rm -rf ${PACKAGE}.jar
@@ -28,18 +27,17 @@ rm -rf ${PACKAGE}.zip
 mkdir -p nxt/
 mkdir -p nxt/logs
 
-if [ "${OBFUSCATE}" == "obfuscate" ];
+if [ "${OBFUSCATE}" == "obfuscate" ]; 
 then
 echo obfuscate
-proguard.bat @nxt.pro
+/opt/proguard/bin/proguard.sh @nxt.pro
 mv ../nxt.map ../nxt.map.${VERSION}
-mkdir -p nxt/src/
 else
 FILES="${FILES} classes src COPYING.txt"
 FILES="${FILES} compile.sh javadoc.sh jar.sh package.sh"
 FILES="${FILES} win-compile.sh win-javadoc.sh win-package.sh"
 echo javadoc
-./win-javadoc.sh
+./javadoc.sh
 fi
 echo copy resources
 cp installer/lib/JavaExe.exe nxt.exe
@@ -60,28 +58,8 @@ echo generate jar files
 ../jar.sh
 echo package installer Jar
 ../installer/build-installer.sh ../${PACKAGE}
-echo create installer exe
-../installer/build-exe.bat ${PACKAGE}
-echo create installer zip
 cd -
-zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
-echo creating change log ${CHANGELOG}
-echo -e "Release $1\n" > ${CHANGELOG}
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
-sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
-
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
-sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
-
-if [ "${OBFUSCATE}" == "obfuscate" ];
-then
-echo -e "\n\nThis is an experimental release for testing only. Source code is not provided." >> ${CHANGELOG}
-fi
-echo -e "\n\nChange log:\n" >> ${CHANGELOG}
-
-cat changelogs/${CHANGELOG} >> ${CHANGELOG}
-echo >> ${CHANGELOG}
+echo bundle a dmg file	
+/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/bin/javapackager -deploy -outdir . -outfile nxt-client -name nxt-installer -width 34 -height 43 -native dmg -srcfiles ${PACKAGE}.jar -appclass com.izforge.izpack.installer.bootstrap.Installer -v -Bmac.category=Business -Bmac.CFBundleIdentifier=org.nxt.client.installer -Bmac.CFBundleName=Nxt-Installer -Bmac.CFBundleVersion=${VERSION} -BappVersion=${VERSION} -Bicon=installer/AppIcon.icns > installer/javapackager.log 2>&1

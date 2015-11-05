@@ -1234,8 +1234,8 @@ var NRS = (function(NRS, $, undefined) {
 				"scrollTop": 0
 			}, 0);
 
-			$("#poll_account").html("<a href='#' data-user='" + NRS.getAccountFormatted(poll, "account") + "' class='user_info'>" + NRS.getAccountTitle(poll, "account") + "</a>");
-			$("#poll_id").html(poll.poll.escapeHTML());
+			$("#poll_account").html(NRS.getAccountLink(poll, "account"));
+			$("#poll_id").html(NRS.getTransactionLink(pollId));
 
 			$("#followed_polls_poll_name").html(String(poll.name).escapeHTML());
 			$("#poll_description").html(String(poll.description).autoLink());
