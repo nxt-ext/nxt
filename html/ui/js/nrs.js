@@ -982,6 +982,8 @@ NRS.addPagination = function () {
 					NRS.updateAccountLeasingStatus();
 				}
 
+				NRS.updateAccountControlStatus();
+
 				if (response.name) {
 					$("#account_name").html(response.name.escapeHTML()).removeAttr("data-i18n");
 				}
@@ -1091,6 +1093,16 @@ NRS.addPagination = function () {
 			$("#account_leasing_status").html(accountLeasingStatus).show();
 		} else {
 			$("#account_leasing_status").hide();
+		}
+	};
+
+	NRS.updateAccountControlStatus = function() {
+		if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+			$("#setup_mandatory_approval").hide();
+			$("#change_mandatory_approval").show();
+		} else {
+			$("#setup_mandatory_approval").show();
+			$("#change_mandatory_approval").hide();
 		}
 	};
 

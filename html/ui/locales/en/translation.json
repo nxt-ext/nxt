@@ -1492,5 +1492,7 @@
   "error_invalid_hallmark": "Error generating hallmark: __error__",
   "parse": "Parse",
   "ledger": "Ledger",
-  "user_no_ledger": "This user has no ledger entries."
+  "user_no_ledger": "This user has no ledger entries.",
+  "setup_mandatory_approval": "Setup Mandatory Approval",
+  "mandatory_approval_enabled": "Mandatory Approval is enabled"
 }
