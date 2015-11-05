@@ -65,7 +65,7 @@ public final class GetHoldingShufflings extends APIServlet.APIRequestHandler {
         response.put("shufflings", jsonArray);
         try (DbIterator<Shuffling> shufflings = Shuffling.getHoldingShufflings(holdingId, stage, includeFinished, firstIndex, lastIndex)) {
             for (Shuffling shuffling : shufflings) {
-                jsonArray.add(JSONData.shuffling(shuffling));
+                jsonArray.add(JSONData.shuffling(shuffling, false));
             }
         }
         return response;

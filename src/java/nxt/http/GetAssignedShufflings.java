@@ -29,13 +29,14 @@ public final class GetAssignedShufflings extends APIServlet.APIRequestHandler {
     static final GetAssignedShufflings instance = new GetAssignedShufflings();
 
     private GetAssignedShufflings() {
-        super(new APITag[] {APITag.SHUFFLING}, "account", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.SHUFFLING}, "account", "includeHoldingInfo", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         long accountId = ParameterParser.getAccountId(req, "account", true);
+        boolean includeHoldingInfo = "true".equalsIgnoreCase(req.getParameter("includeHoldingInfo"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
 
@@ -44,7 +45,7 @@ public final class GetAssignedShufflings extends APIServlet.APIRequestHandler {
         response.put("shufflings", jsonArray);
         try (DbIterator<Shuffling> shufflings = Shuffling.getAssignedShufflings(accountId, firstIndex, lastIndex)) {
             for (Shuffling shuffling : shufflings) {
-                jsonArray.add(JSONData.shuffling(shuffling));
+                jsonArray.add(JSONData.shuffling(shuffling, includeHoldingInfo));
             }
         }
         return response;

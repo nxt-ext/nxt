@@ -35,6 +35,7 @@ import nxt.DigitalGoodsStore;
 import nxt.Exchange;
 import nxt.ExchangeRequest;
 import nxt.Generator;
+import nxt.HoldingType;
 import nxt.MonetarySystem;
 import nxt.Nxt;
 import nxt.Order;
@@ -325,7 +326,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject shuffling(Shuffling shuffling) {
+    static JSONObject shuffling(Shuffling shuffling, boolean includeHoldingInfo) {
         JSONObject json = new JSONObject();
         json.put("shuffling", Long.toUnsignedString(shuffling.getId()));
         putAccount(json, "issuer", shuffling.getIssuerId());
@@ -347,6 +348,15 @@ final class JSONData {
         if (recipientPublicKeys.size() > 0) {
             json.put("recipientPublicKeys", recipientPublicKeys);
         }
+        if (includeHoldingInfo && shuffling.getHoldingType() != HoldingType.NXT) {
+            JSONObject holdingJson = new JSONObject();
+            if (shuffling.getHoldingType() == HoldingType.ASSET) {
+                putAssetInfo(holdingJson, shuffling.getHoldingId());
+            } else if (shuffling.getHoldingType() == HoldingType.CURRENCY) {
+                putCurrencyInfo(holdingJson, shuffling.getHoldingId());
+            }
+            json.put("holdingInfo", holdingJson);
+        }
         return json;
     }
 
@@ -364,6 +374,7 @@ final class JSONData {
         putAccount(json, "account", shuffler.getAccountId());
         putAccount(json, "recipient", Account.getId(shuffler.getRecipientPublicKey()));
         json.put("shufflingFullHash", Convert.toHexString(shuffler.getShufflingFullHash()));
+        json.put("shuffling", Long.toUnsignedString(Convert.fullHashToId(shuffler.getShufflingFullHash())));
         return json;
     }
 
