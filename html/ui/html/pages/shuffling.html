@@ -14,14 +14,14 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div id="shuffling_page" class="page" xmlns="http://www.w3.org/1999/html">
-
+<div id="shuffling_page" class="paginated page">
     <section id="shuffling_page_header" class="content-header">
         <h1><span data-i18n="shuffling">SHUFFLING</span></h1>
     </section>
-
     <section id="exchange_page_content" class="content">
         <ul>
+            <li><a href="#" data-toggle="modal" data-target="#m_shuffling_start_modal">Start Shuffle</a></li>
+            <li><a href="#" data-toggle="modal" data-target="#m_shuffling_stop_modal">Stop Shuffle</a></li>
             <li><a href="#" data-toggle="modal" data-target="#m_shuffling_create_modal">Create Shuffle</a></li>
             <li><a href="#" data-toggle="modal" data-target="#m_shuffling_register_modal">Register Shuffle</a></li>
             <li><a href="#" data-toggle="modal" data-target="#m_shuffling_process_modal">Process Shuffle</a></li>
@@ -29,5 +29,172 @@
             <li><a href="#" data-toggle="modal" data-target="#m_shuffling_cancel_modal">Cancel Shuffle</a></li>
         </ul>
     </section>
+</div>
 
+<div id="my_shufflers_page" class="paginated page">
+    <script type="text/x-handlebars-template">
+        <section class="content-header">
+            <h1 data-i18n="my_shufflers">My Shufflers</h1>
+        </section>
+        <section class="content">
+            <a href="#" onclick="{{ callback this start }}">Start</a>
+            {{#if errorMessage}}
+            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+            {{/if}}
+            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th data-i18n="shuffling">Shuffling</th>
+                        <th data-i18n="holding_type">Holding Type</th>
+                        <th data-i18n="holding">Holding</th>
+                        <th data-i18n="stage">Stage</th>
+                        <th data-i18n="assignee">Assignee</th>
+                        <th data-i18n="amount">Amount</th>
+                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
+                        <th data-i18n="participant_count">Participant Count</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {{#each shufflers}}
+                            <tr>
+                                <td>{{shuffling}}</td>
+                                <td>{{holdingTypeLabel}}</td>
+                                <td>{{holding}}</td>
+                                <td>{{stageLabel}}</td>
+                                <td>{{assignee}}</td>
+                                <td>{{amount}}</td>
+                                <td>{{blocks_remaining}}</td>
+                                <td>{{participant_count}}</td>
+                                <td>
+                                    {{#if canJoin}}
+                                        <a href="#" onclick="{{ callback .. ../start }}">Start</a>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container">
+                    <p>
+                        <span data-i18n="no_shufflings">There are no shufflings</span>, 
+                        <a href="#" data-toggle="modal" data-target="#m_shuffling_create_modal" data-i18n="create_one">create one</a>.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </script>
+</div>
+
+<div id="all_shufflings_page" class="page">
+    <script type="text/x-handlebars-template">
+        <section class="content-header">
+            <h1 data-i18n="all_shufflings">All Shufflings</h1>
+        </section>
+        <section class="content">
+            {{#if errorMessage}}
+            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+            {{/if}}
+            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th data-i18n="shuffling">Shuffling</th>
+                        <th data-i18n="holding_type">Holding Type</th>
+                        <th data-i18n="holding">Holding</th>
+                        <th data-i18n="stage">Stage</th>
+                        <th data-i18n="assignee">Assignee</th>
+                        <th data-i18n="amount">Amount</th>
+                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
+                        <th data-i18n="participant_count">Participant Count</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {{#each shufflings}}
+                            <tr>
+                                <td>{{shuffling}}</td>
+                                <td>{{holdingTypeLabel}}</td>
+                                <td>{{holding}}</td>
+                                <td>{{stageLabel}}</td>
+                                <td>{{assignee}}</td>
+                                <td>{{amount}}</td>
+                                <td>{{blocks_remaining}}</td>
+                                <td>{{participant_count}}</td>
+                                <td>
+                                    {{#if canJoin}}
+                                        <a href="#">Join</a>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container">
+                    <p>
+                        <span data-i18n="no_shufflings">There are no shufflings</span>.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </script>
+</div>
+
+<div id="my_shufflings_page" class="paginated page">
+    <script type="text/x-handlebars-template">
+        <section class="content-header">
+            <h1 data-i18n="my_shufflings">My Shufflings</h1>
+        </section>
+        <section class="content">
+            {{#if errorMessage}}
+            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+            {{/if}}
+            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th data-i18n="shuffling">Shuffling</th>
+                        <th data-i18n="holding_type">Holding Type</th>
+                        <th data-i18n="holding">Holding</th>
+                        <th data-i18n="stage">Stage</th>
+                        <th data-i18n="assignee">Assignee</th>
+                        <th data-i18n="amount">Amount</th>
+                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
+                        <th data-i18n="participant_count">Participant Count</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {{#each shufflings}}
+                            <tr>
+                                <td>{{shuffling}}</td>
+                                <td>{{holdingTypeLabel}}</td>
+                                <td>{{holding}}</td>
+                                <td>{{stageLabel}}</td>
+                                <td>{{assignee}}</td>
+                                <td>{{amount}}</td>
+                                <td>{{blocks_remaining}}</td>
+                                <td>{{participant_count}}</td>
+                                <td>
+                                    {{#if canJoin}}
+                                        <a href="#" class="my-shufflings-join">Join</a>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container">
+                    <p>
+                        <span data-i18n="no_shufflings">There are no shufflings</span>, 
+                        <a href="#" data-toggle="modal" data-target="#m_shuffling_create_modal" data-i18n="create_one">create one</a>.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </script>
 </div>
