@@ -554,13 +554,15 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (encryptedData.getData().length > (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+            if (getEncryptedDataLength() > (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
                     ? Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2 : Constants.MAX_ENCRYPTED_MESSAGE_LENGTH)) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
-            if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
-                    || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
-                throw new NxtException.NotValidException("Invalid nonce length " + encryptedData.getNonce().length);
+            if (encryptedData != null) {
+                if ((encryptedData.getNonce().length != 32 && encryptedData.getData().length > 0)
+                        || (encryptedData.getNonce().length != 0 && encryptedData.getData().length == 0)) {
+                    throw new NxtException.NotValidException("Invalid nonce length " + encryptedData.getNonce().length);
+                }
             }
             if ((getVersion() != 2 && !isCompressed) || (getVersion() == 2 && isCompressed)) {
                 throw new NxtException.NotValidException("Version mismatch - version " + getVersion() + ", isCompressed " + isCompressed);
@@ -671,8 +673,8 @@ public interface Appendix {
         }
 
         @Override
-        int getMyFullSize() {
-            return getEncryptedData() == null ? 0 : getEncryptedData().getData().length;
+        final int getMyFullSize() {
+            return getEncryptedDataLength();
         }
 
         @Override
@@ -748,6 +750,10 @@ public interface Appendix {
             this.encryptedData = encryptedData;
         }
 
+        int getEncryptedDataLength() {
+            return getEncryptedData() == null ? 0 : getEncryptedData().getData().length;
+        }
+
         public final boolean isText() {
             if (prunableMessage != null) {
                 return prunableMessage.isText();
@@ -819,14 +825,6 @@ public interface Appendix {
         }
 
         @Override
-        int getMyFullSize() {
-            if (getEncryptedData() != null) {
-                return getEncryptedData().getData().length;
-            }
-            return EncryptedData.getEncryptedDataLength(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt);
-        }
-
-        @Override
         void putMyBytes(ByteBuffer buffer) {
             if (getEncryptedData() == null) {
                 throw new NxtException.NotYetEncryptedException("Prunable encrypted message not yet encrypted");
@@ -851,9 +849,14 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (getEncryptedData() == null) {
-                throw new NxtException.NotYetEncryptedException("Prunable encrypted message not yet encrypted");
+                int dataLength = getEncryptedDataLength();
+                if (dataLength > Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH) {
+                    throw new NxtException.NotValidException(String.format("Message length %d exceeds max prunable encrypted message length %d",
+                            dataLength, Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH));
+                }
+            } else {
+                super.validate(transaction);
             }
-            super.validate(transaction);
         }
 
         @Override
@@ -870,6 +873,11 @@ public interface Appendix {
         @Override
         public void encrypt(String secretPhrase) {
             setEncryptedData(EncryptedData.encrypt(getPlaintext(), secretPhrase, recipientPublicKey));
+        }
+
+        @Override
+        int getEncryptedDataLength() {
+            return EncryptedData.getEncryptedDataLength(getPlaintext());
         }
 
         private byte[] getPlaintext() {
@@ -974,14 +982,6 @@ public interface Appendix {
             } else {
                 super.putMyJSON(json);
             }
-        }
-
-        @Override
-        void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (getEncryptedData() == null) {
-                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
-            }
-            super.validate(transaction);
         }
 
         @Override
@@ -1092,14 +1092,6 @@ public interface Appendix {
             } else {
                 super.putMyJSON(json);
             }
-        }
-
-        @Override
-        void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (getEncryptedData() == null) {
-                throw new NxtException.NotYetEncryptedException("Message not yet encrypted");
-            }
-            super.validate(transaction);
         }
 
         @Override

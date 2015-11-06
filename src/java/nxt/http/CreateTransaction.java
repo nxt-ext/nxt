@@ -219,9 +219,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("broadcasted", true);
             } else {
-                try {
-                    transaction.validate();
-                } catch (NxtException.NotYetEncryptedException ignore) {}
+                transaction.validate();
                 response.put("broadcasted", false);
             }
         } catch (NxtException.NotYetEnabledException e) {
