@@ -324,6 +324,10 @@ var NRS = (function(NRS, $) {
 		if (!data) {
 			data = NRS.getFormData($form);
 		}
+        if ($btn.hasClass("btn-calculate-fee")) {
+            data.calculateFee = true;
+            data.feeNXT = "0";
+        }
 
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
@@ -464,7 +468,8 @@ var NRS = (function(NRS, $) {
 			data.deadline = String(data.deadline * 60); //hours to minutes
 		}
 
-        if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
+        if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword &&
+                !(data.calculateFee && NRS.accountInfo.publicKey)) {
 			$form.find(".error_message").html($.t("error_passphrase_required")).show();
 			if (formErrorFunction) {
 				formErrorFunction(false, data);
@@ -562,9 +567,17 @@ var NRS = (function(NRS, $) {
 			});
 		}
 
-		if (data.doNotBroadcast) {
+		if (data.doNotBroadcast || data.calculateFee) {
 			data.broadcast = "false";
-			delete data.doNotBroadcast;
+            if (data.calculateFee) {
+                if (NRS.accountInfo.publicKey) {
+                    data.publicKey = NRS.accountInfo.publicKey;
+                    delete data.secretPhrase;
+                }
+            }
+            if (data.doNotBroadcast) {
+                delete data.doNotBroadcast;
+            }
 		}
 
 		NRS.sendRequest(requestType, data, function(response) {
@@ -639,7 +652,11 @@ var NRS = (function(NRS, $) {
 						errorMessage = $.t("error_unknown");
 					}
 				}
-
+                if (data.calculateFee) {
+                    NRS.unlockForm($modal, $btn, false);
+                    $("#" + $modal.attr('id').replace('_modal', '') + "_fee").val(NRS.convertToNXT(response.transactionJSON.feeNQT));
+                    return;
+                }
 				if (!sentToFunction) {
 					NRS.unlockForm($modal, $btn, true);
 

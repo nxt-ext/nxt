@@ -82,6 +82,7 @@ var NRS = (function(NRS, $, undefined) {
             _replaceModalHTMLTemplateDiv(data, 'recipient_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'add_message_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'add_public_message_modal_template');
+            _replaceModalHTMLTemplateDiv(data, 'fee_calculation_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'secret_phrase_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'admin_password_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_fee_deadline_template');
