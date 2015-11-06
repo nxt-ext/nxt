@@ -1785,6 +1785,10 @@ public interface Attachment extends Appendix {
             this.goods = goods;
         }
 
+        int getGoodsDataLength() {
+            return goods.getData().length;
+        }
+
         public final long getDiscountNQT() {
             return discountNQT;
         }
@@ -1818,7 +1822,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             if (getGoods() == null) {
-                return 8 + 4 + Constants.MAX_DGS_GOODS_LENGTH + 32 + 8;
+                return 8 + 4 + EncryptedData.getEncryptedSize(getPlaintext()) + 8;
             }
             return super.getMySize();
         }
@@ -1846,7 +1850,16 @@ public interface Attachment extends Appendix {
 
         @Override
         public void encrypt(String secretPhrase) {
-            setGoods(EncryptedData.encrypt(Convert.compress(goodsToEncrypt), secretPhrase, recipientPublicKey));
+            setGoods(EncryptedData.encrypt(getPlaintext(), secretPhrase, recipientPublicKey));
+        }
+
+        @Override
+        int getGoodsDataLength() {
+            return EncryptedData.getEncryptedDataLength(getPlaintext());
+        }
+
+        private byte[] getPlaintext() {
+            return Convert.compress(goodsToEncrypt);
         }
 
     }

@@ -65,6 +65,20 @@ public final class EncryptedData {
         }
     }
 
+    public static int getEncryptedDataLength(byte[] plaintext) {
+        if (plaintext.length == 0) {
+            return 0;
+        }
+        return Crypto.aesEncrypt(plaintext, new byte[32]).length;
+    }
+
+    public static int getEncryptedSize(byte[] plaintext) {
+        if (plaintext.length == 0) {
+            return 0;
+        }
+        return getEncryptedDataLength(plaintext) + 32;
+    }
+
     private final byte[] data;
     private final byte[] nonce;
 

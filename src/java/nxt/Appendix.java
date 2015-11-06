@@ -486,7 +486,7 @@ public interface Appendix {
         private static final Fee ENCRYPTED_MESSAGE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendage) {
-                return ((AbstractEncryptedMessage)appendage).getEncryptedData().getData().length - 16;
+                return ((AbstractEncryptedMessage)appendage).getEncryptedDataLength() - 16;
             }
         };
 
@@ -576,6 +576,10 @@ public interface Appendix {
 
         final void setEncryptedData(EncryptedData encryptedData) {
             this.encryptedData = encryptedData;
+        }
+
+        int getEncryptedDataLength() {
+            return encryptedData.getData().length;
         }
 
         public final boolean isText() {
@@ -816,7 +820,10 @@ public interface Appendix {
 
         @Override
         int getMyFullSize() {
-            return getEncryptedData() == null ? Constants.MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH : getEncryptedData().getData().length;
+            if (getEncryptedData() != null) {
+                return getEncryptedData().getData().length;
+            }
+            return EncryptedData.getEncryptedDataLength(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt);
         }
 
         @Override
@@ -862,8 +869,11 @@ public interface Appendix {
 
         @Override
         public void encrypt(String secretPhrase) {
-            setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    secretPhrase, recipientPublicKey));
+            setEncryptedData(EncryptedData.encrypt(getPlaintext(), secretPhrase, recipientPublicKey));
+        }
+
+        private byte[] getPlaintext() {
+            return isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt;
         }
 
     }
@@ -938,10 +948,10 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            if (getEncryptedData() == null) {
-                return 4 + Constants.MAX_ENCRYPTED_MESSAGE_LENGTH;
+            if (getEncryptedData() != null) {
+                return super.getMySize();
             }
-            return super.getMySize();
+            return 4 + EncryptedData.getEncryptedSize(getPlaintext());
         }
 
         @Override
@@ -984,8 +994,16 @@ public interface Appendix {
 
         @Override
         public void encrypt(String secretPhrase) {
-            setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    secretPhrase, recipientPublicKey));
+            setEncryptedData(EncryptedData.encrypt(getPlaintext(), secretPhrase, recipientPublicKey));
+        }
+
+        private byte[] getPlaintext() {
+            return isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt;
+        }
+
+        @Override
+        int getEncryptedDataLength() {
+            return EncryptedData.getEncryptedDataLength(getPlaintext());
         }
 
     }
@@ -1049,10 +1067,10 @@ public interface Appendix {
 
         @Override
         int getMySize() {
-            if (getEncryptedData() == null) {
-                return 4 + Constants.MAX_ENCRYPTED_MESSAGE_LENGTH;
+            if (getEncryptedData() != null) {
+                return super.getMySize();
             }
-            return super.getMySize();
+            return 4 + EncryptedData.getEncryptedSize(getPlaintext());
         }
 
         @Override
@@ -1094,8 +1112,16 @@ public interface Appendix {
 
         @Override
         public void encrypt(String secretPhrase) {
-            setEncryptedData(EncryptedData.encrypt(isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt,
-                    secretPhrase, Crypto.getPublicKey(secretPhrase)));
+            setEncryptedData(EncryptedData.encrypt(getPlaintext(), secretPhrase, Crypto.getPublicKey(secretPhrase)));
+        }
+
+        @Override
+        int getEncryptedDataLength() {
+            return EncryptedData.getEncryptedDataLength(getPlaintext());
+        }
+
+        private byte[] getPlaintext() {
+            return isCompressed() && messageToEncrypt.length > 0 ? Convert.compress(messageToEncrypt) : messageToEncrypt;
         }
 
     }
