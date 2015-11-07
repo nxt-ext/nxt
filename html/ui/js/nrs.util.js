@@ -788,12 +788,12 @@ var NRS = (function (NRS, $, undefined) {
             "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
     };
 
-    NRS.getTransactionLink = function(id, text) {
+    NRS.getTransactionLink = function(id, text, isEscapedtext) {
         if (!text) {
             text = id;
         }
         return "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(id).escapeHTML() + "'>"
-            + String(text).escapeHTML() + "</a>";
+            + (isEscapedtext ? text : String(text).escapeHTML()) + "</a>";
     };
 
     NRS.getAccountTitle = function (object, acc) {

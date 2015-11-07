@@ -80,7 +80,7 @@ var NRS = (function (NRS, $, undefined) {
                 phasingDetails.quorum = phasingParams.phasingQuorum;
                 phasingDetails.minBalance = phasingParams.phasingMinBalance;
         }
-        var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(phasingParams.phasingHolding).escapeHTML() + "'>" + phasingParams.phasingHolding + "</a>";
+        var phasingTransactionLink = NRS.getTransactionLink(phasingParams.phasingHolding);
         if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
             phasingDetails.asset_formatted_html = phasingTransactionLink;
         } else if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.CURRENCY) {
@@ -362,7 +362,7 @@ var NRS = (function (NRS, $, undefined) {
                         }
                         var data = {
                             "type": $.t("vote_casting"),
-                            "poll_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + transaction.attachment.poll + "'>" + transaction.attachment.poll + "</a>",
+                            "poll_formatted_html": NRS.getTransactionLink(transaction.attachment.poll),
                             "vote": vote
                         };
                         data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
@@ -487,7 +487,8 @@ var NRS = (function (NRS, $, undefined) {
                         for (i = 0; i < transaction.attachment.transactionFullHashes.length; i++) {
                             var transactionBytes = converters.hexStringToByteArray(transaction.attachment.transactionFullHashes[i]);
                             var transactionId = converters.byteArrayToBigInteger(transactionBytes, 0).toString().escapeHTML();
-                            data[$.t("transaction") + (i + 1) + "_formatted_html"] = "<a href='#' class='show_transaction_modal_action' data-transaction='" + transactionId + "'>" + transactionId + "</a>";
+                            data[$.t("transaction") + (i + 1) + "_formatted_html"] =
+                                NRS.getTransactionLink(transactionId);
                         }
 
                         $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
@@ -561,7 +562,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }, function (asset) {
                                     var data = {
                                         "type": $.t("ask_order_cancellation"),
-                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
+                                        "order_formatted_html": NRS.getTransactionLink(transaction.transaction),
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -590,7 +591,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }, function (asset) {
                                     var data = {
                                         "type": $.t("bid_order_cancellation"),
-                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
+                                        "order_formatted_html": NRS.getTransactionLink(transaction.transaction),
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -1239,7 +1240,7 @@ var NRS = (function (NRS, $, undefined) {
                     tradeQuantity = tradeQuantity.add(new BigInteger(trade.quantityQNT));
                     tradeTotal = tradeTotal.add(new BigInteger(trade.quantityQNT).multiply(new BigInteger(trade.priceNQT)));
                     rows += "<tr>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(trade[transactionField]).escapeHTML() + "'>" + NRS.formatTimestamp(trade.timestamp) + "</a>" +
+                    "<td>" + NRS.getTransactionLink(trade[transactionField], NRS.formatTimestamp(trade.timestamp)) + "<td>" +
                     "<td>" + NRS.formatQuantity(trade.quantityQNT, asset.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(trade.priceNQT, asset.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(trade.quantityQNT, trade.priceNQT)) +
@@ -1291,7 +1292,7 @@ var NRS = (function (NRS, $, undefined) {
                     exchangedUnits = exchangedUnits.add(new BigInteger(exchange.units));
                     exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
                     rows += "<tr>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+                    "<td>" + NRS.getTransactionLink(exchange.offer, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                     "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
@@ -1358,7 +1359,7 @@ var NRS = (function (NRS, $, undefined) {
                         exchangeType = "Same";
                     }
                     rows += "<tr>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+                    "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                     "<td>" + exchangeType + "</td>" +
                     "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +

@@ -192,9 +192,7 @@ var NRS = (function (NRS, $, undefined) {
             var minReserve = String(currency.minReservePerUnitNQT).escapeHTML();
             var typeIcons = NRS.getTypeIcons(currency.type);
             rows += "<tr>" +
-            "<td>" +
-            "<a href='#' class='show_transaction_modal_action' data-transaction='" + currencyId + "' >" + code + "</a>" +
-            "</td>" +
+            "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
             "<td>" + name + "</td>" +
             "<td>" + typeIcons + "</td>" +
             "<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
@@ -251,7 +249,7 @@ var NRS = (function (NRS, $, undefined) {
                     $("#" + (type == "sell" ? "buy" : "sell") + "_currency_rate").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
                 }
                 rows += "<tr>" +
-                    "<td>" + "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(offer.offer).escapeHTML() + "'>" + NRS.getTransactionStatusIcon(offer) + "</a>" + "</td>" +
+                    "<td>" + NRS.getTransactionLink(offer.offer, NRS.getTransactionStatusIcon(offer), true) + "</td>" +
                     "<td>" + NRS.getAccountLink(offer, "account") + "</td>" +
                     "<td>" + NRS.convertToQNTf(offer.supply, decimals) + "</td>" +
                     "<td>" + NRS.convertToQNTf(offer.limit, decimals) + "</td>" +
@@ -401,9 +399,7 @@ var NRS = (function (NRS, $, undefined) {
                     for (var i = 0; i < response.exchanges.length; i++) {
                         var exchange = response.exchanges[i];
                         rows += "<tr>" +
-                        "<td>" +
-                        "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
-                        "</td>" +
+                        "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                         "<td>" +
                         "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
                         "</td>" +
@@ -438,9 +434,7 @@ var NRS = (function (NRS, $, undefined) {
                     for (var i = 0; i < response.exchanges.length; i++) {
                         var exchange = response.exchanges[i];
                         rows += "<tr>" +
-                        "<td>" +
-                        "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
-                        "</td>" +
+                        "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                         "<td>" +
                         "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
                         "</td>" +
@@ -474,9 +468,7 @@ var NRS = (function (NRS, $, undefined) {
                 var exchangeRequest = exchangeRequests[i];
                 var type = exchangeRequest.subtype == 5 ? "buy" : "sell";
                 rows += "<tr class=confirmed>" +
-                    "<td>" +
-                        "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchangeRequest.transaction).escapeHTML() + "'>" + NRS.getTransactionStatusIcon(exchangeRequest) + "</a>" +
-                    "</td>" +
+                    "<td>" + NRS.getTransactionLink(exchangeRequest.transaction, NRS.getTransactionStatusIcon(exchangeRequest), true) + "</td>" +
                     "<td>" +
                         "<a href='#' class='block show_block_modal_action' data-block='" + String(exchangeRequest.height).escapeHTML() + "'>" + exchangeRequest.height + "</a>" +
                     "</td>" +
@@ -719,9 +711,7 @@ var NRS = (function (NRS, $, undefined) {
                         var typeIcons = NRS.getTypeIcons(currency.type);
                         var isOfferEnabled = NRS.isExchangeable(currency.type) && (!NRS.isControllable(currency.type) || NRS.account == currency.issuerAccount);
                         rows += "<tr>" +
-                        "<td>" +
-                        "<a href='#' class='show_transaction_modal_action' data-transaction='" + currencyId + "' >" + code + "</a>" +
-                        "</td>" +
+                        "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
                         "<td>" + currency.name + "</td>" +
                         "<td>" + typeIcons + "</td>" +
                         "<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
@@ -907,15 +897,9 @@ var NRS = (function (NRS, $, undefined) {
                     var exchange = response.exchanges[i];
                     rows += "<tr>" +
                     "<td>" + NRS.formatTimestamp(exchange.timestamp) + "</td>" +
-                    "<td>" +
-                    "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + String(exchange.transaction).escapeHTML() + "</a>" +
-                    "</td>" +
-                    "<td>" +
-                    "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + String(exchange.offer).escapeHTML() + "</a>" +
-                    "</td>" +
-                    "<td>" +
-                    "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.currency).escapeHTML() + "' >" + String(exchange.code).escapeHTML() + "</a>" +
-                    "</td>" +
+                    "<td>" + NRS.getTransactionLink(exchange.transaction) + "</td>" +
+                    "<td>" + NRS.getTransactionLink(exchange.offer) + "</td>" +
+                    "<td>" + NRS.getTransactionLink(exchange.currency, exchange.code) + "</td>" +
                     "<td>" +
                     "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
                     "</td>" +
@@ -951,7 +935,8 @@ var NRS = (function (NRS, $, undefined) {
                 for (var i = 0; i < transfers.length; i++) {
                     transfers[i].units = new BigInteger(transfers[i].units);
                     var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
-                    rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transfers[i].transfer).escapeHTML() + "'>" + String(transfers[i].currency).escapeHTML() + "</a></td>" +
+                    rows += "<tr>" +
+                    "<td>" + NRS.getTransactionLink(transfers[i].transfer, transfers[i].currency) + "</td>" +
                     "<td><a href='#' data-goto-currency='" + String(transfers[i].code).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td>" +
                     "<td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td>" +
                     "<td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals) + "</td>" +

@@ -72,7 +72,7 @@ var NRS = (function(NRS, $, undefined) {
                         transaction.amount = new BigInteger(transaction.amountNQT);
                         transaction.fee = new BigInteger(transaction.feeNQT);
                         rows += "<tr>" +
-                        "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td>" +
+                        "<td>" + NRS.getTransactionLink(transaction.transaction, NRS.formatTimestamp(transaction.timestamp)) + "</td>" +
                         "<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "</td>" +
                         "<td>" + NRS.formatAmount(transaction.amount) + "</td>" +
                         "<td>" + NRS.formatAmount(transaction.fee) + "</td>" +

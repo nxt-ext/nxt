@@ -727,7 +727,7 @@ var NRS = (function (NRS, $, undefined) {
                 var statusIcon = NRS.getTransactionStatusIcon(order);
                 var className = (order.account == NRS.account ? "your-order" : "");
                 rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(order.order).escapeHTML() + "'>" + statusIcon + "</a></td>" +
+                    "<td>" + NRS.getTransactionLink(order.order, statusIcon, true) + "</td>" +
                     "<td>" + NRS.getAccountLink(order, "account", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                     "<td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
                     "<td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td>" +
@@ -816,7 +816,7 @@ var NRS = (function (NRS, $, undefined) {
                     trade.quantityQNT = new BigInteger(trade.quantityQNT);
                     trade.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trade.priceNQT, trade.quantityQNT));
                     rows += "<tr>" +
-                        "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(trade.bidOrder).escapeHTML() + "'>" + NRS.formatTimestamp(trade.timestamp) + "</a></td>" +
+                        "<td>" + NRS.getTransactionLink(trade.bidOrder, NRS.formatTimestamp(trade.timestamp)) + "</td>" +
                         "<td>" + $.t(trade.tradeType) + "</td>" +
                         "<td>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
                         "<td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals) + "</td>" +
@@ -1419,9 +1419,10 @@ var NRS = (function (NRS, $, undefined) {
 
                     var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
 
-                    rows += "<tr><td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transfers[i].assetTransfer).escapeHTML() + "'>" + String(transfers[i].assetTransfer).escapeHTML() + "</a></td><td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
-                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
-                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
+                    rows += "<tr><td>" + NRS.getTransactionLink(transfers[i].assetTransfer) + "</td>" +
+                        "<td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
+                        "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
+                        "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
                     "</tr>";
                 }
 

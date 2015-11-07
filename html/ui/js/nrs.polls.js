@@ -99,7 +99,7 @@ var NRS = (function(NRS, $, undefined) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
 								rows += "<tr>";
-								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
+								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
 								rows += "<td>" + (poll.sender != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
@@ -164,8 +164,8 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								rows += "<tr>"
-								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#'  data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
+								rows += "<tr>";
+								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
 								rows += "<td>" + (poll.sender != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
@@ -234,8 +234,8 @@ var NRS = (function(NRS, $, undefined) {
 								if (pollDescription.length > 100) {
 									pollDescription = pollDescription.substring(0, 100) + "...";
 								}
-								rows += "<tr>"
-								rows += "<td><a class='poll_list_title show_transaction_modal_action' href='#' data-transaction='"+poll.transaction+"'>" + String(poll.attachment.name).escapeHTML() + "</a></td>";
+								rows += "<tr>";
+								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
 								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
 								rows += "<td>" + (poll.sender != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(poll, "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(poll, "sender") + "</a>" : "Genesis") + "</td>"
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
