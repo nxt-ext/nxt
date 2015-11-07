@@ -33,9 +33,23 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
-	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true])").click(function() {
+	$(".modal button.btn-primary,button.btn-calculate-fee:not([data-dismiss=modal]):not([data-ignore=true])").click(function() {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
+
+	$(".modal input,select,textarea").change(function() {
+        var id = $(this).attr('id');
+        var modal = $(this).closest(".modal");
+        var feeFieldId = modal.attr('id').replace('_modal', '') + "_fee";
+        if (id == feeFieldId) {
+            return;
+        }
+        var fee = $("#" + feeFieldId);
+        if (fee.val() == "") {
+            return;
+        }
+        fee.val("");
+    });
 
 	function getSuccessMessage(requestType) {
 		var ignore = ["asset_exchange_change_group_name", "asset_exchange_group", "add_contact", "update_contact", "delete_contact",
@@ -327,9 +341,11 @@ var NRS = (function(NRS, $) {
         if ($btn.hasClass("btn-calculate-fee")) {
             data.calculateFee = true;
             data.feeNXT = "0";
+            $form.find(".error_message").html("").hide();
         } else {
+            delete data.calculateFee;
             if (!data.feeNXT) {
-                data.feeNXT = "1";
+                data.feeNXT = "0";
             }
         }
 
