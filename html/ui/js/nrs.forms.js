@@ -327,6 +327,10 @@ var NRS = (function(NRS, $) {
         if ($btn.hasClass("btn-calculate-fee")) {
             data.calculateFee = true;
             data.feeNXT = "0";
+        } else {
+            if (!data.feeNXT) {
+                data.feeNXT = "1";
+            }
         }
 
 		if (data.recipient) {
