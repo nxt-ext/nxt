@@ -298,4 +298,12 @@ public final class Crypto {
         }
     }
 
+    public static boolean isCanonicalPublicKey(byte[] publicKey) {
+        return Curve25519.isCanonicalPublicKey(publicKey);
+    }
+
+    public static boolean isCanonicalSignature(byte[] signature) {
+        return Curve25519.isCanonicalSignature(signature);
+    }
+
 }

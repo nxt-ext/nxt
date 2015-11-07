@@ -1174,6 +1174,9 @@ public interface Appendix {
             if (publicKey.length != 32) {
                 throw new NxtException.NotValidException("Invalid recipient public key length: " + Convert.toHexString(publicKey));
             }
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && !Crypto.isCanonicalPublicKey(publicKey)) {
+                throw new NxtException.NotValidException("Invalid recipient public key: " + Convert.toHexString(publicKey));
+            }
             long recipientId = transaction.getRecipientId();
             if (Account.getId(this.publicKey) != recipientId) {
                 throw new NxtException.NotValidException("Announced public key does not match recipient accountId");

@@ -472,11 +472,11 @@ public final class Shuffling {
         }
         outputDataList.add(bytesToEncrypt);
         // Shuffle the tokens and save the shuffled tokens as the participant data
-        Collections.shuffle(outputDataList, Crypto.getSecureRandom());
+        Collections.sort(outputDataList, Convert.byteArrayComparator);
         if (isLast) {
             Set<Long> recipientAccounts = new HashSet<>();
             for (byte[] publicKey : outputDataList) {
-                if (!recipientAccounts.add(Account.getId(publicKey))) {
+                if (!Crypto.isCanonicalPublicKey(publicKey) || !recipientAccounts.add(Account.getId(publicKey))) {
                     // duplicate recipient public key
                     return new Attachment.ShufflingRecipients(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
                 }
@@ -485,6 +485,11 @@ public final class Shuffling {
             return new Attachment.ShufflingRecipients(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     shufflingStateHash);
         } else {
+            for (int i = 0; i < outputDataList.size() - 1; i++) {
+                if (Arrays.equals(outputDataList.get(i), outputDataList.get(i + 1))) {
+                    return new Attachment.ShufflingProcessing(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
+                }
+            }
             return new Attachment.ShufflingProcessing(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     shufflingStateHash);
         }
@@ -773,8 +778,8 @@ public final class Shuffling {
                 boolean isLast = k == participantCount - 1;
                 if (isLast) {
                     // not encrypted data but plaintext recipient public key
-                    if (participantBytes.length != 32) {
-                        // cannot be a valid public key
+                    if (!Crypto.isCanonicalPublicKey(publicKey)) {
+                        // not a valid public key
                         Logger.logDebugMessage("Participant %s submitted invalid recipient public key", Long.toUnsignedString(participant.getAccountId()));
                         return participant.getAccountId();
                     }

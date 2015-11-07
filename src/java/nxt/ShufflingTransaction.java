@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import org.json.simple.JSONObject;
 
@@ -383,9 +384,13 @@ public abstract class ShufflingTransaction extends TransactionType {
                     throw new NxtException.NotValidException(String.format("Invalid number of encrypted data %d for participant number %d",
                             data.length, participant.getIndex()));
                 }
+                Set<String> set = new HashSet<>();
                 for (byte[] bytes : data) {
                     if (bytes.length < 32) {
                         throw new NxtException.NotValidException("Invalid encrypted data length " + bytes.length);
+                    }
+                    if (!set.add(Convert.toHexString(bytes))) {
+                        throw new NxtException.NotValidException("Duplicate encrypted data " + Convert.toHexString(bytes));
                     }
                 }
             }
@@ -500,8 +505,8 @@ public abstract class ShufflingTransaction extends TransactionType {
             }
             Set<Long> recipientAccounts = new HashSet<>();
             for (byte[] recipientPublicKey : recipientPublicKeys) {
-                if (recipientPublicKey.length != 32) {
-                    throw new NxtException.NotValidException("Invalid recipient public key length " + recipientPublicKey.length);
+                if (!Crypto.isCanonicalPublicKey(recipientPublicKey)) {
+                    throw new NxtException.NotValidException("Invalid recipient public key " + Convert.toHexString(recipientPublicKey));
                 }
                 if (!recipientAccounts.add(Account.getId(recipientPublicKey))) {
                     throw new NxtException.NotValidException("Duplicate recipient accounts");
