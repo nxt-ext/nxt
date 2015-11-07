@@ -90,9 +90,9 @@ var NRS = (function (NRS, $, undefined) {
                     if (response && !response.errorDescription) {
                         $("#MSnoCode").hide();
                         $("#MScode").show();
-                        $("#currency_account").html(String(response.accountRS).escapeHTML());
+                        $("#currency_account").html(NRS.getAccountLink(response, "account"));
                         currencyId = response.currency;
-                        $("#currency_id").html(String(currencyId).escapeHTML());
+                        $("#currency_id").html(NRS.getTransactionLink(currencyId));
                         $("#currency_name").html(String(response.name).escapeHTML());
                         $("#currency_code").html(String(response.code).escapeHTML());
                         $("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
