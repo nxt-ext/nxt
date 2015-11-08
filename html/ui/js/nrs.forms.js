@@ -33,7 +33,7 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
-	$(".modal button.btn-primary,button.btn-calculate-fee:not([data-dismiss=modal]):not([data-ignore=true])").click(function() {
+	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true]),button.btn-calculate-fee").click(function() {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
 
