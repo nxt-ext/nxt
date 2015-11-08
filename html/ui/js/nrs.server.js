@@ -162,6 +162,31 @@ var NRS = (function (NRS, $, undefined) {
             return;
         }
 
+        //Fill phasing parameters when mandatory approval is enabled
+        if (data.mandatoryApprovalParamsJSON) {
+            data.phased = true;
+            var phasingParams = JSON.parse(data.mandatoryApprovalParamsJSON);
+
+            data.phasingVotingModel = phasingParams.votingModel;
+            data.phasingQuorum = phasingParams.quorum;
+            data.phasingMinBalance = phasingParams.minBalance;
+            data.phasingMinBalanceModel = phasingParams.minBalanceModel;
+            if (phasingParams.holding) {
+                data.phasingHolding = phasingParams.holding;
+            }
+            if (phasingParams.whitelist) {
+                data.phasingWhitelisted = [];
+                $.each(phasingParams.whitelist, function(index, accObject) {
+                    data.phasingWhitelisted.push(accObject.whitelisted);
+                });
+            }
+
+            delete data.phasingHashedSecret;
+            delete data.phasingHashedSecretAlgorithm;
+            delete data.phasingLinkedFullHash;
+        }
+        delete data.mandatoryApprovalParamsJSON;
+
         if (!data.recipientPublicKey) {
             delete data.recipientPublicKey;
         }

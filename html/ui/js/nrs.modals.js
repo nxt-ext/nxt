@@ -235,6 +235,9 @@ var NRS = (function(NRS, $, undefined) {
 		var text = $(this).text().toLowerCase();
 		if (text == $.t("advanced").toLowerCase()) {
 			var not = ".optional_note, .optional_do_not_sign, .optional_public_key";
+			if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+				not += ", .approve_modal";
+			}
 			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
