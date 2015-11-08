@@ -2820,6 +2820,13 @@ a.list-group-item-header:hover {
   font-size:12px;
 }
 
+.warning-label {
+    content: "*";
+    font-weight: bold;
+    color: red;
+    display: none;
+}
+
 .scrollable-menu {
     height: auto;
     max-height: 500px;

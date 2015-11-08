@@ -48,7 +48,8 @@ var NRS = (function(NRS, $) {
         if (fee.val() == "") {
             return;
         }
-        fee.css("color", "red");
+        var recalcIndicator = $("#" + modal.attr('id').replace('_modal', '') + "_recalc");
+        recalcIndicator.show();
     });
 
 	function getSuccessMessage(requestType) {
@@ -676,7 +677,8 @@ var NRS = (function(NRS, $) {
                     NRS.unlockForm($modal, $btn, false);
                     var fee = $("#" + $modal.attr('id').replace('_modal', '') + "_fee");
                     fee.val(NRS.convertToNXT(response.transactionJSON.feeNQT));
-                    fee.css("color", "black");
+                    var recalcIndicator = $("#" + $modal.attr('id').replace('_modal', '') + "_recalc");
+                    recalcIndicator.hide();
                     return;
                 }
 				if (!sentToFunction) {

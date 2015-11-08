@@ -81,7 +81,7 @@
 <div id="fee_calculation_modal_template">
     <div class="form-group">
         <label for="{{name}}_fee" data-i18n="fee">FEE</label>
-        <button type="button" class="btn btn-info btn-xs btn-calculate-fee" data-loading-text="Submitting..." data-i18n="calculate;[data-loading-text]submitting">CALCULATE</button>
+        <button type="button" class="btn btn-info btn-xs btn-calculate-fee" data-loading-text="Calculating..." data-i18n="[data-loading-text]calculating"><span data-i18n="calculate">CALCULATE</span><span class="warning-label" id="{{name}}_recalc"> *</span></button>
         <div class="input-group">
             <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" placeholder="Minimal Fee" data-i18n="[placeholder]minimal_fee" tabindex="100">
             <span class="input-group-addon">NXT</span>
