@@ -386,7 +386,7 @@ public abstract class ShufflingTransaction extends TransactionType {
                 }
                 Set<String> set = new HashSet<>();
                 for (byte[] bytes : data) {
-                    if (bytes.length < 32) {
+                    if (bytes.length != 32 + 64 * (shuffling.getParticipantCount() - participant.getIndex() - 1)) {
                         throw new NxtException.NotValidException("Invalid encrypted data length " + bytes.length);
                     }
                     if (!set.add(Convert.toHexString(bytes))) {
