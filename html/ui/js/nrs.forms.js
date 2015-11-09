@@ -182,7 +182,7 @@ var NRS = (function(NRS, $) {
 		return data;
 	};
 
-	NRS.submitForm = function($modal, $btn) {
+    NRS.submitForm = function($modal, $btn) {
 		if (!$btn) {
 			$btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 		}
@@ -238,7 +238,7 @@ var NRS = (function(NRS, $) {
 				return;
 			}
 		}
-		
+
 		var invalidElement = false;
 
 		//TODO
@@ -605,7 +605,11 @@ var NRS = (function(NRS, $) {
 			//todo check again.. response.error
             var formCompleteFunction;
 			if (response.fullHash) {
-				NRS.unlockForm($modal, $btn);
+                NRS.unlockForm($modal, $btn);
+                if (data.calculateFee) {
+                    updateFee($modal, response.transactionJSON.feeNQT);
+                    return;
+                }
 
 				if (!$modal.hasClass("modal-no-hide")) {
 					$modal.modal("hide");
@@ -675,10 +679,7 @@ var NRS = (function(NRS, $) {
 				}
                 if (data.calculateFee) {
                     NRS.unlockForm($modal, $btn, false);
-                    var fee = $("#" + $modal.attr('id').replace('_modal', '') + "_fee");
-                    fee.val(NRS.convertToNXT(response.transactionJSON.feeNQT));
-                    var recalcIndicator = $("#" + $modal.attr('id').replace('_modal', '') + "_recalc");
-                    recalcIndicator.hide();
+                    updateFee($modal, response.transactionJSON.feeNQT);
                     return;
                 }
 				if (!sentToFunction) {
@@ -702,6 +703,13 @@ var NRS = (function(NRS, $) {
 			$modal.modal("hide");
 		}
 	};
+
+    function updateFee(modal, feeNQT) {
+        var fee = $("#" + modal.attr('id').replace('_modal', '') + "_fee");
+        fee.val(NRS.convertToNXT(feeNQT));
+        var recalcIndicator = $("#" + modal.attr('id').replace('_modal', '') + "_recalc");
+        recalcIndicator.hide();
+    }
 
 	return NRS;
 }(NRS || {}, jQuery));
