@@ -658,8 +658,12 @@ var NRS = (function(NRS, $) {
 
 				NRS.unlockForm($modal, $btn);
 			} else {
+                if (data.calculateFee) {
+                    NRS.unlockForm($modal, $btn, false);
+                    updateFee($modal, response.transactionJSON.feeNQT);
+                    return;
+                }
 				var sentToFunction = false;
-
 				if (!errorMessage) {
 					formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
 
@@ -677,11 +681,6 @@ var NRS = (function(NRS, $) {
 						errorMessage = $.t("error_unknown");
 					}
 				}
-                if (data.calculateFee) {
-                    NRS.unlockForm($modal, $btn, false);
-                    updateFee($modal, response.transactionJSON.feeNQT);
-                    return;
-                }
 				if (!sentToFunction) {
 					NRS.unlockForm($modal, $btn, true);
 
