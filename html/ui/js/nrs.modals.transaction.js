@@ -1138,8 +1138,31 @@ var NRS = (function (NRS, $, undefined) {
                         incorrect = true;
                         break;
                 }
+            } else if (NRS.isOfType(transaction, "ShufflingCreation")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingRegistration")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingProcessing")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingRecipients")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingVerification")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingCancellation")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
             }
-
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
                     if (transaction.attachment.message) {
