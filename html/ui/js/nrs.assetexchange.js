@@ -1001,7 +1001,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     });
 
-    $("#buy_asset_quantity, #buy_asset_price, #sell_asset_quantity, #sell_asset_price, #buy_asset_fee, #sell_asset_fee").keydown(function (e) {
+    $("#buy_asset_quantity, #buy_asset_price, #sell_asset_quantity, #sell_asset_price").keydown(function (e) {
         var charCode = !e.charCode ? e.which : e.charCode;
 
         if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
@@ -1048,7 +1048,6 @@ var NRS = (function (NRS, $, undefined) {
             var quantity = String($("#" + orderType + "_asset_quantity").val());
             var quantityQNT = new BigInteger(NRS.convertToQNT(quantity, NRS.currentAsset.decimals));
             var priceNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_asset_price").val())), NRS.currentAsset.decimals));
-            var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + orderType + "_asset_fee").val())));
             var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(quantityQNT, priceNQT, NRS.currentAsset.decimals), false, true);
         } catch (err) {
             $.growl($.t("error_invalid_input"), {
@@ -1062,10 +1061,6 @@ var NRS = (function (NRS, $, undefined) {
                 "type": "danger"
             });
             return e.preventDefault();
-        }
-
-        if (feeNQT.toString() == "0") {
-            feeNQT = new BigInteger("100000000");
         }
 
         var priceNQTPerWholeQNT = priceNQT.multiply(new BigInteger("" + Math.pow(10, NRS.currentAsset.decimals)));
@@ -1095,7 +1090,6 @@ var NRS = (function (NRS, $, undefined) {
 
         $("#asset_order_description").html(description);
         $("#asset_order_total").html(totalNXT + " NXT");
-        $("#asset_order_fee_paid").html(NRS.formatAmount(feeNQT) + " NXT");
 
         var assetOrderTotalTooltip = $("#asset_order_total_tooltip");
         if (quantity != "1") {
@@ -1114,7 +1108,6 @@ var NRS = (function (NRS, $, undefined) {
         $("#asset_order_asset").val(assetId);
         $("#asset_order_quantity").val(quantityQNT.toString());
         $("#asset_order_price").val(priceNQT.toString());
-        $("#asset_order_fee").val(feeNQT.toString());
     });
 
     NRS.forms.orderAsset = function () {

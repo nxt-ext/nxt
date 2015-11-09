@@ -65,17 +65,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	});
 
-    /* Removed variable fee, keeping fees at their minimal
-	$("#send_money_amount").on("input", function(e) {
-		var amount = parseInt($(this).val(), 10);
-		var fee = isNaN(amount) ? 1 : (amount < 500 ? 1 : Math.round(amount / 1000));
-
-		$("#send_money_fee").val(fee);
-
-		$(this).closest(".modal").find(".advanced_fee").html(NRS.formatAmount(NRS.convertToNQT(fee)) + " NXT");
-	});
-	*/
-
 	//todo later: http://twitter.github.io/typeahead.js/
 	$(".modal").on("click", "span.recipient_selector button, span.plain_adress_selector button", function(e) {
 		if (!Object.keys(NRS.contacts).length) {

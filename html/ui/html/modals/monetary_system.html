@@ -42,8 +42,9 @@
                         </div>
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -56,7 +57,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="transfer_currency;[placeholder]submitting">Transfer Currency</button>
@@ -82,19 +83,15 @@
                         <input type="hidden" name="currency" id="currency_order_currency" value="" />
                         <input type="hidden" name="units" id="currency_order_units" value="" />
                         <input type="hidden" name="rateNQT" id="currency_order_rate" value="" />
-                        <input type="hidden" name="feeNQT" id="currency_order_fee" value="" />
                         <input type="hidden" name="deadline" id="currency_order_deadline" data-default="24" value="24" />
                     </div>
                     <div class="form-group">
                         <label><span data-i18n="total">TOTAL</span> <i id="currency_order_total_tooltip" class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content=""></i></label>
                         <p id="currency_order_total"></p>
                     </div>
-                    <div class="form-group">
-                        <label data-i18n="fee">FEE</label>
-                        <p id="currency_order_fee_paid"></p>
-                    </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -104,7 +101,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="currency_order_modal_button" data-i18n="[data-loading-text]submitting"></button>
@@ -211,27 +208,6 @@
                         <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="18" value="0" disabled>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced" data-advanced="6">
-                            <div class="form-group">
-                                <label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The fees are the following: 3 Letters - 25000 NXT, 4 Letters - 1000 NXT, 5 Letters - 40 NXT" data-i18n="[data-content]currency_minimum_fee_help" data-container="body" style="color:red"></i></label>
-                                <div class="input-group">
-                                    <input type="text" name="feeNXT" id="issue_currency_fee" class="form-control" placeholder="Fee" min="40" data-default="25000" value="25000" tabindex="19">
-                                    <span class="input-group-addon" style="min-width:50px;"><i class="fa fa-gavel"></i> 
-                                        <span id="{{name}}_feeNXT_addition_info" class="feeNXT_approval_addition_info">+0</span>
-                                    </span>
-                                    <input type="hidden" id="{{name}}_feeNXT_approval_addition" name="feeNXT_approval_addition" value="0" />
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced">
-                            <div class="form-group">
-                                <label for="issue_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="issue_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="20">
-                            </div>
-                        </div>
-                    </div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -240,7 +216,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">25'000 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="issue_currency;[data-loading-text]submitting">Issue Currency</button>
@@ -361,8 +337,9 @@
                             </div>
                         </div>
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -372,7 +349,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="publish_exchange_offer;[data-loading-text]submitting">Publish Exchange Offer</button>
             </div>
@@ -399,8 +376,9 @@
                         <label for="claim_currency_amount" data-i18n="currency_claim_rate">Claim rate</label> <i><span id="claimRate"></span></i>
                         <input type="text" class="form-control" name="units" id="claim_currency_amount" placeholder="Number of units" data-i18n="units" tabindex="1" />
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -410,7 +388,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="claim_currency_button" data-loading-text="Submitting..." data-i18n="claim;[data-loading-text]submitting">Claim currency</button>
@@ -449,8 +427,9 @@
                         <label for="mine_currency_nonce" data-i18n="nonce">Nonce</label>
                         <input type="text" class="form-control" name="nonce" id="mine_currency_nonce" data-i18n="nonce" tabindex="1" />
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -460,7 +439,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="mine_currency_button" data-loading-text="Submitting..." data-i18n="mint;[data-loading-text]submitting">Mint currency</button>
@@ -502,8 +481,9 @@
                         <label for="reserve_currency_total" data-i18n="amount_nxt_reserved">Reserve per Unit</label>
                         <input id="reserve_currency_total" name="amountPerUnitNQT" readonly style="border: none"/>
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -513,7 +493,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="reserve_currency_button" data-loading-text="Submitting..." data-i18n="reserve;[data-loading-text]submitting">Reserve currency</button>
@@ -535,8 +515,9 @@
                     <div class="form-group">
                         <input type="hidden" class="form-control" name="currency" id="delete_currency_currency" />
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -546,7 +527,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="delete_currency_button" data-loading-text="Submitting..." data-i18n="delete;[data-loading-text]submitting">Delete currency</button>

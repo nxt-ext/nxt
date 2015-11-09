@@ -561,7 +561,6 @@ var NRS = (function (NRS, $, undefined) {
             var units = String($("#" + exchangeType + "_currency_units").val());
             var unitsQNT = new BigInteger(NRS.convertToQNT(units, currencyDecimals));
             var rateNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + exchangeType + "_currency_rate").val())), currencyDecimals));
-            var feeNQT = new BigInteger(NRS.convertToNQT(String($("#" + exchangeType + "_currency_fee").val())));
             var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(unitsQNT, rateNQT), false, true);
         } catch (err) {
             $.growl($.t("error_invalid_input"), {
@@ -575,10 +574,6 @@ var NRS = (function (NRS, $, undefined) {
                 "type": "danger"
             });
             return e.preventDefault();
-        }
-
-        if (feeNQT.toString() == "0") {
-            feeNQT = new BigInteger("100000000");
         }
 
         var rateNQTPerWholeQNT = rateNQT.multiply(new BigInteger("" + Math.pow(10, currencyDecimals)));
@@ -610,7 +605,6 @@ var NRS = (function (NRS, $, undefined) {
 
         $("#currency_order_description").html(description);
         $("#currency_order_total").html(totalNXT + " NXT");
-        $("#currency_order_fee_paid").html(NRS.formatAmount(feeNQT) + " NXT");
 
         var totalTooltip = $("#currency_order_total_tooltip");
         if (units != "1") {
@@ -629,7 +623,6 @@ var NRS = (function (NRS, $, undefined) {
         $("#currency_order_currency").val(currencyId);
         $("#currency_order_units").val(unitsQNT.toString());
         $("#currency_order_rate").val(rateNQT.toString());
-        $("#currency_order_fee").val(feeNQT.toString());
     });
 
     NRS.forms.orderCurrency = function () {
@@ -1069,36 +1062,6 @@ var NRS = (function (NRS, $, undefined) {
         };
         NRS.appendMenuItemToTSMenuItem(sidebarId, options);
     };
-
-    /* Calculate correct fees based on currency code length */
-    var issueCurrencyCode = $("#issue_currency_code");
-    issueCurrencyCode.keyup(function () {
-        if (issueCurrencyCode.val().length < 4) {
-            $("#issue_currency_fee").val("25000");
-            $("#issue_currency_modal").find(".advanced_fee").html("25'000 NXT");
-        } else if ($("#issue_currency_code").val().length == 4) {
-            $("#issue_currency_fee").val("1000");
-            $("#issue_currency_modal").find(".advanced_fee").html("1'000 NXT");
-        } else {
-            $("#issue_currency_fee").val("40");
-            $("#issue_currency_modal").find(".advanced_fee").html("40 NXT");
-        }
-        this.value = this.value.toLocaleUpperCase();
-    });
-
-    issueCurrencyCode.blur(function () {
-        if (issueCurrencyCode.val().length < 4) {
-            $("#issue_currency_fee").val("25000");
-            $("#issue_currency_moda").find(".advanced_fee").html("25'000 NXT");
-        } else if ($("#issue_currency_code").val().length == 4) {
-            $("#issue_currency_fee").val("1000");
-            $("#issue_currency_modal").find(".advanced_fee").html("1'000 NXT");
-        } else {
-            $("#issue_currency_fee").val("40");
-            $("#issue_currency_modal").find(".advanced_fee").html("40 NXT");
-        }
-        this.value = this.value.toLocaleUpperCase();
-    });
 
     /* ISSUE CURRENCY FORM */
     NRS.forms.issueCurrency = function ($modal) {
