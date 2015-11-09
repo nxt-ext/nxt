@@ -349,9 +349,7 @@ var NRS = (function (NRS, $, undefined) {
                     amountPerUnitNQT = new BigInteger(response.founders[i].amountPerUnitNQT).multiply(new BigInteger("" + Math.pow(10, decimals)));
                     var percentage = NRS.calculatePercentage(amountPerUnitNQT, minReservePerUnitNQT);
                     rows += "<tr>" +
-                    "<td>" +
-                    "<a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(account, "account") + "</a>" +
-                    "</td>" +
+                    "<td>" + NRS.getAccountLink(account, "account")+ "</td>" +
                     "<td>" + NRS.convertToNXT(amountPerUnitNQT) + "</td>" +
                     "<td>" + NRS.convertToNXT(amountPerUnitNQT.multiply(new BigInteger(NRS.convertToQNTf(resSupply, decimals)))) + "</td>" +
                     "<td>" + NRS.formatQuantity(resSupply.subtract(initialSupply).multiply(amountPerUnitNQT).divide(totalAmountReserved), decimals) + "</td>" +
@@ -400,12 +398,8 @@ var NRS = (function (NRS, $, undefined) {
                         var exchange = response.exchanges[i];
                         rows += "<tr>" +
                         "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
-                        "<td>" +
-                        "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
-                        "</td>" +
-                        "<td>" +
-                        "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
-                        "</td>" +
+                        "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
+                        "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
                         "<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
                         "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
                         "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) + "</td>" +
@@ -435,12 +429,8 @@ var NRS = (function (NRS, $, undefined) {
                         var exchange = response.exchanges[i];
                         rows += "<tr>" +
                         "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
-                        "<td>" +
-                        "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
-                        "</td>" +
-                        "<td>" +
-                        "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
-                        "</td>" +
+                        "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
+                        "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
                         "<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
                         "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
                         "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) + "</td>" +
@@ -893,12 +883,8 @@ var NRS = (function (NRS, $, undefined) {
                     "<td>" + NRS.getTransactionLink(exchange.transaction) + "</td>" +
                     "<td>" + NRS.getTransactionLink(exchange.offer) + "</td>" +
                     "<td>" + NRS.getTransactionLink(exchange.currency, exchange.code) + "</td>" +
-                    "<td>" +
-                    "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.sellerRS + "'>" + NRS.getAccountTitle(exchange.sellerRS) + "</a>" +
-                    "</td>" +
-                    "<td>" +
-                    "<a href='#' class='show_account_modal_action user-info' data-user='" + exchange.buyerRS + "'>" + NRS.getAccountTitle(exchange.buyerRS) + "</a>" +
-                    "</td>" +
+                    "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
+                    "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
                     "<td>" + NRS.formatQuantity(exchange.units, exchange.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT, exchange.decimals)) + "</td>" +
@@ -933,8 +919,8 @@ var NRS = (function (NRS, $, undefined) {
                     "<td><a href='#' data-goto-currency='" + String(transfers[i].code).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td>" +
                     "<td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td>" +
                     "<td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals) + "</td>" +
-                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
-                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
+                    "<td>" + NRS.getAccountLink(transfers[i], "recipient") + "</td>" +
+                    "<td>" + NRS.getAccountLink(transfers[i], "sender") + "</td>" +
                     "</tr>";
                 }
                 NRS.dataLoaded(rows);
@@ -1157,7 +1143,7 @@ var NRS = (function (NRS, $, undefined) {
                 for (var i = 0; i < response.accountCurrencies.length; i++) {
                     var account = response.accountCurrencies[i];
                     var percentageCurrency = NRS.calculatePercentage(account.units, currency.currentSupply);
-                    rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='show_account_modal_action user_info'>" + (account.account == currency.account ? "Currency Issuer" : NRS.getAccountTitle(account, "account")) + "</a></td><td>" + NRS.formatQuantity(account.units, currency.decimals) + "</td><td>" + percentageCurrency + "%</td></tr>";
+                    rows += "<tr><td>" + NRS.getAccountLink(account, "account", currency.account, "Currency Issuer") + "</td><td>" + NRS.formatQuantity(account.units, currency.decimals) + "</td><td>" + percentageCurrency + "%</td></tr>";
                 }
             }
 

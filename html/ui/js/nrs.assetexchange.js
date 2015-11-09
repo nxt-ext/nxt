@@ -828,8 +828,9 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             rows += "black";
                         }
-                        rows += "'>" + NRS.formatAmount(trade.totalNQT) + "</td><td><a href='#' data-user='" + NRS.getAccountFormatted(trade, "buyer") + "' class='show_account_modal_action user_info'>" + (trade.buyerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trade, "buyer")) + "</a></td>" +
-                        "<td><a href='#' data-user='" + NRS.getAccountFormatted(trade, "seller") + "' class='user_info'>" + (trade.sellerRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(trade, "seller")) + "</a></td>" +
+                        rows += "'>" + NRS.formatAmount(trade.totalNQT) + "</td>" +
+                        "<td>" + NRS.getAccountLink(trade, "buyer", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
+                        "<td>" + NRS.getAccountLink(trade, "seller", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                     "</tr>";
                 }
 
@@ -1377,8 +1378,8 @@ var NRS = (function (NRS, $, undefined) {
                     var type = (trades[i].buyerRS == NRS.accountRS ? "buy" : "sell");
 
                     rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td>" + $.t(trades[i].tradeType) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals) + "</td><td style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td>" +
-                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "buyer") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(trades[i], "buyer") + "</a></td>" +
-                    "<td><a href='#' data-user='" + NRS.getAccountFormatted(trades[i], "seller") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(trades[i], "seller") + "</a></td>" +
+                        "<td>" + NRS.getAccountLink(trades[i], "buyer") + "</td>" +
+                        "<td>" + NRS.getAccountLink(trades[i], "seller") + "</td>" +
                     "</tr>";
                 }
 
@@ -1414,8 +1415,8 @@ var NRS = (function (NRS, $, undefined) {
 
                     rows += "<tr><td>" + NRS.getTransactionLink(transfers[i].assetTransfer) + "</td>" +
                         "<td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
-                        "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "recipient") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "recipient") + "</a></td>" +
-                        "<td><a href='#' data-user='" + NRS.getAccountFormatted(transfers[i], "sender") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(transfers[i], "sender") + "</a></td>" +
+                        "<td>" + NRS.getAccountLink(transfers[i], "recipient") + "</td>" +
+                        "<td>" + NRS.getAccountLink(transfers[i], "sender") + "</td>" +
                     "</tr>";
                 }
 
@@ -1593,7 +1594,7 @@ var NRS = (function (NRS, $, undefined) {
                     var account = response.accountAssets[i];
                     var percentageAsset = NRS.calculatePercentage(account.quantityQNT, NRS.currentAsset.quantityQNT);
 
-                    rows += "<tr><td><a href='#' data-user='" + NRS.getAccountFormatted(account, "account") + "' class='show_account_modal_action user_info'>" + (account.accountRS == NRS.currentAsset.accountRS ? "Asset Issuer" : NRS.getAccountTitle(account, "account")) + "</a></td><td>" + NRS.formatQuantity(account.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
+                    rows += "<tr><td>" + NRS.getAccountLink(account, "account", NRS.currentAsset.accountRS, "Asset Issuer") + "</td><td>" + NRS.formatQuantity(account.quantityQNT, NRS.currentAsset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
                 }
             }
 
