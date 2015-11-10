@@ -94,39 +94,49 @@
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
                         <label for="m_shuffling_create_holding_type">Holding Type</label>
-                        <select name="holdingType" id="m_shuffling_create_holding_type" class="form-control" data-default="0" tabindex="3">
+                        <select name="holdingType" id="m_shuffling_create_holding_type" class="form-control" data-default="0" tabindex="1">
                             <option selected value="0" data-i18n="holding_type_nxt">NXT</option>
                             <option value="1" data-i18n="holding_type_asset">Asset</option>
                             <option value="2" data-i18n="holding_type_currency">Currency</option>
                         </select>
                     </div>
-                    <div class="form-group" style="display:none" id="m_shuffling_create_holding_group">
-                        <label for="m_shuffling_create_holding">Holding</label>
-                        <div class="input-group">
-                          <input type="text" name="holding" id="m_shuffling_create_holding" class="form-control" placeholder="Holding" tabindex="1">
-                          <span class="input-group-addon" id="m_shuffling_create_holding_name"></span>
+                    <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="shuffling_asset_id_group" style="display: none;">
+                        <div class="form-group shuffling_holding_asset" data-modal-ui-element="add_asset_modal_ui_element"></div>
+                    </div>
+                    <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="shuffling_ms_currency_group" style="display: none;">
+                        <div class="form-group shuffling_holding_currency" data-modal-ui-element="add_currency_modal_ui_element"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="m_shuffling_create_amount">
+                                    <span data-i18n="amount">AMOUNT</span>
+                                    (<span data-i18n="none" id="m_shuffling_create_unit">None</span>)
+                                </label>
+                                <input name="amount" id="m_shuffling_create_amount" class="form-control" placeholder="" data-default="0" value="0" tabindex="2">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group shuffling_finish_height" data-modal-ui-element="block_height_modal_ui_element"></div>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="m_shuffling_create_amount">Amount</label>
-                        <input type="text" name="amount" id="m_shuffling_create_amount" class="form-control" placeholder="Amount" tabindex="1">
-                    </div>
-                    <div class="form-group">
                         <label for="m_shuffling_create_participant_count">Participant Count</label>
-                        <input type="text" name="participantCount" id="m_shuffling_create_participant_count" class="form-control" placeholder="Participant Count" tabindex="1" min="3" max="30">
+                        <input type="text" name="participantCount" id="m_shuffling_create_participant_count" class="form-control" placeholder="Participant Count" tabindex="3" min="3" max="30">
                     </div>
-                    <div class="form-group">
-                        <label for="m_shuffling_create_registration_period">Registration Period</label>
-                        <input type="text" name="registrationPeriod" id="m_shuffling_create_registration_period" class="form-control" placeholder="Registration Period" tabindex="1">
-                    </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>                    
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_approve_template"></div>
+                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
+                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
+                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
                     
                     <input type="hidden" name="request_type" value="shufflingCreate" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="create_shuffling;[placeholder]submitting">Create Shuffling</button>
             </div>

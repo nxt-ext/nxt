@@ -17,7 +17,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 
     function isErrorResponse(response) {
         return response.errorCode || response.errorDescription || response.errorMessage || response.error;
@@ -31,11 +31,11 @@ var NRS = (function(NRS, $, undefined) {
 
     NRS.jsondata.participant = function (response) {
         return $.extend(response, {});
-    }
+    };
 
     NRS.jsondata.shuffler = function (response) {
         return $.extend(response, {});
-    }
+    };
 
     /**
      *  {
@@ -74,9 +74,9 @@ var NRS = (function(NRS, $, undefined) {
                 }
             })()
         });
-    }
+    };
 
-    NRS.pages.shuffling = function () {}
+    NRS.pages.shuffling = function () {};
 
     NRS.setup.shuffling = function() {
         var sidebarId = 'sidebar_shuffling';
@@ -115,20 +115,23 @@ var NRS = (function(NRS, $, undefined) {
      * Hides holding field unless type is asset or currency.
      */
     $('#m_shuffling_create_holding_type').change(function () {
-        switch ($(this).val()) {
-            case '0':
-                $('#m_shuffling_create_holding_group').hide();
-                break;
-            case '1':
-                $('label[for=m_shuffling_create_holding]').text('Asset ID');
-                $('#m_shuffling_create_holding_group').show();
-                break;
-            case '2':
-                $('label[for=m_shuffling_create_holding]').text('Currency ID');
-                $('#m_shuffling_create_holding_group').show();
-                break;
-        }
-        $('#m_shuffling_create_holding').change();
+        var holdingType = $("#m_shuffling_create_holding_type");
+        if(holdingType.val() == "0") {
+            $("#shuffling_asset_id_group").css("display", "none");
+            $("#shuffling_ms_currency_group").css("display", "none");
+            $('#m_shuffling_create_unit').html($.t('nxt_capital_letters'));
+            $('#m_shuffling_create_amount').attr('name', 'shufflingAmountNXT');
+        } if(holdingType.val() == "1") {
+			$("#shuffling_asset_id_group").css("display", "inline");
+			$("#shuffling_ms_currency_group").css("display", "none");
+            $('#m_shuffling_create_unit').html($.t('quantity'));
+            $('#m_shuffling_create_amount').attr('name', 'amountQNTf');
+		} else if(holdingType.val() == "2") {
+			$("#shuffling_asset_id_group").css("display", "none");
+			$("#shuffling_ms_currency_group").css("display", "inline");
+            $('#m_shuffling_create_unit').html($.t('units'));
+            $('#m_shuffling_create_amount').attr('name', 'amountQNTf');
+		}
     });
 
     NRS.forms.shufflingCreate = function($modal) {
@@ -142,10 +145,14 @@ var NRS = (function(NRS, $, undefined) {
             case '2':
                 break;
         }
+        if (data.finishHeight) {
+            data.registrationPeriod = parseInt(data.finishHeight) - NRS.lastBlockHeight;
+            delete data.finishHeight;
+        }
         return {
             "data": data
         }
-    }
+    };
 
     NRS.pages.all_shufflings = function () {
         var view = NRS.simpleview.get('all_shufflings_page', {
@@ -176,7 +183,7 @@ var NRS = (function(NRS, $, undefined) {
                 });
             }
         );
-    }
+    };
 
     NRS.pages.my_shufflers = function () {
         var view = NRS.simpleview.get('my_shufflers_page', {
@@ -210,7 +217,8 @@ var NRS = (function(NRS, $, undefined) {
                 });
             }
         );
-    }
+    };
+
     NRS.pages.my_shufflings = function () {
         var view = NRS.simpleview.get('my_shufflings_page', {
             errorMessage: null,
@@ -240,7 +248,39 @@ var NRS = (function(NRS, $, undefined) {
                 });
             }
         );
-    }
+    };
+
+    $("#m_shuffling_create_modal").on("show.bs.modal", function() {
+   		context = {
+   			labelText: "Currency",
+   			labelI18n: "currency",
+   			inputCodeName: "shuffling_ms_code",
+   			inputIdName: "holding",
+   			inputDecimalsName: "shuffling_ms_decimals",
+   			helpI18n: "add_currency_modal_help"
+   		};
+   		NRS.initModalUIElement($(this), '.shuffling_holding_currency', 'add_currency_modal_ui_element', context);
+
+   		context = {
+   			labelText: "Asset",
+   			labelI18n: "asset",
+   			inputIdName: "holding",
+   			inputDecimalsName: "shuffling_asset_decimals",
+   			helpI18n: "add_asset_modal_help"
+   		};
+   		NRS.initModalUIElement($(this), '.shuffling_holding_asset', 'add_asset_modal_ui_element', context);
+
+   		var context = {
+   			labelText: "Finish Height",
+   			labelI18n: "finish_height",
+   			helpI18n: "shuffling_finish_height_help",
+   			inputName: "finishHeight",
+   			initBlockHeight: NRS.lastBlockHeight + 720,
+   			changeHeightBlocks: 10
+   		};
+   		NRS.initModalUIElement($(this), '.shuffling_finish_height', 'block_height_modal_ui_element', context);
+   	});
+
     return NRS;
 
 }(NRS || {}, jQuery));

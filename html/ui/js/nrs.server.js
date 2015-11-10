@@ -99,24 +99,24 @@ var NRS = (function (NRS, $, undefined) {
         var field = "N/A";
         try {
             var nxtFields = [
-                ["feeNXT", "NQT"],
-                ["amountNXT", "NQT"],
-                ["priceNXT", "NQT"],
-                ["refundNXT", "NQT"],
-                ["discountNXT", "NQT"],
-                ["phasingQuorumNXT", ""],
-                ["phasingMinBalanceNXT", ""],
-                ["controlQuorumNXT", ""],
-                ["controlMinBalanceNXT", ""],
-                ["minBalanceNXT", ""]
+                ["feeNXT", "feeNQT"],
+                ["amountNXT", "amountNQT"],
+                ["priceNXT", "priceNQT"],
+                ["refundNXT", "refundNQT"],
+                ["discountNXT", "discountNQT"],
+                ["phasingQuorumNXT", "phasingQuorum"],
+                ["phasingMinBalanceNXT", "phasingMinBalance"],
+                ["controlQuorumNXT", "controlQuorum"],
+                ["controlMinBalanceNXT", "controlMinBalance"],
+                ["minBalanceNXT", "minBalance"],
+                ["shufflingAmountNXT", "amount"]
             ];
 
             for (i = 0; i < nxtFields.length; i++) {
                 var nxtField = nxtFields[i][0];
-                field = nxtField.replace("NXT", "");
-
+                var nqtField = nxtFields[i][1];
                 if (nxtField in data) {
-                    data[field + nxtFields[i][1]] = NRS.convertToNQT(data[nxtField]);
+                    data[nqtField] = NRS.convertToNQT(data[nxtField]);
                     delete data[nxtField];
                 }
             }
@@ -135,7 +135,9 @@ var NRS = (function (NRS, $, undefined) {
                 ["controlQuorumQNTf", "controlHoldingDecimals"],
                 ["controlMinBalanceQNTf", "controlHoldingDecimals"],
                 ["minBalanceQNTf", "create_poll_asset_decimals"],
-                ["minBalanceQNTf", "create_poll_ms_decimals"]
+                ["minBalanceQNTf", "create_poll_ms_decimals"],
+                ["amountQNTf", "shuffling_asset_decimals"],
+                ["amountQNTf", "shuffling_ms_decimals"]
             ];
             var toDelete = [];
             for (i = 0; i < currencyFields.length; i++) {
