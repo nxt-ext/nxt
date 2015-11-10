@@ -307,26 +307,7 @@ var NRS = (function(NRS, $, undefined) {
 			"modalId": 'create_poll_modal'
 		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
-
-		$('#create_poll_modal input[name="feeNXT"]').attr('min', 10);
-		$('#create_poll_modal input[name="feeNXT"]').data('default', 10);
-		$('#create_poll_modal input[name="feeNXT"]').val(10);
 	};
-
-	function _resetPollFee() {
-		var options = $(".create_poll_answers").length;
-		if(options > 20)
-		{
-			var fee = (options - 20) + 10;
-			$("#create_poll_fee").val(fee);
-			$("#create_poll_fee_text").text(fee + " NXT");
-		}
-		else 
-		{
-			$("#create_poll_fee").val("10");
-			$("#create_poll_fee_text").text("10 NXT");
-		}
-	}
 
 	$("#create_poll_answers").on("click", "button.btn.remove_answer", function(e) {
 		e.preventDefault();
@@ -336,7 +317,6 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$(this).closest("div.form-group").remove();
-		_resetPollFee();
 	});
 
 	$("#create_poll_answers_add").click(function(e) {
@@ -345,7 +325,6 @@ var NRS = (function(NRS, $, undefined) {
 		$clone.find("input").val("");
 
 		$clone.appendTo("#create_poll_answers");
-		_resetPollFee();
 	});
 
 	function _setMinBalanceForm() {
