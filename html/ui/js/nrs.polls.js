@@ -820,7 +820,6 @@ var NRS = (function(NRS, $, undefined) {
 
 		
 		data["poll"] = $("#cast_vote_poll").val();
-		data["feeNQT"] = String(parseInt($("#cast_vote_fee").val())*100000000);
 		data["deadline"] = $("#cast_vote_deadline").val();
 		data["secretPhrase"] =  $("#cast_vote_password").val();
 		
