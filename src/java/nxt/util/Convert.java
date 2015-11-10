@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -294,5 +295,16 @@ public final class Convert {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+
+    public static Comparator<byte[]> byteArrayComparator = (o1, o2) -> {
+        int minLength = Math.min(o1.length, o2.length);
+        for (int i = 0; i < minLength; i++) {
+            int result = Byte.compare(o1[i], o2[i]);
+            if (result != 0) {
+                return result;
+            }
+        }
+        return o1.length - o2.length;
+    };
 
 }

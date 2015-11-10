@@ -398,7 +398,7 @@ final class ParameterParser {
                 if (publicKey == null) {
                     throw new ParameterException(missing(secretPhraseParam, publicKeyParam));
                 }
-                if (publicKey.length != 32) {
+                if (!Crypto.isCanonicalPublicKey(publicKey)) {
                     throw new ParameterException(incorrect(publicKeyParam));
                 }
                 return publicKey;

@@ -78,22 +78,23 @@
     </div>
 </div>
 
-
-<div id="advanced_fee_deadline_template">
-    <div class="row advanced">
-        <div class="col-xs-6 col-sm-6 col-md-6">
+<div id="fee_calculation_modal_template">
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="{{name}}_fee" data-i18n="fee">FEE</label>
+                <button type="button" class="btn btn-info btn-xs btn-calculate-fee" data-loading-text="Calculating..." data-i18n="[data-loading-text]calculating"><span data-i18n="calculate">CALCULATE</span><span class="warning-label" id="{{name}}_recalc"> *</span></button>
                 <div class="input-group">
-                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="121">
-                    <span class="input-group-addon" style="min-width:50px;"><i class="fa fa-gavel"></i> 
-                        <span id="{{name}}_feeNXT_addition_info" class="feeNXT_approval_addition_info">+0</span>
-                    </span>
-                    <input type="hidden" id="{{name}}_feeNXT_approval_addition" name="feeNXT_approval_addition" value="0" />
+                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" placeholder="Minimal Fee" data-i18n="[placeholder]minimal_fee" tabindex="100">
                     <span class="input-group-addon">NXT</span>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="advanced_deadline_template">
+    <div class="row advanced">
         <div class="col-xs-6 col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="{{name}}_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>

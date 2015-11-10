@@ -2570,7 +2570,7 @@ public abstract class TransactionType {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
                     Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
-                    return attachment.getGoods().getData().length - 16;
+                    return attachment.getGoodsDataLength() - 16;
                 }
             };
 
@@ -2622,13 +2622,15 @@ public abstract class TransactionType {
             void doValidateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.DigitalGoodsDelivery attachment = (Attachment.DigitalGoodsDelivery) transaction.getAttachment();
                 DigitalGoodsStore.Purchase purchase = DigitalGoodsStore.Purchase.getPendingPurchase(attachment.getPurchaseId());
-                if (attachment.getGoods() == null) {
-                    throw new NxtException.NotYetEncryptedException("Goods data not yet encrypted");
+                if (attachment.getGoodsDataLength() > Constants.MAX_DGS_GOODS_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid digital goods delivery data length: " + attachment.getGoodsDataLength());
                 }
-                if (attachment.getGoods().getData().length > Constants.MAX_DGS_GOODS_LENGTH
-                        || attachment.getGoods().getData().length == 0
-                        || attachment.getGoods().getNonce().length != 32
-                        || attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
+                if (attachment.getGoods() != null) {
+                    if (attachment.getGoods().getData().length == 0 || attachment.getGoods().getNonce().length != 32) {
+                        throw new NxtException.NotValidException("Invalid digital goods delivery: " + attachment.getJSONObject());
+                    }
+                }
+                if (attachment.getDiscountNQT() < 0 || attachment.getDiscountNQT() > Constants.MAX_BALANCE_NQT
                         || (purchase != null &&
                         (purchase.getBuyerId() != transaction.getRecipientId()
                                 || transaction.getSenderId() != purchase.getSellerId()

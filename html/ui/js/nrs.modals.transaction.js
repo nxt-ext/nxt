@@ -40,8 +40,9 @@ var NRS = (function (NRS, $, undefined) {
 
         $("#transaction_info_output_top, #transaction_info_output_bottom, #transaction_info_bottom").html("").hide();
         $("#transaction_info_callout").hide();
-        $("#transaction_info_table").hide();
-        $("#transaction_info_table").find("tbody").empty();
+        var infoTable = $("#transaction_info_table");
+        infoTable.hide();
+        infoTable.find("tbody").empty();
 
         try {
             if (typeof transaction != "object") {
@@ -80,7 +81,7 @@ var NRS = (function (NRS, $, undefined) {
                 phasingDetails.quorum = phasingParams.phasingQuorum;
                 phasingDetails.minBalance = phasingParams.phasingMinBalance;
         }
-        var phasingTransactionLink = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(phasingParams.phasingHolding).escapeHTML() + "'>" + phasingParams.phasingHolding + "</a>";
+        var phasingTransactionLink = NRS.getTransactionLink(phasingParams.phasingHolding);
         if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.ASSET) {
             phasingDetails.asset_formatted_html = phasingTransactionLink;
         } else if (NRS.constants.VOTING_MODELS[votingModel] == NRS.constants.VOTING_MODELS.CURRENCY) {
@@ -93,7 +94,7 @@ var NRS = (function (NRS, $, undefined) {
             rows = "<table class='table table-striped'><thead><tr>" +
                 "<th>" + $.t("Account") + "</th>" +
                 "</tr></thead><tbody>";
-            for (i = 0; i < phasingParams.phasingWhitelist.length; i++) {
+            for (var i = 0; i < phasingParams.phasingWhitelist.length; i++) {
                 var account = NRS.convertNumericToRSAccountFormat(phasingParams.phasingWhitelist[i]);
                 rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td></tr>";
             }
@@ -152,7 +153,8 @@ var NRS = (function (NRS, $, undefined) {
             $("#transaction_info_tab_link").tab("show");
 
             $("#transaction_info_details_table").find("tbody").empty().append(NRS.createInfoTable(transactionDetails, true));
-            $("#transaction_info_table").find("tbody").empty();
+            var infoTable = $("#transaction_info_table");
+            infoTable.find("tbody").empty();
 
             var incorrect = false;
             if (transaction.senderRS == NRS.accountRS) {
@@ -164,11 +166,12 @@ var NRS = (function (NRS, $, undefined) {
                 $("#transaction_info_modal_transfer_currency").removeAttr('disabled');
                 $("#transaction_info_modal_send_message").removeAttr('disabled');
             }
+            var accountButton;
             if (transaction.senderRS in NRS.contacts) {
-                var accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
+                accountButton = NRS.contacts[transaction.senderRS].name.escapeHTML();
                 $("#transaction_info_modal_add_as_contact").attr('disabled','disabled');
             } else {
-                var accountButton = transaction.senderRS;
+                accountButton = transaction.senderRS;
                 $("#transaction_info_modal_add_as_contact").removeAttr('disabled');
             }
             var approveTransactionButton = $("#transaction_info_modal_approve_transaction");
@@ -207,10 +210,12 @@ var NRS = (function (NRS, $, undefined) {
                 $("#phasing_info_details_link").hide();
             }
             // TODO Someday I'd like to replace it with if (NRS.isOfType(transaction, "OrdinaryPayment"))
+            var data;
+            var message;
             if (transaction.type == 0) {
                 switch (transaction.subtype) {
                     case 0:
-                        var data = {
+                        data = {
                             "type": $.t("ordinary_payment"),
                             "amount": transaction.amountNQT,
                             "fee": transaction.feeNQT,
@@ -218,8 +223,8 @@ var NRS = (function (NRS, $, undefined) {
                             "sender": transaction.senderRS ? transaction.senderRS : transaction.sender
                         };
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     default:
@@ -229,8 +234,6 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 1) {
                 switch (transaction.subtype) {
                     case 0:
-                        var message;
-
                         var $output = $("#transaction_info_output_top");
 
                         if (transaction.attachment) {
@@ -287,18 +290,18 @@ var NRS = (function (NRS, $, undefined) {
 
                         break;
                     case 1:
-                        var data = {
+                        data = {
                             "type": $.t("alias_assignment"),
                             "alias": transaction.attachment.alias,
                             "data_formatted_html": transaction.attachment.uri.autoLink()
                         };
                         data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 2:
-                        var data = {
+                        data = {
                             "type": $.t("poll_creation"),
                             "name": transaction.attachment.name,
                             "description": transaction.attachment.description,
@@ -341,8 +344,8 @@ var NRS = (function (NRS, $, undefined) {
                         }
 
                         data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 3:
@@ -360,48 +363,47 @@ var NRS = (function (NRS, $, undefined) {
                                 }
                             }
                         }
-                        var data = {
+                        data = {
                             "type": $.t("vote_casting"),
-                            "poll_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + transaction.attachment.poll + "'>" + transaction.attachment.poll + "</a>",
+                            "poll_formatted_html": NRS.getTransactionLink(transaction.attachment.poll),
                             "vote": vote
                         };
                         data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 4:
-                        var data = {
+                        data = {
                             "type": $.t("hub_announcement")
                         };
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 5:
-                        var data = {
+                        data = {
                             "type": $.t("account_info"),
                             "name": transaction.attachment.name,
                             "description": transaction.attachment.description
                         };
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 6:
+                        var type = $.t("alias_sale");
                         if (transaction.attachment.priceNQT == "0") {
                             if (transaction.sender == transaction.recipient) {
-                                var type = $.t("alias_sale_cancellation");
+                                type = $.t("alias_sale_cancellation");
                             } else {
-                                var type = $.t("alias_transfer");
+                                type = $.t("alias_transfer");
                             }
-                        } else {
-                            var type = $.t("alias_sale");
                         }
 
-                        var data = {
+                        data = {
                             "type": type,
                             "alias_name": transaction.attachment.alias
                         };
@@ -417,7 +419,7 @@ var NRS = (function (NRS, $, undefined) {
                         data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
 
                         if (type == $.t("alias_sale")) {
-                            var message = "";
+                            message = "";
                             var messageStyle = "info";
 
                             NRS.sendRequest("getAlias", {
@@ -452,12 +454,12 @@ var NRS = (function (NRS, $, undefined) {
                             }
                         }
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 7:
-                        var data = {
+                        data = {
                             "type": $.t("alias_buy"),
                             "alias_name": transaction.attachment.alias,
                             "price": transaction.amountNQT,
@@ -465,33 +467,34 @@ var NRS = (function (NRS, $, undefined) {
                             "sender": transaction.senderRS ? transaction.senderRS : transaction.sender
                         };
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 8:
-                        var data = {
+                        data = {
                             "type": $.t("alias_deletion"),
                             "alias_name": transaction.attachment.alias,
                             "sender": transaction.senderRS ? transaction.senderRS : transaction.sender
                         };
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 9:
-                        var data = {
+                        data = {
                             "type": $.t("transaction_approval")
                         };
                         for (i = 0; i < transaction.attachment.transactionFullHashes.length; i++) {
                             var transactionBytes = converters.hexStringToByteArray(transaction.attachment.transactionFullHashes[i]);
                             var transactionId = converters.byteArrayToBigInteger(transactionBytes, 0).toString().escapeHTML();
-                            data[$.t("transaction") + (i + 1) + "_formatted_html"] = "<a href='#' class='show_transaction_modal_action' data-transaction='" + transactionId + "'>" + transactionId + "</a>";
+                            data[$.t("transaction") + (i + 1) + "_formatted_html"] =
+                                NRS.getTransactionLink(transactionId);
                         }
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     default:
@@ -501,7 +504,7 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 2) {
                 switch (transaction.subtype) {
                     case 0:
-                        var data = {
+                        data = {
                             "type": $.t("asset_issuance"),
                             "name": transaction.attachment.name,
                             "quantity": [transaction.attachment.quantityQNT, transaction.attachment.decimals],
@@ -511,8 +514,8 @@ var NRS = (function (NRS, $, undefined) {
                         data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                         $("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 1:
@@ -520,8 +523,8 @@ var NRS = (function (NRS, $, undefined) {
 
                         NRS.sendRequest("getAsset", {
                             "asset": transaction.attachment.asset
-                        }, function (asset, input) {
-                            var data = {
+                        }, function (asset) {
+                            data = {
                                 "type": $.t("asset_transfer"),
                                 "asset_name": asset.name,
                                 "quantity": [transaction.attachment.quantityQNT, asset.decimals]
@@ -532,8 +535,8 @@ var NRS = (function (NRS, $, undefined) {
                             if (data.recipient == NRS.constants.GENESIS_RS) {
                                 data.type = $.t("delete_shares");
                             }
-                            $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                            $("#transaction_info_table").show();
+                            infoTable.find("tbody").append(NRS.createInfoTable(data));
+                            infoTable.show();
 
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
@@ -545,7 +548,7 @@ var NRS = (function (NRS, $, undefined) {
                         async = true;
                         NRS.sendRequest("getAsset", {
                             "asset": transaction.attachment.asset
-                        }, function (asset, input) {
+                        }, function (asset) {
                             NRS.formatAssetOrder(asset, transaction, isModalVisible)
                         });
                         break;
@@ -554,22 +557,22 @@ var NRS = (function (NRS, $, undefined) {
 
                         NRS.sendRequest("getTransaction", {
                             "transaction": transaction.attachment.order
-                        }, function (transaction, input) {
+                        }, function (transaction) {
                             if (transaction.attachment.asset) {
                                 NRS.sendRequest("getAsset", {
                                     "asset": transaction.attachment.asset
                                 }, function (asset) {
-                                    var data = {
+                                    data = {
                                         "type": $.t("ask_order_cancellation"),
-                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
+                                        "order_formatted_html": NRS.getTransactionLink(transaction.transaction),
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
                                         "total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
                                     };
                                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                                    $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                                    $("#transaction_info_table").show();
+                                    infoTable.find("tbody").append(NRS.createInfoTable(data));
+                                    infoTable.show();
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
                                 });
@@ -588,17 +591,17 @@ var NRS = (function (NRS, $, undefined) {
                                 NRS.sendRequest("getAsset", {
                                     "asset": transaction.attachment.asset
                                 }, function (asset) {
-                                    var data = {
+                                    data = {
                                         "type": $.t("bid_order_cancellation"),
-                                        "order_formatted_html": "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + transaction.transaction + "</a>",
+                                        "order_formatted_html": NRS.getTransactionLink(transaction.transaction),
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
                                         "total_formatted_html": NRS.formatAmount(NRS.calculateOrderTotalNQT(transaction.attachment.quantityQNT, transaction.attachment.priceNQT)) + " NXT"
                                     };
                                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                                    $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                                    $("#transaction_info_table").show();
+                                    infoTable.find("tbody").append(NRS.createInfoTable(data));
+                                    infoTable.show();
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
                                 });
@@ -618,15 +621,15 @@ var NRS = (function (NRS, $, undefined) {
                                 NRS.sendRequest("getAsset", {
                                     "asset": transaction.attachment.asset
                                 }, function (asset) {
-                                    var data = {
+                                    data = {
                                         "type": $.t("dividend_payment"),
                                         "asset_name": asset.name,
                                         "amount_per_share": NRS.formatOrderPricePerWholeQNT(transaction.attachment.amountNQTPerQNT, asset.decimals) + " NXT",
                                         "height": transaction.attachment.height
                                     };
                                     data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                                    $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                                    $("#transaction_info_table").show();
+                                    infoTable.find("tbody").append(NRS.createInfoTable(data));
+                                    infoTable.show();
 
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
@@ -643,7 +646,7 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 3) {
                 switch (transaction.subtype) {
                     case 0:
-                        var data = {
+                        data = {
                             "type": $.t("marketplace_listing"),
                             "name": transaction.attachment.name,
                             "description": transaction.attachment.description,
@@ -652,8 +655,8 @@ var NRS = (function (NRS, $, undefined) {
                             "seller": NRS.getAccountFormatted(transaction, "sender")
                         };
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 1:
@@ -662,14 +665,14 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
-                            var data = {
+                            data = {
                                 "type": $.t("marketplace_removal"),
                                 "item_name": goods.name,
                                 "seller": NRS.getAccountFormatted(goods, "seller")
                             };
 
-                            $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                            $("#transaction_info_table").show();
+                            infoTable.find("tbody").append(NRS.createInfoTable(data));
+                            infoTable.show();
 
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
@@ -682,15 +685,15 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
-                            var data = {
+                            data = {
                                 "type": $.t("marketplace_item_price_change"),
                                 "item_name": goods.name,
                                 "new_price_formatted_html": NRS.formatAmount(transaction.attachment.priceNQT) + " NXT",
                                 "seller": NRS.getAccountFormatted(goods, "seller")
                             };
 
-                            $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                            $("#transaction_info_table").show();
+                            infoTable.find("tbody").append(NRS.createInfoTable(data));
+                            infoTable.show();
 
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
@@ -703,15 +706,15 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
-                            var data = {
+                            data = {
                                 "type": $.t("marketplace_item_quantity_change"),
                                 "item_name": goods.name,
                                 "delta_quantity": transaction.attachment.deltaQuantity,
                                 "seller": NRS.getAccountFormatted(goods, "seller")
                             };
 
-                            $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                            $("#transaction_info_table").show();
+                            infoTable.find("tbody").append(NRS.createInfoTable(data));
+                            infoTable.show();
 
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
@@ -724,7 +727,7 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
-                            var data = {
+                            data = {
                                 "type": $.t("marketplace_purchase"),
                                 "item_name": goods.name,
                                 "price": transaction.attachment.priceNQT,
@@ -733,8 +736,8 @@ var NRS = (function (NRS, $, undefined) {
                                 "seller": NRS.getAccountFormatted(goods, "seller")
                             };
 
-                            $("#transaction_info_table tbody").append(NRS.createInfoTable(data));
-                            $("#transaction_info_table").show();
+                            infoTable.find("tbody").append(NRS.createInfoTable(data));
+                            infoTable.show();
 
                             NRS.sendRequest("getDGSPurchase", {
                                 "purchase": transaction.transaction
@@ -788,7 +791,7 @@ var NRS = (function (NRS, $, undefined) {
                             NRS.sendRequest("getDGSGood", {
                                 "goods": purchase.goods
                             }, function (goods) {
-                                var data = {
+                                data = {
                                     "type": $.t("marketplace_delivery"),
                                     "item_name": goods.name,
                                     "price": purchase.priceNQT
@@ -821,8 +824,8 @@ var NRS = (function (NRS, $, undefined) {
                                     }
                                 }
 
-                                $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                                $("#transaction_info_table").show();
+                                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                                infoTable.show();
 
                                 var callout;
 
@@ -855,15 +858,15 @@ var NRS = (function (NRS, $, undefined) {
                             NRS.sendRequest("getDGSGood", {
                                 "goods": purchase.goods
                             }, function (goods) {
-                                var data = {
+                                data = {
                                     "type": $.t("marketplace_feedback"),
                                     "item_name": goods.name,
                                     "buyer": NRS.getAccountFormatted(purchase, "buyer"),
                                     "seller": NRS.getAccountFormatted(purchase, "seller")
                                 };
 
-                                $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                                $("#transaction_info_table").show();
+                                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                                infoTable.show();
 
                                 if (purchase.seller == NRS.account || purchase.buyer == NRS.account) {
                                     NRS.sendRequest("getDGSPurchase", {
@@ -908,7 +911,7 @@ var NRS = (function (NRS, $, undefined) {
                             NRS.sendRequest("getDGSGood", {
                                 "goods": purchase.goods
                             }, function (goods) {
-                                var data = {
+                                data = {
                                     "type": $.t("marketplace_refund"),
                                     "item_name": goods.name
                                 };
@@ -922,8 +925,8 @@ var NRS = (function (NRS, $, undefined) {
                                 data["buyer"] = NRS.getAccountFormatted(purchase, "buyer");
                                 data["seller"] = NRS.getAccountFormatted(purchase, "seller");
 
-                                $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                                $("#transaction_info_table").show();
+                                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                                infoTable.show();
 
                                 $("#transaction_info_modal").modal("show");
                                 NRS.fetchingModalData = false;
@@ -938,25 +941,25 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 4) {
                 switch (transaction.subtype) {
                     case 0:
-                        var data = {
+                        data = {
                             "type": $.t("balance_leasing"),
                             "period": transaction.attachment.period,
                             "lessee": transaction.recipientRS ? transaction.recipientRS : transaction.recipient
                         };
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 1:
-                        var data = {
+                        data = {
                             "type": $.t("phasing_only")
                         };
 
                         _getPhasingDetails(data, transaction.attachment.phasingControlParams);
 
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
 
@@ -980,7 +983,7 @@ var NRS = (function (NRS, $, undefined) {
                 switch (transaction.subtype) {
                     case 0:
                         var minReservePerUnitNQT = new BigInteger(transaction.attachment.minReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, transaction.attachment.decimals)));
-                        var data = {
+                        data = {
                             "type": $.t("currency_issuance"),
                             "name": transaction.attachment.name,
                             "code": transaction.attachment.code,
@@ -1008,7 +1011,7 @@ var NRS = (function (NRS, $, undefined) {
                         if (currency) {
                             var amountPerUnitNQT = new BigInteger(transaction.attachment.amountPerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
                             var resSupply = currency.reserveSupply;
-                            var data = {
+                            data = {
                                 "type": $.t("reserve_increase"),
                                 "code": currency.code,
                                 "reserve_units": [resSupply, currency.decimals],
@@ -1022,7 +1025,7 @@ var NRS = (function (NRS, $, undefined) {
                     case 2:
                         if (currency) {
                             var currentReservePerUnitNQT = new BigInteger(currency.currentReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
-                            var data = {
+                            data = {
                                 "type": $.t("reserve_claim"),
                                 "code": currency.code,
                                 "units": [transaction.attachment.units, currency.decimals],
@@ -1034,7 +1037,7 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 3:
                         if (currency) {
-                            var data = {
+                            data = {
                                 "type": $.t("currency_transfer"),
                                 "code": currency.code,
                                 "units": [transaction.attachment.units, currency.decimals]
@@ -1066,7 +1069,7 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 7:
                         if (currency) {
-                            var data = {
+                            data = {
                                 "type": $.t("mint_currency"),
                                 "code": currency.code,
                                 "units": [transaction.attachment.units, currency.decimals],
@@ -1079,7 +1082,7 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 8:
                         if (currency) {
-                            var data = {
+                            data = {
                                 "type": $.t("delete_currency"),
                                 "code": currency.code
                             };
@@ -1095,21 +1098,21 @@ var NRS = (function (NRS, $, undefined) {
                     if (transaction.sender != NRS.account) {
                         data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                     }
-
-                    $("#transaction_info_callout").html("");
+                    var infoCallout = $("#transaction_info_callout");
+                    infoCallout.html("");
                     if (currency != null && NRS.isExchangeable(currency.type)) {
-                        $("#transaction_info_callout").append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>" + $.t('exchange_booth') + "</a><br/>");
+                        infoCallout.append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>" + $.t('exchange_booth') + "</a><br/>");
                     }
                     if (currency != null && NRS.isReservable(currency.type)) {
-                        $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' data-issueheight='" + String(currency.issuanceHeight).escapeHTML() + "'>View Founders</a><br/>");
+                        infoCallout.append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' data-issueheight='" + String(currency.issuanceHeight).escapeHTML() + "'>View Founders</a><br/>");
                     }
                     if (currency != null) {
-                        $("#transaction_info_callout").append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'  data-i18n='Currency Distribution'>Currency Distribution</a>");
+                        infoCallout.append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'  data-i18n='Currency Distribution'>Currency Distribution</a>");
                     }
-                    $("#transaction_info_callout").show();
+                    infoCallout.show();
 
-                    $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                    $("#transaction_info_table").show();
+                    infoTable.find("tbody").append(NRS.createInfoTable(data));
+                    infoTable.show();
 
                     if (!isModalVisible) {
                         $("#transaction_info_modal").modal("show");
@@ -1119,15 +1122,15 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 6) {
                 switch (transaction.subtype) {
                     case 0:
-                        var data = NRS.getTaggedData(transaction.attachment, 0);
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        data = NRS.getTaggedData(transaction.attachment, 0);
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
                     case 1:
-                        var data = NRS.getTaggedData(transaction.attachment, 1);
-                        $("#transaction_info_table").find("tbody").append(NRS.createInfoTable(data));
-                        $("#transaction_info_table").show();
+                        data = NRS.getTaggedData(transaction.attachment, 1);
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
 
                         break;
 
@@ -1135,8 +1138,31 @@ var NRS = (function (NRS, $, undefined) {
                         incorrect = true;
                         break;
                 }
+            } else if (NRS.isOfType(transaction, "ShufflingCreation")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingRegistration")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingProcessing")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingRecipients")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingVerification")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
+            } else if (NRS.isOfType(transaction, "ShufflingCancellation")) {
+                data = transaction.attachment;
+                infoTable.find("tbody").append(NRS.createInfoTable(data));
+                infoTable.show();
             }
-
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
                     if (transaction.attachment.message) {
@@ -1239,7 +1265,7 @@ var NRS = (function (NRS, $, undefined) {
                     tradeQuantity = tradeQuantity.add(new BigInteger(trade.quantityQNT));
                     tradeTotal = tradeTotal.add(new BigInteger(trade.quantityQNT).multiply(new BigInteger(trade.priceNQT)));
                     rows += "<tr>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(trade[transactionField]).escapeHTML() + "'>" + NRS.formatTimestamp(trade.timestamp) + "</a>" +
+                    "<td>" + NRS.getTransactionLink(trade[transactionField], NRS.formatTimestamp(trade.timestamp)) + "<td>" +
                     "<td>" + NRS.formatQuantity(trade.quantityQNT, asset.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(trade.priceNQT, asset.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(trade.quantityQNT, trade.priceNQT)) +
@@ -1291,7 +1317,7 @@ var NRS = (function (NRS, $, undefined) {
                     exchangedUnits = exchangedUnits.add(new BigInteger(exchange.units));
                     exchangedTotal = exchangedTotal.add(new BigInteger(exchange.units).multiply(new BigInteger(exchange.rateNQT)));
                     rows += "<tr>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.offer).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+                    "<td>" + NRS.getTransactionLink(exchange.offer, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                     "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT)) +
@@ -1358,7 +1384,7 @@ var NRS = (function (NRS, $, undefined) {
                         exchangeType = "Same";
                     }
                     rows += "<tr>" +
-                    "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(exchange.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(exchange.timestamp) + "</a>" +
+                    "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                     "<td>" + exchangeType + "</td>" +
                     "<td>" + NRS.formatQuantity(exchange.units, currency.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, currency.decimals) + "</td>" +
@@ -1381,12 +1407,11 @@ var NRS = (function (NRS, $, undefined) {
         if (!transaction) {
             return {};
         }
-        var data = {
+        return {
             "status": "Currency Deleted or not Issued",
             "type": transaction.type,
             "subType": transaction.subtype
         };
-        return data;
     };
 
     NRS.getTaggedData = function (attachment, subtype) {
@@ -1440,11 +1465,11 @@ var NRS = (function (NRS, $, undefined) {
         }
     });
 
-    $("#approve_transaction_button").on("click", function (e) {
+    $("#approve_transaction_button").on("click", function () {
         $('.tr_transaction_' + $(this).data("transaction") + ':visible .approve_transaction_btn').attr('disabled', true);
     });
 
-    $("#transaction_info_modal").on("hide.bs.modal", function (e) {
+    $("#transaction_info_modal").on("hide.bs.modal", function () {
         NRS.removeDecryptionForm($(this));
         $("#transaction_info_output_bottom, #transaction_info_output_top, #transaction_info_bottom").html("").hide();
     });

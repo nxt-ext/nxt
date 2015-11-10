@@ -422,6 +422,7 @@ public final class Shuffling {
     public Attachment.ShufflingAttachment process(final long accountId, final String secretPhrase, final byte[] recipientPublicKey) {
         byte[][] data = Convert.EMPTY_BYTES;
         byte[] shufflingStateHash = null;
+        int participantIndex = 0;
         List<ShufflingParticipant> shufflingParticipants = new ArrayList<>();
         Nxt.getBlockchain().readLock();
         // Read the participant list for the shuffling
@@ -431,6 +432,7 @@ public final class Shuffling {
                 if (participant.getNextAccountId() == accountId) {
                     data = participant.getData();
                     shufflingStateHash = participant.getDataTransactionFullHash();
+                    participantIndex = shufflingParticipants.size();
                 }
             }
             if (shufflingStateHash == null) {
@@ -439,17 +441,13 @@ public final class Shuffling {
         } finally {
             Nxt.getBlockchain().readUnlock();
         }
-        boolean isLast = shufflingParticipants.get(shufflingParticipants.size() - 1).getAccountId() == accountId;
+        boolean isLast = participantIndex == participantCount - 1;
         // decrypt the tokens bundled in the current data
         List<byte[]> outputDataList = new ArrayList<>();
         for (byte[] bytes : data) {
             AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.readEncryptedData(bytes);
             try {
                 byte[] decrypted = encryptedData.decrypt(secretPhrase);
-                if (isLast && decrypted.length != 32) {
-                    Logger.logDebugMessage("Invalid recipient public key " + Convert.toHexString(decrypted));
-                    return new Attachment.ShufflingRecipients(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
-                }
                 outputDataList.add(decrypted);
             } catch (Exception e) {
                 Logger.logMessage("Decryption failed", e);
@@ -461,23 +459,21 @@ public final class Shuffling {
         // which did not perform shuffle processing yet
         byte[] bytesToEncrypt = recipientPublicKey;
         byte[] nonce = Convert.toBytes(this.id);
-        for (int i = shufflingParticipants.size() - 1; i >= 0; i--) {
+        for (int i = shufflingParticipants.size() - 1; i > participantIndex; i--) {
             ShufflingParticipant participant = shufflingParticipants.get(i);
-            if (participant.getAccountId() == accountId) {
-                break;
-            }
             byte[] participantPublicKey = Account.getPublicKey(participant.getAccountId());
             AnonymouslyEncryptedData encryptedData = AnonymouslyEncryptedData.encrypt(bytesToEncrypt, secretPhrase, participantPublicKey, nonce);
             bytesToEncrypt = encryptedData.getBytes();
         }
         outputDataList.add(bytesToEncrypt);
         // Shuffle the tokens and save the shuffled tokens as the participant data
-        Collections.shuffle(outputDataList, Crypto.getSecureRandom());
+        Collections.sort(outputDataList, Convert.byteArrayComparator);
         if (isLast) {
             Set<Long> recipientAccounts = new HashSet<>();
             for (byte[] publicKey : outputDataList) {
-                if (!recipientAccounts.add(Account.getId(publicKey))) {
-                    // duplicate recipient public key
+                if (!Crypto.isCanonicalPublicKey(publicKey) || !recipientAccounts.add(Account.getId(publicKey))) {
+                    // duplicate or invalid recipient public key
+                    Logger.logDebugMessage("Invalid recipient public key " + Convert.toHexString(publicKey));
                     return new Attachment.ShufflingRecipients(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
                 }
             }
@@ -485,6 +481,16 @@ public final class Shuffling {
             return new Attachment.ShufflingRecipients(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     shufflingStateHash);
         } else {
+            for (int i = 0; i < outputDataList.size(); i++) {
+                byte[] decrypted = outputDataList.get(i);
+                if (i > 0 && Arrays.equals(decrypted, outputDataList.get(i - 1))) {
+                    return new Attachment.ShufflingProcessing(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
+                }
+                if (decrypted.length != 32 + 64 * (participantCount - participantIndex - 1)) {
+                    Logger.logDebugMessage("Invalid encrypted data length in process " + decrypted.length);
+                    return new Attachment.ShufflingProcessing(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
+                }
+            }
             return new Attachment.ShufflingProcessing(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     shufflingStateHash);
         }
@@ -773,8 +779,8 @@ public final class Shuffling {
                 boolean isLast = k == participantCount - 1;
                 if (isLast) {
                     // not encrypted data but plaintext recipient public key
-                    if (participantBytes.length != 32) {
-                        // cannot be a valid public key
+                    if (!Crypto.isCanonicalPublicKey(publicKey)) {
+                        // not a valid public key
                         Logger.logDebugMessage("Participant %s submitted invalid recipient public key", Long.toUnsignedString(participant.getAccountId()));
                         return participant.getAccountId();
                     }

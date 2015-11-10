@@ -83,8 +83,8 @@ var NRS = (function(NRS, $) {
 		}
 
 		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
-			(showBuyer ? "<strong>" + $.t("buyer") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "buyer") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(purchase, "buyer") + "</a></span><br>" :
-			"<strong>" + $.t("seller") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "seller") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(purchase, "seller") + "</a></span><br>") +
+			(showBuyer ? "<strong>" + $.t("buyer") + "</strong>: <span>" + NRS.getAccountLink(purchase, "buyer") + "</span><br>" :
+			"<strong>" + $.t("seller") + "</strong>: <span>" + NRS.getAccountLink(purchase, "seller") + "</span><br>") +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(purchase.goods).escapeHTML() + "'>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='" + (modal ? modal : "#dgs_view_delivery_modal") + "'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
@@ -101,7 +101,7 @@ var NRS = (function(NRS, $) {
 
 	NRS.getMarketplacePendingOrderHTML = function(purchase) {
       return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
-			"<strong>" + $.t("buyer") + "</strong>: <span><a href='#' data-user='" + NRS.getAccountFormatted(purchase, "buyer") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(purchase, "buyer") + "</a></span><br>" +
+			"<strong>" + $.t("buyer") + "</strong>: <span>" + NRS.getAccountLink(purchase, "buyer") + "</span><br>" +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(purchase.goods).escapeHTML() + "'>" + String(purchase.goods).escapeHTML() + "</a>" +
 			"</div>" +
 			"<h3 class='title'><a href='#' data-purchase='" + String(purchase.purchase).escapeHTML() + "' data-toggle='modal' data-target='#dgs_view_purchase_modal'>" + String(purchase.name).escapeHTML() + "</a></h3>" +
@@ -825,9 +825,9 @@ var NRS = (function(NRS, $) {
 						}
 
 						if (response.seller == NRS.account) {
-							output += "<tr><th><strong>" + $.t("buyer") + "</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "buyer") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(response, "buyer") + "</a></td></tr>";
+							output += "<tr><th><strong>" + $.t("buyer") + "</strong>:</th><td>" + NRS.getAccountLink(response, "buyer") + "</td></tr>";
 						} else {
-							output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "seller") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(response, "seller") + "</a></td></tr>";
+							output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + "</td></tr>";
 						}
 
 						if (type == "dgs_view_refund_modal") {
@@ -982,7 +982,7 @@ var NRS = (function(NRS, $) {
 				var output = "<table>";
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
-				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td><a href='#' data-user='" + NRS.getAccountFormatted(response, "seller") + "' class='show_account_modal_action user_info'>" + NRS.getAccountTitle(response, "seller") + "</a></td></tr>";
+				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + "</td></tr>";
 				if (response.delisted) {
 					output += "<tr><th><strong>" + $.t("status") + "</strong>:</th><td>" + $.t("no_longer_for_sale") + "</td></tr>";
 				} else {

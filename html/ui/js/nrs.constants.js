@@ -148,5 +148,12 @@ var NRS = (function (NRS, $) {
         return NRS.constants.REQUEST_TYPES[requestType].requirePost;
     };
 
+    NRS.isSubmitPassphrase = function (requestType) {
+        return requestType == "startForging" ||
+            requestType == "stopForging" ||
+            requestType == "getForging" ||
+            requestType == "markHost";
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

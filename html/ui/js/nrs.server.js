@@ -187,7 +187,7 @@ var NRS = (function (NRS, $, undefined) {
         //check to see if secretPhrase supplied matches logged in account, if not - show error.
         if ("secretPhrase" in data) {
             accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
-            if (accountId != NRS.account) {
+            if (accountId != NRS.account && !data.calculateFee) {
                 callback({
                     "errorCode": 1,
                     "errorDescription": $.t("error_passphrase_incorrect")
@@ -261,8 +261,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" &&
-            requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
+        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
             } else {
@@ -374,7 +373,7 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     callback(response, data);
                 } else {
-                    if (response.broadcasted == false) {
+                    if (response.broadcasted == false && !data.calculateFee) {
                         async.waterfall([
                             function(callback) {
                                 addMissingData(data);

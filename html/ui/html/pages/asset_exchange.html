@@ -197,13 +197,7 @@
 
                             <div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
                                 <strong data-i18n="account">Account</strong>: <span id="asset_account"></span><br />
-                                <span id="asset_id_dropdown" class="dropdown" style="margin-bottom:0;">
-                                    <strong data-i18n="asset_id">Asset Id</strong>: &nbsp;<a href="#" id="asset_id" class="dropdown-toggle" data-toggle="dropdown"></a>
-                                    <ul class="dropdown-menu" role="menu" style="right:0;left:auto;text-align:left;">
-                                        <li role="presentation" class="copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_id" data-i18n="copy_asset_id">Copy Asset ID</a></li>
-                                        <li role="presentation" class="remote_only copy_link"><a role="menuitem" tabindex="-1" href="#" data-type="asset_link" data-i18n="copy_asset_link">Copy Asset Link</a></li>
-                                    </ul>
-                                </span>
+                                <strong data-i18n="asset_id">Asset Id</strong>: <span id="asset_id"></span><br />
                             </div>
                             <h3 style="margin-top:0" id="asset_name"></h3>
 
@@ -254,15 +248,6 @@
                                                         <div class="col-sm-9">
                                                             <div class="input-group">
                                                                 <input type="text" name="buy_asset_total" id="buy_asset_total" readonly value="0" class="form-control disabled" />
-                                                                <span class="input-group-addon">NXT</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="buy_asset_fee" class="col-sm-3 control-label" data-i18n="fee">Fee</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input type="text" id="buy_asset_fee" name="buy_asset_fee" value="1" class="form-control" />
                                                                 <span class="input-group-addon">NXT</span>
                                                             </div>
                                                         </div>
@@ -339,15 +324,6 @@
                                                         <div class="col-sm-9">
                                                             <div class="input-group">
                                                                 <input type="text" name="sell_asset_total" id="sell_asset_total" readonly value="0" class="form-control disabled" />
-                                                                <span class="input-group-addon">NXT</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="sell_asset_fee" class="col-sm-3 control-label" data-i18n="fee">Fee</label>
-                                                        <div class="col-sm-9">
-                                                            <div class="input-group">
-                                                                <input type="text" id="sell_asset_fee" name="sell_asset_fee" value="1" class="form-control" />
                                                                 <span class="input-group-addon">NXT</span>
                                                             </div>
                                                         </div>

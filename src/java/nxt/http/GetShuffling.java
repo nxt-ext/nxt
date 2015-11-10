@@ -26,12 +26,13 @@ public final class GetShuffling extends APIServlet.APIRequestHandler {
     static final GetShuffling instance = new GetShuffling();
 
     private GetShuffling() {
-        super(new APITag[] {APITag.SHUFFLING}, "shuffling");
+        super(new APITag[] {APITag.SHUFFLING}, "shuffling", "includeHoldingInfo");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        return JSONData.shuffling(ParameterParser.getShuffling(req));
+        boolean includeHoldingInfo = "true".equalsIgnoreCase(req.getParameter("includeHoldingInfo"));
+        return JSONData.shuffling(ParameterParser.getShuffling(req), includeHoldingInfo);
     }
 
 }

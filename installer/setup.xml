@@ -111,8 +111,7 @@
         <pack name="server" required="yes">
             <description>Common Server Files</description>
             <file src="nxt.jar" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="README.txt" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
+			<file src="README.txt" targetdir="${INSTALL_PATH}" override="true"/><executable targetfile="${INSTALL_PATH}/run.sh"/>			<file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="3RD-PARTY-LICENSES.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="AUTHORS.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="DEVELOPER-AGREEMENT.txt" targetdir="${INSTALL_PATH}" override="true"/>
@@ -130,6 +129,7 @@
 			<fileset dir="contrib" targetdir="${INSTALL_PATH}/contrib" override="true" excludes=".gitignore"/>
             <fileset dir="logs" targetdir="${INSTALL_PATH}/logs" override="true" excludes=".gitignore"/>
 		</pack>
+
         <pack name="server.windows" os="windows" required="yes">
             <description>Windows Specific Resources</description>
 			<os family="windows"/>
@@ -143,6 +143,7 @@
 			<singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
 			<singlefile src="resource/nxtservice.properties" target="${INSTALL_PATH}/resource/nxtservice.properties" override="true"/>
 		</pack>
+        
         <pack name="server.unix" os="unix" required="yes">
             <description>Unix Specific Resources</description>
             <file src="run.sh" targetdir="${INSTALL_PATH}" override="false"/>
@@ -158,9 +159,22 @@
             <file src="sign.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/sign.sh"/>
 		</pack>
-        <pack name="jre" os="windows" required="yes" uninstall="false">
-            <description>Java 32 bit</description>
+        
+        <pack name="jre.win" os="windows" required="yes" uninstall="false">
+            <description>Java 64 bit for Windows</description>
 			<fileset dir="../jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
 		</pack>
+        
+        <pack name="server.mac" os="mac" required="yes" uninstall="false">
+            <description>Mac Specific Resources</description>
+			<singlefile src="mac-run.sh" target="${INSTALL_PATH}/run.sh" override="true"/>
+			<executable targetfile="${INSTALL_PATH}/run.sh"/>
+		</pack>
+        
+        <pack name="jre.mac" os="mac" required="yes" uninstall="false">
+            <description>Java 64 bit for Mac</description>
+            <fileset dir="../jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/jre/java"/>
+        </pack>
 	</packs>
 </installation>
