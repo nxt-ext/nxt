@@ -1139,7 +1139,26 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                 }
             } else if (NRS.isOfType(transaction, "ShufflingCreation")) {
-                data = transaction.attachment;
+                data = {
+                    "type": $.t("shuffling_creation"),
+                    "period": transaction.attachment.registrationPeriod,
+                    "participants": transaction.attachment.participantCount,
+                    "holdingType": transaction.attachment.holdingType
+                };
+                if (transaction.attachment.holding != "0") {
+                    var requestType;
+                    if (data.holdingType == 1) {
+                        requestType = "getAsset";
+                    } else if (data.holdingType == 2) {
+                        requestType = "getCurrency";
+                    }
+                    NRS.sendRequest(requestType, {"currency": transaction.attachment.holding, "asset": transaction.attachment.holding}, function (response) {
+                        data.holding_formatted_html = NRS.getTransactionLink(transaction.attachment.holding);
+                        data.amount_formatted_html = NRS.convertToQNTf(transaction.attachment.amount, response.decimals);
+                    }, false);
+                } else {
+                    data.amount = transaction.attachment.amount;
+                }
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingRegistration")) {
