@@ -481,15 +481,17 @@ public final class Shuffling {
             return new Attachment.ShufflingRecipients(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     shufflingStateHash);
         } else {
-            for (int i = 0; i < outputDataList.size(); i++) {
-                byte[] decrypted = outputDataList.get(i);
-                if (i > 0 && Arrays.equals(decrypted, outputDataList.get(i - 1))) {
+            byte[] previous = null;
+            for (byte[] decrypted : outputDataList) {
+                if (previous != null && Arrays.equals(decrypted, previous)) {
+                    Logger.logDebugMessage("Duplicate decrypted data");
                     return new Attachment.ShufflingProcessing(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
                 }
                 if (decrypted.length != 32 + 64 * (participantCount - participantIndex - 1)) {
                     Logger.logDebugMessage("Invalid encrypted data length in process " + decrypted.length);
                     return new Attachment.ShufflingProcessing(this.id, Convert.EMPTY_BYTES, shufflingStateHash);
                 }
+                previous = decrypted;
             }
             return new Attachment.ShufflingProcessing(this.id, outputDataList.toArray(new byte[outputDataList.size()][]),
                     shufflingStateHash);

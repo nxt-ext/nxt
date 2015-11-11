@@ -1058,7 +1058,7 @@ public class TestShuffling extends BlockchainTest {
         JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
         JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
         String s = (String)data.get(0);
-        data.set(0, "0000000000" + s.substring(10));
+        data.set(0, "8080808080" + s.substring(10));
         broadcast(transactionJSON, ALICE);
         generateBlock();
         getShufflingResponse = getShuffling(shufflingId);
@@ -1124,7 +1124,7 @@ public class TestShuffling extends BlockchainTest {
         JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
         JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
         String s = (String)data.get(0);
-        data.set(0, "0000000000" + s.substring(10));
+        data.set(0, "8080808080" + s.substring(10));
         broadcast(transactionJSON, BOB);
         generateBlock();
         getShufflingResponse = getShuffling(shufflingId);
@@ -1197,7 +1197,7 @@ public class TestShuffling extends BlockchainTest {
         JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
         JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
         String s = (String)data.get(0);
-        data.set(0, "0000000000" + s.substring(10));
+        data.set(0, "8080808080" + s.substring(10));
         broadcast(transactionJSON, CHUCK);
         generateBlock();
         getShufflingResponse = getShuffling(shufflingId);

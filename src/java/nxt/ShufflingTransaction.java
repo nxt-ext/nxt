@@ -384,14 +384,15 @@ public abstract class ShufflingTransaction extends TransactionType {
                     throw new NxtException.NotValidException(String.format("Invalid number of encrypted data %d for participant number %d",
                             data.length, participant.getIndex()));
                 }
-                Set<String> set = new HashSet<>();
+                byte[] previous = null;
                 for (byte[] bytes : data) {
                     if (bytes.length != 32 + 64 * (shuffling.getParticipantCount() - participant.getIndex() - 1)) {
                         throw new NxtException.NotValidException("Invalid encrypted data length " + bytes.length);
                     }
-                    if (!set.add(Convert.toHexString(bytes))) {
-                        throw new NxtException.NotValidException("Duplicate encrypted data " + Convert.toHexString(bytes));
+                    if (previous != null && Convert.byteArrayComparator.compare(previous, bytes) >= 0) {
+                        throw new NxtException.NotValidException("Duplicate or unsorted encrypted data");
                     }
+                    previous = bytes;
                 }
             }
         }

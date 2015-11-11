@@ -16,19 +16,15 @@
 
 package nxt.http.shuffling;
 
-import nxt.Account;
 import nxt.Block;
-import nxt.BlockchainProcessor;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.Shuffling;
-import nxt.ShufflingParticipant;
 import nxt.ShufflingTransaction;
 import nxt.Tester;
 import nxt.Transaction;
 import nxt.crypto.AnonymouslyEncryptedData;
-import nxt.http.ParseTransaction;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
@@ -1147,7 +1143,7 @@ public class TestAutomatedShuffling extends BlockchainTest {
         JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
         JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
         String s = (String)data.get(0);
-        data.set(0, "0000000000" + s.substring(10));
+        data.set(0, "8080808080" + s.substring(10));
         broadcast(transactionJSON, ALICE);
         for (int i = 0; i < 15; i++) {
             generateBlock();
@@ -1204,7 +1200,7 @@ public class TestAutomatedShuffling extends BlockchainTest {
         JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
         JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
         String s = (String)data.get(0);
-        data.set(0, "0000000000" + s.substring(10));
+        data.set(0, "8080808080" + s.substring(10));
         broadcast(transactionJSON, BOB);
         generateBlock();
         getShufflingResponse = getShuffling(shufflingId);
@@ -1289,8 +1285,13 @@ public class TestAutomatedShuffling extends BlockchainTest {
         byte[] bobBytes = AnonymouslyEncryptedData.encrypt(bytesToEncrypt, BOB.getSecretPhrase(), CHUCK.getPublicKey(), nonce).getBytes();
         byte[] modifiedBytes = AnonymouslyEncryptedData.encrypt(bytesToEncrypt, BOB.getSecretPhrase(), CHUCK.getPublicKey(), nonce2).getBytes();
 
-        data.set(0, Convert.toHexString(bobBytes));
-        data.set(1, Convert.toHexString(modifiedBytes));
+        if (Convert.byteArrayComparator.compare(bobBytes, modifiedBytes) < 0) {
+            data.set(0, Convert.toHexString(bobBytes));
+            data.set(1, Convert.toHexString(modifiedBytes));
+        } else {
+            data.set(0, Convert.toHexString(modifiedBytes));
+            data.set(1, Convert.toHexString(bobBytes));
+        }
 
         broadcast(transactionJSON, BOB);
         generateBlock();
@@ -1369,7 +1370,7 @@ public class TestAutomatedShuffling extends BlockchainTest {
         JSONObject transactionJSON = (JSONObject)processResponse.get("transactionJSON");
         JSONArray data = (JSONArray)((JSONObject)transactionJSON.get("attachment")).get("data");
         String s = (String)data.get(0);
-        data.set(0, "0000000000" + s.substring(10));
+        data.set(0, "8080808080" + s.substring(10));
         broadcast(transactionJSON, CHUCK);
         generateBlock();
 
