@@ -84,17 +84,6 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         });
-        //feeNXT addition fields
-        var nxtAdditionFields = [
-            "feeNXT_approval_addition"
-        ];
-        for (var i = 0; i < nxtAdditionFields.length; i++) {
-            var nxtAdditionField = nxtAdditionFields[i];
-            if (nxtAdditionField in data && "feeNXT" in data && parseInt(data[nxtAdditionField]) >= 0) {
-                data["feeNXT"] = String(parseFloat(data["feeNXT"]) + parseFloat(data[nxtAdditionField]));
-                delete data[nxtAdditionField];
-            }
-        }
         //convert NXT to NQT...
         var field = "N/A";
         try {
