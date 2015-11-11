@@ -92,6 +92,18 @@ var NRS = (function(NRS, $, undefined) {
                     'i18nKeyTitle': 'transaction_approval',
                     'iconHTML': "<i class='fa fa-gavel'></i>",
                     'receiverPage': "transactions"
+                },
+                10: {
+                    'title': "Account Property",
+                    'i18nKeyTitle': 'account_property',
+                    'iconHTML': "<i class='fa fa-gavel'></i>",
+                    'receiverPage': "transactions"
+                },
+                11: {
+                    'title': "AccountPropertyDelete",
+                    'i18nKeyTitle': 'account_property_delete',
+                    'iconHTML': "<i class='fa fa-question'></i>",
+                    'receiverPage': "transactions"
                 }
             }
         },
