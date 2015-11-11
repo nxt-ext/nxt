@@ -152,6 +152,12 @@ var NRS = (function(NRS, $, undefined) {
                     'i18nKeyTitle': 'dividend_payment',
                     'iconHTML': '<i class="fa fa-gift"></i>',
                     'receiverPage': "transactions"
+                },
+                7: {
+                    'title': "Delete Asset",
+                    'i18nKeyTitle': 'delete_asset',
+                    'iconHTML': '<i class="fa fa-remove"></i>',
+                    'receiverPage': "transactions"
                 }
             }
         },

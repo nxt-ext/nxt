@@ -1490,5 +1490,8 @@
   "shuffling_recipients": "Shuffling Recipient",
   "shuffling_registration": "Join Shuffling",
   "shuffling_verification": "Verify Shuffling",
-  "shuffling_cancellation": "Cancel Shuffling"
+  "shuffling_cancellation": "Cancel Shuffling",
+  "delete_asset": "Delete Asset",
+  "account_property": "Set Account Property",
+  "account_property_delete": "Delete Account Property"
 }
