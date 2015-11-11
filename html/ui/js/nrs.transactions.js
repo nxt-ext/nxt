@@ -677,8 +677,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		var typeIndex = $('#transactions_type_navi').find('li.active a').attr('data-transaction-type');
 		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "all_unconfirmed" && typeIndex != "phasing") {
-				var typeDict = NRS.transactionTypes[typeIndex];
-				$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
+			var typeDict = NRS.transactionTypes[typeIndex];
+			$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
 				var subTitleString = $.t(subTypeDict.i18nKeyTitle);
 				html = '<li role="presentation"><a href="#" data-transaction-sub-type="' + subTypeIndex + '">';
 				html += subTypeDict.iconHTML + ' ' + subTitleString + '</a></li>';
