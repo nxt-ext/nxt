@@ -18,6 +18,12 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
+    var SUBTYPE_SHUFFLING_CREATION = 0;
+    var SUBTYPE_SHUFFLING_REGISTRATION = 1;
+    var SUBTYPE_SHUFFLING_PROCESSING = 2;
+    var SUBTYPE_SHUFFLING_RECIPIENTS = 3;
+    var SUBTYPE_SHUFFLING_VERIFICATION = 4;
+    var SUBTYPE_SHUFFLING_CANCELLATION = 5;
 
     function isErrorResponse(response) {
         return response.errorCode || response.errorDescription || response.errorMessage || response.error;
@@ -71,6 +77,20 @@ var NRS = (function(NRS, $) {
                     case 0: return 'NXT';
                     case 1: return 'ASSET';
                     case 2: return 'CURRENCY';
+                }
+            })(),
+            formattedAmount: (function () {
+                switch (response.holdingType) {
+                    case 0: return NRS.formatAmount(response.amount);
+                    case 1: return NRS.formatQuantity(response.amount, 0);
+                    case 2: return NRS.formatQuantity(response.amount, 0);
+                }
+            })(),
+            holdingFormatted: (function () {
+                switch (response.holdingType) {
+                    case 0: return '';
+                    case 1: return '<a href="#" data-goto-asset="'+response.holding.escapeHTML()+'">'+response.holdingInfo.name.escapeHTML()+'</a>';
+                    case 2: return '<a href="#" data-goto-currency="'+response.holding.escapeHTML()+'">'+response.holdingInfo.name.escapeHTML()+'</a>';
                 }
             })()
         });
@@ -161,7 +181,7 @@ var NRS = (function(NRS, $) {
             isEmpty: false,
             shufflings: []
         });
-        NRS.sendRequest("getAllShufflings", {}, 
+        NRS.sendRequest("getAllShufflings", { includeHoldingInfo:'true' }, 
             function(response) {
                 if (isErrorResponse(response)) {
                     view.render({
@@ -183,6 +203,19 @@ var NRS = (function(NRS, $) {
                 });
             }
         );
+        NRS.incoming.all_shufflings = function (transactions) {
+            setTimeout(NRS.pages.all_shufflings, 0);
+            // transactions.forEach(function (transaction) {
+            //     switch (transaction.type) {
+            //         case SUBTYPE_SHUFFLING_CREATION:
+            //         case SUBTYPE_SHUFFLING_REGISTRATION:
+            //         case SUBTYPE_SHUFFLING_PROCESSING:
+            //         case SUBTYPE_SHUFFLING_RECIPIENTS:
+            //         case SUBTYPE_SHUFFLING_VERIFICATION:
+            //         case SUBTYPE_SHUFFLING_CANCELLATION:
+            //     }
+            // });
+        }
     };
 
     NRS.pages.my_shufflers = function () {
