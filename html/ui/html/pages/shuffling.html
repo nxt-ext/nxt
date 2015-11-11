@@ -107,8 +107,8 @@
                         <th data-i18n="stage">Stage</th>
                         <th data-i18n="assignee">Assignee</th>
                         <th data-i18n="amount">Amount</th>
+                        <th data-i18n="participant_count">Participants</th>
                         <th data-i18n="blocks_remaining">Blocks Remaining</th>
-                        <th data-i18n="participant_count">Participant Count</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -117,12 +117,12 @@
                             <tr>
                                 <td>{{shuffling}}</td>
                                 <td>{{holdingTypeLabel}}</td>
-                                <td>{{holding}}</td>
+                                <td>{{{holdingFormatted}}}</td>
                                 <td>{{stageLabel}}</td>
                                 <td>{{assignee}}</td>
-                                <td>{{amount}}</td>
-                                <td>{{blocks_remaining}}</td>
-                                <td>{{participant_count}}</td>
+                                <td>{{formattedAmount}}</td>
+                                <td>{{participantCount}}</td>
+                                <td>{{blocksRemaining}}</td>
                                 <td>
                                     {{#if canJoin}}
                                         <a href="#">Join</a>
