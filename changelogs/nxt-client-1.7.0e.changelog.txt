@@ -133,7 +133,8 @@ total length, after the first 32 chars. Name and URI size limits remain at
 Messages and EncryptedMessages (non-prunable):
 Maximum length reduced to 160 bytes. 1 NXT fee for each 32 bytes after the
 first 32 bytes. For encrypted messages, the length is measured excluding the
-nonce and the 16 byte AES initialization vector.
+nonce and the 16 byte AES initialization vector, and to account for those
+there is an extra fee of 1 NXT.
 Fees and size limit for prunable messages remain unchanged.
 
 AccountInfo:

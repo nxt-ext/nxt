@@ -483,7 +483,7 @@ public interface Appendix {
 
     abstract class AbstractEncryptedMessage extends AbstractAppendix {
 
-        private static final Fee ENCRYPTED_MESSAGE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
+        private static final Fee ENCRYPTED_MESSAGE_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT, 32) {
             @Override
             public int getSize(TransactionImpl transaction, Appendix appendage) {
                 return ((AbstractEncryptedMessage)appendage).getEncryptedDataLength() - 16;
@@ -549,7 +549,7 @@ public interface Appendix {
 
         @Override
         public int getNextFeeHeight() {
-            return Constants.BASE_TARGET_BLOCK;
+            return Constants.isTestnet ? 480000 : Constants.BASE_TARGET_BLOCK;
         }
 
         @Override
