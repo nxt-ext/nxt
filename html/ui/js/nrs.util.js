@@ -1557,5 +1557,24 @@ var NRS = (function (NRS, $, undefined) {
         return statusIcon;
     };
 
+    NRS.phasingControlObjectToPhasingParams = function(controlObj) {
+        var phasingParams = {}
+
+        phasingParams.phasingVotingModel = controlObj.votingModel;
+        phasingParams.phasingQuorum = controlObj.quorum;
+        phasingParams.phasingMinBalance = controlObj.minBalance;
+        phasingParams.phasingMinBalanceModel = controlObj.minBalanceModel;
+        if (controlObj.holding) {
+            phasingParams.phasingHolding = controlObj.holding;
+        }
+        if (controlObj.whitelist) {
+            phasingParams.phasingWhitelisted = [];
+            $.each(controlObj.whitelist, function(index, accObject) {
+                phasingParams.phasingWhitelisted.push(accObject.whitelisted);
+            });
+        }
+        return phasingParams;
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

@@ -1098,10 +1098,24 @@ NRS.addPagination = function () {
 	NRS.updateAccountControlStatus = function() {
 		if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
 			$("#setup_mandatory_approval").hide();
-			$("#change_mandatory_approval").show();
+			$("#mandatory_approval_details").show();
+			NRS.sendRequest("getPhasingOnlyControl", {
+				"account": NRS.account
+			}, function (response) {
+				var infoTable = $("#mandatory_approval_info_table");
+				infoTable.find("tbody").empty();
+				var data = {};
+				var params = NRS.phasingControlObjectToPhasingParams(response);
+				params.phasingWhitelist = params.phasingWhitelisted;
+				NRS.getPhasingDetails(data, params);
+				delete data.full_hash_formatted_html;
+				infoTable.find("tbody").append(NRS.createInfoTable(data));
+				infoTable.show();
+			});
+
 		} else {
 			$("#setup_mandatory_approval").show();
-			$("#change_mandatory_approval").hide();
+			$("#mandatory_approval_details").hide();
 		}
 	};
 

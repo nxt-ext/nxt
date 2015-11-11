@@ -1493,5 +1493,8 @@
   "shuffling_cancellation": "Cancel Shuffling",
   "delete_asset": "Delete Asset",
   "account_property": "Set Account Property",
-  "account_property_delete": "Delete Account Property"
+  "account_property_delete": "Delete Account Property",
+  "mandatory_approval_enabled": "Mandatory Approval:",
+  "mandatory_approval_enabled_info": "Mandatory Approval is enabled. Please set Finish Height.",
+  "mandatory_approval_details": "Show Details"
 }

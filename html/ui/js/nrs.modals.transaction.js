@@ -61,7 +61,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    function _getPhasingDetails(phasingDetails, phasingParams) {
+    NRS.getPhasingDetails = function(phasingDetails, phasingParams) {
         var votingModel = NRS.getVotingModelName(parseInt(phasingParams.phasingVotingModel));
         phasingDetails.votingModel = $.t(votingModel);
         switch (votingModel) {
@@ -203,7 +203,7 @@ var NRS = (function (NRS, $, undefined) {
                 var phasingDetails = {};
                 phasingDetails.finishHeight = finishHeight;
                 phasingDetails.finishIn = ((finishHeight - NRS.lastBlockHeight) > 0) ? (finishHeight - NRS.lastBlockHeight) + " " + $.t("blocks") : $.t("finished");
-                _getPhasingDetails(phasingDetails, transaction.attachment);
+                NRS.getPhasingDetails(phasingDetails, transaction.attachment);
                 $("#phasing_info_details_table").find("tbody").empty().append(NRS.createInfoTable(phasingDetails, true));
                 $("#phasing_info_details_link").show();
             } else {
@@ -956,7 +956,7 @@ var NRS = (function (NRS, $, undefined) {
                             "type": $.t("phasing_only")
                         };
 
-                        _getPhasingDetails(data, transaction.attachment.phasingControlParams);
+                        NRS.getPhasingDetails(data, transaction.attachment.phasingControlParams);
 
                         infoTable.find("tbody").append(NRS.createInfoTable(data));
                         infoTable.show();

@@ -154,21 +154,10 @@ var NRS = (function (NRS, $, undefined) {
         //Fill phasing parameters when mandatory approval is enabled
         if (data.mandatoryApprovalParamsJSON) {
             data.phased = true;
-            var phasingParams = JSON.parse(data.mandatoryApprovalParamsJSON);
+            var phasingControl = JSON.parse(data.mandatoryApprovalParamsJSON);
 
-            data.phasingVotingModel = phasingParams.votingModel;
-            data.phasingQuorum = phasingParams.quorum;
-            data.phasingMinBalance = phasingParams.minBalance;
-            data.phasingMinBalanceModel = phasingParams.minBalanceModel;
-            if (phasingParams.holding) {
-                data.phasingHolding = phasingParams.holding;
-            }
-            if (phasingParams.whitelist) {
-                data.phasingWhitelisted = [];
-                $.each(phasingParams.whitelist, function(index, accObject) {
-                    data.phasingWhitelisted.push(accObject.whitelisted);
-                });
-            }
+            var phasingParams = NRS.phasingControlObjectToPhasingParams(phasingControl);
+            $.extend(data, phasingParams);
 
             delete data.phasingHashedSecret;
             delete data.phasingHashedSecretAlgorithm;
