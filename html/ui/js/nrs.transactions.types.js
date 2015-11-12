@@ -313,7 +313,7 @@ var NRS = (function(NRS, $, undefined) {
                 0: {
                     'title': "Shuffling Creation",
                     'i18nKeyTitle': 'shuffling_creation',
-                    'iconHTML': '<i class="fa fa-question"></i>'
+                    'iconHTML': '<i class="fa fa-plus"></i>'
                 },
                 1: {
                     'title': "Shuffling Registration",
