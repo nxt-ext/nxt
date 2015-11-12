@@ -62,6 +62,8 @@ var NRS = (function(NRS, $) {
         return $.extend(response, {
             amountLabel: NRS.formatAmount(response.amount),
             canRegister: response.stage == 0,
+            shufflingFormatted: NRS.getTransactionLink(response.shuffling),
+            assigneeFormatted: NRS.getAccountLink(response, "assignee"),
             stageLabel: (function () {
                 switch (response.stage) {
                     case 0: return 'REGISTRATION';
@@ -79,18 +81,18 @@ var NRS = (function(NRS, $) {
                     case 2: return 'CURRENCY';
                 }
             })(),
-            formattedAmount: (function () {
+            amountFormatted: (function () {
                 switch (response.holdingType) {
                     case 0: return NRS.formatAmount(response.amount);
-                    case 1: return NRS.formatQuantity(response.amount, 0);
-                    case 2: return NRS.formatQuantity(response.amount, 0);
+                    case 1: return NRS.formatQuantity(response.amount, 0); // TODO need to get decimals positions using getAsset
+                    case 2: return NRS.formatQuantity(response.amount, 0); // TODO need to get decimals positions using getCurrency
                 }
             })(),
             holdingFormatted: (function () {
                 switch (response.holdingType) {
                     case 0: return '';
-                    case 1: return '<a href="#" data-goto-asset="'+response.holding.escapeHTML()+'">'+response.holdingInfo.name.escapeHTML()+'</a>';
-                    case 2: return '<a href="#" data-goto-currency="'+response.holding.escapeHTML()+'">'+response.holdingInfo.name.escapeHTML()+'</a>';
+                    case 1:
+                    case 2: return NRS.getTransactionLink(response.holding);
                 }
             })()
         });

@@ -116,12 +116,12 @@
                     <tbody>
                         {{#each shufflings}}
                             <tr>
-                                <td>{{shuffling}}</td>
+                                <td>{{{shufflingFormatted}}}</td>
                                 <td>{{holdingTypeLabel}}</td>
                                 <td>{{{holdingFormatted}}}</td>
                                 <td>{{stageLabel}}</td>
-                                <td>{{assignee}}</td>
-                                <td>{{formattedAmount}}</td>
+                                <td>{{{assigneeFormatted}}}</td>
+                                <td>{{{amountFormatted}}}</td>
                                 <td>{{participantCount}}</td>
                                 <td>{{blocksRemaining}}</td>
                                 <td>
@@ -166,24 +166,23 @@
                         <th data-i18n="amount">Amount</th>
                         <th data-i18n="blocks_remaining">Blocks Remaining</th>
                         <th data-i18n="participant_count">Participant Count</th>
+                        <th data-i18n="action">Action</th>
                         <th></th>
                     </tr>
                     </thead>
                     <tbody>
                         {{#each shufflings}}
                             <tr>
-                                <td>{{shuffling}}</td>
+                                <td>{{{shufflingFormatted}}}</td>
                                 <td>{{holdingTypeLabel}}</td>
-                                <td>{{holding}}</td>
+                                <td>{{{holdingFormatted}}}</td>
                                 <td>{{stageLabel}}</td>
-                                <td>{{assignee}}</td>
-                                <td>{{amount}}</td>
+                                <td>{{{assigneeFormatted}}}</td>
+                                <td>{{{amountFormatted}}}</td>
                                 <td>{{blocks_remaining}}</td>
                                 <td>{{participant_count}}</td>
                                 <td>
-                                    {{#if canJoin}}
-                                        <a href="#" class="my-shufflings-join">Join</a>
-                                    {{/if}}
+                                    <!-- add action links here -->
                                 </td>
                             </tr>
                         {{/each}}
