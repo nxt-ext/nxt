@@ -180,6 +180,12 @@ var NRS = (function(NRS, $) {
         }
     };
 
+    NRS.incoming.all_shufflings = function (transactions) {
+        if (NRS.hasTransactionUpdates(transactions)) {
+            NRS.loadPage("all_shufflings");
+        }
+    };
+
     NRS.pages.all_shufflings = function () {
         var view = NRS.simpleview.get('all_shufflings_page', {
             errorMessage: null,
@@ -209,19 +215,6 @@ var NRS = (function(NRS, $) {
                 });
             }
         );
-        NRS.incoming.all_shufflings = function (transactions) {
-            setTimeout(NRS.pages.all_shufflings, 0);
-            // transactions.forEach(function (transaction) {
-            //     switch (transaction.type) {
-            //         case SUBTYPE_SHUFFLING_CREATION:
-            //         case SUBTYPE_SHUFFLING_REGISTRATION:
-            //         case SUBTYPE_SHUFFLING_PROCESSING:
-            //         case SUBTYPE_SHUFFLING_RECIPIENTS:
-            //         case SUBTYPE_SHUFFLING_VERIFICATION:
-            //         case SUBTYPE_SHUFFLING_CANCELLATION:
-            //     }
-            // });
-        }
     };
 
     NRS.pages.my_shufflers = function () {
