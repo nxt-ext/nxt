@@ -109,7 +109,7 @@ var NRS = (function(NRS, $) {
         NRS.addTreeviewSidebarMenuItem({
             "id": sidebarId,
             "titleHTML": '<i class="fa fa-random"></i> <span data-i18n="shuffling">Shuffling</span>',
-            "page": 'shuffling',
+            "page": 'all_shufflings',
             "desiredPosition": 80
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
