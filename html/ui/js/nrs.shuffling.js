@@ -40,7 +40,11 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.jsondata.shuffler = function (response) {
-        return $.extend(response, {});
+        return $.extend(response, {
+            accountFormatted: NRS.getAccountLink(response, "account"),
+            recipientFormatted: NRS.getAccountLink(response, "recipient"),
+            shufflingFormatted: NRS.getTransactionLink(response.shuffling)
+        });
     };
 
     /**
@@ -230,7 +234,7 @@ var NRS = (function(NRS, $) {
                 alert(JSON.stringify(arguments))
             }
         });
-        NRS.sendRequest("getShufflers", { "account": NRS.account }, 
+        NRS.sendRequest("getShufflers", { "account": NRS.account, "adminPassword": NRS.settings.admin_password },
             function(response) {
                 if (isErrorResponse(response)) {
                     view.render({
