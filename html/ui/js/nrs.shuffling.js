@@ -255,9 +255,9 @@ var NRS = (function(NRS, $) {
                     });
                     return;
                 }
-                if (response.shufflings.length > NRS.itemsPerPage) {
+                if (response.shufflers.length > NRS.itemsPerPage) {
                     NRS.hasMorePages = true;
-                    response.shufflings.pop();
+                    response.shufflers.pop();
                 }
                 view.shufflers.length = 0;
                 response.shufflers.forEach(
