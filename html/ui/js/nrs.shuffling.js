@@ -275,13 +275,19 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.pages.my_shufflings = function () {
+        NRS.hasMorePages = false;
         var view = NRS.simpleview.get('my_shufflings_page', {
             errorMessage: null,
             isLoading: true,
             isEmpty: false,
             shufflings: []
         });
-        NRS.sendRequest("getAccountShufflings", { "account": NRS.account }, 
+        var arg = {
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+            "account": NRS.account
+        };
+        NRS.sendRequest("getAccountShufflings", arg, 
             function(response) {
                 if (isErrorResponse(response)) {
                     view.render({
@@ -290,6 +296,10 @@ var NRS = (function(NRS, $) {
                         isEmpty: false
                     });
                     return;
+                }
+                if (response.shufflings.length > NRS.itemsPerPage) {
+                    NRS.hasMorePages = true;
+                    response.shufflings.pop();
                 }
                 view.shufflings.length = 0;
                 response.shufflings.forEach(
@@ -301,6 +311,7 @@ var NRS = (function(NRS, $) {
                     isLoading: false,
                     isEmpty: view.shufflings.length == 0
                 });
+                NRS.pageLoaded();
             }
         );
     };
