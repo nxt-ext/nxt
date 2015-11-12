@@ -37,7 +37,6 @@
             <h1 data-i18n="my_shufflers">My Shufflers</h1>
         </section>
         <section class="content">
-            <a href="#" onclick="{{ callback this start }}">Start</a>
             {{#if errorMessage}}
             <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
             {{/if}}
@@ -46,31 +45,19 @@
                     <thead>
                     <tr>
                         <th data-i18n="shuffling">Shuffling</th>
-                        <th data-i18n="holding_type">Holding Type</th>
-                        <th data-i18n="holding">Holding</th>
-                        <th data-i18n="stage">Stage</th>
-                        <th data-i18n="assignee">Assignee</th>
-                        <th data-i18n="amount">Amount</th>
-                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
-                        <th data-i18n="participant_count">Participant Count</th>
-                        <th></th>
+                        <th data-i18n="account">Account</th>
+                        <th data-i18n="recipient">Recipient</th>
+                        <th data-i18n="action">Action</th>
                     </tr>
                     </thead>
                     <tbody>
                         {{#each shufflers}}
                             <tr>
-                                <td>{{shuffling}}</td>
-                                <td>{{holdingTypeLabel}}</td>
-                                <td>{{holding}}</td>
-                                <td>{{stageLabel}}</td>
-                                <td>{{assignee}}</td>
-                                <td>{{amount}}</td>
-                                <td>{{blocks_remaining}}</td>
-                                <td>{{participant_count}}</td>
+                                <td>{{{shufflingFormatted}}}</td>
+                                <td>{{{accountFormatted}}}</td>
+                                <td>{{{recipientFormatted}}}</td>
                                 <td>
-                                    {{#if canJoin}}
-                                        <a href="#" onclick="{{ callback .. ../start }}">Start</a>
-                                    {{/if}}
+                                    <!-- add actions here -->
                                 </td>
                             </tr>
                         {{/each}}
@@ -79,8 +66,7 @@
                 <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                 <div class="data-empty-container">
                     <p>
-                        <span data-i18n="no_shufflings">There are no shufflings</span>, 
-                        <a href="#" data-toggle="modal" data-target="#m_shuffling_create_modal" data-i18n="create_one">create one</a>.
+                        <span data-i18n="no_shufflers">There are no shufflers for the current account</span>,
                     </p>
                 </div>
             </div>
@@ -126,7 +112,6 @@
                                 <td>{{blocksRemaining}}</td>
                                 <td>
                                     {{#if canRegister}}
-                                       <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffling_register_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="register">REGISTER</a>
                                        <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="start_shuffler">START SHUFFLER</a>
                                     {{/if}}
                                 </td>
@@ -179,8 +164,8 @@
                                 <td>{{stageLabel}}</td>
                                 <td>{{{assigneeFormatted}}}</td>
                                 <td>{{{amountFormatted}}}</td>
-                                <td>{{blocks_remaining}}</td>
-                                <td>{{participant_count}}</td>
+                                <td>{{blocksRemaining}}</td>
+                                <td>{{participantCount}}</td>
                                 <td>
                                     <!-- add action links here -->
                                 </td>
