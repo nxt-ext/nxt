@@ -158,6 +158,8 @@ public final class Constants {
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
     public static final long SHUFFLING_DEPOSIT_NQT = (isTestnet ? 7 : 1000) * ONE_NXT;
 
+    public static final boolean correctInvalidFees = Nxt.getBooleanProperty("nxt.correctInvalidFees");
+
     public static final long EPOCH_BEGINNING;
     static {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));

@@ -161,3 +161,10 @@ Base fee 1 NXT, with 2 NXT additional fee for each 32 bytes of encrypted goods
 data after the first 32 bytes, nonce and AES initialization bytes excluded.
 Encrypted goods data size limit remains 1000 bytes.
 
+To facilitate migration of legacy client code to the new fees, if the property
+nxt.correctInvalidFees=true has been set in nxt.properties (default is false),
+the server will automatically replace insufficient fees for submitted unsigned
+transactions with the minimum fee needed, depending on the transaction, as if
+feeNQT=0 has been specified. Fees exceeding the minimum, or fees for already
+signed transactions, will not be corrected.
+
