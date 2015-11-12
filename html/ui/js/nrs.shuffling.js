@@ -229,6 +229,7 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.pages.my_shufflers = function () {
+        NRS.hasMorePages = false;
         var view = NRS.simpleview.get('my_shufflers_page', {
             errorMessage: null,
             isLoading: true,
@@ -238,7 +239,13 @@ var NRS = (function(NRS, $) {
                 alert(JSON.stringify(arguments))
             }
         });
-        NRS.sendRequest("getShufflers", { "account": NRS.account, "adminPassword": NRS.settings.admin_password },
+        var arg = {
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+            "account": NRS.account, 
+            "adminPassword": NRS.settings.admin_password
+        };
+        NRS.sendRequest("getShufflers", arg,
             function(response) {
                 if (isErrorResponse(response)) {
                     view.render({
@@ -247,6 +254,10 @@ var NRS = (function(NRS, $) {
                         isEmpty: false
                     });
                     return;
+                }
+                if (response.shufflings.length > NRS.itemsPerPage) {
+                    NRS.hasMorePages = true;
+                    response.shufflings.pop();
                 }
                 view.shufflers.length = 0;
                 response.shufflers.forEach(
@@ -258,6 +269,7 @@ var NRS = (function(NRS, $) {
                     isLoading: false,
                     isEmpty: view.shufflers.length == 0
                 });
+                NRS.pageLoaded();
             }
         );
     };
