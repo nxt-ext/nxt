@@ -151,6 +151,7 @@ var NRS = (function (NRS, $) {
     NRS.isSubmitPassphrase = function (requestType) {
         return requestType == "startForging" ||
             requestType == "stopForging" ||
+            requestType == "startShuffler" ||
             requestType == "getForging" ||
             requestType == "markHost";
     };

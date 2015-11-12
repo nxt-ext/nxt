@@ -61,7 +61,7 @@ var NRS = (function(NRS, $) {
     NRS.jsondata.shuffling = function (response) {
         return $.extend(response, {
             amountLabel: NRS.formatAmount(response.amount),
-            canJoin: response.stage == 0,
+            canRegister: response.stage == 0,
             stageLabel: (function () {
                 switch (response.stage) {
                     case 0: return 'REGISTRATION';
@@ -313,6 +313,34 @@ var NRS = (function(NRS, $) {
    		};
    		NRS.initModalUIElement($(this), '.shuffling_finish_height', 'block_height_modal_ui_element', context);
    	});
+
+    $("#m_shuffling_register_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        var shufflingId = $invoker.data("shuffling");
+        $("#register_shuffling_id").html(shufflingId);
+        var shufflingFullHash = $invoker.data("shufflingfullhash");
+        $("#register_shuffling_full_hash").val(shufflingFullHash);
+    });
+
+    var shufflerStartModal = $("#m_shuffler_start_modal");
+    shufflerStartModal.on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        var shufflingId = $invoker.data("shuffling");
+        $("#shuffler_start_shuffling_id").html(shufflingId);
+        var shufflingFullHash = $invoker.data("shufflingfullhash");
+        $("#shuffler_start_shuffling_full_hash").val(shufflingFullHash);
+    });
+
+    NRS.forms.startShuffler = function ($modal) {
+        var data = NRS.getFormData($modal.find("form:first"));
+        if (data.recipientSecretPhrase) {
+            data.recipientPublicKey = NRS.getPublicKey(data.recipientSecretPhrase);
+            delete data.recipientSecretPhrase;
+        }
+        return {
+            "data": data
+        };
+    };
 
     return NRS;
 

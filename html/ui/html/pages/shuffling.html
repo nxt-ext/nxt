@@ -20,8 +20,8 @@
     </section>
     <section id="exchange_page_content" class="content">
         <ul>
-            <li><a href="#" data-toggle="modal" data-target="#m_shuffling_start_modal">Start Shuffle</a></li>
-            <li><a href="#" data-toggle="modal" data-target="#m_shuffling_stop_modal">Stop Shuffle</a></li>
+            <li><a href="#" data-toggle="modal" data-target="#m_shuffler_start_modal">Start Shuffler</a></li>
+            <li><a href="#" data-toggle="modal" data-target="#m_shuffler_stop_modal">Stop Shuffler</a></li>
             <li><a href="#" data-toggle="modal" data-target="#m_shuffling_create_modal">Create Shuffle</a></li>
             <li><a href="#" data-toggle="modal" data-target="#m_shuffling_register_modal">Register Shuffle</a></li>
             <li><a href="#" data-toggle="modal" data-target="#m_shuffling_process_modal">Process Shuffle</a></li>
@@ -109,6 +109,7 @@
                         <th data-i18n="amount">Amount</th>
                         <th data-i18n="participant_count">Participants</th>
                         <th data-i18n="blocks_remaining">Blocks Remaining</th>
+                        <th data-i18n="action">Action</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -124,8 +125,9 @@
                                 <td>{{participantCount}}</td>
                                 <td>{{blocksRemaining}}</td>
                                 <td>
-                                    {{#if canJoin}}
-                                        <a href="#">Join</a>
+                                    {{#if canRegister}}
+                                       <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffling_register_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="register">REGISTER</a>
+                                       <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="start_shuffler">START SHUFFLER</a>
                                     {{/if}}
                                 </td>
                             </tr>
