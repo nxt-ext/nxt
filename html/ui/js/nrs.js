@@ -509,7 +509,7 @@ NRS.addPagination = function () {
 		}
 	};
 
-	$(".data-pagination").on("click", "a", function(e) {
+	$(document).on("click", ".data-pagination a", function(e) {
 		e.preventDefault();
 
 		NRS.goToPageNumber($(this).data("page"));
