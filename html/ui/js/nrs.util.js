@@ -755,6 +755,18 @@ var NRS = (function (NRS, $, undefined) {
 		return data;
 	};
 
+    NRS.mergeMaps = function (mergedMap, toMap, skipAttributes) {
+        for (var attr in mergedMap) {
+            if (!mergedMap.hasOwnProperty(attr)) {
+                continue;
+            }
+            if (skipAttributes[attr]) {
+                continue;
+            }
+            toMap[attr] = mergedMap[attr];
+        }
+    };
+
     NRS.convertNumericToRSAccountFormat = function (account) {
 		if (/^NXT\-/i.test(account)) {
 			return String(account).escapeHTML();

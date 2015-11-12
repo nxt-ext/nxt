@@ -1162,23 +1162,28 @@ var NRS = (function (NRS, $, undefined) {
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingRegistration")) {
-                data = transaction.attachment;
+                data = { "type": $.t("shuffling_registration") };
+                NRS.mergeMaps(transaction.attachment, data, { "version.ShufflingRegistration": true });
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingProcessing")) {
-                data = transaction.attachment;
+                data = { "type": $.t("shuffling_processing") };
+                NRS.mergeMaps(transaction.attachment, data, { "version.ShufflingProcessing": true });
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingRecipients")) {
-                data = transaction.attachment;
+                data = { "type": $.t("shuffling_recipients") };
+                NRS.mergeMaps(transaction.attachment, data, { "version.ShufflingRecipients": true });
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingVerification")) {
-                data = transaction.attachment;
+                data = { "type": $.t("shuffling_verification") };
+                NRS.mergeMaps(transaction.attachment, data, { "version.ShufflingVerification": true });
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingCancellation")) {
-                data = transaction.attachment;
+                data = { "type": $.t("shuffling_cancellation") };
+                NRS.mergeMaps(transaction.attachment, data, { "version.ShufflingCancellation": true });
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             }
