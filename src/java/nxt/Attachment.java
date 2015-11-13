@@ -2903,7 +2903,7 @@ public interface Attachment extends Appendix {
             this.data = Arrays.equals(hash, emptyDataHash) ? Convert.EMPTY_BYTES : null;
         }
 
-        ShufflingProcessing(JSONObject attachmentData) throws NxtException.NotValidException {
+        ShufflingProcessing(JSONObject attachmentData) {
             super(attachmentData);
             JSONArray jsonArray = (JSONArray)attachmentData.get("data");
             if (jsonArray != null) {

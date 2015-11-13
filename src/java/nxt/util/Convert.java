@@ -296,7 +296,7 @@ public final class Convert {
         }
     }
 
-    public static Comparator<byte[]> byteArrayComparator = (o1, o2) -> {
+    public static final Comparator<byte[]> byteArrayComparator = (o1, o2) -> {
         int minLength = Math.min(o1.length, o2.length);
         for (int i = 0; i < minLength; i++) {
             int result = Byte.compare(o1[i], o2[i]);
