@@ -1159,6 +1159,25 @@ var NRS = (function (NRS, $, undefined) {
                 } else {
                     data.amount = transaction.attachment.amount;
                 }
+                NRS.sendRequest("getShufflingParticipants", { "shuffling": transaction.transaction }, function (response) {
+                    if (response.participants && response.participants.length > 0) {
+                        var rows = "<table class='table table-striped'><thead><tr>" +
+                        "<th>" + $.t("Participant") + "</th>" +
+                        "<th>" + $.t("State") + "</th>" +
+                        "<tr></thead><tbody>";
+                        for (var i = 0; i < response.participants.length; i++) {
+                            var participant = response.participants[i];
+                            rows += "<tr>" +
+                            "<td>" + NRS.getAccountLink(participant, "account") + "<td>" +
+                            "<td>" + NRS.getShufflingParticipantState(participant.state) + "</td>" +
+                            "</tr>";
+                        }
+                        rows += "</tbody></table>";
+                        data["participants_formatted_html"] = rows;
+                    } else {
+                        data["participants"] = $.t("no_matching_participants");
+                    }
+                }, false);
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingRegistration")) {

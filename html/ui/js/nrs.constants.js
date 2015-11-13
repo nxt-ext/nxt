@@ -95,6 +95,8 @@ var NRS = (function (NRS, $) {
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
                 NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
                 NRS.constants.REQUEST_TYPES = response.requestTypes;
+                NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
+                NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
             }
         });
     };
@@ -128,6 +130,14 @@ var NRS = (function (NRS, $) {
 
     NRS.getHashAlgorithm = function (code) {
         return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
+    };
+
+    NRS.getShufflingStage = function (code) {
+        return getKeyByValue(NRS.constants.SHUFFLING_STAGES, code);
+    };
+
+    NRS.getShufflingParticipantState = function (code) {
+        return getKeyByValue(NRS.constants.SHUFFLING_PARTICIPANTS_STATES, code);
     };
 
     NRS.isRequireBlockchain = function(requestType) {

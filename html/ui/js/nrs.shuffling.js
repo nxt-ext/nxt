@@ -18,13 +18,6 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
-    var SUBTYPE_SHUFFLING_CREATION = 0;
-    var SUBTYPE_SHUFFLING_REGISTRATION = 1;
-    var SUBTYPE_SHUFFLING_PROCESSING = 2;
-    var SUBTYPE_SHUFFLING_RECIPIENTS = 3;
-    var SUBTYPE_SHUFFLING_VERIFICATION = 4;
-    var SUBTYPE_SHUFFLING_CANCELLATION = 5;
-
     function isErrorResponse(response) {
         return response.errorCode || response.errorDescription || response.errorMessage || response.error;
     }
@@ -47,37 +40,13 @@ var NRS = (function(NRS, $) {
         });
     };
 
-    /**
-     *  {
-     *      shuffling: String,
-     *      issuerRS: String,
-     *      holding: String,
-     *      holdingType: Number,
-     *      assigneeRS: String,
-     *      amount: String,
-     *      blocksRemaining:Number,
-     *      participantCount: Number,
-     *      stage: Number,
-     *      shufflingStateHash: String,
-     *      recipientPublicKeys: String
-     *  }
-     */
     NRS.jsondata.shuffling = function (response) {
         return $.extend(response, {
             amountLabel: NRS.formatAmount(response.amount),
             canRegister: response.stage == 0,
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
             assigneeFormatted: NRS.getAccountLink(response, "assignee"),
-            stageLabel: (function () {
-                switch (response.stage) {
-                    case 0: return 'REGISTRATION';
-                    case 1: return 'PROCESSING';
-                    case 2: return 'VERIFICATION';
-                    case 3: return 'BLAME';
-                    case 4: return 'CANCELLED';
-                    case 5: return 'DONE';
-                }
-            })(),
+            stageLabel: NRS.getShufflingStage(response.stage),
             holdingTypeLabel: (function () {
                 switch (response.holdingType) {
                     case 0: return 'NXT';
@@ -88,8 +57,8 @@ var NRS = (function(NRS, $) {
             amountFormatted: (function () {
                 switch (response.holdingType) {
                     case 0: return NRS.formatAmount(response.amount);
-                    case 1: return NRS.formatQuantity(response.amount, 0); // TODO need to get decimals positions using getAsset
-                    case 2: return NRS.formatQuantity(response.amount, 0); // TODO need to get decimals positions using getCurrency
+                    case 1: return NRS.formatQuantity(response.amount, response.holdingInfo.decimals);
+                    case 2: return NRS.formatQuantity(response.amount, response.holdingInfo.decimals);
                 }
             })(),
             holdingFormatted: (function () {
@@ -285,7 +254,8 @@ var NRS = (function(NRS, $) {
         var arg = {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-            "account": NRS.account
+            "account": NRS.account,
+            "includeHoldingInfo": "true"
         };
         NRS.sendRequest("getAccountShufflings", arg, 
             function(response) {
@@ -373,6 +343,15 @@ var NRS = (function(NRS, $) {
         return {
             "data": data
         };
+    };
+
+    NRS.forms.ShufflingCrateComplete = function(response, data) {
+        $.growl($.t("shuffling_created"));
+        // TODO invoke start shuffler modal here
+    };
+
+    NRS.forms.startShufflerComplete = function() {
+        $.growl($.t("shuffler_started"));
     };
 
     return NRS;
