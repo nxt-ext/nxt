@@ -34,7 +34,7 @@ public final class Shuffler {
     private static final Map<String, Map<Long, Shuffler>> shufflingsMap = new HashMap<>();
     private static final Map<Integer, Set<String>> expirations = new HashMap<>();
 
-    public static Shuffler addOrGetShuffler(String secretPhrase, byte[] recipientPublicKey, byte[] shufflingFullHash) {
+    public static Shuffler addOrGetShuffler(String secretPhrase, byte[] recipientPublicKey, byte[] shufflingFullHash) throws ShufflerException {
         String hash = Convert.toHexString(shufflingFullHash);
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         BlockchainImpl.getInstance().writeLock();
@@ -49,12 +49,12 @@ public final class Shuffler {
                 return shuffler;
             }
             if (shufflingsMap.size() > 100) {
-                throw new RuntimeException("Cannot run more than 100 shufflers on the same node");
+                throw new ShufflerLimitException("Cannot run more than 100 shufflers on the same node");
             }
             if (shuffler == null) {
                 Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
                 if (map.size() >= (shuffling == null ? Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS : shuffling.getParticipantCount())) {
-                    throw new RuntimeException("Cannot run shufflers for more than " + map.size() + " accounts for this shuffling");
+                    throw new ShufflerLimitException("Cannot run shufflers for more than " + map.size() + " accounts for this shuffling");
                 }
                 shuffler = new Shuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
                 if (shuffling != null) {
@@ -65,9 +65,9 @@ public final class Shuffler {
                 Logger.logMessage(String.format("Started shuffler for account %s, shuffling %s",
                         Long.toUnsignedString(accountId), Long.toUnsignedString(Convert.fullHashToId(shufflingFullHash))));
             } else if (!Arrays.equals(shuffler.recipientPublicKey, recipientPublicKey)) {
-                throw new IllegalArgumentException("A shuffler with different recipientPublicKey already started");
+                throw new DuplicateShufflerException("A shuffler with different recipientPublicKey already started");
             } else if (!Arrays.equals(shuffler.shufflingFullHash, shufflingFullHash)) {
-                throw new RuntimeException("A shuffler with different shufflingFullHash already started");
+                throw new DuplicateShufflerException("A shuffler with different shufflingFullHash already started");
             } else {
                 Logger.logMessage("Shuffler already started");
             }
@@ -274,12 +274,12 @@ public final class Shuffler {
         return shufflingFullHash;
     }
 
-    private void init(Shuffling shuffling) {
+    private void init(Shuffling shuffling) throws ShufflerException {
         ShufflingParticipant shufflingParticipant = shuffling.getParticipant(accountId);
         switch (shuffling.getStage()) {
             case REGISTRATION:
                 if (Account.getAccount(recipientPublicKey) != null) {
-                    throw new RuntimeException("Existing account cannot be used as shuffling recipient");
+                    throw new InvalidRecipientException("Existing account cannot be used as shuffling recipient");
                 }
                 if (shufflingParticipant == null) {
                     submitRegister(shuffling);
@@ -287,7 +287,7 @@ public final class Shuffler {
                 break;
             case PROCESSING:
                 if (Account.getAccount(recipientPublicKey) != null) {
-                    throw new RuntimeException("Existing account cannot be used as shuffling recipient");
+                    throw new InvalidRecipientException("Existing account cannot be used as shuffling recipient");
                 }
                 if (accountId == shuffling.getAssigneeAccountId()) {
                     submitProcess(shuffling);
@@ -404,6 +404,42 @@ public final class Shuffler {
             }
         }
         return false;
+    }
+
+    public static class ShufflerException extends NxtException {
+
+        private ShufflerException(String message) {
+            super(message);
+        }
+
+        private ShufflerException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+    }
+
+    public static final class ShufflerLimitException extends ShufflerException {
+
+        private ShufflerLimitException(String message) {
+            super(message);
+        }
+
+    }
+
+    public static final class DuplicateShufflerException extends ShufflerException {
+
+        private DuplicateShufflerException(String message) {
+            super(message);
+        }
+
+    }
+
+    public static final class InvalidRecipientException extends ShufflerException {
+
+        private InvalidRecipientException(String message) {
+            super(message);
+        }
+
     }
 
 }

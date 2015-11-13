@@ -19,6 +19,7 @@ package nxt.http;
 import nxt.NxtException;
 import nxt.Shuffler;
 import nxt.util.JSON;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,8 +37,22 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
         byte[] shufflingFullHash = ParameterParser.getBytes(req, "shufflingFullHash", true);
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         byte[] recipientPublicKey = ParameterParser.getPublicKey(req, "recipient");
-        Shuffler shuffler = Shuffler.addOrGetShuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
-        return shuffler != null ? JSONData.shuffler(shuffler) : JSON.emptyJSON;
+        try {
+            Shuffler shuffler = Shuffler.addOrGetShuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
+            return shuffler != null ? JSONData.shuffler(shuffler) : JSON.emptyJSON;
+        } catch (Shuffler.ShufflerLimitException e) {
+            JSONObject response = new JSONObject();
+            response.put("errorCode", 7);
+            response.put("errorDescription", e.getMessage());
+            return JSON.prepare(response);
+        } catch (Shuffler.DuplicateShufflerException e) {
+            JSONObject response = new JSONObject();
+            response.put("errorCode", 8);
+            response.put("errorDescription", e.getMessage());
+            return JSON.prepare(response);
+        } catch (Shuffler.InvalidRecipientException e) {
+            return JSONResponses.incorrect("recipientPublicKey", e.getMessage());
+        }
     }
 
     @Override
