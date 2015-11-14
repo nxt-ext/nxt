@@ -1178,6 +1178,23 @@ var NRS = (function (NRS, $, undefined) {
                         data["participants"] = $.t("no_matching_participants");
                     }
                 }, false);
+                NRS.sendRequest("getShufflers", {
+                    "shufflingFullHash": transaction.fullHash,
+                    "account": NRS.accountRS,
+                    "adminPassword": NRS.settings.admin_password
+                }, function (response) {
+                    if (response.shufflers && response.shufflers.length > 0) {
+                        var shuffler = response.shufflers[0];
+                        data["shuffler"] = "running";
+                        data["shufflerRecipient_formatted_html"] = NRS.getAccountLink(shuffler, "recipient");
+                        if (shuffler.failedTransaction) {
+                            data["failedTransaction_formatted_html"] = NRS.getTransactionLink(shuffler.recipient);
+                            data["failureCause"] = shuffler.failureCause;
+                        }
+                    } else {
+                        data["shuffler"] = $.t("not_running");
+                    }
+                }, false);
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingRegistration")) {
