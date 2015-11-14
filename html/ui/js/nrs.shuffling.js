@@ -329,9 +329,13 @@ var NRS = (function(NRS, $) {
     shufflerStartModal.on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
         var shufflingId = $invoker.data("shuffling");
-        $("#shuffler_start_shuffling_id").html(shufflingId);
+        if (shufflingId) {
+            $("#shuffler_start_shuffling_id").html(shufflingId);
+        }
         var shufflingFullHash = $invoker.data("shufflingfullhash");
-        $("#shuffler_start_shuffling_full_hash").val(shufflingFullHash);
+        if (shufflingFullHash) {
+            $("#shuffler_start_shuffling_full_hash").val(shufflingFullHash);
+        }
     });
 
     NRS.forms.startShuffler = function ($modal) {
@@ -345,9 +349,11 @@ var NRS = (function(NRS, $) {
         };
     };
 
-    NRS.forms.ShufflingCrateComplete = function(response, data) {
+    NRS.forms.shufflingCreateComplete = function(response) {
         $.growl($.t("shuffling_created"));
-        // TODO invoke start shuffler modal here
+        $("#shuffler_start_shuffling_id").html(response.transaction);
+        $("#shuffler_start_shuffling_full_hash").val(response.fullHash);
+        $('#m_shuffler_start_modal').modal("show");
     };
 
     NRS.forms.startShufflerComplete = function() {
