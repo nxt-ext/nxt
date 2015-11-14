@@ -261,6 +261,7 @@ var NRS = (function(NRS, $) {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
             "account": NRS.account,
+            "includeFinished": "true",
             "includeHoldingInfo": "true"
         };
         NRS.sendRequest("getAccountShufflings", arg, 
