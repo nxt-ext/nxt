@@ -36,7 +36,13 @@ var NRS = (function(NRS, $) {
         return $.extend(response, {
             accountFormatted: NRS.getAccountLink(response, "account"),
             recipientFormatted: NRS.getAccountLink(response, "recipient"),
-            shufflingFormatted: NRS.getTransactionLink(response.shuffling)
+            shufflingFormatted: NRS.getTransactionLink(response.shuffling),
+            failureFormatted: (function () {
+                if (!response.failedTransaction) {
+                    return "";
+                }
+                return NRS.getTransactionLink(response.failedTransaction.transaction);
+            })()
         });
     };
 

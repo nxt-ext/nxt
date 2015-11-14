@@ -30,7 +30,7 @@
                         <th data-i18n="shuffling">Shuffling</th>
                         <th data-i18n="account">Account</th>
                         <th data-i18n="recipient">Recipient</th>
-                        <th data-i18n="action">Action</th>
+                        <th data-i18n="failure">Failure</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -39,9 +39,7 @@
                                 <td>{{{shufflingFormatted}}}</td>
                                 <td>{{{accountFormatted}}}</td>
                                 <td>{{{recipientFormatted}}}</td>
-                                <td>
-                                    <!-- add actions here -->
-                                </td>
+                                <td>{{{failureFormatted}}}</td>
                             </tr>
                         {{/each}}
                     </tbody>
@@ -165,7 +163,6 @@
                 <div class="data-empty-container">
                     <p>
                         <span data-i18n="no_shufflings">There are no shufflings</span>, 
-                        <a href="#" data-toggle="modal" data-target="#m_shuffling_create_modal" data-i18n="create_one">create one</a>.
                     </p>
                 </div>
                 <div class="data-pagination"></div>                
