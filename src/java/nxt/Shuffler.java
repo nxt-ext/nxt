@@ -219,6 +219,15 @@ public final class Shuffler {
         Shuffling.addListener(Shuffler::scheduleExpiration, Shuffling.Event.SHUFFLING_CANCELLED);
 
         BlockchainProcessorImpl.getInstance().addListener(block -> {
+            shufflingsMap.values().forEach(shufflerMap -> shufflerMap.values().forEach(shuffler -> {
+                if (shuffler.failedTransaction != null) {
+                    try {
+                        TransactionProcessorImpl.getInstance().broadcast(shuffler.failedTransaction);
+                        shuffler.failedTransaction = null;
+                    } catch (NxtException.ValidationException ignore) {
+                    }
+                }
+            }));
             Set<String> expired = expirations.get(block.getHeight());
             if (expired != null) {
                 expired.forEach(shufflingsMap::remove);
@@ -254,6 +263,7 @@ public final class Shuffler {
     private final String secretPhrase;
     private final byte[] recipientPublicKey;
     private final byte[] shufflingFullHash;
+    private volatile Transaction failedTransaction;
 
     private Shuffler(String secretPhrase, byte[] recipientPublicKey, byte[] shufflingFullHash) {
         this.secretPhrase = secretPhrase;
@@ -272,6 +282,10 @@ public final class Shuffler {
 
     public byte[] getShufflingFullHash() {
         return shufflingFullHash;
+    }
+
+    public Transaction getFailedTransaction() {
+        return failedTransaction;
     }
 
     private void init(Shuffling shuffling) throws ShufflerException {
@@ -384,9 +398,15 @@ public final class Shuffler {
             Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(secretPhrase), 0, 0,
                     (short) 1440, attachment);
             Transaction transaction = builder.build(secretPhrase);
-            TransactionProcessorImpl.getInstance().broadcast(transaction);
+            failedTransaction = null;
+            try {
+                TransactionProcessorImpl.getInstance().broadcast(transaction);
+            } catch (NxtException.NotCurrentlyValidException e) {
+                failedTransaction = transaction;
+                Logger.logErrorMessage("Error submitting shuffler transaction, will retry at next block", e);
+            }
         } catch (NxtException.ValidationException e) {
-            Logger.logErrorMessage("Error submitting shuffler transaction", e);
+            Logger.logErrorMessage("Fatal error submitting shuffler transaction", e);
         }
     }
 

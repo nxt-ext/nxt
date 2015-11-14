@@ -375,6 +375,9 @@ final class JSONData {
         putAccount(json, "recipient", Account.getId(shuffler.getRecipientPublicKey()));
         json.put("shufflingFullHash", Convert.toHexString(shuffler.getShufflingFullHash()));
         json.put("shuffling", Long.toUnsignedString(Convert.fullHashToId(shuffler.getShufflingFullHash())));
+        if (shuffler.getFailedTransaction() != null) {
+            json.put("failedTransaction", unconfirmedTransaction(shuffler.getFailedTransaction()));
+        }
         return json;
     }
 
