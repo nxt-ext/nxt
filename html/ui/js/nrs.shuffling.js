@@ -65,8 +65,8 @@ var NRS = (function(NRS, $) {
             holdingFormatted: (function () {
                 switch (response.holdingType) {
                     case 0: return '';
-                    case 1:
-                    case 2: return NRS.getTransactionLink(response.holding);
+                    case 1: return NRS.getTransactionLink(response.holding);
+                    case 2: return NRS.getTransactionLink(response.holding, response.holdingInfo.code);
                 }
             })()
         });
