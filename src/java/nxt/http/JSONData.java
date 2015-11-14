@@ -377,6 +377,7 @@ final class JSONData {
         json.put("shuffling", Long.toUnsignedString(Convert.fullHashToId(shuffler.getShufflingFullHash())));
         if (shuffler.getFailedTransaction() != null) {
             json.put("failedTransaction", unconfirmedTransaction(shuffler.getFailedTransaction()));
+            json.put("failureCause", shuffler.getFailureCause().getMessage());
         }
         return json;
     }

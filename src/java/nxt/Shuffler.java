@@ -224,6 +224,7 @@ public final class Shuffler {
                     try {
                         TransactionProcessorImpl.getInstance().broadcast(shuffler.failedTransaction);
                         shuffler.failedTransaction = null;
+                        shuffler.failureCause = null;
                     } catch (NxtException.ValidationException ignore) {
                     }
                 }
@@ -264,6 +265,7 @@ public final class Shuffler {
     private final byte[] recipientPublicKey;
     private final byte[] shufflingFullHash;
     private volatile Transaction failedTransaction;
+    private volatile NxtException.NotCurrentlyValidException failureCause;
 
     private Shuffler(String secretPhrase, byte[] recipientPublicKey, byte[] shufflingFullHash) {
         this.secretPhrase = secretPhrase;
@@ -286,6 +288,10 @@ public final class Shuffler {
 
     public Transaction getFailedTransaction() {
         return failedTransaction;
+    }
+
+    public NxtException.NotCurrentlyValidException getFailureCause() {
+        return failureCause;
     }
 
     private void init(Shuffling shuffling) throws ShufflerException {
@@ -399,10 +405,12 @@ public final class Shuffler {
                     (short) 1440, attachment);
             Transaction transaction = builder.build(secretPhrase);
             failedTransaction = null;
+            failureCause = null;
             try {
                 TransactionProcessorImpl.getInstance().broadcast(transaction);
             } catch (NxtException.NotCurrentlyValidException e) {
                 failedTransaction = transaction;
+                failureCause = e;
                 Logger.logErrorMessage("Error submitting shuffler transaction, will retry at next block", e);
             }
         } catch (NxtException.ValidationException e) {
