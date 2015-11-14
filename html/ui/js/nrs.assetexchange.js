@@ -1626,8 +1626,10 @@ var NRS = (function (NRS, $, undefined) {
         $("#transfer_asset_button").html($.t(action));
         if (action == "transfer_asset") {
             $("#transfer_asset_recipient_container").show();
+            $("#transfer_asset_request_type").val("transferAsset");
         } else if (action == "delete_shares") {
             $("#transfer_asset_recipient_container").hide();
+            $("#transfer_asset_request_type").val("deleteAssetShares");
         }
 
         var confirmedBalance = 0;
@@ -1667,6 +1669,14 @@ var NRS = (function (NRS, $, undefined) {
     });
 
     NRS.forms.transferAsset = function ($modal) {
+        return transferOrDeleteShares($modal);
+    };
+
+    NRS.forms.deleteAssetShares = function ($modal) {
+        return transferOrDeleteShares($modal);
+    };
+
+    function transferOrDeleteShares($modal) {
         var data = NRS.getFormData($modal.find("form:first"));
 
         if (!data.quantity) {
@@ -1711,13 +1721,13 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         if ($("#transfer_asset_action").val() == "delete_shares") {
-            data.recipient = NRS.constants.GENESIS_RS;
+            delete data.recipient;
             delete data.recipientPublicKey;
         }
         return {
             "data": data
         };
-    };
+    }
 
     NRS.forms.transferAssetComplete = function () {
         NRS.loadPage("my_assets");

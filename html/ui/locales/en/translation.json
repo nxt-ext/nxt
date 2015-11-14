@@ -1517,5 +1517,6 @@
   "shuffler_started": "Shuffler Started",
   "participant": "Participant",
   "no_matching_participants": "No Matching Participants",
-  "not_started": "Not Started"
+  "not_started": "Not Started",
+  "delete_asset_shares": "Delete Asset Shares"
 }

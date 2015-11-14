@@ -154,8 +154,8 @@ var NRS = (function(NRS, $, undefined) {
                     'receiverPage': "transactions"
                 },
                 7: {
-                    'title': "Delete Asset",
-                    'i18nKeyTitle': 'delete_asset',
+                    'title': "Delete Asset Shares",
+                    'i18nKeyTitle': 'delete_asset_shares',
                     'iconHTML': '<i class="fa fa-remove"></i>',
                     'receiverPage': "transactions"
                 }

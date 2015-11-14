@@ -532,8 +532,9 @@ var NRS = (function (NRS, $, undefined) {
 
                             data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                             data["recipient"] = transaction.recipientRS ? transaction.recipientRS : transaction.recipient;
+                            // Setting recipient to genesis to delete shares was allowed between v1.6 and v1.7
                             if (data.recipient == NRS.constants.GENESIS_RS) {
-                                data.type = $.t("delete_shares");
+                                data.type = $.t("delete_asset_shares");
                             }
                             infoTable.find("tbody").append(NRS.createInfoTable(data));
                             infoTable.show();
@@ -638,6 +639,27 @@ var NRS = (function (NRS, $, undefined) {
                                 NRS.fetchingModalData = false;
                             }
                         });
+                        break;
+                    case 7:
+                        async = true;
+
+                        NRS.sendRequest("getAsset", {
+                            "asset": transaction.attachment.asset
+                        }, function (asset) {
+                            data = {
+                                "type": $.t("delete_asset_shares"),
+                                "asset_name": asset.name,
+                                "quantity": [transaction.attachment.quantityQNT, asset.decimals]
+                            };
+
+                            data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
+                            infoTable.find("tbody").append(NRS.createInfoTable(data));
+                            infoTable.show();
+
+                            $("#transaction_info_modal").modal("show");
+                            NRS.fetchingModalData = false;
+                        });
+
                         break;
                     default:
                         incorrect = true;
