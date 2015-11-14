@@ -20,7 +20,7 @@
  */
 var NRS = (function(NRS, $, undefined) {
     var accountDetailsModal = $("#account_details_modal");
-    accountDetailsModal.on("show.bs.modal", function() {
+    accountDetailsModal.on("show.bs.modal", function(e) {
         NRS.sendRequestQRCode("#account_details_modal_qr_code", NRS.accountRS, 125, 125);
 		$("#account_details_modal_balance").show();
 
@@ -54,21 +54,32 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		}
+
+		var $invoker = $(e.relatedTarget);
+		var tab = $invoker.data("detailstab");
+		if (tab) {
+			_showTab(tab)
+		}
 	});
 
-	accountDetailsModal.find("ul.nav li").click(function(e) {
-		e.preventDefault();
-
-		var tab = $(this).data("tab");
-
-		$(this).siblings().removeClass("active");
-		$(this).addClass("active");
+	function _showTab(tab){
+		var tabListItem = $("#account_details_modal li[data-tab=" + tab + "]");
+		tabListItem.siblings().removeClass("active");
+		tabListItem.addClass("active");
 
 		$(".account_details_modal_content").hide();
 
 		var content = $("#account_details_modal_" + tab);
 
 		content.show();
+	}
+
+	accountDetailsModal.find("ul.nav li").click(function(e) {
+		e.preventDefault();
+
+		var tab = $(this).data("tab");
+
+		_showTab(tab);
 	});
 
 	accountDetailsModal.on("hidden.bs.modal", function() {
