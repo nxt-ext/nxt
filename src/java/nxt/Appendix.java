@@ -1211,6 +1211,24 @@ public interface Appendix {
 
         private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
 
+        private static final Fee PHASING_FEE_2 = new Fee() {
+            @Override
+            public long getFee(TransactionImpl transaction, Appendix appendage) {
+                long fee = 0;
+                Phasing phasing = (Phasing)appendage;
+                if (!phasing.params.getVoteWeighting().isBalanceIndependent()) {
+                    fee += 20 * Constants.ONE_NXT;
+                } else {
+                    fee += Constants.ONE_NXT;
+                }
+                if (phasing.hashedSecret.length > 0) {
+                    fee += (1 + (phasing.hashedSecret.length - 1) / 32) * Constants.ONE_NXT;
+                }
+                fee += Constants.ONE_NXT * phasing.linkedFullHashes.length;
+                return fee;
+            }
+        };
+
         static Phasing parse(JSONObject attachmentData) {
             if (!hasAppendix(appendixName, attachmentData)) {
                 return null;
@@ -1398,6 +1416,16 @@ public interface Appendix {
                 return Fee.DEFAULT_FEE;
             }
             return PHASING_FEE;
+        }
+
+        @Override
+        public Fee getNextFee(Transaction transaction) {
+            return PHASING_FEE_2;
+        }
+
+        @Override
+        public int getNextFeeHeight() {
+            return Constants.BASE_TARGET_BLOCK;
         }
 
         private void release(TransactionImpl transaction) {
