@@ -318,27 +318,27 @@ var NRS = (function(NRS, $, undefined) {
                 1: {
                     'title': "Shuffling Registration",
                     'i18nKeyTitle': 'shuffling_registration',
-                    'iconHTML': '<i class="fa fa-question"></i>'
+                    'iconHTML': '<i class="fa fa-link"></i>'
                 },
                 2: {
                     'title': "Shuffling Processing",
                     'i18nKeyTitle': 'shuffling_processing',
-                    'iconHTML': '<i class="fa fa-question"></i>'
+                    'iconHTML': '<i class="fa fa-coge"></i>'
                 },
                 3: {
                     'title': "Shuffling Recipients",
                     'i18nKeyTitle': 'shuffling_recipients',
-                    'iconHTML': '<i class="fa fa-question"></i>'
+                    'iconHTML': '<i class="fa fa-spoon"></i>'
                 },
                 4: {
                     'title': "Shuffling Verification",
                     'i18nKeyTitle': 'shuffling_verification',
-                    'iconHTML': '<i class="fa fa-question"></i>'
+                    'iconHTML': '<i class="fa fa-check-square"></i>'
                 },
                 5: {
                     'title': "Shuffling Cancellation",
                     'i18nKeyTitle': 'shuffling_cancellation',
-                    'iconHTML': '<i class="fa fa-question"></i>'
+                    'iconHTML': '<i class="fa fa-thumbs-down"></i>'
                 }
             }
         }
