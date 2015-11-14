@@ -28,10 +28,6 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata = NRS.jsondata||{};
 
-    NRS.jsondata.participant = function (response) {
-        return $.extend(response, {});
-    };
-
     NRS.jsondata.shuffler = function (response) {
         return $.extend(response, {
             accountFormatted: NRS.getAccountLink(response, "account"),
@@ -48,22 +44,21 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata.shuffling = function (response) {
         return $.extend(response, {
-            amountLabel: NRS.formatAmount(response.amount),
-            canRegister: response.stage == 0,
+            canJoin: response.stage == 0,
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
             assigneeFormatted: NRS.getAccountLink(response, "assignee"),
             stageLabel: NRS.getShufflingStage(response.stage),
             holdingTypeLabel: (function () {
                 switch (response.holdingType) {
                     case 0: return 'NXT';
-                    case 1: return 'ASSET';
-                    case 2: return 'CURRENCY';
+                    case 1: return $.t('asset');
+                    case 2: return $.t('currency');
                 }
             })(),
             amountFormatted: (function () {
                 switch (response.holdingType) {
                     case 0: return NRS.formatAmount(response.amount);
-                    case 1: return NRS.formatQuantity(response.amount, response.holdingInfo.decimals);
+                    case 1:
                     case 2: return NRS.formatQuantity(response.amount, response.holdingInfo.decimals);
                 }
             })(),
@@ -169,12 +164,12 @@ var NRS = (function(NRS, $) {
             isEmpty: false,
             shufflings: []
         });
-        var arg = {
+        var params = {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
             "includeHoldingInfo": "true"
         };
-        NRS.sendRequest("getAllShufflings", arg, 
+        NRS.sendRequest("getAllShufflings", params,
             function(response) {
                 if (isErrorResponse(response)) {
                     view.render({
@@ -190,8 +185,8 @@ var NRS = (function(NRS, $) {
                 }
                 view.shufflings.length = 0;
                 response.shufflings.forEach(
-                    function (d) { 
-                        view.shufflings.push( NRS.jsondata.shuffling(d))
+                    function (shufflingJson) {
+                        view.shufflings.push( NRS.jsondata.shuffling(shufflingJson))
                     }
                 );
                 view.render({
@@ -209,18 +204,15 @@ var NRS = (function(NRS, $) {
             errorMessage: null,
             isLoading: true,
             isEmpty: false,
-            shufflers: [],
-            start: function (shuffler) {
-                alert(JSON.stringify(arguments))
-            }
+            shufflers: []
         });
-        var arg = {
+        var params = {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
             "account": NRS.account, 
             "adminPassword": NRS.settings.admin_password
         };
-        NRS.sendRequest("getShufflers", arg,
+        NRS.sendRequest("getShufflers", params,
             function(response) {
                 if (isErrorResponse(response)) {
                     view.render({
@@ -236,8 +228,8 @@ var NRS = (function(NRS, $) {
                 }
                 view.shufflers.length = 0;
                 response.shufflers.forEach(
-                    function (d) { 
-                        view.shufflers.push( NRS.jsondata.shuffler(d) ); 
+                    function (shufflerJson) {
+                        view.shufflers.push( NRS.jsondata.shuffler(shufflerJson) );
                     }
                 );
                 view.render({
@@ -257,14 +249,14 @@ var NRS = (function(NRS, $) {
             isEmpty: false,
             shufflings: []
         });
-        var arg = {
+        var params = {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
             "account": NRS.account,
             "includeFinished": "true",
             "includeHoldingInfo": "true"
         };
-        NRS.sendRequest("getAccountShufflings", arg, 
+        NRS.sendRequest("getAccountShufflings", params,
             function(response) {
                 if (isErrorResponse(response)) {
                     view.render({
@@ -280,8 +272,8 @@ var NRS = (function(NRS, $) {
                 }
                 view.shufflings.length = 0;
                 response.shufflings.forEach(
-                    function (d) { 
-                        view.shufflings.push( NRS.jsondata.shuffling(d) ); 
+                    function (shufflingJson) {
+                        view.shufflings.push( NRS.jsondata.shuffling(shufflingJson) );
                     }
                 );
                 view.render({
@@ -324,14 +316,6 @@ var NRS = (function(NRS, $) {
    		NRS.initModalUIElement($(this), '.shuffling_finish_height', 'block_height_modal_ui_element', context);
    	});
 
-    $("#m_shuffling_register_modal").on("show.bs.modal", function(e) {
-        var $invoker = $(e.relatedTarget);
-        var shufflingId = $invoker.data("shuffling");
-        $("#register_shuffling_id").html(shufflingId);
-        var shufflingFullHash = $invoker.data("shufflingfullhash");
-        $("#register_shuffling_full_hash").val(shufflingFullHash);
-    });
-
     var shufflerStartModal = $("#m_shuffler_start_modal");
     shufflerStartModal.on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
@@ -358,6 +342,7 @@ var NRS = (function(NRS, $) {
 
     NRS.forms.shufflingCreateComplete = function(response) {
         $.growl($.t("shuffling_created"));
+        // After shuffling created we show the start shuffler modal
         $("#shuffler_start_shuffling_id").html(response.transaction);
         $("#shuffler_start_shuffling_full_hash").val(response.fullHash);
         $('#m_shuffler_start_modal').modal("show");

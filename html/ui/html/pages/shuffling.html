@@ -93,7 +93,7 @@
                                 <td>{{participantCount}}</td>
                                 <td>{{blocksRemaining}}</td>
                                 <td>
-                                    {{#if canRegister}}
+                                    {{#if canJoin}}
                                        <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="join">JOIN</a>
                                     {{/if}}
                                 </td>
@@ -137,7 +137,6 @@
                         <th data-i18n="amount">Amount</th>
                         <th data-i18n="blocks_remaining">Blocks Remaining</th>
                         <th data-i18n="participant_count">Participant Count</th>
-                        <th data-i18n="action">Action</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -152,9 +151,6 @@
                                 <td>{{{amountFormatted}}}</td>
                                 <td>{{blocksRemaining}}</td>
                                 <td>{{participantCount}}</td>
-                                <td>
-                                    <!-- add action links here -->
-                                </td>
                             </tr>
                         {{/each}}
                     </tbody>
