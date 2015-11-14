@@ -1162,8 +1162,8 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.sendRequest("getShufflingParticipants", { "shuffling": transaction.transaction }, function (response) {
                     if (response.participants && response.participants.length > 0) {
                         var rows = "<table class='table table-striped'><thead><tr>" +
-                        "<th>" + $.t("Participant") + "</th>" +
-                        "<th>" + $.t("State") + "</th>" +
+                        "<th>" + $.t("participant") + "</th>" +
+                        "<th>" + $.t("state") + "</th>" +
                         "<tr></thead><tbody>";
                         for (var i = 0; i < response.participants.length; i++) {
                             var participant = response.participants[i];
@@ -1192,7 +1192,7 @@ var NRS = (function (NRS, $, undefined) {
                             data["failureCause"] = shuffler.failureCause;
                         }
                     } else {
-                        data["shuffler"] = $.t("not_running");
+                        data["shuffler"] = $.t("not_started");
                     }
                 }, false);
                 infoTable.find("tbody").append(NRS.createInfoTable(data));

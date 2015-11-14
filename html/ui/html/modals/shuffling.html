@@ -67,9 +67,9 @@
                     <div class="form-group">
                         <label for="m_shuffling_create_holding_type">Holding Type</label>
                         <select name="holdingType" id="m_shuffling_create_holding_type" class="form-control" data-default="0" tabindex="1">
-                            <option selected value="0" data-i18n="holding_type_nxt">NXT</option>
-                            <option value="1" data-i18n="holding_type_asset">Asset</option>
-                            <option value="2" data-i18n="holding_type_currency">Currency</option>
+                            <option selected value="0" data-i18n="nxt_capital_letters">NXT</option>
+                            <option value="1" data-i18n="asset">Asset</option>
+                            <option value="2" data-i18n="currency">Currency</option>
                         </select>
                     </div>
                     <div class="col-xs-12 col-sm-12 col-md-12" aria-hidden="true" id="shuffling_asset_id_group" style="display: none;">
@@ -82,8 +82,7 @@
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <div class="form-group">
                                 <label for="m_shuffling_create_amount">
-                                    <span data-i18n="amount">AMOUNT</span>
-                                    (<span data-i18n="none" id="m_shuffling_create_unit">None</span>)
+                                    <span id="m_shuffling_create_unit"></span>
                                 </label>
                                 <input name="amount" id="m_shuffling_create_amount" class="form-control" placeholder="" data-default="0" value="0" tabindex="2">
                             </div>

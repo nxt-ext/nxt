@@ -83,7 +83,7 @@ var NRS = (function(NRS, $) {
             "desiredPosition": 80
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
-            "titleHTML": '<span data-i18n="my_shufflings">My Shufflers</span>',
+            "titleHTML": '<span data-i18n="my_shufflers">My Shufflers</span>',
             "type": 'PAGE',
             "page": 'my_shufflers'
         });
@@ -115,7 +115,7 @@ var NRS = (function(NRS, $) {
         if(holdingType.val() == "0") {
             $("#shuffling_asset_id_group").css("display", "none");
             $("#shuffling_ms_currency_group").css("display", "none");
-            $('#m_shuffling_create_unit').html($.t('nxt_capital_letters'));
+            $('#m_shuffling_create_unit').html($.t('amount'));
             $('#m_shuffling_create_amount').attr('name', 'shufflingAmountNXT');
         } if(holdingType.val() == "1") {
 			$("#shuffling_asset_id_group").css("display", "inline");
