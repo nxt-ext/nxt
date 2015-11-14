@@ -96,7 +96,7 @@
                                 <td>{{blocksRemaining}}</td>
                                 <td>
                                     {{#if canRegister}}
-                                       <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="start_shuffler">START SHUFFLER</a>
+                                       <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="join">JOIN</a>
                                     {{/if}}
                                 </td>
                             </tr>
@@ -119,6 +119,9 @@
     <script type="text/x-handlebars-template">
         <section class="content-header">
             <h1 data-i18n="my_shufflings">My Shufflings</h1>
+            <div style="position:absolute;top:9px;right:9px;">
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#m_shuffling_create_modal" data-i18n="create_shuffling">Create Shuffling</button>
+            </div>
         </section>
         <section class="content">
             {{#if errorMessage}}
