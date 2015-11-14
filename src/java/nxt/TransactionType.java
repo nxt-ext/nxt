@@ -931,8 +931,8 @@ public abstract class TransactionType {
                     }
                 }
 
-                if (attachment.getMinRangeValue() < Constants.MIN_VOTE_VALUE
-                        || attachment.getMaxRangeValue() > Constants.MAX_VOTE_VALUE){
+                if (attachment.getMinRangeValue() < Constants.MIN_VOTE_VALUE || attachment.getMaxRangeValue() > Constants.MAX_VOTE_VALUE
+                        || (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && attachment.getMaxRangeValue() < attachment.getMinRangeValue())){
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
