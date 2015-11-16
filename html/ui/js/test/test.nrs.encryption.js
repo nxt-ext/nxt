@@ -22,9 +22,9 @@ QUnit.test("getPrivateKey", function (assert) {
 
 QUnit.test("encryptDecryptNote", function (assert) {
     var senderPrivateKey = "rshw9abtpsa2";
-    var senderPublicKeyHex = "0b4e505972149e7ceb51309edc76729795cabe1f2cc42d87688138d0966db436";
+    var senderPublicKeyHex = NRS.getPublicKey(converters.stringToHexString(senderPrivateKey));
     var receiverPrivateKey = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
-    var receiverPublicKeyHex = "b337a8dc689d855acd9d52b491111065bba2578277852645891228e4b641b872";
+    var receiverPublicKeyHex = NRS.getPublicKey(converters.stringToHexString(receiverPrivateKey));
     var encryptedNote = NRS.encryptNote("MyMessage", { publicKey: receiverPublicKeyHex }, senderPrivateKey);
     assert.equal(encryptedNote.message.length, 96, "message.length");
     assert.equal(encryptedNote.nonce.length, 64, "nonce.length");
