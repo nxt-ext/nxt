@@ -1589,7 +1589,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
-    function strToUTF8Arr (str) {
+    NRS.strToUTF8Arr = function(str) {
         var utf8 = [];
         for (var i = 0; i < str.length; i++) {
             var charcode = str.charCodeAt(i);
@@ -1618,7 +1618,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
         return utf8;
-    }
+    };
 
     function byteArrayToBigInteger(byteArray) {
         var value = new BigInteger("0", 10);
@@ -1629,7 +1629,7 @@ var NRS = (function (NRS, $, undefined) {
     }
 
     NRS.generateToken = function(message, secretPhrase) {
-        var messageBytes = strToUTF8Arr(message);
+        var messageBytes = NRS.getUtf8Bytes(message);
         var pubKeyBytes = converters.hexStringToByteArray(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));
         var token = pubKeyBytes;
 

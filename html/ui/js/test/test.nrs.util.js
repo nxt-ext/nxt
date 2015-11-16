@@ -186,3 +186,26 @@ QUnit.test("generateToken", function (assert) {
     assert.ok(token.startsWith("e9cl0jgba7lnp7gke9rdp7hg3uvcl5cnd23"));
     assert.equal(token.length, 160);
 });
+
+QUnit.test("utf8", function (assert) {
+    // compare the two UTF8 conversion methods
+    var str = "Hello World";
+    var bytes1 = NRS.getUtf8Bytes(str);
+    var bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
+    // Hebrew
+    str = "אבג";
+    bytes1 = NRS.getUtf8Bytes(str);
+    bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
+    // Chinese Simplified
+    str = "简体中文网页";
+    bytes1 = NRS.getUtf8Bytes(str);
+    bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
+    // Chinese Traditional
+    str = "繁體中文網頁";
+    bytes1 = NRS.getUtf8Bytes(str);
+    bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
+});
