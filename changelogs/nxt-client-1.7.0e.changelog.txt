@@ -115,9 +115,13 @@ split between the forgers of the current and the previous three blocks in a
 4:3:2:1 ratio.
 
 
+Incompatible changes:
+
 Deletion of asset shares will be performed as a separate AssetDelete
 transaction type instead of as sending the shares to Genesis. Sending shares
-to Genesis will no longer be allowed.
+to Genesis will no longer be allowed. A new API, getAssetDeletes has been
+added to retrieve asset deletions, as using the getAssetTransfers API to find
+transfers to Genesis account no longer can be used for that purpose.
 
 
 Fees and size limit changes. Several transaction types or attachments will

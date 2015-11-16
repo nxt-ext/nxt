@@ -22,6 +22,7 @@ import nxt.AccountRestrictions;
 import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
+import nxt.AssetDelete;
 import nxt.AssetTransfer;
 import nxt.Attachment;
 import nxt.Block;
@@ -773,6 +774,20 @@ final class JSONData {
             putAssetInfo(json, attachment.getAssetId());
         }
         putExpectedTransaction(json, transaction);
+        return json;
+    }
+
+    static JSONObject assetDelete(AssetDelete assetDelete, boolean includeAssetInfo) {
+        JSONObject json = new JSONObject();
+        json.put("assetDelete", Long.toUnsignedString(assetDelete.getId()));
+        json.put("asset", Long.toUnsignedString(assetDelete.getAssetId()));
+        putAccount(json, "account", assetDelete.getAccountId());
+        json.put("quantityQNT", String.valueOf(assetDelete.getQuantityQNT()));
+        json.put("height", assetDelete.getHeight());
+        json.put("timestamp", assetDelete.getTimestamp());
+        if (includeAssetInfo) {
+            putAssetInfo(json, assetDelete.getAssetId());
+        }
         return json;
     }
 

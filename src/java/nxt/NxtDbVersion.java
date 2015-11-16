@@ -1039,7 +1039,6 @@ class NxtDbVersion extends DbVersion {
             case 437:
                 apply("ALTER TABLE phasing_poll DROP COLUMN IF EXISTS linked_full_hashes");
             case 438:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 439:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing (db_id IDENTITY, account_id BIGINT NOT NULL, "
@@ -1067,6 +1066,20 @@ class NxtDbVersion extends DbVersion {
             case 448:
                 apply("ALTER TABLE shuffling DROP COLUMN IF EXISTS cancelling_account_id");
             case 449:
+                apply("CREATE TABLE IF NOT EXISTS asset_delete (db_id IDENTITY, id BIGINT NOT NULL, asset_id BIGINT NOT NULL, "
+                        + "account_id BIGINT NOT NULL, quantity BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
+            case 450:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_delete_id_idx ON asset_delete (id)");
+            case 451:
+                apply("CREATE INDEX IF NOT EXISTS asset_delete_asset_id_idx ON asset_delete (asset_id, height DESC)");
+            case 452:
+                apply("CREATE INDEX IF NOT EXISTS asset_delete_account_id_idx ON asset_delete (account_id, height DESC)");
+            case 453:
+                apply("CREATE INDEX IF NOT EXISTS asset_delete_height_idx ON asset_delete (height)");
+            case 454:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 455:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
