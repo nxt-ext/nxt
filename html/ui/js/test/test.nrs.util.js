@@ -163,6 +163,7 @@ QUnit.test("formatTimestamp", function (assert) {
 
 QUnit.test("getAccountLink", function (assert) {
     NRS.contacts = {};
+
     assert.equal(NRS.getAccountLink({}, "dummy"), "/", "non.existing");
     assert.equal(NRS.getAccountLink({ entity: 5873880488492319831 }, "entity"), "<a href='#' data-user='NXT-XKA2-7VJU-VZSY-7R335' class='show_account_modal_action user-info'>/</a>", "numeric");
     assert.equal(NRS.getAccountLink({ entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity"), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info'>NXT-XK4R-7VJU-6EQG-7R335</a>", "RS");
@@ -177,4 +178,11 @@ QUnit.test("getAccountLink", function (assert) {
     NRS.constants.GENESIS = 1739068987193023818;
     NRS.constants.GENESIS_RS = "NXT-MR8N-2YLS-3MEQ-3CMAJ";
     assert.equal(NRS.getAccountLink({ entityRS: NRS.constants.GENESIS_RS }, "entity"), "<a href='#' data-user='NXT-MR8N-2YLS-3MEQ-3CMAJ' class='show_account_modal_action user-info'>Genesis</a>", "genesis");
+});
+
+QUnit.test("generateToken", function (assert) {
+    NRS.constants.EPOCH_BEGINNING = 1385294400000;
+    var token = NRS.generateToken("myToken", "rshw9abtpsa2");
+    assert.ok(token.startsWith("e9cl0jgba7lnp7gke9rdp7hg3uvcl5cnd23"));
+    assert.equal(token.length, 160);
 });

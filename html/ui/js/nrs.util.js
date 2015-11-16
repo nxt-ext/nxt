@@ -1588,5 +1588,91 @@ var NRS = (function (NRS, $, undefined) {
         return phasingParams;
     };
 
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function strToUTF8Arr (str) {
+        var utf8 = [];
+        for (var i = 0; i < str.length; i++) {
+            var charcode = str.charCodeAt(i);
+            if (charcode < 0x80) utf8.push(charcode);
+            else if (charcode < 0x800) {
+                utf8.push(0xc0 | (charcode >> 6),
+                          0x80 | (charcode & 0x3f));
+            }
+            else if (charcode < 0xd800 || charcode >= 0xe000) {
+                utf8.push(0xe0 | (charcode >> 12),
+                          0x80 | ((charcode >> 6) & 0x3f),
+                          0x80 | (charcode & 0x3f));
+            }
+            // surrogate pair
+            else {
+                i++;
+                // UTF-16 encodes 0x10000-0x10FFFF by
+                // subtracting 0x10000 and splitting the
+                // 20 bits of 0x0-0xFFFFF into two halves
+                charcode = 0x10000 + (((charcode & 0x3ff) << 10)
+                          | (str.charCodeAt(i) & 0x3ff));
+                utf8.push(0xf0 | (charcode >> 18),
+                          0x80 | ((charcode >> 12) & 0x3f),
+                          0x80 | ((charcode >> 6) & 0x3f),
+                          0x80 | (charcode & 0x3f));
+            }
+        }
+        return utf8;
+    }
+
+    function byteArrayToBigInteger(byteArray) {
+        var value = new BigInteger("0", 10);
+        for (var i = byteArray.length - 1; i >= 0; i--) {
+            value = value.multiply(new BigInteger("256", 10)).add(new BigInteger(byteArray[i].toString(10), 10));
+        }
+        return value;
+    }
+
+    NRS.generateToken = function(message, secretPhrase) {
+        var messageBytes = strToUTF8Arr(message);
+        var pubKeyBytes = converters.hexStringToByteArray(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));
+        var token = pubKeyBytes;
+
+        var tsb = [];
+        var ts = NRS.toEpochTime();
+        tsb[0] = ts & 0xFF;
+        tsb[1] = (ts >> 8) & 0xFF;
+        tsb[2] = (ts >> 16) & 0xFF;
+        tsb[3] = (ts >> 24) & 0xFF;
+
+        messageBytes = messageBytes.concat(pubKeyBytes, tsb);
+        token = token.concat(tsb, converters.hexStringToByteArray(
+            NRS.signBytes(converters.byteArrayToHexString(messageBytes),
+                converters.stringToHexString(secretPhrase))));
+
+        var buf = "";
+        for (var ptr = 0; ptr < 100; ptr += 5) {
+            var nbr = [];
+            nbr[0] = token[ptr] & 0xFF;
+            nbr[1] = token[ptr+1] & 0xFF;
+            nbr[2] = token[ptr+2] & 0xFF;
+            nbr[3] = token[ptr+3] & 0xFF;
+            nbr[4] = token[ptr+4] & 0xFF;
+            var number = byteArrayToBigInteger(nbr);
+            if (number < 32) {
+                buf += "0000000";
+            } else if (number < 1024) {
+                buf += "000000";
+            } else if (number < 32768) {
+                buf += "00000";
+            } else if (number < 1048576) {
+                buf += "0000";
+            } else if (number < 33554432) {
+                buf += "000";
+            } else if (number < 1073741824) {
+                buf += "00";
+            } else if (number < 34359738368) {
+                buf += "0";
+            }
+            buf +=number.toString(32);
+        }
+        return buf;
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
