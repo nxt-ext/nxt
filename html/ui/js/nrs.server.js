@@ -134,15 +134,15 @@ var NRS = (function (NRS, $, undefined) {
                 var decimalsField = currencyFields[i][1];
                 field = decimalUnitField.replace("QNTf", "");
 
-                if (decimalUnitField in data) {
+                if (decimalUnitField in data && decimalsField in data) {
                     data[field] = NRS.convertToQNT(parseFloat(data[decimalUnitField]), parseInt(data[decimalsField]));
                     toDelete.push(decimalUnitField);
                     toDelete.push(decimalsField);
                 }
             }
-            $(toDelete, function (key, value) {
-                delete data[value];
-            });
+            for (var i = 0; i < toDelete.length; i++) {
+                delete data[toDelete[i]];
+            }
         } catch (err) {
             callback({
                 "errorCode": 1,
