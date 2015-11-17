@@ -195,11 +195,11 @@ public final class Shuffling {
     }
 
     public static DbIterator<Shuffling> getAll(int from, int to) {
-        return shufflingTable.getAll(from, to, " ORDER BY blocks_remaining NULLS LAST ");
+        return shufflingTable.getAll(from, to, " ORDER BY blocks_remaining NULLS LAST, height DESC ");
     }
 
     public static DbIterator<Shuffling> getActiveShufflings(int from, int to) {
-        return shufflingTable.getManyBy(new DbClause.NotNullClause("blocks_remaining"), from, to);
+        return shufflingTable.getManyBy(new DbClause.NotNullClause("blocks_remaining"), from, to, " ORDER BY blocks_remaining, height DESC ");
     }
 
     public static Shuffling getShuffling(long shufflingId) {
@@ -233,7 +233,7 @@ public final class Shuffling {
         if (stage != null) {
             clause = clause.and(new DbClause.ByteClause("stage", stage.getCode()));
         }
-        return shufflingTable.getManyBy(clause, from, to, " ORDER BY blocks_remaining NULLS LAST ");
+        return shufflingTable.getManyBy(clause, from, to, " ORDER BY blocks_remaining NULLS LAST, height DESC ");
     }
 
     public static DbIterator<Shuffling> getAccountShufflings(long accountId, boolean includeFinished, int from, int to) {
@@ -243,7 +243,7 @@ public final class Shuffling {
             PreparedStatement pstmt = con.prepareStatement("SELECT shuffling.* FROM shuffling, shuffling_participant WHERE "
                     + "shuffling_participant.account_id = ? AND shuffling.id = shuffling_participant.shuffling_id "
                     + (includeFinished ? "" : "AND shuffling.blocks_remaining IS NOT NULL ")
-                    + "AND shuffling.latest = TRUE AND shuffling_participant.latest = TRUE ORDER BY blocks_remaining NULLS LAST "
+                    + "AND shuffling.latest = TRUE AND shuffling_participant.latest = TRUE ORDER BY blocks_remaining NULLS LAST, height DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -258,7 +258,7 @@ public final class Shuffling {
     public static DbIterator<Shuffling> getAssignedShufflings(long assigneeAccountId, int from, int to) {
         return shufflingTable.getManyBy(new DbClause.LongClause("assignee_account_id", assigneeAccountId)
                         .and(new DbClause.ByteClause("stage", Stage.PROCESSING.getCode())), from, to,
-                " ORDER BY blocks_remaining NULLS LAST ");
+                " ORDER BY blocks_remaining NULLS LAST, height DESC ");
     }
 
     static void addShuffling(Transaction transaction, Attachment.ShufflingCreation attachment) {
