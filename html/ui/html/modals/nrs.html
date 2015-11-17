@@ -329,23 +329,18 @@
 
                 <div id="token_modal_generate_token" class="token_modal_content" style="display:none">
                     <form role="form" id="generate_token_form" autocomplete="off">
-                        <div class="callout callout-danger remote_warning" style="display:none">
-                            <strong><span data-i18n="warning">Warning</span>:</strong>
-                            <span data-i18n="passphrase_remote_warning">Your passphrase will be sent to the server!</span>
-                        </div>
                         <div class="callout callout-danger error_message" style="display:none"></div>
                         <div class="callout callout-info" id="generate_token_output" style="display:none;"></div>
                         <div class="form-group">
                             <label for="generate_token_data" data-i18n="data">DATA</label>
                             <textarea class="form-control" name="website" id="generate_token_data" placeholder="Website or Text" data-i18n="[placeholder]website_or_text" tabindex="1" rows="3"></textarea>
                         </div>
-                        <input type="hidden" name="request_type" value="generateToken" />
                         <div class="form-group secret_phrase">
                             <label for="generate_token_password" data-i18n="passphrase">PASSPHRASE</label>
                             <input type="password" name="secretPhrase" id="generate_token_password" class="form-control" placeholder="" tabindex="5">
                         </div>
                     </form>
-                 </div>
+                </div>
 
                 <div id="token_modal_validate_token" class="token_modal_content" style="display:none">     
                     <form role="form" id="validate_token_form" autocomplete="off">
@@ -365,7 +360,8 @@
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="token_modal_button" data-i18n="generate">Generate</button>
+                <button type="button" class="btn btn-primary " data-ignore="true" data-form="generate_token_form" id="generate_token_button" data-i18n="generate">Generate</button>
+                <button type="button" class="btn btn-primary" data-form="validate_token_form" id="validate_token_button" data-i18n="validate">Validate</button>
             </div>
         </div>
     </div>
