@@ -18,7 +18,6 @@ package nxt.http;
 
 import nxt.Block;
 import nxt.Nxt;
-import nxt.NxtException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -64,13 +63,8 @@ public final class PopOff extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         response.put("blocks", blocksJSON);
         if (keepTransactions) {
-            blocks.forEach(block -> block.getTransactions().forEach(transaction -> {
-                try {
-                    Nxt.getTransactionProcessor().broadcast(transaction);
-                } catch (NxtException.ValidationException ignore) {}
-            }));
+            blocks.forEach(block -> Nxt.getTransactionProcessor().processLater(block.getTransactions()));
         }
-
         return response;
     }
 

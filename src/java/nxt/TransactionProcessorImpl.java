@@ -543,13 +543,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    void processLater(Collection<TransactionImpl> transactions) {
+    @Override
+    public void processLater(Collection<? extends Transaction> transactions) {
         long currentTime = System.currentTimeMillis();
         BlockchainImpl.getInstance().writeLock();
         try {
-            for (TransactionImpl transaction : transactions) {
-                transaction.unsetBlock();
-                waitingTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
+            for (Transaction transaction : transactions) {
+                ((TransactionImpl)transaction).unsetBlock();
+                waitingTransactions.add(new UnconfirmedTransaction((TransactionImpl)transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
