@@ -34,19 +34,11 @@
                         <label for="m_shuffler_start_recipient_secretphrase" data-i18n="recipient_passphrase">Recipient Passphrase</label>
                         <input type="password" name="recipientSecretPhrase" id="m_shuffler_start_recipient_secretphrase" class="form-control" placeholder="Recipient Passphrase" data-i18n="[placeholder]recipient_passphrase" tabindex="1">
                     </div>
-                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
-                    <div data-replace-with-modal-template="advanced_approve_template"></div>
-                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
-                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
-                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-
                     <input type="hidden" name="request_type" value="startShuffler" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="start_shuffler;[placeholder]submitting">Start Shuffler</button>
             </div>
