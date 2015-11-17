@@ -59,6 +59,10 @@ phasing restrictions.
 Note that by-transaction and by-hash voting models are not allowed for phasing
 control, and setting voting model to none is used to disable the control.
 
+To prevent deadlocks due to cyclic account control restrictions, approval
+transactions themselves (PhasingVoteCasting) are not subject to phasing only
+account control.
+
 
 Immediate release of phased transactions on approval. Phased transactions with
 a voting model that does not depend on account balance (such as by-transaction
@@ -176,4 +180,6 @@ the server will automatically replace insufficient fees for submitted unsigned
 transactions with the minimum fee needed, depending on the transaction, as if
 feeNQT=0 has been specified. Fees exceeding the minimum, or fees for already
 signed transactions, will not be corrected.
+
+This release will perform a blokchain rescan on first start.
 

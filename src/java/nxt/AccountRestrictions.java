@@ -96,6 +96,9 @@ public final class AccountRestrictions {
         }
 
         private void checkTransaction(Transaction transaction) throws AccountControlException {
+            if (transaction.getType() == TransactionType.Messaging.PHASING_VOTE_CASTING) {
+                return;
+            }
             Appendix.Phasing phasingAppendix = transaction.getPhasing();
             if (phasingAppendix == null) {
                 throw new AccountControlException("Non-phased transaction when phasing account control is enabled");
