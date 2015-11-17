@@ -53,6 +53,9 @@ public final class Shuffler {
             }
             if (shuffler == null) {
                 Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
+                if (shuffling == null && Account.getAccount(recipientPublicKey) != null) {
+                    throw new InvalidRecipientException("Existing account cannot be used as shuffling recipient");
+                }
                 if (map.size() >= (shuffling == null ? Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS : shuffling.getParticipantCount())) {
                     throw new ShufflerLimitException("Cannot run shufflers for more than " + map.size() + " accounts for this shuffling");
                 }
