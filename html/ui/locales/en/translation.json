@@ -1507,7 +1507,7 @@
   "shuffling": "Shuffling",
   "failure": "Failure",
   "no_shufflers": "There are no shufflers for the current account",
-  "all_shufflings": "All Shufflings",
+  "active_shufflings": "Active Shufflings",
   "stage": "Stage",
   "assignee": "Assignee",
   "blocks_remaining": "Blocks Remaining",

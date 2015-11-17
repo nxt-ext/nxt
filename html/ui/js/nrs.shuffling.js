@@ -79,7 +79,7 @@ var NRS = (function(NRS, $) {
         NRS.addTreeviewSidebarMenuItem({
             "id": sidebarId,
             "titleHTML": '<i class="fa fa-random"></i> <span data-i18n="shuffling">Shuffling</span>',
-            "page": 'all_shufflings',
+            "page": 'active_shufflings',
             "desiredPosition": 80
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
@@ -88,9 +88,9 @@ var NRS = (function(NRS, $) {
             "page": 'my_shufflers'
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
-            "titleHTML": '<span data-i18n="all_shufflings">All Shufflings</span>',
+            "titleHTML": '<span data-i18n="active_shufflings">Active Shufflings</span>',
             "type": 'PAGE',
-            "page": 'all_shufflings'
+            "page": 'active_shufflings'
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
             "titleHTML": '<span data-i18n="my_shufflings">My Shufflings</span>',
@@ -150,15 +150,15 @@ var NRS = (function(NRS, $) {
         }
     };
 
-    NRS.incoming.all_shufflings = function (transactions) {
+    NRS.incoming.active_shufflings = function (transactions) {
         if (NRS.hasTransactionUpdates(transactions)) {
-            NRS.loadPage("all_shufflings");
+            NRS.loadPage("active_shufflings");
         }
     };
 
-    NRS.pages.all_shufflings = function () {
+    NRS.pages.active_shufflings = function () {
         NRS.hasMorePages = false;
-        var view = NRS.simpleview.get('all_shufflings_page', {
+        var view = NRS.simpleview.get('active_shufflings_page', {
             errorMessage: null,
             isLoading: true,
             isEmpty: false,
