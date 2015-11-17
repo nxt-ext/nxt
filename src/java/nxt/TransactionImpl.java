@@ -1096,6 +1096,9 @@ final class TransactionImpl implements Transaction {
             Fee fee = blockchainHeight >= appendage.getNextFeeHeight() ? appendage.getNextFee(this) : appendage.getBaselineFee(this);
             totalFee = Math.addExact(totalFee, fee.getFee(this, appendage));
         }
+        if (referencedTransactionFullHash != null && blockchainHeight > Constants.BASE_TARGET_BLOCK) {
+            totalFee = Math.addExact(totalFee, Constants.ONE_NXT);
+        }
         return totalFee;
     }
 
