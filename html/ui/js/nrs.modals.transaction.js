@@ -1214,7 +1214,11 @@ var NRS = (function (NRS, $, undefined) {
                             data["failureCause"] = shuffler.failureCause;
                         }
                     } else {
-                        data["shuffler"] = $.t("not_started");
+                        if (response.errorCode) {
+                            data["shuffler"] = $.t("unknown");
+                        } else {
+                            data["shuffler"] = $.t("not_started");
+                        }
                     }
                 }, false);
                 infoTable.find("tbody").append(NRS.createInfoTable(data));

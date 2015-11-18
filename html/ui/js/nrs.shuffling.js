@@ -42,10 +42,55 @@ var NRS = (function(NRS, $) {
         });
     };
 
-    NRS.jsondata.shuffling = function (response) {
+    NRS.jsondata.shuffling = function (response, shufflers) {
+        var isShufflerActive = false;
+        if (shufflers && shufflers.shufflers) {
+            for (var i = 0; i < shufflers.shufflers.length; i++) {
+                var shuffler = shufflers.shufflers[i];
+                if (response.shufflingFullHash == shuffler.shufflingFullHash) {
+                    isShufflerActive = true;
+                    break;
+                }
+            }
+        }
+        var shufflerStatus = $.t("unknown");
+        var shufflerColor = "gray";
+
+        if (shufflers && shufflers.shufflers) {
+            if (isShufflerActive) {
+                shufflerStatus = $.t("active");
+                shufflerColor = "green";
+            } else {
+                shufflerStatus = $.t("inactive");
+                shufflerColor = "red";
+            }
+        }
+
+        var shufflerIndicatorFormatted = "";
+        var startShufflerLinkFormatted = "";
+        if (response.stage < 4) {
+            shufflerIndicatorFormatted = "<i class='fa fa-circle' style='color:" + shufflerColor + ";'></i>";
+            if (!isShufflerActive) {
+                startShufflerLinkFormatted = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#m_shuffler_start_modal' " +
+                    "data-shuffling='" + response.shuffling + "' " +
+                    "data-shufflingfullhash='" + response.shufflingFullHash + "' " +
+                    "data-i18n='start'>START</a>";
+            }
+        } else {
+            shufflerStatus = "";
+        }
         return $.extend(response, {
-            canJoin: response.stage == 0,
+            canJoin:
+                (function () {
+                    if (response.stage > 0) {
+                        return false;
+                    }
+                    return !isShufflerActive;
+                })(),
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
+            shufflerStatus: shufflerStatus,
+            shufflerIndicatorFormatted: shufflerIndicatorFormatted,
+            startShufflerLinkFormatted: startShufflerLinkFormatted,
             assigneeFormatted: NRS.getAccountLink(response, "assignee"),
             stageLabel: NRS.getShufflingStage(response.stage),
             holdingTypeLabel: (function () {
@@ -156,46 +201,67 @@ var NRS = (function(NRS, $) {
         }
     };
 
+    function getShufflers(callback) {
+        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.settings.admin_password},
+            function (shufflers) {
+                if (isErrorResponse(shufflers)) {
+                    $.growl($.t("cannot_check_shufflers_status") + " " + shufflers.errorDescription);
+                    callback(null, undefined);
+                } else {
+                    callback(null, shufflers);
+                }
+            }
+        )
+    }
+
     NRS.pages.active_shufflings = function () {
-        NRS.hasMorePages = false;
-        var view = NRS.simpleview.get('active_shufflings_page', {
-            errorMessage: null,
-            isLoading: true,
-            isEmpty: false,
-            shufflings: []
-        });
-        var params = {
-            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-            "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-            "includeHoldingInfo": "true"
-        };
-        NRS.sendRequest("getAllShufflings", params,
-            function(response) {
-                if (isErrorResponse(response)) {
-                    view.render({
-                        errorMessage: getErrorMessage(response),
-                        isLoading: false,
-                        isEmpty: false
-                    });
-                    return;
-                }
-                if (response.shufflings.length > NRS.itemsPerPage) {
-                    NRS.hasMorePages = true;
-                    response.shufflings.pop();
-                }
-                view.shufflings.length = 0;
-                response.shufflings.forEach(
-                    function (shufflingJson) {
-                        view.shufflings.push( NRS.jsondata.shuffling(shufflingJson))
+        async.waterfall([
+            function(callback) {
+                getShufflers(callback);
+            },
+            function(shufflers, callback) {
+                NRS.hasMorePages = false;
+                var view = NRS.simpleview.get('active_shufflings_page', {
+                    errorMessage: null,
+                    isLoading: true,
+                    isEmpty: false,
+                    shufflings: []
+                });
+                var params = {
+                    "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+                    "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+                    "includeHoldingInfo": "true"
+                };
+                NRS.sendRequest("getAllShufflings", params,
+                    function (response) {
+                        if (isErrorResponse(response)) {
+                            view.render({
+                                errorMessage: getErrorMessage(response),
+                                isLoading: false,
+                                isEmpty: false
+                            });
+                            return;
+                        }
+                        if (response.shufflings.length > NRS.itemsPerPage) {
+                            NRS.hasMorePages = true;
+                            response.shufflings.pop();
+                        }
+                        view.shufflings.length = 0;
+                        response.shufflings.forEach(
+                            function (shufflingJson) {
+                                view.shufflings.push(NRS.jsondata.shuffling(shufflingJson, shufflers))
+                            }
+                        );
+                        view.render({
+                            isLoading: false,
+                            isEmpty: view.shufflings.length == 0
+                        });
+                        NRS.pageLoaded();
+                        callback(null);
                     }
                 );
-                view.render({
-                    isLoading: false,
-                    isEmpty: view.shufflings.length == 0
-                });
-                NRS.pageLoaded();
             }
-        );
+        ], function (err, result) {});
     };
 
     NRS.pages.my_shufflers = function () {
@@ -209,7 +275,7 @@ var NRS = (function(NRS, $) {
         var params = {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-            "account": NRS.account, 
+            "account": NRS.account,
             "adminPassword": NRS.settings.admin_password
         };
         NRS.sendRequest("getShufflers", params,
@@ -242,47 +308,55 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.pages.my_shufflings = function () {
-        NRS.hasMorePages = false;
-        var view = NRS.simpleview.get('my_shufflings_page', {
-            errorMessage: null,
-            isLoading: true,
-            isEmpty: false,
-            shufflings: []
-        });
-        var params = {
-            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-            "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-            "account": NRS.account,
-            "includeFinished": "true",
-            "includeHoldingInfo": "true"
-        };
-        NRS.sendRequest("getAccountShufflings", params,
-            function(response) {
-                if (isErrorResponse(response)) {
-                    view.render({
-                        errorMessage: getErrorMessage(response),
-                        isLoading: false,
-                        isEmpty: false
-                    });
-                    return;
-                }
-                if (response.shufflings.length > NRS.itemsPerPage) {
-                    NRS.hasMorePages = true;
-                    response.shufflings.pop();
-                }
-                view.shufflings.length = 0;
-                response.shufflings.forEach(
-                    function (shufflingJson) {
-                        view.shufflings.push( NRS.jsondata.shuffling(shufflingJson) );
+        async.waterfall([
+            function(callback) {
+                getShufflers(callback);
+            },
+            function(shufflers, callback) {
+                NRS.hasMorePages = false;
+                var view = NRS.simpleview.get('my_shufflings_page', {
+                    errorMessage: null,
+                    isLoading: true,
+                    isEmpty: false,
+                    shufflings: []
+                });
+                var params = {
+                    "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+                    "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+                    "account": NRS.account,
+                    "includeFinished": "true",
+                    "includeHoldingInfo": "true"
+                };
+                NRS.sendRequest("getAccountShufflings", params,
+                    function(response) {
+                        if (isErrorResponse(response)) {
+                            view.render({
+                                errorMessage: getErrorMessage(response),
+                                isLoading: false,
+                                isEmpty: false
+                            });
+                            return;
+                        }
+                        if (response.shufflings.length > NRS.itemsPerPage) {
+                            NRS.hasMorePages = true;
+                            response.shufflings.pop();
+                        }
+                        view.shufflings.length = 0;
+                        response.shufflings.forEach(
+                            function (shufflingJson) {
+                                view.shufflings.push( NRS.jsondata.shuffling(shufflingJson, shufflers) );
+                            }
+                        );
+                        view.render({
+                            isLoading: false,
+                            isEmpty: view.shufflings.length == 0
+                        });
+                        NRS.pageLoaded();
+                        callback(null);
                     }
                 );
-                view.render({
-                    isLoading: false,
-                    isEmpty: view.shufflings.length == 0
-                });
-                NRS.pageLoaded();
             }
-        );
+        ], function (err, result) {});
     };
 
     $("#m_shuffling_create_modal").on("show.bs.modal", function() {
@@ -350,6 +424,7 @@ var NRS = (function(NRS, $) {
 
     NRS.forms.startShufflerComplete = function() {
         $.growl($.t("shuffler_started"));
+        NRS.loadPage(NRS.currentPage);
     };
 
     return NRS;

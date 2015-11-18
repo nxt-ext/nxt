@@ -130,6 +130,7 @@
                     <thead>
                     <tr>
                         <th data-i18n="shuffling">Shuffling</th>
+                        <th data-i18n="shuffler">Shuffler</th>
                         <th data-i18n="holding_type">Holding Type</th>
                         <th data-i18n="holding">Holding</th>
                         <th data-i18n="stage">Stage</th>
@@ -144,6 +145,7 @@
                         {{#each shufflings}}
                             <tr>
                                 <td>{{{shufflingFormatted}}}</td>
+                                <td>{{{shufflerIndicatorFormatted}}} <span>{{shufflerStatus}}</span> {{{startShufflerLinkFormatted}}}</td>
                                 <td>{{holdingTypeLabel}}</td>
                                 <td>{{{holdingFormatted}}}</td>
                                 <td>{{stageLabel}}</td>

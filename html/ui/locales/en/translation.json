@@ -1518,5 +1518,9 @@
   "participant": "Participant",
   "no_matching_participants": "No Matching Participants",
   "not_started": "Not Started",
-  "delete_asset_shares": "Delete Asset Shares"
+  "delete_asset_shares": "Delete Asset Shares",
+  "active": "Active",
+  "inactive": "Inactive",
+  "start": "Start",
+  "cannot_check_shufflers_status": "Cannot check shuffler status."
 }
