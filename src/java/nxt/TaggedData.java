@@ -484,9 +484,9 @@ public class TaggedData {
     }
 
     static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME && attachment.getData() != null) {
             TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId()));
-            if (taggedData == null && attachment.getData() != null) {
+            if (taggedData == null) {
                 taggedData = new TaggedData(transaction, attachment);
                 taggedDataTable.insert(taggedData);
                 Tag.add(taggedData);
