@@ -1169,18 +1169,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     TransactionDb.findPrunableTransactions(con, minTimestamp, maxTimestamp);
             transactionList.forEach(prunableTransaction -> {
                 long id = prunableTransaction.getId();
-                if (prunableTransaction.hasPrunableAttachment()) {
-                    if (prunableTransaction.getTransactionType().isPruned(id)) {
-                        synchronized (prunableTransactions) {
-                            prunableTransactions.add(id);
-                        }
+                if (prunableTransaction.hasPrunableAttachment() && prunableTransaction.getTransactionType().isPruned(id)) {
+                    synchronized (prunableTransactions) {
+                        prunableTransactions.add(id);
                     }
                 }
-                if (prunableTransaction.hasPrunableMessage()) {
-                    if (PrunableMessage.isPruned(id)) {
-                        synchronized (prunableTransactions) {
-                            prunableTransactions.add(id);
-                        }
+                if (PrunableMessage.isPruned(id, prunableTransaction.hasPrunablePlainMessage(), prunableTransaction.hasPrunableEncryptedMessage())) {
+                    synchronized (prunableTransactions) {
+                        prunableTransactions.add(id);
                     }
                 }
             });

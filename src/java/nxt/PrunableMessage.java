@@ -273,12 +273,17 @@ public final class PrunableMessage {
         }
     }
 
-    static boolean isPruned(long transactionId) {
+    static boolean isPruned(long transactionId, boolean hasPrunablePlainMessage, boolean hasPrunableEncryptedMessage) {
+        if (!hasPrunablePlainMessage && !hasPrunableEncryptedMessage) {
+            return false;
+        }
         try (Connection con = Db.db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM prunable_message WHERE id = ?")) {
+                PreparedStatement pstmt = con.prepareStatement("SELECT message, encrypted_message FROM prunable_message WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return !rs.next();
+                return !rs.next()
+                        || (hasPrunablePlainMessage && rs.getBytes("message") == null)
+                        || (hasPrunableEncryptedMessage && rs.getBytes("encrypted_message") == null);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
