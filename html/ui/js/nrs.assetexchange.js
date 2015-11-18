@@ -649,7 +649,7 @@ var NRS = (function (NRS, $, undefined) {
                             }], function () {
                                 setTimeout(function () {
                                     NRS.loadPage("asset_exchange");
-                                    $.growl("Invalid asset.", {
+                                    $.growl($.t("invalid asset") + " " + asset.name, {
                                         "type": "danger"
                                     });
                                 }, 50);

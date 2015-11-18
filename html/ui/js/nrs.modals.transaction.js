@@ -504,18 +504,23 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 2) {
                 switch (transaction.subtype) {
                     case 0:
-                        data = {
-                            "type": $.t("asset_issuance"),
-                            "name": transaction.attachment.name,
-                            "quantity": [transaction.attachment.quantityQNT, transaction.attachment.decimals],
-                            "decimals": transaction.attachment.decimals,
-                            "description": transaction.attachment.description
-                        };
-                        data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                        $("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
+                        NRS.sendRequest("getAsset", {
+                            "asset": transaction.transaction
+                        }, function (asset) {
+                            data = {
+                                "type": $.t("asset_issuance"),
+                                "name": transaction.attachment.name,
+                                "initial_quantity": [asset.initialQuantityQNT, transaction.attachment.decimals],
+                                "quantity": [asset.quantityQNT, transaction.attachment.decimals],
+                                "decimals": transaction.attachment.decimals,
+                                "description": transaction.attachment.description
+                            };
+                            data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
+                            $("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
-                        infoTable.find("tbody").append(NRS.createInfoTable(data));
-                        infoTable.show();
+                            infoTable.find("tbody").append(NRS.createInfoTable(data));
+                            infoTable.show();
+                        });
 
                         break;
                     case 1:

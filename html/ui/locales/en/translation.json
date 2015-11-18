@@ -1525,6 +1525,7 @@
   "cannot_check_shufflers_status": "Cannot check shuffler status.",
   "switch_account": "Switch Account",
   "deletes_history": "Deletes History",
-  "no_asset_deletes_history": "No asset deletes history available."
-
+  "no_asset_deletes_history": "No asset deletes history available.",
+  "invalid asset": "Invalid asset",
+  "initial_quantity": "Initial Quantity"
 }
