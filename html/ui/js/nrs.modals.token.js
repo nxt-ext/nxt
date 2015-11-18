@@ -89,7 +89,7 @@ var NRS = (function(NRS, $) {
             return;
         }
         var token = NRS.generateToken(data, secretPhrase);
-        tokenOutput.html($.t("generated_token_is") + "<br /><br /><textarea readonly style='width:100%' rows='3'>" + String(token).escapeHTML() + "</textarea>");
+        tokenOutput.html($.t("generated_token_is") + "<br/><br/><textarea readonly style='width:100%' rows='3'>" + token + "</textarea>");
         tokenOutput.addClass("callout-info").removeClass("callout-danger").show();
         e.preventDefault();
     });
