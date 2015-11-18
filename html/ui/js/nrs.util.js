@@ -781,7 +781,7 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
-    NRS.getAccountLink = function (object, accountKey, accountRef, title) {
+    NRS.getAccountLink = function (object, accountKey, accountRef, title, showAccountRS) {
         var accountRS;
         if (typeof object[accountKey + "RS"] != "undefined") {
             accountRS = object[accountKey + "RS"];
@@ -793,6 +793,8 @@ var NRS = (function (NRS, $, undefined) {
         var accountTitle;
         if (accountRef && accountRS == accountRef) {
             accountTitle = $.t(title);
+        } else if(showAccountRS) {
+            accountTitle = String(accountRS).escapeHTML();
         } else {
             accountTitle = NRS.getAccountTitle(object, accountKey);
         }

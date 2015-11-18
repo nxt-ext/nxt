@@ -1522,5 +1522,6 @@
   "active": "Active",
   "inactive": "Inactive",
   "start": "Start",
-  "cannot_check_shufflers_status": "Cannot check shuffler status."
+  "cannot_check_shufflers_status": "Cannot check shuffler status.",
+  "switch_account": "Switch Account"
 }

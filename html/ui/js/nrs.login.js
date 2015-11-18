@@ -307,7 +307,7 @@ var NRS = (function(NRS, $, undefined) {
                         NRS.disablePluginsDuringSession = true;
                     }
 
-					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
+					$("#dashboard_account_id").html(NRS.getAccountLink(NRS, "account", undefined, undefined, true));
 
 					var passwordNotice = "";
 
@@ -424,7 +424,6 @@ var NRS = (function(NRS, $, undefined) {
 					/* Add accounts to dropdown for quick switching */
 					$("#account_id_dropdown .dropdown-menu .switchAccount").remove();
 					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
-						$("#account_id_dropdown .dropdown-menu").append("<li class='switchAccount' style='padding-left:2px;'><b>Switch Account to</b></li>");
 						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
 						$.each(accounts, function(index, account) {
 							if (account != ''){
