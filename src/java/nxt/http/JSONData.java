@@ -791,6 +791,20 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject expectedAssetDelete(Transaction transaction, boolean includeAssetInfo) {
+        JSONObject json = new JSONObject();
+        Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
+        json.put("assetDelete", transaction.getStringId());
+        json.put("asset", Long.toUnsignedString(attachment.getAssetId()));
+        putAccount(json, "account", transaction.getSenderId());
+        json.put("quantityQNT", String.valueOf(attachment.getQuantityQNT()));
+        if (includeAssetInfo) {
+            putAssetInfo(json, attachment.getAssetId());
+        }
+        putExpectedTransaction(json, transaction);
+        return json;
+    }
+
     static JSONObject currencyTransfer(CurrencyTransfer transfer, boolean includeCurrencyInfo) {
         JSONObject json = new JSONObject();
         json.put("transfer", Long.toUnsignedString(transfer.getId()));

@@ -241,6 +241,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAssetTransfers", GetAssetTransfers.instance);
         map.put("getAssetDeletes", GetAssetDeletes.instance);
         map.put("getExpectedAssetTransfers", GetExpectedAssetTransfers.instance);
+        map.put("getExpectedAssetDeletes", GetExpectedAssetDeletes.instance);
         map.put("getCurrencyTransfers", GetCurrencyTransfers.instance);
         map.put("getExpectedCurrencyTransfers", GetExpectedCurrencyTransfers.instance);
         map.put("getTransaction", GetTransaction.instance);

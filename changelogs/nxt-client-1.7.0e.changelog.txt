@@ -131,7 +131,9 @@ Deletion of asset shares will be performed as a separate AssetDelete
 transaction type instead of as sending the shares to Genesis. Sending shares
 to Genesis will no longer be allowed. A new API, getAssetDeletes has been
 added to retrieve asset deletions, as using the getAssetTransfers API to find
-transfers to Genesis account no longer can be used for that purpose.
+transfers to Genesis account no longer can be used for that purpose. There is
+also a new API, getExpectedAssetDeletes, to get asset deletes expected in the
+next block, analogous to getExpectedAssetTransfers.
 
 Since both prunable plain and prunable encrypted messages can now be added to
 the same transaction, the APIs getAllPrunableMessages, getPrunableMessage, and
