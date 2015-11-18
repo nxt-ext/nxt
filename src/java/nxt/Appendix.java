@@ -261,7 +261,7 @@ public interface Appendix {
 
         @Override
         void putMyJSON(JSONObject json) {
-            json.put("message", this.toString());
+            json.put("message", Convert.toString(message, isText));
             json.put("messageIsText", isText);
         }
 
@@ -299,10 +299,6 @@ public interface Appendix {
             return false;
         }
 
-        @Override
-        public String toString() {
-            return isText ? Convert.toString(message) : Convert.toHexString(message);
-        }
     }
 
     class PrunablePlainMessage extends Appendix.AbstractAppendix implements Prunable {
@@ -347,7 +343,7 @@ public interface Appendix {
             } else {
                 this.hash = null;
                 this.isText = Boolean.TRUE.equals(attachmentData.get("messageIsText"));
-                this.message = isText ? Convert.toBytes(messageString) : Convert.parseHexString(messageString);
+                this.message = Convert.toBytes(messageString, isText);
             }
         }
 
@@ -360,7 +356,7 @@ public interface Appendix {
         }
 
         public PrunablePlainMessage(String string, boolean isText) {
-            this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
+            this(Convert.toBytes(string, isText), isText);
         }
 
         private PrunablePlainMessage(byte[] message, boolean isText) {
@@ -397,10 +393,10 @@ public interface Appendix {
         @Override
         void putMyJSON(JSONObject json) {
             if (prunableMessage != null) {
-                json.put("message", prunableMessage.toString());
-                json.put("messageIsText", prunableMessage.isText());
+                json.put("message", Convert.toString(prunableMessage.getMessage(), prunableMessage.messageIsText()));
+                json.put("messageIsText", prunableMessage.messageIsText());
             } else if (message != null) {
-                json.put("message", this.toString());
+                json.put("message", Convert.toString(message, isText));
                 json.put("messageIsText", isText);
             }
             json.put("messageHash", Convert.toHexString(getHash()));
@@ -434,7 +430,7 @@ public interface Appendix {
 
         public boolean isText() {
             if (prunableMessage != null) {
-                return prunableMessage.isText();
+                return prunableMessage.messageIsText();
             }
             return isText;
         }
@@ -448,14 +444,6 @@ public interface Appendix {
             digest.update((byte)(isText ? 1 : 0));
             digest.update(message);
             return digest.digest();
-        }
-
-        @Override
-        public String toString() {
-            if (prunableMessage != null) {
-                return prunableMessage.toString();
-            }
-            return isText ? Convert.toString(message) : Convert.toHexString(message);
         }
 
         @Override
@@ -689,7 +677,7 @@ public interface Appendix {
                 json.put("encryptedMessage", encryptedMessageJSON);
                 encryptedMessageJSON.put("data", Convert.toHexString(prunableMessage.getEncryptedData().getData()));
                 encryptedMessageJSON.put("nonce", Convert.toHexString(prunableMessage.getEncryptedData().getNonce()));
-                encryptedMessageJSON.put("isText", prunableMessage.isText());
+                encryptedMessageJSON.put("isText", prunableMessage.encryptedMessageIsText());
                 encryptedMessageJSON.put("isCompressed", prunableMessage.isCompressed());
             } else if (encryptedData != null) {
                 JSONObject encryptedMessageJSON = new JSONObject();
@@ -712,8 +700,8 @@ public interface Appendix {
             if (transaction.getEncryptedMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both encrypted and prunable encrypted message attachments");
             }
-            if (transaction.getPrunablePlainMessage() != null) {
-                throw new NxtException.NotValidException("Cannot have both plain and encrypted prunable message attachments");
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK && transaction.getPrunablePlainMessage() != null) {
+                throw new NxtException.NotYetEnabledException("Cannot have both plain and encrypted prunable message attachments yet");
             }
             EncryptedData ed = getEncryptedData();
             if (ed == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
@@ -756,7 +744,7 @@ public interface Appendix {
 
         public final boolean isText() {
             if (prunableMessage != null) {
-                return prunableMessage.isText();
+                return prunableMessage.encryptedMessageIsText();
             }
             return isText;
         }

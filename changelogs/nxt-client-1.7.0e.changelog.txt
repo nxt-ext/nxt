@@ -119,6 +119,12 @@ split between the forgers of the current and the previous three blocks in a
 4:3:2:1 ratio.
 
 
+Prunable plain and prunable encrypted message attachments both allowed in the
+same transaction. The maximum data size for each such attachment is 42 kbytes,
+but when coexisting in the same transaction the sum of the two is still being
+limited to the maximum payload size of 44880 bytes.
+
+
 Incompatible changes:
 
 Deletion of asset shares will be performed as a separate AssetDelete
@@ -126,6 +132,20 @@ transaction type instead of as sending the shares to Genesis. Sending shares
 to Genesis will no longer be allowed. A new API, getAssetDeletes has been
 added to retrieve asset deletions, as using the getAssetTransfers API to find
 transfers to Genesis account no longer can be used for that purpose.
+
+Since both prunable plain and prunable encrypted messages can now be added to
+the same transaction, the APIs getAllPrunableMessages, getPrunableMessage, and
+getPrunableMessages cannot continue to use just a single "isText" boolean field
+in the JSON response to indicate if the prunable message is text or binary.
+For all prunable plain messages, a new "messageIsText" boolean field is added,
+and for all prunable encrypted messages, a new "encryptedMessageIsText" boolean
+field is added in the response of the above APIs, for each message.
+For backwards compatibility, the "isText" field will continue to be added, but
+only for transactions that have either plain, or encrypted, prunable message
+attachment, not for those that have both.
+This change does not affect the attachment JSON returned from getTransaction
+API, as there are already separate messageIsText and encryptedMessage.isText
+fields there.
 
 
 Fees and size limit changes. Several transaction types or attachments will

@@ -963,7 +963,9 @@ final class JSONData {
     static JSONObject prunableMessage(PrunableMessage prunableMessage, long readerAccountId, String secretPhrase) {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(prunableMessage.getId()));
-        json.put("isText", prunableMessage.isText());
+        if (prunableMessage.getMessage() == null || prunableMessage.getEncryptedData() == null) {
+            json.put("isText", prunableMessage.getMessage() != null ? prunableMessage.messageIsText() : prunableMessage.encryptedMessageIsText());
+        }
         putAccount(json, "sender", prunableMessage.getSenderId());
         if (prunableMessage.getRecipientId() != 0) {
             putAccount(json, "recipient", prunableMessage.getRecipientId());
@@ -973,21 +975,24 @@ final class JSONData {
         EncryptedData encryptedData = prunableMessage.getEncryptedData();
         if (encryptedData != null) {
             json.put("encryptedMessage", encryptedData(prunableMessage.getEncryptedData()));
+            json.put("encryptedMessageIsText", prunableMessage.encryptedMessageIsText());
             if (secretPhrase != null) {
                 byte[] publicKey = prunableMessage.getSenderId() == readerAccountId
                         ? Account.getPublicKey(prunableMessage.getRecipientId()) : Account.getPublicKey(prunableMessage.getSenderId());
                 if (publicKey != null) {
                     try {
                         byte[] decrypted = Account.decryptFrom(publicKey, encryptedData, secretPhrase, prunableMessage.isCompressed());
-                        json.put("decryptedMessage", prunableMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                        json.put("decryptedMessage", Convert.toString(decrypted, prunableMessage.encryptedMessageIsText()));
                     } catch (RuntimeException e) {
                         putException(json, e, "Decryption failed");
                     }
                 }
             }
             json.put("isCompressed", prunableMessage.isCompressed());
-        } else {
-            json.put("message", prunableMessage.toString());
+        }
+        if (prunableMessage.getMessage() != null) {
+            json.put("message", Convert.toString(prunableMessage.getMessage(), prunableMessage.messageIsText()));
+            json.put("messageIsText", prunableMessage.messageIsText());
         }
         return json;
     }

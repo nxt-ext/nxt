@@ -1080,6 +1080,26 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 455:
+                apply("ALTER TABLE prunable_message ADD COLUMN IF NOT EXISTS encrypted_message VARBINARY");
+            case 456:
+                apply("ALTER TABLE prunable_message ADD COLUMN IF NOT EXISTS encrypted_is_text BOOLEAN DEFAULT FALSE");
+            case 457:
+                apply("UPDATE prunable_message SET encrypted_message = message WHERE is_encrypted IS TRUE");
+            case 458:
+                apply("ALTER TABLE prunable_message ALTER COLUMN message SET NULL");
+            case 459:
+                apply("UPDATE prunable_message SET message = NULL WHERE is_encrypted IS TRUE");
+            case 460:
+                apply("UPDATE prunable_message SET encrypted_is_text = TRUE WHERE is_encrypted IS TRUE AND is_text IS TRUE");
+            case 461:
+                apply("UPDATE prunable_message SET encrypted_is_text = FALSE WHERE is_encrypted IS TRUE AND is_text IS FALSE");
+            case 462:
+                apply("UPDATE prunable_message SET is_text = FALSE where is_encrypted IS TRUE");
+            case 463:
+                apply("ALTER TABLE prunable_message ALTER COLUMN is_text RENAME TO message_is_text");
+            case 464:
+                apply("ALTER TABLE prunable_message DROP COLUMN is_encrypted");
+            case 465:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

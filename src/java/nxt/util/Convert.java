@@ -213,12 +213,20 @@ public final class Convert {
         }
     }
 
+    public static byte[] toBytes(String s, boolean isText) {
+        return isText ? toBytes(s) : parseHexString(s);
+    }
+
     public static String toString(byte[] bytes) {
         try {
             return new String(bytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    public static String toString(byte[] bytes, boolean isText) {
+        return isText ? toString(bytes) : toHexString(bytes);
     }
 
     public static byte[] toBytes(long n) {
