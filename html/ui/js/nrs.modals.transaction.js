@@ -531,6 +531,7 @@ var NRS = (function (NRS, $, undefined) {
                         }, function (asset) {
                             data = {
                                 "type": $.t("asset_transfer"),
+                                "asset_formatted_html": NRS.getTransactionLink(transaction.attachment.asset),
                                 "asset_name": asset.name,
                                 "quantity": [transaction.attachment.quantityQNT, asset.decimals]
                             };
@@ -571,6 +572,7 @@ var NRS = (function (NRS, $, undefined) {
                                     data = {
                                         "type": $.t("ask_order_cancellation"),
                                         "order_formatted_html": NRS.getTransactionLink(transaction.transaction),
+                                        "asset_formatted_html": NRS.getTransactionLink(transaction.attachment.asset),
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -600,6 +602,7 @@ var NRS = (function (NRS, $, undefined) {
                                     data = {
                                         "type": $.t("bid_order_cancellation"),
                                         "order_formatted_html": NRS.getTransactionLink(transaction.transaction),
+                                        "asset_formatted_html": NRS.getTransactionLink(transaction.attachment.asset),
                                         "asset_name": asset.name,
                                         "quantity": [transaction.attachment.quantityQNT, asset.decimals],
                                         "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
@@ -629,6 +632,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }, function (asset) {
                                     data = {
                                         "type": $.t("dividend_payment"),
+                                        "asset_formatted_html": NRS.getTransactionLink(transaction.attachment.asset),
                                         "asset_name": asset.name,
                                         "amount_per_share": NRS.formatOrderPricePerWholeQNT(transaction.attachment.amountNQTPerQNT, asset.decimals) + " NXT",
                                         "height": transaction.attachment.height
@@ -653,6 +657,7 @@ var NRS = (function (NRS, $, undefined) {
                         }, function (asset) {
                             data = {
                                 "type": $.t("delete_asset_shares"),
+                                "asset_formatted_html": NRS.getTransactionLink(transaction.attachment.asset),
                                 "asset_name": asset.name,
                                 "quantity": [transaction.attachment.quantityQNT, asset.decimals]
                             };
@@ -1327,6 +1332,7 @@ var NRS = (function (NRS, $, undefined) {
     NRS.formatAssetOrder = function (asset, transaction, isModalVisible) {
         var data = {
             "type": (transaction.subtype == 2 ? $.t("ask_order_placement") : $.t("bid_order_placement")),
+            "asset_formatted_html": NRS.getTransactionLink(transaction.attachment.asset),
             "asset_name": asset.name,
             "quantity": [transaction.attachment.quantityQNT, asset.decimals],
             "price_formatted_html": NRS.formatOrderPricePerWholeQNT(transaction.attachment.priceNQT, asset.decimals) + " NXT",
