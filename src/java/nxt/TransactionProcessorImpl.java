@@ -769,7 +769,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject)transactionJSON);
                     TransactionImpl myTransaction = TransactionDb.findTransactionByFullHash(transaction.fullHash());
                     if (myTransaction != null) {
-                        boolean foundData = true;
+                        boolean foundAllData = true;
                         //
                         // Process each prunable appendage
                         //
@@ -795,28 +795,13 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                 if (((Appendix.Prunable)appendage).hasPrunableData()) {
                                     Logger.logDebugMessage(String.format("Loading prunable data for transaction %s %s appendage",
                                             Long.toUnsignedString(transaction.getId()), appendage.getAppendixName()));
-                                    int blockTimestamp;
-                                    int height;
-                                    if (appendage.isPhased(myTransaction)) {
-                                        height = myTransaction.getPhasing().getFinishHeight();
-                                        Block finishBlock = Nxt.getBlockchain().getBlockAtHeight(height);
-                                        if (finishBlock == null) {
-                                            throw new NxtException.NotValidException(
-                                                    "Transaction " + myTransaction.getStringId()
-                                                    + " prunable data finish block at height " + height + " not found");
-                                        }
-                                        blockTimestamp = finishBlock.getTimestamp();
-                                    } else {
-                                        blockTimestamp = myTransaction.getBlockTimestamp();
-                                        height = myTransaction.getHeight();
-                                    }
-                                    ((Appendix.Prunable)appendage).restorePrunableData(transaction, blockTimestamp, height);
+                                    ((Appendix.Prunable)appendage).restorePrunableData(transaction, myTransaction.getBlockTimestamp(), myTransaction.getHeight());
                                 } else {
-                                    foundData = false;
+                                    foundAllData = false;
                                 }
                             }
                         }
-                        if (foundData) {
+                        if (foundAllData) {
                             processed.add(transaction);
                         }
                     }
