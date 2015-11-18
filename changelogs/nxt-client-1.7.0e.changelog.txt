@@ -122,7 +122,7 @@ split between the forgers of the current and the previous three blocks in a
 Prunable plain and prunable encrypted message attachments both allowed in the
 same transaction. The maximum data size for each such attachment is 42 kbytes,
 but when coexisting in the same transaction the sum of the two is still being
-limited to the maximum payload size of 44880 bytes.
+limited by the maximum payload size of 44880 bytes.
 
 
 Incompatible changes:
