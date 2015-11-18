@@ -1427,6 +1427,34 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
+    /* DELETES HISTORY PAGE */
+    NRS.pages.deletes_history = function () {
+        NRS.sendRequest("getAssetDeletes+", {
+            "account": NRS.accountRS,
+            "includeAssetInfo": true,
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+        }, function (response) {
+            if (response.deletes && response.deletes.length) {
+                if (response.deletes.length > NRS.itemsPerPage) {
+                    NRS.hasMorePages = true;
+                    response.deletes.pop();
+                }
+                var deletes = response.deletes;
+                var rows = "";
+                for (var i = 0; i < deletes.length; i++) {
+                    deletes[i].quantityQNT = new BigInteger(deletes[i].quantityQNT);
+                    rows += "<tr><td>" + NRS.getTransactionLink(deletes[i].assetDelete) + "</td>" +
+                        "<td><a href='#' data-goto-asset='" + String(deletes[i].asset).escapeHTML() + "'>" + String(deletes[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(deletes[i].timestamp) + "</td><td>" + NRS.formatQuantity(deletes[i].quantityQNT, deletes[i].decimals) + "</td>" +
+                    "</tr>";
+                }
+                NRS.dataLoaded(rows);
+            } else {
+                NRS.dataLoaded();
+            }
+        });
+    };
+
     /* MY ASSETS PAGE */
     NRS.pages.my_assets = function () {
         if (NRS.accountInfo.assetBalances && NRS.accountInfo.assetBalances.length) {
@@ -2029,6 +2057,12 @@ var NRS = (function (NRS, $, undefined) {
             "titleHTML": '<span data-i18n="transfer_history">Transfer History</span>',
             "type": 'PAGE',
             "page": 'transfer_history'
+        };
+        NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+        options = {
+            "titleHTML": '<span data-i18n="deletes_history">Deletes History</span>',
+            "type": 'PAGE',
+            "page": 'deletes_history'
         };
         NRS.appendMenuItemToTSMenuItem(sidebarId, options);
         options = {

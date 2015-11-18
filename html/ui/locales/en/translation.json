@@ -1523,5 +1523,8 @@
   "inactive": "Inactive",
   "start": "Start",
   "cannot_check_shufflers_status": "Cannot check shuffler status.",
-  "switch_account": "Switch Account"
+  "switch_account": "Switch Account",
+  "deletes_history": "Deletes History",
+  "no_asset_deletes_history": "No asset deletes history available."
+
 }
