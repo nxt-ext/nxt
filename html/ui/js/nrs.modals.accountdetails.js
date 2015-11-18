@@ -34,7 +34,7 @@ var NRS = (function(NRS, $, undefined) {
             if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
 				$("#account_balance_balance, #account_balance_unconfirmed_balance, #account_balance_effective_balance, #account_balance_guaranteed_balance, #account_balance_forged_balance").html("0 NXT");
 				accountBalancePublicKey.html(String(NRS.publicKey).escapeHTML());
-				$("#account_balance_account_rs").html(String(NRS.accountRS).escapeHTML());
+				$("#account_balance_account_rs").html(NRS.getAccountLink(NRS, "account", undefined, undefined, true));
 				$("#account_balance_account").html(String(NRS.account).escapeHTML());
 			} else {
 				$("#account_balance_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.balanceNQT)) + " NXT");
@@ -44,7 +44,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_balance_forged_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.forgedBalanceNQT)) + " NXT");
 
 				accountBalancePublicKey.html(String(NRS.accountInfo.publicKey).escapeHTML());
-				$("#account_balance_account_rs").html(String(NRS.accountInfo.accountRS).escapeHTML());
+				$("#account_balance_account_rs").html(NRS.getAccountLink(NRS.accountInfo, "account", undefined, undefined, true));
 				$("#account_balance_account").html(String(NRS.account).escapeHTML());
 
 				if (!NRS.accountInfo.publicKey) {
