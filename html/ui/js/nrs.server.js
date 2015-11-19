@@ -514,7 +514,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        if (transaction.amountNQT !== data.amountNQT || transaction.feeNQT !== data.feeNQT) {
+        if (transaction.amountNQT !== data.amountNQT) {
             return false;
         }
 
@@ -791,6 +791,18 @@ var NRS = (function (NRS, $, undefined) {
                 transaction.order = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 if (transaction.order !== data.order) {
+                    return false;
+                }
+                break;
+            case "deleteAssetShares":
+                if (transaction.type !== 2 || transaction.subtype !== 7) {
+                    return false;
+                }
+                transaction.asset = String(converters.byteArrayToBigInteger(byteArray, pos));
+                pos += 8;
+                transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
+                pos += 8;
+                if (transaction.asset !== data.asset || transaction.quantityQNT !== data.quantityQNT) {
                     return false;
                 }
                 break;
@@ -1157,6 +1169,38 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.taggedDataId !== data.transaction) {
                     return false;
                 }
+                break;
+            case "shufflingCreate":
+                if (transaction.type !== 7 && transaction.subtype !== 0) {
+                    return false;
+                }
+                var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                if (holdingId !== "0" && holdingId !== data.holdingId ||
+                    holdingId === "0" && data.holdingId !== undefined && data.holdingId !== "" && data.holdingId !== "0") {
+                    return false;
+                }
+                pos += 8;
+                var holdingType = String(byteArray[pos]);
+                if (holdingType !== "0" && holdingType !== data.holdingType ||
+                    holdingType === "0" && data.holdingType !== undefined && data.holdingType !== "" && data.holdingType !== "0") {
+                    return false;
+                }
+                pos++;
+                var amount = String(converters.byteArrayToBigInteger(byteArray, pos));
+                if (amount !== data.amount) {
+                    return false;
+                }
+                pos += 8;
+                var participantCount = String(byteArray[pos]);
+                if (participantCount !== data.participantCount) {
+                    return false;
+                }
+                pos++;
+                var registrationPeriod = converters.byteArrayToSignedShort(byteArray, pos);
+                if (registrationPeriod !== data.registrationPeriod) {
+                    return false;
+                }
+                pos += 2;
                 break;
             default:
                 //invalid requestType..
