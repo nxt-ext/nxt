@@ -447,9 +447,12 @@ public interface Appendix {
         }
 
         @Override
-        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
-            if (message == null && prunableMessage == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
-                prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
+        final void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (!hasPrunableData() && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
+                PrunableMessage prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
+                if (prunableMessage != null && prunableMessage.getMessage() != null) {
+                    this.prunableMessage = prunableMessage;
+                }
             }
         }
 
@@ -459,7 +462,7 @@ public interface Appendix {
         }
 
         @Override
-        public boolean hasPrunableData() {
+        public final boolean hasPrunableData() {
             return (prunableMessage != null || message != null);
         }
 
@@ -771,8 +774,11 @@ public interface Appendix {
 
         @Override
         void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
-            if (encryptedData == null && prunableMessage == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
-                prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
+            if (!hasPrunableData() && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
+                PrunableMessage prunableMessage = PrunableMessage.getPrunableMessage(transaction.getId());
+                if (prunableMessage != null && prunableMessage.getEncryptedData() != null) {
+                    this.prunableMessage = prunableMessage;
+                }
             }
         }
 
@@ -782,7 +788,7 @@ public interface Appendix {
         }
 
         @Override
-        public boolean hasPrunableData() {
+        public final boolean hasPrunableData() {
             return (prunableMessage != null || encryptedData != null);
         }
 
