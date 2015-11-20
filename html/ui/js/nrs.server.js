@@ -955,6 +955,12 @@ var NRS = (function (NRS, $, undefined) {
                     return false;
                 }
                 break;
+            case "setPhasingOnlyControl":
+                if (transaction.type !== 4 && transaction.subtype !== 1) {
+                    return false;
+                }
+                return validateCommonPhasingData(byteArray, pos, data, "control") != -1;
+                break;
             case "issueCurrency":
                 if (transaction.type !== 5 && transaction.subtype !== 0) {
                     return false;
@@ -1329,37 +1335,10 @@ var NRS = (function (NRS, $, undefined) {
                 return false;
             }
             pos += 4;
-            if (byteArray[pos] != (parseInt(data.phasingVotingModel) & 0xFF)) {
+            pos = validateCommonPhasingData(byteArray, pos, data, "phasing");
+            if (pos == -1) {
                 return false;
             }
-            pos++;
-            if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== String(data.phasingQuorum)) {
-                return false;
-            }
-            pos += 8;
-            var minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
-            if (minBalance !== "0" && minBalance !== data.phasingMinBalance) {
-                return false;
-            }
-            pos += 8;
-            var whiteListLength = byteArray[pos];
-            pos++;
-            for (i = 0; i < whiteListLength; i++) {
-                var accountId = NRS.convertNumericToRSAccountFormat(converters.byteArrayToBigInteger(byteArray, pos));
-                pos += 8;
-                if (String(accountId) !== data.phasingWhitelisted[i]) {
-                    return false;
-                }
-            }
-            var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
-            if (holdingId !== "0" && holdingId !== data.phasingHolding) {
-                return false;
-            }
-            pos += 8;
-            if (String(byteArray[pos]) !== String(data.phasingMinBalanceModel)) {
-                return false;
-            }
-            pos++;
             var linkedFullHashesLength = byteArray[pos];
             pos++;
             for (i = 0; i < linkedFullHashesLength; i++) {
@@ -1535,6 +1514,41 @@ var NRS = (function (NRS, $, undefined) {
             data.recipient = NRS.constants.GENESIS;
             data.recipientRS = NRS.constants.GENESIS_RS;
         }
+    }
+
+    function validateCommonPhasingData(byteArray, pos, data, prefix) {
+        if (byteArray[pos] != (parseInt(data[prefix + "VotingModel"]) & 0xFF)) {
+            return -1;
+        }
+        pos++;
+        if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== String(data[prefix + "Quorum"])) {
+            return -1;
+        }
+        pos += 8;
+        var minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
+        if (minBalance !== "0" && minBalance !== data[prefix + "MinBalance"]) {
+            return -1;
+        }
+        pos += 8;
+        var whiteListLength = byteArray[pos];
+        pos++;
+        for (i = 0; i < whiteListLength; i++) {
+            var accountId = NRS.convertNumericToRSAccountFormat(converters.byteArrayToBigInteger(byteArray, pos));
+            pos += 8;
+            if (String(accountId) !== data[prefix + "Whitelisted"][i]) {
+                return -1;
+            }
+        }
+        var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
+        if (holdingId !== "0" && holdingId !== data[prefix + "Holding"]) {
+            return -1;
+        }
+        pos += 8;
+        if (String(byteArray[pos]) !== String(data[prefix + "MinBalanceModel"])) {
+            return -1;
+        }
+        pos++;
+        return pos;
     }
 
     return NRS;
