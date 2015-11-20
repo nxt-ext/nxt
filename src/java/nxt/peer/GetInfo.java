@@ -92,6 +92,9 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
 
         peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
 
+        peerImpl.setApiPort(request.get("apiPort"));
+        peerImpl.setApiSSLPort(request.get("apiSSLPort"));
+
         if (peerImpl.getServices() != origServices) {
             Peers.notifyListeners(peerImpl, Peers.Event.CHANGED_SERVICES);
         }

@@ -505,6 +505,12 @@ final class JSONData {
         json.put("application", peer.getApplication());
         json.put("version", peer.getVersion());
         json.put("platform", peer.getPlatform());
+        if (peer.getApiPort() != 0) {
+            json.put("apiPort", peer.getApiPort());
+        }
+        if (peer.getApiSSLPort() != 0) {
+            json.put("apiSSLPort", peer.getApiSSLPort());
+        }
         json.put("blacklisted", peer.isBlacklisted());
         json.put("lastUpdated", peer.getLastUpdated());
         json.put("lastConnectAttempt", peer.getLastConnectAttempt());

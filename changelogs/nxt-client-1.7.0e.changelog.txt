@@ -125,6 +125,16 @@ but when coexisting in the same transaction the sum of the two is still being
 limited by the maximum payload size of 44880 bytes.
 
 
+Peers that provide http or https API access open to anyone, configured with
+nxt.apiServerHost=0.0.0.0 and nxt.allowedBotHosts=* , are now labelled as
+providing a service, API or API_SSL, and can be found using the getPeers API
+with the corresponding "service" parameter. This API has been modified to
+accept multivalued "service" parameter, returning peers that match all
+requested services. The ports on which the open API access is running are
+included in the peer info of peers providing those services as apiPort and
+apiSSLPort fields.
+
+
 Incompatible changes:
 
 Deletion of asset shares will be performed as a separate AssetDelete

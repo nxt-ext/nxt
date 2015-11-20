@@ -27,7 +27,9 @@ public interface Peer extends Comparable<Peer> {
 
     enum Service {
         HALLMARK(1),                    // Hallmarked node
-        PRUNABLE(2);                    // Stores expired prunable messages
+        PRUNABLE(2),                    // Stores expired prunable messages
+        API(4),                         // Provides open API access over http
+        API_SSL(8);                     // Provides open API access over https
 
         private final long code;        // Service code - must be a power of 2
 
@@ -41,6 +43,8 @@ public interface Peer extends Comparable<Peer> {
     }
 
     boolean providesService(Service service);
+
+    boolean providesServices(long services);
 
     String getHost();
 
@@ -57,6 +61,10 @@ public interface Peer extends Comparable<Peer> {
     String getPlatform();
 
     String getSoftware();
+
+    int getApiPort();
+
+    int getApiSSLPort();
 
     Hallmark getHallmark();
 

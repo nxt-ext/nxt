@@ -22,6 +22,7 @@ import nxt.Constants;
 import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.http.API;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
@@ -257,6 +258,14 @@ public final class Peers {
         json.put("shareAddress", Peers.shareMyAddress);
         if (!Constants.ENABLE_PRUNING && Constants.INCLUDE_EXPIRED_PRUNABLE) {
             servicesList.add(Peer.Service.PRUNABLE);
+        }
+        if (API.openAPIPort > 0) {
+            json.put("apiPort", API.openAPIPort);
+            servicesList.add(Peer.Service.API);
+        }
+        if (API.openAPISSLPort > 0) {
+            json.put("apiSSLPort", API.openAPISSLPort);
+            servicesList.add(Peer.Service.API_SSL);
         }
         long services = 0;
         for (Peer.Service service : servicesList) {
