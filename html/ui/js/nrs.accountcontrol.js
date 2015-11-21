@@ -137,6 +137,8 @@ var NRS = (function(NRS, $) {
 		$elems.hide();
 
 		$(this).find('.mandatory_approve_tab_list a:first').click();
+
+		$(".show_popover").popover("hide");
 	});
 
 	$('.mandatory_approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
