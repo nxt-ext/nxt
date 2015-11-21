@@ -360,7 +360,7 @@ var NRS = (function(NRS, $) {
     };
 
     $("#m_shuffling_create_modal").on("show.bs.modal", function() {
-   		context = {
+   		var context = {
    			labelText: "Currency",
    			labelI18n: "currency",
    			inputCodeName: "shuffling_ms_code",
@@ -379,15 +379,24 @@ var NRS = (function(NRS, $) {
    		};
    		NRS.initModalUIElement($(this), '.shuffling_holding_asset', 'add_asset_modal_ui_element', context);
 
-   		var context = {
-   			labelText: "Finish Height",
-   			labelI18n: "finish_height",
-   			helpI18n: "shuffling_finish_height_help",
+   		context = {
+   			labelText: "Registration Finish",
+   			labelI18n: "registration_finish",
+   			helpI18n: "shuffling_registration_height_help",
    			inputName: "finishHeight",
    			initBlockHeight: NRS.lastBlockHeight + 720,
    			changeHeightBlocks: 10
    		};
    		NRS.initModalUIElement($(this), '.shuffling_finish_height', 'block_height_modal_ui_element', context);
+        // Activating context help popovers - from some reason this code is activated
+        // after the same event in nrs.modals.js which doesn't happen for create pool thus it's necessary
+        // to explicitly enable the popover here. strange ...
+		$(function () {
+            $("[data-toggle='popover']").popover({
+            	"html": true
+            });
+        });
+
    	});
 
     var shufflerStartModal = $("#m_shuffler_start_modal");

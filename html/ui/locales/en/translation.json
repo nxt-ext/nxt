@@ -1527,5 +1527,7 @@
   "deletes_history": "Deletes History",
   "no_asset_deletes_history": "No asset deletes history available.",
   "invalid asset": "Invalid asset",
-  "initial_quantity": "Initial Quantity"
+  "initial_quantity": "Initial Quantity",
+  "registration_finish": "Register Until",
+  "shuffling_registration_height_help": "Shuffling won't start unless the required number of participants register before this height."
 }
