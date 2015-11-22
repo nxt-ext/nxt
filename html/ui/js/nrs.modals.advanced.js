@@ -321,7 +321,9 @@ var NRS = (function(NRS, $, undefined) {
 
 	function _setMandatoryApproval($modal) {
 		$modal.one('shown.bs.modal', function() {
-			if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+			var requestType = $modal.find('input[name="request_type"]').val();
+			if (requestType != "approveTransaction"
+				&& NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
 
 				NRS.sendRequest("getPhasingOnlyControl", {
 					"account": NRS.account

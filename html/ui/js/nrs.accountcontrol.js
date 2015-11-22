@@ -3,6 +3,10 @@
  */
 var NRS = (function(NRS, $) {
 
+    NRS.forms.setPhasingOnlyControlComplete = function(response, data) {
+        //NRS.getAccountInfo();
+    };
+
 	NRS.pages.account_control = function(callback) {
 		
 	}
