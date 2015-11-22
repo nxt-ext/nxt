@@ -3272,6 +3272,16 @@ table.purchase td {
   margin-bottom: 18px;
 }
 
+.phasing_only_enabled_info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
 .tab_pane_approve {
   padding: 16px 0px 0px 0px;
 }
