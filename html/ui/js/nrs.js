@@ -983,8 +983,6 @@ NRS.addPagination = function () {
 
 				NRS.updateAccountControlStatus();
 
-                $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
-                $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-xs"));
 				if (response.name) {
 					$("#account_name").html(response.name.escapeHTML()).removeAttr("data-i18n");
 				}

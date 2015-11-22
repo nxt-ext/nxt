@@ -307,6 +307,9 @@ var NRS = (function(NRS, $, undefined) {
                         NRS.disablePluginsDuringSession = true;
                     }
 
+                    $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
+                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-xs"));
+
 					var passwordNotice = "";
 
 					if (password.length < 35 && passLogin) {
@@ -422,6 +425,7 @@ var NRS = (function(NRS, $, undefined) {
 					/* Add accounts to dropdown for quick switching */
 					$("#account_id_dropdown .dropdown-menu .switchAccount").remove();
 					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+                        $("#account_id_dropdown").show();
 						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
 						$.each(accounts, function(index, account) {
 							if (account != ''){
@@ -435,7 +439,9 @@ var NRS = (function(NRS, $, undefined) {
 								);
 							}
 						});
-					}
+					} else {
+                        $("#account_id_dropdown").hide();
+                    }
 
 					NRS.getInitialTransactions();
 					NRS.updateApprovalRequests();
