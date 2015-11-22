@@ -1533,9 +1533,10 @@ var NRS = (function (NRS, $, undefined) {
         var whiteListLength = byteArray[pos];
         pos++;
         for (i = 0; i < whiteListLength; i++) {
-            var accountId = NRS.convertNumericToRSAccountFormat(converters.byteArrayToBigInteger(byteArray, pos));
+            var accountId = converters.byteArrayToBigInteger(byteArray, pos);
+            var accountRS = NRS.convertNumericToRSAccountFormat(accountId);
             pos += 8;
-            if (String(accountId) !== data[prefix + "Whitelisted"][i]) {
+            if (String(accountId) !== data[prefix + "Whitelisted"][i] && String(accountRS) !== data[prefix + "Whitelisted"][i]) {
                 return -1;
             }
         }
