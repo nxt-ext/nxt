@@ -258,11 +258,13 @@ public final class PhasingPoll extends AbstractPoll {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* "
-                    + "FROM transaction, phasing_poll, phasing_poll_voter "
+                    + "FROM transaction, phasing_poll_voter, phasing_poll "
+                    + "LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id "
                     + "WHERE transaction.id = phasing_poll.id AND "
                     + "phasing_poll.finish_height > ? AND "
                     + "phasing_poll.id = phasing_poll_voter.transaction_id "
                     + "AND phasing_poll_voter.voter_id = ? "
+                    + "AND phasing_poll_result.id IS NULL "
                     + "ORDER BY transaction.height DESC, transaction.transaction_index DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
@@ -313,8 +315,10 @@ public final class PhasingPoll extends AbstractPoll {
         Connection con = null;
         try {
             con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll  " +
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
+                    " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
                     " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
+                    " AND phasing_poll_result.id IS NULL " +
                     " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
             int i = 0;
@@ -332,8 +336,10 @@ public final class PhasingPoll extends AbstractPoll {
 
     public static int getAccountPhasedTransactionCount(long accountId) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction, phasing_poll  " +
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction, phasing_poll " +
+                     " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
                      " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
+                     " AND phasing_poll_result.id IS NULL " +
                      " AND phasing_poll.finish_height > ?")) {
             int i = 0;
             pstmt.setLong(++i, accountId);
