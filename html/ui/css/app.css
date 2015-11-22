@@ -3079,7 +3079,6 @@ input:invalid {
 }
 
 #account_name {
-  font-style:italic;
   text-overflow:ellipsis;
   white-space:nowrap;
   overflow:hidden;

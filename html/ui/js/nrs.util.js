@@ -781,7 +781,7 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
-    NRS.getAccountLink = function (object, accountKey, accountRef, title, showAccountRS) {
+    NRS.getAccountLink = function (object, accountKey, accountRef, title, showAccountRS, clazz) {
         var accountRS;
         if (typeof object[accountKey + "RS"] != "undefined") {
             accountRS = object[accountKey + "RS"];
@@ -798,8 +798,11 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             accountTitle = NRS.getAccountTitle(object, accountKey);
         }
+        if (!clazz) {
+            clazz = "";
+        }
         return "<a href='#' data-user='" + String(accountRS).escapeHTML() +
-            "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
+            "' class='show_account_modal_action user-info " + clazz + "'>" + accountTitle + "</a>";
     };
 
     NRS.getTransactionLink = function(id, text, isEscapedtext) {
