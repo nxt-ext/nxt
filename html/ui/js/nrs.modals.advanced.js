@@ -322,6 +322,10 @@ var NRS = (function(NRS, $, undefined) {
 	function _setMandatoryApproval($modal) {
 		$modal.one('shown.bs.modal', function() {
 			var requestType = $modal.find('input[name="request_type"]').val();
+			var onNoMandatoryApproval = function() {
+				$modal.find('.advanced_mandatory_approval').hide();
+				$modal.find('input[name="mandatoryApprovalParamsJSON"]').val("");
+			}
 			if (requestType != "approveTransaction"
 				&& NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
 
@@ -333,11 +337,11 @@ var NRS = (function(NRS, $, undefined) {
 						$modal.find('.advanced_mandatory_approval').show();
 						$modal.find('input[name="mandatoryApprovalParamsJSON"]').val(JSON.stringify(response));
 					} else {
-						$modal.find('.advanced_mandatory_approval').hide();
+						onNoMandatoryApproval();
 					}
 				});
 			} else {
-				$modal.find('.advanced_mandatory_approval').hide();
+				onNoMandatoryApproval();
 			}
 
 		});
