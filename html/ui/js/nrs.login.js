@@ -307,8 +307,6 @@ var NRS = (function(NRS, $, undefined) {
                         NRS.disablePluginsDuringSession = true;
                     }
 
-					$("#dashboard_account_id").html(NRS.getAccountLink(NRS, "account", undefined, undefined, true));
-
 					var passwordNotice = "";
 
 					if (password.length < 35 && passLogin) {
