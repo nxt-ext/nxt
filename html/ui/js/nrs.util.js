@@ -324,7 +324,10 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.calculatePercentage = function (a, b, rounding_mode) {
-		if (rounding_mode != undefined) { // Rounding mode from Big.js
+		if (String(b) == "0") {
+            return "0";
+        }
+        if (rounding_mode != undefined) { // Rounding mode from Big.js
 			Big.RM = rounding_mode;
 		}
 		a = new Big(String(a));
