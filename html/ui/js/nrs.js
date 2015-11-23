@@ -206,9 +206,7 @@ var NRS = (function(NRS, $, undefined) {
 		
 		$("[data-toggle='tooltip']").tooltip();
 
-		$("#dgs_search_account_top, #dgs_search_account_center").mask("NXT-****-****-****-*****", {
-			"unmask": false
-		});
+		$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
 		
 		if (NRS.getUrlParameter("account")){
 			NRS.login(false,NRS.getUrlParameter("account"));

@@ -243,9 +243,7 @@ var NRS = (function(NRS, $) {
 			"page": "main",
 			"searchStr": ""
 		};
-		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****", {
-			"unmask": false
-		});
+		$(".dgs_search input[name=q]").val("").trigger("unmask").mask("NXT-****-****-****-*****");
 		$(".dgs_fulltext_search input[name=fs_q]").val("");
 		$(".dgs_search_pageheader_addon").hide();
 		$("#dgs_search_contents").empty();
@@ -1068,9 +1066,7 @@ var NRS = (function(NRS, $) {
 				NRS.dgs_search_seller(seller);
 			}
 		} else {
-			$.growl($.t("error_invalid_seller"), {
-				"type": "danger"
-			});
+            NRS.dgs_search_seller(seller);
 		}
 	});
 
