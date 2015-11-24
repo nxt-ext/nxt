@@ -78,7 +78,7 @@ public class TestTrustlessAssetSwap extends BlockchainTest {
                 param("recipient", ALICE.getStrId()).
                 param("asset", bobAssetId).
                 param("quantityQNT", 200).
-                param("feeNQT", 2 * Constants.ONE_NXT).
+                param("feeNQT", 3 * Constants.ONE_NXT).
                 param("phased", "true").
                 param("phasingFinishHeight", baseHeight + 5).
                 param("phasingVotingModel", 4).

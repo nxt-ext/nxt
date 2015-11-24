@@ -131,7 +131,7 @@ public class TestApproveTransaction extends BlockchainTest {
         Assert.assertEquals(64, fullHash.length());
         String approvalTransactionBytes = (String)response.get("transactionBytes");
 
-        long fee = 2 * Constants.ONE_NXT;
+        long fee = 3 * Constants.ONE_NXT;
         response = new APICall.Builder("sendMoney").
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).
@@ -186,7 +186,7 @@ public class TestApproveTransaction extends BlockchainTest {
         Assert.assertEquals(64, fullHash1.length());
         String approvalTransactionBytes3 = (String)response.get("transactionBytes");
 
-        long fee = 2 * Constants.ONE_NXT;
+        long fee = 5 * Constants.ONE_NXT;
         response = new APICall.Builder("sendMoney").
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).
@@ -230,7 +230,7 @@ public class TestApproveTransaction extends BlockchainTest {
 
     @Test
     public void sendMoneyPhasedByTransactionHashNotApplied() {
-        long fee = 2 * Constants.ONE_NXT;
+        long fee = 3 * Constants.ONE_NXT;
         JSONObject response = new APICall.Builder("sendMoney").
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).
