@@ -63,6 +63,14 @@ To prevent deadlocks due to cyclic account control restrictions, approval
 transactions themselves (PhasingVoteCasting) are not subject to phasing only
 account control.
 
+When setting phasing account control, a maximum fees total can be specified,
+limiting the total fees for currently pending phased transactions of the
+controlled account, and limits can be placed on minimum and maximum phasing
+duration allowed.
+
+Transactions of accounts subject to phasing account control with restriction
+on maximum fees are throttled at one per account per block.
+
 
 Immediate release of phased transactions on approval. Phased transactions with
 a voting model that does not depend on account balance (such as by-transaction

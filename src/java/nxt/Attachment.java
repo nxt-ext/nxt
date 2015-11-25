@@ -27,9 +27,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public interface Attachment extends Appendix {
 
@@ -3568,20 +3566,32 @@ public interface Attachment extends Appendix {
     final class SetPhasingOnly extends AbstractAttachment {
 
         private final PhasingParams phasingParams;
+        private final long maxFees;
+        private final short minDuration;
+        private final short maxDuration;
 
-        public SetPhasingOnly(PhasingParams params) {
+        public SetPhasingOnly(PhasingParams params, long maxFees, short minDuration, short maxDuration) {
             phasingParams = params;
+            this.maxFees = maxFees;
+            this.minDuration = minDuration;
+            this.maxDuration = maxDuration;
         }
 
         SetPhasingOnly(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             phasingParams = new PhasingParams(buffer);
+            maxFees = buffer.getLong();
+            minDuration = buffer.getShort();
+            maxDuration = buffer.getShort();
         }
 
         SetPhasingOnly(JSONObject attachmentData) {
             super(attachmentData);
             JSONObject phasingControlParams = (JSONObject) attachmentData.get("phasingControlParams");
             phasingParams = new PhasingParams(phasingControlParams);
+            maxFees = Convert.parseLong(attachmentData.get("controlMaxFees"));
+            minDuration = ((Long)attachmentData.get("controlMinDuration")).shortValue();
+            maxDuration = ((Long)attachmentData.get("controlMaxDuration")).shortValue();
         }
 
         @Override
@@ -3591,12 +3601,15 @@ public interface Attachment extends Appendix {
 
         @Override
         int getMySize() {
-            return phasingParams.getMySize();
+            return phasingParams.getMySize() + 8 + 2 + 2;
         }
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
             phasingParams.putMyBytes(buffer);
+            buffer.putLong(maxFees);
+            buffer.putShort(minDuration);
+            buffer.putShort(maxDuration);
         }
 
         @Override
@@ -3604,10 +3617,26 @@ public interface Attachment extends Appendix {
             JSONObject phasingControlParams = new JSONObject();
             phasingParams.putMyJSON(phasingControlParams);
             json.put("phasingControlParams", phasingControlParams);
+            json.put("controlMaxFees", maxFees);
+            json.put("controlMinDuration", minDuration);
+            json.put("controlMaxDuration", maxDuration);
         }
 
         public PhasingParams getPhasingParams() {
             return phasingParams;
         }
+
+        public long getMaxFees() {
+            return maxFees;
+        }
+
+        public short getMinDuration() {
+            return minDuration;
+        }
+
+        public short getMaxDuration() {
+            return maxDuration;
+        }
+
     }
 }

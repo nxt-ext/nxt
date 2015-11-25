@@ -2938,6 +2938,22 @@ public abstract class TransactionType {
                 } else if (votingModel == VotingModel.TRANSACTION || votingModel == VotingModel.HASH) {
                     throw new NxtException.NotValidException("Invalid voting model " + votingModel + " for account control");
                 }
+                long maxFees = attachment.getMaxFees();
+                if (maxFees < 0 || (maxFees > 0 && maxFees < 2 * Constants.ONE_NXT) || maxFees > Constants.MAX_BALANCE_NQT) {
+                    throw new NxtException.NotValidException("Invalid max fees " + maxFees);
+                }
+                short minDuration = attachment.getMinDuration();
+                if (minDuration < 0 || (minDuration > 0 && minDuration < 3) || minDuration >= Constants.MAX_PHASING_DURATION) {
+                    throw new NxtException.NotValidException("Invalid min duration " + attachment.getMinDuration());
+                }
+                short maxDuration = attachment.getMaxDuration();
+                if (maxDuration < 0 || (maxDuration > 0 && maxDuration < 3) || maxDuration >= Constants.MAX_PHASING_DURATION) {
+                    throw new NxtException.NotValidException("Invalid max duration " + maxDuration);
+                }
+                if (minDuration > maxDuration) {
+                    throw new NxtException.NotValidException(String.format("Min duration %d cannot exceed max duration %d ",
+                            minDuration, maxDuration));
+                }
             }
 
             @Override

@@ -376,6 +376,28 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
+    static long getSenderPhasedTransactionFees(long accountId) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT SUM(transaction.fee) AS fees FROM transaction, phasing_poll " +
+                    " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
+                    " WHERE phasing_poll.id = transaction.id AND transaction.sender_id = ? " +
+                    " AND phasing_poll_result.id IS NULL " +
+                    " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC ");
+            int i = 0;
+            pstmt.setLong(++i, accountId);
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getLong("fees");
+            }
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
 
     static void addPoll(Transaction transaction, Appendix.Phasing appendix) {
         PhasingPoll poll = new PhasingPoll(transaction, appendix);

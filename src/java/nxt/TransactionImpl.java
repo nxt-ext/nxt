@@ -1023,7 +1023,7 @@ final class TransactionImpl implements Transaction {
                         ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
             }
         }
-        AccountRestrictions.checkTransaction(this);
+        AccountRestrictions.checkTransaction(this, validatingAtFinish);
     }
 
     // returns false iff double spending
@@ -1069,6 +1069,9 @@ final class TransactionImpl implements Transaction {
             return false;
         }
         if (atAcceptanceHeight) {
+            if (AccountRestrictions.isBlockDuplicate(this, duplicates)) {
+                return true;
+            }
             // all are checked at acceptance height for block duplicates
             if (type.isBlockDuplicate(this, duplicates)) {
                 return true;

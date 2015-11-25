@@ -1100,6 +1100,12 @@ class NxtDbVersion extends DbVersion {
             case 464:
                 apply("ALTER TABLE prunable_message DROP COLUMN is_encrypted");
             case 465:
+                apply("ALTER TABLE account_control_phasing ADD COLUMN IF NOT EXISTS max_fees BIGINT");
+            case 466:
+                apply("ALTER TABLE account_control_phasing ADD COLUMN IF NOT EXISTS min_duration SMALLINT");
+            case 467:
+                apply("ALTER TABLE account_control_phasing ADD COLUMN IF NOT EXISTS max_duration SMALLINT");
+            case 468:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

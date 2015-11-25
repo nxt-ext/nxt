@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.PhasingParams;
 import org.json.simple.JSONStreamAware;
@@ -50,6 +51,9 @@ import javax.servlet.http.HttpServletRequest;
  * </li>
  * <li>controlHolding - The expected holding ID - asset ID or currency ID.</li>
  * <li>controlWhitelisted - multiple values - the expected whitelisted accounts</li>
+ * <li>controlMaxFees - The maximum allowed accumulated total fees for not yet finished phased transactions.</li>
+ * <li>controlMinDuration - The minimum phasing duration (finish height minus current height).</li>
+ * <li>controlHolding - The maximum allowed phasing duration.</li>
  * </ul>
  *
  * 
@@ -60,14 +64,18 @@ public final class SetPhasingOnlyControl extends CreateTransaction {
 
     private SetPhasingOnlyControl() {
         super(new APITag[] {APITag.ACCOUNT_CONTROL, APITag.CREATE_TRANSACTION}, "controlVotingModel", "controlQuorum", "controlMinBalance",
-                "controlMinBalanceModel", "controlHolding", "controlWhitelisted", "controlWhitelisted", "controlWhitelisted");
+                "controlMinBalanceModel", "controlHolding", "controlWhitelisted", "controlWhitelisted", "controlWhitelisted",
+                "controlMaxFees", "controlMinDuration", "controlMaxDuration");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
         Account account = ParameterParser.getSenderAccount(request);
         PhasingParams phasingParams = parsePhasingParams(request, "control");
-        return createTransaction(request, account, new Attachment.SetPhasingOnly(phasingParams));
+        long maxFees = ParameterParser.getLong(request, "controlMaxFees", 2 * Constants.ONE_NXT, Constants.MAX_BALANCE_NQT, false);
+        short minDuration = (short)ParameterParser.getInt(request, "controlMinDuration", 3, Constants.MAX_PHASING_DURATION - 1, false);
+        short maxDuration = (short) ParameterParser.getInt(request, "controlMaxDuration", 3, Constants.MAX_PHASING_DURATION - 1, false);
+        return createTransaction(request, account, new Attachment.SetPhasingOnly(phasingParams, maxFees, minDuration, maxDuration));
     }
 
 }

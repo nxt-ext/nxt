@@ -683,6 +683,9 @@ final class JSONData {
             whitelistJson.add(whitelisted);
         }
         json.put("whitelist", whitelistJson);
+        json.put("maxFees", String.valueOf(phasingOnly.getMaxFees()));
+        json.put("minDuration", phasingOnly.getMinDuration());
+        json.put("maxDuration", phasingOnly.getMaxDuration());
         putVoteWeighting(json, phasingOnly.getPhasingParams().getVoteWeighting());
         return json;
     }

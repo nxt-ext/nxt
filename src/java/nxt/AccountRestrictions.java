@@ -29,6 +29,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 public final class AccountRestrictions {
 
@@ -57,9 +58,13 @@ public final class AccountRestrictions {
                 senderAccount.addControl(ControlType.PHASING_ONLY);
                 PhasingOnly phasingOnly = get(senderAccount.getId());
                 if (phasingOnly == null) {
-                    phasingOnly = new PhasingOnly(senderAccount.getId(), phasingParams);
+                    phasingOnly = new PhasingOnly(senderAccount.getId(), phasingParams, attachment.getMaxFees(),
+                            attachment.getMinDuration(), attachment.getMaxDuration());
                 } else {
                     phasingOnly.phasingParams = phasingParams;
+                    phasingOnly.maxFees = attachment.getMaxFees();
+                    phasingOnly.minDuration = attachment.getMinDuration();
+                    phasingOnly.maxDuration = attachment.getMaxDuration();
                 }
                 phasingControlTable.insert(phasingOnly);
             }
@@ -68,11 +73,17 @@ public final class AccountRestrictions {
         private final DbKey dbKey;
         private final long accountId;
         private PhasingParams phasingParams;
+        private long maxFees;
+        private short minDuration;
+        private short maxDuration;
 
-        private PhasingOnly(long accountId, PhasingParams params){
+        private PhasingOnly(long accountId, PhasingParams params, long maxFees, short minDuration, short maxDuration) {
             this.accountId = accountId;
             dbKey = phasingControlDbKeyFactory.newKey(this.accountId);
             phasingParams = params;
+            this.maxFees = maxFees;
+            this.minDuration = minDuration;
+            this.maxDuration = maxDuration;
         }
 
         private PhasingOnly(ResultSet rs) throws SQLException {
@@ -85,6 +96,9 @@ public final class AccountRestrictions {
                     rs.getLong("min_balance"),
                     rs.getByte("min_balance_model"),
                     whitelist == null ? Convert.EMPTY_LONG : Convert.toArray(whitelist));
+            this.maxFees = rs.getLong("max_fees");
+            this.minDuration = rs.getShort("min_duration");
+            this.maxDuration = rs.getShort("max_duration");
         }
 
         public long getAccountId() {
@@ -95,7 +109,22 @@ public final class AccountRestrictions {
             return phasingParams;
         }
 
-        private void checkTransaction(Transaction transaction) throws AccountControlException {
+        public long getMaxFees() {
+            return maxFees;
+        }
+
+        public short getMinDuration() {
+            return minDuration;
+        }
+
+        public short getMaxDuration() {
+            return maxDuration;
+        }
+
+        private void checkTransaction(Transaction transaction, boolean validatingAtFinish) throws AccountControlException {
+            if (!validatingAtFinish && maxFees > 0 && Math.addExact(transaction.getFeeNQT(), PhasingPoll.getSenderPhasedTransactionFees(transaction.getSenderId())) > maxFees) {
+                throw new AccountControlException("Maximum total fees limit of " + maxFees + " exceeded");
+            }
             if (transaction.getType() == TransactionType.Messaging.PHASING_VOTE_CASTING) {
                 return;
             }
@@ -104,15 +133,22 @@ public final class AccountRestrictions {
                 throw new AccountControlException("Non-phased transaction when phasing account control is enabled");
             }
             if (!phasingParams.equals(phasingAppendix.getParams())) {
-                throw new AccountControlException("Phasing parameters mismatch phasing account control. Expected " +
-                        phasingParams.toString() + ". Actual: " + phasingAppendix.getParams().toString());
+                throw new AccountControlException("Phasing parameters mismatch phasing account control. Expected: " +
+                        phasingParams.toString() + " . Actual: " + phasingAppendix.getParams().toString());
+            }
+            if (!validatingAtFinish) {
+                int duration = phasingAppendix.getFinishHeight() - Nxt.getBlockchain().getHeight();
+                if ((maxDuration > 0 && duration > maxDuration) || (minDuration > 0 && duration < minDuration)) {
+                    throw new AccountControlException("Invalid phasing duration " + duration);
+                }
             }
         }
 
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO account_control_phasing "
-                    + "(account_id, whitelist, voting_model, quorum, min_balance, holding_id, min_balance_model, height, latest) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                    + "(account_id, whitelist, voting_model, quorum, min_balance, holding_id, min_balance_model, "
+                    + "max_fees, min_duration, max_duration, height, latest) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.accountId);
                 DbUtils.setArrayEmptyToNull(pstmt, ++i, Convert.toArray(phasingParams.getWhitelist()));
@@ -121,6 +157,9 @@ public final class AccountRestrictions {
                 DbUtils.setLongZeroToNull(pstmt, ++i, phasingParams.getVoteWeighting().getMinBalance());
                 DbUtils.setLongZeroToNull(pstmt, ++i, phasingParams.getVoteWeighting().getHoldingId());
                 pstmt.setByte(++i, phasingParams.getVoteWeighting().getMinBalanceModel().getCode());
+                pstmt.setLong(++i, this.maxFees);
+                pstmt.setShort(++i, this.minDuration);
+                pstmt.setShort(++i, this.maxDuration);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -151,12 +190,25 @@ public final class AccountRestrictions {
     static void init() {
     }
 
-    static void checkTransaction(Transaction transaction) throws AccountControlException {
+    static void checkTransaction(Transaction transaction, boolean validatingAtFinish) throws AccountControlException {
         Account senderAccount = Account.getAccount(transaction.getSenderId());
         if (senderAccount.getControls().contains(Account.ControlType.PHASING_ONLY)) {
             PhasingOnly phasingOnly = PhasingOnly.get(transaction.getSenderId());
-            phasingOnly.checkTransaction(transaction);
+            phasingOnly.checkTransaction(transaction, validatingAtFinish);
         }
+    }
+
+    static boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+        Account senderAccount = Account.getAccount(transaction.getSenderId());
+        if (!senderAccount.getControls().contains(Account.ControlType.PHASING_ONLY)) {
+            return false;
+        }
+        if (PhasingOnly.get(transaction.getSenderId()).getMaxFees() == 0) {
+            return false;
+        }
+        return transaction.getType() != TransactionType.AccountControl.SET_PHASING_ONLY &&
+                TransactionType.isDuplicate(TransactionType.AccountControl.SET_PHASING_ONLY, Long.toUnsignedString(senderAccount.getId()),
+                        duplicates, true);
     }
 
 }
