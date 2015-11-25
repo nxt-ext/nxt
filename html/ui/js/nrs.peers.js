@@ -33,8 +33,19 @@ var NRS = (function(NRS, $) {
 			NRS.loadPage("peers");
 		});
 	};
-	
-	NRS.pages.peers = function() {
+
+    function getPeerServicesLabel(services) {
+        var servicesText = "";
+        for (var i=0; i<services.length; i++) {
+            servicesText += services[i].substring(0, 1) + services[i].substring(services[i].length - 1) + ",";
+        }
+        if (servicesText.length == 0) {
+            return servicesText;
+        }
+        return servicesText.substring(0, servicesText.length - 1);
+    }
+
+    NRS.pages.peers = function() {
 		NRS.sendRequest("getPeers+", {
 			"active": "true",
 			"includePeerInfo": "true"
@@ -77,6 +88,7 @@ var NRS = (function(NRS, $) {
 					rows += "<td><span class='label label-" + (NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>";
 					rows += (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td>";
 					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>";
+					rows += "<td>" + getPeerServicesLabel(peer.services) + "</td>";
 
 					rows += "<td style='text-align:right;'>";
 					rows += "<a class='btn btn-xs btn-default' href='#' ";

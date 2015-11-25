@@ -1533,5 +1533,6 @@
   "details": "Details",
   "min_balance": "Minimum Balance",
   "min_balance_model": "Minimum Balance Model",
-  "voting_model": "Voting Model"
+  "voting_model": "Voting Model",
+  "services": "Services"
 }
