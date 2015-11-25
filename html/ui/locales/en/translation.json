@@ -1530,5 +1530,8 @@
   "initial_quantity": "Initial Quantity",
   "registration_finish": "Register Until",
   "shuffling_registration_height_help": "Shuffling won't start unless the required number of participants register before this height.",
-  "details": "Details"
+  "details": "Details",
+  "min_balance": "Minimum Balance",
+  "min_balance_model": "Minimum Balance Model",
+  "voting_model": "Voting Model"
 }
