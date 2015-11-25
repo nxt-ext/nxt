@@ -355,11 +355,9 @@ public final class PhasingPoll extends AbstractPoll {
     }
 
     static List<TransactionImpl> getLinked(byte[] linkedTransactionFullHash) {
-        Connection con = null;
-        try {
-            con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT transaction_id FROM phasing_poll_linked_transaction " +
-                            "WHERE linked_transaction_id = ? AND linked_full_hash = ?");
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT transaction_id FROM phasing_poll_linked_transaction " +
+                     "WHERE linked_transaction_id = ? AND linked_full_hash = ?")) {
             int i = 0;
             pstmt.setLong(++i, Convert.fullHashToId(linkedTransactionFullHash));
             pstmt.setBytes(++i, linkedTransactionFullHash);
@@ -371,20 +369,17 @@ public final class PhasingPoll extends AbstractPoll {
             }
             return transactions;
         } catch (SQLException e) {
-            DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
     }
 
     static long getSenderPhasedTransactionFees(long accountId) {
-        Connection con = null;
-        try {
-            con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT SUM(transaction.fee) AS fees FROM transaction, phasing_poll " +
-                    " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
-                    " WHERE phasing_poll.id = transaction.id AND transaction.sender_id = ? " +
-                    " AND phasing_poll_result.id IS NULL " +
-                    " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC ");
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT SUM(transaction.fee) AS fees FROM transaction, phasing_poll " +
+                     " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
+                     " WHERE phasing_poll.id = transaction.id AND transaction.sender_id = ? " +
+                     " AND phasing_poll_result.id IS NULL " +
+                     " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC ")) {
             int i = 0;
             pstmt.setLong(++i, accountId);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -393,7 +388,6 @@ public final class PhasingPoll extends AbstractPoll {
                 return rs.getLong("fees");
             }
         } catch (SQLException e) {
-            DbUtils.close(con);
             throw new RuntimeException(e.toString(), e);
         }
     }
