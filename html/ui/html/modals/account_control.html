@@ -131,6 +131,50 @@
                                 </div>
                             </div>
                         </div>
+                        <!--Minimal fees and phasing duration-->
+                        <div class="phasing_duration_and_min_fees">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div class="form-group phasing_only_phasing_duration">
+                                        <label data-i18n="phasing_duration">Minimal and maximal phasing duration</label>
+                                        <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#mandatory_approval_modal"
+                                           data-i18n="[data-content]phasing_duration_help"></i>
+                                        <div class="row">
+                                            <div class="col-xs-6">
+                                                <div class="input-group">
+                                                    <input name="controlMinDuration" type="number" min="0" class="form-control"
+                                                           placeholder="Min" data-i18n="[placeholder]minimal_duration_short"/>
+                                                    <span class="input-group-addon">Blocks</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-6">
+                                                <div class="input-group">
+                                                    <input name="controlMaxDuration" type="number" min="0" class="form-control"
+                                                           placeholder="Max" data-i18n="[placeholder]maximal_duration_short"/>
+                                                    <span class="input-group-addon">Blocks</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-12 col-sm-6 col-md-6">
+                                    <div class="form-group phasing_only_maximal_pending_fees">
+                                        <label data-i18n="phasing_maximal_pending_fees">Max pending transactions fees</label>
+                                        <i class="fa fa-question-circle modal-context-help" data-content="" data-toggle="popover" data-trigger="hover" data-container="#mandatory_approval_modal"
+                                           data-i18n="[data-content]maximal_pending_fees_help"></i>
+
+                                        <div class="input-group">
+                                            <input name="controlMaxFees" type="number" min="0" class="form-control" step="any"
+                                                   placeholder="Max fees" data-i18n="[placeholder]maximal_fees"/>
+                                            <span class="input-group-addon">NXT</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
 

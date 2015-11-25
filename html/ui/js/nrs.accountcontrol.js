@@ -142,6 +142,8 @@ var NRS = (function(NRS, $) {
 
 		$(this).find('.mandatory_approve_tab_list a:first').click();
 
+		$(this).find('.phasing_duration_and_min_fees').hide();
+
 		$(".show_popover").popover("hide");
 	});
 
@@ -149,6 +151,11 @@ var NRS = (function(NRS, $) {
 		var $am = $(this).closest('.phasing_only_modal');
 		$am.find('.tab-pane input, .tab-pane select').prop('disabled', true);
 		$am.find('.tab-pane.active input, .tab-pane.active select').prop('disabled', false);
+		if ($am.find('.tab-pane:first').hasClass("active")) {
+			$am.find('.phasing_duration_and_min_fees').hide();
+		} else {
+			$am.find('.phasing_duration_and_min_fees').show();
+		}
 
 		$('.modal .phasing_only_modal .phasing_only_min_balance_model_group:visible select').trigger('change');
 	});

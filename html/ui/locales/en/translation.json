@@ -1534,5 +1534,12 @@
   "min_balance": "Minimum Balance",
   "min_balance_model": "Minimum Balance Model",
   "voting_model": "Voting Model",
-  "services": "Services"
+  "services": "Services",
+  "phasing_duration": "Minimal and maximal phasing durations",
+  "phasing_duration_help": "Restricts the phasing period of the transactions issued by the account. Useful in case the controlled account is compromised. The maximal duration determines for how long an attacker will be able to lock the account funds before the controlling entities are able to rescue them to a new account. The minimal duration, together with the Maximum Pending Fees, determines at what rate an attacker will be able to burn through fees the NXT owned by the controlled account",
+  "phasing_maximal_pending_fees": "Max pending transactions fees",
+  "minimal_duration_short": "Min duration",
+  "maximal_duration_short": "Max duration",
+  "maximal_fees": "Max fees",
+  "maximal_pending_fees_help": "Maximal sum of the pending transactions fees. Divide this by the minimal phasing duration, and you will get the amount of NXT that can be spent in fees by the controlled account per block"
 }

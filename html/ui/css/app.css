@@ -3272,6 +3272,13 @@ table.purchase td {
   margin-bottom: 18px;
 }
 
+.phasing_duration_and_min_fees {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
 .phasing_only_enabled_info {
   color: #31708f;
   background-color: #d9edf7;
