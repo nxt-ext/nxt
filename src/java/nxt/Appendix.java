@@ -28,7 +28,9 @@ import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public interface Appendix {
 
@@ -1340,9 +1342,15 @@ public interface Appendix {
                 if (linkedFullHashes.length == 0 || linkedFullHashes.length > Constants.MAX_PHASING_LINKED_TRANSACTIONS) {
                     throw new NxtException.NotValidException("Invalid number of linkedFullHashes " + linkedFullHashes.length);
                 }
+                Set<Long> linkedTransactionIds = new HashSet<>(linkedFullHashes.length);
                 for (byte[] hash : linkedFullHashes) {
                     if (Convert.emptyToNull(hash) == null || hash.length != 32) {
                         throw new NxtException.NotValidException("Invalid linkedFullHash " + Convert.toHexString(hash));
+                    }
+                    if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
+                        if (!linkedTransactionIds.add(Convert.fullHashToId(hash))) {
+                            throw new NxtException.NotValidException("Duplicate linked transaction ids");
+                        }
                     }
                     TransactionImpl linkedTransaction = TransactionDb.findTransactionByFullHash(hash, currentHeight);
                     if (linkedTransaction != null) {
