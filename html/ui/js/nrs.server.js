@@ -97,6 +97,7 @@ var NRS = (function (NRS, $, undefined) {
                 ["phasingMinBalanceNXT", "phasingMinBalance"],
                 ["controlQuorumNXT", "controlQuorum"],
                 ["controlMinBalanceNXT", "controlMinBalance"],
+                ["controlMaxFeesNXT", "controlMaxFees"],
                 ["minBalanceNXT", "minBalance"],
                 ["shufflingAmountNXT", "amount"]
             ];
@@ -153,11 +154,36 @@ var NRS = (function (NRS, $, undefined) {
 
         //Fill phasing parameters when mandatory approval is enabled
         if (data.mandatoryApprovalParamsJSON) {
-            data.phased = true;
             var phasingControl = JSON.parse(data.mandatoryApprovalParamsJSON);
+            var maxFees = new BigInteger(phasingControl.maxFees);
+            if (maxFees > 0 && new BigInteger(data.feeNQT).compareTo(new BigInteger(phasingControl.maxFees)) > 0) {
+                callback({
+                    "errorCode": 1,
+                    "errorDescription": $.t("error_fee_exceeds_max_account_control_fee", {
+                        "maxFee": NRS.convertToNXT(phasingControl.maxFees)
+                    })
+                });
+                return;
+            }
+            var phasingDuration = parseInt(data.phasingFinishHeight) - NRS.lastBlockHeight;
+            var minDuration = parseInt(phasingControl.minDuration) > 0 ? parseInt(phasingControl.minDuration) : 0;
+            var maxDuration = parseInt(phasingControl.maxDuration) > 0 ? parseInt(phasingControl.maxDuration) : NRS.constants.SERVER.maxPhasingDuration;
+
+            if (phasingDuration < minDuration || phasingDuration > maxDuration) {
+                callback({
+                    "errorCode": 1,
+                    "errorDescription": $.t("error_finish_height_out_of_account_control_interval", {
+                        "min": NRS.lastBlockHeight + minDuration,
+                        "max": NRS.lastBlockHeight + maxDuration
+                    })
+                });
+                return;
+            }
+
 
             var phasingParams = NRS.phasingControlObjectToPhasingParams(phasingControl);
             $.extend(data, phasingParams);
+            data.phased = true;
 
             delete data.phasingHashedSecret;
             delete data.phasingHashedSecretAlgorithm;

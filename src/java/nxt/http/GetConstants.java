@@ -115,6 +115,8 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 }
                 response.put("phasingHashAlgorithms", phasingHashFunctions);
 
+                response.put("maxPhasingDuration", Constants.MAX_PHASING_DURATION);
+
                 JSONObject mintingHashFunctions = new JSONObject();
                 for (HashFunction hashFunction : CurrencyMinting.acceptedHashFunctions) {
                     mintingHashFunctions.put(hashFunction.toString(), hashFunction.getId());
