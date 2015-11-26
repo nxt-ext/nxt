@@ -30,7 +30,7 @@ mkdir -p nxt/logs
 if [ "${OBFUSCATE}" == "obfuscate" ]; 
 then
 echo obfuscate
-/opt/proguard/bin/proguard.sh @nxt.pro
+/Applications/proguard/bin/proguard.sh @nxt.pro
 mv ../nxt.map ../nxt.map.${VERSION}
 else
 FILES="${FILES} classes src COPYING.txt"
@@ -62,4 +62,4 @@ cd -
 rm -rf nxt
 
 echo bundle a dmg file	
-/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/bin/javapackager -deploy -outdir . -outfile nxt-client -name nxt-installer -width 34 -height 43 -native dmg -srcfiles ${PACKAGE}.jar -appclass com.izforge.izpack.installer.bootstrap.Installer -v -Bmac.category=Business -Bmac.CFBundleIdentifier=org.nxt.client.installer -Bmac.CFBundleName=Nxt-Installer -Bmac.CFBundleVersion=${VERSION} -BappVersion=${VERSION} -Bicon=installer/AppIcon.icns > installer/javapackager.log 2>&1
+/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/bin/javapackager -deploy -outdir . -outfile nxt-client -name nxt-installer -width 34 -height 43 -native dmg -srcfiles ${PACKAGE}.jar -appclass com.izforge.izpack.installer.bootstrap.Installer -v -Bmac.category=Business -Bmac.CFBundleIdentifier=org.nxt.client.installer -Bmac.CFBundleName=Nxt-Installer -Bmac.CFBundleVersion=${VERSION} -BappVersion=${VERSION} -Bicon=installer/AppIcon.icns -Bmac.signing-key-developer-id-app="Developer ID Application: Stichting NXT (YU63QW5EFW)" > installer/javapackager.log 2>&1
