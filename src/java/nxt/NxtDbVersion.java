@@ -996,7 +996,7 @@ class NxtDbVersion extends DbVersion {
             case 422:
                 apply("CREATE TABLE IF NOT EXISTS shuffling (db_id IDENTITY, id BIGINT NOT NULL, holding_id BIGINT NULL, holding_type TINYINT NOT NULL, "
                         + "issuer_id BIGINT NOT NULL, amount BIGINT NOT NULL, participant_count TINYINT NOT NULL, blocks_remaining SMALLINT NULL, "
-                        + "stage TINYINT NOT NULL, assignee_account_id BIGINT NULL, cancelling_account_id BIGINT NULL, "
+                        + "stage TINYINT NOT NULL, assignee_account_id BIGINT NULL, "
                         + "recipient_public_keys ARRAY, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
             case 423:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS shuffling_id_height_idx ON shuffling (id, height DESC)");
@@ -1039,73 +1039,62 @@ class NxtDbVersion extends DbVersion {
             case 437:
                 apply("ALTER TABLE phasing_poll DROP COLUMN IF EXISTS linked_full_hashes");
             case 438:
-                apply(null);
-            case 439:
                 apply("CREATE TABLE IF NOT EXISTS account_control_phasing (db_id IDENTITY, account_id BIGINT NOT NULL, "
-                        + "whitelist ARRAY, "
-                        + "voting_model TINYINT NOT NULL, quorum BIGINT, "
-                        + "min_balance BIGINT, holding_id BIGINT, min_balance_model TINYINT, "
+                        + "whitelist ARRAY, voting_model TINYINT NOT NULL, quorum BIGINT, min_balance BIGINT, "
+                        + "holding_id BIGINT, min_balance_model TINYINT, max_fees BIGINT, min_duration SMALLINT, max_duration SMALLINT, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 440:
+            case 439:
                 apply("ALTER TABLE account ADD COLUMN IF NOT EXISTS has_control_phasing BOOLEAN NOT NULL DEFAULT FALSE");
-            case 441:
+            case 440:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_control_phasing_id_height_idx ON account_control_phasing (account_id, height DESC)");
-            case 442:
+            case 441:
                 apply("CREATE INDEX IF NOT EXISTS account_control_phasing_height_id_idx ON account_control_phasing (height, account_id)");
-            case 443:
+            case 442:
                 apply("CREATE TABLE IF NOT EXISTS account_property (db_id IDENTITY, id BIGINT NOT NULL, account_id BIGINT NOT NULL, setter_id BIGINT, "
                         + "property VARCHAR NOT NULL, value VARCHAR, height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
-            case 444:
+            case 443:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_property_id_height_idx ON account_property (id, height DESC)");
-            case 445:
+            case 444:
                 apply("CREATE INDEX IF NOT EXISTS account_property_height_id_idx ON account_property (height, id)");
-            case 446:
+            case 445:
                 apply("CREATE INDEX IF NOT EXISTS account_property_account_height_idx ON account_property (account_id, height DESC)");
-            case 447:
+            case 446:
                 apply("CREATE INDEX IF NOT EXISTS account_property_setter_account_idx ON account_property (setter_id, account_id)");
-            case 448:
-                apply("ALTER TABLE shuffling DROP COLUMN IF EXISTS cancelling_account_id");
-            case 449:
+            case 447:
                 apply("CREATE TABLE IF NOT EXISTS asset_delete (db_id IDENTITY, id BIGINT NOT NULL, asset_id BIGINT NOT NULL, "
                         + "account_id BIGINT NOT NULL, quantity BIGINT NOT NULL, timestamp INT NOT NULL, height INT NOT NULL)");
-            case 450:
+            case 448:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS asset_delete_id_idx ON asset_delete (id)");
-            case 451:
+            case 449:
                 apply("CREATE INDEX IF NOT EXISTS asset_delete_asset_id_idx ON asset_delete (asset_id, height DESC)");
-            case 452:
+            case 450:
                 apply("CREATE INDEX IF NOT EXISTS asset_delete_account_id_idx ON asset_delete (account_id, height DESC)");
-            case 453:
+            case 451:
                 apply("CREATE INDEX IF NOT EXISTS asset_delete_height_idx ON asset_delete (height)");
+            case 452:
+                apply("ALTER TABLE prunable_message ADD COLUMN IF NOT EXISTS encrypted_message VARBINARY");
+            case 453:
+                apply("ALTER TABLE prunable_message ADD COLUMN IF NOT EXISTS encrypted_is_text BOOLEAN DEFAULT FALSE");
             case 454:
+                apply("UPDATE prunable_message SET encrypted_message = message WHERE is_encrypted IS TRUE");
+            case 455:
+                apply("ALTER TABLE prunable_message ALTER COLUMN message SET NULL");
+            case 456:
+                apply("UPDATE prunable_message SET message = NULL WHERE is_encrypted IS TRUE");
+            case 457:
+                apply("UPDATE prunable_message SET encrypted_is_text = TRUE WHERE is_encrypted IS TRUE AND is_text IS TRUE");
+            case 458:
+                apply("UPDATE prunable_message SET encrypted_is_text = FALSE WHERE is_encrypted IS TRUE AND is_text IS FALSE");
+            case 459:
+                apply("UPDATE prunable_message SET is_text = FALSE where is_encrypted IS TRUE");
+            case 460:
+                apply("ALTER TABLE prunable_message ALTER COLUMN is_text RENAME TO message_is_text");
+            case 461:
+                apply("ALTER TABLE prunable_message DROP COLUMN is_encrypted");
+            case 462:
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
-            case 455:
-                apply("ALTER TABLE prunable_message ADD COLUMN IF NOT EXISTS encrypted_message VARBINARY");
-            case 456:
-                apply("ALTER TABLE prunable_message ADD COLUMN IF NOT EXISTS encrypted_is_text BOOLEAN DEFAULT FALSE");
-            case 457:
-                apply("UPDATE prunable_message SET encrypted_message = message WHERE is_encrypted IS TRUE");
-            case 458:
-                apply("ALTER TABLE prunable_message ALTER COLUMN message SET NULL");
-            case 459:
-                apply("UPDATE prunable_message SET message = NULL WHERE is_encrypted IS TRUE");
-            case 460:
-                apply("UPDATE prunable_message SET encrypted_is_text = TRUE WHERE is_encrypted IS TRUE AND is_text IS TRUE");
-            case 461:
-                apply("UPDATE prunable_message SET encrypted_is_text = FALSE WHERE is_encrypted IS TRUE AND is_text IS FALSE");
-            case 462:
-                apply("UPDATE prunable_message SET is_text = FALSE where is_encrypted IS TRUE");
             case 463:
-                apply("ALTER TABLE prunable_message ALTER COLUMN is_text RENAME TO message_is_text");
-            case 464:
-                apply("ALTER TABLE prunable_message DROP COLUMN is_encrypted");
-            case 465:
-                apply("ALTER TABLE account_control_phasing ADD COLUMN IF NOT EXISTS max_fees BIGINT");
-            case 466:
-                apply("ALTER TABLE account_control_phasing ADD COLUMN IF NOT EXISTS min_duration SMALLINT");
-            case 467:
-                apply("ALTER TABLE account_control_phasing ADD COLUMN IF NOT EXISTS max_duration SMALLINT");
-            case 468:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
