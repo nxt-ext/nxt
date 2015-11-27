@@ -475,9 +475,36 @@ public final class DebugTrace {
         if (fee == 0) {
             return Collections.emptyMap();
         }
+        long totalBackFees = 0;
+        if (block.getHeight() > Constants.BASE_TARGET_BLOCK) {
+            long[] backFees = new long[3];
+            for (Transaction transaction : block.getTransactions()) {
+                long[] fees = ((TransactionImpl)transaction).getBackFees();
+                for (int i = 0; i < fees.length; i++) {
+                    backFees[i] += fees[i];
+                }
+            }
+            for (int i = 0; i < backFees.length; i++) {
+                if (backFees[i] == 0) {
+                    break;
+                }
+                totalBackFees += backFees[i];
+                long previousGeneratorId = BlockDb.findBlockAtHeight(block.getHeight() - i - 1).getGeneratorId();
+                if (include(previousGeneratorId)) {
+                    Map<String,String> map = getValues(previousGeneratorId, false);
+                    map.put("effective balance", String.valueOf(Account.getAccount(previousGeneratorId).getEffectiveBalanceNXT()));
+                    map.put("generation fee", String.valueOf(backFees[i]));
+                    map.put("block", block.getStringId());
+                    map.put("event", "block");
+                    map.put("timestamp", String.valueOf(block.getTimestamp()));
+                    map.put("height", String.valueOf(block.getHeight()));
+                    log(map);
+                }
+            }
+        }
         Map<String,String> map = getValues(accountId, false);
         map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
-        map.put("generation fee", String.valueOf(fee));
+        map.put("generation fee", String.valueOf(fee - totalBackFees));
         map.put("block", block.getStringId());
         map.put("event", "block");
         map.put("timestamp", String.valueOf(block.getTimestamp()));
