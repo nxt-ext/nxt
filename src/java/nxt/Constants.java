@@ -147,7 +147,7 @@ public final class Constants {
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
     public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
     public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
-    public static final int SHUFFLING_BLOCK = isTestnet ? 428000 : Integer.MAX_VALUE;
+    public static final int SHUFFLING_BLOCK = isTestnet ? 483000 : 621000;
     public static final int LAST_CHECKSUM_BLOCK = isTestnet ? 463000 : 556000;
 
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 468200 : 556000;
