@@ -27,9 +27,9 @@ unused accounts are specified as recipients). If the shuffle fails due to
 a registered participant failing to participate as required, or intentionally
 submitting false data, the participant responsible for the shuffle
 cancellation is penalized by retaining this deposit and sending it to the
-forger of the shuffle finish block instead. If a shuffle is cancelled because
-the required number of participants is not met, nobody is penalized and all
-deposits are refunded.
+forgers of the shuffle finish block and the previous three blocks instead.
+If a shuffle is cancelled because the required number of participants is not
+met, nobody is penalized and all deposits are refunded.
 
 Query APIs to retrieve currently running shufflers, shufflings, and shuffling
 participants are: getAllShufflings, getAccountShufflings,

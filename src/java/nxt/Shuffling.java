@@ -701,10 +701,19 @@ public final class Shuffling {
             }
         }
         if (blamedAccountId != 0) {
-            // as a penalty the deposit goes to the generator of the finish block
+            // as a penalty the deposit goes to the generators of the finish block and previous 3 blocks
+            long fee = Constants.SHUFFLING_DEPOSIT_NQT / 4;
+            for (int i = 0; i < 3; i++) {
+                Account previousGeneratorAccount = Account.getAccount(BlockDb.findBlockAtHeight(block.getHeight() - i - 1).getGeneratorId());
+                previousGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, block.getId(), fee);
+                previousGeneratorAccount.addToForgedBalanceNQT(fee);
+                Logger.logDebugMessage("Shuffling penalty %f NXT awarded to forger at height %d", ((double)fee) / Constants.ONE_NXT, block.getHeight() - i - 1);
+            }
+            fee = Constants.SHUFFLING_DEPOSIT_NQT - 3 * fee;
             Account blockGeneratorAccount = Account.getAccount(block.getGeneratorId());
-            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, block.getId(), Constants.SHUFFLING_DEPOSIT_NQT);
-            blockGeneratorAccount.addToForgedBalanceNQT(Constants.SHUFFLING_DEPOSIT_NQT);
+            blockGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.BLOCK_GENERATED, block.getId(), fee);
+            blockGeneratorAccount.addToForgedBalanceNQT(fee);
+            Logger.logDebugMessage("Shuffling penalty %f NXT awarded to forger at height %d", ((double)fee) / Constants.ONE_NXT, block.getHeight());
         }
         setStage(Stage.CANCELLED, blamedAccountId, (short)0);
         shufflingTable.insert(this);

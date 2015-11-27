@@ -263,10 +263,22 @@ public final class DebugTrace {
             map.put("transaction fee", String.valueOf(-Constants.SHUFFLING_DEPOSIT_NQT));
             map.put("event", "shuffling blame");
             log(map);
+            long fee = Constants.SHUFFLING_DEPOSIT_NQT / 4;
+            int height = Nxt.getBlockchain().getHeight();
+            for (int i = 0; i < 3; i++) {
+                long generatorId = BlockDb.findBlockAtHeight(height - i - 1).getGeneratorId();
+                if (include(generatorId)) {
+                    Map<String, String> generatorMap = getValues(generatorId, false);
+                    generatorMap.put("generation fee", String.valueOf(fee));
+                    generatorMap.put("event", "shuffling blame");
+                    log(generatorMap);
+                }
+            }
+            fee = Constants.SHUFFLING_DEPOSIT_NQT - 3 * fee;
             long generatorId = Nxt.getBlockchain().getLastBlock().getGeneratorId();
             if (include(generatorId)) {
                 Map<String,String> generatorMap = getValues(generatorId, false);
-                generatorMap.put("generation fee", String.valueOf(Constants.SHUFFLING_DEPOSIT_NQT));
+                generatorMap.put("generation fee", String.valueOf(fee));
                 generatorMap.put("event", "shuffling blame");
                 log(generatorMap);
             }
