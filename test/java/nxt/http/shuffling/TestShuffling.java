@@ -20,7 +20,6 @@ import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.Shuffling;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.Assert;

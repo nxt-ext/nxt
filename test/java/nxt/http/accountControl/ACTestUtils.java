@@ -18,10 +18,8 @@ package nxt.http.accountControl;
 
 import nxt.Constants;
 import nxt.http.APICall;
-import nxt.http.APICall.Builder;
 import nxt.http.monetarysystem.TestCurrencyIssuance;
 import nxt.util.Logger;
-
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 

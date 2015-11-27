@@ -23,7 +23,6 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 
 public final class StartForging extends APIServlet.APIRequestHandler {
