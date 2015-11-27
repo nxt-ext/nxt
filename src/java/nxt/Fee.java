@@ -66,7 +66,7 @@ public interface Fee {
             if (size <= 0) {
                 return constantFee;
             }
-            if (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
                 size -= 1;
             }
             return Math.addExact(constantFee, Math.multiplyExact((long) (size / unitSize), feePerSize));

@@ -488,7 +488,7 @@ public final class DebugTrace {
             return Collections.emptyMap();
         }
         long totalBackFees = 0;
-        if (block.getHeight() > Constants.BASE_TARGET_BLOCK) {
+        if (block.getHeight() > Constants.SHUFFLING_BLOCK) {
             long[] backFees = new long[3];
             for (Transaction transaction : block.getTransactions()) {
                 long[] fees = ((TransactionImpl)transaction).getBackFees();

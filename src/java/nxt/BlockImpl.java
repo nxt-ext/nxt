@@ -389,7 +389,7 @@ final class BlockImpl implements Block {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(getGeneratorPublicKey());
         long totalBackFees = 0;
-        if (this.height > Constants.BASE_TARGET_BLOCK) {
+        if (this.height > Constants.SHUFFLING_BLOCK) {
             long[] backFees = new long[3];
             for (TransactionImpl transaction : getTransactions()) {
                 long[] fees = transaction.getBackFees();
@@ -442,7 +442,7 @@ final class BlockImpl implements Block {
 
     private void calculateBaseTarget(BlockImpl previousBlock) {
         long prevBaseTarget = previousBlock.baseTarget;
-        if (previousBlock.getHeight() < Constants.BASE_TARGET_BLOCK) {
+        if (previousBlock.getHeight() < Constants.SHUFFLING_BLOCK) {
             baseTarget = BigInteger.valueOf(prevBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
                     .divide(BigInteger.valueOf(60)).longValue();

@@ -521,7 +521,7 @@ public abstract class TransactionType {
 
             @Override
             int getNextFeeHeight() {
-                return Constants.BASE_TARGET_BLOCK;
+                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -548,7 +548,7 @@ public abstract class TransactionType {
 
             @Override
             boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                return Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
                         && Alias.getAlias(((Attachment.MessagingAliasAssignment) transaction.getAttachment()).getAliasName()) == null
                         && isDuplicate(Messaging.ALIAS_ASSIGNMENT, "", duplicates, true);
             }
@@ -883,7 +883,7 @@ public abstract class TransactionType {
 
             @Override
             int getNextFeeHeight() {
-                return Constants.BASE_TARGET_BLOCK;
+                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -955,7 +955,7 @@ public abstract class TransactionType {
 
             @Override
             boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                return Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
                         && isDuplicate(Messaging.POLL_CREATION, getName(), duplicates, true);
             }
 
@@ -1282,7 +1282,7 @@ public abstract class TransactionType {
 
             @Override
             int getNextFeeHeight() {
-                return Constants.BASE_TARGET_BLOCK;
+                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -1312,7 +1312,7 @@ public abstract class TransactionType {
 
             @Override
             boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                return Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
                         && isDuplicate(Messaging.ACCOUNT_INFO, getName(), duplicates, true);
             }
 
@@ -1528,7 +1528,7 @@ public abstract class TransactionType {
 
             @Override
             int getNextFeeHeight() {
-                return Constants.BASE_TARGET_BLOCK;
+                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -1589,7 +1589,7 @@ public abstract class TransactionType {
 
             @Override
             boolean isBlockDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
-                if (Nxt.getBlockchain().getHeight() <= Constants.BASE_TARGET_BLOCK) {
+                if (Nxt.getBlockchain().getHeight() <= Constants.SHUFFLING_BLOCK) {
                     return false;
                 }
                 if (isSingletonIssuance(transaction)) {
@@ -2236,7 +2236,7 @@ public abstract class TransactionType {
 
             @Override
             int getNextFeeHeight() {
-                return Constants.BASE_TARGET_BLOCK;
+                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -2270,7 +2270,7 @@ public abstract class TransactionType {
 
             @Override
             boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-                return Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+                return Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
                         && isDuplicate(DigitalGoods.LISTING, getName(), duplicates, true);
             }
 
@@ -2612,7 +2612,7 @@ public abstract class TransactionType {
 
             @Override
             int getNextFeeHeight() {
-                return Constants.BASE_TARGET_BLOCK;
+                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override

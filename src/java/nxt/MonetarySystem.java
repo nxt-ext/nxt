@@ -155,7 +155,7 @@ public abstract class MonetarySystem extends TransactionType {
 
         @Override
         boolean isBlockDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
-            return Nxt.getBlockchain().getHeight() >= Constants.BASE_TARGET_BLOCK
+            return Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
                     && isDuplicate(CURRENCY_ISSUANCE, getName(), duplicates, true);
         }
 

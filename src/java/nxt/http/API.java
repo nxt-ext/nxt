@@ -59,8 +59,8 @@ import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 
 public final class API {
 
-    public static final int TESTNET_API_PORT = 2876;
-    public static final int TESTNET_API_SSLPORT = 2877;
+    public static final int TESTNET_API_PORT = 6876;
+    public static final int TESTNET_API_SSLPORT = 6877;
 
     public static final int openAPIPort;
     public static final int openAPISSLPort;

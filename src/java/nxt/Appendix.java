@@ -274,12 +274,12 @@ public interface Appendix {
 
         @Override
         public int getNextFeeHeight() {
-            return Constants.BASE_TARGET_BLOCK;
+            return Constants.SHUFFLING_BLOCK;
         }
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (message.length > (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+            if (message.length > (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
                     ? Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2 : Constants.MAX_ARBITRARY_MESSAGE_LENGTH)) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
@@ -542,12 +542,12 @@ public interface Appendix {
 
         @Override
         public int getNextFeeHeight() {
-            return Constants.isTestnet ? 480000 : Constants.BASE_TARGET_BLOCK;
+            return Constants.SHUFFLING_BLOCK;
         }
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (getEncryptedDataLength() > (Nxt.getBlockchain().getHeight() > Constants.BASE_TARGET_BLOCK
+            if (getEncryptedDataLength() > (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
                     ? Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2 : Constants.MAX_ENCRYPTED_MESSAGE_LENGTH)) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
@@ -1427,7 +1427,7 @@ public interface Appendix {
 
         @Override
         public int getNextFeeHeight() {
-            return Constants.BASE_TARGET_BLOCK;
+            return Constants.SHUFFLING_BLOCK;
         }
 
         private void release(TransactionImpl transaction) {
