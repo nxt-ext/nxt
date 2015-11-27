@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"  ?>
-<installation version="5.0">
+	<installation version="5.0">
     <properties>
 		<property file="conf/nxt-default.properties" prefix="runtime"/>
 	</properties>
@@ -93,6 +93,7 @@
 	<variables>
 		<variable name="$InstallerFrame.logfilePath" value="default"/>
 		<variable name="DesktopShortcutCheckboxEnabled" value="true"/>
+                <variable name="TargetPanel.dir" value="$USER_HOME/nxt" os="mac"/>
 	</variables>
 
     <panels>
@@ -111,7 +112,8 @@
         <pack name="server" required="yes">
             <description>Common Server Files</description>
             <file src="nxt.jar" targetdir="${INSTALL_PATH}" override="true"/>
-			<file src="README.txt" targetdir="${INSTALL_PATH}" override="true"/><executable targetfile="${INSTALL_PATH}/run.sh"/>			<file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
+			<file src="README.txt" targetdir="${INSTALL_PATH}" override="true"/>
+                        <file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="3RD-PARTY-LICENSES.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="AUTHORS.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="DEVELOPER-AGREEMENT.txt" targetdir="${INSTALL_PATH}" override="true"/>
@@ -165,16 +167,17 @@
 			<fileset dir="../jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
 		</pack>
         
-        <pack name="server.mac" os="mac" required="yes" uninstall="false">
+        <pack name="server.mac" os="mac_osx" required="yes" uninstall="false">
             <description>Mac Specific Resources</description>
-			<singlefile src="mac-run.sh" target="${INSTALL_PATH}/run.sh" override="true"/>
-			<executable targetfile="${INSTALL_PATH}/run.sh"/>
-		</pack>
+            <singlefile src="mac-run.sh" target="${INSTALL_PATH}/run.sh" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/run.sh" failure="warn" keep="true"/>
+        </pack>
         
-        <pack name="jre.mac" os="mac" required="yes" uninstall="false">
+        <pack name="jre.mac" os="mac_osx" required="yes" uninstall="false">
             <description>Java 64 bit for Mac</description>
             <fileset dir="../jre" targetdir="${INSTALL_PATH}/jre" override="true"/>
-            <executable targetfile="${INSTALL_PATH}/jre/java"/>
+            <executable targetfile="${INSTALL_PATH}/jre/java" failure="warn" keep="true"/>
         </pack>
+        
 	</packs>
 </installation>
