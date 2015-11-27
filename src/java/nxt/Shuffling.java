@@ -469,7 +469,7 @@ public final class Shuffling {
         // Shuffle the tokens and save the shuffled tokens as the participant data
         Collections.sort(outputDataList, Convert.byteArrayComparator);
         if (isLast) {
-            Set<Long> recipientAccounts = new HashSet<>();
+            Set<Long> recipientAccounts = new HashSet<>(participantCount);
             for (byte[] publicKey : outputDataList) {
                 if (!Crypto.isCanonicalPublicKey(publicKey) || !recipientAccounts.add(Account.getId(publicKey))) {
                     // duplicate or invalid recipient public key
@@ -742,7 +742,7 @@ public final class Shuffling {
             }
             throw new RuntimeException("All participants submitted data and verifications, blame phase should not have been entered");
         }
-        Set<Long> recipientAccounts = new HashSet<>();
+        Set<Long> recipientAccounts = new HashSet<>(participantCount);
         // start from issuer and verify all data up, skipping last participant
         for (int i = 0; i < participantCount - 1; i++) {
             ShufflingParticipant participant = participants.get(i);

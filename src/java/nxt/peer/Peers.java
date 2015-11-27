@@ -669,7 +669,7 @@ public final class Peers {
             // Load the current database entries and map announced address to database entry
             //
             List<PeerDb.Entry> oldPeers = PeerDb.loadPeers();
-            Map<String, PeerDb.Entry> oldMap = new HashMap<>();
+            Map<String, PeerDb.Entry> oldMap = new HashMap<>(oldPeers.size());
             oldPeers.forEach(entry -> oldMap.put(entry.getAddress(), entry));
             //
             // Create the current peer map (note that there can be duplicate peer entries with

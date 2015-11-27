@@ -504,7 +504,7 @@ public abstract class ShufflingTransaction extends TransactionType {
             if (recipientPublicKeys.length != shuffling.getParticipantCount() && recipientPublicKeys.length != 0) {
                 throw new NxtException.NotValidException(String.format("Invalid number of recipient public keys %d", recipientPublicKeys.length));
             }
-            Set<Long> recipientAccounts = new HashSet<>();
+            Set<Long> recipientAccounts = new HashSet<>(recipientPublicKeys.length);
             for (byte[] recipientPublicKey : recipientPublicKeys) {
                 if (!Crypto.isCanonicalPublicKey(recipientPublicKey)) {
                     throw new NxtException.NotValidException("Invalid recipient public key " + Convert.toHexString(recipientPublicKey));
