@@ -66,6 +66,12 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
             }
         }
 
+        if (!account.getControls().isEmpty()) {
+            JSONArray accountControlsJson = new JSONArray();
+            account.getControls().forEach(accountControl -> accountControlsJson.add(accountControl.toString()));
+            response.put("accountControls", accountControlsJson);
+        }
+
         if (includeLessors) {
             try (DbIterator<Account> lessors = account.getLessors()) {
                 if (lessors.hasNext()) {

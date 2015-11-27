@@ -116,7 +116,6 @@
                         <file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
 			<file src="3RD-PARTY-LICENSES.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="AUTHORS.txt" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="COPYING.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="DEVELOPER-AGREEMENT.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="LICENSE.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="DEVELOPERS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
@@ -129,8 +128,7 @@
 			<fileset dir="changelogs" targetdir="${INSTALL_PATH}/changelogs" override="true" excludes=".gitignore"/>
 			<fileset dir="classes" targetdir="${INSTALL_PATH}/classes" override="true" excludes=".gitignore"/>
 			<fileset dir="html" targetdir="${INSTALL_PATH}/html" override="true" excludes=".gitignore"/>
-			<fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore nxt-private.iml"/>
-            <fileset dir="contrib" targetdir="${INSTALL_PATH}/contrib" override="true" excludes=".gitignore"/>
+			<fileset dir="contrib" targetdir="${INSTALL_PATH}/contrib" override="true" excludes=".gitignore"/>
             <fileset dir="logs" targetdir="${INSTALL_PATH}/logs" override="true" excludes=".gitignore"/>
 		</pack>
 
@@ -158,14 +156,6 @@
             <executable targetfile="${INSTALL_PATH}/run-desktop.sh"/>
             <file src="mint.sh" targetdir="${INSTALL_PATH}" override="false"/>
             <executable targetfile="${INSTALL_PATH}/mint.sh"/>
-            <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<executable targetfile="${INSTALL_PATH}/compile.sh"/>
-            <file src="jar.sh" targetdir="${INSTALL_PATH}" override="true"/>
-            <executable targetfile="${INSTALL_PATH}/jar.sh"/>
-            <file src="javadoc.sh" targetdir="${INSTALL_PATH}" override="true"/>
-			<executable targetfile="${INSTALL_PATH}/javadoc.sh"/>
-            <file src="package.sh" targetdir="${INSTALL_PATH}" override="true"/>
-            <executable targetfile="${INSTALL_PATH}/package.sh"/>
             <file src="compact.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/compact.sh"/>
             <file src="sign.sh" targetdir="${INSTALL_PATH}" override="true"/>

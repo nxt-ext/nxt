@@ -1,0 +1,230 @@
+Coin Shuffling. This feature is based on the paper by Tim Ruffing et al,
+http://crypsys.mmci.uni-saarland.de/projects/CoinShuffle/coinshuffle.pdf .
+
+Coin shuffling can be used to perform mixing of NXT, MS currencies (unless
+created as non-shuffleable), or AE assets. Any account can create a new
+shuffling, specifying the holding to be shuffled, the shuffle amount, number
+of participants required, and registration deadline. This is done using the
+shufflingCreate API. The subsequent shuffling steps can be done either
+manually, by using the shufflingRegister (for accounts other than the
+creator), shufflingProcess, shufflingVerify or shufflingCancel APIs, or, much
+more conveniently, by starting an automated Shuffler, using the startShuffler
+API. Once started, the Shuffler monitors the blockchain state for transactions
+relevant to the specified shuffle, and automatically submits the required
+transactions on behalf of the user, performing shuffle processing,
+verification, or cancellation as needed. To do this, the Shuffler is required
+to keep the user secret phrase in memory, therefore it should be run on a
+trusted local machine only. A restart or a crash of the node requires the
+shuffler to be started again using the startShuffler API, as it should never
+save the user secret phrase on disk.
+
+To participate in a shuffling, a deposit of 1000 NXT is needed, in addition
+to the amount of currency or asset being shuffled. Or if shuffling NXT, the
+amount of the shuffle must exceed this 1000 NXT minimum. If the shuffling
+completes successfully, this amount is added to the recipient account balance,
+to allow it to send outgoing transactions (as it is required that only new,
+unused accounts are specified as recipients). If the shuffle fails due to
+a registered participant failing to participate as required, or intentionally
+submitting false data, the participant responsible for the shuffle
+cancellation is penalized by retaining this deposit and sending it to the
+forgers of the shuffle finish block and the previous three blocks instead.
+If a shuffle is cancelled because the required number of participants is not
+met, nobody is penalized and all deposits are refunded.
+
+Query APIs to retrieve currently running shufflers, shufflings, and shuffling
+participants are: getAllShufflings, getAccountShufflings,
+getAssignedShufflings, getHoldingShufflings, getShufflers, getShuffling, and
+getShufflingParticipants.
+
+If desired, finished shufflings can be automatically deleted from the database
+if the nxt.deleteFinishedShufflings property is set to true (default is false).
+
+The fee for creating a shuffling or registering in one is 1 NXT, for the
+shuffling process or shuffling cancel transactions 10 NXT, and for the verify
+transaction 1 NXT.
+
+
+Account control for phased transactions. Any account can be restricted to only
+be allowed to issue phased transactions subject to a specific voting model.
+This is achieved by the account submitting a setPhasingOnly transaction using
+the setPhasingOnlyControl API. The getPhasingOnlyControl API can be used to
+retrieve the status of an account phasing control, and
+getAllPhasingOnlyControls to get all accounts subject to phasing control with
+their respective restrictions.
+
+Once set, the phasing only account control can only be disabled or changed
+with another setPhasingOnly transaction, itself subject to the currently set
+phasing restrictions.
+
+Note that by-transaction and by-hash voting models are not allowed for phasing
+control, and setting voting model to none is used to disable the control.
+
+To prevent deadlocks due to cyclic account control restrictions, approval
+transactions themselves (PhasingVoteCasting) are not subject to phasing only
+account control.
+
+When setting phasing account control, a maximum fees total can be specified,
+limiting the total fees for currently pending phased transactions of the
+controlled account, and limits can be placed on minimum and maximum phasing
+duration allowed.
+
+Transactions of accounts subject to phasing account control with restriction
+on maximum fees are throttled at one per account per block.
+
+
+Immediate release of phased transactions on approval. Phased transactions with
+a voting model that does not depend on account balance (such as by-transaction
+or by-hash), or by-account with no minimum balance and with a whitelist, will
+be released before their finish height as soon as approved (in the block in
+which the transaction causing their approval is executed), if possible. Such
+early finish is guaranteed for transaction types known to be phasing safe. For
+others, if the early finish does not succeed due to the transaction failing
+validation at this height or conflicting with another transaction in the same
+block, a second, final release attempt will be performed at finish height.
+
+
+New base target adjustment algorithm. Average block times will be 60 s, with
+1440 blocks per day. Block times should practically never exceed 10 min.
+
+Limit of 1000 NXT on minimum forging balance. This applies to the total of the
+account own guaranteed balance plus any balances leased to it, but not to each
+individual balance lease. An account with balance lower than the limit can
+still lease its balance to another.
+
+
+Account properties. Those are name / value pairs that can be set on any
+account (except Genesis), by either the account owner, or by another account.
+Names are limited to 32 characters, and values to 160 characters. Names are
+unique per account and per setter account, but not globally unique. Account
+properties cannot be transferred between accounts. The setter of an account
+property can edit it by replacing its value with another. Either the setter,
+or the recipient (if different) of an account property can delete it. There
+is no limit on the number of properties an account can have. Fee for setting
+account property is 1 NXT for value up to 32 chars, with additional 1 NXT fee
+for every 32 chars after that.
+
+Account properties are managed using the setAccountProperty and
+deleteAccountProperty APIs. To query the properties of an account, or those
+set by an account, the getAccountProperties API can be used.
+
+
+Singleton assets. Issuing an asset with a quantity of 1, decimals 0, and
+description length not exceeding 160 characters, will require a base minimum
+fee of 1 NXT only, instead of the regular 1000 NXT asset issuance fee. For
+description of more than 32 chars, an extra 1 NXT fee is added for each 32
+chars. Asset name for singleton assets is limited to 10 chars, same as for
+regular assets.
+
+Throttling of unique resource allocation transactions. Asset issuance
+(excluding singleton assets), monetary system currency issuance, and alias
+assignment (excluding re-assignment), will be limited to only one transaction
+of each type accepted per block.
+
+
+Spreading back block fees for asset and currency issuance. The transaction
+fees for asset (excluding singleton assets) and currency issuance will be
+split between the forgers of the current and the previous three blocks in a
+4:3:2:1 ratio.
+
+
+Prunable plain and prunable encrypted message attachments both allowed in the
+same transaction. The maximum data size for each such attachment is 42 kbytes,
+but when coexisting in the same transaction the sum of the two is still being
+limited by the maximum payload size of 44880 bytes.
+
+
+Peers that provide http or https API access open to anyone, configured with
+nxt.apiServerHost=0.0.0.0 and nxt.allowedBotHosts=* , are now labelled as
+providing a service, API or API_SSL, and can be found using the getPeers API
+with the corresponding "service" parameter. This API has been modified to
+accept multivalued "service" parameter, returning peers that match all
+requested services. The ports on which the open API access is running are
+included in the peer info of peers providing those services as apiPort and
+apiSSLPort fields.
+
+
+Incompatible changes:
+
+Deletion of asset shares will be performed as a separate AssetDelete
+transaction type instead of as sending the shares to Genesis. Sending shares
+to Genesis will no longer be allowed. A new API, getAssetDeletes has been
+added to retrieve asset deletions, as using the getAssetTransfers API to find
+transfers to Genesis account no longer can be used for that purpose. There is
+also a new API, getExpectedAssetDeletes, to get asset deletes expected in the
+next block, analogous to getExpectedAssetTransfers.
+
+Since both prunable plain and prunable encrypted messages can now be added to
+the same transaction, the APIs getAllPrunableMessages, getPrunableMessage, and
+getPrunableMessages cannot continue to use just a single "isText" boolean field
+in the JSON response to indicate if the prunable message is text or binary.
+For all prunable plain messages, a new "messageIsText" boolean field is added,
+and for all prunable encrypted messages, a new "encryptedMessageIsText" boolean
+field is added in the response of the above APIs, for each message.
+For backwards compatibility, the "isText" field will continue to be added, but
+only for transactions that have either plain, or encrypted, prunable message
+attachment, not for those that have both.
+This change does not affect the attachment JSON returned from getTransaction
+API, as there are already separate messageIsText and encryptedMessage.isText
+fields there.
+
+
+Fees and size limit changes. Several transaction types or attachments will
+have new fees and size limits, to encourage users to utilize the prunable
+versions when available, and to make fees proportionate to actual blockchain
+space consumed.
+
+Aliases:
+Base fee 2 NXT, with 2 NXT additional fee for each 32 chars of name plus URI
+total length, after the first 32 chars. Name and URI size limits remain at
+100 and 1000 chars respectively.
+
+Messages and EncryptedMessages (non-prunable):
+Maximum length reduced to 160 bytes. 1 NXT fee for each 32 bytes after the
+first 32 bytes. For encrypted messages, the length is measured excluding the
+nonce and the 16 byte AES initialization vector, and to account for those
+there is an extra fee of 1 NXT.
+Fees and size limit for prunable messages remain unchanged.
+
+AccountInfo:
+Base fee 1 NXT, with 2 NXT additional fee for each 32 chars of name plus
+description total length, after the first 32 chars. Name and description size
+limits remain at 100 and 1000 chars. AccountInfo transactions throttled at
+one per block.
+
+Polls:
+Base fee 10 NXT for polls with up to 20 options, and total size of poll name
+plus poll description plus total option length not exceeding 320 chars. For
+each option above 20, an additional fee of 1 NXT, and for each 32 chars after
+320, an additional fee of 1 NXT. Poll creation throttled to one per block.
+Name, description, and option length limits remain at 100, 1000, and 100 chars
+respectively.
+
+DGS Listing:
+Base fee 2 NXT, with 2 NXT additional fee for each 32 chars of name plus
+description total length, after the first 32 chars. Name and description size
+limits remain at 100 and 1000 max. DGS Listing throttled at one per block.
+
+DGS Delivery:
+Base fee 1 NXT, with 2 NXT additional fee for each 32 bytes of encrypted goods
+data after the first 32 bytes, nonce and AES initialization bytes excluded.
+Encrypted goods data size limit remains 1000 bytes.
+
+Phasing:
+In addition to the current fee for phasing (1 NXT for balance independent,
+20 NXT otherwise), 1 NXT will be added for each 32 bytes of hashedSecret or
+linkedFullHash fields.
+
+Referenced transactions:
+An extra fee of 1 NXT for the 32 byte referencedTransactionFullHash if set,
+i.e. if the transaction is using the referenced transactions feature.
+
+
+To facilitate migration of legacy client code to the new fees, if the property
+nxt.correctInvalidFees=true has been set in nxt.properties (default is false),
+the server will automatically replace insufficient fees for submitted unsigned
+transactions with the minimum fee needed, depending on the transaction, as if
+feeNQT=0 has been specified. Fees exceeding the minimum, or fees for already
+signed transactions, will not be corrected.
+
+This release will perform a blokchain rescan on first start.
+

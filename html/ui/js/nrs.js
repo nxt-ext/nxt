@@ -206,9 +206,7 @@ var NRS = (function(NRS, $, undefined) {
 		
 		$("[data-toggle='tooltip']").tooltip();
 
-		$("#dgs_search_account_top, #dgs_search_account_center").mask("NXT-****-****-****-*****", {
-			"unmask": false
-		});
+		$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
 		
 		if (NRS.getUrlParameter("account")){
 			NRS.login(false,NRS.getUrlParameter("account"));
@@ -509,7 +507,7 @@ NRS.addPagination = function () {
 		}
 	};
 
-	$(".data-pagination").on("click", "a", function(e) {
+	$(document).on("click", ".data-pagination a", function(e) {
 		e.preventDefault();
 
 		NRS.goToPageNumber($(this).data("page"));
@@ -981,6 +979,8 @@ NRS.addPagination = function () {
 					NRS.updateAccountLeasingStatus();
 				}
 
+				NRS.updateAccountControlStatus();
+
 				if (response.name) {
 					$("#account_name").html(response.name.escapeHTML()).removeAttr("data-i18n");
 				}
@@ -1065,7 +1065,7 @@ NRS.addPagination = function () {
 					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				}
 				rows += "<tr>" +
-					"<td><a href='#' data-user='" + String(lessor).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(lessor) + "</a></td>" +
+					"<td>" + NRS.getAccountLink({ lessorRS: lessor }, "lessor") + "</td>" +
 					"<td>" + String(lessorInfo.effectiveBalanceNXT).escapeHTML() + "</td>" +
 					"<td><label>" + String(blocksLeft).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + blocksLeftTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
 					"<td><label>" + String(nextLessee).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + nextTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
@@ -1090,6 +1090,30 @@ NRS.addPagination = function () {
 			$("#account_leasing_status").html(accountLeasingStatus).show();
 		} else {
 			$("#account_leasing_status").hide();
+		}
+	};
+
+	NRS.updateAccountControlStatus = function() {
+		if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+			$("#setup_mandatory_approval").hide();
+			$("#mandatory_approval_details").show();
+			NRS.sendRequest("getPhasingOnlyControl", {
+				"account": NRS.account
+			}, function (response) {
+				var infoTable = $("#mandatory_approval_info_table");
+				infoTable.find("tbody").empty();
+				var data = {};
+				var params = NRS.phasingControlObjectToPhasingParams(response);
+				params.phasingWhitelist = params.phasingWhitelisted;
+				NRS.getPhasingDetails(data, params);
+				delete data.full_hash_formatted_html;
+				infoTable.find("tbody").append(NRS.createInfoTable(data));
+				infoTable.show();
+			});
+
+		} else {
+			$("#setup_mandatory_approval").show();
+			$("#mandatory_approval_details").hide();
 		}
 	};
 

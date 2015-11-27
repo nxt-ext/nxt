@@ -29,6 +29,7 @@ import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
+import nxt.Shuffling;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
@@ -152,6 +153,17 @@ final class ParameterParser {
         return values;
     }
 
+    static byte[] getBytes(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return Convert.EMPTY_BYTE;
+        }
+        return Convert.parseHexString(paramValue);
+    }
+
     static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         return getAccountId(req, "account", isMandatory);
     }
@@ -252,8 +264,12 @@ final class ParameterParser {
     }
 
     static Currency getCurrency(HttpServletRequest req) throws ParameterException {
-        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", true));
-        if (currency == null) {
+        return getCurrency(req, true);
+    }
+
+    static Currency getCurrency(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", isMandatory));
+        if (isMandatory && currency == null) {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
         return currency;
@@ -273,6 +289,14 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_OFFER);
         }
         return offer;
+    }
+
+    static Shuffling getShuffling(HttpServletRequest req) throws ParameterException {
+        Shuffling shuffling = Shuffling.getShuffling(getUnsignedLong(req, "shuffling", true));
+        if (shuffling == null) {
+            throw new ParameterException(UNKNOWN_SHUFFLING);
+        }
+        return shuffling;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
@@ -360,21 +384,35 @@ final class ParameterParser {
         return secretPhrase;
     }
 
-    static Account getSenderAccount(HttpServletRequest req) throws ParameterException {
-        Account account;
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
-        if (secretPhrase != null) {
-            account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        } else if (publicKeyString != null) {
+    static byte[] getPublicKey(HttpServletRequest req) throws ParameterException {
+        return getPublicKey(req, null);
+    }
+
+    static byte[] getPublicKey(HttpServletRequest req, String prefix) throws ParameterException {
+        String secretPhraseParam = prefix == null ? "secretPhrase" : (prefix + "SecretPhrase");
+        String publicKeyParam = prefix == null ? "publicKey" : (prefix + "PublicKey");
+        String secretPhrase = Convert.emptyToNull(req.getParameter(secretPhraseParam));
+        if (secretPhrase == null) {
             try {
-                account = Account.getAccount(Convert.parseHexString(publicKeyString));
+                byte[] publicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter(publicKeyParam)));
+                if (publicKey == null) {
+                    throw new ParameterException(missing(secretPhraseParam, publicKeyParam));
+                }
+                if (!Crypto.isCanonicalPublicKey(publicKey)) {
+                    throw new ParameterException(incorrect(publicKeyParam));
+                }
+                return publicKey;
             } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_PUBLIC_KEY);
+                throw new ParameterException(incorrect(publicKeyParam));
             }
         } else {
-            throw new ParameterException(MISSING_SECRET_PHRASE_OR_PUBLIC_KEY);
+            return Crypto.getPublicKey(secretPhrase);
         }
+    }
+
+    static Account getSenderAccount(HttpServletRequest req) throws ParameterException {
+        byte[] publicKey = getPublicKey(req);
+        Account account = Account.getAccount(publicKey);
         if (account == null) {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }

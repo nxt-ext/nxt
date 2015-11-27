@@ -21,6 +21,7 @@ import nxt.util.Observable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
 
@@ -53,6 +54,8 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
     void broadcast(Transaction transaction) throws NxtException.ValidationException;
 
     void processPeerTransactions(JSONObject request) throws NxtException.ValidationException;
+
+    void processLater(Collection<? extends Transaction> transactions);
 
     SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude);
 

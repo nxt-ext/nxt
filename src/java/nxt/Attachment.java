@@ -60,22 +60,37 @@ public interface Attachment extends Appendix {
         }
 
         @Override
-        final void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
-            getTransactionType().validateAttachmentAtFinish(transaction);
-        }
-
         final void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            getTransactionType().apply((TransactionImpl)transaction, senderAccount, recipientAccount);
+            getTransactionType().apply((TransactionImpl) transaction, senderAccount, recipientAccount);
         }
 
         @Override
-        public Fee getBaselineFee(Transaction transaction) {
+        public final Fee getBaselineFee(Transaction transaction) {
             return getTransactionType().getBaselineFee(transaction);
         }
 
         @Override
-        public final boolean isPhasable() {
+        public final Fee getNextFee(Transaction transaction) {
+            return getTransactionType().getNextFee(transaction);
+        }
+
+        @Override
+        public final int getBaselineFeeHeight() {
+            return getTransactionType().getBaselineFeeHeight();
+        }
+
+        @Override
+        public final int getNextFeeHeight() {
+            return getTransactionType().getNextFeeHeight();
+        }
+
+        @Override
+        final boolean isPhasable() {
             return !(this instanceof Prunable) && getTransactionType().isPhasable();
+        }
+
+        final int getFinishValidationHeight(Transaction transaction) {
+            return isPhased(transaction) ? transaction.getPhasing().getFinishHeight() - 1 : Nxt.getBlockchain().getHeight();
         }
 
     }
@@ -138,8 +153,8 @@ public interface Attachment extends Appendix {
 
         MessagingAliasAssignment(JSONObject attachmentData) {
             super(attachmentData);
-            aliasName = (Convert.nullToEmpty((String) attachmentData.get("alias"))).trim();
-            aliasURI = (Convert.nullToEmpty((String) attachmentData.get("uri"))).trim();
+            aliasName = Convert.nullToEmpty((String) attachmentData.get("alias")).trim();
+            aliasURI = Convert.nullToEmpty((String) attachmentData.get("uri")).trim();
         }
 
         public MessagingAliasAssignment(String aliasName, String aliasURI) {
@@ -817,7 +832,6 @@ public interface Attachment extends Appendix {
         }
 
         public MessagingAccountInfo(String name, String description) {
-            super(1);
             this.name = name;
             this.description = description;
         }
@@ -854,6 +868,108 @@ public interface Attachment extends Appendix {
 
         public String getDescription() {
             return description;
+        }
+
+    }
+
+    final class MessagingAccountProperty extends AbstractAttachment {
+
+        private final String property;
+        private final String value;
+
+        MessagingAccountProperty(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            this.property = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_PROPERTY_NAME_LENGTH).trim();
+            this.value = Convert.readString(buffer, buffer.get(), Constants.MAX_ACCOUNT_PROPERTY_VALUE_LENGTH).trim();
+        }
+
+        MessagingAccountProperty(JSONObject attachmentData) {
+            super(attachmentData);
+            this.property = Convert.nullToEmpty((String) attachmentData.get("property")).trim();
+            this.value = Convert.nullToEmpty((String) attachmentData.get("value")).trim();
+        }
+
+        public MessagingAccountProperty(String property, String value) {
+            this.property = property.trim();
+            this.value = Convert.nullToEmpty(value).trim();
+        }
+
+        @Override
+        int getMySize() {
+            return 1 + Convert.toBytes(property).length + 1 + Convert.toBytes(value).length;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            byte[] property = Convert.toBytes(this.property);
+            byte[] value = Convert.toBytes(this.value);
+            buffer.put((byte)property.length);
+            buffer.put(property);
+            buffer.put((byte)value.length);
+            buffer.put(value);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("property", property);
+            attachment.put("value", value);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ACCOUNT_PROPERTY;
+        }
+
+        public String getProperty() {
+            return property;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+    }
+
+    final class MessagingAccountPropertyDelete extends AbstractAttachment {
+
+        private final long propertyId;
+
+        MessagingAccountPropertyDelete(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.propertyId = buffer.getLong();
+        }
+
+        MessagingAccountPropertyDelete(JSONObject attachmentData) {
+            super(attachmentData);
+            this.propertyId = Convert.parseUnsignedLong((String)attachmentData.get("property"));
+        }
+
+        public MessagingAccountPropertyDelete(long propertyId) {
+            this.propertyId = propertyId;
+        }
+
+        @Override
+        int getMySize() {
+            return 8;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(propertyId);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("property", Long.toUnsignedString(propertyId));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.Messaging.ACCOUNT_PROPERTY_DELETE;
+        }
+
+        public long getPropertyId() {
+            return propertyId;
         }
 
     }
@@ -1010,7 +1126,7 @@ public interface Attachment extends Appendix {
         private final long assetId;
         private final long quantityQNT;
 
-        ColoredCoinsAssetDelete(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        ColoredCoinsAssetDelete(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
             this.assetId = buffer.getLong();
             this.quantityQNT = buffer.getLong();
@@ -1667,6 +1783,10 @@ public interface Attachment extends Appendix {
             this.goods = goods;
         }
 
+        int getGoodsDataLength() {
+            return goods.getData().length;
+        }
+
         public final long getDiscountNQT() {
             return discountNQT;
         }
@@ -1700,7 +1820,7 @@ public interface Attachment extends Appendix {
         @Override
         int getMySize() {
             if (getGoods() == null) {
-                return 8 + 4 + Constants.MAX_DGS_GOODS_LENGTH + 32 + 8;
+                return 8 + 4 + EncryptedData.getEncryptedSize(getPlaintext()) + 8;
             }
             return super.getMySize();
         }
@@ -1728,7 +1848,16 @@ public interface Attachment extends Appendix {
 
         @Override
         public void encrypt(String secretPhrase) {
-            setGoods(EncryptedData.encrypt(Convert.compress(goodsToEncrypt), Crypto.getPrivateKey(secretPhrase), recipientPublicKey));
+            setGoods(EncryptedData.encrypt(getPlaintext(), secretPhrase, recipientPublicKey));
+        }
+
+        @Override
+        int getGoodsDataLength() {
+            return EncryptedData.getEncryptedDataLength(getPlaintext());
+        }
+
+        private byte[] getPlaintext() {
+            return Convert.compress(goodsToEncrypt);
         }
 
     }
@@ -2555,6 +2684,540 @@ public interface Attachment extends Appendix {
         public long getCurrencyId() {
             return currencyId;
         }
+    }
+
+    final class ShufflingCreation extends AbstractAttachment {
+
+        private final long holdingId;
+        private final HoldingType holdingType;
+        private final long amount;
+        private final byte participantCount;
+        private final short registrationPeriod;
+
+        ShufflingCreation(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.holdingId = buffer.getLong();
+            this.holdingType = HoldingType.get(buffer.get());
+            this.amount = buffer.getLong();
+            this.participantCount = buffer.get();
+            this.registrationPeriod = buffer.getShort();
+        }
+
+        ShufflingCreation(JSONObject attachmentData) {
+            super(attachmentData);
+            this.holdingId = Convert.parseUnsignedLong((String) attachmentData.get("holding"));
+            this.holdingType = HoldingType.get(((Long)attachmentData.get("holdingType")).byteValue());
+            this.amount = Convert.parseLong(attachmentData.get("amount"));
+            this.participantCount = ((Long)attachmentData.get("participantCount")).byteValue();
+            this.registrationPeriod = ((Long)attachmentData.get("registrationPeriod")).shortValue();
+        }
+
+        public ShufflingCreation(long holdingId, HoldingType holdingType, long amount, byte participantCount, short registrationPeriod) {
+            this.holdingId = holdingId;
+            this.holdingType = holdingType;
+            this.amount = amount;
+            this.participantCount = participantCount;
+            this.registrationPeriod = registrationPeriod;
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 1 + 8 + 1 + 2;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(holdingId);
+            buffer.put(holdingType.getCode());
+            buffer.putLong(amount);
+            buffer.put(participantCount);
+            buffer.putShort(registrationPeriod);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("holding", Long.toUnsignedString(holdingId));
+            attachment.put("holdingType", holdingType.getCode());
+            attachment.put("amount", amount);
+            attachment.put("participantCount", participantCount);
+            attachment.put("registrationPeriod", registrationPeriod);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return ShufflingTransaction.SHUFFLING_CREATION;
+        }
+
+        public long getHoldingId() {
+            return holdingId;
+        }
+
+        public HoldingType getHoldingType() {
+            return holdingType;
+        }
+
+        public long getAmount() {
+            return amount;
+        }
+
+        public byte getParticipantCount() {
+            return participantCount;
+        }
+
+        public short getRegistrationPeriod() {
+            return registrationPeriod;
+        }
+    }
+
+    interface ShufflingAttachment extends Attachment {
+
+        long getShufflingId();
+
+        byte[] getShufflingStateHash();
+
+    }
+
+    abstract class AbstractShufflingAttachment extends AbstractAttachment implements ShufflingAttachment {
+
+        private final long shufflingId;
+        private final byte[] shufflingStateHash;
+
+        private AbstractShufflingAttachment(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.shufflingId = buffer.getLong();
+            this.shufflingStateHash = new byte[32];
+            buffer.get(this.shufflingStateHash);
+        }
+
+        private AbstractShufflingAttachment(JSONObject attachmentData) {
+            super(attachmentData);
+            this.shufflingId = Convert.parseUnsignedLong((String) attachmentData.get("shuffling"));
+            this.shufflingStateHash = Convert.parseHexString((String) attachmentData.get("shufflingStateHash"));
+        }
+
+        private AbstractShufflingAttachment(long shufflingId, byte[] shufflingStateHash) {
+            this.shufflingId = shufflingId;
+            this.shufflingStateHash = shufflingStateHash;
+        }
+
+        @Override
+        int getMySize() {
+            return 8 + 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.putLong(shufflingId);
+            buffer.put(shufflingStateHash);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("shuffling", Long.toUnsignedString(shufflingId));
+            attachment.put("shufflingStateHash", Convert.toHexString(shufflingStateHash));
+        }
+
+        @Override
+        public final long getShufflingId() {
+            return shufflingId;
+        }
+
+        @Override
+        public final byte[] getShufflingStateHash() {
+            return shufflingStateHash;
+        }
+
+    }
+
+    final class ShufflingRegistration extends AbstractAttachment implements ShufflingAttachment {
+
+        private final byte[] shufflingFullHash;
+
+        ShufflingRegistration(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.shufflingFullHash = new byte[32];
+            buffer.get(this.shufflingFullHash);
+        }
+
+        ShufflingRegistration(JSONObject attachmentData) {
+            super(attachmentData);
+            this.shufflingFullHash = Convert.parseHexString((String) attachmentData.get("shufflingFullHash"));
+        }
+
+        public ShufflingRegistration(byte[] shufflingFullHash) {
+            this.shufflingFullHash = shufflingFullHash;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return ShufflingTransaction.SHUFFLING_REGISTRATION;
+        }
+
+        @Override
+        int getMySize() {
+            return 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            buffer.put(shufflingFullHash);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            attachment.put("shufflingFullHash", Convert.toHexString(shufflingFullHash));
+        }
+
+        @Override
+        public long getShufflingId() {
+            return Convert.fullHashToId(shufflingFullHash);
+        }
+
+        @Override
+        public byte[] getShufflingStateHash() {
+            return shufflingFullHash;
+        }
+
+    }
+
+    final class ShufflingProcessing extends AbstractShufflingAttachment implements Prunable {
+
+        private static final byte[] emptyDataHash = Crypto.sha256().digest();
+
+        static ShufflingProcessing parse(JSONObject attachmentData) throws NxtException.NotValidException {
+            if (!Appendix.hasAppendix(ShufflingTransaction.SHUFFLING_PROCESSING.getName(), attachmentData)) {
+                return null;
+            }
+            return new ShufflingProcessing(attachmentData);
+        }
+
+        private volatile byte[][] data;
+        private final byte[] hash;
+
+        ShufflingProcessing(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            this.hash = new byte[32];
+            buffer.get(hash);
+            this.data = Arrays.equals(hash, emptyDataHash) ? Convert.EMPTY_BYTES : null;
+        }
+
+        ShufflingProcessing(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONArray jsonArray = (JSONArray)attachmentData.get("data");
+            if (jsonArray != null) {
+                this.data = new byte[jsonArray.size()][];
+                for (int i = 0; i < this.data.length; i++) {
+                    this.data[i] = Convert.parseHexString((String) jsonArray.get(i));
+                }
+                this.hash = null;
+            } else {
+                this.hash = Convert.parseHexString(Convert.emptyToNull((String)attachmentData.get("hash")));
+                this.data = Arrays.equals(hash, emptyDataHash) ? Convert.EMPTY_BYTES : null;
+            }
+        }
+
+        ShufflingProcessing(long shufflingId, byte[][] data, byte[] shufflingStateHash) {
+            super(shufflingId, shufflingStateHash);
+            this.data = data;
+            this.hash = null;
+        }
+
+        @Override
+        int getMyFullSize() {
+            int size = super.getMySize();
+            if (data != null) {
+                size += 1;
+                for (byte[] bytes : data) {
+                    size += 4;
+                    size += bytes.length;
+                }
+            }
+            return size / 2; // just lie
+        }
+
+        @Override
+        int getMySize() {
+            return super.getMySize() + 32;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            super.putMyBytes(buffer);
+            buffer.put(getHash());
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            if (data != null) {
+                JSONArray jsonArray = new JSONArray();
+                attachment.put("data", jsonArray);
+                for (byte[] bytes : data) {
+                    jsonArray.add(Convert.toHexString(bytes));
+                }
+            }
+            attachment.put("hash", Convert.toHexString(getHash()));
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return ShufflingTransaction.SHUFFLING_PROCESSING;
+        }
+
+        @Override
+        public byte[] getHash() {
+            if (hash != null) {
+                return hash;
+            } else if (data != null) {
+                MessageDigest digest = Crypto.sha256();
+                for (byte[] bytes : data) {
+                    digest.update(bytes);
+                }
+                return digest.digest();
+            } else {
+                throw new IllegalStateException("Both hash and data are null");
+            }
+        }
+
+        public byte[][] getData() {
+            return data;
+        }
+
+        @Override
+        void loadPrunable(Transaction transaction, boolean includeExpiredPrunable) {
+            if (data == null && shouldLoadPrunable(transaction, includeExpiredPrunable)) {
+                data = ShufflingParticipant.getData(getShufflingId(), transaction.getSenderId());
+            }
+        }
+
+        @Override
+        public boolean hasPrunableData() {
+            return data != null;
+        }
+
+        @Override
+        public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
+            ShufflingParticipant.restoreData(getShufflingId(), transaction.getSenderId(), getData(), transaction.getTimestamp(), height);
+        }
+
+    }
+
+    final class ShufflingRecipients extends AbstractShufflingAttachment {
+
+        private final byte[][] recipientPublicKeys;
+
+        ShufflingRecipients(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            int count = buffer.get();
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count < 0) {
+                throw new NxtException.NotValidException("Invalid data count " + count);
+            }
+            this.recipientPublicKeys = new byte[count][];
+            for (int i = 0; i < count; i++) {
+                this.recipientPublicKeys[i] = new byte[32];
+                buffer.get(this.recipientPublicKeys[i]);
+            }
+        }
+
+        ShufflingRecipients(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONArray jsonArray = (JSONArray)attachmentData.get("recipientPublicKeys");
+            this.recipientPublicKeys = new byte[jsonArray.size()][];
+            for (int i = 0; i < this.recipientPublicKeys.length; i++) {
+                this.recipientPublicKeys[i] = Convert.parseHexString((String)jsonArray.get(i));
+            }
+        }
+
+        ShufflingRecipients(long shufflingId, byte[][] recipientPublicKeys, byte[] shufflingStateHash) {
+            super(shufflingId, shufflingStateHash);
+            this.recipientPublicKeys = recipientPublicKeys;
+        }
+
+        @Override
+        int getMySize() {
+            int size = super.getMySize();
+            size += 1;
+            size += 32 * recipientPublicKeys.length;
+            return size;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            super.putMyBytes(buffer);
+            buffer.put((byte)recipientPublicKeys.length);
+            for (byte[] bytes : recipientPublicKeys) {
+                buffer.put(bytes);
+            }
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            JSONArray jsonArray = new JSONArray();
+            attachment.put("recipientPublicKeys", jsonArray);
+            for (byte[] bytes : recipientPublicKeys) {
+                jsonArray.add(Convert.toHexString(bytes));
+            }
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return ShufflingTransaction.SHUFFLING_RECIPIENTS;
+        }
+
+        public byte[][] getRecipientPublicKeys() {
+            return recipientPublicKeys;
+        }
+
+    }
+
+    final class ShufflingVerification extends AbstractShufflingAttachment {
+
+        ShufflingVerification(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+        }
+
+        ShufflingVerification(JSONObject attachmentData) {
+            super(attachmentData);
+        }
+
+        public ShufflingVerification(long shufflingId, byte[] shufflingStateHash) {
+            super(shufflingId, shufflingStateHash);
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return ShufflingTransaction.SHUFFLING_VERIFICATION;
+        }
+
+    }
+
+    final class ShufflingCancellation extends AbstractShufflingAttachment {
+
+        private final byte[][] blameData;
+        private final byte[][] keySeeds;
+        private final long cancellingAccountId;
+
+        ShufflingCancellation(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+            super(buffer, transactionVersion);
+            int count = buffer.get();
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
+                throw new NxtException.NotValidException("Invalid data count " + count);
+            }
+            this.blameData = new byte[count][];
+            for (int i = 0; i < count; i++) {
+                int size = buffer.getInt();
+                if (size > Constants.MAX_PAYLOAD_LENGTH) {
+                    throw new NxtException.NotValidException("Invalid data size " + size);
+                }
+                this.blameData[i] = new byte[size];
+                buffer.get(this.blameData[i]);
+            }
+            count = buffer.get();
+            if (count > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS || count <= 0) {
+                throw new NxtException.NotValidException("Invalid keySeeds count " + count);
+            }
+            this.keySeeds = new byte[count][];
+            for (int i = 0; i < count; i++) {
+                this.keySeeds[i] = new byte[32];
+                buffer.get(this.keySeeds[i]);
+            }
+            this.cancellingAccountId = buffer.getLong();
+        }
+
+        ShufflingCancellation(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONArray jsonArray = (JSONArray)attachmentData.get("blameData");
+            this.blameData = new byte[jsonArray.size()][];
+            for (int i = 0; i < this.blameData.length; i++) {
+                this.blameData[i] = Convert.parseHexString((String)jsonArray.get(i));
+            }
+            jsonArray = (JSONArray)attachmentData.get("keySeeds");
+            this.keySeeds = new byte[jsonArray.size()][];
+            for (int i = 0; i < this.keySeeds.length; i++) {
+                this.keySeeds[i] = Convert.parseHexString((String)jsonArray.get(i));
+            }
+            this.cancellingAccountId = Convert.parseUnsignedLong((String) attachmentData.get("cancellingAccount"));
+        }
+
+        ShufflingCancellation(long shufflingId, byte[][] blameData, byte[][] keySeeds, byte[] shufflingStateHash, long cancellingAccountId) {
+            super(shufflingId, shufflingStateHash);
+            this.blameData = blameData;
+            this.keySeeds = keySeeds;
+            this.cancellingAccountId = cancellingAccountId;
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return ShufflingTransaction.SHUFFLING_CANCELLATION;
+        }
+
+        @Override
+        int getMySize() {
+            int size = super.getMySize();
+            size += 1;
+            for (byte[] bytes : blameData) {
+                size += 4;
+                size += bytes.length;
+            }
+            size += 1;
+            size += 32 * keySeeds.length;
+            size += 8;
+            return size;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            super.putMyBytes(buffer);
+            buffer.put((byte) blameData.length);
+            for (byte[] bytes : blameData) {
+                buffer.putInt(bytes.length);
+                buffer.put(bytes);
+            }
+            buffer.put((byte) keySeeds.length);
+            for (byte[] bytes : keySeeds) {
+                buffer.put(bytes);
+            }
+            buffer.putLong(cancellingAccountId);
+        }
+
+        @Override
+        void putMyJSON(JSONObject attachment) {
+            super.putMyJSON(attachment);
+            JSONArray jsonArray = new JSONArray();
+            attachment.put("blameData", jsonArray);
+            for (byte[] bytes : blameData) {
+                jsonArray.add(Convert.toHexString(bytes));
+            }
+            jsonArray = new JSONArray();
+            attachment.put("keySeeds", jsonArray);
+            for (byte[] bytes : keySeeds) {
+                jsonArray.add(Convert.toHexString(bytes));
+            }
+            if (cancellingAccountId != 0) {
+                attachment.put("cancellingAccount", Long.toUnsignedString(cancellingAccountId));
+            }
+        }
+
+        public byte[][] getBlameData() {
+            return blameData;
+        }
+
+        public byte[][] getKeySeeds() {
+            return keySeeds;
+        }
+
+        public long getCancellingAccountId() {
+            return cancellingAccountId;
+        }
+
+        byte[] getHash() {
+            MessageDigest digest = Crypto.sha256();
+            for (byte[] bytes : blameData) {
+                digest.update(bytes);
+            }
+            return digest.digest();
+        }
 
     }
 
@@ -2583,6 +3246,7 @@ public interface Attachment extends Appendix {
         }
 
         private TaggedDataAttachment(JSONObject attachmentData) {
+            super(attachmentData);
             String dataJSON = (String) attachmentData.get("data");
             if (dataJSON != null) {
                 this.name = (String) attachmentData.get("name");
@@ -2899,4 +3563,80 @@ public interface Attachment extends Appendix {
 
     }
 
+    final class SetPhasingOnly extends AbstractAttachment {
+
+        private final PhasingParams phasingParams;
+        private final long maxFees;
+        private final short minDuration;
+        private final short maxDuration;
+
+        public SetPhasingOnly(PhasingParams params, long maxFees, short minDuration, short maxDuration) {
+            phasingParams = params;
+            this.maxFees = maxFees;
+            this.minDuration = minDuration;
+            this.maxDuration = maxDuration;
+        }
+
+        SetPhasingOnly(ByteBuffer buffer, byte transactionVersion) {
+            super(buffer, transactionVersion);
+            phasingParams = new PhasingParams(buffer);
+            maxFees = buffer.getLong();
+            minDuration = buffer.getShort();
+            maxDuration = buffer.getShort();
+        }
+
+        SetPhasingOnly(JSONObject attachmentData) {
+            super(attachmentData);
+            JSONObject phasingControlParams = (JSONObject) attachmentData.get("phasingControlParams");
+            phasingParams = new PhasingParams(phasingControlParams);
+            maxFees = Convert.parseLong(attachmentData.get("controlMaxFees"));
+            minDuration = ((Long)attachmentData.get("controlMinDuration")).shortValue();
+            maxDuration = ((Long)attachmentData.get("controlMaxDuration")).shortValue();
+        }
+
+        @Override
+        public TransactionType getTransactionType() {
+            return TransactionType.AccountControl.SET_PHASING_ONLY;
+        }
+
+        @Override
+        int getMySize() {
+            return phasingParams.getMySize() + 8 + 2 + 2;
+        }
+
+        @Override
+        void putMyBytes(ByteBuffer buffer) {
+            phasingParams.putMyBytes(buffer);
+            buffer.putLong(maxFees);
+            buffer.putShort(minDuration);
+            buffer.putShort(maxDuration);
+        }
+
+        @Override
+        void putMyJSON(JSONObject json) {
+            JSONObject phasingControlParams = new JSONObject();
+            phasingParams.putMyJSON(phasingControlParams);
+            json.put("phasingControlParams", phasingControlParams);
+            json.put("controlMaxFees", maxFees);
+            json.put("controlMinDuration", minDuration);
+            json.put("controlMaxDuration", maxDuration);
+        }
+
+        public PhasingParams getPhasingParams() {
+            return phasingParams;
+        }
+
+        public long getMaxFees() {
+            return maxFees;
+        }
+
+        public short getMinDuration() {
+            return minDuration;
+        }
+
+        public short getMaxDuration() {
+            return maxDuration;
+        }
+
+    }
 }

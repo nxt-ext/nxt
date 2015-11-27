@@ -30,7 +30,7 @@ public final class PopOff extends APIServlet.APIRequestHandler {
     static final PopOff instance = new PopOff();
 
     private PopOff() {
-        super(new APITag[] {APITag.DEBUG}, "numBlocks", "height");
+        super(new APITag[] {APITag.DEBUG}, "numBlocks", "height", "keepTransactions");
     }
 
     @Override
@@ -44,7 +44,7 @@ public final class PopOff extends APIServlet.APIRequestHandler {
         try {
             height = Integer.parseInt(req.getParameter("height"));
         } catch (NumberFormatException ignored) {}
-
+        boolean keepTransactions = "true".equalsIgnoreCase(req.getParameter("keepTransactions"));
         List<? extends Block> blocks;
         try {
             Nxt.getBlockchainProcessor().setGetMoreBlocks(false);
@@ -62,6 +62,9 @@ public final class PopOff extends APIServlet.APIRequestHandler {
         blocks.forEach(block -> blocksJSON.add(JSONData.block(block, true, false)));
         JSONObject response = new JSONObject();
         response.put("blocks", blocksJSON);
+        if (keepTransactions) {
+            blocks.forEach(block -> Nxt.getTransactionProcessor().processLater(block.getTransactions()));
+        }
         return response;
     }
 

@@ -24,37 +24,9 @@ var NRS = (function(NRS, $) {
 		$("#generate_token_output, #decode_token_output").html("").hide();
 
 		$("#token_modal_generate_token").show();
-		$("#token_modal_button").text($.t("generate")).data("form", "generate_token_form");
+		$("#generate_token_button").show();
+		$("#validate_token_button").hide();
 	});
-
-	NRS.forms.generateToken = function() {
-		var data = $.trim($("#generate_token_data").val());
-		if (!data) {
-			return {
-				"error": $.t("data_required_field")
-			};
-		} else {
-			return {};
-		}
-	};
-
-	NRS.forms.generateTokenComplete = function(response) {
-        var tokenModal = $("#token_modal");
-        tokenModal.find(".error_message").hide();
-
-		if (response.token) {
-			$("#generate_token_output").html($.t("generated_token_is") + "<br /><br /><textarea readonly style='width:100%' rows='3'>" + String(response.token).escapeHTML() + "</textarea>").show();
-		} else {
-			$.growl($.t("error_generate_token"), {
-				"type": "danger"
-			});
-			tokenModal.modal("hide");
-		}
-	};
-
-	NRS.forms.generateTokenError = function() {
-		$("#generate_token_output").hide();
-	};
 
 	NRS.forms.decodeTokenComplete = function(response) {
 		$("#token_modal").find(".error_message").hide();
@@ -78,20 +50,17 @@ var NRS = (function(NRS, $) {
 
     tokenModal.find("ul.nav li").click(function(e) {
 		e.preventDefault();
-
 		var tab = $(this).data("tab");
-
 		$(this).siblings().removeClass("active");
 		$(this).addClass("active");
-
 		$(".token_modal_content").hide();
-
 		var content = $("#token_modal_" + tab);
-
 		if (tab == "generate_token") {
-			$("#token_modal_button").text($.t("generate")).data("form", "generate_token_form");
+			$("#generate_token_button").show();
+			$("#validate_token_button").hide();
 		} else {
-			$("#token_modal_button").text($.t("validate")).data("form", "validate_token_form");
+            $("#generate_token_button").hide();
+            $("#validate_token_button").show();
 		}
 
 		$("#token_modal").find(".error_message").hide();
@@ -103,6 +72,27 @@ var NRS = (function(NRS, $) {
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#generate_token_nav").addClass("active");
 	});
+
+    $("#generate_token_button").click(function (e) {
+        var data = $.trim($("#generate_token_data").val());
+        var tokenOutput = $("#generate_token_output");
+        if (!data || data == "") {
+            tokenOutput.html($.t("data_required_field"));
+            tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
+            return;
+        }
+        var secretPhrase = $.trim($("#generate_token_password").val());
+        var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
+        if (publicKey != NRS.publicKey) {
+            tokenOutput.html($.t("error_incorrect_passphrase"));
+            tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
+            return;
+        }
+        var token = NRS.generateToken(data, secretPhrase);
+        tokenOutput.html($.t("generated_token_is") + "<br/><br/><textarea readonly style='width:100%' rows='3'>" + token + "</textarea>");
+        tokenOutput.addClass("callout-info").removeClass("callout-danger").show();
+        e.preventDefault();
+    });
 
 	return NRS;
 }(NRS || {}, jQuery));

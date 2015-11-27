@@ -45,7 +45,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.6.2";
+    public static final String VERSION = "1.7.0e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -323,6 +323,7 @@ public final class Nxt {
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
                 Account.init();
+                AccountRestrictions.init();
                 AccountLedger.init();
                 Alias.init();
                 Asset.init();
@@ -333,6 +334,7 @@ public final class Nxt {
                 PhasingPoll.init();
                 Trade.init();
                 AssetTransfer.init();
+                AssetDelete.init();
                 Vote.init();
                 PhasingVote.init();
                 Currency.init();
@@ -343,6 +345,8 @@ public final class Nxt {
                 CurrencyTransfer.init();
                 Exchange.init();
                 ExchangeRequest.init();
+                Shuffling.init();
+                ShufflingParticipant.init();
                 PrunableMessage.init();
                 TaggedData.init();
                 Peers.init();

@@ -40,14 +40,14 @@ var NRS = (function(NRS, $, undefined) {
                 entryDetails.entryTime = NRS.formatTimestamp(entryDetails.timestamp);
             }
             if (entryDetails.holding) {
-                entryDetails.holding_formatted_html = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(entry.holding).escapeHTML() + "'>" + String(entry.holding).escapeHTML() + "</a>";
+                entryDetails.holding_formatted_html = NRS.getTransactionLink(entry.holding);
                 delete entryDetails.holding;
             }
             entryDetails.height_formatted_html = "<a href='#' class='show_block_modal_action' data-block='" + String(entry.height).escapeHTML() + "'>" + String(entry.height).escapeHTML() + "</a>";
             delete entryDetails.block;
             delete entryDetails.height;
             if (entryDetails.isTransactionEvent) {
-                entryDetails.transaction_formatted_html = "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(entry.event).escapeHTML() + "'>" + String(entry.event).escapeHTML() + "</a>";
+                entryDetails.transaction_formatted_html = NRS.getTransactionLink(entry.event);
             }
             delete entryDetails.event;
             delete entryDetails.isTransactionEvent;

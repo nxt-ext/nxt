@@ -281,7 +281,8 @@ final class TransactionDb {
         List<PrunableTransaction> result = new ArrayList<>();
         try (PreparedStatement pstmt = con.prepareStatement("SELECT id, type, subtype, "
                 + "has_prunable_attachment AS prunable_attachment, "
-                + "(has_prunable_message OR has_prunable_encrypted_message) AS prunable_message "
+                + "has_prunable_message AS prunable_plain_message, "
+                + "has_prunable_encrypted_message AS prunable_encrypted_message "
                 + "FROM transaction WHERE (timestamp BETWEEN ? AND ?) AND "
                 + "(has_prunable_attachment = TRUE OR has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE)")) {
             pstmt.setInt(1, minTimestamp);
@@ -293,7 +294,9 @@ final class TransactionDb {
                     byte subtype = rs.getByte("subtype");
                     TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
                     result.add(new PrunableTransaction(id, transactionType,
-                            rs.getBoolean("prunable_attachment"), rs.getBoolean("prunable_message")));
+                            rs.getBoolean("prunable_attachment"),
+                            rs.getBoolean("prunable_plain_message"),
+                            rs.getBoolean("prunable_encrypted_message")));
                 }
             }
         } catch (SQLException e) {
@@ -367,13 +370,16 @@ final class TransactionDb {
         private final long id;
         private final TransactionType transactionType;
         private final boolean prunableAttachment;
-        private final boolean prunableMessage;
+        private final boolean prunablePlainMessage;
+        private final boolean prunableEncryptedMessage;
 
-        public PrunableTransaction(long id, TransactionType transactionType, boolean prunableAttachment, boolean prunableMessage) {
+        public PrunableTransaction(long id, TransactionType transactionType, boolean prunableAttachment,
+                                   boolean prunablePlainMessage, boolean prunableEncryptedMessage) {
             this.id = id;
             this.transactionType = transactionType;
             this.prunableAttachment = prunableAttachment;
-            this.prunableMessage = prunableMessage;
+            this.prunablePlainMessage = prunablePlainMessage;
+            this.prunableEncryptedMessage = prunableEncryptedMessage;
         }
 
         public long getId() {
@@ -388,8 +394,12 @@ final class TransactionDb {
             return prunableAttachment;
         }
 
-        public boolean hasPrunableMessage() {
-            return prunableMessage;
+        public boolean hasPrunablePlainMessage() {
+            return prunablePlainMessage;
+        }
+
+        public boolean hasPrunableEncryptedMessage() {
+            return prunableEncryptedMessage;
         }
     }
 

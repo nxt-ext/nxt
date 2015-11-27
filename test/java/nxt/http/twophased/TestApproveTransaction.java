@@ -131,7 +131,7 @@ public class TestApproveTransaction extends BlockchainTest {
         Assert.assertEquals(64, fullHash.length());
         String approvalTransactionBytes = (String)response.get("transactionBytes");
 
-        long fee = 2 * Constants.ONE_NXT;
+        long fee = 3 * Constants.ONE_NXT;
         response = new APICall.Builder("sendMoney").
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).
@@ -160,16 +160,7 @@ public class TestApproveTransaction extends BlockchainTest {
         Logger.logDebugMessage("broadcastTransaction: " + response);
         generateBlock();
 
-        // Transaction is still not applied since finish height not reached
-        // Sender
-        Assert.assertEquals(-fee, ALICE.getBalanceDiff());
-        Assert.assertEquals(-100 * Constants.ONE_NXT - fee, ALICE.getUnconfirmedBalanceDiff());
-        // Recipient
-        Assert.assertEquals(0, BOB.getBalanceDiff());
-        Assert.assertEquals(0, BOB.getUnconfirmedBalanceDiff());
-
-        generateBlock();
-        // Transaction is applied
+        // Transaction is applied before finish height
         // Sender
         Assert.assertEquals(-100 * Constants.ONE_NXT - fee, ALICE.getBalanceDiff());
         Assert.assertEquals(-100 * Constants.ONE_NXT - fee, ALICE.getUnconfirmedBalanceDiff());
@@ -195,7 +186,7 @@ public class TestApproveTransaction extends BlockchainTest {
         Assert.assertEquals(64, fullHash1.length());
         String approvalTransactionBytes3 = (String)response.get("transactionBytes");
 
-        long fee = 2 * Constants.ONE_NXT;
+        long fee = 5 * Constants.ONE_NXT;
         response = new APICall.Builder("sendMoney").
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).
@@ -239,7 +230,7 @@ public class TestApproveTransaction extends BlockchainTest {
 
     @Test
     public void sendMoneyPhasedByTransactionHashNotApplied() {
-        long fee = 2 * Constants.ONE_NXT;
+        long fee = 3 * Constants.ONE_NXT;
         JSONObject response = new APICall.Builder("sendMoney").
                 param("secretPhrase", ALICE.getSecretPhrase()).
                 param("recipient", BOB.getStrId()).

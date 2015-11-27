@@ -99,7 +99,7 @@ public final class APIServlet extends HttpServlet {
         }
 
         boolean requirePassword() {
-        	return false;
+            return false;
         }
 
         boolean allowRequiredBlockParameters() {
@@ -168,6 +168,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountCurrencies", GetAccountCurrencies.instance);
         map.put("getAccountCurrencyCount", GetAccountCurrencyCount.instance);
         map.put("getAccountAssetCount", GetAccountAssetCount.instance);
+        map.put("getAccountProperties", GetAccountProperties.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
@@ -238,7 +239,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getAllTrades", GetAllTrades.instance);
         map.put("getAllExchanges", GetAllExchanges.instance);
         map.put("getAssetTransfers", GetAssetTransfers.instance);
+        map.put("getAssetDeletes", GetAssetDeletes.instance);
         map.put("getExpectedAssetTransfers", GetExpectedAssetTransfers.instance);
+        map.put("getExpectedAssetDeletes", GetExpectedAssetDeletes.instance);
         map.put("getCurrencyTransfers", GetCurrencyTransfers.instance);
         map.put("getExpectedCurrencyTransfers", GetExpectedCurrencyTransfers.instance);
         map.put("getTransaction", GetTransaction.instance);
@@ -270,6 +273,12 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getExpectedExchangeRequests", GetExpectedExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
+        map.put("getAllShufflings", GetAllShufflings.instance);
+        map.put("getAccountShufflings", GetAccountShufflings.instance);
+        map.put("getAssignedShufflings", GetAssignedShufflings.instance);
+        map.put("getHoldingShufflings", GetHoldingShufflings.instance);
+        map.put("getShuffling", GetShuffling.instance);
+        map.put("getShufflingParticipants", GetShufflingParticipants.instance);
         map.put("getPrunableMessage", GetPrunableMessage.instance);
         map.put("getPrunableMessages", GetPrunableMessages.instance);
         map.put("getAllPrunableMessages", GetAllPrunableMessages.instance);
@@ -289,7 +298,17 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
+        map.put("setAccountProperty", SetAccountProperty.instance);
+        map.put("deleteAccountProperty", DeleteAccountProperty.instance);
         map.put("setAlias", SetAlias.instance);
+        map.put("shufflingCreate", ShufflingCreate.instance);
+        map.put("shufflingRegister", ShufflingRegister.instance);
+        map.put("shufflingProcess", ShufflingProcess.instance);
+        map.put("shufflingVerify", ShufflingVerify.instance);
+        map.put("shufflingCancel", ShufflingCancel.instance);
+        map.put("startShuffler", StartShuffler.instance);
+        map.put("stopShuffler", StopShuffler.instance);
+        map.put("getShufflers", GetShufflers.instance);
         map.put("deleteAlias", DeleteAlias.instance);
         map.put("signTransaction", SignTransaction.instance);
         map.put("startForging", StartForging.instance);
@@ -338,6 +357,9 @@ public final class APIServlet extends HttpServlet {
         map.put("trimDerivedTables", TrimDerivedTables.instance);
         map.put("hash", Hash.instance);
         map.put("fullHashToId", FullHashToId.instance);
+        map.put("setPhasingOnlyControl", SetPhasingOnlyControl.instance);
+        map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
+        map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
@@ -365,7 +387,7 @@ public final class APIServlet extends HttpServlet {
 
             long startTime = System.currentTimeMillis();
 
-			if (! API.isAllowed(req.getRemoteHost())) {
+            if (! API.isAllowed(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
             }

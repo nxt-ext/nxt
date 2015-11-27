@@ -17,7 +17,6 @@
 package nxt;
 
 import nxt.crypto.Crypto;
-import nxt.db.DbIterator;
 import nxt.util.Listener;
 import nxt.util.Logger;
 import org.junit.Assert;

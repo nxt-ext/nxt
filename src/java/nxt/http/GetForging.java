@@ -65,11 +65,6 @@ public final class GetForging extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
-        return true;
-    }
-
-    @Override
     boolean allowRequiredBlockParameters() {
         return false;
     }

@@ -95,6 +95,8 @@ var NRS = (function (NRS, $) {
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
                 NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
                 NRS.constants.REQUEST_TYPES = response.requestTypes;
+                NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
+                NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
             }
         });
     };
@@ -130,6 +132,14 @@ var NRS = (function (NRS, $) {
         return getKeyByValue(NRS.constants.HASH_ALGORITHMS, code);
     };
 
+    NRS.getShufflingStage = function (code) {
+        return getKeyByValue(NRS.constants.SHUFFLING_STAGES, code);
+    };
+
+    NRS.getShufflingParticipantState = function (code) {
+        return getKeyByValue(NRS.constants.SHUFFLING_PARTICIPANTS_STATES, code);
+    };
+
     NRS.isRequireBlockchain = function(requestType) {
         if (!NRS.constants.REQUEST_TYPES[requestType]) {
             // For requests invoked before the getConstants request returns,
@@ -151,6 +161,7 @@ var NRS = (function (NRS, $) {
     NRS.isSubmitPassphrase = function (requestType) {
         return requestType == "startForging" ||
             requestType == "stopForging" ||
+            requestType == "startShuffler" ||
             requestType == "getForging" ||
             requestType == "markHost";
     };

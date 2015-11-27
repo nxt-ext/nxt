@@ -140,7 +140,7 @@ var NRS = (function(NRS, $, undefined) {
     NRS.forms.broadcastTransaction = function(modal) {
         // The problem is that broadcastTransaction is invoked by different modals
         // We need to find the correct form in case the modal has more than one
-        var data
+        var data;
         if (modal.attr('id') == "transaction_json_modal") {
             data = NRS.getFormData($("#broadcast_json_form"));
         } else {
@@ -184,6 +184,9 @@ var NRS = (function(NRS, $, undefined) {
 			changeHeightBlocks: 500
 		};
 		var $elems = NRS.initModalUIElement($modal, '.phasing_finish_height_group', 'block_height_modal_ui_element', context);
+		$elems.find('input').prop("disabled", true);
+
+		$elems = NRS.initModalUIElement($modal, '.mandatory_approval_finish_height_group', 'block_height_modal_ui_element', context);
 		$elems.find('input').prop("disabled", true);
 
 		context = {
@@ -313,25 +316,38 @@ var NRS = (function(NRS, $, undefined) {
 		};
 		NRS.initModalUIElement($modal, '.hash_algorithm_model_group', 'hash_algorithm_model_modal_ui_element', context);
 
-		_setApprovalFeeAddition($modal);
+		_setMandatoryApproval($modal);
 	};
 
-	function _setApprovalFeeAddition($modal) {
-		if (!$modal) {
-			$modal = $('.modal:visible');
-		}
-		var feeAddition = $modal.find('.approve_tab_list li.active a').data("feeNxtApprovalAddition");
-		var $mbSelect = $modal.find('.tab_pane_approve.active .approve_min_balance_model_group select');
-		if($mbSelect.length > 0 && $mbSelect.val() != "0") {
-			feeAddition = String(20);
-		}
+	function _setMandatoryApproval($modal) {
+		$modal.one('shown.bs.modal', function() {
+			var requestType = $modal.find('input[name="request_type"]').val();
+			var onNoMandatoryApproval = function() {
+				$modal.find('.advanced_mandatory_approval').hide();
+				$modal.find('input[name="mandatoryApprovalParamsJSON"]').val("");
+			}
+			if (requestType != "approveTransaction"
+				&& NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
 
-        $modal.find("input[name='feeNXT_approval_addition']").val(feeAddition);
-        $modal.find("span.feeNXT_approval_addition_info").html("+" + feeAddition);
+				NRS.sendRequest("getPhasingOnlyControl", {
+					"account": NRS.account
+				}, function (response) {
+					if (response && response.votingModel >= 0) {
+						$modal.find('.advanced_mandatory_approval input').prop('disabled', false);
+						$modal.find('.advanced_mandatory_approval').show();
+						$modal.find('input[name="mandatoryApprovalParamsJSON"]').val(JSON.stringify(response));
+					} else {
+						onNoMandatoryApproval();
+					}
+				});
+			} else {
+				onNoMandatoryApproval();
+			}
+
+		});
 	}
 
 	$('.approve_tab_list a[data-toggle="tab"]').on('shown.bs.tab', function () {
-		_setApprovalFeeAddition();
         var $am = $(this).closest('.approve_modal');
         $am.find('.tab-pane input, .tab-pane select').prop('disabled', true);
         $am.find('.tab-pane.active input, .tab-pane.active select').prop('disabled', false);
@@ -346,7 +362,6 @@ var NRS = (function(NRS, $, undefined) {
     });
 
 	$('body').on('change', '.modal .approve_modal .approve_min_balance_model_group select', function() {
-		_setApprovalFeeAddition();
 		var $tabPane = $(this).closest('div.tab_pane_approve');
 		var mbModelId = $(this).val();
 		for(var id=0; id<=3; id++) {

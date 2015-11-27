@@ -138,7 +138,7 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
             var infoModalTransactionsTable = $("#user_info_modal_transactions_table");
-            if (response.transactions && response.transactions.length) {
+			if (response.transactions && response.transactions.length) {
 				var rows = "";
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
@@ -157,7 +157,7 @@ var NRS = (function(NRS, $) {
 
 					var account = (receiving ? "sender" : "recipient");
 					rows += "<tr>" +
-						"<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td>" +
+						"<td>" + NRS.getTransactionLink(transaction.transaction, NRS.formatTimestamp(transaction.timestamp)) + "</td>" +
 						"<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "&nbsp" + transactionType + "</td>" +
 						"<td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>" +
 						"<td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td>" +

@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -157,6 +158,10 @@ public final class Convert {
         return array == null ? EMPTY_LONG : array;
     }
 
+    public static long nullToZero(Long l) {
+        return l == null ? 0 : l;
+    }
+
     public static long[] toArray(List<Long> list) {
         long[] result = new long[list.size()];
         for (int i = 0; i < list.size(); i++) {
@@ -169,6 +174,22 @@ public final class Convert {
         List<Long> result = new ArrayList<>(array.length);
         for (long elem : array) {
             result.add(elem);
+        }
+        return result;
+    }
+
+    public static Long[] toArray(long[] array) {
+        Long[] result = new Long[array.length];
+        for (int i = 0; i < array.length; i++) {
+            result[i] = array[i];
+        }
+        return result;
+    }
+
+    public static long[] toArray(Long[] array) {
+        long[] result = new long[array.length];
+        for (int i = 0; i < array.length; i++) {
+            result[i] = array[i];
         }
         return result;
     }
@@ -192,12 +213,28 @@ public final class Convert {
         }
     }
 
+    public static byte[] toBytes(String s, boolean isText) {
+        return isText ? toBytes(s) : parseHexString(s);
+    }
+
     public static String toString(byte[] bytes) {
         try {
             return new String(bytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    public static String toString(byte[] bytes, boolean isText) {
+        return isText ? toString(bytes) : toHexString(bytes);
+    }
+
+    public static byte[] toBytes(long n) {
+        byte[] bytes = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            bytes[i] = (byte)(n >> (8 * i));
+        }
+        return bytes;
     }
 
     public static String readString(ByteBuffer buffer, int numBytes, int maxLength) throws NxtException.NotValidException {
@@ -266,5 +303,16 @@ public final class Convert {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
+
+    public static final Comparator<byte[]> byteArrayComparator = (o1, o2) -> {
+        int minLength = Math.min(o1.length, o2.length);
+        for (int i = 0; i < minLength; i++) {
+            int result = Byte.compare(o1[i], o2[i]);
+            if (result != 0) {
+                return result;
+            }
+        }
+        return o1.length - o2.length;
+    };
 
 }

@@ -18,6 +18,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function (NRS, $, undefined) {
+
     var LOCALE_DATE_FORMATS = {
         "ar-SA": "dd/MM/yy",
         "bg-BG": "dd.M.yyyy",
@@ -235,74 +236,74 @@ var NRS = (function (NRS, $, undefined) {
     var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
 
     NRS.formatVolume = function (volume) {
-        var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-        if (volume == 0) return '0 B';
-        var i = parseInt(Math.floor(Math.log(volume) / Math.log(1024)));
+		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+		if (volume == 0) return '0 B';
+		var i = parseInt(Math.floor(Math.log(volume) / Math.log(1024)));
 
         volume = Math.round(volume / Math.pow(1024, i));
-        var size = sizes[i];
+		var size = sizes[i];
 
         var digits = [], formattedVolume = "";
-        do {
-            digits[digits.length] = volume % 10;
-            volume = Math.floor(volume / 10);
-        } while (volume > 0);
-        for (i = 0; i < digits.length; i++) {
-            if (i > 0 && i % 3 == 0) {
-                formattedVolume = "'" + formattedVolume;
-            }
-            formattedVolume = digits[i] + formattedVolume;
-        }
-        return formattedVolume + " " + size;
-    };
+		do {
+			digits[digits.length] = volume % 10;
+			volume = Math.floor(volume / 10);
+		} while (volume > 0);
+		for (i = 0; i < digits.length; i++) {
+			if (i > 0 && i % 3 == 0) {
+				formattedVolume = "'" + formattedVolume;
+			}
+			formattedVolume = digits[i] + formattedVolume;
+		}
+		return formattedVolume + " " + size;
+	};
 
     NRS.formatWeight = function (weight) {
-        var digits = [],
-            formattedWeight = "",
-            i;
-        do {
-            digits[digits.length] = weight % 10;
-            weight = Math.floor(weight / 10);
-        } while (weight > 0);
-        for (i = 0; i < digits.length; i++) {
-            if (i > 0 && i % 3 == 0) {
-                formattedWeight = "'" + formattedWeight;
-            }
-            formattedWeight = digits[i] + formattedWeight;
-        }
-        return formattedWeight.escapeHTML();
-    };
+		var digits = [],
+			formattedWeight = "",
+			i;
+		do {
+			digits[digits.length] = weight % 10;
+			weight = Math.floor(weight / 10);
+		} while (weight > 0);
+		for (i = 0; i < digits.length; i++) {
+			if (i > 0 && i % 3 == 0) {
+				formattedWeight = "'" + formattedWeight;
+			}
+			formattedWeight = digits[i] + formattedWeight;
+		}
+		return formattedWeight.escapeHTML();
+	};
 
     NRS.formatOrderPricePerWholeQNT = function (price, decimals) {
-        price = NRS.calculateOrderPricePerWholeQNT(price, decimals, true);
+		price = NRS.calculateOrderPricePerWholeQNT(price, decimals, true);
 
-        return NRS.format(price);
-    };
+		return NRS.format(price);
+	};
 
     NRS.calculateOrderPricePerWholeQNT = function (price, decimals, returnAsObject) {
-        if (typeof price != "object") {
-            price = new BigInteger(String(price));
-        }
+		if (typeof price != "object") {
+			price = new BigInteger(String(price));
+		}
 
-        return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))), returnAsObject);
-    };
+		return NRS.convertToNXT(price.multiply(new BigInteger("" + Math.pow(10, decimals))), returnAsObject);
+	};
 
     NRS.calculatePricePerWholeQNT = function (price, decimals) {
-        price = String(price);
+		price = String(price);
 
-        if (decimals) {
-            var toRemove = price.slice(-decimals);
+		if (decimals) {
+			var toRemove = price.slice(-decimals);
 
-            if (!/^[0]+$/.test(toRemove)) {
-                //return new Big(price).div(new Big(Math.pow(10, decimals))).round(8, 0);
-                throw $.t("error_invalid_input");
-            } else {
-                return price.slice(0, -decimals);
-            }
-        } else {
-            return price;
-        }
-    };
+			if (!/^[0]+$/.test(toRemove)) {
+				//return new Big(price).div(new Big(Math.pow(10, decimals))).round(8, 0);
+				throw $.t("error_invalid_input");
+			} else {
+				return price.slice(0, -decimals);
+			}
+		} else {
+			return price;
+		}
+	};
 
     function calculateOrderTotalImpl(quantityQNT, priceNQT) {
         if (typeof quantityQNT != "object") {
@@ -323,25 +324,28 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.calculatePercentage = function (a, b, rounding_mode) {
-        if (rounding_mode != undefined) { // Rounding mode from Big.js
-            Big.RM = rounding_mode;
+		if (String(b) == "0") {
+            return "0";
         }
-        a = new Big(String(a));
-        b = new Big(String(b));
+        if (rounding_mode != undefined) { // Rounding mode from Big.js
+			Big.RM = rounding_mode;
+		}
+		a = new Big(String(a));
+		b = new Big(String(b));
 
-        var result = a.div(b).times(new Big("100")).toFixed(2);
-        Big.RM = 1;
+		var result = a.div(b).times(new Big("100")).toFixed(2);
+		Big.RM = 1;
 
-        return result.toString();
-    };
+		return result.toString();
+	};
 
     NRS.convertToNXT = function (amount, returnAsObject) {
         var negative = "";
         var mantissa = "";
 
-        if (typeof amount != "object") {
-            amount = new BigInteger(String(amount));
-        }
+		if (typeof amount != "object") {
+			amount = new BigInteger(String(amount));
+		}
 
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             amount = amount.abs();
@@ -361,7 +365,7 @@ var NRS = (function (NRS, $, undefined) {
             mantissa += fractionalPart.replace(/0+$/, "");
         }
 
-        amount = amount.toString();
+		amount = amount.toString();
 
         if (returnAsObject) {
             return {
@@ -375,77 +379,77 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.amountToPrecision = function (amount, decimals) {
-        amount = String(amount);
+		amount = String(amount);
 
-        var parts = amount.split(".");
+		var parts = amount.split(".");
 
-        //no fractional part
-        if (parts.length == 1) {
-            return parts[0];
-        } else if (parts.length == 2) {
-            var fraction = parts[1];
-            fraction = fraction.replace(/0+$/, "");
+		//no fractional part
+		if (parts.length == 1) {
+			return parts[0];
+		} else if (parts.length == 2) {
+			var fraction = parts[1];
+			fraction = fraction.replace(/0+$/, "");
 
-            if (fraction.length > decimals) {
-                fraction = fraction.substring(0, decimals);
-            }
+			if (fraction.length > decimals) {
+				fraction = fraction.substring(0, decimals);
+			}
 
-            return parts[0] + "." + fraction;
-        } else {
-            throw $.t("error_invalid_input");
-        }
-    };
+			return parts[0] + "." + fraction;
+		} else {
+			throw $.t("error_invalid_input");
+		}
+	};
 
     NRS.convertToNQT = function (currency) {
-        currency = String(currency);
+		currency = String(currency);
 
-        var parts = currency.split(".");
+		var parts = currency.split(".");
 
-        var amount = parts[0];
+		var amount = parts[0];
 
-        //no fractional part
+		//no fractional part
         var fraction;
-        if (parts.length == 1) {
+		if (parts.length == 1) {
             fraction = "00000000";
-        } else if (parts.length == 2) {
-            if (parts[1].length <= 8) {
+		} else if (parts.length == 2) {
+			if (parts[1].length <= 8) {
                 fraction = parts[1];
-            } else {
+			} else {
                 fraction = parts[1].substring(0, 8);
-            }
-        } else {
-            throw $.t("error_invalid_input");
-        }
+			}
+		} else {
+			throw $.t("error_invalid_input");
+		}
 
-        for (var i = fraction.length; i < 8; i++) {
-            fraction += "0";
-        }
+		for (var i = fraction.length; i < 8; i++) {
+			fraction += "0";
+		}
 
-        var result = amount + "" + fraction;
+		var result = amount + "" + fraction;
 
-        //in case there's a comma or something else in there.. at this point there should only be numbers
-        if (!/^\d+$/.test(result)) {
-            throw $.t("error_invalid_input");
-        }
+		//in case there's a comma or something else in there.. at this point there should only be numbers
+		if (!/^\d+$/.test(result)) {
+			throw $.t("error_invalid_input");
+		}
 
-        //remove leading zeroes
-        result = result.replace(/^0+/, "");
+		//remove leading zeroes
+		result = result.replace(/^0+/, "");
 
-        if (result === "") {
-            result = "0";
-        }
+		if (result === "") {
+			result = "0";
+		}
 
-        return result;
-    };
+		return result;
+	};
 
     NRS.convertToQNTf = function (quantity, decimals, returnAsObject) {
-        quantity = String(quantity);
+		quantity = String(quantity);
 
-        if (quantity.length < decimals) {
-            for (var i = quantity.length; i < decimals; i++) {
-                quantity = "0" + quantity;
-            }
-        }
+		if (quantity.length < decimals) {
+			for (var i = quantity.length; i < decimals; i++) {
+				quantity = "0" + quantity;
+			}
+		}
 
         var mantissa = "";
 
@@ -453,9 +457,9 @@ var NRS = (function (NRS, $, undefined) {
             mantissa = "." + quantity.substring(quantity.length - decimals);
             quantity = quantity.substring(0, quantity.length - decimals);
 
-            if (!quantity) {
-                quantity = "0";
-            }
+			if (!quantity) {
+				quantity = "0";
+			}
 
             mantissa = mantissa.replace(/0+$/, "");
 
@@ -475,40 +479,40 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.convertToQNT = function (quantity, decimals) {
-        quantity = String(quantity);
+		quantity = String(quantity);
 
-        var parts = quantity.split(".");
+		var parts = quantity.split(".");
 
-        var qnt = parts[0];
+		var qnt = parts[0];
 
-        //no fractional part
+		//no fractional part
         var i;
-        if (parts.length == 1) {
-            if (decimals) {
+		if (parts.length == 1) {
+			if (decimals) {
                 for (i = 0; i < decimals; i++) {
-                    qnt += "0";
-                }
-            }
-        } else if (parts.length == 2) {
-            var fraction = parts[1];
-            if (fraction.length > decimals) {
-                throw $.t("error_fraction_decimals", {
-                    "decimals": decimals
-                });
-            } else if (fraction.length < decimals) {
+					qnt += "0";
+				}
+			}
+		} else if (parts.length == 2) {
+			var fraction = parts[1];
+			if (fraction.length > decimals) {
+				throw $.t("error_fraction_decimals", {
+					"decimals": decimals
+				});
+			} else if (fraction.length < decimals) {
                 for (i = fraction.length; i < decimals; i++) {
-                    fraction += "0";
-                }
-            }
-            qnt += fraction;
-        } else {
-            throw $.t("error_invalid_input");
-        }
+					fraction += "0";
+				}
+			}
+			qnt += fraction;
+		} else {
+			throw $.t("error_invalid_input");
+		}
 
-        //in case there's a comma or something else in there.. at this point there should only be numbers
-        if (!/^\d+$/.test(qnt)) {
-            throw $.t("error_invalid_input_numbers");
-        }
+		//in case there's a comma or something else in there.. at this point there should only be numbers
+		if (!/^\d+$/.test(qnt)) {
+			throw $.t("error_invalid_input_numbers");
+		}
         try {
             if (parseInt(qnt) === 0) {
                 return "0";
@@ -516,13 +520,13 @@ var NRS = (function (NRS, $, undefined) {
         } catch (e) {
         }
 
-        //remove leading zeroes
-        return qnt.replace(/^0+/, "");
-    };
+		//remove leading zeroes
+		return qnt.replace(/^0+/, "");
+	};
 
     NRS.format = function (params, no_escaping) {
         var amount;
-        if (typeof params != "object") {
+		if (typeof params != "object") {
             amount = String(params);
             var negative = amount.charAt(0) == "-" ? "-" : "";
             if (negative) {
@@ -537,28 +541,28 @@ var NRS = (function (NRS, $, undefined) {
 
         amount = String(params.amount);
 
-        var digits = amount.split("").reverse();
-        var formattedAmount = "";
+		var digits = amount.split("").reverse();
+		var formattedAmount = "";
 
-        for (var i = 0; i < digits.length; i++) {
-            if (i > 0 && i % 3 == 0) {
-                formattedAmount = "'" + formattedAmount;
-            }
-            formattedAmount = digits[i] + formattedAmount;
+		for (var i = 0; i < digits.length; i++) {
+			if (i > 0 && i % 3 == 0) {
+				formattedAmount = "'" + formattedAmount;
+			}
+			formattedAmount = digits[i] + formattedAmount;
         }
 
         var output = (params.negative ? params.negative : "") + formattedAmount + params.mantissa;
 
-        if (!no_escaping) {
-            output = output.escapeHTML();
-        }
+		if (!no_escaping) {
+			output = output.escapeHTML();
+		}
 
-        return output;
-    };
+		return output;
+	};
 
     NRS.formatQuantity = function (quantity, decimals, no_escaping) {
-        return NRS.format(NRS.convertToQNTf(quantity, decimals, true), no_escaping);
-    };
+		return NRS.format(NRS.convertToQNTf(quantity, decimals, true), no_escaping);
+	};
 
     NRS.formatAmount = function (amount, round, no_escaping) {
         if (typeof amount == "undefined") {
@@ -622,20 +626,20 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
         var date;
-        if (typeof timestamp == "object") {
+		if (typeof timestamp == "object") {
             date = timestamp;
         } else if (isAbsoluteTime) {
             date = new Date(timestamp);
         } else {
             date = new Date(NRS.fromEpochTime(timestamp));
-        }
+		}
 
-        if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
-            var d = date.getDate();
-            var dd = d < 10 ? '0' + d : d;
-            var M = date.getMonth() + 1;
-            var MM = M < 10 ? '0' + M : M;
-            var yyyy = date.getFullYear();
+		if (!isNaN(date) && typeof(date.getFullYear) == 'function') {
+			var d = date.getDate();
+			var dd = d < 10 ? '0' + d : d;
+			var M = date.getMonth() + 1;
+			var MM = M < 10 ? '0' + M : M;
+			var yyyy = date.getFullYear();
             var yy = String(yyyy).substring(2);
 
             var res = LOCALE_DATE_FORMAT
@@ -669,106 +673,118 @@ var NRS = (function (NRS, $, undefined) {
 
                 if (!NRS.settings || NRS.settings["24_hour_format"] == "0") {
                     res += " " + (originalHours >= 12 ? "PM" : "AM");
-                }
-            }
+				}
+			}
 
-            return res;
-        } else {
-            return date.toLocaleString();
-        }
-    };
+			return res;
+		} else {
+			return date.toLocaleString();
+		}
+	};
 
     NRS.isPrivateIP = function (ip) {
-        if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
-            return false;
-        }
-        var parts = ip.split('.');
-        return parts[0] === '10' || parts[0] == '127' || parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31) || parts[0] === '192' && parts[1] === '168';
-    };
+		if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+			return false;
+		}
+		var parts = ip.split('.');
+      return parts[0] === '10' || parts[0] == '127' || parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31) || parts[0] === '192' && parts[1] === '168';
+	};
 
     NRS.convertToHex16 = function (str) {
-        var hex, i;
-        var result = "";
-        for (i = 0; i < str.length; i++) {
-            hex = str.charCodeAt(i).toString(16);
-            result += ("000" + hex).slice(-4);
-        }
+		var hex, i;
+		var result = "";
+		for (i = 0; i < str.length; i++) {
+			hex = str.charCodeAt(i).toString(16);
+			result += ("000" + hex).slice(-4);
+		}
 
-        return result;
-    };
+		return result;
+	};
 
     NRS.convertFromHex16 = function (hex) {
-        var j;
-        var hexes = hex.match(/.{1,4}/g) || [];
-        var back = "";
-        for (j = 0; j < hexes.length; j++) {
-            back += String.fromCharCode(parseInt(hexes[j], 16));
-        }
+		var j;
+		var hexes = hex.match(/.{1,4}/g) || [];
+		var back = "";
+		for (j = 0; j < hexes.length; j++) {
+			back += String.fromCharCode(parseInt(hexes[j], 16));
+		}
 
-        return back;
-    };
+		return back;
+	};
 
     NRS.convertFromHex8 = function (hex) {
         var hexStr = hex.toString(); //force conversion
-        var str = '';
+		var str = '';
         for (var i = 0; i < hexStr.length; i += 2) {
             str += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
         }
-        return str;
-    };
+		return str;
+	};
 
     NRS.convertToHex8 = function (str) {
-        var hex = '';
-        for (var i = 0; i < str.length; i++) {
-            hex += '' + str.charCodeAt(i).toString(16);
-        }
-        return hex;
-    };
+		var hex = '';
+		for (var i = 0; i < str.length; i++) {
+			hex += '' + str.charCodeAt(i).toString(16);
+		}
+		return hex;
+	};
 
     NRS.getFormData = function ($form, unmodified) {
-        var serialized = $form.serializeArray();
-        var data = {};
-        var multiValuedFields = ["phasingWhitelisted"];
-        for (var s in serialized) {
+		var serialized = $form.serializeArray();
+		var data = {};
+        var multiValuedFields = ["phasingWhitelisted", "controlWhitelisted"];
+		for (var s in serialized) {
             if (!serialized.hasOwnProperty(s)) {
                 continue;
+		}
+			if (multiValuedFields.indexOf(serialized[s]["name"]) > -1) {
+				if (serialized[s]['value'] != "") {
+					if (serialized[s]['name'] in data) {
+						var index = data[serialized[s]['name']].length;
+						data[serialized[s]['name']][index] = serialized[s]['value'];
+					} else {
+						data[serialized[s]['name']] = [serialized[s]['value']]; //all data as list (traditional, to allow multiple values)
+					}
+				}
+			} else {
+				data[serialized[s]['name']] = serialized[s]['value'];
+			}
+		}
+		if (!unmodified) {
+			delete data.request_type;
+			delete data.converted_account_id;
+			delete data.merchant_info;
+		}
+		return data;
+	};
+
+    NRS.mergeMaps = function (mergedMap, toMap, skipAttributes) {
+        for (var attr in mergedMap) {
+            if (!mergedMap.hasOwnProperty(attr)) {
+                continue;
             }
-            if (multiValuedFields.indexOf(serialized[s]["name"]) > -1) {
-                if (serialized[s]['value'] != "") {
-                    if (serialized[s]['name'] in data) {
-                        var index = data[serialized[s]['name']].length;
-                        data[serialized[s]['name']][index] = serialized[s]['value'];
-                    } else {
-                        data[serialized[s]['name']] = [serialized[s]['value']]; //all data as list (traditional, to allow multiple values)
-                    }
-                }
-            } else {
-                data[serialized[s]['name']] = serialized[s]['value'];
+            if (skipAttributes[attr]) {
+                continue;
             }
+            toMap[attr] = mergedMap[attr];
         }
-        if (!unmodified) {
-            delete data.request_type;
-            delete data.converted_account_id;
-            delete data.merchant_info;
-        }
-        return data;
     };
 
     NRS.convertNumericToRSAccountFormat = function (account) {
-        if (/^NXT\-/i.test(account)) {
-            return String(account).escapeHTML();
-        } else {
-            var address = new NxtAddress();
+		if (/^NXT\-/i.test(account)) {
+			return String(account).escapeHTML();
+		} else {
+			var address = new NxtAddress();
 
-            if (address.set(account)) {
-                return address.toString().escapeHTML();
-            } else {
-                return "";
-            }
-        }
-    };
+			if (address.set(account)) {
+				return address.toString().escapeHTML();
+			} else {
+				return "";
+			}
+		}
+	};
 
-    NRS.getAccountLink = function (object, accountKey, accountRef, title) {
+    NRS.getAccountLink = function (object, accountKey, accountRef, title, showAccountRS, clazz) {
         var accountRS;
         if (typeof object[accountKey + "RS"] != "undefined") {
             accountRS = object[accountKey + "RS"];
@@ -780,19 +796,24 @@ var NRS = (function (NRS, $, undefined) {
         var accountTitle;
         if (accountRef && accountRS == accountRef) {
             accountTitle = $.t(title);
+        } else if(showAccountRS) {
+            accountTitle = String(accountRS).escapeHTML();
         } else {
             accountTitle = NRS.getAccountTitle(object, accountKey);
         }
+        if (!clazz) {
+            clazz = "";
+        }
         return "<a href='#' data-user='" + String(accountRS).escapeHTML() +
-            "' class='show_account_modal_action user-info'>" + accountTitle + "</a>";
+            "' class='show_account_modal_action user-info " + clazz + "'>" + accountTitle + "</a>";
     };
 
-    NRS.getTransactionLink = function(id, text) {
+    NRS.getTransactionLink = function(id, text, isEscapedtext) {
         if (!text) {
             text = id;
         }
         return "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(id).escapeHTML() + "'>"
-            + String(text).escapeHTML() + "</a>";
+            + (isEscapedtext ? text : String(text).escapeHTML()) + "</a>";
     };
 
     NRS.getAccountTitle = function (object, acc) {
@@ -823,102 +844,102 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getAccountFormatted = function (object, acc) {
-        var type = typeof object;
+		var type = typeof object;
 
-        if (type == "string" || type == "number") {
-            return String(object).escapeHTML();
-        } else {
-            if (typeof object[acc + "RS"] == "undefined") {
-                return "";
-            } else {
-                return String(object[acc + "RS"]).escapeHTML();
-            }
-        }
-    };
+		if (type == "string" || type == "number") {
+			return String(object).escapeHTML();
+		} else {
+			if (typeof object[acc + "RS"] == "undefined") {
+				return "";
+			} else {
+				return String(object[acc + "RS"]).escapeHTML();
+			}
+		}
+	};
 
     NRS.dataLoaded = function (data, noPageLoad) {
-        var $el = $("#" + NRS.currentPage + "_contents");
+		var $el = $("#" + NRS.currentPage + "_contents");
 
-        if ($el.length) {
-            $el.empty().append(data);
-        } else {
-            $el = $("#" + NRS.currentPage + "_table");
-            $el.find("tbody").empty().append(data);
-        }
+		if ($el.length) {
+			$el.empty().append(data);
+		} else {
+			$el = $("#" + NRS.currentPage + "_table");
+			$el.find("tbody").empty().append(data);
+		}
 
-        NRS.dataLoadFinished($el);
+		NRS.dataLoadFinished($el);
 
-        if (!noPageLoad) {
-            NRS.pageLoaded();
-        }
-    };
+		if (!noPageLoad) {
+			NRS.pageLoaded();
+		}
+	};
 
     NRS.dataLoadFinished = function ($el, fadeIn) {
-        var $parent = $el.parent();
+		var $parent = $el.parent();
 
-        if (fadeIn) {
-            $parent.hide();
-        }
+		if (fadeIn) {
+			$parent.hide();
+		}
 
-        $parent.removeClass("data-loading");
+		$parent.removeClass("data-loading");
 
-        var extra = $parent.data("extra");
+		var extra = $parent.data("extra");
 
-        var empty = false;
+		var empty = false;
 
-        if ($el.is("table")) {
-            if ($el.find("tbody tr").length > 0) {
-                $parent.removeClass("data-empty");
-                if ($parent.data("no-padding")) {
-                    $parent.parent().addClass("no-padding");
-                }
+		if ($el.is("table")) {
+			if ($el.find("tbody tr").length > 0) {
+				$parent.removeClass("data-empty");
+				if ($parent.data("no-padding")) {
+					$parent.parent().addClass("no-padding");
+				}
 
-                if (extra) {
-                    $(extra).show();
-                }
-            } else {
-                empty = true;
-            }
-        } else {
-            if ($.trim($el.html()).length == 0) {
-                empty = true;
-            }
-        }
+				if (extra) {
+					$(extra).show();
+				}
+			} else {
+				empty = true;
+			}
+		} else {
+			if ($.trim($el.html()).length == 0) {
+				empty = true;
+			}
+		}
 
-        if (empty) {
-            $parent.addClass("data-empty");
-            if ($parent.data("no-padding")) {
-                $parent.parent().removeClass("no-padding");
-            }
-            if (extra) {
-                $(extra).hide();
-            }
-        } else {
-            $parent.removeClass("data-empty");
-        }
+		if (empty) {
+			$parent.addClass("data-empty");
+			if ($parent.data("no-padding")) {
+				$parent.parent().removeClass("no-padding");
+			}
+			if (extra) {
+				$(extra).hide();
+			}
+		} else {
+			$parent.removeClass("data-empty");
+		}
 
-        if (fadeIn) {
+		if (fadeIn) {
             $parent.stop(true, true).fadeIn(400, function () {
-                $parent.show();
-            });
-        }
-    };
+				$parent.show();
+			});
+		}
+	};
 
     NRS.createInfoTable = function (data, fixed) {
-        var rows = "";
-        for (var key in data) {
+		var rows = "";
+		for (var key in data) {
             if (!data.hasOwnProperty(key)) {
                 continue;
             }
-            var value = data[key];
+			var value = data[key];
 
-            var match = key.match(/(.*)(NQT|QNT|RS)$/);
-            var type = "";
+			var match = key.match(/(.*)(NQT|QNT|RS)$/);
+			var type = "";
 
-            if (match && match[1]) {
-                key = match[1];
-                type = match[2];
-            }
+			if (match && match[1]) {
+				key = match[1];
+				type = match[2];
+			}
 
             key = key.replace(/\s+/g, "").replace(/([A-Z])/g, function ($1) {
                 return "_" + $1.toLowerCase();
@@ -933,7 +954,7 @@ var NRS = (function (NRS, $, undefined) {
                 value = String(value).escapeHTML();
             } else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
                 key == "total_buy_limit" || key == "total_sell_limit" || key == "units_exchanged" || key == "total_exchanged" ||
-                key == "initial_units" || key == "reserve_units" || key == "max_units" || key == "quantity_traded") && $.isArray(value)) {
+                key == "initial_units" || key == "reserve_units" || key == "max_units" || key == "quantity_traded" || key == "initial_quantity") && $.isArray(value)) {
                 if ($.isArray(value)) {
                     value = NRS.formatQuantity(value[0], value[1]);
                 } else {
@@ -956,391 +977,391 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getSelectedText = function () {
-        var t = "";
-        if (window.getSelection) {
-            t = window.getSelection().toString();
-        } else if (document.getSelection) {
-            t = document.getSelection().toString();
-        } else if (document.selection) {
-            t = document.selection.createRange().text;
-        }
-        return t;
-    };
+		var t = "";
+		if (window.getSelection) {
+			t = window.getSelection().toString();
+		} else if (document.getSelection) {
+			t = document.getSelection().toString();
+		} else if (document.selection) {
+			t = document.selection.createRange().text;
+		}
+		return t;
+	};
 
     NRS.formatStyledAmount = function (strAmount, round) {
         var amount = NRS.formatAmount(strAmount, round).split(".");
-        if (amount.length == 2) {
+		if (amount.length == 2) {
             return amount[0] + "<span style='font-size:12px'>." + amount[1] + "</span>";
-        } else {
+		} else {
             return amount[0];
-        }
-    };
+		}
+	};
 
     NRS.getUnconfirmedTransactionsFromCache = function (type, subtype, fields, single) {
-        if (!NRS.unconfirmedTransactions.length) {
-            return false;
-        }
+		if (!NRS.unconfirmedTransactions.length) {
+			return false;
+		}
 
-        if (typeof type == "number") {
-            type = [type];
-        }
+		if (typeof type == "number") {
+			type = [type];
+		}
 
-        if (typeof subtype == "number") {
-            subtype = [subtype];
-        }
+		if (typeof subtype == "number") {
+			subtype = [subtype];
+		}
 
-        var unconfirmedTransactions = [];
+		var unconfirmedTransactions = [];
 
-        for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
-            var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
+		for (var i = 0; i < NRS.unconfirmedTransactions.length; i++) {
+			var unconfirmedTransaction = NRS.unconfirmedTransactions[i];
 
-            if (type.indexOf(unconfirmedTransaction.type) == -1 || (subtype.length > 0 && subtype.indexOf(unconfirmedTransaction.subtype) == -1)) {
-                continue;
-            }
+			if (type.indexOf(unconfirmedTransaction.type) == -1 || (subtype.length > 0 && subtype.indexOf(unconfirmedTransaction.subtype) == -1)) {
+				continue;
+			}
 
-            if (fields) {
-                for (var key in fields) {
+			if (fields) {
+				for (var key in fields) {
                     if (!fields.hasOwnProperty(key)) {
                         continue;
                     }
-                    if (unconfirmedTransaction[key] == fields[key]) {
-                        if (single) {
-                            return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
-                        } else {
-                            unconfirmedTransactions.push(unconfirmedTransaction);
-                        }
-                    }
-                }
-            } else {
-                if (single) {
-                    return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
-                } else {
-                    unconfirmedTransactions.push(unconfirmedTransaction);
-                }
-            }
-        }
+					if (unconfirmedTransaction[key] == fields[key]) {
+						if (single) {
+							return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+						} else {
+							unconfirmedTransactions.push(unconfirmedTransaction);
+						}
+					}
+				}
+			} else {
+				if (single) {
+					return NRS.completeUnconfirmedTransactionDetails(unconfirmedTransaction);
+				} else {
+					unconfirmedTransactions.push(unconfirmedTransaction);
+				}
+			}
+		}
 
-        if (single || unconfirmedTransactions.length == 0) {
-            return false;
-        } else {
+		if (single || unconfirmedTransactions.length == 0) {
+			return false;
+		} else {
             $.each(unconfirmedTransactions, function (key, val) {
-                unconfirmedTransactions[key] = NRS.completeUnconfirmedTransactionDetails(val);
-            });
+				unconfirmedTransactions[key] = NRS.completeUnconfirmedTransactionDetails(val);
+			});
 
-            return unconfirmedTransactions;
-        }
-    };
+			return unconfirmedTransactions;
+		}
+	};
 
     NRS.completeUnconfirmedTransactionDetails = function (unconfirmedTransaction) {
-        if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 4 && !unconfirmedTransaction.name) {
-            NRS.sendRequest("getDGSGood", {
-                "goods": unconfirmedTransaction.attachment.goods
+		if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 4 && !unconfirmedTransaction.name) {
+			NRS.sendRequest("getDGSGood", {
+				"goods": unconfirmedTransaction.attachment.goods
             }, function (response) {
-                unconfirmedTransaction.name = response.name;
-                unconfirmedTransaction.buyer = unconfirmedTransaction.sender;
-                unconfirmedTransaction.buyerRS = unconfirmedTransaction.senderRS;
-                unconfirmedTransaction.seller = response.seller;
-                unconfirmedTransaction.sellerRS = response.sellerRS;
-            }, false);
-        } else if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 0) {
-            unconfirmedTransaction.goods = unconfirmedTransaction.transaction;
-        }
+				unconfirmedTransaction.name = response.name;
+				unconfirmedTransaction.buyer = unconfirmedTransaction.sender;
+				unconfirmedTransaction.buyerRS = unconfirmedTransaction.senderRS;
+				unconfirmedTransaction.seller = response.seller;
+				unconfirmedTransaction.sellerRS = response.sellerRS;
+			}, false);
+		} else if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 0) {
+			unconfirmedTransaction.goods = unconfirmedTransaction.transaction;
+		}
 
-        return unconfirmedTransaction;
-    };
+		return unconfirmedTransaction;
+	};
 
     NRS.hasTransactionUpdates = function (transactions) {
-        return ((transactions && transactions.length) || NRS.unconfirmedTransactionsChange);
-    };
+		return ((transactions && transactions.length) || NRS.unconfirmedTransactionsChange);
+	};
 
     NRS.showMore = function ($el) {
-        if (!$el) {
-            $el = $("#" + NRS.currentPage + "_contents");
-            if (!$el.length) {
-                $el = $("#" + NRS.currentPage + "_table");
-            }
-        }
-        var adjustheight = 40;
-        var moreText = "Show more...";
-        var lessText = "Show less...";
+		if (!$el) {
+			$el = $("#" + NRS.currentPage + "_contents");
+			if (!$el.length) {
+				$el = $("#" + NRS.currentPage + "_table");
+			}
+		}
+		var adjustheight = 40;
+		var moreText = "Show more...";
+		var lessText = "Show less...";
 
         $el.find(".showmore > .moreblock").each(function () {
-            if ($(this).height() > adjustheight) {
-                $(this).css("height", adjustheight).css("overflow", "hidden");
-                $(this).parent(".showmore").append(' <a href="#" class="adjust"></a>');
+			if ($(this).height() > adjustheight) {
+				$(this).css("height", adjustheight).css("overflow", "hidden");
+				$(this).parent(".showmore").append(' <a href="#" class="adjust"></a>');
                 $(this).parent(".showmore").find("a.adjust").text(moreText).click(function (e) {
-                    e.preventDefault();
+					e.preventDefault();
 
-                    if ($(this).text() == moreText) {
-                        $(this).parents("div:first").find(".moreblock").css('height', 'auto').css('overflow', 'visible');
-                        $(this).parents("div:first").find("p.continued").css('display', 'none');
-                        $(this).text(lessText);
-                    } else {
-                        $(this).parents("div:first").find(".moreblock").css('height', adjustheight).css('overflow', 'hidden');
-                        $(this).parents("div:first").find("p.continued").css('display', 'block');
-                        $(this).text(moreText);
-                    }
-                });
-            }
-        });
-    };
+					if ($(this).text() == moreText) {
+						$(this).parents("div:first").find(".moreblock").css('height', 'auto').css('overflow', 'visible');
+						$(this).parents("div:first").find("p.continued").css('display', 'none');
+						$(this).text(lessText);
+					} else {
+						$(this).parents("div:first").find(".moreblock").css('height', adjustheight).css('overflow', 'hidden');
+						$(this).parents("div:first").find("p.continued").css('display', 'block');
+						$(this).text(moreText);
+					}
+				});
+			}
+		});
+	};
 
     NRS.showFullDescription = function ($el) {
-        $el.addClass("open").removeClass("closed");
-        $el.find(".description_toggle").text("Less...");
-    };
+		$el.addClass("open").removeClass("closed");
+		$el.find(".description_toggle").text("Less...");
+	};
 
     NRS.showPartialDescription = function ($el) {
-        if ($el.hasClass("open") || $el.height() > 40) {
-            $el.addClass("closed").removeClass("open");
-            $el.find(".description_toggle").text("More...");
-        } else {
-            $el.find(".description_toggle").text("");
-        }
-    };
+		if ($el.hasClass("open") || $el.height() > 40) {
+			$el.addClass("closed").removeClass("open");
+			$el.find(".description_toggle").text("More...");
+		} else {
+			$el.find(".description_toggle").text("");
+		}
+	};
 
     $("body").on(".description_toggle", "click", function (e) {
-        e.preventDefault();
+		e.preventDefault();
 
-        if ($(this).closest(".description").hasClass("open")) {
-            NRS.showPartialDescription();
-        } else {
-            NRS.showFullDescription();
-        }
-    });
+		if ($(this).closest(".description").hasClass("open")) {
+			NRS.showPartialDescription();
+		} else {
+			NRS.showFullDescription();
+		}
+	});
 
     $("#offcanvas_toggle").on("click", function (e) {
-        e.preventDefault();
+		e.preventDefault();
 
-        //If window is small enough, enable sidebar push menu
+		//If window is small enough, enable sidebar push menu
         var leftSide = $(".left-side");
         var rightSide = $(".right-side");
-        if ($(window).width() <= 992) {
+		if ($(window).width() <= 992) {
             var rowOffCanvas = $('.row-offcanvas');
             rowOffCanvas.toggleClass('active');
             leftSide.removeClass("collapse-left");
             rightSide.removeClass("strech");
             rowOffCanvas.toggleClass("relative");
-        } else {
-            //Else, enable content streching
+		} else {
+			//Else, enable content streching
             leftSide.toggleClass("collapse-left");
             rightSide.toggleClass("strech");
-        }
+		}
 
         leftSide.one($.support.transition.end,
             function () {
-                $(".content.content-stretch:visible").width($(".page:visible").width());
-            });
-    });
+			$(".content.content-stretch:visible").width($(".page:visible").width());
+		});
+	});
 
     $.fn.tree = function () {
         return this.each(function () {
-            var btn = $(this).children("a").first();
-            var menu = $(this).children(".treeview-menu").first();
-            var isActive = $(this).hasClass('active');
+			var btn = $(this).children("a").first();
+			var menu = $(this).children(".treeview-menu").first();
+			var isActive = $(this).hasClass('active');
 
-            //initialize already active menus
-            if (isActive) {
-                menu.show();
-                btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
-            }
-            //Slide open or close the menu on link click
+			//initialize already active menus
+			if (isActive) {
+				menu.show();
+				btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
+			}
+			//Slide open or close the menu on link click
             btn.click(function (e) {
-                e.preventDefault();
-                if (isActive) {
-                    //Slide up to close menu
-                    menu.slideUp();
-                    isActive = false;
-                    btn.children(".fa-angle-down").first().removeClass("fa-angle-down").addClass("fa-angle-right");
-                    btn.parent("li").removeClass("active");
-                } else {
-                    //Slide down to open menu
-                    menu.slideDown();
-                    isActive = true;
-                    btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
-                    btn.parent("li").addClass("active");
-                }
-            });
-        });
-    };
+				e.preventDefault();
+				if (isActive) {
+					//Slide up to close menu
+					menu.slideUp();
+					isActive = false;
+					btn.children(".fa-angle-down").first().removeClass("fa-angle-down").addClass("fa-angle-right");
+					btn.parent("li").removeClass("active");
+				} else {
+					//Slide down to open menu
+					menu.slideDown();
+					isActive = true;
+					btn.children(".fa-angle-right").first().removeClass("fa-angle-right").addClass("fa-angle-down");
+					btn.parent("li").addClass("active");
+				}
+			});
+		});
+	};
 
     NRS.setCookie = function (name, value, days) {
-        var expires;
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+		var expires;
+		if (days) {
+			var date = new Date();
+			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
-        } else {
-            expires = "";
-        }
+		} else {
+			expires = "";
+		}
         //noinspection JSDeprecatedSymbols
-        document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
-    };
+		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
+	};
 
     NRS.getCookie = function (name) {
         //noinspection JSDeprecatedSymbols
-        var nameEQ = escape(name) + "=";
-        var ca = document.cookie.split(';');
-        for (var i = 0; i < ca.length; i++) {
-            var c = ca[i];
+		var nameEQ = escape(name) + "=";
+		var ca = document.cookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
             while (c.charAt(0) === ' ') {
                 c = c.substring(1, c.length);
-            }
+		}
             if (c.indexOf(nameEQ) === 0) {
                 //noinspection JSDeprecatedSymbols
                 return unescape(c.substring(nameEQ.length, c.length));
             }
         }
-        return null;
-    };
+		return null;
+	};
 
     NRS.deleteCookie = function (name) {
-        NRS.setCookie(name, "", -1);
-    };
+		NRS.setCookie(name, "", -1);
+	};
 
     NRS.translateServerError = function (response) {
         var match;
-        if (!response.errorDescription) {
-            if (response.errorMessage) {
-                response.errorDescription = response.errorMessage;
-            } else if (response.error) {
-                if (typeof response.error == "string") {
-                    response.errorDescription = response.error;
-                    response.errorCode = -1;
-                } else {
-                    return $.t("error_unknown");
-                }
-            } else {
-                return $.t("error_unknown");
-            }
-        }
+		if (!response.errorDescription) {
+			if (response.errorMessage) {
+				response.errorDescription = response.errorMessage;
+			} else if (response.error) {
+				if (typeof response.error == "string") {
+					response.errorDescription = response.error;
+					response.errorCode = -1;
+				} else {
+					return $.t("error_unknown");
+				}
+			} else {
+				return $.t("error_unknown");
+			}
+		}
 
-        switch (response.errorCode) {
-            case -1:
-                switch (response.errorDescription) {
-                    case "Invalid ordinary payment":
-                        return $.t("error_invalid_ordinary_payment");
-                        break;
-                    case "Missing alias name":
-                        return $.t("error_missing_alias_name");
-                        break;
-                    case "Transferring aliases to Genesis account not allowed":
-                        return $.t("error_alias_transfer_genesis");
-                        break;
-                    case "Ask order already filled":
-                        return $.t("error_ask_order_filled");
-                        break;
-                    case "Bid order already filled":
-                        return $.t("error_bid_order_filled");
-                        break;
-                    case "Only text encrypted messages allowed":
-                        return $.t("error_encrypted_text_messages_only");
-                        break;
-                    case "Missing feedback message":
-                        return $.t("error_missing_feedback_message");
-                        break;
-                    case "Only text public messages allowed":
-                        return $.t("error_public_text_messages_only");
-                        break;
-                    case "Purchase does not exist yet or not yet delivered":
-                        return $.t("error_purchase_delivery");
-                        break;
-                    case "Purchase does not exist or is not delivered or is already refunded":
-                        return $.t("error_purchase_refund");
-                        break;
-                    case "Recipient account does not have a public key, must attach a public key announcement":
-                        return $.t("error_recipient_no_public_key_announcement");
-                        break;
-                    case "Transaction is not signed yet":
-                        return $.t("error_transaction_not_signed");
-                        break;
-                    case "Transaction already signed":
-                        return $.t("error_transaction_already_signed");
-                        break;
-                    case "PublicKeyAnnouncement cannot be attached to transactions with no recipient":
-                        return $.t("error_public_key_announcement_no_recipient");
-                        break;
-                    case "Announced public key does not match recipient accountId":
-                        return $.t("error_public_key_different_account_id");
-                        break;
-                    case "Public key for this account has already been announced":
-                        return $.t("error_public_key_already_announced");
-                        break;
-                    default:
-                        if (response.errorDescription.indexOf("Alias already owned by another account") != -1) {
-                            return $.t("error_alias_owned_by_other_account");
-                        } else if (response.errorDescription.indexOf("Invalid alias sell price") != -1) {
-                            return $.t("error_invalid_alias_sell_price");
-                        } else if (response.errorDescription.indexOf("Alias hasn't been registered yet") != -1) {
-                            return $.t("error_alias_not_yet_registered");
-                        } else if (response.errorDescription.indexOf("Alias doesn't belong to sender") != -1) {
-                            return $.t("error_alias_not_from_sender");
-                        } else if (response.errorDescription.indexOf("Alias is owned by account other than recipient") != -1) {
-                            return $.t("error_alias_not_from_recipient");
-                        } else if (response.errorDescription.indexOf("Alias is not for sale") != -1) {
-                            return $.t("error_alias_not_for_sale");
-                        } else if (response.errorDescription.indexOf("Invalid alias name") != -1) {
-                            return $.t("error_invalid_alias_name");
-                        } else if (response.errorDescription.indexOf("Invalid URI length") != -1) {
-                            return $.t("error_invalid_alias_uri_length");
-                        } else if (response.errorDescription.indexOf("Invalid ask order") != -1) {
-                            return $.t("error_invalid_ask_order");
-                        } else if (response.errorDescription.indexOf("Invalid bid order") != -1) {
-                            return $.t("error_invalid_bid_order");
-                        } else if (response.errorDescription.indexOf("Goods price or quantity changed") != -1) {
-                            return $.t("error_dgs_price_quantity_changed");
-                        } else if (response.errorDescription.indexOf("Invalid digital goods price change") != -1) {
-                            return $.t("error_invalid_dgs_price_change");
-                        } else if (response.errorDescription.indexOf("Invalid digital goods refund") != -1) {
-                            return $.t("error_invalid_dgs_refund");
-                        } else if (response.errorDescription.indexOf("Purchase does not exist yet, or already delivered") != -1) {
-                            return $.t("error_purchase_not_exist_or_delivered");
-                        } else if (response.errorDescription.match(/Goods.*not yet listed or already delisted/)) {
-                            return $.t("error_dgs_not_listed");
-                        } else if (response.errorDescription.match(/Delivery deadline has already expired/)) {
-                            return $.t("error_dgs_delivery_deadline_expired");
-                        } else if (response.errorDescription.match(/Invalid effective balance leasing:.*recipient account.*not found or no public key published/)) {
-                            return $.t("error_invalid_balance_leasing_no_public_key");
-                        } else if (response.errorDescription.indexOf("Invalid effective balance leasing") != -1) {
-                            return $.t("error_invalid_balance_leasing");
-                        } else if (response.errorDescription.match(/Wrong buyer for.*expected:.*/)) {
-                            return $.t("error_wrong_buyer_for_alias");
-                        } else {
-                            return response.errorDescription;
-                        }
+		switch (response.errorCode) {
+			case -1:
+				switch (response.errorDescription) {
+					case "Invalid ordinary payment":
+						return $.t("error_invalid_ordinary_payment");
+						break;
+					case "Missing alias name":
+						return $.t("error_missing_alias_name");
+						break;
+					case "Transferring aliases to Genesis account not allowed":
+						return $.t("error_alias_transfer_genesis");
+						break;
+					case "Ask order already filled":
+						return $.t("error_ask_order_filled");
+						break;
+					case "Bid order already filled":
+						return $.t("error_bid_order_filled");
+						break;
+					case "Only text encrypted messages allowed":
+						return $.t("error_encrypted_text_messages_only");
+						break;
+					case "Missing feedback message":
+						return $.t("error_missing_feedback_message");
+						break;
+					case "Only text public messages allowed":
+						return $.t("error_public_text_messages_only");
+						break;
+					case "Purchase does not exist yet or not yet delivered":
+						return $.t("error_purchase_delivery");
+						break;
+					case "Purchase does not exist or is not delivered or is already refunded":
+						return $.t("error_purchase_refund");
+						break;
+					case "Recipient account does not have a public key, must attach a public key announcement":
+						return $.t("error_recipient_no_public_key_announcement");
+						break;
+					case "Transaction is not signed yet":
+						return $.t("error_transaction_not_signed");
+						break;
+					case "Transaction already signed":
+						return $.t("error_transaction_already_signed");
+						break;
+					case "PublicKeyAnnouncement cannot be attached to transactions with no recipient":
+						return $.t("error_public_key_announcement_no_recipient");
+						break;
+					case "Announced public key does not match recipient accountId":
+						return $.t("error_public_key_different_account_id");
+						break;
+					case "Public key for this account has already been announced":
+						return $.t("error_public_key_already_announced");
+						break;
+					default:
+						if (response.errorDescription.indexOf("Alias already owned by another account") != -1) {
+							return $.t("error_alias_owned_by_other_account");
+						} else if (response.errorDescription.indexOf("Invalid alias sell price") != -1) {
+							return $.t("error_invalid_alias_sell_price");
+						} else if (response.errorDescription.indexOf("Alias hasn't been registered yet") != -1) {
+							return $.t("error_alias_not_yet_registered");
+						} else if (response.errorDescription.indexOf("Alias doesn't belong to sender") != -1) {
+							return $.t("error_alias_not_from_sender");
+						} else if (response.errorDescription.indexOf("Alias is owned by account other than recipient") != -1) {
+							return $.t("error_alias_not_from_recipient");
+						} else if (response.errorDescription.indexOf("Alias is not for sale") != -1) {
+							return $.t("error_alias_not_for_sale");
+						} else if (response.errorDescription.indexOf("Invalid alias name") != -1) {
+							return $.t("error_invalid_alias_name");
+						} else if (response.errorDescription.indexOf("Invalid URI length") != -1) {
+							return $.t("error_invalid_alias_uri_length");
+						} else if (response.errorDescription.indexOf("Invalid ask order") != -1) {
+							return $.t("error_invalid_ask_order");
+						} else if (response.errorDescription.indexOf("Invalid bid order") != -1) {
+							return $.t("error_invalid_bid_order");
+						} else if (response.errorDescription.indexOf("Goods price or quantity changed") != -1) {
+							return $.t("error_dgs_price_quantity_changed");
+						} else if (response.errorDescription.indexOf("Invalid digital goods price change") != -1) {
+							return $.t("error_invalid_dgs_price_change");
+						} else if (response.errorDescription.indexOf("Invalid digital goods refund") != -1) {
+							return $.t("error_invalid_dgs_refund");
+						} else if (response.errorDescription.indexOf("Purchase does not exist yet, or already delivered") != -1) {
+							return $.t("error_purchase_not_exist_or_delivered");
+						} else if (response.errorDescription.match(/Goods.*not yet listed or already delisted/)) {
+							return $.t("error_dgs_not_listed");
+						} else if (response.errorDescription.match(/Delivery deadline has already expired/)) {
+							return $.t("error_dgs_delivery_deadline_expired");
+						} else if (response.errorDescription.match(/Invalid effective balance leasing:.*recipient account.*not found or no public key published/)) {
+							return $.t("error_invalid_balance_leasing_no_public_key");
+						} else if (response.errorDescription.indexOf("Invalid effective balance leasing") != -1) {
+							return $.t("error_invalid_balance_leasing");
+						} else if (response.errorDescription.match(/Wrong buyer for.*expected:.*/)) {
+							return $.t("error_wrong_buyer_for_alias");
+						} else {
+							return response.errorDescription;
+						}
 
-                        break;
-                }
-            case 1:
-                switch (response.errorDescription) {
-                    case "This request is only accepted using POST!":
-                        return $.t("error_post_only");
-                        break;
-                    case "Incorrect request":
-                        return $.t("error_incorrect_request");
-                        break;
-                    default:
-                        return response.errorDescription;
-                        break;
-                }
-                break;
-            case 2:
-                return response.errorDescription;
-                break;
-            case 3:
+						break;
+				}
+			case 1:
+				switch (response.errorDescription) {
+					case "This request is only accepted using POST!":
+						return $.t("error_post_only");
+						break;
+					case "Incorrect request":
+						return $.t("error_incorrect_request");
+						break;
+					default:
+						return response.errorDescription;
+						break;
+				}
+				break;
+			case 2:
+				return response.errorDescription;
+				break;
+			case 3:
                 match = response.errorDescription.match(/"([^"]+)" not specified/i);
-                if (match && match[1]) {
-                    return $.t("error_not_specified", {
-                        "name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
-                    }).capitalize();
-                }
+				if (match && match[1]) {
+					return $.t("error_not_specified", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
+				}
 
                 match = response.errorDescription.match(/At least one of \[(.*)\] must be specified/i);
                 if (match && match[1]) {
                     var fieldNames = match[1].split(",");
                     var translatedFieldNames = [];
                     for (var i=0; i<fieldNames.length; i++) {
-                        translatedFieldNames.push(NRS.getTranslatedFieldName(fieldNames[i]));
+                        translatedFieldNames.push(NRS.getTranslatedFieldName(fieldNames[i].toLowerCase()));
                     }
 
                     var translatedFieldNamesJoined = translatedFieldNames.join(", ");
@@ -1355,103 +1376,103 @@ var NRS = (function (NRS, $, undefined) {
                 break;
             case 4:
                 match = response.errorDescription.match(/Incorrect "(.*)"(.*)/i);
-                if (match && match[1] && match[2]) {
+				if (match && match[1] && match[2]) {
                     return $.t("error_incorrect_name", {
-                        "name": NRS.getTranslatedFieldName(match[1]).toLowerCase(),
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase(),
                         "reason": match[2]
-                    }).capitalize();
-                } else {
-                    return response.errorDescription;
-                }
-                break;
-            case 5:
+					}).capitalize();
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			case 5:
                 match = response.errorDescription.match(/Unknown (.*)/i);
-                if (match && match[1]) {
-                    return $.t("error_unknown_name", {
-                        "name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
-                    }).capitalize();
-                }
+				if (match && match[1]) {
+					return $.t("error_unknown_name", {
+						"name": NRS.getTranslatedFieldName(match[1]).toLowerCase()
+					}).capitalize();
+				}
 
-                if (response.errorDescription == "Account is not forging") {
-                    return $.t("error_not_forging");
-                } else {
-                    return response.errorDescription;
-                }
-                break;
-            case 6:
-                switch (response.errorDescription) {
-                    case "Not enough assets":
-                        return $.t("error_not_enough_assets");
-                        break;
-                    case "Not enough funds":
-                        return $.t("error_not_enough_funds");
-                        break;
-                    default:
-                        return response.errorDescription;
-                        break;
-                }
-                break;
-            case 7:
-                if (response.errorDescription == "Not allowed") {
-                    return $.t("error_not_allowed");
-                } else {
-                    return response.errorDescription;
-                }
-                break;
-            case 8:
-                switch (response.errorDescription) {
-                    case "Goods have not been delivered yet":
-                        return $.t("error_goods_not_delivered_yet");
-                        break;
-                    case "Feedback already sent":
-                        return $.t("error_feedback_already_sent");
-                        break;
-                    case "Refund already sent":
-                        return $.t("error_refund_already_sent");
-                        break;
-                    case "Purchase already delivered":
-                        return $.t("error_purchase_already_delivered");
-                        break;
-                    case "Decryption failed":
-                        return $.t("error_decryption_failed");
-                        break;
-                    case "No attached message found":
-                        return $.t("error_no_attached_message");
-                    case "recipient account does not have public key":
-                        return $.t("error_recipient_no_public_key");
-                    default:
-                        return response.errorDescription;
-                        break;
-                }
-                break;
-            case 9:
-                if (response.errorDescription == "Feature not available") {
-                    return $.t("error_feature_not_available");
-                } else {
-                    return response.errorDescription;
-                }
-                break;
-            default:
-                return response.errorDescription;
-                break;
-        }
-    };
+				if (response.errorDescription == "Account is not forging") {
+					return $.t("error_not_forging");
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			case 6:
+				switch (response.errorDescription) {
+					case "Not enough assets":
+						return $.t("error_not_enough_assets");
+						break;
+					case "Not enough funds":
+						return $.t("error_not_enough_funds");
+						break;
+					default:
+						return response.errorDescription;
+						break;
+				}
+				break;
+			case 7:
+				if (response.errorDescription == "Not allowed") {
+					return $.t("error_not_allowed");
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			case 8:
+				switch (response.errorDescription) {
+					case "Goods have not been delivered yet":
+						return $.t("error_goods_not_delivered_yet");
+						break;
+					case "Feedback already sent":
+						return $.t("error_feedback_already_sent");
+						break;
+					case "Refund already sent":
+						return $.t("error_refund_already_sent");
+						break;
+					case "Purchase already delivered":
+						return $.t("error_purchase_already_delivered");
+						break;
+					case "Decryption failed":
+						return $.t("error_decryption_failed");
+						break;
+					case "No attached message found":
+						return $.t("error_no_attached_message");
+					case "recipient account does not have public key":
+						return $.t("error_recipient_no_public_key");
+					default:
+						return response.errorDescription;
+						break;
+				}
+				break;
+			case 9:
+				if (response.errorDescription == "Feature not available") {
+					return $.t("error_feature_not_available");
+				} else {
+					return response.errorDescription;
+				}
+				break;
+			default:
+				return response.errorDescription;
+				break;
+		}
+	};
 
     NRS.getTranslatedFieldName = function (name) {
         var nameKey = String(name).replace(/NQT|QNT|RS$/, "").replace(/\s+/g, "").replace(/([A-Z])/g, function ($1) {
-            return "_" + $1.toLowerCase();
-        });
+			return "_" + $1.toLowerCase();
+		});
 
-        if (nameKey.charAt(0) == "_") {
-            nameKey = nameKey.substring(1);
-        }
+		if (nameKey.charAt(0) == "_") {
+			nameKey = nameKey.substring(1);
+		}
 
-        if ($.i18n.exists(nameKey)) {
-            return $.t(nameKey).escapeHTML();
-        } else {
-            return nameKey.replace(/_/g, " ").escapeHTML();
-        }
-    };
+		if ($.i18n.exists(nameKey)) {
+			return $.t(nameKey).escapeHTML();
+		} else {
+			return nameKey.replace(/_/g, " ").escapeHTML();
+		}
+	};
 
     NRS.isControlKey = function (charCode) {
         return !(charCode >= 32 || charCode == 10 || charCode == 13);
@@ -1520,18 +1541,18 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getUrlParameter = function (sParam) {
-        var sPageURL = window.location.search.substring(1);
-        var sURLVariables = sPageURL.split('&');
+		var sPageURL = window.location.search.substring(1);
+		var sURLVariables = sPageURL.split('&');
         for (var i = 0; i < sURLVariables.length; i++) {
-            var sParameterName = sURLVariables[i].split('=');
+			var sParameterName = sURLVariables[i].split('=');
             if (sParameterName[0] == sParam) {
-                return sParameterName[1];
-            }
-        }
-        return false;
+				return sParameterName[1];
+			}
+		}
+		return false;
     };
 
-    // http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
+	// http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
     NRS.getUtf8Bytes = function (str) {
         //noinspection JSDeprecatedSymbols
         var utf8 = unescape(encodeURIComponent(str));
@@ -1554,6 +1575,111 @@ var NRS = (function (NRS, $, undefined) {
             statusIcon = "<i class='fa fa-circle' title='" + $.t("confirmed") + "'></i>";
         }
         return statusIcon;
+    };
+
+    NRS.phasingControlObjectToPhasingParams = function(controlObj) {
+        var phasingParams = {}
+
+        phasingParams.phasingVotingModel = controlObj.votingModel;
+        phasingParams.phasingQuorum = controlObj.quorum;
+        phasingParams.phasingMinBalance = controlObj.minBalance;
+        phasingParams.phasingMinBalanceModel = controlObj.minBalanceModel;
+        if (controlObj.holding) {
+            phasingParams.phasingHolding = controlObj.holding;
+        }
+        if (controlObj.whitelist) {
+            phasingParams.phasingWhitelisted = [];
+            $.each(controlObj.whitelist, function(index, accObject) {
+                phasingParams.phasingWhitelisted.push(accObject.whitelisted);
+            });
+        }
+        return phasingParams;
+    };
+
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    NRS.strToUTF8Arr = function(str) {
+        var utf8 = [];
+        for (var i = 0; i < str.length; i++) {
+            var charcode = str.charCodeAt(i);
+            if (charcode < 0x80) utf8.push(charcode);
+            else if (charcode < 0x800) {
+                utf8.push(0xc0 | (charcode >> 6),
+                          0x80 | (charcode & 0x3f));
+            }
+            else if (charcode < 0xd800 || charcode >= 0xe000) {
+                utf8.push(0xe0 | (charcode >> 12),
+                          0x80 | ((charcode >> 6) & 0x3f),
+                          0x80 | (charcode & 0x3f));
+            }
+            // surrogate pair
+            else {
+                i++;
+                // UTF-16 encodes 0x10000-0x10FFFF by
+                // subtracting 0x10000 and splitting the
+                // 20 bits of 0x0-0xFFFFF into two halves
+                charcode = 0x10000 + (((charcode & 0x3ff) << 10)
+                          | (str.charCodeAt(i) & 0x3ff));
+                utf8.push(0xf0 | (charcode >> 18),
+                          0x80 | ((charcode >> 12) & 0x3f),
+                          0x80 | ((charcode >> 6) & 0x3f),
+                          0x80 | (charcode & 0x3f));
+            }
+        }
+        return utf8;
+    };
+
+    function byteArrayToBigInteger(byteArray) {
+        var value = new BigInteger("0", 10);
+        for (var i = byteArray.length - 1; i >= 0; i--) {
+            value = value.multiply(new BigInteger("256", 10)).add(new BigInteger(byteArray[i].toString(10), 10));
+        }
+        return value;
+    }
+
+    NRS.generateToken = function(message, secretPhrase) {
+        var messageBytes = NRS.getUtf8Bytes(message);
+        var pubKeyBytes = converters.hexStringToByteArray(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));
+        var token = pubKeyBytes;
+
+        var tsb = [];
+        var ts = NRS.toEpochTime();
+        tsb[0] = ts & 0xFF;
+        tsb[1] = (ts >> 8) & 0xFF;
+        tsb[2] = (ts >> 16) & 0xFF;
+        tsb[3] = (ts >> 24) & 0xFF;
+
+        messageBytes = messageBytes.concat(pubKeyBytes, tsb);
+        token = token.concat(tsb, converters.hexStringToByteArray(
+            NRS.signBytes(converters.byteArrayToHexString(messageBytes),
+                converters.stringToHexString(secretPhrase))));
+
+        var buf = "";
+        for (var ptr = 0; ptr < 100; ptr += 5) {
+            var nbr = [];
+            nbr[0] = token[ptr] & 0xFF;
+            nbr[1] = token[ptr+1] & 0xFF;
+            nbr[2] = token[ptr+2] & 0xFF;
+            nbr[3] = token[ptr+3] & 0xFF;
+            nbr[4] = token[ptr+4] & 0xFF;
+            var number = byteArrayToBigInteger(nbr);
+            if (number < 32) {
+                buf += "0000000";
+            } else if (number < 1024) {
+                buf += "000000";
+            } else if (number < 32768) {
+                buf += "00000";
+            } else if (number < 1048576) {
+                buf += "0000";
+            } else if (number < 33554432) {
+                buf += "000";
+            } else if (number < 1073741824) {
+                buf += "00";
+            } else if (number < 34359738368) {
+                buf += "0";
+            }
+            buf +=number.toString(32);
+        }
+        return buf;
     };
 
     return NRS;

@@ -92,6 +92,18 @@ public abstract class NxtException extends Exception {
 
     }
 
+    public static class AccountControlException extends NotCurrentlyValidException {
+
+        public AccountControlException(String message) {
+            super(message);
+        }
+
+        public AccountControlException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+    }
+    
     public static final class NotYetEncryptedException extends IllegalStateException {
 
         public NotYetEncryptedException(String message) {

@@ -62,6 +62,9 @@ public final class API {
     public static final int TESTNET_API_PORT = 6876;
     public static final int TESTNET_API_SSLPORT = 6877;
 
+    public static final int openAPIPort;
+    public static final int openAPISSLPort;
+
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
     static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
@@ -147,6 +150,8 @@ public final class API {
             } catch (URISyntaxException e) {
                 Logger.logInfoMessage("Cannot resolve browser URI", e);
             }
+            openAPIPort = "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
+            openAPISSLPort = "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
 
             HandlerList apiHandlers = new HandlerList();
 
@@ -224,6 +229,8 @@ public final class API {
         } else {
             apiServer = null;
             disableAdminPassword = false;
+            openAPIPort = 0;
+            openAPISSLPort = 0;
             Logger.logMessage("API server not enabled");
         }
 

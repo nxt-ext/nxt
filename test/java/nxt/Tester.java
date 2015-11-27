@@ -40,7 +40,7 @@ public class Tester {
     private final Map<Long, Long> initialCurrencyUnits = new HashMap<>();
     private final Map<Long, Long> initialUnconfirmedCurrencyUnits = new HashMap<>();
 
-    Tester(String secretPhrase) {
+    public Tester(String secretPhrase) {
         this.secretPhrase = secretPhrase;
         this.privateKey = Crypto.getPrivateKey(secretPhrase);
         this.publicKey = Crypto.getPublicKey(secretPhrase);
@@ -118,6 +118,22 @@ public class Tester {
         return getAccount().getBalanceNQT();
     }
 
+    public long getAssetQuantityDiff(long assetId) {
+        return Account.getAccount(id).getAssetBalanceQNT(assetId) - getInitialAssetQuantity(assetId);
+    }
+
+    public long getUnconfirmedAssetQuantityDiff(long assetId) {
+        return Account.getAccount(id).getUnconfirmedAssetBalanceQNT(assetId) - getInitialAssetQuantity(assetId);
+    }
+
+    public long getCurrencyUnitsDiff(long currencyId) {
+        return Account.getAccount(id).getCurrencyUnits(currencyId) - getInitialCurrencyUnits(currencyId);
+    }
+
+    public long getUnconfirmedCurrencyUnitsDiff(long currencyId) {
+        return Account.getAccount(id).getUnconfirmedCurrencyUnits(currencyId) - getInitialUnconfirmedCurrencyUnits(currencyId);
+    }
+
     public long getInitialUnconfirmedBalance() {
         return initialUnconfirmedBalance;
     }
@@ -127,15 +143,15 @@ public class Tester {
     }
 
     public long getInitialAssetQuantity(long assetId) {
-        return initialAssetQuantity.get(assetId);
+        return Convert.nullToZero(initialAssetQuantity.get(assetId));
     }
 
     public long getInitialUnconfirmedAssetQuantity(long assetId) {
-        return initialUnconfirmedAssetQuantity.get(assetId);
+        return Convert.nullToZero(initialUnconfirmedAssetQuantity.get(assetId));
     }
 
     public long getInitialCurrencyUnits(long currencyId) {
-        return initialCurrencyUnits.get(currencyId);
+        return Convert.nullToZero(initialCurrencyUnits.get(currencyId));
     }
 
     public long getCurrencyUnits(long currencyId) {
@@ -143,6 +159,6 @@ public class Tester {
     }
 
     public long getInitialUnconfirmedCurrencyUnits(long currencyId) {
-        return initialUnconfirmedCurrencyUnits.get(currencyId);
+        return Convert.nullToZero(initialUnconfirmedCurrencyUnits.get(currencyId));
     }
 }

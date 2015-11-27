@@ -1,28 +1,12 @@
 Copyright © 2013-2015 The Nxt Core Developers.
 
+This is an experimental software release. A temporary permission is granted to
+use this software only for testing purposes, and only until 14 days after the
+release of the next non-experimental NRS version, or until November 30, 2015,
+whichever is earlier. Sub-licensing and redistribution is prohibited.
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License version 2,
-as published by the Free Software Foundation.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License version 2 for more details.
-
-You should have received a copy of the GNU General Public License version 2
-along with this program in the file COPYING.txt. If not, see
-<https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt>.
-
-
-The Nxt core development team will consider granting exceptions to allow use of
-this software under a different license on a case by case basis. Please see the
-DEVELOPER-AGREEMENT.txt file describing the developer agreement on copyright
-and licensing policies, and the AUTHORS.txt file for individual copyright holder
-information.
-
-The client UI component of this software, located under /html/ui, is distributed
-under the MIT license, a copy of which is available under /html/ui/LICENSE.txt.
+Any type of use of this software, or works derived from it, after this deadline,
+is not allowed.
 
 This software uses third party libraries, distributed under licenses described
 in 3RD-PARTY-LICENSES.txt.

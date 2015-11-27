@@ -109,6 +109,8 @@ public interface Transaction {
 
     byte getVersion();
 
+    int getFullSize();
+
     Appendix.Message getMessage();
 
     Appendix.EncryptedMessage getEncryptedMessage();

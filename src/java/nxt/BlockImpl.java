@@ -388,8 +388,31 @@ final class BlockImpl implements Block {
     void apply() {
         Account generatorAccount = Account.addOrGetAccount(getGeneratorId());
         generatorAccount.apply(getGeneratorPublicKey());
-        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.BLOCK_GENERATED, getId(), totalFeeNQT);
-        generatorAccount.addToForgedBalanceNQT(totalFeeNQT);
+        long totalBackFees = 0;
+        if (this.height > Constants.SHUFFLING_BLOCK) {
+            long[] backFees = new long[3];
+            for (TransactionImpl transaction : getTransactions()) {
+                long[] fees = transaction.getBackFees();
+                for (int i = 0; i < fees.length; i++) {
+                    backFees[i] += fees[i];
+                }
+            }
+            for (int i = 0; i < backFees.length; i++) {
+                if (backFees[i] == 0) {
+                    break;
+                }
+                totalBackFees += backFees[i];
+                Account previousGeneratorAccount = Account.getAccount(BlockDb.findBlockAtHeight(this.height - i - 1).getGeneratorId());
+                Logger.logDebugMessage("Back fees %f NXT to forger at height %d", ((double)backFees[i])/Constants.ONE_NXT, this.height - i - 1);
+                previousGeneratorAccount.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.BLOCK_GENERATED, getId(), backFees[i]);
+                previousGeneratorAccount.addToForgedBalanceNQT(backFees[i]);
+            }
+        }
+        if (totalBackFees != 0) {
+            Logger.logDebugMessage("Fee reduced by %f NXT at height %d", ((double)totalBackFees)/Constants.ONE_NXT, this.height);
+        }
+        generatorAccount.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.BLOCK_GENERATED, getId(), totalFeeNQT - totalBackFees);
+        generatorAccount.addToForgedBalanceNQT(totalFeeNQT - totalBackFees);
     }
 
     void setPrevious(BlockImpl block) {
@@ -418,31 +441,46 @@ final class BlockImpl implements Block {
     }
 
     private void calculateBaseTarget(BlockImpl previousBlock) {
-
-        if ((this.getId() != Genesis.GENESIS_BLOCK_ID || previousBlockId != 0) && cumulativeDifficulty.equals(BigInteger.ZERO)) {
-            long curBaseTarget = previousBlock.baseTarget;
-            long newBaseTarget = BigInteger.valueOf(curBaseTarget)
+        long prevBaseTarget = previousBlock.baseTarget;
+        if (previousBlock.getHeight() < Constants.SHUFFLING_BLOCK) {
+            baseTarget = BigInteger.valueOf(prevBaseTarget)
                     .multiply(BigInteger.valueOf(this.timestamp - previousBlock.timestamp))
                     .divide(BigInteger.valueOf(60)).longValue();
-            if (newBaseTarget < 0 || newBaseTarget > Constants.MAX_BASE_TARGET) {
-                newBaseTarget = Constants.MAX_BASE_TARGET;
+            if (baseTarget < 0 || baseTarget > Constants.MAX_BASE_TARGET) {
+                baseTarget = Constants.MAX_BASE_TARGET;
             }
-            if (newBaseTarget < curBaseTarget / 2) {
-                newBaseTarget = curBaseTarget / 2;
+            if (baseTarget < prevBaseTarget / 2) {
+                baseTarget = prevBaseTarget / 2;
             }
-            if (newBaseTarget == 0) {
-                newBaseTarget = 1;
+            if (baseTarget == 0) {
+                baseTarget = 1;
             }
-            long twofoldCurBaseTarget = curBaseTarget * 2;
+            long twofoldCurBaseTarget = prevBaseTarget * 2;
             if (twofoldCurBaseTarget < 0) {
                 twofoldCurBaseTarget = Constants.MAX_BASE_TARGET;
             }
-            if (newBaseTarget > twofoldCurBaseTarget) {
-                newBaseTarget = twofoldCurBaseTarget;
+            if (baseTarget > twofoldCurBaseTarget) {
+                baseTarget = twofoldCurBaseTarget;
             }
-            baseTarget = newBaseTarget;
-            cumulativeDifficulty = previousBlock.cumulativeDifficulty.add(Convert.two64.divide(BigInteger.valueOf(baseTarget)));
+        } else if (previousBlock.getHeight() % 2 == 0) {
+            BlockImpl block = BlockDb.findBlockAtHeight(previousBlock.getHeight() - 2);
+            int blocktimeAverage = (this.timestamp - block.timestamp) / 3;
+            if (blocktimeAverage > 60) {
+                baseTarget = (prevBaseTarget * Math.min(blocktimeAverage, Constants.MAX_BLOCKTIME_LIMIT)) / 60;
+            } else {
+                baseTarget = prevBaseTarget - prevBaseTarget * Constants.BASE_TARGET_GAMMA
+                        * (60 - Math.max(blocktimeAverage, Constants.MIN_BLOCKTIME_LIMIT)) / 6000;
+            }
+            if (baseTarget < 0 || baseTarget > Constants.MAX_BASE_TARGET_2) {
+                baseTarget = Constants.MAX_BASE_TARGET_2;
+            }
+            if (baseTarget < Constants.MIN_BASE_TARGET) {
+                baseTarget = Constants.MIN_BASE_TARGET;
+            }
+        } else {
+            baseTarget = prevBaseTarget;
         }
+        cumulativeDifficulty = previousBlock.cumulativeDifficulty.add(Convert.two64.divide(BigInteger.valueOf(baseTarget)));
     }
 
 }

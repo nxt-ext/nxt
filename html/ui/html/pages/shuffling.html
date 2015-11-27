@@ -1,0 +1,170 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<div id="my_shufflers_page" class="paginated page">
+    <script type="text/x-handlebars-template">
+        <section class="content-header">
+            <h1 data-i18n="my_shufflers">My Shufflers</h1>
+        </section>
+        <section class="content">
+            {{#if errorMessage}}
+            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+            {{/if}}
+            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th data-i18n="shuffling">Shuffling</th>
+                        <th data-i18n="account">Account</th>
+                        <th data-i18n="recipient">Recipient</th>
+                        <th data-i18n="failure">Failure</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {{#each shufflers}}
+                            <tr>
+                                <td>{{{shufflingFormatted}}}</td>
+                                <td>{{{accountFormatted}}}</td>
+                                <td>{{{recipientFormatted}}}</td>
+                                <td>{{{failureFormatted}}}</td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container">
+                    <p>
+                        <span data-i18n="no_shufflers">There are no shufflers for the current account</span>,
+                    </p>
+                </div>
+                <div class="data-pagination"></div>
+            </div>
+        </section>
+    </script>
+</div>
+
+<div id="active_shufflings_page" class="paginated page">
+    <script type="text/x-handlebars-template">
+        <section class="content-header">
+            <h1 data-i18n="active_shufflings">Active Shufflings</h1>
+        </section>
+        <section class="content">
+            {{#if errorMessage}}
+            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+            {{/if}}
+            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th data-i18n="shuffling">Shuffling</th>
+                        <th data-i18n="holding_type">Holding Type</th>
+                        <th data-i18n="holding">Holding</th>
+                        <th data-i18n="stage">Stage</th>
+                        <th data-i18n="assignee">Assignee</th>
+                        <th data-i18n="amount">Amount</th>
+                        <th data-i18n="participant_count">Participants</th>
+                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
+                        <th data-i18n="action">Action</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {{#each shufflings}}
+                            <tr>
+                                <td>{{{shufflingFormatted}}}</td>
+                                <td>{{holdingTypeLabel}}</td>
+                                <td>{{{holdingFormatted}}}</td>
+                                <td>{{stageLabel}}</td>
+                                <td>{{{assigneeFormatted}}}</td>
+                                <td>{{{amountFormatted}}}</td>
+                                <td>{{participantCount}}</td>
+                                <td>{{blocksRemaining}}</td>
+                                <td>
+                                    {{#if canJoin}}
+                                       <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="join">JOIN</a>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container">
+                    <p>
+                        <span data-i18n="no_shufflings">There are no shufflings</span>.
+                    </p>
+                </div>
+                <div class="data-pagination"></div>                
+            </div>
+        </section>
+    </script>
+</div>
+
+<div id="my_shufflings_page" class="paginated page">
+    <script type="text/x-handlebars-template">
+        <section class="content-header">
+            <h1 data-i18n="my_shufflings">My Shufflings</h1>
+            <div style="position:absolute;top:9px;right:9px;">
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#m_shuffling_create_modal" data-i18n="create_shuffling">Create Shuffling</button>
+            </div>
+        </section>
+        <section class="content">
+            {{#if errorMessage}}
+            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+            {{/if}}
+            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th data-i18n="shuffling">Shuffling</th>
+                        <th data-i18n="shuffler">Shuffler</th>
+                        <th data-i18n="holding_type">Holding Type</th>
+                        <th data-i18n="holding">Holding</th>
+                        <th data-i18n="stage">Stage</th>
+                        <th data-i18n="assignee">Assignee</th>
+                        <th data-i18n="amount">Amount</th>
+                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
+                        <th data-i18n="participant_count">Participant Count</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {{#each shufflings}}
+                            <tr>
+                                <td>{{{shufflingFormatted}}}</td>
+                                <td>{{{shufflerIndicatorFormatted}}} <span>{{shufflerStatus}}</span> {{{startShufflerLinkFormatted}}}</td>
+                                <td>{{holdingTypeLabel}}</td>
+                                <td>{{{holdingFormatted}}}</td>
+                                <td>{{stageLabel}}</td>
+                                <td>{{{assigneeFormatted}}}</td>
+                                <td>{{{amountFormatted}}}</td>
+                                <td>{{blocksRemaining}}</td>
+                                <td>{{participantCount}}</td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container">
+                    <p>
+                        <span data-i18n="no_shufflings">There are no shufflings</span>, 
+                    </p>
+                </div>
+                <div class="data-pagination"></div>                
+            </div>
+        </section>
+    </script>
+</div>

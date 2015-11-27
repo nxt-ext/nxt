@@ -30,3 +30,4 @@ deploy.sh
 /nxt.exe
 /nxtservice.exe
 /bundles
+*.patch

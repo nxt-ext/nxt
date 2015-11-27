@@ -92,6 +92,18 @@ var NRS = (function(NRS, $, undefined) {
                     'i18nKeyTitle': 'transaction_approval',
                     'iconHTML': "<i class='fa fa-gavel'></i>",
                     'receiverPage': "transactions"
+                },
+                10: {
+                    'title': "Account Property",
+                    'i18nKeyTitle': 'account_property',
+                    'iconHTML': "<i class='fa fa-gavel'></i>",
+                    'receiverPage': "transactions"
+                },
+                11: {
+                    'title': "AccountPropertyDelete",
+                    'i18nKeyTitle': 'account_property_delete',
+                    'iconHTML': "<i class='fa fa-question'></i>",
+                    'receiverPage': "transactions"
                 }
             }
         },
@@ -139,6 +151,12 @@ var NRS = (function(NRS, $, undefined) {
                     'title': "Dividend Payment",
                     'i18nKeyTitle': 'dividend_payment',
                     'iconHTML': '<i class="fa fa-gift"></i>',
+                    'receiverPage': "transactions"
+                },
+                7: {
+                    'title': "Delete Asset Shares",
+                    'i18nKeyTitle': 'delete_asset_shares',
+                    'iconHTML': '<i class="fa fa-remove"></i>',
                     'receiverPage': "transactions"
                 }
             }
@@ -203,6 +221,12 @@ var NRS = (function(NRS, $, undefined) {
                     'title': "Balance Leasing",
                     'i18nKeyTitle': 'balance_leasing',
                     'iconHTML': '<i class="fa fa-arrow-circle-o-right"></i>',
+                    'receiverPage': "transactions"
+                },
+                1: {
+                    'title': "Mandatory Approval",
+                    'i18nKeyTitle': 'phasing_only',
+                    'iconHTML': '<i class="fa fa-gavel"></i>',
                     'receiverPage': "transactions"
                 }
             }
@@ -278,6 +302,43 @@ var NRS = (function(NRS, $, undefined) {
                     'title': "Extend Tagged Data",
                     'i18nKeyTitle': 'extend_tagged_data',
                     'iconHTML': '<i class="fa fa-expand"></i>'
+                }
+            }
+        },
+        7: {
+            'title': "Shuffling",
+            'i18nKeyTitle': 'shuffling',
+            'iconHTML': '<i class="fa fa-random"></i>',
+            'subTypes': {
+                0: {
+                    'title': "Shuffling Creation",
+                    'i18nKeyTitle': 'shuffling_creation',
+                    'iconHTML': '<i class="fa fa-plus"></i>'
+                },
+                1: {
+                    'title': "Shuffling Registration",
+                    'i18nKeyTitle': 'shuffling_registration',
+                    'iconHTML': '<i class="fa fa-link"></i>'
+                },
+                2: {
+                    'title': "Shuffling Processing",
+                    'i18nKeyTitle': 'shuffling_processing',
+                    'iconHTML': '<i class="fa fa-cog"></i>'
+                },
+                3: {
+                    'title': "Shuffling Recipients",
+                    'i18nKeyTitle': 'shuffling_recipients',
+                    'iconHTML': '<i class="fa fa-spoon"></i>'
+                },
+                4: {
+                    'title': "Shuffling Verification",
+                    'i18nKeyTitle': 'shuffling_verification',
+                    'iconHTML': '<i class="fa fa-check-square"></i>'
+                },
+                5: {
+                    'title': "Shuffling Cancellation",
+                    'i18nKeyTitle': 'shuffling_cancellation',
+                    'iconHTML': '<i class="fa fa-thumbs-down"></i>'
                 }
             }
         }
