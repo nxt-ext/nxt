@@ -72,9 +72,9 @@ public final class SetPhasingOnlyControl extends CreateTransaction {
     JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
         Account account = ParameterParser.getSenderAccount(request);
         PhasingParams phasingParams = parsePhasingParams(request, "control");
-        long maxFees = ParameterParser.getLong(request, "controlMaxFees", 2 * Constants.ONE_NXT, Constants.MAX_BALANCE_NQT, false);
-        short minDuration = (short)ParameterParser.getInt(request, "controlMinDuration", 3, Constants.MAX_PHASING_DURATION - 1, false);
-        short maxDuration = (short) ParameterParser.getInt(request, "controlMaxDuration", 3, Constants.MAX_PHASING_DURATION - 1, false);
+        long maxFees = ParameterParser.getLong(request, "controlMaxFees", 0, Constants.MAX_BALANCE_NQT, false);
+        short minDuration = (short)ParameterParser.getInt(request, "controlMinDuration", 0, Constants.MAX_PHASING_DURATION - 1, false);
+        short maxDuration = (short) ParameterParser.getInt(request, "controlMaxDuration", 0, Constants.MAX_PHASING_DURATION - 1, false);
         return createTransaction(request, account, new Attachment.SetPhasingOnly(phasingParams, maxFees, minDuration, maxDuration));
     }
 
