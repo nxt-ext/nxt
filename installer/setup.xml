@@ -168,8 +168,9 @@
 
         <pack name="server.mac" os="mac_osx" required="yes" uninstall="false">
             <description>Mac Specific Resources</description>
-            <singlefile src="mac-run.sh" target="${INSTALL_PATH}/run.sh" override="true"/>
-            <executable targetfile="${INSTALL_PATH}/run.sh" failure="warn" keep="true"/>
+            <singlefile src="mac-run.sh" target="${INSTALL_PATH}/run.command"/>
+            <executable targetfile="${INSTALL_PATH}/run.command"/>
+            <parsable targetfile="${INSTALL_PATH}/run.command"/>
         </pack>
 
         <pack name="jre.mac" os="mac_osx" required="yes" uninstall="false">

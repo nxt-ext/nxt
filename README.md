@@ -29,7 +29,7 @@ in such a way that no trusted third parties are required anymore.
 ## Run it! ##
 
   - Linux: `./run.sh`
-  - Mac: `./run.sh`
+  - Mac: `./run.command`
   - Window: `run.bat`
 
   - Browse: http://localhost:7876/
