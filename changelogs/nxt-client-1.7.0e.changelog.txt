@@ -195,7 +195,7 @@ Polls:
 Base fee 10 NXT for polls with up to 20 options, and total size of poll name
 plus poll description plus total option length not exceeding 320 chars. For
 each option above 20, an additional fee of 1 NXT, and for each 32 chars after
-320, an additional fee of 1 NXT. Poll creation throttled to one per block.
+320, an additional fee of 2 NXT. Poll creation throttled to one per block.
 Name, description, and option length limits remain at 100, 1000, and 100 chars
 respectively.
 

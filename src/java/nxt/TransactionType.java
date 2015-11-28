@@ -841,7 +841,7 @@ public abstract class TransactionType {
                 }
             };
 
-            private final Fee POLL_SIZE_FEE = new Fee.SizeBasedFee(0, Constants.ONE_NXT, 32) {
+            private final Fee POLL_SIZE_FEE = new Fee.SizeBasedFee(0, 2 * Constants.ONE_NXT, 32) {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
                     Attachment.MessagingPollCreation attachment = (Attachment.MessagingPollCreation)appendage;
