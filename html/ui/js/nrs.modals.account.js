@@ -259,9 +259,7 @@ var NRS = (function(NRS, $) {
 					var currency = response.accountCurrencies[i];
 					var code = String(currency.code).escapeHTML();
 					rows += "<tr>" +
-						"<td>" +
-							"<a href='#' data-transaction='" + String(currency.currency).escapeHTML() + "' >" + code + "</a>" +
-						"</td>" +
+						"<td>" + NRS.getTransactionLink(String(currency.currency).escapeHTML(), code) + "</td>" +
 						"<td>" + currency.name + "</td>" +
 						"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
 					"</tr>";
