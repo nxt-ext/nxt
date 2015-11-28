@@ -42,7 +42,19 @@ submitting false data, the participant responsible for the shuffle
 cancellation is penalized by retaining this deposit and sending it to the
 forgers of the shuffle finish block and the previous three blocks instead.
 If a shuffle is cancelled because the required number of participants is not
-met, nobody is penalized and all deposits are refunded.
+met, nobody is penalized and all deposits are refunded. On testnet, the deposit
+and penalty is 7 NXT only.
+
+After shuffling registration is complete, participants must submit processing
+data within a 100 blocks period each (10 blocks on testnet). For the
+verification and blame phase, the total allowance for all participants is 100
++ numberOfParticipants blocks (again reduced to 10 + n blocks on testnet).
+Full blocks are not counted towards the limit. If at any stage the deadline is
+reached without some participant submitting the next required transaction, the
+shuffling is cancelled at this participant's fault. It is therefore critical
+that after registering for a shuffling, the shuffler started is left running
+until its successful completion. If the node must be restarted, all previously
+running shufflers must be started again manually.
 
 Query APIs to retrieve currently running shufflers, shufflings, and shuffling
 participants are: getAllShufflings, getAccountShufflings,
