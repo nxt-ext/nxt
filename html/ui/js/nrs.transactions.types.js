@@ -346,32 +346,30 @@ var NRS = (function(NRS, $, undefined) {
 
     NRS.subtype = {};
 
-    NRS.loadTransactionTypeConstants = function() {
-        NRS.sendRequest("getConstants", {}, function (response) {
-            if (response.genesisAccountId) {
-                $.each(response.transactionTypes, function(typeIndex, type) {
-                    if (!(typeIndex in NRS.transactionTypes)) {
-                        NRS.transactionTypes[typeIndex] = {
+    NRS.loadTransactionTypeConstants = function(response) {
+        if (response.genesisAccountId) {
+            $.each(response.transactionTypes, function(typeIndex, type) {
+                if (!(typeIndex in NRS.transactionTypes)) {
+                    NRS.transactionTypes[typeIndex] = {
+                        'title': "Unknown",
+                        'i18nKeyTitle': 'unknown',
+                        'iconHTML': '<i class="fa fa-question-circle"></i>',
+                        'subTypes': {}
+                    }
+                }
+                $.each(type.subtypes, function(subTypeIndex, subType) {
+                    if (!(subTypeIndex in NRS.transactionTypes[typeIndex]["subTypes"])) {
+                        NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex] = {
                             'title': "Unknown",
                             'i18nKeyTitle': 'unknown',
-                            'iconHTML': '<i class="fa fa-question-circle"></i>',
-                            'subTypes': {}
+                            'iconHTML': '<i class="fa fa-question-circle"></i>'
                         }
                     }
-                    $.each(type.subtypes, function(subTypeIndex, subType) {
-                        if (!(subTypeIndex in NRS.transactionTypes[typeIndex]["subTypes"])) {
-                            NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex] = {
-                                'title': "Unknown",
-                                'i18nKeyTitle': 'unknown',
-                                'iconHTML': '<i class="fa fa-question-circle"></i>'
-                            }
-                        }
-                        NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex]["serverConstants"] = subType;
-                    });
+                    NRS.transactionTypes[typeIndex]["subTypes"][subTypeIndex]["serverConstants"] = subType;
                 });
-                NRS.subtype = response.transactionSubTypes;
-            }
-        });
+            });
+            NRS.subtype = response.transactionSubTypes;
+        }
     };
 
     NRS.isOfType = function(transaction, type_str) {

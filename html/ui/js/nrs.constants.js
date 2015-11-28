@@ -97,8 +97,9 @@ var NRS = (function (NRS, $) {
                 NRS.constants.REQUEST_TYPES = response.requestTypes;
                 NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
                 NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
+                NRS.loadTransactionTypeConstants(response);
             }
-        });
+        }, false);
     };
 
     function getKeyByValue(map, value) {
