@@ -1,3 +1,16 @@
+This is an experimental release. The new features will be activated at block
+483000 on testnet (Nov 30) and 621000 on production (estimated Jan 21, 2016).
+
+All testnet nodes are required to upgrade to this release. Those that don't
+will remain on a fork.
+
+Production nodes will need to upgrade to the stable 1.7 version once it is
+released (expected before end of December), but in any case before the
+hardfork scheduled for block 621000.
+
+
+New features:
+
 Coin Shuffling. This feature is based on the paper by Tim Ruffing et al,
 http://crypsys.mmci.uni-saarland.de/projects/CoinShuffle/coinshuffle.pdf .
 
@@ -226,5 +239,5 @@ transactions with the minimum fee needed, depending on the transaction, as if
 feeNQT=0 has been specified. Fees exceeding the minimum, or fees for already
 signed transactions, will not be corrected.
 
-This release will perform a blokchain rescan on first start.
+This release will perform a blockchain rescan on first start.
 
