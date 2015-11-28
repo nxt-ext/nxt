@@ -93,7 +93,6 @@
     <variables>
         <variable name="$InstallerFrame.logfilePath" value="default"/>
         <variable name="DesktopShortcutCheckboxEnabled" value="true"/>
-        <variable name="TargetPanel.dir" value="$USER_HOME/nxt" os="mac"/>
     </variables>
 
     <panels>
