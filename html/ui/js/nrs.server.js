@@ -20,8 +20,6 @@
 var NRS = (function (NRS, $, undefined) {
     var _password;
 
-    NRS.multiQueue = null;
-
     NRS.setServerPassword = function (password) {
         _password = password;
     };
@@ -233,9 +231,6 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.processAjaxRequest = function (requestType, data, callback, isAsync) {
-        if (!NRS.multiQueue) {
-            NRS.multiQueue = $.ajaxMultiQueue(8);
-        }
         var extra = null;
         if (data["_extra"]) {
             extra = data["_extra"];
@@ -312,13 +307,6 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         $.support.cors = true;
-        var ajaxCall;
-        if (type == "GET") {
-            ajaxCall = NRS.multiQueue.queue;
-        } else {
-            ajaxCall = $.ajax;
-        }
-
         // Used for passing row query string which is too long for a GET request
         if (data.querystring) {
             data = data.querystring;
@@ -357,7 +345,7 @@ var NRS = (function (NRS, $, undefined) {
             processData = true;
         }
 
-        ajaxCall({
+        $.ajax({
             url: url,
             crossDomain: true,
             dataType: "json",

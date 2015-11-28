@@ -22,7 +22,6 @@
  * @depends {3rdparty/jsbn2.js}
  * @depends {3rdparty/pako.js}
  * @depends {3rdparty/webdb.js}
- * @depends {3rdparty/ajaxmultiqueue.js}
  * @depends {3rdparty/growl.js}
  * @depends {crypto/curve25519.js}
  * @depends {crypto/curve25519_.js}
@@ -132,7 +131,6 @@ var NRS = (function(NRS, $, undefined) {
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
 			NRS.loadServerConstants();
-			NRS.loadTransactionTypeConstants();
 			NRS.initializePlugins();
             NRS.printEnvInfo();
 		});
