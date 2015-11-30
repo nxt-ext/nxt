@@ -1523,11 +1523,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 });
             }
-            if (!Constants.isTestnet && block.getHeight() == Constants.SHUFFLING_BLOCK) {
-                //TODO: temporary bugfix for transaction 11815651636695037775, remove after hardfork
-                Account.getAccount(Convert.parseUnsignedLong("4345946899368325355")).addToUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.ASSET_DIVIDEND_PAYMENT,
-                        Convert.parseUnsignedLong("11815651636695037775"), 100 * Constants.ONE_NXT);
-            }
             blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
             if (block.getTransactions().size() > 0) {
                 TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);

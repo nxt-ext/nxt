@@ -279,8 +279,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (message.length > (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
-                    ? Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2 : Constants.MAX_ARBITRARY_MESSAGE_LENGTH)) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
         }
@@ -547,8 +546,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (getEncryptedDataLength() > (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
-                    ? Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2 : Constants.MAX_ENCRYPTED_MESSAGE_LENGTH)) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && getEncryptedDataLength() > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             if (encryptedData != null) {
@@ -704,9 +702,6 @@ public interface Appendix {
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (transaction.getEncryptedMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both encrypted and prunable encrypted message attachments");
-            }
-            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK && transaction.getPrunablePlainMessage() != null) {
-                throw new NxtException.NotYetEnabledException("Cannot have both plain and encrypted prunable message attachments yet");
             }
             EncryptedData ed = getEncryptedData();
             if (ed == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {

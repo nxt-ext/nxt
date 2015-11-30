@@ -1370,9 +1370,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
-                }
                 Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty)transaction.getAttachment();
                 if (attachment.getProperty().length() > Constants.MAX_ACCOUNT_PROPERTY_NAME_LENGTH
                         || attachment.getProperty().length() == 0
@@ -1444,9 +1441,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
-                }
                 Attachment.MessagingAccountPropertyDelete attachment = (Attachment.MessagingAccountPropertyDelete)transaction.getAttachment();
                 Account.AccountProperty accountProperty = Account.getProperty(attachment.getPropertyId());
                 if (accountProperty == null) {
@@ -1770,9 +1764,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset delete not yet enabled at height " + Nxt.getBlockchain().getHeight());
-                }
                 Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
                 if (attachment.getAssetId() == 0) {
                     throw new NxtException.NotValidException("Invalid asset identifier: " + attachment.getJSONObject());
@@ -2098,14 +2089,10 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
                 long assetId = attachment.getAssetId();
                 Asset asset = Asset.getAsset(assetId, attachment.getHeight());
-                //TODO: enable bugfix after hardfork
-                /*
                 if (asset == null) {
                     return true;
                 }
-                */
-                long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
-                        - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
+                long quantityQNT = asset.getQuantityQNT() - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalDividendPayment);
@@ -2126,14 +2113,10 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
                 long assetId = attachment.getAssetId();
                 Asset asset = Asset.getAsset(assetId, attachment.getHeight());
-                //TODO: enable bugfix after hardfork
-                /*
                 if (asset == null) {
                     return;
                 }
-                */
-                long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
-                        - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
+                long quantityQNT = asset.getQuantityQNT() - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalDividendPayment);
             }
@@ -2940,9 +2923,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Phasing only account control not yet enabled");
-                }
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
                 VotingModel votingModel = attachment.getPhasingParams().getVoteWeighting().getVotingModel();
                 attachment.getPhasingParams().validate();
