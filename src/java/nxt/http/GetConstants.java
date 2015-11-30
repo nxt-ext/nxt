@@ -51,7 +51,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 response.put("genesisAccountId", Long.toUnsignedString(Genesis.CREATOR_ID));
                 response.put("epochBeginning", Constants.EPOCH_BEGINNING);
                 response.put("maxBlockPayloadLength", Constants.MAX_PAYLOAD_LENGTH);
-                response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2);
+                response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH);
 
                 JSONObject transactionJSON = new JSONObject();
                 JSONObject transactionSubTypesJSON = new JSONObject();

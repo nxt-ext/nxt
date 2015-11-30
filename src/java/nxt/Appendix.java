@@ -211,7 +211,7 @@ public interface Appendix {
             if (messageLength < 0) {
                 messageLength &= Integer.MAX_VALUE;
             }
-            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+            if (messageLength > 1000) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + messageLength);
             }
             this.message = new byte[messageLength];
@@ -279,7 +279,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
         }
@@ -493,7 +493,7 @@ public interface Appendix {
             if (length < 0) {
                 length &= Integer.MAX_VALUE;
             }
-            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, 1000);
             this.isCompressed = getVersion() != 2;
         }
 
@@ -546,7 +546,7 @@ public interface Appendix {
 
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && getEncryptedDataLength() > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && getEncryptedDataLength() > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             if (encryptedData != null) {
