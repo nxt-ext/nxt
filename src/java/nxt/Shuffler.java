@@ -222,6 +222,14 @@ public final class Shuffler {
         Shuffling.addListener(Shuffler::scheduleExpiration, Shuffling.Event.SHUFFLING_CANCELLED);
 
         BlockchainProcessorImpl.getInstance().addListener(block -> {
+            Set<String> expired = expirations.get(block.getHeight());
+            if (expired != null) {
+                expired.forEach(shufflingsMap::remove);
+                expirations.remove(block.getHeight());
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+
+        BlockchainProcessorImpl.getInstance().addListener(block -> {
             shufflingsMap.values().forEach(shufflerMap -> shufflerMap.values().forEach(shuffler -> {
                 if (shuffler.failedTransaction != null) {
                     try {
@@ -232,13 +240,8 @@ public final class Shuffler {
                     }
                 }
             }));
-            Set<String> expired = expirations.get(block.getHeight());
-            if (expired != null) {
-                expired.forEach(shufflingsMap::remove);
-                expirations.remove(block.getHeight());
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-        
+        }, BlockchainProcessor.Event.BLOCK_PUSHED);
+
     }
 
     private static Map<Long, Shuffler> getShufflers(Shuffling shuffling) {
