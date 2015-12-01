@@ -1175,6 +1175,7 @@ var NRS = (function (NRS, $, undefined) {
                     "type": $.t("shuffling_creation"),
                     "period": transaction.attachment.registrationPeriod,
                     "participants": transaction.attachment.participantCount,
+                    "registrants": transaction.attachment.registeredCount,
                     "holdingType": transaction.attachment.holdingType
                 };
                 if (transaction.attachment.holding != "0") {

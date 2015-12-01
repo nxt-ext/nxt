@@ -75,8 +75,9 @@
                         <th data-i18n="stage">Stage</th>
                         <th data-i18n="assignee">Assignee</th>
                         <th data-i18n="amount">Amount</th>
-                        <th data-i18n="participant_count">Participants</th>
                         <th data-i18n="blocks_remaining">Blocks Remaining</th>
+                        <th data-i18n="participant_count">Participants</th>
+                        <th data-i18n="registrant_count">Registrants</th>
                         <th data-i18n="action">Action</th>
                         <th></th>
                     </tr>
@@ -90,8 +91,9 @@
                                 <td>{{stageLabel}}</td>
                                 <td>{{{assigneeFormatted}}}</td>
                                 <td>{{{amountFormatted}}}</td>
-                                <td>{{participantCount}}</td>
                                 <td>{{blocksRemaining}}</td>
+                                <td>{{participantCount}}</td>
+                                <td>{{registeredCount}}</td>
                                 <td>
                                     {{#if canJoin}}
                                        <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="join">JOIN</a>
@@ -138,6 +140,7 @@
                         <th data-i18n="amount">Amount</th>
                         <th data-i18n="blocks_remaining">Blocks Remaining</th>
                         <th data-i18n="participant_count">Participant Count</th>
+                        <th data-i18n="registrant_count">Registrant Count</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -153,6 +156,7 @@
                                 <td>{{{amountFormatted}}}</td>
                                 <td>{{blocksRemaining}}</td>
                                 <td>{{participantCount}}</td>
+                                <td>{{registeredCount}}</td>
                             </tr>
                         {{/each}}
                     </tbody>

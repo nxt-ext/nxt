@@ -1546,5 +1546,7 @@
   "error_finish_height_out_of_account_control_interval": "The finish height is out of the allowed by the account control range [__min__..__max__]",
   "shuffling_full_hash": "Shuffling Full Hash",
   "shuffling_state_hash": "Shuffling State Hash",
-  "shuffler_recipient": "Shuffler Recipient"
+  "shuffler_recipient": "Shuffler Recipient",
+  "registrant_count": "Registrant Count",
+  "registrants": "Registrants"
 }
