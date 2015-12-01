@@ -1543,5 +1543,8 @@
   "maximal_fees": "Max fees",
   "maximal_pending_fees_help": "Maximal sum of the pending transactions fees. Divide this by the minimal phasing duration, and you will get the amount of NXT that can be spent in fees by the controlled account per block",
   "error_fee_exceeds_max_account_control_fee": "Maximum total fees limit of __maxFee__ NXT exceeded",
-  "error_finish_height_out_of_account_control_interval": "The finish height is out of the allowed by the account control range [__min__..__max__]"
+  "error_finish_height_out_of_account_control_interval": "The finish height is out of the allowed by the account control range [__min__..__max__]",
+  "shuffling_full_hash": "Shuffling Full Hash",
+  "shuffling_state_hash": "Shuffling State Hash",
+  "shuffler_recipient": "Shuffler Recipient"
 }
