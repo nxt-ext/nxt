@@ -165,10 +165,6 @@ public final class ShufflingParticipant {
 
     };
 
-    public static int getCount(long shufflingId) {
-        return shufflingParticipantTable.getCount(new DbClause.LongClause("shuffling_id", shufflingId));
-    }
-
     public static boolean addListener(Listener<ShufflingParticipant> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
