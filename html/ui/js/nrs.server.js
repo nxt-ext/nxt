@@ -1194,9 +1194,9 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 7 && transaction.subtype !== 0) {
                     return false;
                 }
-                var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
-                if (holdingId !== "0" && holdingId !== data.holdingId ||
-                    holdingId === "0" && data.holdingId !== undefined && data.holdingId !== "" && data.holdingId !== "0") {
+                var holding = String(converters.byteArrayToBigInteger(byteArray, pos));
+                if (holding !== "0" && holding !== data.holding ||
+                    holding === "0" && data.holding !== undefined && data.holding !== "" && data.holding !== "0") {
                     return false;
                 }
                 pos += 8;
