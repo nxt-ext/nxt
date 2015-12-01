@@ -240,7 +240,7 @@ public final class Shuffler {
                     }
                 }
             }));
-        }, BlockchainProcessor.Event.BLOCK_PUSHED);
+        }, BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
 
     }
 
