@@ -242,6 +242,8 @@ public final class Shuffler {
             }));
         }, BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
 
+        BlockchainProcessorImpl.getInstance().addListener(block -> stopAllShufflers(), BlockchainProcessor.Event.RESCAN_BEGIN);
+
     }
 
     private static Map<Long, Shuffler> getShufflers(Shuffling shuffling) {

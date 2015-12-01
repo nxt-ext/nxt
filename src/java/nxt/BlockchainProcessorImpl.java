@@ -1277,7 +1277,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 TransactionProcessorImpl.getInstance().requeueAllUnconfirmedTransactions();
                 addBlock(block);
                 accept(block, validPhasedTransactions, invalidPhasedTransactions, duplicates);
-                blockListeners.notify(block, Event.AFTER_BLOCK_ACCEPT);
 
                 Db.db.commitTransaction();
             } catch (Exception e) {
@@ -1287,6 +1286,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 Db.db.endTransaction();
             }
+            blockListeners.notify(block, Event.AFTER_BLOCK_ACCEPT);
         } finally {
             blockchain.writeUnlock();
         }
@@ -1924,10 +1924,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
                             blockchain.setLastBlock(currentBlock);
                             accept(currentBlock, validPhasedTransactions, invalidPhasedTransactions, duplicates);
-                            blockListeners.notify(currentBlock, Event.AFTER_BLOCK_ACCEPT);
                             currentBlockId = currentBlock.getNextBlockId();
                             Db.db.clearCache();
                             Db.db.commitTransaction();
+                            blockListeners.notify(currentBlock, Event.AFTER_BLOCK_ACCEPT);
                         } catch (NxtException | RuntimeException e) {
                             Db.db.rollbackTransaction();
                             Logger.logDebugMessage(e.toString(), e);
