@@ -218,7 +218,7 @@ public final class Shuffling {
     }
 
     public static int getHoldingShufflingCount(long holdingId, boolean includeFinished) {
-        DbClause clause = new DbClause.LongClause("holding_id", holdingId);
+        DbClause clause = holdingId != 0 ? new DbClause.LongClause("holding_id", holdingId) : new DbClause.NullClause("holding_id");
         if (!includeFinished) {
             clause = clause.and(new DbClause.NotNullClause("blocks_remaining"));
         }
@@ -226,7 +226,7 @@ public final class Shuffling {
     }
 
     public static DbIterator<Shuffling> getHoldingShufflings(long holdingId, Stage stage, boolean includeFinished, int from, int to) {
-        DbClause clause = new DbClause.LongClause("holding_id", holdingId);
+        DbClause clause = holdingId != 0 ? new DbClause.LongClause("holding_id", holdingId) : new DbClause.NullClause("holding_id");
         if (!includeFinished) {
             clause = clause.and(new DbClause.NotNullClause("blocks_remaining"));
         }
