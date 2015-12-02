@@ -1097,7 +1097,7 @@ class NxtDbVersion extends DbVersion {
             case 463:
                 apply("TRUNCATE TABLE shuffling");
             case 464:
-                apply("ALTER TABLE shuffling ADD COLUMN IF NOT EXISTS registered_count TINYINT NOT NULL");
+                apply("ALTER TABLE shuffling ADD COLUMN IF NOT EXISTS registrant_count TINYINT NOT NULL");
             case 465:
                 if (Constants.isTestnet) {
                     BlockchainProcessorImpl.getInstance().scheduleScan(0, false);

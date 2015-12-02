@@ -339,7 +339,7 @@ final class JSONData {
         json.put("amount", String.valueOf(shuffling.getAmount()));
         json.put("blocksRemaining", shuffling.getBlocksRemaining());
         json.put("participantCount", shuffling.getParticipantCount());
-        json.put("registeredCount", shuffling.getRegisteredCount());
+        json.put("registrantCount", shuffling.getRegistrantCount());
         json.put("stage", shuffling.getStage().getCode());
         json.put("shufflingStateHash", Convert.toHexString(shuffling.getStateHash()));
         json.put("shufflingFullHash", Convert.toHexString(shuffling.getFullHash()));

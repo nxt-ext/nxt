@@ -262,7 +262,7 @@ public abstract class ShufflingTransaction extends TransactionType {
             return TransactionType.isDuplicate(SHUFFLING_REGISTRATION,
                     Long.toUnsignedString(shuffling.getId()) + "." + Long.toUnsignedString(transaction.getSenderId()), duplicates, true)
                     || TransactionType.isDuplicate(SHUFFLING_REGISTRATION,
-                    Long.toUnsignedString(shuffling.getId()), duplicates, shuffling.getParticipantCount() - shuffling.getRegisteredCount());
+                    Long.toUnsignedString(shuffling.getId()), duplicates, shuffling.getParticipantCount() - shuffling.getRegistrantCount());
         }
 
         @Override
