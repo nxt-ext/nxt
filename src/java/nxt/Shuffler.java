@@ -56,6 +56,9 @@ public final class Shuffler {
                 if (shuffling == null && Account.getAccount(recipientPublicKey) != null) {
                     throw new InvalidRecipientException("Existing account cannot be used as shuffling recipient");
                 }
+                if (getRecipientShuffler(Account.getId(recipientPublicKey)) != null) {
+                    throw new InvalidRecipientException("Another shuffler with the same recipient account already running");
+                }
                 if (map.size() >= (shuffling == null ? Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS : shuffling.getParticipantCount())) {
                     throw new ShufflerLimitException("Cannot run shufflers for more than " + map.size() + " accounts for this shuffling");
                 }
@@ -153,6 +156,22 @@ public final class Shuffler {
             shufflingsMap.clear();
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
+        }
+    }
+
+    private static Shuffler getRecipientShuffler(long recipientId) {
+        BlockchainImpl.getInstance().readLock();
+        try {
+            for (Map<Long,Shuffler> shufflerMap : shufflingsMap.values()) {
+                for (Shuffler shuffler : shufflerMap.values()) {
+                    if (Account.getId(shuffler.recipientPublicKey) == recipientId) {
+                        return shuffler;
+                    }
+                }
+            }
+            return null;
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
         }
     }
 
