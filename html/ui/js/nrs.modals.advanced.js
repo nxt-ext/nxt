@@ -342,13 +342,10 @@ var NRS = (function(NRS, $, undefined) {
 
 				$modal.find('.advanced_mandatory_approval input').prop('disabled', false);
 				$modal.find('.advanced_mandatory_approval').show();
-				$modal.find('input[name="mandatoryApprovalParamsJSON"]').val(JSON.stringify(NRS.accountInfo.phasingOnly));
 
 			} else {
 				$modal.find('.advanced_mandatory_approval').hide();
-				$modal.find('input[name="mandatoryApprovalParamsJSON"]').val("");
 			}
-
 		});
 	}
 

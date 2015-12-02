@@ -151,8 +151,11 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         //Fill phasing parameters when mandatory approval is enabled
-        if (data.mandatoryApprovalParamsJSON) {
-            var phasingControl = JSON.parse(data.mandatoryApprovalParamsJSON);
+        if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1
+                && NRS.accountInfo.phasingOnly
+                && NRS.accountInfo.phasingOnly.votingModel >= 0) {
+
+            var phasingControl = NRS.accountInfo.phasingOnly;
             var maxFees = new BigInteger(phasingControl.maxFees);
             if (maxFees > 0 && new BigInteger(data.feeNQT).compareTo(new BigInteger(phasingControl.maxFees)) > 0) {
                 callback({
@@ -178,7 +181,6 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
 
-
             var phasingParams = NRS.phasingControlObjectToPhasingParams(phasingControl);
             $.extend(data, phasingParams);
             data.phased = true;
@@ -187,7 +189,6 @@ var NRS = (function (NRS, $, undefined) {
             delete data.phasingHashedSecretAlgorithm;
             delete data.phasingLinkedFullHash;
         }
-        delete data.mandatoryApprovalParamsJSON;
 
         if (!data.recipientPublicKey) {
             delete data.recipientPublicKey;
