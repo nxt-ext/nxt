@@ -318,7 +318,7 @@ public final class Nxt {
                 setSystemProperties();
                 logSystemProperties();
                 runtimeMode.init();
-                testSecureRandom();
+                Thread secureRandomInitThread = initSecureRandom();
                 setServerStatus("NXT Server - Loading database", null);
                 Db.init();
                 setServerStatus("NXT Server - Loading resources", null);
@@ -362,7 +362,10 @@ public final class Nxt {
                     setTime(new Time.FasterTime(Math.max(getEpochTime(), Nxt.getBlockchain().getLastBlock().getTimestamp()), timeMultiplier));
                     Logger.logMessage("TIME WILL FLOW " + timeMultiplier + " TIMES FASTER!");
                 }
-
+                try {
+                    secureRandomInitThread.join(10000);
+                } catch (InterruptedException ignore) {}
+                testSecureRandom();
                 long currentTime = System.currentTimeMillis();
                 Logger.logMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
@@ -431,6 +434,15 @@ public final class Nxt {
         Logger.logDebugMessage(String.format("processId = %s", getProcessId()));
     }
 
+    private static Thread initSecureRandom() {
+        Thread secureRandomInitThread = new Thread(() -> {
+            Crypto.getSecureRandom().nextBytes(new byte[1024]);
+        });
+        secureRandomInitThread.setDaemon(true);
+        secureRandomInitThread.start();
+        return secureRandomInitThread;
+    }
+
     private static void testSecureRandom() {
         Thread thread = new Thread(() -> {
             Crypto.getSecureRandom().nextBytes(new byte[1024]);
@@ -438,12 +450,12 @@ public final class Nxt {
         thread.setDaemon(true);
         thread.start();
         try {
-            thread.join(1000);
+            thread.join(2000);
+            if (thread.isAlive()) {
+                throw new RuntimeException("SecureRandom implementation too slow!!! " +
+                        "Install haveged if on linux, or set nxt.useStrongSecureRandom=false.");
+            }
         } catch (InterruptedException ignore) {}
-        if (thread.isAlive()) {
-            throw new RuntimeException("Strong SecureRandom implementation too slow!!! " +
-                    "Install haveged if on linux, or set nxt.useStrongSecureRandom=false.");
-        }
     }
 
     public static String getProcessId() {
