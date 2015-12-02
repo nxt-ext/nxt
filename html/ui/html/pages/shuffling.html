@@ -28,18 +28,16 @@
                     <thead>
                     <tr>
                         <th data-i18n="shuffling">Shuffling</th>
-                        <th data-i18n="account">Account</th>
                         <th data-i18n="recipient">Recipient</th>
-                        <th data-i18n="failure">Failure</th>
+                        <th data-i18n="status">Status</th>
                     </tr>
                     </thead>
                     <tbody>
                         {{#each shufflers}}
                             <tr>
                                 <td>{{{shufflingFormatted}}}</td>
-                                <td>{{{accountFormatted}}}</td>
                                 <td>{{{recipientFormatted}}}</td>
-                                <td>{{{failureFormatted}}}</td>
+                                <td>{{status}}</td>
                             </tr>
                         {{/each}}
                     </tbody>

@@ -30,15 +30,15 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata.shuffler = function (response) {
         return $.extend(response, {
-            accountFormatted: NRS.getAccountLink(response, "account"),
-            recipientFormatted: NRS.getAccountLink(response, "recipient"),
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
-            failureFormatted: (function () {
-                if (!response.failedTransaction) {
-                    return "";
+            recipientFormatted: NRS.getAccountLink(response, "recipient"),
+            status: (function () {
+                if (!response.failureCause) {
+                    return $.t("active");
+                } else {
+                    return String(response.failureCause).escapeHTML()
                 }
-                return NRS.getTransactionLink(response.failedTransaction.transaction);
-            })()
+            })
         });
     };
 
