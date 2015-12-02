@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.env.DirProvider;
 import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
@@ -317,6 +318,7 @@ public final class Nxt {
                 setSystemProperties();
                 logSystemProperties();
                 runtimeMode.init();
+                testSecureRandom();
                 setServerStatus("NXT Server - Loading database", null);
                 Db.init();
                 setServerStatus("NXT Server - Loading resources", null);
@@ -427,6 +429,21 @@ public final class Nxt {
         Logger.logDebugMessage(String.format("availableProcessors = %s", Runtime.getRuntime().availableProcessors()));
         Logger.logDebugMessage(String.format("maxMemory = %s", Runtime.getRuntime().maxMemory()));
         Logger.logDebugMessage(String.format("processId = %s", getProcessId()));
+    }
+
+    private static void testSecureRandom() {
+        Thread thread = new Thread(() -> {
+            Crypto.getSecureRandom().nextBytes(new byte[1024]);
+        });
+        thread.setDaemon(true);
+        thread.start();
+        try {
+            thread.join(1000);
+        } catch (InterruptedException ignore) {}
+        if (thread.isAlive()) {
+            throw new RuntimeException("Strong SecureRandom implementation too slow!!! " +
+                    "Install haveged if on linux, or set nxt.useStrongSecureRandom=false.");
+        }
     }
 
     public static String getProcessId() {
