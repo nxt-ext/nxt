@@ -196,9 +196,11 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.incoming.active_shufflings = function (transactions) {
-        if (NRS.hasTransactionUpdates(transactions)) {
-            NRS.loadPage("active_shufflings");
-        }
+        NRS.loadPage("active_shufflings");
+    };
+
+    NRS.incoming.my_shufflings = function (transactions) {
+        NRS.loadPage("my_shufflings");
     };
 
     function getShufflers(callback) {
