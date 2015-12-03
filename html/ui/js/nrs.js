@@ -1113,6 +1113,18 @@ NRS.addPagination = function () {
 					params.phasingWhitelist = params.phasingWhitelisted;
 					NRS.getPhasingDetails(data, params);
 					delete data.full_hash_formatted_html;
+					if (response.minDuration) {
+						data.minimal_duration_short = response.minDuration;
+					}
+
+					if (response.maxDuration) {
+						data.maximal_duration_short = response.maxDuration;
+					}
+
+					if (response.maxFees) {
+						data.maximal_fees = NRS.convertToNXT(response.maxFees);
+					}
+
 					infoTable.find("tbody").append(NRS.createInfoTable(data));
 					infoTable.show();
 				} else {
