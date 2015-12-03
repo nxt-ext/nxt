@@ -1092,9 +1092,15 @@ class NxtDbVersion extends DbVersion {
             case 461:
                 apply("ALTER TABLE prunable_message DROP COLUMN is_encrypted");
             case 462:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 463:
+                apply("TRUNCATE TABLE shuffling");
+            case 464:
+                apply("ALTER TABLE shuffling ADD COLUMN IF NOT EXISTS registrant_count TINYINT NOT NULL");
+            case 465:
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                apply(null);
+            case 466:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

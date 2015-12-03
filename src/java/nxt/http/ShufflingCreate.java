@@ -48,6 +48,9 @@ public final class ShufflingCreate extends CreateTransaction {
         short registrationPeriod = (short)ParameterParser.getInt(req, "registrationPeriod", 0, Constants.MAX_SHUFFLING_REGISTRATION_PERIOD, true);
         Attachment attachment = new Attachment.ShufflingCreation(holdingId, holdingType, amount, participantCount, registrationPeriod);
         Account account = ParameterParser.getSenderAccount(req);
+        if (account.getControls().contains(Account.ControlType.PHASING_ONLY)) {
+            return JSONResponses.error("Accounts under phasing only control cannot start a shuffling");
+        }
         return createTransaction(req, account, attachment);
     }
 }

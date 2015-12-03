@@ -16,6 +16,7 @@
 
 package nxt.crypto;
 
+import nxt.Nxt;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.bouncycastle.crypto.CipherParameters;
@@ -36,11 +37,13 @@ import java.util.Arrays;
 
 public final class Crypto {
 
+    private static final boolean useStrongSecureRandom = Nxt.getBooleanProperty("nxt.useStrongSecureRandom");
+
     private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
         @Override
         protected SecureRandom initialValue() {
             try {
-                SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+                SecureRandom secureRandom = useStrongSecureRandom ? SecureRandom.getInstanceStrong() : new SecureRandom();
                 secureRandom.nextBoolean();
                 return secureRandom;
             } catch (NoSuchAlgorithmException e) {

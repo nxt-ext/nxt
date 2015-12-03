@@ -175,12 +175,24 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
+		var minDuration = 0;
+		var maxDuration = 0;
+
+		if (NRS.accountInfo.phasingOnly) {
+			minDuration = NRS.accountInfo.phasingOnly.minDuration;
+			maxDuration = NRS.accountInfo.phasingOnly.maxDuration;
+		}
+
+		if (maxDuration == 0) {
+			maxDuration = NRS.constants.SERVER.maxPhasingDuration;
+		}
+
 		var context = {
 			labelText: "Finish Height",
 			labelI18n: "finish_height",
 			helpI18n: "approve_transaction_finish_height_help",
 			inputName: "phasingFinishHeight",
-			initBlockHeight: NRS.lastBlockHeight + 7000,
+			initBlockHeight: NRS.lastBlockHeight + minDuration + (maxDuration - minDuration) / 2,
 			changeHeightBlocks: 500
 		};
 		var $elems = NRS.initModalUIElement($modal, '.phasing_finish_height_group', 'block_height_modal_ui_element', context);
@@ -322,28 +334,18 @@ var NRS = (function(NRS, $, undefined) {
 	function _setMandatoryApproval($modal) {
 		$modal.one('shown.bs.modal', function() {
 			var requestType = $modal.find('input[name="request_type"]').val();
-			var onNoMandatoryApproval = function() {
-				$modal.find('.advanced_mandatory_approval').hide();
-				$modal.find('input[name="mandatoryApprovalParamsJSON"]').val("");
-			}
+
 			if (requestType != "approveTransaction"
-				&& NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+				&& NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1
+				&& NRS.accountInfo.phasingOnly
+				&& NRS.accountInfo.phasingOnly.votingModel >= 0) {
 
-				NRS.sendRequest("getPhasingOnlyControl", {
-					"account": NRS.account
-				}, function (response) {
-					if (response && response.votingModel >= 0) {
-						$modal.find('.advanced_mandatory_approval input').prop('disabled', false);
-						$modal.find('.advanced_mandatory_approval').show();
-						$modal.find('input[name="mandatoryApprovalParamsJSON"]').val(JSON.stringify(response));
-					} else {
-						onNoMandatoryApproval();
-					}
-				});
+				$modal.find('.advanced_mandatory_approval input').prop('disabled', false);
+				$modal.find('.advanced_mandatory_approval').show();
+
 			} else {
-				onNoMandatoryApproval();
+				$modal.find('.advanced_mandatory_approval').hide();
 			}
-
 		});
 	}
 

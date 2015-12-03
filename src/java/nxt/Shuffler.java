@@ -56,8 +56,15 @@ public final class Shuffler {
                 if (shuffling == null && Account.getAccount(recipientPublicKey) != null) {
                     throw new InvalidRecipientException("Existing account cannot be used as shuffling recipient");
                 }
+                if (getRecipientShuffler(Account.getId(recipientPublicKey)) != null) {
+                    throw new InvalidRecipientException("Another shuffler with the same recipient account already running");
+                }
                 if (map.size() >= (shuffling == null ? Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS : shuffling.getParticipantCount())) {
                     throw new ShufflerLimitException("Cannot run shufflers for more than " + map.size() + " accounts for this shuffling");
+                }
+                Account account = Account.getAccount(accountId);
+                if (account != null && account.getControls().contains(Account.ControlType.PHASING_ONLY)) {
+                    throw new ControlledAccountException("Cannot run a shuffler for an account under phasing only control");
                 }
                 shuffler = new Shuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
                 if (shuffling != null) {
@@ -156,6 +163,22 @@ public final class Shuffler {
         }
     }
 
+    private static Shuffler getRecipientShuffler(long recipientId) {
+        BlockchainImpl.getInstance().readLock();
+        try {
+            for (Map<Long,Shuffler> shufflerMap : shufflingsMap.values()) {
+                for (Shuffler shuffler : shufflerMap.values()) {
+                    if (Account.getId(shuffler.recipientPublicKey) == recipientId) {
+                        return shuffler;
+                    }
+                }
+            }
+            return null;
+        } finally {
+            BlockchainImpl.getInstance().readUnlock();
+        }
+    }
+
     static {
 
         Shuffling.addListener(shuffling -> {
@@ -222,6 +245,14 @@ public final class Shuffler {
         Shuffling.addListener(Shuffler::scheduleExpiration, Shuffling.Event.SHUFFLING_CANCELLED);
 
         BlockchainProcessorImpl.getInstance().addListener(block -> {
+            Set<String> expired = expirations.get(block.getHeight());
+            if (expired != null) {
+                expired.forEach(shufflingsMap::remove);
+                expirations.remove(block.getHeight());
+            }
+        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+
+        BlockchainProcessorImpl.getInstance().addListener(block -> {
             shufflingsMap.values().forEach(shufflerMap -> shufflerMap.values().forEach(shuffler -> {
                 if (shuffler.failedTransaction != null) {
                     try {
@@ -232,13 +263,10 @@ public final class Shuffler {
                     }
                 }
             }));
-            Set<String> expired = expirations.get(block.getHeight());
-            if (expired != null) {
-                expired.forEach(shufflingsMap::remove);
-                expirations.remove(block.getHeight());
-            }
-        }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-        
+        }, BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
+
+        BlockchainProcessorImpl.getInstance().addListener(block -> stopAllShufflers(), BlockchainProcessor.Event.RESCAN_BEGIN);
+
     }
 
     private static Map<Long, Shuffler> getShufflers(Shuffling shuffling) {
@@ -468,6 +496,14 @@ public final class Shuffler {
     public static final class InvalidRecipientException extends ShufflerException {
 
         private InvalidRecipientException(String message) {
+            super(message);
+        }
+
+    }
+
+    public static final class ControlledAccountException extends ShufflerException {
+
+        private ControlledAccountException(String message) {
             super(message);
         }
 

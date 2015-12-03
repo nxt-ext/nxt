@@ -119,7 +119,7 @@ var NRS = (function(NRS, $, undefined) {
                     NRS.upnpExternalAddress = response[key];
 				}
 			}
-			
+
 			if (!isTestnet) {
 				$(".testnet_only").hide();
 			} else {
@@ -134,7 +134,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.initializePlugins();
             NRS.printEnvInfo();
 		});
-		
+
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
@@ -201,11 +201,11 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.positionAssetSidebar();
 			}
 		});
-		
+
 		$("[data-toggle='tooltip']").tooltip();
 
 		$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
-		
+
 		if (NRS.getUrlParameter("account")){
 			NRS.login(false,NRS.getUrlParameter("account"));
 		}
@@ -493,7 +493,7 @@ NRS.addPagination = function () {
 		}
 
 		prevHTML += '</span>';
-		firstHTML += '</span>'; 
+		firstHTML += '</span>';
 		currentHTML += '</span>';
 		nextHTML += '</span>';
 
@@ -522,7 +522,7 @@ NRS.addPagination = function () {
 		NRS.pages[NRS.currentPage]();
 	};
 
-		
+
 
 	NRS.initUserDBSuccess = function() {
 		NRS.database.select("data", [{
@@ -635,7 +635,7 @@ NRS.addPagination = function () {
 				});
 			} catch (err) {
                 NRS.logConsole("error creating database " + err.message);
-			}		
+			}
 		}
 	};
 
@@ -713,7 +713,7 @@ NRS.addPagination = function () {
 			NRS.initUserDBFail();
 		}
 	};
-	
+
 	/* Display connected state in Sidebar */
 	NRS.checkConnected = function() {
 		NRS.sendRequest("getPeers+", {
@@ -748,7 +748,7 @@ NRS.addPagination = function () {
 
 			if (response.errorCode) {
 				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
-				
+
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
 						if (NRS.newlyCreatedAccount) {
@@ -921,10 +921,10 @@ NRS.addPagination = function () {
 					} else {
 						$("#account_message_count").empty().append("0");
 					}
-				});	
-				
+				});
+
 				/***  ******************   ***/
-				
+
 				NRS.sendRequest("getAliasCount+", {
 					"account":NRS.account
 				}, function(response) {
@@ -932,7 +932,7 @@ NRS.addPagination = function () {
 						$("#account_alias_count").empty().append(response.numberOfAliases);
 					}
 				});
-				
+
 				NRS.sendRequest("getDGSPurchaseCount+", {
 					"buyer": NRS.account
 				}, function(response) {
@@ -1092,26 +1092,37 @@ NRS.addPagination = function () {
 	};
 
 	NRS.updateAccountControlStatus = function() {
+		var onNoPhasingOnly = function() {
+			$("#setup_mandatory_approval").show();
+			$("#mandatory_approval_details").hide();
+			delete NRS.accountInfo.phasingOnly;
+		};
 		if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
-			$("#setup_mandatory_approval").hide();
-			$("#mandatory_approval_details").show();
 			NRS.sendRequest("getPhasingOnlyControl", {
 				"account": NRS.account
 			}, function (response) {
-				var infoTable = $("#mandatory_approval_info_table");
-				infoTable.find("tbody").empty();
-				var data = {};
-				var params = NRS.phasingControlObjectToPhasingParams(response);
-				params.phasingWhitelist = params.phasingWhitelisted;
-				NRS.getPhasingDetails(data, params);
-				delete data.full_hash_formatted_html;
-				infoTable.find("tbody").append(NRS.createInfoTable(data));
-				infoTable.show();
+				if (response && response.votingModel >= 0) {
+					$("#setup_mandatory_approval").hide();
+					$("#mandatory_approval_details").show();
+
+					NRS.accountInfo.phasingOnly = response;
+					var infoTable = $("#mandatory_approval_info_table");
+					infoTable.find("tbody").empty();
+					var data = {};
+					var params = NRS.phasingControlObjectToPhasingParams(response);
+					params.phasingWhitelist = params.phasingWhitelisted;
+					NRS.getPhasingDetails(data, params);
+					delete data.full_hash_formatted_html;
+					infoTable.find("tbody").append(NRS.createInfoTable(data));
+					infoTable.show();
+				} else {
+					onNoPhasingOnly();
+				}
+
 			});
 
 		} else {
-			$("#setup_mandatory_approval").show();
-			$("#mandatory_approval_details").hide();
+			onNoPhasingOnly();
 		}
 	};
 
@@ -1262,7 +1273,7 @@ NRS.addPagination = function () {
 		var lastNumBlocks = 5000;
         var downloadingBlockchain = $('#downloading_blockchain');
         downloadingBlockchain.find('.last_num_blocks').html($.t('last_num_blocks', { "blocks": lastNumBlocks }));
-		
+
 		if (!NRS.serverConnect || !NRS.peerConnect) {
 			downloadingBlockchain.find(".db_active").hide();
 			downloadingBlockchain.find(".db_halted").show();

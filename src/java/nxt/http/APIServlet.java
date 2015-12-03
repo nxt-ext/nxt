@@ -260,6 +260,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getSellOffers", GetSellOffers.instance);
         map.put("getExpectedSellOffers", GetExpectedSellOffers.instance);
         map.put("getOffer", GetOffer.instance);
+        map.put("getAvailableToBuy", GetAvailableToBuy.instance);
+        map.put("getAvailableToSell", GetAvailableToSell.instance);
         map.put("getAskOrder", GetAskOrder.instance);
         map.put("getAskOrderIds", GetAskOrderIds.instance);
         map.put("getAskOrders", GetAskOrders.instance);

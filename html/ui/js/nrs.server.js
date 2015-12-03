@@ -151,8 +151,11 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         //Fill phasing parameters when mandatory approval is enabled
-        if (data.mandatoryApprovalParamsJSON) {
-            var phasingControl = JSON.parse(data.mandatoryApprovalParamsJSON);
+        if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1
+                && NRS.accountInfo.phasingOnly
+                && NRS.accountInfo.phasingOnly.votingModel >= 0) {
+
+            var phasingControl = NRS.accountInfo.phasingOnly;
             var maxFees = new BigInteger(phasingControl.maxFees);
             if (maxFees > 0 && new BigInteger(data.feeNQT).compareTo(new BigInteger(phasingControl.maxFees)) > 0) {
                 callback({
@@ -178,7 +181,6 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
 
-
             var phasingParams = NRS.phasingControlObjectToPhasingParams(phasingControl);
             $.extend(data, phasingParams);
             data.phased = true;
@@ -187,7 +189,6 @@ var NRS = (function (NRS, $, undefined) {
             delete data.phasingHashedSecretAlgorithm;
             delete data.phasingLinkedFullHash;
         }
-        delete data.mandatoryApprovalParamsJSON;
 
         if (!data.recipientPublicKey) {
             delete data.recipientPublicKey;
@@ -1194,9 +1195,9 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 7 && transaction.subtype !== 0) {
                     return false;
                 }
-                var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
-                if (holdingId !== "0" && holdingId !== data.holdingId ||
-                    holdingId === "0" && data.holdingId !== undefined && data.holdingId !== "" && data.holdingId !== "0") {
+                var holding = String(converters.byteArrayToBigInteger(byteArray, pos));
+                if (holding !== "0" && holding !== data.holding ||
+                    holding === "0" && data.holding !== undefined && data.holding !== "" && data.holding !== "0") {
                     return false;
                 }
                 pos += 8;

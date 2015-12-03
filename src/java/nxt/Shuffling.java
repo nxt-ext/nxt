@@ -218,7 +218,7 @@ public final class Shuffling {
     }
 
     public static int getHoldingShufflingCount(long holdingId, boolean includeFinished) {
-        DbClause clause = new DbClause.LongClause("holding_id", holdingId);
+        DbClause clause = holdingId != 0 ? new DbClause.LongClause("holding_id", holdingId) : new DbClause.NullClause("holding_id");
         if (!includeFinished) {
             clause = clause.and(new DbClause.NotNullClause("blocks_remaining"));
         }
@@ -226,7 +226,7 @@ public final class Shuffling {
     }
 
     public static DbIterator<Shuffling> getHoldingShufflings(long holdingId, Stage stage, boolean includeFinished, int from, int to) {
-        DbClause clause = new DbClause.LongClause("holding_id", holdingId);
+        DbClause clause = holdingId != 0 ? new DbClause.LongClause("holding_id", holdingId) : new DbClause.NullClause("holding_id");
         if (!includeFinished) {
             clause = clause.and(new DbClause.NotNullClause("blocks_remaining"));
         }
@@ -278,6 +278,7 @@ public final class Shuffling {
     private final long amount;
     private final byte participantCount;
     private short blocksRemaining;
+    private byte registrantCount;
 
     private Stage stage;
     private long assigneeAccountId;
@@ -295,6 +296,7 @@ public final class Shuffling {
         this.stage = Stage.REGISTRATION;
         this.assigneeAccountId = issuerId;
         this.recipientPublicKeys = Convert.EMPTY_BYTES;
+        this.registrantCount = 1;
     }
 
     private Shuffling(ResultSet rs) throws SQLException {
@@ -309,14 +311,15 @@ public final class Shuffling {
         this.stage = Stage.get(rs.getByte("stage"));
         this.assigneeAccountId = rs.getLong("assignee_account_id");
         this.recipientPublicKeys = DbUtils.getArray(rs, "recipient_public_keys", byte[][].class, Convert.EMPTY_BYTES);
+        this.registrantCount = rs.getByte("registrant_count");
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO shuffling (id, holding_id, holding_type, "
                 + "issuer_id, amount, participant_count, blocks_remaining, stage, assignee_account_id, "
-                + "recipient_public_keys, height, latest) "
+                + "recipient_public_keys, registrant_count, height, latest) "
                 + "KEY (id, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.holdingId);
@@ -328,6 +331,7 @@ public final class Shuffling {
             pstmt.setByte(++i, this.getStage().getCode());
             DbUtils.setLongZeroToNull(pstmt, ++i, this.assigneeAccountId);
             DbUtils.setArrayEmptyToNull(pstmt, ++i, this.recipientPublicKeys);
+            pstmt.setByte(++i, this.registrantCount);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
@@ -355,6 +359,10 @@ public final class Shuffling {
 
     public byte getParticipantCount() {
         return participantCount;
+    }
+
+    public byte getRegistrantCount() {
+        return registrantCount;
     }
 
     public short getBlocksRemaining() {
@@ -563,10 +571,10 @@ public final class Shuffling {
         // to the new participant
         ShufflingParticipant lastParticipant = ShufflingParticipant.getParticipant(this.id, this.assigneeAccountId);
         lastParticipant.setNextAccountId(participantId);
-        int index = lastParticipant.getIndex() + 1;
-        ShufflingParticipant.addParticipant(this.id, participantId, index);
+        ShufflingParticipant.addParticipant(this.id, participantId, this.registrantCount);
+        this.registrantCount += 1;
         // Check if participant registration is complete and if so update the shuffling
-        if (index == this.participantCount - 1) {
+        if (this.registrantCount == this.participantCount) {
             setStage(Stage.PROCESSING, this.issuerId, Constants.SHUFFLING_PROCESSING_DEADLINE);
         } else {
             this.assigneeAccountId = participantId;

@@ -30,15 +30,15 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata.shuffler = function (response) {
         return $.extend(response, {
-            accountFormatted: NRS.getAccountLink(response, "account"),
-            recipientFormatted: NRS.getAccountLink(response, "recipient"),
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
-            failureFormatted: (function () {
-                if (!response.failedTransaction) {
-                    return "";
+            recipientFormatted: NRS.getAccountLink(response, "recipient"),
+            status: (function () {
+                if (!response.failureCause) {
+                    return $.t("active");
+                } else {
+                    return String(response.failureCause).escapeHTML()
                 }
-                return NRS.getTransactionLink(response.failedTransaction.transaction);
-            })()
+            })
         });
     };
 
@@ -196,9 +196,11 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.incoming.active_shufflings = function (transactions) {
-        if (NRS.hasTransactionUpdates(transactions)) {
-            NRS.loadPage("active_shufflings");
-        }
+        NRS.loadPage("active_shufflings");
+    };
+
+    NRS.incoming.my_shufflings = function (transactions) {
+        NRS.loadPage("my_shufflings");
     };
 
     function getShufflers(callback) {

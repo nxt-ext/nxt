@@ -16,31 +16,26 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Attachment;
-import nxt.NxtException;
+import nxt.CurrencyExchangeOffer;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class ShufflingRegister extends CreateTransaction {
+public final class GetAvailableToSell extends APIServlet.APIRequestHandler {
 
-    static final ShufflingRegister instance = new ShufflingRegister();
+    static final GetAvailableToSell instance = new GetAvailableToSell();
 
-    private ShufflingRegister() {
-        super(new APITag[] {APITag.SHUFFLING, APITag.CREATE_TRANSACTION}, "shufflingFullHash");
+    private GetAvailableToSell() {
+        super(new APITag[] {APITag.MS}, "currency", "units");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        byte[] shufflingFullHash = ParameterParser.getBytes(req, "shufflingFullHash", true);
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        Attachment attachment = new Attachment.ShufflingRegistration(shufflingFullHash);
-
-        Account account = ParameterParser.getSenderAccount(req);
-        if (account.getControls().contains(Account.ControlType.PHASING_ONLY)) {
-            return JSONResponses.error("Accounts under phasing only control cannot join a shuffling");
-        }
-        return createTransaction(req, account, attachment);
+        long currencyId = ParameterParser.getUnsignedLong(req, "currency", true);
+        long units = ParameterParser.getLong(req, "units", 1L, Long.MAX_VALUE, true);
+        CurrencyExchangeOffer.AvailableOffers availableOffers = CurrencyExchangeOffer.getAvailableToSell(currencyId, units);
+        return JSONData.availableOffers(availableOffers);
     }
+
 }

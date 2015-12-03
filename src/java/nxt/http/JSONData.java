@@ -327,6 +327,15 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject availableOffers(CurrencyExchangeOffer.AvailableOffers availableOffers) {
+        JSONObject json = new JSONObject();
+        json.put("currency", Long.toUnsignedString(availableOffers.getCurrencyId()));
+        json.put("rateNQT", String.valueOf(availableOffers.getRateNQT()));
+        json.put("units", String.valueOf(availableOffers.getUnits()));
+        json.put("amountNQT", String.valueOf(availableOffers.getAmountNQT()));
+        return json;
+    }
+
     static JSONObject shuffling(Shuffling shuffling, boolean includeHoldingInfo) {
         JSONObject json = new JSONObject();
         json.put("shuffling", Long.toUnsignedString(shuffling.getId()));
@@ -339,6 +348,7 @@ final class JSONData {
         json.put("amount", String.valueOf(shuffling.getAmount()));
         json.put("blocksRemaining", shuffling.getBlocksRemaining());
         json.put("participantCount", shuffling.getParticipantCount());
+        json.put("registrantCount", shuffling.getRegistrantCount());
         json.put("stage", shuffling.getStage().getCode());
         json.put("shufflingStateHash", Convert.toHexString(shuffling.getStateHash()));
         json.put("shufflingFullHash", Convert.toHexString(shuffling.getFullHash()));
@@ -370,7 +380,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject shuffler(Shuffler shuffler) {
+    static JSONObject shuffler(Shuffler shuffler, boolean includeShufflingInfo) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", shuffler.getAccountId());
         putAccount(json, "recipient", Account.getId(shuffler.getRecipientPublicKey()));
@@ -379,6 +389,12 @@ final class JSONData {
         if (shuffler.getFailedTransaction() != null) {
             json.put("failedTransaction", unconfirmedTransaction(shuffler.getFailedTransaction()));
             json.put("failureCause", shuffler.getFailureCause().getMessage());
+        }
+        if (includeShufflingInfo) {
+            Shuffling shuffling = Shuffling.getShuffling(shuffler.getShufflingFullHash());
+            if (shuffling != null) {
+                json.put("shufflingInfo", shuffling(shuffling, false));
+            }
         }
         return json;
     }

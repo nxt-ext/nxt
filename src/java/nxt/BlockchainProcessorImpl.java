@@ -1286,6 +1286,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             } finally {
                 Db.db.endTransaction();
             }
+            blockListeners.notify(block, Event.AFTER_BLOCK_ACCEPT);
         } finally {
             blockchain.writeUnlock();
         }
@@ -1921,6 +1922,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                             currentBlockId = currentBlock.getNextBlockId();
                             Db.db.clearCache();
                             Db.db.commitTransaction();
+                            blockListeners.notify(currentBlock, Event.AFTER_BLOCK_ACCEPT);
                         } catch (NxtException | RuntimeException e) {
                             Db.db.rollbackTransaction();
                             Logger.logDebugMessage(e.toString(), e);
