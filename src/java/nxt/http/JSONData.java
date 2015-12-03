@@ -327,6 +327,15 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject availableOffers(CurrencyExchangeOffer.AvailableOffers availableOffers) {
+        JSONObject json = new JSONObject();
+        json.put("currency", Long.toUnsignedString(availableOffers.getCurrencyId()));
+        json.put("rateNQT", String.valueOf(availableOffers.getRateNQT()));
+        json.put("units", String.valueOf(availableOffers.getUnits()));
+        json.put("amountNQT", String.valueOf(availableOffers.getAmountNQT()));
+        return json;
+    }
+
     static JSONObject shuffling(Shuffling shuffling, boolean includeHoldingInfo) {
         JSONObject json = new JSONObject();
         json.put("shuffling", Long.toUnsignedString(shuffling.getId()));

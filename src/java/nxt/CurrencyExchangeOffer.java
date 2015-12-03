@@ -29,6 +29,38 @@ import java.util.List;
 
 public abstract class CurrencyExchangeOffer {
 
+    public static final class AvailableOffers {
+
+        private final long currencyId;
+        private final long rateNQT;
+        private final long units;
+        private final long amountNQT;
+
+        private AvailableOffers(long currencyId, long rateNQT, long units, long amountNQT) {
+            this.currencyId = currencyId;
+            this.rateNQT = rateNQT;
+            this.units = units;
+            this.amountNQT = amountNQT;
+        }
+
+        public long getCurrencyId() {
+            return currencyId;
+        }
+
+        public long getRateNQT() {
+            return rateNQT;
+        }
+
+        public long getUnits() {
+            return units;
+        }
+
+        public long getAmountNQT() {
+            return amountNQT;
+        }
+
+    }
+
     static {
 
         Nxt.getBlockchainProcessor().addListener(block -> {
@@ -79,8 +111,33 @@ public abstract class CurrencyExchangeOffer {
     static final DbClause availableOnlyDbClause = new DbClause.LongClause("unit_limit", DbClause.Op.NE, 0)
             .and(new DbClause.LongClause("supply", DbClause.Op.NE, 0));
 
-    static void exchangeCurrencyForNXT(Transaction transaction, Account account, final long currencyId, final long rateNQT, long units) {
-        long extraAmountNQT = 0;
+    public static AvailableOffers getAvailableToSell(final long currencyId, final long units) {
+        long totalAmountNQT = 0;
+        long remainingUnits = units;
+        long rateNQT = 0;
+        List<CurrencyBuyOffer> currencyBuyOffers = new ArrayList<>();
+        DbClause dbClause = new DbClause.LongClause("currency_id", currencyId).and(availableOnlyDbClause);
+        try (DbIterator<CurrencyBuyOffer> offers = CurrencyBuyOffer.getOffers(dbClause, 0, -1,
+                " ORDER BY rate DESC, creation_height ASC, transaction_height ASC, transaction_index ASC ")) {
+            for (CurrencyBuyOffer offer : offers) {
+                currencyBuyOffers.add(offer);
+            }
+        }
+        for (CurrencyBuyOffer offer : currencyBuyOffers) {
+            if (remainingUnits == 0) {
+                break;
+            }
+            rateNQT = offer.getRateNQT();
+            long curUnits = Math.min(Math.min(remainingUnits, offer.getSupply()), offer.getLimit());
+            long curAmountNQT = Math.multiplyExact(curUnits, offer.getRateNQT());
+            totalAmountNQT = Math.addExact(totalAmountNQT, curAmountNQT);
+            remainingUnits = Math.subtractExact(remainingUnits, curUnits);
+        }
+        return new AvailableOffers(currencyId, rateNQT, Math.subtractExact(units, remainingUnits), totalAmountNQT);
+    }
+
+    static void exchangeCurrencyForNXT(Transaction transaction, Account account, final long currencyId, final long rateNQT, final long units) {
+        long totalAmountNQT = 0;
         long remainingUnits = units;
 
         List<CurrencyBuyOffer> currencyBuyOffers = new ArrayList<>();
@@ -98,7 +155,7 @@ public abstract class CurrencyExchangeOffer {
             long curUnits = Math.min(Math.min(remainingUnits, offer.getSupply()), offer.getLimit());
             long curAmountNQT = Math.multiplyExact(curUnits, offer.getRateNQT());
 
-            extraAmountNQT = Math.addExact(extraAmountNQT, curAmountNQT);
+            totalAmountNQT = Math.addExact(totalAmountNQT, curAmountNQT);
             remainingUnits = Math.subtractExact(remainingUnits, curUnits);
 
             offer.decreaseLimitAndSupply(curUnits);
@@ -111,13 +168,41 @@ public abstract class CurrencyExchangeOffer {
             Exchange.addExchange(transaction, currencyId, offer, account.getId(), offer.getAccountId(), curUnits);
         }
         long transactionId = transaction.getId();
-        account.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId, extraAmountNQT);
+        account.addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId, totalAmountNQT);
         account.addToCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transactionId, currencyId, -(units - remainingUnits));
         account.addToUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transactionId, currencyId, remainingUnits);
     }
 
-    static void exchangeNXTForCurrency(Transaction transaction, Account account, final long currencyId, final long rateNQT, long units) {
-        long extraUnits = 0;
+    public static AvailableOffers getAvailableToBuy(final long currencyId, final long amountNQT) {
+        long totalUnits = 0;
+        long remainingAmountNQT = amountNQT;
+        long rateNQT = 0;
+        List<CurrencySellOffer> currencySellOffers = new ArrayList<>();
+        DbClause dbClause = new DbClause.LongClause("currency_id", currencyId).and(availableOnlyDbClause);
+        try (DbIterator<CurrencySellOffer> offers = CurrencySellOffer.getOffers(dbClause, 0, -1,
+                " ORDER BY rate ASC, creation_height ASC, transaction_height ASC, transaction_index ASC ")) {
+            for (CurrencySellOffer offer : offers) {
+                currencySellOffers.add(offer);
+            }
+        }
+        for (CurrencySellOffer offer : currencySellOffers) {
+            if (remainingAmountNQT == 0) {
+                break;
+            }
+            long curUnits = Math.min(Math.min(remainingAmountNQT / offer.getRateNQT(), offer.getSupply()), offer.getLimit());
+            if (curUnits == 0) {
+                continue;
+            }
+            rateNQT = offer.getRateNQT();
+            long curAmountNQT = Math.multiplyExact(curUnits, offer.getRateNQT());
+            totalUnits = Math.addExact(totalUnits, curUnits);
+            remainingAmountNQT = Math.subtractExact(remainingAmountNQT, curAmountNQT);
+        }
+        return new AvailableOffers(currencyId, rateNQT, totalUnits, Math.subtractExact(amountNQT, remainingAmountNQT));
+    }
+
+    static void exchangeNXTForCurrency(Transaction transaction, Account account, final long currencyId, final long rateNQT, final long units) {
+        long totalUnits = 0;
         long remainingAmountNQT = Math.multiplyExact(units, rateNQT);
 
         List<CurrencySellOffer> currencySellOffers = new ArrayList<>();
@@ -138,7 +223,7 @@ public abstract class CurrencyExchangeOffer {
             }
             long curAmountNQT = Math.multiplyExact(curUnits, offer.getRateNQT());
 
-            extraUnits = Math.addExact(extraUnits, curUnits);
+            totalUnits = Math.addExact(totalUnits, curUnits);
             remainingAmountNQT = Math.subtractExact(remainingAmountNQT, curAmountNQT);
 
             offer.decreaseLimitAndSupply(curUnits);
@@ -153,7 +238,7 @@ public abstract class CurrencyExchangeOffer {
         }
         long transactionId = transaction.getId();
         account.addToCurrencyAndUnconfirmedCurrencyUnits(LedgerEvent.CURRENCY_EXCHANGE, transactionId,
-                                                         currencyId, extraUnits);
+                                                         currencyId, totalUnits);
         account.addToBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId,
                                 -(Math.multiplyExact(units, rateNQT) - remainingAmountNQT));
         account.addToUnconfirmedBalanceNQT(LedgerEvent.CURRENCY_EXCHANGE, transactionId, remainingAmountNQT);
