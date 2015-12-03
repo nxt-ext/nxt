@@ -402,7 +402,7 @@ public final class JSONResponses {
         return JSON.prepare(response);
     }
 
-    private static JSONStreamAware error(String error) {
+    static JSONStreamAware error(String error) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 11);
         response.put("errorDescription", error);

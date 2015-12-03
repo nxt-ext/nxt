@@ -62,6 +62,10 @@ public final class Shuffler {
                 if (map.size() >= (shuffling == null ? Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS : shuffling.getParticipantCount())) {
                     throw new ShufflerLimitException("Cannot run shufflers for more than " + map.size() + " accounts for this shuffling");
                 }
+                Account account = Account.getAccount(accountId);
+                if (account != null && account.getControls().contains(Account.ControlType.PHASING_ONLY)) {
+                    throw new ControlledAccountException("Cannot run a shuffler for an account under phasing only control");
+                }
                 shuffler = new Shuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
                 if (shuffling != null) {
                     shuffler.init(shuffling);
@@ -492,6 +496,14 @@ public final class Shuffler {
     public static final class InvalidRecipientException extends ShufflerException {
 
         private InvalidRecipientException(String message) {
+            super(message);
+        }
+
+    }
+
+    public static final class ControlledAccountException extends ShufflerException {
+
+        private ControlledAccountException(String message) {
             super(message);
         }
 

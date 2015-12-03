@@ -52,6 +52,16 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
             return JSON.prepare(response);
         } catch (Shuffler.InvalidRecipientException e) {
             return JSONResponses.incorrect("recipientPublicKey", e.getMessage());
+        } catch (Shuffler.ControlledAccountException e) {
+            JSONObject response = new JSONObject();
+            response.put("errorCode", 9);
+            response.put("errorDescription", e.getMessage());
+            return JSON.prepare(response);
+        } catch (Shuffler.ShufflerException e) {
+            JSONObject response = new JSONObject();
+            response.put("errorCode", 10);
+            response.put("errorDescription", e.getMessage());
+            return JSON.prepare(response);
         }
     }
 

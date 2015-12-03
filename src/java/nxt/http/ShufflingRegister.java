@@ -38,6 +38,9 @@ public final class ShufflingRegister extends CreateTransaction {
         Attachment attachment = new Attachment.ShufflingRegistration(shufflingFullHash);
 
         Account account = ParameterParser.getSenderAccount(req);
+        if (account.getControls().contains(Account.ControlType.PHASING_ONLY)) {
+            return JSONResponses.error("Accounts under phasing only control cannot join a shuffling");
+        }
         return createTransaction(req, account, attachment);
     }
 }
