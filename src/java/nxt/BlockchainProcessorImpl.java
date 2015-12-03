@@ -98,7 +98,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     -88, -128, 68, -118, 10, -62, 110, 19, -73, 61, 34, -76, 35, 73, -101, 9,
                     33, -111, 40, 114, 27, 105, 54, 0, 16, -97, 115, -12, -110, -88, 1, -15
             };
-    private static final byte[] LAST_CHECKSUM = Constants.isTestnet ?
+    private static final byte[] CHECKSUM_16 = Constants.isTestnet ?
             new byte[] {
                     -12, 21, 56, 106, -58, -126, 123, 33, 117, 11, -79, 28, -79, -45, 7, 69,
                     120, 71, -3, 27, 67, -85, 30, -25, -12, 127, 76, -60, -114, 41, -46, 55
@@ -108,6 +108,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     4, -96, 70, -17, 32, 17, 76, -92, 127, -127, 76, -77, 38, 7, 36, -113, 69,
                     26, -91, -94, -81, -70, 62, 30, 114, 63, -102, -55, -75, 25, -17, -12
             };
+    private static final byte[] CHECKSUM_17 = Constants.isTestnet ?
+            new byte[] {
+                    -19, -44, -49, 101, 5, -57, 51, 119, 16, 36, -3, 123, 90, -83, 89, 55, 72,
+                    116, 4, 27, -14, 114, 28, 79, -104, 100, -74, 61, -64, -6, -53, 103
+            }
+            :
+            null;
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -940,9 +947,13 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 && ! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
             popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
         }
-        if (block.getHeight() == Constants.LAST_CHECKSUM_BLOCK
-                && ! verifyChecksum(LAST_CHECKSUM, Constants.PHASING_BLOCK, Constants.LAST_CHECKSUM_BLOCK)) {
+        if (block.getHeight() == Constants.CHECKSUM_BLOCK_16
+                && ! verifyChecksum(CHECKSUM_16, Constants.PHASING_BLOCK, Constants.CHECKSUM_BLOCK_16)) {
             popOffTo(Constants.PHASING_BLOCK);
+        }
+        if (block.getHeight() == Constants.CHECKSUM_BLOCK_17
+                && ! verifyChecksum(CHECKSUM_17, Constants.CHECKSUM_BLOCK_16, Constants.CHECKSUM_BLOCK_17)) {
+            popOffTo(Constants.CHECKSUM_BLOCK_16);
         }
     };
 
