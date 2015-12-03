@@ -1548,5 +1548,14 @@
   "shuffling_state_hash": "Shuffling State Hash",
   "shuffler_recipient": "Shuffler Recipient",
   "registrant_count": "Registrant Count",
-  "registrants": "Registrants"
+  "registrants": "Registrants",
+  "registration": "Registration",
+  "processing": "Processing",
+  "verification": "Verification",
+  "blame": "Blame",
+  "cancelled": "Cancelled",
+  "done": "Done",
+  "registered": "Registered",
+  "processed": "Processed",
+  "verified": "Verified"
 }
