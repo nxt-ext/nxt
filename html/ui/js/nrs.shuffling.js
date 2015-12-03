@@ -34,7 +34,7 @@ var NRS = (function(NRS, $) {
             recipientFormatted: NRS.getAccountLink(response, "recipient"),
             status: (function () {
                 if (!response.failureCause) {
-                    return $.t("active");
+                    return $.t(NRS.getShufflingStage(response.shufflingInfo.stage).toLowerCase());
                 } else {
                     return String(response.failureCause).escapeHTML()
                 }
@@ -92,7 +92,7 @@ var NRS = (function(NRS, $) {
             shufflerIndicatorFormatted: shufflerIndicatorFormatted,
             startShufflerLinkFormatted: startShufflerLinkFormatted,
             assigneeFormatted: NRS.getAccountLink(response, "assignee"),
-            stageLabel: NRS.getShufflingStage(response.stage),
+            stageLabel: $.t(NRS.getShufflingStage(response.stage).toLowerCase()),
             holdingTypeLabel: (function () {
                 switch (response.holdingType) {
                     case 0: return 'NXT';
@@ -278,7 +278,8 @@ var NRS = (function(NRS, $) {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
             "account": NRS.account,
-            "adminPassword": NRS.settings.admin_password
+            "adminPassword": NRS.settings.admin_password,
+            "includeShufflingInfo": "true"
         };
         NRS.sendRequest("getShufflers", params,
             function(response) {

@@ -522,7 +522,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         if (transaction.recipient !== data.recipient) {
-            if (data.recipient == NRS.constants.GENESIS && transaction.recipient == "0") {
+            if ((data.recipient == NRS.constants.GENESIS || data.recipient == "") && transaction.recipient == "0") {
                 //ok
             } else {
                 return false;
@@ -742,6 +742,31 @@ var NRS = (function (NRS, $, undefined) {
                     transaction.revealedSecret !== converters.byteArrayToHexString(NRS.getUtf8Bytes(data.revealedSecretText))) {
                     return false;
                 }
+                break;
+            case "setAccountProperty":
+                if (transaction.type !== 1 && transaction.subtype !== 10) {
+                    return false;
+                }
+                length = byteArray[pos];
+                pos++;
+                if (converters.byteArrayToString(byteArray, pos, length) !== data.property) {
+                    return false;
+                }
+                pos += length;
+                length = byteArray[pos];
+                pos++;
+                if (converters.byteArrayToString(byteArray, pos, length) !== data.value) {
+                    return false;
+                }
+                pos += length;
+                break;
+            case "deleteAccountProperty":
+                if (transaction.type !== 1 && transaction.subtype !== 11) {
+                    return false;
+                }
+                var propertyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                pos += 8;
+                // TODO no idea how to validate the property id
                 break;
             case "issueAsset":
                 if (transaction.type !== 2 || transaction.subtype !== 0) {
