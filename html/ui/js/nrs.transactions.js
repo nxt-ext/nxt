@@ -942,6 +942,12 @@ var NRS = (function(NRS, $, undefined) {
 		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {
+			"titleHTML": '<span data-i18n="account_properties">Account Properties</span>',
+			"type": 'PAGE',
+			"page": 'account_properties'
+		};
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
 			"titleHTML": '<span data-i18n="my_transactions">My Transactions</span>',
 			"type": 'PAGE',
 			"page": 'transactions'
