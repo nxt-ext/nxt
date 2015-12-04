@@ -318,7 +318,7 @@ public abstract class TransactionType {
     }
 
     int getBaselineFeeHeight() {
-        return 1;
+        return Constants.SHUFFLING_BLOCK;
     }
 
     int getNextFeeHeight() {
@@ -515,13 +515,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return ALIAS_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -828,11 +823,6 @@ public abstract class TransactionType {
 
         public final static TransactionType POLL_CREATION = new Messaging() {
 
-            private final Fee POLL_FEE = (transaction, appendage) -> {
-                int numOptions = ((Attachment.MessagingPollCreation)appendage).getPollOptions().length;
-                return numOptions <= 20 ? 10 * Constants.ONE_NXT : (10 + numOptions - 20) * Constants.ONE_NXT;
-            };
-
             private final Fee POLL_OPTIONS_FEE = new Fee.SizeBasedFee(10 * Constants.ONE_NXT, Constants.ONE_NXT, 1) {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
@@ -853,7 +843,7 @@ public abstract class TransactionType {
                 }
             };
 
-            private final Fee POLL_FEE_2 = (transaction, appendage) ->
+            private final Fee POLL_FEE = (transaction, appendage) ->
                     POLL_OPTIONS_FEE.getFee(transaction, appendage) + POLL_SIZE_FEE.getFee(transaction, appendage);
 
             @Override
@@ -874,16 +864,6 @@ public abstract class TransactionType {
             @Override
             Fee getBaselineFee(Transaction transaction) {
                 return POLL_FEE;
-            }
-
-            @Override
-            Fee getNextFee(Transaction transaction) {
-                return POLL_FEE_2;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -1276,13 +1256,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return ACCOUNT_INFO_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -1483,8 +1458,6 @@ public abstract class TransactionType {
 
         public static final TransactionType ASSET_ISSUANCE = new ColoredCoins() {
 
-            private final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
-
             private final Fee SINGLETON_ASSET_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT, 32) {
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
                     Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance) transaction.getAttachment();
@@ -1492,8 +1465,8 @@ public abstract class TransactionType {
                 }
             };
 
-            private final Fee ASSET_ISSUANCE_FEE_2 = (transaction, appendage) -> isSingletonIssuance(transaction) ?
-                    SINGLETON_ASSET_FEE.getFee(transaction, appendage) : ASSET_ISSUANCE_FEE.getFee(transaction, appendage);
+            private final Fee ASSET_ISSUANCE_FEE = (transaction, appendage) -> isSingletonIssuance(transaction) ?
+                    SINGLETON_ASSET_FEE.getFee(transaction, appendage) : 1000 * Constants.ONE_NXT;
 
             @Override
             public final byte getSubtype() {
@@ -1513,16 +1486,6 @@ public abstract class TransactionType {
             @Override
             Fee getBaselineFee(Transaction transaction) {
                 return ASSET_ISSUANCE_FEE;
-            }
-
-            @Override
-            Fee getNextFee(Transaction transaction) {
-                return ASSET_ISSUANCE_FEE_2;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -2213,13 +2176,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return DGS_LISTING_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -2589,13 +2547,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return DGS_DELIVERY_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override

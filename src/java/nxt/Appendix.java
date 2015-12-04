@@ -135,7 +135,7 @@ public interface Appendix {
 
         @Override
         public int getBaselineFeeHeight() {
-            return 1;
+            return Constants.SHUFFLING_BLOCK;
         }
 
         @Override
@@ -268,13 +268,8 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) {
+        public Fee getBaselineFee(Transaction transaction) {
             return MESSAGE_FEE;
-        }
-
-        @Override
-        public int getNextFeeHeight() {
-            return Constants.SHUFFLING_BLOCK;
         }
 
         @Override
@@ -535,13 +530,8 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) {
+        public Fee getBaselineFee(Transaction transaction) {
             return ENCRYPTED_MESSAGE_FEE;
-        }
-
-        @Override
-        public int getNextFeeHeight() {
-            return Constants.SHUFFLING_BLOCK;
         }
 
         @Override
@@ -1200,9 +1190,7 @@ public interface Appendix {
 
         private static final String appendixName = "Phasing";
 
-        private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
-
-        private static final Fee PHASING_FEE_2 = new Fee() {
+        private static final Fee PHASING_FEE = new Fee() {
             @Override
             public long getFee(TransactionImpl transaction, Appendix appendage) {
                 long fee = 0;
@@ -1409,20 +1397,7 @@ public interface Appendix {
 
         @Override
         public Fee getBaselineFee(Transaction transaction) {
-            if (params.getVoteWeighting().isBalanceIndependent()) {
-                return Fee.DEFAULT_FEE;
-            }
             return PHASING_FEE;
-        }
-
-        @Override
-        public Fee getNextFee(Transaction transaction) {
-            return PHASING_FEE_2;
-        }
-
-        @Override
-        public int getNextFeeHeight() {
-            return Constants.SHUFFLING_BLOCK;
         }
 
         private void release(TransactionImpl transaction) {
