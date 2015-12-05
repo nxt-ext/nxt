@@ -33,13 +33,17 @@ public final class SetAccountProperty extends CreateTransaction {
     static final SetAccountProperty instance = new SetAccountProperty();
 
     private SetAccountProperty() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.CREATE_TRANSACTION}, "account", "property", "value");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.CREATE_TRANSACTION}, "recipient", "property", "value");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long account = ParameterParser.getAccountId(req, false);
+        Account senderAccount = ParameterParser.getSenderAccount(req);
+        long recipientId = ParameterParser.getAccountId(req, "recipient", false);
+        if (recipientId == 0) {
+            recipientId = senderAccount.getId();
+        }
         String property = Convert.nullToEmpty(req.getParameter("property")).trim();
         String value = Convert.nullToEmpty(req.getParameter("value")).trim();
 
@@ -51,9 +55,8 @@ public final class SetAccountProperty extends CreateTransaction {
             return INCORRECT_ACCOUNT_PROPERTY_VALUE_LENGTH;
         }
 
-        Account senderAccount = ParameterParser.getSenderAccount(req);
         Attachment attachment = new Attachment.MessagingAccountProperty(property, value);
-        return createTransaction(req, senderAccount, account, 0, attachment);
+        return createTransaction(req, senderAccount, recipientId, 0, attachment);
 
     }
 

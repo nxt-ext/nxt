@@ -338,15 +338,15 @@ public final class Account {
 
         private final long id;
         private final DbKey dbKey;
-        private final long accountId;
+        private final long recipientId;
         private final long setterId;
         private String property;
         private String value;
 
-        private AccountProperty(long id, long accountId, long setterId, String property, String value) {
+        private AccountProperty(long id, long recipientId, long setterId, String property, String value) {
             this.id = id;
             this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
-            this.accountId = accountId;
+            this.recipientId = recipientId;
             this.setterId = setterId;
             this.property = property;
             this.value = value;
@@ -355,21 +355,21 @@ public final class Account {
         private AccountProperty(ResultSet rs) throws SQLException {
             this.id = rs.getLong("id");
             this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
-            this.accountId = rs.getLong("account_id");
+            this.recipientId = rs.getLong("recipient_id");
             long setterId = rs.getLong("setter_id");
-            this.setterId = setterId == 0 ? accountId : setterId;
+            this.setterId = setterId == 0 ? recipientId : setterId;
             this.property = rs.getString("property");
             this.value = rs.getString("value");
         }
 
         private void save(Connection con) throws SQLException {
             try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_property "
-                    + "(id, account_id, setter_id, property, value, height, latest) "
+                    + "(id, recipient_id, setter_id, property, value, height, latest) "
                     + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.id);
-                pstmt.setLong(++i, this.accountId);
-                DbUtils.setLongZeroToNull(pstmt, ++i, this.setterId != this.accountId ? this.setterId : 0);
+                pstmt.setLong(++i, this.recipientId);
+                DbUtils.setLongZeroToNull(pstmt, ++i, this.setterId != this.recipientId ? this.setterId : 0);
                 DbUtils.setString(pstmt, ++i, this.property);
                 DbUtils.setString(pstmt, ++i, this.value);
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
@@ -381,8 +381,8 @@ public final class Account {
             return id;
         }
 
-        public long getAccountId() {
-            return accountId;
+        public long getRecipientId() {
+            return recipientId;
         }
 
         public long getSetterId() {
@@ -757,21 +757,21 @@ public final class Account {
         return accountPropertyTable.get(accountPropertyDbKeyFactory.newKey(propertyId));
     }
 
-    public static DbIterator<AccountProperty> getProperties(long accountId, long setterId, String property, int from, int to) {
-        if (accountId == 0 && setterId == 0) {
-            throw new IllegalArgumentException("At least one of accountId and setterId must be specified");
+    public static DbIterator<AccountProperty> getProperties(long recipientId, long setterId, String property, int from, int to) {
+        if (recipientId == 0 && setterId == 0) {
+            throw new IllegalArgumentException("At least one of recipientId and setterId must be specified");
         }
         DbClause dbClause = null;
-        if (setterId == accountId) {
+        if (setterId == recipientId) {
             dbClause = new DbClause.NullClause("setter_id");
         } else if (setterId != 0) {
             dbClause = new DbClause.LongClause("setter_id", setterId);
         }
-        if (accountId != 0) {
+        if (recipientId != 0) {
             if (dbClause != null) {
-                dbClause = dbClause.and(new DbClause.LongClause("account_id", accountId));
+                dbClause = dbClause.and(new DbClause.LongClause("recipient_id", recipientId));
             } else {
-                dbClause = new DbClause.LongClause("account_id", accountId);
+                dbClause = new DbClause.LongClause("recipient_id", recipientId);
             }
         }
         if (property != null) {
@@ -780,17 +780,17 @@ public final class Account {
         return accountPropertyTable.getManyBy(dbClause, from, to, " ORDER BY property ");
     }
 
-    public static AccountProperty getProperty(long accountId, String property) {
-        return getProperty(accountId, property, accountId);
+    public static AccountProperty getProperty(long recipientId, String property) {
+        return getProperty(recipientId, property, recipientId);
     }
 
-    public static AccountProperty getProperty(long accountId, String property, long setterId) {
-        if (accountId == 0 || setterId == 0) {
-            throw new IllegalArgumentException("Both accountId and setterId must be specified");
+    public static AccountProperty getProperty(long recipientId, String property, long setterId) {
+        if (recipientId == 0 || setterId == 0) {
+            throw new IllegalArgumentException("Both recipientId and setterId must be specified");
         }
-        DbClause dbClause = new DbClause.LongClause("account_id", accountId);
+        DbClause dbClause = new DbClause.LongClause("recipient_id", recipientId);
         dbClause = dbClause.and(new DbClause.StringClause("property", property));
-        if (setterId != accountId) {
+        if (setterId != recipientId) {
             dbClause = dbClause.and(new DbClause.LongClause("setter_id", setterId));
         } else {
             dbClause = dbClause.and(new DbClause.NullClause("setter_id"));
@@ -1394,7 +1394,7 @@ public final class Account {
         if (accountProperty == null) {
             return;
         }
-        if (accountProperty.getSetterId() != this.id && accountProperty.getAccountId() != this.id) {
+        if (accountProperty.getSetterId() != this.id && accountProperty.getRecipientId() != this.id) {
             throw new RuntimeException("Property " + Long.toUnsignedString(propertyId) + " cannot be deleted by " + Long.toUnsignedString(this.id));
         }
         accountPropertyTable.delete(accountProperty);

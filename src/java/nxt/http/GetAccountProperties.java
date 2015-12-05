@@ -31,16 +31,16 @@ public final class GetAccountProperties extends APIServlet.APIRequestHandler {
     static final GetAccountProperties instance = new GetAccountProperties();
 
     private GetAccountProperties() {
-        super(new APITag[] {APITag.ACCOUNTS}, "account", "property", "setter", "firstIndex", "lastIndex");
+        super(new APITag[] {APITag.ACCOUNTS}, "recipient", "property", "setter", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        long accountId = ParameterParser.getAccountId(req, false);
+        long recipientId = ParameterParser.getAccountId(req, "recipient", false);
         long setterId = ParameterParser.getAccountId(req, "setter", false);
-        if (accountId == 0 && setterId == 0) {
-            return JSONResponses.missing("account", "setter");
+        if (recipientId == 0 && setterId == 0) {
+            return JSONResponses.missing("recipient", "setter");
         }
         String property = Convert.emptyToNull(req.getParameter("property"));
         int firstIndex = ParameterParser.getFirstIndex(req);
@@ -49,15 +49,15 @@ public final class GetAccountProperties extends APIServlet.APIRequestHandler {
         JSONObject response = new JSONObject();
         JSONArray propertiesJSON = new JSONArray();
         response.put("properties", propertiesJSON);
-        if (accountId != 0) {
-            JSONData.putAccount(response, "account", accountId);
+        if (recipientId != 0) {
+            JSONData.putAccount(response, "recipient", recipientId);
         }
         if (setterId != 0) {
             JSONData.putAccount(response, "setter", setterId);
         }
-        try (DbIterator<Account.AccountProperty> iterator = Account.getProperties(accountId, setterId, property, firstIndex, lastIndex)) {
+        try (DbIterator<Account.AccountProperty> iterator = Account.getProperties(recipientId, setterId, property, firstIndex, lastIndex)) {
             while (iterator.hasNext()) {
-                propertiesJSON.add(JSONData.accountProperty(iterator.next(), accountId == 0, setterId == 0));
+                propertiesJSON.add(JSONData.accountProperty(iterator.next(), recipientId == 0, setterId == 0));
             }
         }
         return response;

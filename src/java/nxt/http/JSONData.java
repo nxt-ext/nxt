@@ -217,7 +217,7 @@ final class JSONData {
     static JSONObject accountProperty(Account.AccountProperty accountProperty, boolean includeAccount, boolean includeSetter) {
         JSONObject json = new JSONObject();
         if (includeAccount) {
-            putAccount(json, "account", accountProperty.getAccountId());
+            putAccount(json, "recipient", accountProperty.getRecipientId());
         }
         if (includeSetter) {
             putAccount(json, "setter", accountProperty.getSetterId());
