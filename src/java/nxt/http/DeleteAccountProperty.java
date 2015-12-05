@@ -29,22 +29,26 @@ public final class DeleteAccountProperty extends CreateTransaction {
     static final DeleteAccountProperty instance = new DeleteAccountProperty();
 
     private DeleteAccountProperty() {
-        super(new APITag[] {APITag.ACCOUNTS, APITag.CREATE_TRANSACTION}, "property", "recipient");
+        super(new APITag[] {APITag.ACCOUNTS, APITag.CREATE_TRANSACTION}, "account", "property", "setter");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Account senderAccount = ParameterParser.getSenderAccount(req);
-        long recipient = ParameterParser.getAccountId(req, "recipient", false);
-        if (recipient == 0) {
-            recipient = senderAccount.getId();
+        long account = ParameterParser.getAccountId(req, false);
+        if (account == 0) {
+            account = senderAccount.getId();
+        }
+        long setter = ParameterParser.getAccountId(req, "setter", false);
+        if (setter == 0) {
+            setter = senderAccount.getId();
         }
         String property = Convert.nullToEmpty(req.getParameter("property")).trim();
         if (property.isEmpty()) {
             return JSONResponses.MISSING_PROPERTY;
         }
-        Account.AccountProperty accountProperty = Account.getProperty(recipient, property, senderAccount.getId());
+        Account.AccountProperty accountProperty = Account.getProperty(account, property, setter);
         if (accountProperty == null) {
             return JSONResponses.UNKNOWN_PROPERTY;
         }
