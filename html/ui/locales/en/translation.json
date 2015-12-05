@@ -1557,5 +1557,18 @@
   "done": "Done",
   "registered": "Registered",
   "processed": "Processed",
-  "verified": "Verified"
+  "verified": "Verified",
+  "account_properties": "Account Properties",
+  "incoming": "incoming",
+  "outgoing": "Outgoing",
+  "set": "Set",
+  "property": "Property",
+  "value": "Value",
+  "action": "Action",
+  "no_properties": "There are no properties for the current account",
+  "set_account_property": "Set Account Property",
+  "delete_account_property": "Delete Account Property",
+  "setter": "Setter",
+  "set_property": "Set Property",
+  "delete_property": "Delete Property"
 }

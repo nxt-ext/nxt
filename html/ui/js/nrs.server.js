@@ -764,9 +764,9 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.type !== 1 && transaction.subtype !== 11) {
                     return false;
                 }
+                // no way to validate the property id, just skip it
                 var propertyId = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
-                // TODO no idea how to validate the property id
                 break;
             case "issueAsset":
                 if (transaction.type !== 2 || transaction.subtype !== 0) {

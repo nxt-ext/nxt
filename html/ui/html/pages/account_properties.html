@@ -36,8 +36,9 @@
                     <thead>
                     <tr>
                         <th>{{header}}</th>
-                        <th data-i18n="property">PROPERTY</th>
-                        <th data-i18n="value">VALUE</th>
+                        <th data-i18n="property">Property</th>
+                        <th data-i18n="value">Value</th>
+                        <th data-i18n="action">Action</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -46,6 +47,7 @@
                                 <td>{{{accountFormatted}}}</td>
                                 <td>{{property}}</td>
                                 <td>{{value}}</td>
+                                <td>{{{action_update}}}{{{action_delete}}}</td>
                             </tr>
                         {{/each}}
                     </tbody>
