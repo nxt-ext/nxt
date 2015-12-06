@@ -74,19 +74,27 @@ var NRS = (function(NRS, $) {
             deleteAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#delete_account_property_modal' " +
             "data-setter='" + response.setterRS + "' " +
             "data-recipient='" + NRS.accountRS + "' " +
-            "data-property='" + response.property + "' " +
+            "data-property='" + String(response.property).escapeHTML() + "' " +
             "data-i18n='delete'>DELETE</a>";
+
+            if (response.setterRS == NRS.accountRS) {
+                updateAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#set_account_property_modal' " +
+                "data-recipient='" + NRS.accountRS + "' " +
+                "data-property='" + String(response.property).escapeHTML() + "' " +
+                "data-value='" + String(response.value).escapeHTML() + "' " +
+                "data-i18n='update'>UPDATE</a>";
+            }
         } else {
             deleteAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#delete_account_property_modal' " +
             "data-setter='" + NRS.accountRS + "' " +
             recipientToken +
-            "data-property='" + response.property + "' " +
+            "data-property='" + String(response.property).escapeHTML() + "' " +
             "data-i18n='delete'>DELETE</a>";
 
-            updateAction += "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#set_account_property_modal' " +
+            updateAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#set_account_property_modal' " +
             recipientToken +
-            "data-property='" + response.property + "' " +
-            "data-value='" + response.value + "' " +
+            "data-property='" + String(response.property).escapeHTML() + "' " +
+            "data-value='" + String(response.value).escapeHTML() + "' " +
             "data-i18n='update'>UPDATE</a>";
         }
 
@@ -110,16 +118,6 @@ var NRS = (function(NRS, $) {
         propertiesTable.parent().addClass("data-loading").removeClass("data-empty");
         NRS.renderAccountProperties($(this).data("type"));
     });
-
-    NRS.forms.setAccountProperty = function($modal) {
-        var data = NRS.getFormData($modal.find("form:first"));
-        if (data.recipient == NRS.accountRS) {
-            data.recipient = "";
-        }
-        return {
-            "data": data
-        }
-    };
 
     $("#set_account_property_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);

@@ -510,7 +510,7 @@ var NRS = (function (NRS, $, undefined) {
                     case 11:
                         data = {
                             "type": $.t("delete_account_property"),
-                            "property": transaction.attachment.property
+                            "property_formatted_html": NRS.getTransactionLink(transaction.attachment.property)
                         };
                         infoTable.find("tbody").append(NRS.createInfoTable(data));
                         infoTable.show();
