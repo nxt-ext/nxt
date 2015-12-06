@@ -29,5 +29,5 @@ Added Account Properties UI.
 Account Control UI improvements and bugfixes.
 
 This release will do a blockchain rescan on testnet only, deleting blocks
-after height 487511.
+after height 484310.
 
