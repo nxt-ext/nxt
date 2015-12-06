@@ -39,7 +39,7 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
         byte[] recipientPublicKey = ParameterParser.getPublicKey(req, "recipient");
         try {
             Shuffler shuffler = Shuffler.addOrGetShuffler(secretPhrase, recipientPublicKey, shufflingFullHash);
-            return shuffler != null ? JSONData.shuffler(shuffler, false, false) : JSON.emptyJSON;
+            return shuffler != null ? JSONData.shuffler(shuffler, false) : JSON.emptyJSON;
         } catch (Shuffler.ShufflerLimitException e) {
             JSONObject response = new JSONObject();
             response.put("errorCode", 7);

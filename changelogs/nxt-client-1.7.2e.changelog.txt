@@ -4,8 +4,11 @@ nodes.
 Accounts under phasing only control are not allowed to create or join
 shufflings, or start shufflers.
 
-Added includeShufflingInfo parameter to getShufflers, to allow retrieving
-shuffling details too with the same request.
+Shuffling UI improvements. The My Shufflers page has been merged with
+My Shufflings.
+
+Added includeParticipantState parameter to getShufflers, to allow retrieving
+shuffling participant state too with the same request.
 
 The deleteAccountProperty API has been fixed to accept both recipient and
 setter parameters, to be able to delete properties set to the account by
@@ -23,7 +26,7 @@ market offers.
 
 Added Account Properties UI.
 
-Account Control UI improvements.
+Account Control UI improvements and bugfixes.
 
 This release will do a blockchain rescan on testnet only, deleting blocks
 after height 487511.

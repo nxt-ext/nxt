@@ -380,7 +380,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject shuffler(Shuffler shuffler, boolean includeShufflingInfo, boolean includeParticipantInfo) {
+    static JSONObject shuffler(Shuffler shuffler, boolean includeParticipantState) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", shuffler.getAccountId());
         putAccount(json, "recipient", Account.getId(shuffler.getRecipientPublicKey()));
@@ -390,16 +390,10 @@ final class JSONData {
             json.put("failedTransaction", unconfirmedTransaction(shuffler.getFailedTransaction()));
             json.put("failureCause", shuffler.getFailureCause().getMessage());
         }
-        if (includeShufflingInfo) {
-            Shuffling shuffling = Shuffling.getShuffling(shuffler.getShufflingFullHash());
-            if (shuffling != null) {
-                json.put("shufflingInfo", shuffling(shuffling, false));
-            }
-        }
-        if (includeParticipantInfo) {
+        if (includeParticipantState) {
             ShufflingParticipant participant = ShufflingParticipant.getParticipant(Convert.fullHashToId(shuffler.getShufflingFullHash()), shuffler.getAccountId());
             if (participant != null) {
-                json.put("participantInfo", participant(participant));
+                json.put("participantState", participant.getState().getCode());
             }
         }
         return json;
