@@ -37,7 +37,7 @@ var NRS = (function(NRS, $) {
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         };
         if (type == INCOMING) {
-            params.account = NRS.account;
+            params.recipient = NRS.account;
         } else {
             params.setter = NRS.account;
         }
@@ -56,7 +56,7 @@ var NRS = (function(NRS, $) {
                 view.render({
                     isLoading: false,
                     isEmpty: view.properties.length == 0,
-                    header: type == INCOMING ? $.t("sender") : $.t("recipient")
+                    header: type == INCOMING ? $.t("setter") : $.t("recipient")
                 });
                 NRS.pageLoaded();
             }
@@ -64,10 +64,46 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.jsondata.properties = function (response, type) {
+        var updateAction = "";
+        var deleteAction = "";
+        var recipientToken = "";
+        if (response.recipientRS) {
+            recipientToken = "data-recipient='" + response.recipientRS + "' ";
+        }
+        if (type == INCOMING) {
+            deleteAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#delete_account_property_modal' " +
+            "data-setter='" + response.setterRS + "' " +
+            "data-recipient='" + NRS.accountRS + "' " +
+            "data-property='" + String(response.property).escapeHTML() + "' " +
+            "data-i18n='delete'>DELETE</a>";
+
+            if (response.setterRS == NRS.accountRS) {
+                updateAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#set_account_property_modal' " +
+                "data-recipient='" + NRS.accountRS + "' " +
+                "data-property='" + String(response.property).escapeHTML() + "' " +
+                "data-value='" + String(response.value).escapeHTML() + "' " +
+                "data-i18n='update'>UPDATE</a>";
+            }
+        } else {
+            deleteAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#delete_account_property_modal' " +
+            "data-setter='" + NRS.accountRS + "' " +
+            recipientToken +
+            "data-property='" + String(response.property).escapeHTML() + "' " +
+            "data-i18n='delete'>DELETE</a>";
+
+            updateAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#set_account_property_modal' " +
+            recipientToken +
+            "data-property='" + String(response.property).escapeHTML() + "' " +
+            "data-value='" + String(response.value).escapeHTML() + "' " +
+            "data-i18n='update'>UPDATE</a>";
+        }
+
         return {
-            accountFormatted: type == INCOMING ? NRS.getAccountLink(response, "setter") : NRS.getAccountLink(response, "account"),
+            accountFormatted: type == INCOMING ? NRS.getAccountLink(response, "setter") : NRS.getAccountLink(response, "recipient"),
             property: String(response.property).escapeHTML(),
-            value: String(response.value).escapeHTML()
+            value: String(response.value).escapeHTML(),
+            action_update: updateAction,
+            action_delete: deleteAction
         };
     };
 
@@ -83,15 +119,51 @@ var NRS = (function(NRS, $) {
         NRS.renderAccountProperties($(this).data("type"));
     });
 
-    NRS.forms.setAccountProperty = function($modal) {
-        var data = NRS.getFormData($modal.find("form:first"));
-        if (data.recipient == NRS.accountRS) {
-            data.recipient = "";
+    $("#set_account_property_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        var recipient = $invoker.data("recipient");
+        var recipientInput = $("#set_account_property_recipient");
+        var recipientButton = $(".recipient_selector").find(".btn");
+        if (recipient) {
+            recipientInput.val(recipient);
+            recipientInput.prop('readonly', true);
+            recipientButton.prop('disabled', true);
+        } else {
+            recipientInput.prop('readonly', false);
+            recipientButton.prop('disabled', false);
         }
-        return {
-            "data": data
+        var property = $invoker.data("property");
+        var propertyInput = $("#set_account_property_property");
+        if (property) {
+            propertyInput.val(property);
+            propertyInput.prop('readonly', true);
+        } else {
+            propertyInput.prop('readonly', false);
         }
-    };
+        var value = $invoker.data("value");
+        if (property) {
+            $("#set_account_property_value").val(value);
+        }
+    });
+
+    $("#delete_account_property_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        var setter = $invoker.data("setter");
+        if (setter) {
+            var setterInput = $("#delete_account_property_setter");
+            setterInput.val(setter);
+        }
+        var recipient = $invoker.data("recipient");
+        if (recipient) {
+            var recipientInput = $("#delete_account_property_recipient");
+            recipientInput.val(recipient);
+        }
+        var property = $invoker.data("property");
+        if (property) {
+            var propertyInput = $("#delete_account_property_property");
+            propertyInput.val(property);
+        }
+    });
 
 	return NRS;
 }(NRS || {}, jQuery));

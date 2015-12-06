@@ -1351,10 +1351,6 @@ public abstract class TransactionType {
                         || attachment.getValue().length() > Constants.MAX_ACCOUNT_PROPERTY_VALUE_LENGTH) {
                     throw new NxtException.NotValidException("Invalid account property: " + attachment.getJSONObject());
                 }
-                if (transaction.getRecipientId() == transaction.getSenderId()) {
-                    throw new NxtException.NotValidException("Transaction should not have recipient when setting account's own property, recipient is: "
-                            + Long.toUnsignedString(transaction.getRecipientId()));
-                }
                 if (transaction.getAmountNQT() != 0) {
                     throw new NxtException.NotValidException("Account property transaction cannot be used to send NXT");
                 }
@@ -1366,18 +1362,12 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty) transaction.getAttachment();
-                Account account = recipientAccount == null ? senderAccount : recipientAccount;
-                account.setProperty(transaction, senderAccount, attachment.getProperty(), attachment.getValue());
+                recipientAccount.setProperty(transaction, senderAccount, attachment.getProperty(), attachment.getValue());
             }
 
             @Override
             public boolean canHaveRecipient() {
                 return true;
-            }
-
-            @Override
-            public boolean mustHaveRecipient() {
-                return false;
             }
 
             @Override
@@ -1421,9 +1411,19 @@ public abstract class TransactionType {
                 if (accountProperty == null) {
                     throw new NxtException.NotCurrentlyValidException("No such property " + Long.toUnsignedString(attachment.getPropertyId()));
                 }
-                if (accountProperty.getAccountId() != transaction.getSenderId() && accountProperty.getSetterId() != transaction.getSenderId()) {
+                if (accountProperty.getRecipientId() != transaction.getSenderId() && accountProperty.getSetterId() != transaction.getSenderId()) {
                     throw new NxtException.NotValidException("Account " + Long.toUnsignedString(transaction.getSenderId())
                             + " cannot delete property " + Long.toUnsignedString(attachment.getPropertyId()));
+                }
+                if (accountProperty.getRecipientId() != transaction.getRecipientId()) {
+                    throw new NxtException.NotValidException("Account property " + Long.toUnsignedString(attachment.getPropertyId())
+                            + " does not belong to " + Long.toUnsignedString(transaction.getRecipientId()));
+                }
+                if (transaction.getAmountNQT() != 0) {
+                    throw new NxtException.NotValidException("Account property transaction cannot be used to send NXT");
+                }
+                if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
+                    throw new NxtException.NotValidException("Deleting Genesis account properties not allowed");
                 }
             }
 
@@ -1435,7 +1435,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean canHaveRecipient() {
-                return false;
+                return true;
             }
 
             @Override
@@ -2888,8 +2888,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid voting model " + votingModel + " for account control");
                 }
                 long maxFees = attachment.getMaxFees();
-                if (maxFees < 0 || (maxFees > 0 && maxFees < 2 * Constants.ONE_NXT) || maxFees > Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("Invalid max fees " + maxFees);
+                long maxFeesLimit = (attachment.getPhasingParams().getVoteWeighting().isBalanceIndependent() ? 3 : 22) * Constants.ONE_NXT;
+                if (maxFees < 0 || (maxFees > 0 && maxFees < maxFeesLimit) || maxFees > Constants.MAX_BALANCE_NQT) {
+                    throw new NxtException.NotValidException(String.format("Invalid max fees %f NXT", ((double)maxFees)/Constants.ONE_NXT));
                 }
                 short minDuration = attachment.getMinDuration();
                 if (minDuration < 0 || (minDuration > 0 && minDuration < 3) || minDuration >= Constants.MAX_PHASING_DURATION) {

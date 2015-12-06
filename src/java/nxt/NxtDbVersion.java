@@ -1101,6 +1101,17 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 466:
+                apply("ALTER TABLE account_property ALTER COLUMN account_id RENAME TO recipient_id");
+            case 467:
+                apply("ALTER INDEX account_property_account_height_idx RENAME TO account_property_recipient_height_idx");
+            case 468:
+                apply("ALTER INDEX account_property_setter_account_idx RENAME TO account_property_setter_recipient_idx");
+            case 469:
+                if (Constants.isTestnet) {
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
+                }
+                apply(null);
+            case 470:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

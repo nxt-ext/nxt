@@ -217,7 +217,7 @@ final class JSONData {
     static JSONObject accountProperty(Account.AccountProperty accountProperty, boolean includeAccount, boolean includeSetter) {
         JSONObject json = new JSONObject();
         if (includeAccount) {
-            putAccount(json, "account", accountProperty.getAccountId());
+            putAccount(json, "recipient", accountProperty.getRecipientId());
         }
         if (includeSetter) {
             putAccount(json, "setter", accountProperty.getSetterId());
@@ -380,7 +380,7 @@ final class JSONData {
         return json;
     }
 
-    static JSONObject shuffler(Shuffler shuffler, boolean includeShufflingInfo) {
+    static JSONObject shuffler(Shuffler shuffler, boolean includeParticipantState) {
         JSONObject json = new JSONObject();
         putAccount(json, "account", shuffler.getAccountId());
         putAccount(json, "recipient", Account.getId(shuffler.getRecipientPublicKey()));
@@ -390,10 +390,10 @@ final class JSONData {
             json.put("failedTransaction", unconfirmedTransaction(shuffler.getFailedTransaction()));
             json.put("failureCause", shuffler.getFailureCause().getMessage());
         }
-        if (includeShufflingInfo) {
-            Shuffling shuffling = Shuffling.getShuffling(shuffler.getShufflingFullHash());
-            if (shuffling != null) {
-                json.put("shufflingInfo", shuffling(shuffling, false));
+        if (includeParticipantState) {
+            ShufflingParticipant participant = ShufflingParticipant.getParticipant(Convert.fullHashToId(shuffler.getShufflingFullHash()), shuffler.getAccountId());
+            if (participant != null) {
+                json.put("participantState", participant.getState().getCode());
             }
         }
         return json;

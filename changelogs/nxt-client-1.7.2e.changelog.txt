@@ -1,0 +1,33 @@
+This is an experimental bugfix release. It is a mandatory update for testnet
+nodes.
+
+Accounts under phasing only control are not allowed to create or join
+shufflings, or start shufflers.
+
+Shuffling UI improvements. The My Shufflers page has been merged with
+My Shufflings.
+
+Added includeParticipantState parameter to getShufflers, to allow retrieving
+shuffling participant state too with the same request.
+
+The deleteAccountProperty API has been fixed to accept both recipient and
+setter parameters, to be able to delete properties set to the account by
+another account.
+
+For consistency with setAccountProperty and deleteAccountProperty, the
+getAccountProperties API account parameter has been renamed to recipient.
+The account owner is also identified as recipient in the JSON fields of
+the properties returned.
+
+Added getAvailableToBuy and getAvailableToSell Monetary System APIs, to allow
+calculating the rate required in order to completely fill an exchange request,
+or the maximum available currency units or NXT amount considering the current
+market offers.
+
+Added Account Properties UI.
+
+Account Control UI improvements and bugfixes.
+
+This release will do a blockchain rescan on testnet only, deleting blocks
+after height 484310.
+

@@ -497,6 +497,25 @@ var NRS = (function (NRS, $, undefined) {
                         infoTable.show();
 
                         break;
+                    case 10:
+                        data = {
+                            "type": $.t("set_account_property"),
+                            "property": transaction.attachment.property,
+                            "value": transaction.attachment.value
+                        };
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
+
+                        break;
+                    case 11:
+                        data = {
+                            "type": $.t("delete_account_property"),
+                            "property_formatted_html": NRS.getTransactionLink(transaction.attachment.property)
+                        };
+                        infoTable.find("tbody").append(NRS.createInfoTable(data));
+                        infoTable.show();
+
+                        break;
                     default:
                         incorrect = true;
                         break;

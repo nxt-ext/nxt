@@ -68,14 +68,12 @@
                     <thead>
                     <tr>
                         <th data-i18n="shuffling">Shuffling</th>
-                        <th data-i18n="holding_type">Holding Type</th>
-                        <th data-i18n="holding">Holding</th>
                         <th data-i18n="stage">Stage</th>
+                        <th data-i18n="holding">Holding</th>
                         <th data-i18n="assignee">Assignee</th>
                         <th data-i18n="amount">Amount</th>
                         <th data-i18n="blocks_remaining">Blocks Remaining</th>
-                        <th data-i18n="participant_count">Participants</th>
-                        <th data-i18n="registrant_count">Registrants</th>
+                        <th data-i18n="participants">Participants</th>
                         <th data-i18n="action">Action</th>
                         <th></th>
                     </tr>
@@ -84,14 +82,12 @@
                         {{#each shufflings}}
                             <tr>
                                 <td>{{{shufflingFormatted}}}</td>
-                                <td>{{holdingTypeLabel}}</td>
-                                <td>{{{holdingFormatted}}}</td>
                                 <td>{{stageLabel}}</td>
+                                <td>{{{holdingFormatted}}}</td>
                                 <td>{{{assigneeFormatted}}}</td>
                                 <td>{{{amountFormatted}}}</td>
-                                <td>{{blocksRemaining}}</td>
-                                <td>{{participantCount}}</td>
-                                <td>{{registrantCount}}</td>
+                                <td>{{blocks}}</td>
+                                <td>{{participants}}</td>
                                 <td>
                                     {{#if canJoin}}
                                        <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="join">JOIN</a>
@@ -130,15 +126,15 @@
                     <thead>
                     <tr>
                         <th data-i18n="shuffling">Shuffling</th>
-                        <th data-i18n="shuffler">Shuffler</th>
-                        <th data-i18n="holding_type">Holding Type</th>
-                        <th data-i18n="holding">Holding</th>
                         <th data-i18n="stage">Stage</th>
+                        <th data-i18n="holding">Holding</th>
                         <th data-i18n="assignee">Assignee</th>
                         <th data-i18n="amount">Amount</th>
-                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
-                        <th data-i18n="participant_count">Participant Count</th>
-                        <th data-i18n="registrant_count">Registrant Count</th>
+                        <th data-i18n="blocks">Blocks</th>
+                        <th data-i18n="participants">Participants</th>
+                        <th data-i18n="shuffler">Shuffler</th>
+                        <th data-i18n="recipient">Recipient</th>
+                        <th data-i18n="state">State</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -146,15 +142,15 @@
                         {{#each shufflings}}
                             <tr>
                                 <td>{{{shufflingFormatted}}}</td>
-                                <td>{{{shufflerIndicatorFormatted}}} <span>{{shufflerStatus}}</span> {{{startShufflerLinkFormatted}}}</td>
-                                <td>{{holdingTypeLabel}}</td>
-                                <td>{{{holdingFormatted}}}</td>
                                 <td>{{stageLabel}}</td>
+                                <td>{{{holdingFormatted}}}</td>
                                 <td>{{{assigneeFormatted}}}</td>
                                 <td>{{{amountFormatted}}}</td>
-                                <td>{{blocksRemaining}}</td>
-                                <td>{{participantCount}}</td>
-                                <td>{{registrantCount}}</td>
+                                <td>{{blocks}}</td>
+                                <td>{{participants}}</td>
+                                <td>{{{shufflerIndicatorFormatted}}} <span>{{shufflerStatus}}</span> {{{startShufflerLinkFormatted}}}</td>
+                                <td>{{{recipientFormatted}}}</td>
+                                <td>{{stateLabel}}</td>
                             </tr>
                         {{/each}}
                     </tbody>
