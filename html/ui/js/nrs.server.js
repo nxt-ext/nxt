@@ -151,7 +151,8 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         //Fill phasing parameters when mandatory approval is enabled
-        if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1
+        if (requestType != "approveTransaction"
+            && NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1
                 && NRS.accountInfo.phasingOnly
                 && NRS.accountInfo.phasingOnly.votingModel >= 0) {
 
