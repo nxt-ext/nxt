@@ -1571,5 +1571,6 @@
   "setter": "Setter",
   "set_property": "Set Property",
   "delete_property": "Delete Property",
-  "participants": "Participants"
+  "participants": "Participants",
+  "shuffler": "Shuffler"
 }

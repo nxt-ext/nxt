@@ -1193,8 +1193,6 @@ var NRS = (function (NRS, $, undefined) {
                 data = {
                     "type": $.t("shuffling_creation"),
                     "period": transaction.attachment.registrationPeriod,
-                    "participants": transaction.attachment.participantCount,
-                    "registrants": transaction.attachment.registrantCount,
                     "holdingType": transaction.attachment.holdingType
                 };
                 if (transaction.attachment.holding != "0") {
@@ -1248,6 +1246,32 @@ var NRS = (function (NRS, $, undefined) {
                             data["shuffler"] = $.t("unknown");
                         } else {
                             data["shuffler"] = $.t("not_started");
+                        }
+                    }
+                }, false);
+                NRS.sendRequest("getShuffling", {
+                    "shuffling": transaction.transaction
+                }, function (response) {
+                    if (response.shuffling) {
+                        data["stage_formatted_html"] = NRS.getShufflingStage(response.stage);
+                        data["count"] = response.registrantCount + " / " + response.participantCount;
+                        data["blocksRemaining"] = response.blocksRemaining;
+                        data["issuer_formatted_html"] = NRS.getAccountLink(response, "issuer");
+                        if (response.assignee) {
+                            data["assignee_formatted_html"] = NRS.getAccountLink(response, "assignee");
+                        }
+                        data["shufflingStateHash"] = response.shufflingStateHash;
+                        if (response.recipientPublicKeys && response.recipientPublicKeys.length > 0) {
+                            var rows = "<table class='table table-striped'><tbody>";
+                            for (var i = 0; i < response.recipientPublicKeys.length; i++) {
+                                var recipientPublicKey = response.recipientPublicKeys[i];
+                                var recipientAccount = { accountRS: NRS.getAccountIdFromPublicKey(recipientPublicKey, true) };
+                                rows += "<tr>" +
+                                "<td>" + NRS.getAccountLink(recipientAccount, "account") + "<td>" +
+                                "</tr>";
+                            }
+                            rows += "</tbody></table>";
+                            data["recipients_formatted_html"] = rows;
                         }
                     }
                 }, false);
