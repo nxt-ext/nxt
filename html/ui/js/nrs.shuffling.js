@@ -28,20 +28,6 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata = NRS.jsondata||{};
 
-    NRS.jsondata.shuffler = function (response) {
-        return $.extend(response, {
-            shufflingFormatted: NRS.getTransactionLink(response.shuffling),
-            recipientFormatted: NRS.getAccountLink(response, "recipient"),
-            status: (function () {
-                if (!response.failureCause) {
-                    return $.t(NRS.getShufflingStage(response.shufflingInfo.stage).toLowerCase());
-                } else {
-                    return String(response.failureCause).escapeHTML()
-                }
-            })
-        });
-    };
-
     NRS.jsondata.shuffling = function (response, shufflers) {
         var isShufflerActive = false;
         var recipient;
@@ -53,8 +39,8 @@ var NRS = (function(NRS, $) {
                 if (response.shufflingFullHash == shuffler.shufflingFullHash) {
                     isShufflerActive = true;
                     recipient = shuffler.recipientRS;
-                    if (shuffler.participantInfo) {
-                        state = $.t(NRS.getShufflingParticipantState(shuffler.participantInfo.state).toLowerCase());
+                    if (shuffler.participantState != undefined) {
+                        state = $.t(NRS.getShufflingParticipantState(shuffler.participantState).toLowerCase());
                     }
                     if (shuffler.failureCause) {
                         error = String(response.failureCause).escapeHTML()
@@ -152,11 +138,6 @@ var NRS = (function(NRS, $) {
             "page": 'my_shufflings'
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
-            "titleHTML": '<span data-i18n="my_shufflers">My Shufflers</span>',
-            "type": 'PAGE',
-            "page": 'my_shufflers'
-        });
-        NRS.appendMenuItemToTSMenuItem(sidebarId, {
             "titleHTML": '<span data-i18n="create_shuffling">Create Shuffling</span>',
             "type": 'MODAL',
             "modalId": 'm_shuffling_create_modal'
@@ -218,7 +199,7 @@ var NRS = (function(NRS, $) {
     };
 
     function getShufflers(callback) {
-        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.settings.admin_password, "includeParticipantInfo": true},
+        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.settings.admin_password, "includeParticipantState": true},
             function (shufflers) {
                 if (isErrorResponse(shufflers)) {
                     $.growl($.t("cannot_check_shufflers_status") + " " + shufflers.errorDescription);
@@ -278,50 +259,6 @@ var NRS = (function(NRS, $) {
                 );
             }
         ], function (err, result) {});
-    };
-
-    NRS.pages.my_shufflers = function () {
-        NRS.hasMorePages = false;
-        var view = NRS.simpleview.get('my_shufflers_page', {
-            errorMessage: null,
-            isLoading: true,
-            isEmpty: false,
-            shufflers: []
-        });
-        var params = {
-            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-            "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-            "account": NRS.account,
-            "adminPassword": NRS.settings.admin_password,
-            "includeShufflingInfo": "true"
-        };
-        NRS.sendRequest("getShufflers", params,
-            function(response) {
-                if (isErrorResponse(response)) {
-                    view.render({
-                        errorMessage: getErrorMessage(response),
-                        isLoading: false,
-                        isEmpty: false
-                    });
-                    return;
-                }
-                if (response.shufflers.length > NRS.itemsPerPage) {
-                    NRS.hasMorePages = true;
-                    response.shufflers.pop();
-                }
-                view.shufflers.length = 0;
-                response.shufflers.forEach(
-                    function (shufflerJson) {
-                        view.shufflers.push( NRS.jsondata.shuffler(shufflerJson) );
-                    }
-                );
-                view.render({
-                    isLoading: false,
-                    isEmpty: view.shufflers.length == 0
-                });
-                NRS.pageLoaded();
-            }
-        );
     };
 
     NRS.pages.my_shufflings = function () {

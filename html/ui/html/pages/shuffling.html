@@ -14,46 +14,6 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div id="my_shufflers_page" class="paginated page">
-    <script type="text/x-handlebars-template">
-        <section class="content-header">
-            <h1 data-i18n="my_shufflers">My Shufflers</h1>
-        </section>
-        <section class="content">
-            {{#if errorMessage}}
-            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
-            {{/if}}
-            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th data-i18n="shuffling">Shuffling</th>
-                        <th data-i18n="recipient">Recipient</th>
-                        <th data-i18n="status">Status</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        {{#each shufflers}}
-                            <tr>
-                                <td>{{{shufflingFormatted}}}</td>
-                                <td>{{{recipientFormatted}}}</td>
-                                <td>{{status}}</td>
-                            </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                <div class="data-empty-container">
-                    <p>
-                        <span data-i18n="no_shufflers">There are no shufflers for the current account</span>,
-                    </p>
-                </div>
-                <div class="data-pagination"></div>
-            </div>
-        </section>
-    </script>
-</div>
-
 <div id="active_shufflings_page" class="paginated page">
     <script type="text/x-handlebars-template">
         <section class="content-header">
