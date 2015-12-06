@@ -337,6 +337,9 @@ public final class Shuffler {
                 }
                 break;
             case PROCESSING:
+                if (shufflingParticipant == null) {
+                    throw new InvalidStageException("Account has not registered for this shuffling");
+                }
                 if (Account.getAccount(recipientPublicKey) != null) {
                     throw new InvalidRecipientException("Existing account cannot be used as shuffling recipient");
                 }
@@ -345,11 +348,17 @@ public final class Shuffler {
                 }
                 break;
             case VERIFICATION:
+                if (shufflingParticipant == null) {
+                    throw new InvalidStageException("Account has not registered for this shuffling");
+                }
                 if (shufflingParticipant.getState() == ShufflingParticipant.State.PROCESSED) {
                     verify(shuffling);
                 }
                 break;
             case BLAME:
+                if (shufflingParticipant == null) {
+                    throw new InvalidStageException("Account has not registered for this shuffling");
+                }
                 if (shufflingParticipant.getState() != ShufflingParticipant.State.CANCELLED) {
                     cancel(shuffling);
                 }
@@ -360,6 +369,9 @@ public final class Shuffler {
                 break;
             default:
                 throw new RuntimeException("Unsupported shuffling stage " + shuffling.getStage());
+        }
+        if (failureCause != null) {
+            throw new ShufflerException(failureCause.getMessage(), failureCause);
         }
     }
 
@@ -437,12 +449,18 @@ public final class Shuffler {
             Transaction transaction = builder.build(secretPhrase);
             failedTransaction = null;
             failureCause = null;
+            Account participantAccount = Account.getAccount(this.accountId);
+            if (participantAccount == null || transaction.getFeeNQT() > participantAccount.getUnconfirmedBalanceNQT()) {
+                failedTransaction = transaction;
+                failureCause = new NxtException.NotCurrentlyValidException("Double spending or insufficient balance");
+                Logger.logErrorMessage("Error submitting shuffler transaction", failureCause);
+            }
             try {
                 TransactionProcessorImpl.getInstance().broadcast(transaction);
             } catch (NxtException.NotCurrentlyValidException e) {
                 failedTransaction = transaction;
                 failureCause = e;
-                Logger.logErrorMessage("Error submitting shuffler transaction, will retry at next block", e);
+                Logger.logErrorMessage("Error submitting shuffler transaction", e);
             }
         } catch (NxtException.ValidationException e) {
             Logger.logErrorMessage("Fatal error submitting shuffler transaction", e);
@@ -504,6 +522,14 @@ public final class Shuffler {
     public static final class ControlledAccountException extends ShufflerException {
 
         private ControlledAccountException(String message) {
+            super(message);
+        }
+
+    }
+
+    public static final class InvalidStageException extends ShufflerException {
+
+        private InvalidStageException(String message) {
             super(message);
         }
 
