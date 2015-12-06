@@ -1570,5 +1570,6 @@
   "delete_account_property": "Delete Account Property",
   "setter": "Setter",
   "set_property": "Set Property",
-  "delete_property": "Delete Property"
+  "delete_property": "Delete Property",
+  "participants": "Participants"
 }

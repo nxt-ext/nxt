@@ -44,11 +44,21 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata.shuffling = function (response, shufflers) {
         var isShufflerActive = false;
+        var recipient;
+        var state;
+        var error;
         if (shufflers && shufflers.shufflers) {
             for (var i = 0; i < shufflers.shufflers.length; i++) {
                 var shuffler = shufflers.shufflers[i];
                 if (response.shufflingFullHash == shuffler.shufflingFullHash) {
                     isShufflerActive = true;
+                    recipient = shuffler.recipientRS;
+                    if (shuffler.participantInfo) {
+                        state = $.t(NRS.getShufflingParticipantState(shuffler.participantInfo.state).toLowerCase());
+                    }
+                    if (shuffler.failureCause) {
+                        error = String(response.failureCause).escapeHTML()
+                    }
                     break;
                 }
             }
@@ -58,8 +68,13 @@ var NRS = (function(NRS, $) {
 
         if (shufflers && shufflers.shufflers) {
             if (isShufflerActive) {
-                shufflerStatus = $.t("active");
-                shufflerColor = "green";
+                if (error) {
+                    shufflerStatus = error;
+                    shufflerColor = "red";
+                } else {
+                    shufflerStatus = $.t("active");
+                    shufflerColor = "green";
+                }
             } else {
                 shufflerStatus = $.t("inactive");
                 shufflerColor = "red";
@@ -79,7 +94,7 @@ var NRS = (function(NRS, $) {
         } else {
             shufflerStatus = "";
         }
-        return $.extend(response, {
+        return {
             canJoin:
                 (function () {
                     if (response.stage > 0) {
@@ -88,18 +103,13 @@ var NRS = (function(NRS, $) {
                     return !isShufflerActive;
                 })(),
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
+            stageLabel: $.t(NRS.getShufflingStage(response.stage).toLowerCase()),
             shufflerStatus: shufflerStatus,
             shufflerIndicatorFormatted: shufflerIndicatorFormatted,
             startShufflerLinkFormatted: startShufflerLinkFormatted,
+            recipientFormatted: recipient,
+            stateLabel: state,
             assigneeFormatted: NRS.getAccountLink(response, "assignee"),
-            stageLabel: $.t(NRS.getShufflingStage(response.stage).toLowerCase()),
-            holdingTypeLabel: (function () {
-                switch (response.holdingType) {
-                    case 0: return 'NXT';
-                    case 1: return $.t('asset');
-                    case 2: return $.t('currency');
-                }
-            })(),
             amountFormatted: (function () {
                 switch (response.holdingType) {
                     case 0: return NRS.formatAmount(response.amount);
@@ -109,12 +119,16 @@ var NRS = (function(NRS, $) {
             })(),
             holdingFormatted: (function () {
                 switch (response.holdingType) {
-                    case 0: return '';
-                    case 1: return NRS.getTransactionLink(response.holding);
-                    case 2: return NRS.getTransactionLink(response.holding, response.holdingInfo.code);
+                    case 0: return 'NXT';
+                    case 1: return NRS.getTransactionLink(response.holding) + " (" + $.t('asset') + ")";
+                    case 2: return NRS.getTransactionLink(response.holding, response.holdingInfo.code)  + " (" + $.t('currency') + ")";
                 }
-            })()
-        });
+            })(),
+            participants: String(response.registrantCount).escapeHTML() + " / " + String(response.participantCount).escapeHTML(),
+            blocks: response.blocksRemaining,
+            shuffling: response.shuffling,
+            shufflingFullHash: response.shufflingFullHash
+        };
     };
 
     NRS.pages.shuffling = function () {};
@@ -128,11 +142,6 @@ var NRS = (function(NRS, $) {
             "desiredPosition": 80
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
-            "titleHTML": '<span data-i18n="my_shufflers">My Shufflers</span>',
-            "type": 'PAGE',
-            "page": 'my_shufflers'
-        });
-        NRS.appendMenuItemToTSMenuItem(sidebarId, {
             "titleHTML": '<span data-i18n="active_shufflings">Active Shufflings</span>',
             "type": 'PAGE',
             "page": 'active_shufflings'
@@ -141,6 +150,11 @@ var NRS = (function(NRS, $) {
             "titleHTML": '<span data-i18n="my_shufflings">My Shufflings</span>',
             "type": 'PAGE',
             "page": 'my_shufflings'
+        });
+        NRS.appendMenuItemToTSMenuItem(sidebarId, {
+            "titleHTML": '<span data-i18n="my_shufflers">My Shufflers</span>',
+            "type": 'PAGE',
+            "page": 'my_shufflers'
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
             "titleHTML": '<span data-i18n="create_shuffling">Create Shuffling</span>',
@@ -195,16 +209,16 @@ var NRS = (function(NRS, $) {
         }
     };
 
-    NRS.incoming.active_shufflings = function (transactions) {
+    NRS.incoming.active_shufflings = function() {
         NRS.loadPage("active_shufflings");
     };
 
-    NRS.incoming.my_shufflings = function (transactions) {
+    NRS.incoming.my_shufflings = function() {
         NRS.loadPage("my_shufflings");
     };
 
     function getShufflers(callback) {
-        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.settings.admin_password},
+        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.settings.admin_password, "includeParticipantInfo": true},
             function (shufflers) {
                 if (isErrorResponse(shufflers)) {
                     $.growl($.t("cannot_check_shufflers_status") + " " + shufflers.errorDescription);

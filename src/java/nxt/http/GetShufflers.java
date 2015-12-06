@@ -33,7 +33,8 @@ public final class GetShufflers extends APIServlet.APIRequestHandler {
     static final GetShufflers instance = new GetShufflers();
 
     private GetShufflers() {
-        super(new APITag[] {APITag.SHUFFLING}, "account", "shufflingFullHash", "secretPhrase", "adminPassword", "includeShufflingInfo");
+        super(new APITag[] {APITag.SHUFFLING}, "account", "shufflingFullHash", "secretPhrase", "adminPassword",
+                "includeShufflingInfo", "includeParticipantInfo");
     }
 
     @Override
@@ -43,6 +44,7 @@ public final class GetShufflers extends APIServlet.APIRequestHandler {
         byte[] shufflingFullHash = ParameterParser.getBytes(req, "shufflingFullHash", false);
         long accountId = ParameterParser.getAccountId(req, false);
         boolean includeShufflingInfo = "true".equalsIgnoreCase(req.getParameter("includeShufflingInfo"));
+        boolean includeParticipantInfo = "true".equalsIgnoreCase(req.getParameter("includeParticipantInfo"));
         List<Shuffler> shufflers;
         if (secretPhrase != null) {
             if (accountId != 0 && Account.getId(Crypto.getPublicKey(secretPhrase)) != accountId) {
@@ -70,7 +72,7 @@ public final class GetShufflers extends APIServlet.APIRequestHandler {
         }
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
-        shufflers.forEach(shuffler -> jsonArray.add(JSONData.shuffler(shuffler, includeShufflingInfo)));
+        shufflers.forEach(shuffler -> jsonArray.add(JSONData.shuffler(shuffler, includeShufflingInfo, includeParticipantInfo)));
         response.put("shufflers", jsonArray);
         return response;
     }
