@@ -1567,5 +1567,7 @@
   "participants": "Participants",
   "shuffler": "Shuffler",
   "shuffling_recipient_passphrase_warning": "Use a strong recipient passphrase and do not forget it !",
-  "shuffling_node_running_warning": "You must keep your node online and your shuffler running !"
+  "shuffling_node_running_warning": "You must keep your node online and your shuffler running !",
+  "in_progress": "In Progress",
+  "already_joined": "Already Joined"
 }

@@ -35,7 +35,7 @@
                         <th>{{i18n "amount"}}</th>
                         <th>{{i18n "blocks_remaining"}}</th>
                         <th>{{i18n "participants"}}</th>
-                        <th>{{i18n "action"}}</th>
+                        <th>{{i18n "status"}}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -48,11 +48,7 @@
                                 <td>{{{amountFormatted}}}</td>
                                 <td>{{blocks}}</td>
                                 <td>{{participants}}</td>
-                                <td>
-                                    {{#if canJoin}}
-                                       <a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shuffler_start_modal' data-shuffling='{{shuffling}}' data-shufflingfullhash='{{shufflingFullHash}}' data-i18n="join">JOIN</a>
-                                    {{/if}}
-                                </td>
+                                <td>{{{status}}}</td>
                             </tr>
                         {{/each}}
                     </tbody>
