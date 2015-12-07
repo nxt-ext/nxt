@@ -20,6 +20,7 @@
             <h1 data-i18n="active_shufflings">Active Shufflings</h1>
         </section>
         <section class="content">
+            <div class="alert alert-danger" role="alert">{{i18n "shuffling_node_running_warning"}}</div>
             {{#if errorMessage}}
             <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
             {{/if}}
@@ -27,15 +28,14 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th data-i18n="shuffling">Shuffling</th>
-                        <th data-i18n="stage">Stage</th>
-                        <th data-i18n="holding">Holding</th>
-                        <th data-i18n="assignee">Assignee</th>
-                        <th data-i18n="amount">Amount</th>
-                        <th data-i18n="blocks_remaining">Blocks Remaining</th>
-                        <th data-i18n="participants">Participants</th>
-                        <th data-i18n="action">Action</th>
-                        <th></th>
+                        <th>{{i18n "shuffling"}}</th>
+                        <th>{{i18n "stage"}}</th>
+                        <th>{{i18n "holding"}}</th>
+                        <th>{{i18n "assignee"}}</th>
+                        <th>{{i18n "amount"}}</th>
+                        <th>{{i18n "blocks_remaining"}}</th>
+                        <th>{{i18n "participants"}}</th>
+                        <th>{{i18n "action"}}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -78,6 +78,7 @@
             </div>
         </section>
         <section class="content">
+            <div class="alert alert-danger" role="alert">{{i18n "shuffling_node_running_warning"}}</div>
             {{#if errorMessage}}
             <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
             {{/if}}
@@ -85,17 +86,16 @@
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th data-i18n="shuffling">Shuffling</th>
-                        <th data-i18n="stage">Stage</th>
-                        <th data-i18n="holding">Holding</th>
-                        <th data-i18n="assignee">Assignee</th>
-                        <th data-i18n="amount">Amount</th>
-                        <th data-i18n="blocks">Blocks</th>
-                        <th data-i18n="participants">Participants</th>
-                        <th data-i18n="shuffler">Shuffler</th>
-                        <th data-i18n="recipient">Recipient</th>
-                        <th data-i18n="state">State</th>
-                        <th></th>
+                        <th>{{i18n "shuffling"}}</th>
+                        <th>{{i18n "stage"}}</th>
+                        <th>{{i18n "holding"}}</th>
+                        <th>{{i18n "assignee"}}</th>
+                        <th>{{i18n "amount"}}</th>
+                        <th>{{i18n "blocks"}}</th>
+                        <th>{{i18n "participants"}}</th>
+                        <th>{{i18n "shuffler"}}</th>
+                        <th>{{i18n "recipient"}}</th>
+                        <th>{{i18n "state"}}</th>
                     </tr>
                     </thead>
                     <tbody>
