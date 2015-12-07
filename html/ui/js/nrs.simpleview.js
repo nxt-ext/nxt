@@ -132,6 +132,12 @@ var NRS = (function(NRS, $, undefined) {
         return 'NRS.simpleview.callbacks.'+view_id+'['+index+'].call(null, $(this))';
     });
 
+    Handlebars.registerHelper('i18n',
+        function (str) {
+            return $.t(str);
+        }
+    );
+
     return NRS;
 
 })(NRS || {}, jQuery);

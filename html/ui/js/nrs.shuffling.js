@@ -74,19 +74,24 @@ var NRS = (function(NRS, $) {
             if (!isShufflerActive) {
                 startShufflerLinkFormatted = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#m_shuffler_start_modal' " +
                     "data-shuffling='" + response.shuffling + "' " +
-                    "data-shufflingfullhash='" + response.shufflingFullHash + "' " +
-                    "data-i18n='start'>START</a>";
+                    "data-shufflingfullhash='" + response.shufflingFullHash + "'>" + $.t("start") + "</a>";
             }
         } else {
             shufflerStatus = "";
         }
         return {
-            canJoin:
+            status:
                 (function () {
                     if (response.stage > 0) {
-                        return false;
+                        return "<span>" + $.t("in_progress") + "</span>";
                     }
-                    return !isShufflerActive;
+                    if (!isShufflerActive) {
+                        return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
+                            "data-target='#m_shuffler_start_modal' " +
+                            "data-shuffling='" + response.shuffling + "'" +
+                            "data-shufflingfullhash='" + response.shufflingFullHash + "'>" + $.t("join") + "</a>";
+                    }
+                    return "<span>" + $.t("already_joined") + "</span>";
                 })(),
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
             stageLabel: $.t(NRS.getShufflingStage(response.stage).toLowerCase()),
