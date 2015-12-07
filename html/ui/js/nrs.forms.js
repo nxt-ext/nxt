@@ -195,7 +195,7 @@ var NRS = (function(NRS, $) {
 			$btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 		}
 
-		var $modal = $btn.closest(".modal");
+		$modal = $btn.closest(".modal");
 
 		$modal.modal("lock");
 		$modal.find("button").prop("disabled", true);
