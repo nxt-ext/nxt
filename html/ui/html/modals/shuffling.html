@@ -34,11 +34,19 @@
                         <span id="shuffler_start_shuffling_id"></span>
                     </div>
                     <input type="hidden" id="shuffler_start_shuffling_full_hash" name="shufflingFullHash" />
+                    <div class="callout callout-danger">
+                        <strong><span data-i18n="warning">Warning</span>:</strong>
+                        <span data-i18n="shuffling_recipient_passphrase_warning"></span>
+                    </div>
                     <div class="form-group">
                         <label for="m_shuffler_start_recipient_secretphrase" data-i18n="recipient_passphrase">Recipient Passphrase</label>
                         <input type="password" name="recipientSecretPhrase" id="m_shuffler_start_recipient_secretphrase" class="form-control" placeholder="Recipient Passphrase" data-i18n="[placeholder]recipient_passphrase" tabindex="1">
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
+                    <div class="callout callout-danger">
+                        <strong><span data-i18n="warning">Warning</span>:</strong>
+                        <span data-i18n="shuffling_node_running_warning"></span>
+                    </div>
                     <input type="hidden" name="request_type" value="startShuffler" />
                 </form>
             </div>
