@@ -40,7 +40,15 @@ var NRS = (function(NRS, $) {
 	$(".modal input,select,textarea").change(function() {
         var id = $(this).attr('id');
         var modal = $(this).closest(".modal");
-        var feeFieldId = modal.attr('id').replace('_modal', '') + "_fee";
+		if (!modal) {
+			return;
+		}
+		var feeFieldId = modal.attr('id');
+		if (!feeFieldId) {
+			// Not a modal dialog with fee calculation widget
+			return;
+		}
+        feeFieldId = feeFieldId.replace('_modal', '') + "_fee";
         if (id == feeFieldId) {
             return;
         }
