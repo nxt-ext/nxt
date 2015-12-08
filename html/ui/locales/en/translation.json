@@ -1567,7 +1567,7 @@
   "participants": "Participants",
   "shuffler": "Shuffler",
   "shuffling_recipient_passphrase_warning": "Use a strong recipient passphrase and do not forget it !",
-  "shuffling_node_running_warning": "You must keep your node online and your shuffler running !",
+  "shuffling_node_running_warning": "After creating or joining a shuffling, you must keep your node online and your shuffler running, until the shuffling completes! If you don't and miss your turn, you will be charged 1000 NXT.",
   "in_progress": "In Progress",
   "already_joined": "Already Joined"
 }
