@@ -1262,16 +1262,7 @@ var NRS = (function (NRS, $, undefined) {
                         }
                         data["shufflingStateHash"] = response.shufflingStateHash;
                         if (response.recipientPublicKeys && response.recipientPublicKeys.length > 0) {
-                            var rows = "<table class='table table-striped'><tbody>";
-                            for (var i = 0; i < response.recipientPublicKeys.length; i++) {
-                                var recipientPublicKey = response.recipientPublicKeys[i];
-                                var recipientAccount = { accountRS: NRS.getAccountIdFromPublicKey(recipientPublicKey, true) };
-                                rows += "<tr>" +
-                                "<td>" + NRS.getAccountLink(recipientAccount, "account") + "<td>" +
-                                "</tr>";
-                            }
-                            rows += "</tbody></table>";
-                            data["recipients_formatted_html"] = rows;
+                            data["recipients_formatted_html"] = listPublicKeys(response.recipientPublicKeys);
                         }
                     }
                 }, false);
@@ -1288,8 +1279,12 @@ var NRS = (function (NRS, $, undefined) {
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingRecipients")) {
-                data = { "type": $.t("shuffling_recipients") };
-                NRS.mergeMaps(transaction.attachment, data, { "version.ShufflingRecipients": true });
+                data = {
+                    "type": $.t("shuffling_recipients"),
+                    "shuffling_state_hash": transaction.attachment.shufflingStateHash
+                };
+                data["shuffling_formatted_html"] = NRS.getTransactionLink(transaction.attachment.shuffling);
+                data["recipients_formatted_html"] = listPublicKeys(transaction.attachment.recipientPublicKeys);
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingVerification")) {
@@ -1581,6 +1576,19 @@ var NRS = (function (NRS, $, undefined) {
         }
         return data;
     };
+
+    function listPublicKeys(publicKeys) {
+        var rows = "<table class='table table-striped'><tbody>";
+        for (var i = 0; i < publicKeys.length; i++) {
+            var recipientPublicKey = publicKeys[i];
+            var recipientAccount = {accountRS: NRS.getAccountIdFromPublicKey(recipientPublicKey, true)};
+            rows += "<tr>" +
+                "<td>" + NRS.getAccountLink(recipientAccount, "account") + "<td>" +
+                "</tr>";
+        }
+        rows += "</tbody></table>";
+        return rows;
+    }
 
     $(document).on("click", ".approve_transaction_btn", function (e) {
         e.preventDefault();
