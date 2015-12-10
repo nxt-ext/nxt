@@ -27,7 +27,7 @@ var NRS = (function(NRS, $) {
 		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
 			"block": blockID
 		}, function(response) {
-			if (response.errorCode && response.errorCode == -1) {
+			if (response.errorCode && response.errorCode == -1 || !NRS.constants || NRS.constants.EPOCH_BEGINNING == 0) {
 				setTimeout(function (){ NRS.getBlock(blockID, callback, pageRequest); }, 2500);
 			} else {
 				if (NRS.blocks.length >= 2) {
