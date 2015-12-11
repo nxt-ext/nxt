@@ -1202,6 +1202,18 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
 
     @Override
     public Transaction restorePrunedTransaction(long transactionId) {
+        TransactionImpl transaction = TransactionDb.findTransaction(transactionId);
+        boolean isPruned = false;
+        for (Appendix.AbstractAppendix appendage : transaction.getAppendages(true)) {
+            if ((appendage instanceof Appendix.Prunable) &&
+                    !((Appendix.Prunable)appendage).hasPrunableData()) {
+                isPruned = true;
+                break;
+            }
+        }
+        if (!isPruned) {
+            return transaction;
+        }
         List<Peer> peers = Peers.getPeers(chkPeer -> chkPeer.providesService(Peer.Service.PRUNABLE) &&
                 !chkPeer.isBlacklisted() && chkPeer.getAnnouncedAddress() != null);
         if (peers.isEmpty()) {
