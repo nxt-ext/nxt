@@ -420,7 +420,9 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            PrunableMessage.add(transaction, this);
+            if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+                PrunableMessage.add(transaction, this);
+            }
         }
 
         public byte[] getMessage() {
@@ -729,7 +731,9 @@ public interface Appendix {
 
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
-            PrunableMessage.add(transaction, this);
+            if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+                PrunableMessage.add(transaction, this);
+            }
         }
 
         public final EncryptedData getEncryptedData() {

@@ -303,7 +303,7 @@ public final class ShufflingParticipant {
     }
 
     static void restoreData(long shufflingId, long accountId, byte[][] data, int timestamp, int height) {
-        if (data != null && Nxt.getEpochTime() - timestamp < Constants.MAX_PRUNABLE_LIFETIME && getData(shufflingId, accountId) == null) {
+        if (data != null && getData(shufflingId, accountId) == null) {
             shufflingDataTable.insert(new ShufflingData(shufflingId, accountId, data, timestamp, height));
         }
     }

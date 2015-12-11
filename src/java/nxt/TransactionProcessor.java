@@ -59,5 +59,5 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude);
 
-    List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException;
+    List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.NotValidException;
 }

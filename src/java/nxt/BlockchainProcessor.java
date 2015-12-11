@@ -64,6 +64,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
 
     int restorePrunedData();
 
+    Transaction restorePrunedTransaction(long transactionId);
+
     class BlockNotAcceptedException extends NxtException {
 
         private final BlockImpl block;

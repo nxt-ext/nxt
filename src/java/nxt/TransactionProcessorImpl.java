@@ -753,10 +753,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
      *
      * @param   transactions                        Transactions containing prunable data
      * @return                                      Processed transactions
-     * @throws  NxtException.ValidationException    Transaction is not valid
+     * @throws  NxtException.NotValidException    Transaction is not valid
      */
     @Override
-    public List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException {
+    public List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.NotValidException {
         List<Transaction> processed = new ArrayList<>();
         Nxt.getBlockchain().readLock();
         try {
@@ -802,7 +802,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                             }
                         }
                         if (foundAllData) {
-                            processed.add(transaction);
+                            processed.add(myTransaction);
                         }
                     }
                 }

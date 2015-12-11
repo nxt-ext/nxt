@@ -1204,6 +1204,53 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
     }
 
+    @Override
+    public Transaction restorePrunedTransaction(long transactionId) {
+        List<Peer> peers = Peers.getPeers(chkPeer -> chkPeer.providesService(Peer.Service.PRUNABLE) &&
+                !chkPeer.isBlacklisted() && chkPeer.getAnnouncedAddress() != null);
+        if (peers.isEmpty()) {
+            Logger.logDebugMessage("Cannot find any archive peers");
+            return null;
+        }
+        JSONObject json = new JSONObject();
+        JSONArray requestList = new JSONArray();
+        requestList.add(Long.toUnsignedString(transactionId));
+        json.put("requestType", "getTransactions");
+        json.put("transactionIds", requestList);
+        JSONStreamAware request = JSON.prepareRequest(json);
+        for (Peer peer : peers) {
+            if (peer.getState() != Peer.State.CONNECTED) {
+                Peers.connectPeer(peer);
+            }
+            if (peer.getState() != Peer.State.CONNECTED) {
+                continue;
+            }
+            Logger.logDebugMessage("Connected to archive peer " + peer.getHost());
+            JSONObject response = peer.send(request);
+            if (response == null) {
+                continue;
+            }
+            JSONArray transactions = (JSONArray)response.get("transactions");
+            if (transactions == null || transactions.isEmpty()) {
+                continue;
+            }
+            try {
+                List<Transaction> processed = Nxt.getTransactionProcessor().restorePrunableData(transactions);
+                if (processed.isEmpty()) {
+                    continue;
+                }
+                synchronized (prunableTransactions) {
+                    prunableTransactions.remove(transactionId);
+                }
+                return processed.get(0);
+            } catch (NxtException.NotValidException e) {
+                Logger.logErrorMessage("Peer " + peer.getHost() + " returned invalid prunable transaction", e);
+                peer.blacklist(e);
+            }
+        }
+        return null;
+    }
+
     private void addBlock(BlockImpl block) {
         try (Connection con = Db.db.getConnection()) {
             BlockDb.saveBlock(con, block);
