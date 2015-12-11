@@ -350,6 +350,14 @@ public final class JSONResponses {
         MISSING_SECRET_PHRASE = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware PRUNED_TRANSACTION;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 15);
+        response.put("errorDescription", "Pruned transaction data not currently available from any peer");
+        PRUNED_TRANSACTION = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

@@ -22,6 +22,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.PRUNED_TRANSACTION;
 import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
 public class RetrievePrunedTransaction extends APIServlet.APIRequestHandler {
@@ -40,6 +41,9 @@ public class RetrievePrunedTransaction extends APIServlet.APIRequestHandler {
             return UNKNOWN_TRANSACTION;
         }
         transaction = Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId);
+        if (transaction == null) {
+            return PRUNED_TRANSACTION;
+        }
         return JSONData.transaction(transaction);
     }
 
