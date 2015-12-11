@@ -20,3 +20,6 @@ hard fork.
 
 Shuffling UI improvements.
 
+Updated Jetty to version 9.3.6 and slf4j to version 1.7.13. Make sure to
+delete the old lib folder if unpacking over a previous installation.
+
