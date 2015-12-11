@@ -398,7 +398,7 @@
   "error_invalid_referenced_transaction_hash": "Invalid referenced transaction hash.",
   "error_invalid_seller": "Invalid Seller ID",
   "error_invalid_token": "The token is NOT VALID. It appears to belong to account __account_link__. It was generated on __timestamp__.",
-  "error_lease_balance_period": "Lease period cannot be higher than 32767 blocks.",
+  "error_lease_balance_period": "Lease period cannot be higher than 65535 blocks.",
   "error_max_amount_warning": "Your amount is higher than __nxt__ NXT. Are you sure you want to continue? Click the submit button again to confirm.",
   "error_max_asset_transfer_warning": "Quantity specified is higher than __qty__. Are you sure you want to continue? Click the submit button again to confirm.",
   "error_max_currency_transfer_warning": "Number of units specified is higher than __qty__. Are you sure you want to continue? Click the submit button again to confirm.",
@@ -1567,7 +1567,7 @@
   "participants": "Participants",
   "shuffler": "Shuffler",
   "shuffling_recipient_passphrase_warning": "Use a strong recipient passphrase and do not forget it !",
-  "shuffling_node_running_warning": "You must keep your node online and your shuffler running !",
+  "shuffling_node_running_warning": "After creating or joining a shuffling, you must keep your node online and your shuffler running, leaving enough funds in your account to cover the 12 NXT shuffling fees, until the shuffling completes! If you don't and miss your turn, you will be charged 1000 NXT.",
   "in_progress": "In Progress",
   "already_joined": "Already Joined"
 }

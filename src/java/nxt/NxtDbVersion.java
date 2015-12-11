@@ -1098,7 +1098,6 @@ class NxtDbVersion extends DbVersion {
             case 464:
                 apply("ALTER TABLE shuffling ADD COLUMN IF NOT EXISTS registrant_count TINYINT NOT NULL");
             case 465:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 466:
                 apply("ALTER TABLE account_property ALTER COLUMN account_id RENAME TO recipient_id");
@@ -1107,9 +1106,7 @@ class NxtDbVersion extends DbVersion {
             case 468:
                 apply("ALTER INDEX account_property_setter_account_idx RENAME TO account_property_setter_recipient_idx");
             case 469:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 470:
                 return;

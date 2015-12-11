@@ -16,39 +16,45 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.Attachment;
-import nxt.Constants;
-import nxt.NxtException;
-import org.json.simple.JSONObject;
+import nxt.Nxt;
+import nxt.Transaction;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class LeaseBalance extends CreateTransaction {
+import static nxt.http.JSONResponses.PRUNED_TRANSACTION;
+import static nxt.http.JSONResponses.UNKNOWN_TRANSACTION;
 
-    static final LeaseBalance instance = new LeaseBalance();
+public class RetrievePrunedTransaction extends APIServlet.APIRequestHandler {
 
-    private LeaseBalance() {
-        super(new APITag[] {APITag.FORGING, APITag.ACCOUNT_CONTROL, APITag.CREATE_TRANSACTION}, "period", "recipient");
+    static final RetrievePrunedTransaction instance = new RetrievePrunedTransaction();
+
+    private RetrievePrunedTransaction() {
+        super(new APITag[] {APITag.TRANSACTIONS}, "transaction");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-
-        int period = ParameterParser.getInt(req, "period", Constants.LEASING_DELAY, 65535, true);
-        Account account = ParameterParser.getSenderAccount(req);
-        long recipient = ParameterParser.getAccountId(req, "recipient", true);
-        Account recipientAccount = Account.getAccount(recipient);
-        if (recipientAccount == null || recipientAccount.getPublicKey() == null) {
-            JSONObject response = new JSONObject();
-            response.put("errorCode", 8);
-            response.put("errorDescription", "recipient account does not have public key");
-            return response;
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+        long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
+        Transaction transaction = Nxt.getBlockchain().getTransaction(transactionId);
+        if (transaction == null) {
+            return UNKNOWN_TRANSACTION;
         }
-        Attachment attachment = new Attachment.AccountControlEffectiveBalanceLeasing(period);
-        return createTransaction(req, account, recipient, 0, attachment);
+        transaction = Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId);
+        if (transaction == null) {
+            return PRUNED_TRANSACTION;
+        }
+        return JSONData.transaction(transaction);
+    }
 
+    @Override
+    final boolean requirePost() {
+        return true;
+    }
+
+    @Override
+    final boolean allowRequiredBlockParameters() {
+        return false;
     }
 
 }

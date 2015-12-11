@@ -238,8 +238,7 @@ public final class PrunableMessage {
     }
 
     static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix, int blockTimestamp, int height) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME &&
-                appendix.getMessage() != null) {
+        if (appendix.getMessage() != null) {
             PrunableMessage prunableMessage = prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId()));
             if (prunableMessage == null) {
                 prunableMessage = new PrunableMessage(transaction, blockTimestamp, height);
@@ -258,8 +257,7 @@ public final class PrunableMessage {
     }
 
     static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix, int blockTimestamp, int height) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME &&
-                appendix.getEncryptedData() != null) {
+        if (appendix.getEncryptedData() != null) {
                 PrunableMessage prunableMessage = prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId()));
             if (prunableMessage == null) {
                 prunableMessage = new PrunableMessage(transaction, blockTimestamp, height);

@@ -1,0 +1,22 @@
+This is an experimental bugfix release. It is a mandatory update for testnet
+nodes.
+
+Added retrievePrunedTransaction API. This API can be used to force retrieval
+of the prunable data for a given transaction, even if past the configured
+nxt.maxPrunableLifetime. Using this API to retrieve pruned data however does
+not increase its lifetime, i.e. at the next scheduled table trimming the data
+will be pruned again if expired. This API queries all currently available
+archival peers, until the missing data is found, therefore it can take some
+time to complete, and can also return no results if there are no such peers
+online, or none of them has the requested data. Consistent with the behavior
+of getTransaction and related API, the returned transaction JSON will not have
+the prunable parts included if they have expired and
+nxt.includeExpiredPrunable=false (default is true), but if those parts have
+been successfully restored, they can be requested using the more specific APIs
+such as getPrunableMessage, getTaggedData, etc.
+
+Increased maximum leasing period to 65535 blocks, to take effect after the
+hard fork.
+
+Shuffling UI improvements.
+

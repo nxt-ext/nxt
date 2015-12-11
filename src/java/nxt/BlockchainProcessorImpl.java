@@ -1180,12 +1180,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     TransactionDb.findPrunableTransactions(con, minTimestamp, maxTimestamp);
             transactionList.forEach(prunableTransaction -> {
                 long id = prunableTransaction.getId();
-                if (prunableTransaction.hasPrunableAttachment() && prunableTransaction.getTransactionType().isPruned(id)) {
-                    synchronized (prunableTransactions) {
-                        prunableTransactions.add(id);
-                    }
-                }
-                if (PrunableMessage.isPruned(id, prunableTransaction.hasPrunablePlainMessage(), prunableTransaction.hasPrunableEncryptedMessage())) {
+                if ((prunableTransaction.hasPrunableAttachment() && prunableTransaction.getTransactionType().isPruned(id)) ||
+                        PrunableMessage.isPruned(id, prunableTransaction.hasPrunablePlainMessage(), prunableTransaction.hasPrunableEncryptedMessage())) {
                     synchronized (prunableTransactions) {
                         prunableTransactions.add(id);
                     }
@@ -1202,6 +1198,65 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         synchronized (prunableTransactions) {
             return prunableTransactions.size();
         }
+    }
+
+    @Override
+    public Transaction restorePrunedTransaction(long transactionId) {
+        TransactionImpl transaction = TransactionDb.findTransaction(transactionId);
+        boolean isPruned = false;
+        for (Appendix.AbstractAppendix appendage : transaction.getAppendages(true)) {
+            if ((appendage instanceof Appendix.Prunable) &&
+                    !((Appendix.Prunable)appendage).hasPrunableData()) {
+                isPruned = true;
+                break;
+            }
+        }
+        if (!isPruned) {
+            return transaction;
+        }
+        List<Peer> peers = Peers.getPeers(chkPeer -> chkPeer.providesService(Peer.Service.PRUNABLE) &&
+                !chkPeer.isBlacklisted() && chkPeer.getAnnouncedAddress() != null);
+        if (peers.isEmpty()) {
+            Logger.logDebugMessage("Cannot find any archive peers");
+            return null;
+        }
+        JSONObject json = new JSONObject();
+        JSONArray requestList = new JSONArray();
+        requestList.add(Long.toUnsignedString(transactionId));
+        json.put("requestType", "getTransactions");
+        json.put("transactionIds", requestList);
+        JSONStreamAware request = JSON.prepareRequest(json);
+        for (Peer peer : peers) {
+            if (peer.getState() != Peer.State.CONNECTED) {
+                Peers.connectPeer(peer);
+            }
+            if (peer.getState() != Peer.State.CONNECTED) {
+                continue;
+            }
+            Logger.logDebugMessage("Connected to archive peer " + peer.getHost());
+            JSONObject response = peer.send(request);
+            if (response == null) {
+                continue;
+            }
+            JSONArray transactions = (JSONArray)response.get("transactions");
+            if (transactions == null || transactions.isEmpty()) {
+                continue;
+            }
+            try {
+                List<Transaction> processed = Nxt.getTransactionProcessor().restorePrunableData(transactions);
+                if (processed.isEmpty()) {
+                    continue;
+                }
+                synchronized (prunableTransactions) {
+                    prunableTransactions.remove(transactionId);
+                }
+                return processed.get(0);
+            } catch (NxtException.NotValidException e) {
+                Logger.logErrorMessage("Peer " + peer.getHost() + " returned invalid prunable transaction", e);
+                peer.blacklist(e);
+            }
+        }
+        return null;
     }
 
     private void addBlock(BlockImpl block) {

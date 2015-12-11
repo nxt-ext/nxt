@@ -354,6 +354,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getLog", GetLog.instance);
         map.put("getStackTraces", GetStackTraces.instance);
         map.put("retrievePrunedData", RetrievePrunedData.instance);
+        map.put("retrievePrunedTransaction", RetrievePrunedTransaction.instance);
         map.put("setLogging", SetLogging.instance);
         map.put("shutdown", Shutdown.instance);
         map.put("trimDerivedTables", TrimDerivedTables.instance);

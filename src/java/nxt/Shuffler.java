@@ -252,18 +252,16 @@ public final class Shuffler {
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
-        BlockchainProcessorImpl.getInstance().addListener(block -> {
-            shufflingsMap.values().forEach(shufflerMap -> shufflerMap.values().forEach(shuffler -> {
-                if (shuffler.failedTransaction != null) {
-                    try {
-                        TransactionProcessorImpl.getInstance().broadcast(shuffler.failedTransaction);
-                        shuffler.failedTransaction = null;
-                        shuffler.failureCause = null;
-                    } catch (NxtException.ValidationException ignore) {
-                    }
+        BlockchainProcessorImpl.getInstance().addListener(block -> shufflingsMap.values().forEach(shufflerMap -> shufflerMap.values().forEach(shuffler -> {
+            if (shuffler.failedTransaction != null) {
+                try {
+                    TransactionProcessorImpl.getInstance().broadcast(shuffler.failedTransaction);
+                    shuffler.failedTransaction = null;
+                    shuffler.failureCause = null;
+                } catch (NxtException.ValidationException ignore) {
                 }
-            }));
-        }, BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
+            }
+        })), BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
 
         BlockchainProcessorImpl.getInstance().addListener(block -> stopAllShufflers(), BlockchainProcessor.Event.RESCAN_BEGIN);
 
