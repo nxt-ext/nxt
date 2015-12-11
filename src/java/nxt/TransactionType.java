@@ -2831,9 +2831,6 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid effective balance leasing: "
                             + transaction.getJSONObject() + " transaction " + transaction.getStringId());
                 }
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK && attachment.getPeriod() > Short.MAX_VALUE) {
-                    throw new NxtException.NotYetEnabledException("Leasing period longer than 32767 not yet enabled");
-                }
                 byte[] recipientPublicKey = Account.getPublicKey(transaction.getRecipientId());
                 if (recipientPublicKey == null && ! transaction.getStringId().equals("5081403377391821646")) {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
