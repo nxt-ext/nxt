@@ -23,6 +23,7 @@ var NRS = (function (NRS, $) {
 
         'PLUGIN_VERSION': 1,
         'MAX_SHORT_JAVA': 32767,
+        'MAX_UNSIGNED_SHORT_JAVA': 65535,
         'MAX_INT_JAVA': 2147483647,
         'MIN_PRUNABLE_MESSAGE_LENGTH': 28,
 

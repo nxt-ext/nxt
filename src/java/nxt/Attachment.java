@@ -1956,19 +1956,19 @@ public interface Attachment extends Appendix {
 
     final class AccountControlEffectiveBalanceLeasing extends AbstractAttachment {
 
-        private final short period;
+        private final int period;
 
         AccountControlEffectiveBalanceLeasing(ByteBuffer buffer, byte transactionVersion) {
             super(buffer, transactionVersion);
-            this.period = buffer.getShort();
+            this.period = Short.toUnsignedInt(buffer.getShort());
         }
 
         AccountControlEffectiveBalanceLeasing(JSONObject attachmentData) {
             super(attachmentData);
-            this.period = ((Long) attachmentData.get("period")).shortValue();
+            this.period = ((Long) attachmentData.get("period")).intValue();
         }
 
-        public AccountControlEffectiveBalanceLeasing(short period) {
+        public AccountControlEffectiveBalanceLeasing(int period) {
             this.period = period;
         }
 
@@ -1979,7 +1979,7 @@ public interface Attachment extends Appendix {
 
         @Override
         void putMyBytes(ByteBuffer buffer) {
-            buffer.putShort(period);
+            buffer.putShort((short)period);
         }
 
         @Override
@@ -1992,7 +1992,7 @@ public interface Attachment extends Appendix {
             return TransactionType.AccountControl.EFFECTIVE_BALANCE_LEASING;
         }
 
-        public short getPeriod() {
+        public int getPeriod() {
             return period;
         }
     }

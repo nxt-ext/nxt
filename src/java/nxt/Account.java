@@ -1334,7 +1334,7 @@ public final class Account {
         return controls;
     }
 
-    void leaseEffectiveBalance(long lesseeId, short period) {
+    void leaseEffectiveBalance(long lesseeId, int period) {
         int height = Nxt.getBlockchain().getHeight();
         AccountLease accountLease = accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(id));
         if (accountLease == null) {
