@@ -1,0 +1,85 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+
+<div id="tagged_data_search_page" class="paginated page">
+    <section id="tagged_data_top" class="content-header">
+        <h1>
+            <span data-i18n="tagged_data">Tagged Data</span>
+            <span class="tagged_data_search_pageheader_addon tagged_data_search_pageheader_addon_account">
+                | <span data-i18n="account">Account</span> <span class="tagged_data_search_pageheader_addon_account_text"></span>
+            </span>
+            <span class="tagged_data_search_pageheader_addon tagged_data_search_pageheader_addon_fulltext">
+                | <span data-i18n="search">Search</span> <span class="tagged_data_search_pageheader_addon_fulltext_text"></span>
+            </span>
+            <span class="tagged_data_search_pageheader_addon tagged_data_search_pageheader_addon_tag">
+                | <span data-i18n="tag">Tag</span> <span class="tagged_data_search_pageheader_addon_tag_text"></span>
+            </span>
+        </h1>
+        <div style="position:absolute;top:9px;right:9px;display:none;" id="tagged_data_search_top">
+            <button id="tagged_data_clear_results" type="button" class="btn btn-default" data-i18n="clear_results">Clear Results</button>
+        </div>
+    </section>
+
+    <section class="content">
+        <div  id="tagged_data_center" class="row">
+            <div class="row" style="text-align:center">
+                <div class="col-xs-12 col-sm-6">
+                    <div style=";padding:12px;background-color:#fff;border:1px solid #f2f2f2;">
+                        <p style="text-align:center;font-size:16px;" data-i18n="tagged_data_search_description">Enter the account id.</p>
+                        <form action="#" method="get" class="tagged_data_search sidebar-form" style="width:300px;margin:0;margin:0 auto;" autocomplete="off">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="Account ID" data-i18n="[placeholder]account_id" style="height:auto;" id="tagged_data_search_account_center" />
+                                <span class="input-group-btn">
+                                    <button type="submit" name="search" class="btn btn-flat"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                    <div style="padding:12px;background-color:#fff;border:1px solid #f2f2f2;">
+                        <p style="text-align:center;font-size:16px;" data-i18n="tagged_data_fulltext_search_description">Search for a data.</p>
+                        <form action="#" method="get" class="tagged_data_fulltext_search sidebar-form" style="width:300px;margin:0;margin:0 auto;" autocomplete="off">
+                            <div class="input-group">
+                                <input type="text" name="fs_q" class="form-control" placeholder="Name, Description or Tag" data-i18n="[placeholder]name_description_tag" style="height:auto;" id="tagged_data_fulltext_search_center" />
+                                <span class="input-group-btn">
+                                    <button type="submit" name="fulltext_search" class="btn btn-flat"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:25px;margin-bottom:30px;">
+                <div class="col-xs-12">
+                    <div id="tagged_data_tag_list" style="text-align:center;">
+                        &nbsp;
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tagged_data_search_results" class="data-container data-loading" style="display:none">
+            <div id="tagged_data_search_contents" class="tagged_data_page_contents">
+
+            </div>
+            <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+            <div class="data-empty-container"><p data-i18n="no_data_items_found">No data items found.</p></div>
+        </div>
+        <div id="tagged_data_pagination" class="data-pagination"></div>
+    </section>
+</div>
