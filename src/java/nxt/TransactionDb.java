@@ -314,8 +314,8 @@ final class TransactionDb {
                         + "block_id, signature, timestamp, type, subtype, sender_id, attachment_bytes, "
                         + "block_timestamp, full_hash, version, has_message, has_encrypted_message, has_public_key_announcement, "
                         + "has_encrypttoself_message, phased, has_prunable_message, has_prunable_encrypted_message, "
-                        + "has_prunable_attachment, ec_block_height, ec_block_id, transaction_index) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                        + "has_prunable_attachment, ec_block_height, ec_block_id, transaction_index, referenced_transaction_id) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                     int i = 0;
                     pstmt.setLong(++i, transaction.getId());
                     pstmt.setShort(++i, transaction.getDeadline());
@@ -358,6 +358,8 @@ final class TransactionDb {
                     pstmt.setInt(++i, transaction.getECBlockHeight());
                     DbUtils.setLongZeroToNull(pstmt, ++i, transaction.getECBlockId());
                     pstmt.setShort(++i, index++);
+                    DbUtils.setLongZeroToNull(pstmt, ++i, transaction.referencedTransactionFullHash() == null ?
+                            0 : Convert.fullHashToId(transaction.referencedTransactionFullHash()));
                     pstmt.executeUpdate();
                 }
             }

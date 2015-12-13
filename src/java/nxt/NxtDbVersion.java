@@ -17,7 +17,13 @@
 package nxt;
 
 import nxt.db.DbVersion;
+import nxt.util.Convert;
 import nxt.util.Logger;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 class NxtDbVersion extends DbVersion {
 
@@ -1109,6 +1115,24 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 470:
+                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_id BIGINT DEFAULT NULL");
+            case 471:
+                try (Connection con = db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement(
+                             "SELECT * FROM transaction WHERE referenced_transaction_full_hash IS NOT NULL FOR UPDATE",
+                             ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+                     ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        rs.updateLong("referenced_transaction_id", Convert.fullHashToId(rs.getBytes("referenced_transaction_full_hash")));
+                        rs.updateRow();
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.toString(), e);
+                }
+                apply(null);
+            case 472:
+                apply("CREATE INDEX IF NOT EXISTS transaction_referenced_transaction_id_idx ON transaction (referenced_transaction_id)");
+            case 473:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

@@ -515,6 +515,24 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public DbIterator<TransactionImpl> getReferencingTransactions(long transactionId, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE referenced_transaction_id = ? "
+                    + "ORDER BY block_timestamp DESC, transaction_index DESC "
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, transactionId);
+            DbUtils.setLimits(++i, pstmt, from, to);
+            return getTransactions(con, pstmt);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
         return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
