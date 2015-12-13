@@ -15,6 +15,13 @@ nxt.includeExpiredPrunable=false (default is true), but if those parts have
 been successfully restored, they can be requested using the more specific APIs
 such as getPrunableMessage, getTaggedData, etc.
 
+Added getReferencingTransactions API, to retrieve the transactions referencing
+a given transaction id.
+
+Incompatible change:
+The taggedData field in the getAllTaggedData API response has been renamed to
+data, for consistency with the other get*TaggedData APIs.
+
 Increased maximum leasing period to 65535 blocks, to take effect after the
 hard fork.
 
