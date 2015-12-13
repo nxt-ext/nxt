@@ -31,7 +31,15 @@ var NRS = (function(NRS, $) {
             type: String(response.type).escapeHTML(),
             channel: String(response.channel).escapeHTML(),
             filename: String(response.filename).escapeHTML(),
-            isText: String(response.isText).escapeHTML()
+            dataFormatted: (function () {
+                if (response.isText) {
+                    return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
+                        "data-target='#tagged_data_view_modal' " +
+                        "data-data='" + response.data + "'>" + $.t("view") + "</a>";
+                }
+                return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + response.transaction +
+                    "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+            })()
         };
     };
 
@@ -263,6 +271,12 @@ var NRS = (function(NRS, $) {
 		e.preventDefault();
         $('#upload_data_modal').modal("show");
 	});
+
+    $("#tagged_data_view_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        var data = $invoker.data("data");
+        $("#tagged_data_content").html(data);
+    });
 
 	return NRS;
 }(NRS || {}, jQuery));
