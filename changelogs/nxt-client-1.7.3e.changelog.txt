@@ -18,6 +18,12 @@ such as getPrunableMessage, getTaggedData, etc.
 Added getReferencingTransactions API, to retrieve the transactions referencing
 a given transaction id.
 
+Added getLinkedPhasedTransactions API, to retrieve phased transactions with
+by-transaction voting model for a given linkedFullHash, regardless of their
+phasing status (pending, approved or rejected). Since the corresponding table
+is trimmed after finish height however, the result will not include those
+transactions that finished before the last trimming height.
+
 Incompatible change:
 The taggedData field in the getAllTaggedData API response has been renamed to
 data, for consistency with the other get*TaggedData APIs.

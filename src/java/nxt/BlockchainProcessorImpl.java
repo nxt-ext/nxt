@@ -1549,9 +1549,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             if (block.getHeight() > Constants.SHUFFLING_BLOCK) {
                 SortedSet<TransactionImpl> possiblyApprovedTransactions = new TreeSet<>(finishingTransactionsComparator);
                 block.getTransactions().forEach(transaction -> {
-                    PhasingPoll.getLinked(transaction.fullHash()).forEach(phasedTransaction -> {
+                    PhasingPoll.getLinkedPhasedTransactions(transaction.fullHash()).forEach(phasedTransaction -> {
                         if (phasedTransaction.getPhasing().getFinishHeight() > block.getHeight()) {
-                            possiblyApprovedTransactions.add(phasedTransaction);
+                            possiblyApprovedTransactions.add((TransactionImpl)phasedTransaction);
                         }
                     });
                     if (transaction.getType() == TransactionType.Messaging.PHASING_VOTE_CASTING && !transaction.attachmentIsPhased()) {
