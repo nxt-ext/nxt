@@ -24,48 +24,50 @@ var NRS = (function(NRS, $) {
 		"searchStr": ""
 	};
 
-	NRS.getDataItemHTML = function(data) {
-		var html = "";
-		html += '<div id="' + data.transaction +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
-		html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
-			"<strong>" + $.t("account") + "</strong>: <span>" + NRS.getAccountLink(data, "account") + "</span></div>" +
-			"<h3 class='title'>" + String(data.name).escapeHTML() + "</h3>";
-
-		var tags = data.parsedTags;
-		for (var i=0; i<tags.length; i++) {
-			html += '<span style="display:inline-block;background-color:#fff;padding:2px 5px 2px 5px;border:1px solid #f2f2f2;">';
-			html += '<a href="#" class="tags" onclick="event.preventDefault(); NRS.tagged_data_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
-			html += String(tags[i]).escapeHTML() + '</a>';
-			html += '</span>';
-		}
-		html += "</div>";
-		html += '</div>';
-		return html;
-	};
+    NRS.jsondata.data = function(response) {
+        return {
+            nameFormatted: NRS.getTransactionLink(response.transaction, response.name),
+            accountFormatted: NRS.getAccountLink(response, "account"),
+            type: String(response.type).escapeHTML(),
+            channel: String(response.channel).escapeHTML(),
+            filename: String(response.filename).escapeHTML(),
+            isText: String(response.isText).escapeHTML()
+        };
+    };
 
 	NRS.tagged_data_show_results = function(response) {
-		var content = "";
-
 		$("#tagged_data_search_contents").empty();
 		$("#tagged_data_search_results").show();
 		$("#tagged_data_search_center").hide();
-		$("#tagged_data_search_top").show();
+		$("#tagged_data_reset").show();
 
-		if (response.data && response.data.length) {
-			if (response.data.length > NRS.itemsPerPage) {
-				NRS.hasMorePages = true;
-				response.data.pop();
-			} else {
-				NRS.hasMorePages = false;
-			}
-			for (var i = 0; i < response.data.length; i++) {
-				content += NRS.getDataItemHTML(response.data[i]);
-			}
-		}
-
-		NRS.dataLoaded(content);
-		NRS.showMore();
-	};
+        NRS.hasMorePages = false;
+        var view = NRS.simpleview.get('tagged_data_search_results_section', {
+            errorMessage: null,
+            isLoading: true,
+            isEmpty: false,
+            data: []
+        });
+        response = $.extend({}, response);
+        if (!response.data) {
+            response.data = response.taggedData;
+        }
+        if (response.data.length > NRS.itemsPerPage) {
+            NRS.hasMorePages = true;
+            response.data.pop();
+        }
+        view.data.length = 0;
+        response.data.forEach(
+            function (dataJson) {
+                view.data.push( NRS.jsondata.data(dataJson) );
+            }
+        );
+        view.render({
+            isLoading: false,
+            isEmpty: view.data.length == 0
+        });
+        NRS.pageLoaded();
+    };
 
 	NRS.tagged_data_load_tags = function() {
 		$('#tagged_data_tag_list').empty();
@@ -177,8 +179,15 @@ var NRS = (function(NRS, $) {
 		NRS.tagged_data_load_tags();
 
 		$("#tagged_data_search_center").show();
-		$("#tagged_data_search_top").hide();
+		$("#tagged_data_reset").hide();
 		$("#tagged_data_search_results").hide();
+        NRS.sendRequest("getAllTaggedData+", {
+            "includeData": true,
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+        }, function (response) {
+            NRS.tagged_data_show_results(response);
+        });
 
 		if (callback) {
 			callback();
@@ -188,7 +197,6 @@ var NRS = (function(NRS, $) {
 	NRS.pages.tagged_data_search = function(callback) {
 		$("#tagged_data_top").show();
 		$("#tagged_data_search_center").show();
-		$("#tagged_data_pagination").show();
 		if (_currentSearch["page"] == "account") {
 			NRS.tagged_data_search_account();
 		} else if (_currentSearch["page"] == "fulltext") {
@@ -204,7 +212,7 @@ var NRS = (function(NRS, $) {
 		var sidebarId = 'sidebar_tagged_data';
 		var options = {
 			"id": sidebarId,
-			"titleHTML": '<i class="fa fa-shopping-cart"></i><span data-i18n="tagged_data">Tagged Data</span>',
+			"titleHTML": '<i class="fa fa-database"></i><span data-i18n="tagged_data">Tagged Data</span>',
 			"page": 'tagged_data_search',
 			"desiredPosition": 60
 		};
@@ -246,9 +254,14 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
-	$("#tagged_data_clear_results").on("click", function(e) {
+	$("#tagged_data_reset").on("click", function(e) {
 		e.preventDefault();
 		NRS.tagged_data_search_main();
+	});
+
+	$("#tagged_data_upload").on("click", function(e) {
+		e.preventDefault();
+        $('#upload_data_modal').modal("show");
 	});
 
 	return NRS;
