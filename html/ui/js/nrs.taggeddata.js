@@ -31,16 +31,19 @@ var NRS = (function(NRS, $) {
             type: String(response.type).escapeHTML(),
             channel: String(response.channel).escapeHTML(),
             filename: String(response.filename).escapeHTML(),
-            dataFormatted: (function () {
-                if (response.isText) {
-                    return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
-                        "data-target='#tagged_data_view_modal' " +
-                        "data-data='" + response.data + "'>" + $.t("view") + "</a>";
-                }
-                return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + response.transaction +
-                    "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
-            })()
+            dataFormatted: NRS.getTaggedDataLink(response.data, response.transaction, response.isText)
         };
+    };
+
+    NRS.getTaggedDataLink = function(data, transaction, isText) {
+        if (isText) {
+            return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
+                "data-target='#tagged_data_view_modal' " +
+                "data-data='" + String(data).escapeHTML() + "'>" + $.t("view") + "</a>";
+        } else {
+            return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + String(transaction).escapeHTML() +
+                "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+        }
     };
 
 	NRS.tagged_data_show_results = function(response) {
