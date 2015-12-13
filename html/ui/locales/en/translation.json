@@ -1339,7 +1339,7 @@
   "founders": "Founders",
   "trades": "Trades",
   "is_text": "Is Text",
-  "filename": "filename",
+  "filename": "Filename",
   "upload_tagged_data": "Upload Tagged Data",
   "tagged_data": "Tagged Data",
   "transaction_time": "Transaction Time",
@@ -1569,5 +1569,12 @@
   "shuffling_recipient_passphrase_warning": "Use a strong recipient passphrase and do not forget it !",
   "shuffling_node_running_warning": "After creating or joining a shuffling, you must keep your node online and your shuffler running, leaving enough funds in your account to cover the 12 NXT shuffling fees, until the shuffling completes! If you don't and miss your turn, you will be charged 1000 NXT.",
   "in_progress": "In Progress",
-  "already_joined": "Already Joined"
+  "already_joined": "Already Joined",
+  "download": "Download",
+  "data_content": "Data Content",
+  "content": "Content",
+  "search_by_account_id": "Search By Account ID",
+  "free_text_search": "Free Text Search",
+  "no_data": "Data not found",
+  "link": "Link"
 }
