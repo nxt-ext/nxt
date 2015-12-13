@@ -59,10 +59,6 @@ var NRS = (function(NRS, $) {
             isEmpty: false,
             data: []
         });
-        response = $.extend({}, response);
-        if (!response.data) {
-            response.data = response.taggedData;
-        }
         if (response.data.length > NRS.itemsPerPage) {
             NRS.hasMorePages = true;
             response.data.pop();
@@ -279,20 +275,6 @@ var NRS = (function(NRS, $) {
         var $invoker = $(e.relatedTarget);
         var data = $invoker.data("data");
         $("#tagged_data_content").val(data);
-    });
-
-    $('#upload_file').bind('change', function () {
-        // Mimics the server side SizeBasedFee calculation
-        var size = this.files[0].size;
-        size += NRS.getUtf8Bytes($('#tagged_data_name').val()).length;
-        size += NRS.getUtf8Bytes($('#tagged_data_description').val()).length;
-        size += NRS.getUtf8Bytes($('#tagged_data_tags').val()).length;
-        size += NRS.getUtf8Bytes($('#tagged_data_type').val()).length;
-        size += NRS.getUtf8Bytes($('#tagged_data_channel').val()).length;
-        size += NRS.getUtf8Bytes(this.files[0].name).length;
-        var dataFee = parseInt(new BigInteger("" + size).divide(new BigInteger("1024")).toString()) * 0.1;
-        $('#upload_data_fee').val(1 + dataFee);
-        $('#upload_data_fee_label').html(String(1 + dataFee) + " NXT");
     });
 
     $("#extend_data_modal").on("show.bs.modal", function (e) {
