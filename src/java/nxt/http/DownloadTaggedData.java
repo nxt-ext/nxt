@@ -39,6 +39,9 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
     JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
         long transactionId = ParameterParser.getUnsignedLong(request, "transaction", true);
         TaggedData taggedData = TaggedData.getData(transactionId);
+        if (taggedData == null) {
+            return JSONResponses.incorrect("transaction", "Tagged data not found");
+        }
         byte[] data = taggedData.getData();
         if (!taggedData.getType().equals("")) {
             response.setContentType(taggedData.getType());
