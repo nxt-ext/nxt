@@ -41,7 +41,7 @@ public final class GetAllTaggedData extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
-        response.put("taggedData", jsonArray);
+        response.put("data", jsonArray);
 
         try (DbIterator<TaggedData> data = TaggedData.getAll(firstIndex, lastIndex)) {
             while (data.hasNext()) {
