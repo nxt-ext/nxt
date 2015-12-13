@@ -1558,7 +1558,8 @@ var NRS = (function (NRS, $, undefined) {
             data["hash"] = attachment.hash;
         }
         if (attachment.taggedData) {
-            data["taggedData"] = attachment.taggedData;
+            data["tagged_data_formatted_html"] = NRS.getTransactionLink(attachment.taggedData);
+            transaction = attachment.taggedData;
         }
         if (attachment.data) {
             data["name"] = attachment.name;
@@ -1568,7 +1569,7 @@ var NRS = (function (NRS, $, undefined) {
             data["channel"] = attachment.channel;
             data["is_text"] = attachment.isText;
             data["filename"] = attachment.filename;
-            if (attachment.isText == "true") {
+            if (attachment.isText) {
                 data["data_size"] = NRS.getUtf8Bytes(attachment.data).length;
             } else {
                 data["data_size"] = converters.hexStringToByteArray(attachment.data).length;
