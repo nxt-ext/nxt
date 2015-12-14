@@ -1267,18 +1267,6 @@ var NRS = (function (NRS, $, undefined) {
         };
     };
 
-    /* DELETE CURRENCY MODEL */
-    $("#delete_currency_modal").on("show.bs.modal", function (e) {
-        var $invoker = $(e.relatedTarget);
-
-        var currency = $invoker.data("currency");
-        var currencyCode = $invoker.data("code");
-
-        $("#delete_currency_currency").val(currency);
-        $("#delete_currency_code").html(String(currencyCode).escapeHTML());
-        $("#delete_currency_modal").find(".error_message").html("Once submitted, this cannot be undone").show();
-    });
-
     /* RESERVE CURRENCY MODEL */
     $("#reserve_currency_modal").on("show.bs.modal", function (e) {
         var $invoker = $(e.relatedTarget);

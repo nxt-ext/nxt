@@ -453,40 +453,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="delete_currency_modal" data-transaction-type="5" data-transaction-subtype="8" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title"><span data-i18n="delete_currency">Delete currency</span> - <span id="delete_currency_code"></span></h4>
-            </div>
-            <div class="modal-body">            
-                <form role="form" autocomplete="off">
-                    <div class="callout callout-danger error_message" style="display:none"></div>
-                    <div class="form-group">
-                        <input type="hidden" class="form-control" name="currency" id="delete_currency_currency" />
-                    </div>
-                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
-                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
-                    <div data-replace-with-modal-template="advanced_approve_template"></div>
-                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
-                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
-                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-                    
-                    <input type="hidden" name="request_type" value="deleteCurrency" />
-                </form>
-            </div>
-            <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
-
-                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="delete_currency_button" data-loading-text="Submitting..." data-i18n="delete;[data-loading-text]submitting">Delete currency</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="currency_founders_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-wider">
         <div class="modal-content">
