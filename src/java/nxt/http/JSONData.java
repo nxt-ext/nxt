@@ -329,7 +329,6 @@ final class JSONData {
 
     static JSONObject availableOffers(CurrencyExchangeOffer.AvailableOffers availableOffers) {
         JSONObject json = new JSONObject();
-        json.put("currency", Long.toUnsignedString(availableOffers.getCurrencyId()));
         json.put("rateNQT", String.valueOf(availableOffers.getRateNQT()));
         json.put("units", String.valueOf(availableOffers.getUnits()));
         json.put("amountNQT", String.valueOf(availableOffers.getAmountNQT()));
