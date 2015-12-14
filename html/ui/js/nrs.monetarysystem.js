@@ -198,6 +198,7 @@ var NRS = (function (NRS, $, undefined) {
             "<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
             "<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
             "<td>";
+            //noinspection BadExpressionStatementJS
             rows += "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> ";
             rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupply + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("reserve") + "</a> ";
             rows += "</td></tr>";
@@ -625,7 +626,7 @@ var NRS = (function (NRS, $, undefined) {
         };
     };
 
-    $("#buy_currency_units_initial, #buy_currency_units_total, #buy_currency_rate, #sell_currency_units_initial, #sell_currency_units_total, #sell_currency_rate").keydown(function (e) {
+    $("#buy_currency_units_initial, #buy_currency_units_total, #buy_currency_offer_rate, #sell_currency_units_initial, #sell_currency_units_total, #sell_currency_offer_rate").keydown(function (e) {
         var decimals = parseInt($("#publish_exchange_offer_decimals").val(), 10);
 
         var charCode = !e.charCode ? e.which : e.charCode;
@@ -693,6 +694,7 @@ var NRS = (function (NRS, $, undefined) {
                         var decimals = String(currency.decimals).escapeHTML();
                         var typeIcons = NRS.getTypeIcons(currency.type);
                         var isOfferEnabled = NRS.isExchangeable(currency.type) && (!NRS.isControllable(currency.type) || NRS.account == currency.issuerAccount);
+                        //noinspection HtmlUnknownAttribute,BadExpressionStatementJS
                         rows += "<tr>" +
                         "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
                         "<td>" + currency.name + "</td>" +
@@ -918,7 +920,7 @@ var NRS = (function (NRS, $, undefined) {
                     "<td>" + NRS.getTransactionLink(transfers[i].transfer, transfers[i].currency) + "</td>" +
                     "<td><a href='#' data-goto-currency='" + String(transfers[i].code).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td>" +
                     "<td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td>" +
-                    "<td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals) + "</td>" +
+                    "<td style='" + (type == "receive" ? "color:green" : "color:red") + "'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals) + "</td>" +
                     "<td>" + NRS.getAccountLink(transfers[i], "recipient") + "</td>" +
                     "<td>" + NRS.getAccountLink(transfers[i], "sender") + "</td>" +
                     "</tr>";
