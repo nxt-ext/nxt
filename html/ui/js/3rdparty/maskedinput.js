@@ -88,12 +88,24 @@
                 function androidInputEvent() {
                     var curVal = input.val(), pos = input.caret();
                     if (oldVal && oldVal.length && oldVal.length > curVal.length) {
-                        for (checkVal(!0); pos.begin > 0 && !tests[pos.begin - 1]; ) pos.begin--;
-                        if (0 === pos.begin) for (;pos.begin < firstNonMaskPos && !tests[pos.begin]; ) pos.begin++;
-                        input.caret(pos.begin, pos.begin);
+                        checkVal(!0);
+                        for (; pos.end > 0 && !tests[pos.end - 1]; ) pos.end--;
+                        if (0 === pos.end) for (;pos.end < firstNonMaskPos && !tests[pos.end]; ) pos.end++;
+                        input.caret(pos.end, pos.end);
                     } else {
-                        for (checkVal(!0); pos.begin < len && !tests[pos.begin]; ) pos.begin++;
-                        input.caret(pos.begin, pos.begin);
+                        var curValUpper = curVal.toUpperCase();
+                        var addressStart = curValUpper.indexOf('NXT-', 4);
+                        if (addressStart > 0) {
+                            var insertedAddress = curValUpper.substr(addressStart, 24);
+                            if (/NXT\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{4}\-[A-Z0-9]{5}/.test(insertedAddress)) {
+                                //since pasting into a msked field will first trigger androidInputEvent, search for inserted address and use it
+                                input.val(insertedAddress);
+                            }
+                        }
+                        checkVal(!0);
+                        for (; pos.end < len && !tests[pos.end]; ) pos.end++;
+                        console.log("caret " + pos.end);
+                        input.caret(pos.end, pos.end);
                     }
                     tryFireCompleted();
                 }
@@ -213,8 +225,9 @@
                 }).on("focus.mask", function() {
                     if (!input.prop("readonly")) {
                         clearTimeout(caretTimeoutId);
-                        var pos;
-                        focusText = input.val(), pos = checkVal(), caretTimeoutId = setTimeout(function() {
+                        focusText = input.val();
+                        var pos = checkVal();
+                        caretTimeoutId = setTimeout(function() {
                             input.get(0) === document.activeElement && (writeBuffer(), pos == mask.replace("?", "").length ? input.caret(0, pos) : input.caret(pos));
                         }, 10);
                     }
