@@ -519,8 +519,10 @@ final class BlockchainImpl implements Blockchain {
         Connection con = null;
         try {
             con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT * FROM transaction WHERE referenced_transaction_id = ? "
-                    + "ORDER BY block_timestamp DESC, transaction_index DESC "
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, referenced_transaction "
+                    + "WHERE referenced_transaction.referenced_transaction_id = ? "
+                    + "AND referenced_transaction.transaction_id = transaction.id "
+                    + "ORDER BY transaction.block_timestamp DESC, transaction.transaction_index DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
             pstmt.setLong(++i, transactionId);

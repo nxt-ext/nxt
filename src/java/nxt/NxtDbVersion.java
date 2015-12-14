@@ -1115,23 +1115,27 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 470:
-                apply("ALTER TABLE transaction ADD COLUMN IF NOT EXISTS referenced_transaction_id BIGINT DEFAULT NULL");
+                apply("CREATE TABLE referenced_transaction (db_id IDENTITY, transaction_id BIGINT NOT NULL, "
+                        + "FOREIGN KEY (transaction_id) REFERENCES transaction (id) ON DELETE CASCADE, "
+                        + "referenced_transaction_id BIGINT NOT NULL)");
             case 471:
                 try (Connection con = db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement(
-                             "SELECT * FROM transaction WHERE referenced_transaction_full_hash IS NOT NULL FOR UPDATE",
-                             ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+                             "SELECT id, referenced_transaction_full_hash FROM transaction WHERE referenced_transaction_full_hash IS NOT NULL");
+                     PreparedStatement pstmtInsert = con.prepareStatement(
+                             "INSERT INTO referenced_transaction (transaction_id, referenced_transaction_id) VALUES (?, ?)");
                      ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
-                        rs.updateLong("referenced_transaction_id", Convert.fullHashToId(rs.getBytes("referenced_transaction_full_hash")));
-                        rs.updateRow();
+                        pstmtInsert.setLong(1, rs.getLong("id"));
+                        pstmtInsert.setLong(2, Convert.fullHashToId(rs.getBytes("referenced_transaction_full_hash")));
+                        pstmtInsert.executeUpdate();
                     }
                 } catch (SQLException e) {
                     throw new RuntimeException(e.toString(), e);
                 }
                 apply(null);
             case 472:
-                apply("CREATE INDEX IF NOT EXISTS transaction_referenced_transaction_id_idx ON transaction (referenced_transaction_id)");
+                apply("CREATE INDEX IF NOT EXISTS referenced_transaction_referenced_transaction_id_idx ON referenced_transaction (referenced_transaction_id)");
             case 473:
                 return;
             default:
