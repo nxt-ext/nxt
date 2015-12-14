@@ -29,14 +29,26 @@ phasing status (pending, approved or rejected). Since the corresponding table
 is trimmed after finish height however, the result will not include those
 transactions that finished before the last trimming height.
 
-Incompatible change:
-The taggedData field in the getAllTaggedData API response has been renamed to
-data, for consistency with the other get*TaggedData APIs.
-
 Increased maximum leasing period to 65535 blocks, to take effect after the
 hard fork.
 
 Shuffling UI improvements.
+
+Added UI for Tagged Data.
+
+
+Incompatible changes:
+
+The taggedData field in the getAllTaggedData API response has been renamed to
+data, for consistency with the other get*TaggedData APIs.
+
+The behaviour of the currencyBuy API has been fixed, to exchange no more than
+the number of currency units specified in the units parameter. Currently, the
+total amount of NXT as calculated from rate * units is exchanged for currency,
+even if this results in purchasing more than the number of units requested,
+which is non intuitive and not consistent with the way currencySell works.
+This change will take effect after the hard fork.
+
 
 Updated Jetty to version 9.3.6 and slf4j to version 1.7.13. Make sure to
 delete the old lib folder if unpacking over a previous installation.
