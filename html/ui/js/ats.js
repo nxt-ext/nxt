@@ -157,7 +157,14 @@ var ATS = (function(ATS, $, undefined) {
             uploadField = $('#file' + params["requestType"]);
         }
         if (params["requestType"] == "downloadTaggedData") {
-            window.location = url + "?requestType=downloadTaggedData&transaction=" + params["transaction"];
+            url += "?";
+            for (key in params) {
+                if (!params.hasOwnProperty(key)) {
+                    continue;
+                }
+                url += key + "=" + params[key] + "&";
+            }
+            window.location = url;
             return false;
         } else if (uploadField) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax

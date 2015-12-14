@@ -15,6 +15,11 @@ nxt.includeExpiredPrunable=false (default is true), but if those parts have
 been successfully restored, they can be requested using the more specific APIs
 such as getPrunableMessage, getTaggedData, etc.
 
+The getPrunableMessage, getTaggedData, and downloadTaggedData APIs now support
+optional "retrieve" parameter, default false. If the corresponding data has
+been pruned and retrieve is true, an attempt will be made to retrieve the data
+from archival peers, as if using the retrievePrunedTransaction API.
+
 Added getReferencingTransactions API, to retrieve the transactions referencing
 a given transaction id.
 
