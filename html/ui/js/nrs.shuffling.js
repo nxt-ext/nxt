@@ -371,6 +371,17 @@ var NRS = (function(NRS, $) {
         }
     });
 
+    $('#m_shuffler_start_recipient_secretphrase').on("change", function () {
+        var secretPhraseValue = $('#m_shuffler_start_recipient_secretphrase').val();
+        var recipientAccount = $('#m_shuffler_start_recipient_account');
+        if (secretPhraseValue == "") {
+            recipientAccount.val("");
+            return;
+        }
+        var account = NRS.getAccountId(secretPhraseValue);
+        recipientAccount.val(NRS.convertNumericToRSAccountFormat(account));
+    });
+
     NRS.forms.startShuffler = function ($modal) {
         var data = NRS.getFormData($modal.find("form:first"));
         if (data.recipientSecretPhrase) {

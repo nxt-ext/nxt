@@ -26,15 +26,15 @@ public final class GetAvailableToBuy extends APIServlet.APIRequestHandler {
     static final GetAvailableToBuy instance = new GetAvailableToBuy();
 
     private GetAvailableToBuy() {
-        super(new APITag[] {APITag.MS}, "currency", "amountNQT");
+        super(new APITag[] {APITag.MS}, "currency", "units");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", true);
-        long amountNQT = ParameterParser.getAmountNQT(req);
-        CurrencyExchangeOffer.AvailableOffers availableOffers = CurrencyExchangeOffer.getAvailableToBuy(currencyId, amountNQT);
+        long units = ParameterParser.getLong(req, "units", 1L, Long.MAX_VALUE, true);
+        CurrencyExchangeOffer.AvailableOffers availableOffers = CurrencyExchangeOffer.getAvailableToBuy(currencyId, units);
         return JSONData.availableOffers(availableOffers);
     }
 
