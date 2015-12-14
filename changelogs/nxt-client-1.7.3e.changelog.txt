@@ -20,10 +20,10 @@ optional "retrieve" parameter, default false. If the corresponding data has
 been pruned and retrieve is true, an attempt will be made to retrieve the data
 from archival peers, as if using the retrievePrunedTransaction API.
 
-Added getReferencingTransactions API, to retrieve the transactions referencing
-a given transaction id.
+Added getReferencingTransactions API, returning the transactions referencing a
+given transaction id.
 
-Added getLinkedPhasedTransactions API, to retrieve phased transactions with
+Added getLinkedPhasedTransactions API, returning the phased transactions with
 by-transaction voting model for a given linkedFullHash, regardless of their
 phasing status (pending, approved or rejected). Since the corresponding table
 is trimmed after finish height however, the result will not include those
