@@ -855,11 +855,11 @@ var NRS = (function (NRS, $, undefined) {
             "account": NRS.accountRS,
             "includeCurrencyInfo": true
         }, function (response) {
-            var availablecurrencysMessage = " - None Available";
+            var availableCurrencyMessage = " - None Available";
             if (response.unconfirmedUnits && response.unconfirmedUnits != "0") {
-                availablecurrencysMessage = " - " + $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
+                availableCurrencyMessage = " - " + $.t("available_units") + " " + NRS.formatQuantity(response.unconfirmedUnits, response.decimals);
             }
-            $("#publish_exchange_available").html(availablecurrencysMessage);
+            $("#publish_exchange_available").html(availableCurrencyMessage);
         })
 
     });
