@@ -354,7 +354,7 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
-    static List<TransactionImpl> getLinked(byte[] linkedTransactionFullHash) {
+    public static List<? extends Transaction> getLinkedPhasedTransactions(byte[] linkedTransactionFullHash) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT transaction_id FROM phasing_poll_linked_transaction " +
                      "WHERE linked_transaction_id = ? AND linked_full_hash = ?")) {

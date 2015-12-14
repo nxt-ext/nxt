@@ -190,8 +190,11 @@ public final class AccountRestrictions {
     static void init() {
     }
 
-    static void checkTransaction(Transaction transaction, boolean validatingAtFinish) throws AccountControlException {
+    static void checkTransaction(Transaction transaction, boolean validatingAtFinish) throws NxtException.NotCurrentlyValidException {
         Account senderAccount = Account.getAccount(transaction.getSenderId());
+        if (senderAccount == null) {
+            throw new NxtException.NotCurrentlyValidException("Account " + Long.toUnsignedString(transaction.getSenderId()) + " does not exist yet");
+        }
         if (senderAccount.getControls().contains(Account.ControlType.PHASING_ONLY)) {
             PhasingOnly phasingOnly = PhasingOnly.get(transaction.getSenderId());
             phasingOnly.checkTransaction(transaction, validatingAtFinish);

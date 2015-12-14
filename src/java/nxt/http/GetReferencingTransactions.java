@@ -18,39 +18,41 @@ package nxt.http;
 
 import nxt.Nxt;
 import nxt.NxtException;
-import nxt.TaggedData;
-import nxt.util.JSON;
+import nxt.Transaction;
+import nxt.db.DbIterator;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.PRUNED_TRANSACTION;
+public final class GetReferencingTransactions extends APIServlet.APIRequestHandler {
 
-public final class GetTaggedData extends APIServlet.APIRequestHandler {
+    static final GetReferencingTransactions instance = new GetReferencingTransactions();
 
-    static final GetTaggedData instance = new GetTaggedData();
-
-    private GetTaggedData() {
-        super(new APITag[] {APITag.DATA}, "transaction", "includeData", "retrieve");
+    private GetReferencingTransactions() {
+        super(new APITag[] {APITag.TRANSACTIONS}, "transaction", "firstIndex", "lastIndex");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
-        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
-        boolean retrieve = "true".equalsIgnoreCase(req.getParameter("retrieve"));
 
-        TaggedData taggedData = TaggedData.getData(transactionId);
-        if (taggedData == null && retrieve) {
-            if (Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId) == null) {
-                return PRUNED_TRANSACTION;
+        long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
+        int firstIndex = ParameterParser.getFirstIndex(req);
+        int lastIndex = ParameterParser.getLastIndex(req);
+
+        JSONArray transactions = new JSONArray();
+        try (DbIterator<? extends Transaction> iterator = Nxt.getBlockchain().getReferencingTransactions(transactionId, firstIndex, lastIndex)) {
+            while (iterator.hasNext()) {
+                Transaction transaction = iterator.next();
+                transactions.add(JSONData.transaction(transaction));
             }
-            taggedData = TaggedData.getData(transactionId);
         }
-        if (taggedData != null) {
-            return JSONData.taggedData(taggedData, includeData);
-        }
-        return JSON.emptyJSON;
+
+        JSONObject response = new JSONObject();
+        response.put("transactions", transactions);
+        return response;
+
     }
 
 }

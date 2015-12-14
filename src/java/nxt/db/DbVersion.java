@@ -25,7 +25,7 @@ import java.sql.Statement;
 
 public abstract class DbVersion {
 
-    private BasicDb db;
+    protected BasicDb db;
 
     void init(BasicDb db) {
         this.db = db;

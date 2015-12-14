@@ -1173,13 +1173,13 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 6) {
                 switch (transaction.subtype) {
                     case 0:
-                        data = NRS.getTaggedData(transaction.attachment, 0);
+                        data = NRS.getTaggedData(transaction.attachment, 0, transaction.transaction);
                         infoTable.find("tbody").append(NRS.createInfoTable(data));
                         infoTable.show();
 
                         break;
                     case 1:
-                        data = NRS.getTaggedData(transaction.attachment, 1);
+                        data = NRS.getTaggedData(transaction.attachment, 1, transaction.transaction);
                         infoTable.find("tbody").append(NRS.createInfoTable(data));
                         infoTable.show();
 
@@ -1550,7 +1550,7 @@ var NRS = (function (NRS, $, undefined) {
         };
     };
 
-    NRS.getTaggedData = function (attachment, subtype) {
+    NRS.getTaggedData = function (attachment, subtype, transaction) {
         var data = {
             "type": $.t(NRS.transactionTypes[6].subTypes[subtype].i18nKeyTitle)
         };
@@ -1558,7 +1558,8 @@ var NRS = (function (NRS, $, undefined) {
             data["hash"] = attachment.hash;
         }
         if (attachment.taggedData) {
-            data["taggedData"] = attachment.taggedData;
+            data["tagged_data_formatted_html"] = NRS.getTransactionLink(attachment.taggedData);
+            transaction = attachment.taggedData;
         }
         if (attachment.data) {
             data["name"] = attachment.name;
@@ -1568,11 +1569,12 @@ var NRS = (function (NRS, $, undefined) {
             data["channel"] = attachment.channel;
             data["is_text"] = attachment.isText;
             data["filename"] = attachment.filename;
-            if (attachment.isText == "true") {
+            if (attachment.isText) {
                 data["data_size"] = NRS.getUtf8Bytes(attachment.data).length;
             } else {
                 data["data_size"] = converters.hexStringToByteArray(attachment.data).length;
             }
+            data["link_formatted_html"] = NRS.getTaggedDataLink(attachment.data, transaction, attachment.isText);
         }
         return data;
     };

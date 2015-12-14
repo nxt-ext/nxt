@@ -16,41 +16,33 @@
 
 package nxt.http;
 
-import nxt.Nxt;
 import nxt.NxtException;
-import nxt.TaggedData;
-import nxt.util.JSON;
+import nxt.PhasingPoll;
+import nxt.Transaction;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
-import static nxt.http.JSONResponses.PRUNED_TRANSACTION;
+public class GetLinkedPhasedTransactions extends APIServlet.APIRequestHandler {
+    static final GetLinkedPhasedTransactions instance = new GetLinkedPhasedTransactions();
 
-public final class GetTaggedData extends APIServlet.APIRequestHandler {
-
-    static final GetTaggedData instance = new GetTaggedData();
-
-    private GetTaggedData() {
-        super(new APITag[] {APITag.DATA}, "transaction", "includeData", "retrieve");
+    private GetLinkedPhasedTransactions() {
+        super(new APITag[]{APITag.PHASING}, "linkedFullHash");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
-        boolean includeData = !"false".equalsIgnoreCase(req.getParameter("includeData"));
-        boolean retrieve = "true".equalsIgnoreCase(req.getParameter("retrieve"));
+        byte[] linkedFullHash = ParameterParser.getBytes(req, "linkedFullHash", true);
 
-        TaggedData taggedData = TaggedData.getData(transactionId);
-        if (taggedData == null && retrieve) {
-            if (Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId) == null) {
-                return PRUNED_TRANSACTION;
-            }
-            taggedData = TaggedData.getData(transactionId);
-        }
-        if (taggedData != null) {
-            return JSONData.taggedData(taggedData, includeData);
-        }
-        return JSON.emptyJSON;
+        JSONArray json = new JSONArray();
+        List<? extends Transaction> transactions = PhasingPoll.getLinkedPhasedTransactions(linkedFullHash);
+        transactions.forEach(transaction -> json.add(JSONData.transaction(transaction)));
+        JSONObject response = new JSONObject();
+        response.put("transactions", json);
+
+        return response;
     }
-
 }

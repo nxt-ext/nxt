@@ -159,6 +159,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountLedger", GetAccountLedger.instance);
         map.put("getAccountLedgerEntry", GetAccountLedgerEntry.instance);
         map.put("getVoterPhasedTransactions", GetVoterPhasedTransactions.instance);
+        map.put("getLinkedPhasedTransactions", GetLinkedPhasedTransactions.instance);
         map.put("getPolls", GetPolls.instance);
         map.put("getAccountPhasedTransactions", GetAccountPhasedTransactions.instance);
         map.put("getAccountPhasedTransactionCount", GetAccountPhasedTransactionCount.instance);
@@ -190,6 +191,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlocks", GetBlocks.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getBlockchainTransactions", GetBlockchainTransactions.instance);
+        map.put("getReferencingTransactions", GetReferencingTransactions.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getCurrency", GetCurrency.instance);
         map.put("getCurrencies", GetCurrencies.instance);

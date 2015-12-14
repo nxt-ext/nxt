@@ -2882,7 +2882,7 @@ public abstract class TransactionType {
                 attachment.getPhasingParams().validate();
                 if (votingModel == VotingModel.NONE) {
                     Account senderAccount = Account.getAccount(transaction.getSenderId());
-                    if (!senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
+                    if (senderAccount == null || !senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
                         throw new NxtException.NotCurrentlyValidException("Phasing only account control is not currently enabled");
                     }
                 } else if (votingModel == VotingModel.TRANSACTION || votingModel == VotingModel.HASH) {
