@@ -1576,5 +1576,15 @@
   "search_by_account_id": "Search By Account ID",
   "free_text_search": "Free Text Search",
   "no_data": "Data not found",
-  "link": "Link"
+  "link": "Link",
+  "effective_rate": "Effective Rate",
+  "units_exchanged": "Units Exchanged",
+  "total_exchanged": "Total Exchanged",
+  "exchanges": "Exchanges",
+  "buy_supply":	"Buy Supply",
+  "buy_limit":	"Buy Limit",
+  "buy_rate": "Buy Rate",
+  "sell_supply": "Sell Supply",
+  "sell_limit":	"Sell Limit",
+  "sell_rate": "Sell Rate"
 }
