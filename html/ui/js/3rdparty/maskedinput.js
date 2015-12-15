@@ -103,9 +103,25 @@
                             }
                         }
                         checkVal(!0);
-                        for (; pos.end < len && !tests[pos.end]; ) pos.end++;
-                        console.log("caret " + pos.end);
-                        input.caret(pos.end, pos.end);
+                        
+                        var caretAdjusted = false;
+                        var newVal = input.val();
+                        if (curValUpper.length == newVal.length + 1) {
+                            for (var i = 0; i < newVal.length; i++) {
+                                if (tests[i] && newVal.charAt(i) == getPlaceholder(i)) {
+                                    if (i > 0 && curValUpper.charAt(i-1) == getPlaceholder(i)) {
+                                        //checkVal moved the inserted character to position i-1 (which was empty before). Adjust the caret
+                                        input.caret(i,i);
+                                        caretAdjusted = true;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (!caretAdjusted) {
+                            for (; pos.end < len && !tests[pos.end]; ) pos.end++;
+                            input.caret(pos.end, pos.end);
+                        }                        
                     }
                     tryFireCompleted();
                 }
