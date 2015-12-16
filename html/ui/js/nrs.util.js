@@ -1636,6 +1636,17 @@ var NRS = (function (NRS, $, undefined) {
         return value;
     }
 
+    NRS.initialCaps = function(str) {
+        if (!str || str == "") {
+            return str;
+        }
+        var firstChar = str.charAt(0).toUpperCase();
+        if (str.length == 1) {
+            return firstChar;
+        }
+        return firstChar + str.slice(1);
+    };
+
     NRS.generateToken = function(message, secretPhrase) {
         var messageBytes = NRS.getUtf8Bytes(message);
         var pubKeyBytes = converters.hexStringToByteArray(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));

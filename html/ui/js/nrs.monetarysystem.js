@@ -541,33 +541,25 @@ var NRS = (function (NRS, $, undefined) {
     /* Currency Order Model */
     $("#currency_order_modal").on("show.bs.modal", function (e) {
         var $invoker = $(e.relatedTarget);
-
         var exchangeType = $invoker.data("type");
         var currencyId = $invoker.data("currency");
         var currencyDecimals = parseInt($invoker.data("decimals"), 10);
+        var unitsQNT = $invoker.data("units");
+        var units = String($("#" + exchangeType + "_currency_units").val());
+        var rateNQT = $invoker.data("rateNQT");
+        var effectiveRate = $invoker.data("effectiveRate");
+        var totalNQT = $invoker.data("totalNQT");
+        var totalNXT = NRS.formatAmount(totalNQT);
+        $("#currency_order_modal_button").html($.t(exchangeType + "_currency")).data("resetText", $.t(exchangeType + "_currency"));
 
-        $("#currency_order_modal_button").html(exchangeType + " currency").data("resetText", exchangeType + " currency");
-
-        try {
-            var units = String($("#" + exchangeType + "_currency_units").val());
-            var unitsQNT = new BigInteger(NRS.convertToQNT(units, currencyDecimals));
-            var rateNQT = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + exchangeType + "_currency_rate").val())), currencyDecimals));
-            var totalNXT = NRS.formatAmount(NRS.calculateOrderTotalNQT(unitsQNT, rateNQT), false, true);
-        } catch (err) {
-            $.growl($.t("error_invalid_input"), {
-                "type": "danger"
-            });
-            return e.preventDefault();
-        }
-
-        if (rateNQT.toString() == "0" || unitsQNT.toString() == "0") {
+        if (rateNQT == "0" || unitsQNT == "0") {
             $.growl($.t("error_unit_rate_required"), {
                 "type": "danger"
             });
             return e.preventDefault();
         }
 
-        var rateNQTPerWholeQNT = rateNQT.multiply(new BigInteger("" + Math.pow(10, currencyDecimals)));
+        var rateNQTPerWholeQNT = new BigInteger(rateNQT).multiply(new BigInteger("" + Math.pow(10, currencyDecimals)));
         var description;
         var tooltipTitle;
         if (exchangeType == "buy") {
@@ -575,10 +567,10 @@ var NRS = (function (NRS, $, undefined) {
                 "total": totalNXT,
                 "quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
                 "currency_code": $("#currency_code").html().escapeHTML(),
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT)
+                "rate": effectiveRate
             });
             tooltipTitle = $.t("buy_currency_description_help", {
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT, false, true),
+                "rate": effectiveRate,
                 "total_nxt": totalNXT
             });
         } else {
@@ -586,10 +578,10 @@ var NRS = (function (NRS, $, undefined) {
                 "total": totalNXT,
                 "quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
                 "currency_code": $("#currency_code").html().escapeHTML(),
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT)
+                "rate": effectiveRate
             });
             tooltipTitle = $.t("sell_currency_description_help", {
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT, false, true),
+                "rate": effectiveRate,
                 "total_nxt": totalNXT
             });
         }
@@ -612,8 +604,8 @@ var NRS = (function (NRS, $, undefined) {
 
         $("#currency_order_type").val((exchangeType == "buy" ? "currencyBuy" : "currencySell"));
         $("#currency_order_currency").val(currencyId);
-        $("#currency_order_units").val(unitsQNT.toString());
-        $("#currency_order_rate").val(rateNQT.toString());
+        $("#currency_order_units").val(unitsQNT);
+        $("#currency_order_rate").val(rateNQT);
     });
 
     NRS.forms.orderCurrency = function () {
@@ -638,8 +630,8 @@ var NRS = (function (NRS, $, undefined) {
         return NRS.validateDecimals(maxFractionLength, charCode, $(this).val(), e);
     });
 
-    var currencyUnitsAndRate = $("#sell_currency_units, #sell_currency_rate, #buy_currency_units, #buy_currency_rate");
-    currencyUnitsAndRate.keydown(function (e) {
+    var unitFields = $("#buy_currency_units, #sell_currency_units");
+    unitFields.keydown(function (e) {
         var decimals = parseInt($("#currency_decimals").html(), 10);
 
         var charCode = !e.charCode ? e.which : e.charCode;
@@ -651,25 +643,42 @@ var NRS = (function (NRS, $, undefined) {
         return NRS.validateDecimals(maxFractionLength, charCode, $(this).val(), e);
     });
 
-    //Calculate preview rate (calculated on every keypress)
-    currencyUnitsAndRate.keyup(function () {
-        var currencyDecimals = parseInt($("#currency_decimals").text(), 10);
+    unitFields.on("change", function() {
         var orderType = $(this).data("type").toLowerCase();
-
-        try {
-            var units = new BigInteger(NRS.convertToQNT(String($("#" + orderType + "_currency_units").val()), currencyDecimals));
-            var rate = new BigInteger(NRS.calculatePricePerWholeQNT(NRS.convertToNQT(String($("#" + orderType + "_currency_rate").val())), currencyDecimals));
-
-            if (rate.toString() == "0" || units.toString() == "0") {
-                $("#" + orderType + "_currency_total").val("0");
-            } else {
-                var total = NRS.calculateOrderTotal(units, rate, currencyDecimals);
-                $("#" + orderType + "_currency_total").val(total.toString());
+        var decimals = parseInt($("#currency_decimals").text(), 10);
+        var units = NRS.convertToQNT(String($("#" + orderType + "_currency_units").val()), decimals);
+        NRS.sendRequest("getAvailableTo" + NRS.initialCaps(orderType), {
+            "currency": $("#currency_id").text(),
+            "units": units
+        }, function (response) {
+            var submitButton = $("#" + orderType + "_currency_button");
+            var unitsField = $("#" + orderType + "_currency_units");
+            var rateField = $("#" + orderType + "_currency_rate");
+            var totalField = $("#" + orderType + "_currency_total");
+            var effectiveRateField = $("#" + orderType + "_currency_effective_rate");
+            if (response.errorCode) {
+                unitsField.val("0");
+                rateField.val("0");
+                totalField.val("0");
+                effectiveRateField.val("0");
+                submitButton.prop('disabled', true);
+                return;
             }
-        } catch (err) {
-            $("#" + orderType + "_currency_total").val("0");
-        }
-    });
+            var units = NRS.convertToQNTf(response.units, decimals);
+            unitsField.val(units);
+            var rate = NRS.calculateOrderPricePerWholeQNT(response.rateNQT, decimals);
+            rateField.val(rate);
+            var amount = NRS.convertToNXT(response.amountNQT);
+            totalField.val(amount);
+            var effectiveRate = units == "0" ? "0" : NRS.amountToPrecision(amount / units, decimals);
+            effectiveRateField.val(effectiveRate);
+            submitButton.data("units", response.units);
+            submitButton.data("rateNQT", response.rateNQT);
+            submitButton.data("effectiveRate", effectiveRate);
+            submitButton.data("totalNQT", response.amountNQT);
+            submitButton.prop('disabled', false);
+        })
+   	});
 
     /* CURRENCIES PAGE */
     NRS.pages.currencies = function () {

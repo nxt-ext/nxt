@@ -121,10 +121,19 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="buy_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Rate</label>
+                                    <label for="buy_currency_rate" class="col-sm-3 control-label" data-i18n="maximal_rate">Maximal Rate</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="buy_currency_rate" type="text" value="0" name="buy_currency_rate" class="form-control" data-type="buy" />
+                                            <input id="buy_currency_rate" type="text" value="0" name="buy_currency_rate" class="form-control" data-type="buy" readonly/>
+                                            <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="buy_currency_effective_rate" class="col-sm-3 control-label" data-i18n="effective_rate">Effective Rate</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="buy_currency_effective_rate" type="text" value="0" name="buy_currency_effective_rate" class="form-control" data-type="buy" readonly/>
                                             <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                         </div>
                                     </div>
@@ -141,7 +150,7 @@
                                 <div class="form-group form-group-last">
                                     <div class="col-sm-3"></div>
                                     <div class="col-sm-9">
-                                        <button type="button" class="btn btn-primary btn-lg btn-block" id="buy_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="buy"><span data-i18n="buy">Exchange</span> (NXT → <span class="currency_code"></span>)</button>
+                                        <button type="button" disabled class="btn btn-primary btn-lg btn-block" id="buy_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="buy"><span data-i18n="buy">Exchange</span> (NXT → <span class="currency_code"></span>)</button>
                                     </div>
                                 </div>
                             </div>
@@ -197,10 +206,19 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="sell_currency_rate" class="col-sm-3 control-label" data-i18n="rate">Rate</label>
+                                    <label for="sell_currency_rate" class="col-sm-3 control-label" data-i18n="minimal_rate">Minimal Rate</label>
                                     <div class="col-sm-9">
                                         <div class="input-group">
-                                            <input id="sell_currency_rate" type="text" value="0" name="sell_currency_rate" class="form-control" data-type="sell" />
+                                            <input id="sell_currency_rate" type="text" value="0" name="sell_currency_rate" class="form-control" data-type="sell" readonly/>
+                                            <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sell_currency_effective_rate" class="col-sm-3 control-label" data-i18n="effective_rate">Effective Rate</label>
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <input id="sell_currency_effective_rate" type="text" value="0" name="sell_currency_rate" class="form-control" data-type="sell" readonly/>
                                             <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                         </div>
                                     </div>
@@ -217,7 +235,7 @@
                                 <div class="form-group form-group-last">
                                     <div class="col-sm-3"></div>
                                     <div class="col-sm-9">
-                                        <button type="button" class="btn btn-primary btn-lg btn-block" id="sell_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="sell"><span data-i18n="sell">Exchange</span> (<span class="currency_code"></span> → NXT)</button>
+                                        <button type="button" disabled class="btn btn-primary btn-lg btn-block" id="sell_currency_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="sell"><span data-i18n="sell">Exchange</span> (<span class="currency_code"></span> → NXT)</button>
                                     </div>
                                 </div>
                             </div>
