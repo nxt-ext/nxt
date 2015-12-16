@@ -121,7 +121,7 @@
                         if (!caretAdjusted) {
                             for (; pos.end < len && !tests[pos.end]; ) pos.end++;
                             input.caret(pos.end, pos.end);
-                        }                        
+                        }
                     }
                     tryFireCompleted();
                 }
@@ -252,7 +252,7 @@
                         var pos = checkVal(!0);
                         input.caret(pos), tryFireCompleted();
                     }, 0);
-                }), chrome && android && input.off("input.mask").on("input.mask", androidInputEvent), 
+                }), chrome && android && input.off("input.mask").off("paste.mask").on("input.mask", androidInputEvent), 
                 checkVal();
 
             });
