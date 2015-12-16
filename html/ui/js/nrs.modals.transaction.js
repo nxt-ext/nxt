@@ -1573,8 +1573,8 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 data["data_size"] = converters.hexStringToByteArray(attachment.data).length;
             }
-            data["link_formatted_html"] = NRS.getTaggedDataLink(attachment.data, transaction, attachment.isText);
         }
+        data["link_formatted_html"] = NRS.getTaggedDataLink(attachment.data, transaction, attachment.isText);
         return data;
     };
 

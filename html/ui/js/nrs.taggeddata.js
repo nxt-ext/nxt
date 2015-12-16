@@ -41,8 +41,22 @@ var NRS = (function(NRS, $) {
                 "data-target='#tagged_data_view_modal' " +
                 "data-data='" + String(data).escapeHTML() + "'>" + $.t("view") + "</a>";
         } else {
-            return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + String(transaction).escapeHTML() +
-                "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+            var error;
+            if (!data) {
+				NRS.sendRequest("getTaggedData", {
+					"transaction": transaction,
+					"retrieve": "true"
+				}, function(response) {
+					if (response.errorCode) {
+						error = "<span>" + response.errorDescription + "</span>"
+					}
+				}, false)
+			}
+            if (error) {
+                return error;
+            }
+			return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + String(transaction).escapeHTML() +
+                "&retrieve=true' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
         }
     };
 
@@ -219,7 +233,7 @@ var NRS = (function(NRS, $) {
 		var sidebarId = 'sidebar_tagged_data';
 		var options = {
 			"id": sidebarId,
-			"titleHTML": '<i class="fa fa-database"></i><span data-i18n="tagged_data">Tagged Data</span>',
+			"titleHTML": '<i class="fa fa-database"></i><span data-i18n="distributed_info">Distributed Info</span>',
 			"page": 'tagged_data_search',
 			"desiredPosition": 60
 		};
