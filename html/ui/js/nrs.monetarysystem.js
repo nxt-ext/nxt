@@ -764,7 +764,7 @@ var NRS = (function (NRS, $, undefined) {
         var exchangeHistoryTable = $("#ms_exchanges_history_table");
         exchangeHistoryTable.find("tbody").empty();
         exchangeHistoryTable.parent().addClass("data-loading").removeClass("data-empty");
-        NRS.getExchangeHistory($("#currency_id").html(), false);
+        NRS.getExchangeHistory($("#currency_id").text(), false);
     });
 
     $("body").on("click", "a[data-goto-currency]", function (e) {
