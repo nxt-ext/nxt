@@ -1574,7 +1574,7 @@ var NRS = (function (NRS, $, undefined) {
                 data["data_size"] = converters.hexStringToByteArray(attachment.data).length;
             }
         }
-        if (transaction.height < NRS.constants.MAX_INT_JAVA) {
+        if (transaction.block) {
             data["link_formatted_html"] = NRS.getTaggedDataLink(attachment.data, transaction.transaction, attachment.isText);
         }
         return data;
