@@ -1173,13 +1173,13 @@ var NRS = (function (NRS, $, undefined) {
             } else if (transaction.type == 6) {
                 switch (transaction.subtype) {
                     case 0:
-                        data = NRS.getTaggedData(transaction.attachment, 0, transaction.transaction);
+                        data = NRS.getTaggedData(transaction.attachment, 0, transaction);
                         infoTable.find("tbody").append(NRS.createInfoTable(data));
                         infoTable.show();
 
                         break;
                     case 1:
-                        data = NRS.getTaggedData(transaction.attachment, 1, transaction.transaction);
+                        data = NRS.getTaggedData(transaction.attachment, 1, transaction);
                         infoTable.find("tbody").append(NRS.createInfoTable(data));
                         infoTable.show();
 
@@ -1574,7 +1574,9 @@ var NRS = (function (NRS, $, undefined) {
                 data["data_size"] = converters.hexStringToByteArray(attachment.data).length;
             }
         }
-        data["link_formatted_html"] = NRS.getTaggedDataLink(attachment.data, transaction, attachment.isText);
+        if (transaction.height < NRS.constants.MAX_INT_JAVA) {
+            data["link_formatted_html"] = NRS.getTaggedDataLink(attachment.data, transaction.transaction, attachment.isText);
+        }
         return data;
     };
 
