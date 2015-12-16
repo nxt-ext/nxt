@@ -625,7 +625,7 @@ final class ParameterParser {
         String type = Convert.nullToEmpty(req.getParameter("type"));
         String channel = Convert.nullToEmpty(req.getParameter("channel"));
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
-        String filename = Convert.nullToEmpty(req.getParameter("filename"));
+        String filename = Convert.nullToEmpty(req.getParameter("filename")).trim();
         String dataValue = Convert.emptyToNull(req.getParameter("data"));
         byte[] data;
         if (dataValue == null) {
@@ -638,7 +638,7 @@ final class ParameterParser {
                 data = fileData.getData();
                 // Depending on how the client submits the form, the filename, can be a regular parameter
                 // or encoded in the multipart form. If its not a parameter we take from the form
-                if (filename.equals("")) {
+                if (filename.isEmpty() && fileData.getFilename() != null) {
                     filename = fileData.getFilename();
                 }
                 if (name == null) {
