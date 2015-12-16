@@ -1432,6 +1432,7 @@ var NRS = (function (NRS, $, undefined) {
             "type": type == "sell" ? $.t("sell_currency") : $.t("buy_currency"),
             "code": currency.code,
             "units": [transaction.attachment.units, currency.decimals],
+            "rate": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.rateNQT, currency.decimals) + rateUnitsStr
         };
         var rows = "";
         NRS.sendRequest("getExchangesByExchangeRequest", {

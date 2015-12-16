@@ -547,6 +547,7 @@ var NRS = (function (NRS, $, undefined) {
         var unitsQNT = $invoker.data("units");
         var units = String($("#" + exchangeType + "_currency_units").val());
         var rateNQT = $invoker.data("rateNQT");
+        var effectiveRate = $invoker.data("effectiveRate");
         var totalNQT = $invoker.data("totalNQT");
         var totalNXT = NRS.formatAmount(totalNQT);
         $("#currency_order_modal_button").html($.t(exchangeType + "_currency")).data("resetText", $.t(exchangeType + "_currency"));
@@ -566,10 +567,10 @@ var NRS = (function (NRS, $, undefined) {
                 "total": totalNXT,
                 "quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
                 "currency_code": $("#currency_code").html().escapeHTML(),
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT)
+                "rate": effectiveRate
             });
             tooltipTitle = $.t("buy_currency_description_help", {
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT, false, true),
+                "rate": effectiveRate,
                 "total_nxt": totalNXT
             });
         } else {
@@ -577,10 +578,10 @@ var NRS = (function (NRS, $, undefined) {
                 "total": totalNXT,
                 "quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
                 "currency_code": $("#currency_code").html().escapeHTML(),
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT)
+                "rate": effectiveRate
             });
             tooltipTitle = $.t("sell_currency_description_help", {
-                "rate": NRS.formatAmount(rateNQTPerWholeQNT, false, true),
+                "rate": effectiveRate,
                 "total_nxt": totalNXT
             });
         }
@@ -672,7 +673,8 @@ var NRS = (function (NRS, $, undefined) {
             var effectiveRate = units == "0" ? "0" : NRS.amountToPrecision(amount / units, decimals);
             effectiveRateField.val(effectiveRate);
             submitButton.data("units", response.units);
-            submitButton.data("rateNQT", NRS.amountToPrecision(response.amountNQT / response.units));
+            submitButton.data("rateNQT", response.rateNQT);
+            submitButton.data("effectiveRate", effectiveRate);
             submitButton.data("totalNQT", response.amountNQT);
             submitButton.prop('disabled', false);
         })
