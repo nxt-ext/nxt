@@ -1479,8 +1479,6 @@
   "ledger": "Ledger",
   "user_no_ledger": "This user has no ledger entries.",
   "setup_mandatory_approval": "Setup Mandatory Approval",
-  "mandatory_approval_enabled": "Mandatory Approval is enabled",
-  "mandatory_approval_enabled_info": "Mandatory Approval is enabled. Please set Finish Height.",
   "shuffling_creation": "Create Shuffling",
   "shuffling_processing": "Process Shuffling",
   "shuffling_recipients": "Shuffling Recipient",
