@@ -44,7 +44,11 @@ public class DividendPayment extends CreateTransaction {
             return JSONResponses.ASSET_NOT_ISSUED_YET;
         }
         final Attachment attachment = new Attachment.ColoredCoinsDividendPayment(asset.getId(), height, amountNQTPerQNT);
-        return this.createTransaction(request, account, attachment);
+        try {
+            return this.createTransaction(request, account, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
+            return JSONResponses.NOT_ENOUGH_FUNDS;
+        }
     }
 
 }

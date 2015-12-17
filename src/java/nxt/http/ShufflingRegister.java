@@ -19,6 +19,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.NxtException;
+import nxt.Shuffling;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,6 +42,14 @@ public final class ShufflingRegister extends CreateTransaction {
         if (account.getControls().contains(Account.ControlType.PHASING_ONLY)) {
             return JSONResponses.error("Accounts under phasing only control cannot join a shuffling");
         }
-        return createTransaction(req, account, attachment);
+        try {
+            return createTransaction(req, account, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
+            Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
+            if (shuffling == null) {
+                return JSONResponses.NOT_ENOUGH_FUNDS;
+            }
+            return JSONResponses.notEnoughHolding(shuffling.getHoldingType());
+        }
     }
 }

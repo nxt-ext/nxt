@@ -58,7 +58,11 @@ public final class CurrencyBuy extends CreateTransaction {
         Account account = ParameterParser.getSenderAccount(req);
 
         Attachment attachment = new Attachment.MonetarySystemExchangeBuy(currency.getId(), rateNQT, units);
-        return createTransaction(req, account, attachment);
+        try {
+            return createTransaction(req, account, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
+            return JSONResponses.NOT_ENOUGH_FUNDS;
+        }
     }
 
 }

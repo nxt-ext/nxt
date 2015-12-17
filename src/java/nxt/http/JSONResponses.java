@@ -17,6 +17,7 @@
 package nxt.http;
 
 import nxt.Constants;
+import nxt.HoldingType;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
@@ -422,6 +423,19 @@ public final class JSONResponses {
         response.put("errorCode", 12);
         response.put("errorDescription", error);
         return JSON.prepare(response);
+    }
+
+    static JSONStreamAware notEnoughHolding(HoldingType holdingType) {
+        switch (holdingType) {
+            case NXT:
+                return JSONResponses.NOT_ENOUGH_FUNDS;
+            case ASSET:
+                return JSONResponses.NOT_ENOUGH_ASSETS;
+            case CURRENCY:
+                return JSONResponses.NOT_ENOUGH_CURRENCY;
+            default:
+                throw new RuntimeException();
+        }
     }
 
     private JSONResponses() {} // never

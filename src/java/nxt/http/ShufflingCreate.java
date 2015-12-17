@@ -51,6 +51,10 @@ public final class ShufflingCreate extends CreateTransaction {
         if (account.getControls().contains(Account.ControlType.PHASING_ONLY)) {
             return JSONResponses.error("Accounts under phasing only control cannot start a shuffling");
         }
-        return createTransaction(req, account, attachment);
+        try {
+            return createTransaction(req, account, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
+            return JSONResponses.notEnoughHolding(holdingType);
+        }
     }
 }

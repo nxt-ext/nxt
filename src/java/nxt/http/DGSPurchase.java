@@ -78,7 +78,11 @@ public final class DGSPurchase extends CreateTransaction {
 
         Attachment attachment = new Attachment.DigitalGoodsPurchase(goods.getId(), quantity, priceNQT,
                 deliveryDeadline);
-        return createTransaction(req, buyerAccount, sellerAccount.getId(), 0, attachment);
+        try {
+            return createTransaction(req, buyerAccount, sellerAccount.getId(), 0, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
+            return JSONResponses.NOT_ENOUGH_FUNDS;
+        }
 
     }
 

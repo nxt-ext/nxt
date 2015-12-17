@@ -224,6 +224,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             }
         } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
+        } catch (NxtException.InsufficientBalanceException e) {
+            throw e;
         } catch (NxtException.ValidationException e) {
             if (broadcast) {
                 response.clear();

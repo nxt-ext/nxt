@@ -43,12 +43,12 @@ public final class TransferCurrency extends CreateTransaction {
         long units = ParameterParser.getLong(req, "units", 0, Long.MAX_VALUE, true);
         Account account = ParameterParser.getSenderAccount(req);
 
-        if (units > account.getUnconfirmedCurrencyUnits(currency.getId())) {
+        Attachment attachment = new Attachment.MonetarySystemCurrencyTransfer(currency.getId(), units);
+        try {
+            return createTransaction(req, account, recipient, 0, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
             return NOT_ENOUGH_CURRENCY;
         }
-
-        Attachment attachment = new Attachment.MonetarySystemCurrencyTransfer(currency.getId(), units);
-        return createTransaction(req, account, recipient, 0, attachment);
     }
 
 }
