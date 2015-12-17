@@ -450,15 +450,15 @@ public final class Shuffler {
             Account participantAccount = Account.getAccount(this.accountId);
             if (participantAccount == null || transaction.getFeeNQT() > participantAccount.getUnconfirmedBalanceNQT()) {
                 failedTransaction = transaction;
-                failureCause = new NxtException.NotCurrentlyValidException("Double spending or insufficient balance");
-                Logger.logErrorMessage("Error submitting shuffler transaction", failureCause);
+                failureCause = new NxtException.NotCurrentlyValidException("Insufficient balance");
+                Logger.logDebugMessage("Error submitting shuffler transaction", failureCause);
             }
             try {
                 TransactionProcessorImpl.getInstance().broadcast(transaction);
             } catch (NxtException.NotCurrentlyValidException e) {
                 failedTransaction = transaction;
                 failureCause = e;
-                Logger.logErrorMessage("Error submitting shuffler transaction", e);
+                Logger.logDebugMessage("Error submitting shuffler transaction", e);
             }
         } catch (NxtException.ValidationException e) {
             Logger.logErrorMessage("Fatal error submitting shuffler transaction", e);

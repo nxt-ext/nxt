@@ -41,13 +41,12 @@ public final class DeleteAssetShares extends CreateTransaction {
         long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
-        long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
-        if (assetBalance < 0 || quantityQNT > assetBalance) {
+        Attachment attachment = new Attachment.ColoredCoinsAssetDelete(asset.getId(), quantityQNT);
+        try {
+            return createTransaction(req, account, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
             return NOT_ENOUGH_ASSETS;
         }
-
-        Attachment attachment = new Attachment.ColoredCoinsAssetDelete(asset.getId(), quantityQNT);
-        return createTransaction(req, account, attachment);
     }
 
 }

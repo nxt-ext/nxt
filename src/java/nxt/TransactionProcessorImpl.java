@@ -672,7 +672,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
 
                 if (! transaction.applyUnconfirmed()) {
-                    throw new NxtException.NotCurrentlyValidException("Double spending or insufficient balance");
+                    throw new NxtException.InsufficientBalanceException("Insufficient balance");
                 }
 
                 if (transaction.isUnconfirmedDuplicate(unconfirmedDuplicates)) {

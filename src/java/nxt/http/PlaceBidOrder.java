@@ -40,19 +40,14 @@ public final class PlaceBidOrder extends CreateTransaction {
         Asset asset = ParameterParser.getAsset(req);
         long priceNQT = ParameterParser.getPriceNQT(req);
         long quantityQNT = ParameterParser.getQuantityQNT(req);
-        long feeNQT = ParameterParser.getFeeNQT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
+        Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset.getId(), quantityQNT, priceNQT);
         try {
-            if (Math.addExact(feeNQT, Math.multiplyExact(priceNQT, quantityQNT)) > account.getUnconfirmedBalanceNQT()) {
-                return NOT_ENOUGH_FUNDS;
-            }
-        } catch (ArithmeticException e) {
+            return createTransaction(req, account, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
             return NOT_ENOUGH_FUNDS;
         }
-
-        Attachment attachment = new Attachment.ColoredCoinsBidOrderPlacement(asset.getId(), quantityQNT, priceNQT);
-        return createTransaction(req, account, attachment);
     }
 
 }

@@ -103,7 +103,19 @@ public abstract class NxtException extends Exception {
         }
         
     }
-    
+
+    public static class InsufficientBalanceException extends NotCurrentlyValidException {
+
+        public InsufficientBalanceException(String message) {
+            super(message);
+        }
+
+        public InsufficientBalanceException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+    }
+
     public static final class NotYetEncryptedException extends IllegalStateException {
 
         public NotYetEncryptedException(String message) {

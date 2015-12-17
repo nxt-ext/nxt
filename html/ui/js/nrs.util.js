@@ -1647,6 +1647,13 @@ var NRS = (function (NRS, $, undefined) {
         return firstChar + str.slice(1);
     };
 
+    NRS.addEllipsis = function(str, length) {
+        if (!str || str == "" || str.length <= length) {
+            return str;
+        }
+        return str.substring(0, length) + "...";
+    };
+
     NRS.generateToken = function(message, secretPhrase) {
         var messageBytes = NRS.getUtf8Bytes(message);
         var pubKeyBytes = converters.hexStringToByteArray(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));

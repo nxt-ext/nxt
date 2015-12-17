@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.NxtException;
 import nxt.Shuffler;
+import nxt.Shuffling;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -58,6 +59,13 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
             response.put("errorDescription", e.getMessage());
             return JSON.prepare(response);
         } catch (Shuffler.ShufflerException e) {
+            if (e.getCause() instanceof NxtException.InsufficientBalanceException) {
+                Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
+                if (shuffling == null) {
+                    return JSONResponses.NOT_ENOUGH_FUNDS;
+                }
+                return JSONResponses.notEnoughHolding(shuffling.getHoldingType());
+            }
             JSONObject response = new JSONObject();
             response.put("errorCode", 10);
             response.put("errorDescription", e.getMessage());

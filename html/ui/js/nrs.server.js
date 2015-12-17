@@ -329,7 +329,14 @@ var NRS = (function (NRS, $, undefined) {
                 formData.append(key, data[key]);
             }
             var file = $('#upload_file')[0].files[0];
-            if (file && file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+            if (!file) {
+                callback({
+                    "errorCode": 3,
+                    "errorDescription": $.t("error_no_file_chosen")
+                }, data);
+                return;
+            }
+            if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
                 callback({
                     "errorCode": 3,
                     "errorDescription": $.t("error_file_too_big", {
