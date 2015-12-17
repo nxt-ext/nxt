@@ -670,7 +670,7 @@ var NRS = (function (NRS, $, undefined) {
             rateField.val(rate);
             var amount = NRS.convertToNXT(response.amountNQT);
             totalField.val(amount);
-            var effectiveRate = units == "0" ? "0" : NRS.amountToPrecision(amount / units, decimals);
+            var effectiveRate = units == "0" ? "0" : NRS.amountToPrecision(amount / units, 8 - decimals);
             effectiveRateField.val(effectiveRate);
             submitButton.data("units", response.units);
             submitButton.data("rateNQT", response.rateNQT);
