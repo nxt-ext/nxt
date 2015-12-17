@@ -1587,5 +1587,6 @@
   "buy_currency_description_help": "Per currency unit received you will pay __rate__ NXT, making a total of __total_nxt__ NXT according to current exchange offers.",
   "sell_currency_description": "Exchange __quantity__ __currency_code__ units for __total__ NXT at an estimated rate of __rate__",
   "sell_currency_description_help": "Per currency unit exchanged, you will receive __rate__ NXT, making a total of __total_nxt__ NXT according to current exchange offers.",
-  "distributed_info": "Distributed Info"
+  "distributed_info": "Distributed Info",
+  "error_no_file_chosen": "No file chosen"
 }
