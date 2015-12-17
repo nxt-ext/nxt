@@ -26,11 +26,11 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata.data = function(response) {
         return {
-            nameFormatted: NRS.getTransactionLink(response.transaction, response.name),
+            nameFormatted: NRS.getTransactionLink(response.transaction, NRS.addEllipsis(response.name, 20)),
             accountFormatted: NRS.getAccountLink(response, "account"),
-            type: String(response.type).escapeHTML(),
-            channel: String(response.channel).escapeHTML(),
-            filename: String(response.filename).escapeHTML(),
+            type: NRS.addEllipsis(String(response.type).escapeHTML(), 20),
+            channel: NRS.addEllipsis(String(response.channel).escapeHTML(), 20),
+            filename: NRS.addEllipsis(String(response.filename).escapeHTML(), 20),
             dataFormatted: NRS.getTaggedDataLink(response.data, response.transaction, response.isText)
         };
     };
