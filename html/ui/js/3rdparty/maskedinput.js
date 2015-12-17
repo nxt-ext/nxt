@@ -14,7 +14,7 @@
             a: "[A-Za-z]",
             "*": "[A-Za-z0-9]"
         },
-        autoclear: !0,
+        autoclear: 0,
         dataName: "rawMaskFn",
         placeholder: "_"
     }, $.fn.extend({
