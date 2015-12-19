@@ -36,6 +36,17 @@ Shuffling UI improvements.
 
 Added UI for Tagged Data.
 
+The Exchange Booth UI has been improved. The user must only enter the number
+of currency units to be bought or sold, and the server determines the maximum
+or minimum rate required in order to obtain or sell this amount, based on the
+current market offers available. This avoids the creation of exchange requests
+that cannot be filled, and eliminates the need for manually calculating the
+required exchange rate.
+
+To prevent clickjacking exploits, a new http header is now added by default to
+all http API responses, X-FRAME-OPTIONS: SAMEORIGIN. This can be turned off by
+setting nxt.apiFrameOptionsSameOrigin=false in nxt.properties.
+
 
 Incompatible changes:
 
