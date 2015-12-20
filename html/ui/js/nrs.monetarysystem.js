@@ -550,7 +550,8 @@ var NRS = (function (NRS, $, undefined) {
         var effectiveRate = $invoker.data("effectiveRate");
         var totalNQT = $invoker.data("totalNQT");
         var totalNXT = NRS.formatAmount(totalNQT);
-        $("#currency_order_modal_button").html($.t(exchangeType + "_currency")).data("resetText", $.t(exchangeType + "_currency"));
+        var submitButton = $("#currency_order_modal_button");
+        submitButton.html($.t(exchangeType + "_currency")).data("resetText", $.t(exchangeType + "_currency"));
 
         if (rateNQT == "0" || unitsQNT == "0") {
             $.growl($.t("error_unit_rate_required"), {
@@ -559,7 +560,16 @@ var NRS = (function (NRS, $, undefined) {
             return e.preventDefault();
         }
 
-        var rateNQTPerWholeQNT = new BigInteger(rateNQT).multiply(new BigInteger("" + Math.pow(10, currencyDecimals)));
+        var maxRate = NRS.convertToNXT(new BigInteger(rateNQT).multiply(new BigInteger("" + Math.pow(10, currencyDecimals))));
+        var preForkWarning = $("#currency_order_pre_fork_warning");
+        if (effectiveRate != maxRate && exchangeType == "buy" && !NRS.isTestNet && NRS.lastBlockHeight < 621000) {
+            preForkWarning.html($.t("currency_exchange_pre_fork_warning"));
+            preForkWarning.show();
+            submitButton.prop('disabled', true);
+        } else {
+            preForkWarning.hide();
+            submitButton.prop('disabled', false);
+        }
         var description;
         var tooltipTitle;
         if (exchangeType == "buy") {
