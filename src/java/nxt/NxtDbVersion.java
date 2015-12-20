@@ -1138,7 +1138,7 @@ class NxtDbVersion extends DbVersion {
                 apply("CREATE INDEX IF NOT EXISTS referenced_transaction_referenced_transaction_id_idx ON referenced_transaction (referenced_transaction_id)");
             case 473:
                 if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
+                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
                 }
                 apply(null);
             case 474:
