@@ -289,17 +289,17 @@ var NRS = (function(NRS, $, undefined) {
             }
         },
         6: {
-            'title': "Tagged Data",
+            'title': "Data Cloud",
             'i18nKeyTitle': 'tagged_data',
             'iconHTML': '<i class="fa fa-dashboard"></i>',
             'subTypes': {
                 0: {
-                    'title': "Upload Tagged Data",
+                    'title': "Upload Data",
                     'i18nKeyTitle': 'upload_tagged_data',
                     'iconHTML': '<i class="fa fa-upload"></i>'
                 },
                 1: {
-                    'title': "Extend Tagged Data",
+                    'title': "Extend Data Lifetime",
                     'i18nKeyTitle': 'extend_tagged_data',
                     'iconHTML': '<i class="fa fa-expand"></i>'
                 }

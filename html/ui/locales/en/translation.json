@@ -491,7 +491,7 @@
   "export_contact": "Export Contacts",
   "extend_data": "Extend Data",
   "extend_data_button": "Extend Data",
-  "extend_tagged_data": "Extend Tagged Data",
+  "extend_tagged_data": "Extend Data Lifetime",
   "failed": "Failed",
   "failed_connect_peer": "Failed to connect peer!",
   "fee": "Fee",
@@ -1334,8 +1334,8 @@
   "trades": "Trades",
   "is_text": "Is Text",
   "filename": "Filename",
-  "upload_tagged_data": "Upload Tagged Data",
-  "tagged_data": "Tagged Data",
+  "upload_tagged_data": "Upload Data",
+  "tagged_data": "Data Cloud",
   "transaction_time": "Transaction Time",
   "forging_tooltip": "Forging started with balance of __balance__ NXT",
   "forging_another_account_tooltip": "Forging with account  __accountRS__",
@@ -1587,7 +1587,7 @@
   "buy_currency_description_help": "Per currency unit received you will pay __rate__ NXT, making a total of __total_nxt__ NXT according to current exchange offers.",
   "sell_currency_description": "Exchange __quantity__ __currency_code__ units for __total__ NXT at an estimated rate of __rate__",
   "sell_currency_description_help": "Per currency unit exchanged, you will receive __rate__ NXT, making a total of __total_nxt__ NXT according to current exchange offers.",
-  "distributed_info": "Distributed Info",
+  "data_cloud": "Data Cloud",
   "error_no_file_chosen": "No file chosen",
   "currency_exchange_pre_fork_warning": "Your exchange request must not match more than one exchange offer before block 621000. See version change log"
 }
