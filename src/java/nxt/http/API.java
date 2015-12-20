@@ -40,8 +40,16 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -202,6 +210,11 @@ public final class API {
                 filterHolder.setAsyncSupported(true);
             }
 
+            if (Nxt.getBooleanProperty("nxt.apiFrameOptionsSameOrigin")) {
+                FilterHolder filterHolder = apiHandler.addFilter(XFrameOptionsFilter.class, "/*", null);
+                filterHolder.setAsyncSupported(true);
+            }
+
             apiHandlers.addHandler(apiHandler);
             apiHandlers.addHandler(new DefaultHandler());
 
@@ -314,6 +327,24 @@ public final class API {
 
         private boolean contains(BigInteger hostAddressToCheck) {
             return hostAddressToCheck.and(netMask).equals(netAddress);
+        }
+
+    }
+
+    public static final class XFrameOptionsFilter implements Filter {
+
+        @Override
+        public void init(FilterConfig filterConfig) throws ServletException {
+        }
+
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+            ((HttpServletResponse) response).setHeader("X-FRAME-OPTIONS", "SAMEORIGIN");
+            chain.doFilter(request, response);
+        }
+
+        @Override
+        public void destroy() {
         }
 
     }
