@@ -10,7 +10,7 @@ archival peers, until the missing data is found, therefore it can take some
 time to complete, and can also return no results if there are no such peers
 online, or none of them has the requested data. Consistent with the behavior
 of getTransaction and related API, the returned transaction JSON will not have
-the prunable parts included if they have expired and
+the prunable parts included if they have already expired and
 nxt.includeExpiredPrunable=false (default is true), but if those parts have
 been successfully restored, they can be requested using the more specific APIs
 such as getPrunableMessage, getTaggedData, etc.
@@ -34,7 +34,7 @@ hard fork.
 
 Shuffling UI improvements.
 
-Added UI for Tagged Data.
+Added UI for the Tagged Data feature, now known as Data Cloud.
 
 The Exchange Booth UI has been improved. The user must only enter the number
 of currency units to be bought or sold, and the server determines the maximum
@@ -63,4 +63,7 @@ This change will take effect after the hard fork.
 
 Updated Jetty to version 9.3.6 and slf4j to version 1.7.13. Make sure to
 delete the old lib folder if unpacking over a previous installation.
+
+This release will do a blockchain rescan on testnet and may delete blocks
+after certain height, to resolve testnet forks.
 
