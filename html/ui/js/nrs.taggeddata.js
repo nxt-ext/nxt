@@ -233,7 +233,7 @@ var NRS = (function(NRS, $) {
 		var sidebarId = 'sidebar_tagged_data';
 		var options = {
 			"id": sidebarId,
-			"titleHTML": '<i class="fa fa-database"></i><span data-i18n="distributed_info">Distributed Info</span>',
+			"titleHTML": '<i class="fa fa-database"></i><span data-i18n="data_cloud">Data Cloud</span>',
 			"page": 'tagged_data_search',
 			"desiredPosition": 60
 		};
