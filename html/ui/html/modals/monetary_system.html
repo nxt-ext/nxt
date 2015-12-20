@@ -277,6 +277,9 @@
                             <input type="hidden" name="currency" id="publish_exchange_offer_currency" value="" />
                             <input type="hidden" name="decimals" id="publish_exchange_offer_decimals" value="" />
                         </div>
+                        An exchange offer can have both buy and sell parts, so that you automatically buy or sell currency
+                        subject to different buy/sell rates and limits. If you only want to buy, or only to sell,
+                        leave the other two unused limits at 0, and enter the same rate in both rate fields.
                         <div class="form-group">
                             <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="buy_units_initial">Buy units (Initial)</label>
                             <div class="col-sm-9">
@@ -284,6 +287,7 @@
                                     <input id="buy_currency_units_initial" type="text" name="initialBuySupply" value="0" class="form-control" data-type="buy" tabindex="2" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
                                 </div>
+                                Number of currency units you want to buy.
                             </div>
                         </div>
                         <div class="form-group">
@@ -293,6 +297,9 @@
                                     <input id="buy_currency_units_total" type="text" name="totalBuyLimit" value="0" class="form-control" data-type="buy" tabindex="3" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
                                 </div>
+                                For offers that have both buy and sell components, if you sell some of the currency, and then buy some again,
+                                you can put a limit to the overall total number of units bought. This total limit cannot be less than the
+                                initial number of units to buy.
                             </div>
                         </div>
                         <div class="form-group">
@@ -302,8 +309,10 @@
                                     <input id="buy_currency_offer_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" tabindex="4" />
                                     <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                 </div>
+                                The rate in NXT per currency unit at which you are willing to buy.
                             </div>
                         </div>
+                        <p></p>
                         <div class="form-group">
                             <label for="sell_currency_units_initial" class="col-sm-3 control-label" data-i18n="sell_units_initial">Sell units (Initial)</label>
                             <div class="col-sm-9">
@@ -311,6 +320,7 @@
                                     <input id="sell_currency_units_initial" type="text" name="initialSellSupply" value="0" class="form-control" data-type="sell" tabindex="5" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
                                 </div>
+                                Number of currency units you want to sell.
                             </div>
                         </div>
                         <div class="form-group">
@@ -320,6 +330,9 @@
                                     <input id="sell_currency_units_total" type="text" name="totalSellLimit" value="0" class="form-control" data-type="sell" tabindex="6" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
                                 </div>
+                                For offers that have both buy and sell components, if you buy some currency, and then sell some of it again,
+                                you can put a limit to the overall total number of units sold. This total limit cannot be less than the
+                                initial number of units to sell.
                             </div>
                         </div>
                         <div class="form-group">
@@ -329,6 +342,7 @@
                                     <input id="sell_currency_offer_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" tabindex="7" />
                                     <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                 </div>
+                                The rate in NXT per currency unit at which you are willing to sell.
                             </div>
                         </div>
                         <div class="form-group">
