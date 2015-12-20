@@ -468,7 +468,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Sending messages to Genesis not allowed.");
+                    throw new NxtException.NotValidException("Sending messages to Genesis not allowed.");
                 }
             }
 
@@ -649,7 +649,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
-                    throw new NxtException.NotCurrentlyValidException("Selling alias to Genesis not allowed");
+                    throw new NxtException.NotValidException("Selling alias to Genesis not allowed");
                 }
             }
 
@@ -1642,7 +1642,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID && attachment.getFinishValidationHeight(transaction) > Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset transfer to Genesis no longer allowed, "
+                    throw new NxtException.NotValidException("Asset transfer to Genesis no longer allowed, "
                             + "use asset delete attachment instead");
                 }
                 if (transaction.getVersion() > 0 && attachment.getComment() != null) {
@@ -2837,7 +2837,7 @@ public abstract class TransactionType {
                             + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
-                    throw new NxtException.NotCurrentlyValidException("Leasing to Genesis account not allowed");
+                    throw new NxtException.NotValidException("Leasing to Genesis account not allowed");
                 }
             }
 
