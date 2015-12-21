@@ -1589,5 +1589,12 @@
   "sell_currency_description_help": "Per currency unit exchanged, you will receive __rate__ NXT, making a total of __total_nxt__ NXT according to current exchange offers.",
   "data_cloud": "Data Cloud",
   "error_no_file_chosen": "No file chosen",
-  "currency_exchange_pre_fork_warning": "Your exchange request must not match more than one exchange offer before block 621000. See version change log"
+  "currency_exchange_pre_fork_warning": "Your exchange request must not match more than one exchange offer before block 621000. See version change log.",
+  "publish_offer_help": "An exchange offer can have both buy and sell parts, so that you automatically buy or sell currency subject to different buy/sell rates and limits. If you only want to buy, or only to sell, leave the other two unused limits at 0, and enter the same rate in both rate fields.",
+  "buy_units_initial_help": "Number of currency units you want to buy.",
+  "buy_units_limit_help": "For offers that have both buy and sell components, if you sell some of the currency, and then buy some again, you can put a limit to the overall total number of units bought. This total limit cannot be less than the initial number of units to buy.",
+  "buy_rate_help": "The rate in NXT per currency unit at which you are willing to buy.",
+  "sell_units_initial_help": "Number of currency units you want to sell.",
+  "sell_units_limit_help": "For offers that have both buy and sell components, if you buy some currency, and then sell some of it again, you can put a limit to the overall total number of units sold. This total limit cannot be less than the initial number of units to sell.",
+  "sell_rate_help": "The rate in NXT per currency unit at which you are willing to sell."
 }

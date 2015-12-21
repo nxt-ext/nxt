@@ -1112,7 +1112,6 @@ class NxtDbVersion extends DbVersion {
             case 468:
                 apply("ALTER INDEX account_property_setter_account_idx RENAME TO account_property_setter_recipient_idx");
             case 469:
-                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 470:
                 apply("CREATE TABLE referenced_transaction (db_id IDENTITY, transaction_id BIGINT NOT NULL, "
@@ -1137,9 +1136,7 @@ class NxtDbVersion extends DbVersion {
             case 472:
                 apply("CREATE INDEX IF NOT EXISTS referenced_transaction_referenced_transaction_id_idx ON referenced_transaction (referenced_transaction_id)");
             case 473:
-                if (Constants.isTestnet) {
-                    BlockchainProcessorImpl.getInstance().scheduleScan(0, true);
-                }
+                BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 474:
                 return;
