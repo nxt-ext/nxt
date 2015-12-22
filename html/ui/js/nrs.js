@@ -66,7 +66,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isAccountForging = false;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
-    NRS.upnpExternalAddress;
+    NRS.upnpExternalAddress = null;
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
