@@ -36,25 +36,26 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.getTaggedDataLink = function(data, transaction, isText) {
+		var error = undefined;
+		if (!data) {
+			NRS.sendRequest("getTaggedData", {
+				"transaction": transaction,
+				"retrieve": "true"
+			}, function (response) {
+				if (response.errorCode) {
+					error = "<span>" + response.errorDescription + "</span>"
+				}
+			}, false)
+		}
+		if (error) {
+			return error;
+		}
         if (isText) {
             return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
                 "data-target='#tagged_data_view_modal' " +
+                "data-transaction='" + String(transaction).escapeHTML() + "' " +
                 "data-data='" + String(data).escapeHTML() + "'>" + $.t("view") + "</a>";
         } else {
-            var error;
-            if (!data) {
-				NRS.sendRequest("getTaggedData", {
-					"transaction": transaction,
-					"retrieve": "true"
-				}, function(response) {
-					if (response.errorCode) {
-						error = "<span>" + response.errorDescription + "</span>"
-					}
-				}, false)
-			}
-            if (error) {
-                return error;
-            }
 			return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + String(transaction).escapeHTML() +
                 "&retrieve=true' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
         }
@@ -289,6 +290,7 @@ var NRS = (function(NRS, $) {
         var $invoker = $(e.relatedTarget);
         var data = $invoker.data("data");
         $("#tagged_data_content").val(data);
+        $("#tagged_data_download").attr("href", "/nxt?requestType=downloadTaggedData&transaction=" + $invoker.data("transaction") + "&retrieve=true");
     });
 
     $("#extend_data_modal").on("show.bs.modal", function (e) {
