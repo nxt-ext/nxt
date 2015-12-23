@@ -2060,7 +2060,7 @@ var NRS = (function (NRS, $, undefined) {
         };
         NRS.appendMenuItemToTSMenuItem(sidebarId, options);
         options = {
-            "titleHTML": '<span data-i18n="deletes_history">Deletes History</span>',
+            "titleHTML": '<span data-i18n="delete_history">Delete History</span>',
             "type": 'PAGE',
             "page": 'deletes_history'
         };

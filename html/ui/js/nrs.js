@@ -66,7 +66,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isAccountForging = false;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
-    NRS.upnpExternalAddress;
+    NRS.upnpExternalAddress = null;
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
@@ -980,7 +980,7 @@ NRS.addPagination = function () {
 				NRS.updateAccountControlStatus();
 
 				if (response.name) {
-					$("#account_name").html(response.name.escapeHTML()).removeAttr("data-i18n");
+					$("#account_name").html(NRS.addEllipsis(response.name.escapeHTML(), 10)).removeAttr("data-i18n");
 				}
 			}
 

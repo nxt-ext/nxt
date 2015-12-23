@@ -25,8 +25,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static nxt.http.JSONResponses.PRUNED_TRANSACTION;
 
@@ -58,12 +58,16 @@ public final class DownloadTaggedData extends APIServlet.APIRequestHandler {
         } else {
             response.setContentType("application/octet-stream");
         }
-        try {
-            String encodedFilename = URLEncoder.encode(taggedData.getFilename(), "UTF-8");
-            response.setHeader("Content-Disposition", "attachment; filename=" + encodedFilename + "; filename*=utf-8''" + encodedFilename);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e.toString(), e); // can't happen, UTF-8 should always be supported
+        String filename = taggedData.getFilename();
+        if (filename == null || filename.trim().isEmpty()) {
+            filename = taggedData.getName().trim();
         }
+        String contentDisposition = "attachment";
+        try {
+            URI uri = new URI(null, null, filename, null);
+            contentDisposition += "; filename*=UTF-8''" + uri.toASCIIString();
+        } catch (URISyntaxException ignore) {}
+        response.setHeader("Content-Disposition", contentDisposition);
         response.setContentLength(data.length);
         try (OutputStream out = response.getOutputStream()) {
             try {

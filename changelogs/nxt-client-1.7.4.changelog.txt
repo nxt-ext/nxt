@@ -1,0 +1,8 @@
+Added detectMimeType utility API, allowing autodetection of the mime type of
+uploaded file or data, using the Apache Tika library.
+
+The uploadTaggedData API now uses such mime type autodetection to determine
+the mime type of uploaded data when the user has not explicitly provided a
+type parameter. It also automatically sets the isText property to true for
+data of type text/plain only.
+

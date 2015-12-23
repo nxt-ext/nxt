@@ -803,9 +803,15 @@ var NRS = (function (NRS, $, undefined) {
         }
         if (!clazz) {
             clazz = "";
+        } else {
+            if (clazz.length > 0) {
+                if (!String(clazz).startsWith(" ")) {
+                    clazz = " " + clazz;
+                }
+            }
         }
         return "<a href='#' data-user='" + String(accountRS).escapeHTML() +
-            "' class='show_account_modal_action user-info " + clazz + "'>" + accountTitle + "</a>";
+            "' class='show_account_modal_action user-info" + clazz + "'>" + accountTitle + "</a>";
     };
 
     NRS.getTransactionLink = function(id, text, isEscapedtext) {

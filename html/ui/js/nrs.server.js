@@ -421,7 +421,8 @@ var NRS = (function (NRS, $, undefined) {
                                 }
                             },
                             function(callback) {
-                                if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data)) {
+                                if (response.unsignedTransactionBytes &&
+                                    !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment)) {
                                     callback({
                                         "errorCode": 1,
                                         "errorDescription": $.t("error_bytes_validation_server")
@@ -474,7 +475,7 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data, callback, response, extra) {
         var byteArray = converters.hexStringToByteArray(transactionBytes);
-        if (!NRS.verifyTransactionBytes(byteArray, requestType, data)) {
+        if (!NRS.verifyTransactionBytes(byteArray, requestType, data, response.transactionJSON.attachment)) {
             callback({
                 "errorCode": 1,
                 "errorDescription": $.t("error_bytes_validation_server")
@@ -494,7 +495,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.verifyTransactionBytes = function (byteArray, requestType, data) {
+    NRS.verifyTransactionBytes = function (byteArray, requestType, data, attachment) {
         var transaction = {};
         transaction.type = byteArray[0];
         transaction.version = (byteArray[1] & 0xF0) >> 4;
@@ -559,10 +560,10 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             pos = 160;
         }
-        return NRS.verifyTransactionTypes(byteArray, transaction, requestType, data, pos);
+        return NRS.verifyTransactionTypes(byteArray, transaction, requestType, data, pos, attachment);
     };
 
-    NRS.verifyTransactionTypes = function (byteArray, transaction, requestType, data, pos) {
+    NRS.verifyTransactionTypes = function (byteArray, transaction, requestType, data, pos, attachment) {
         var length = 0;
         var i=0;
         var serverHash, sha256, utfBytes, isText, hashWords, calculatedHash;
@@ -773,7 +774,7 @@ var NRS = (function (NRS, $, undefined) {
                     return false;
                 }
                 // no way to validate the property id, just skip it
-                var propertyId = String(converters.byteArrayToBigInteger(byteArray, pos));
+                String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 break;
             case "issueAsset":
@@ -1193,12 +1194,12 @@ var NRS = (function (NRS, $, undefined) {
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.tags);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
-                utfBytes = NRS.getUtf8Bytes(data.type);
+                utfBytes = NRS.getUtf8Bytes(attachment.type);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.channel);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 isText = [];
-                if (String(data.isText) == "true") {
+                if (attachment.isText) {
                     isText.push(1);
                 } else {
                     isText.push(0);

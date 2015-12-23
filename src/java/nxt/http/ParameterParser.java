@@ -622,7 +622,7 @@ final class ParameterParser {
         String name = Convert.emptyToNull(req.getParameter("name"));
         String description = Convert.nullToEmpty(req.getParameter("description"));
         String tags = Convert.nullToEmpty(req.getParameter("tags"));
-        String type = Convert.nullToEmpty(req.getParameter("type"));
+        String type = Convert.nullToEmpty(req.getParameter("type")).trim();
         String channel = Convert.nullToEmpty(req.getParameter("channel"));
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
         String filename = Convert.nullToEmpty(req.getParameter("filename")).trim();
@@ -639,7 +639,7 @@ final class ParameterParser {
                 // Depending on how the client submits the form, the filename, can be a regular parameter
                 // or encoded in the multipart form. If its not a parameter we take from the form
                 if (filename.isEmpty() && fileData.getFilename() != null) {
-                    filename = fileData.getFilename();
+                    filename = fileData.getFilename().trim();
                 }
                 if (name == null) {
                     name = filename;
@@ -650,6 +650,14 @@ final class ParameterParser {
             }
         } else {
             data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);
+        }
+
+        String detectedMimeType = Search.detectMimeType(data, filename);
+        if (detectedMimeType != null) {
+            isText = detectedMimeType.equals("text/plain");
+            if (type.isEmpty()) {
+                type = detectedMimeType.substring(0, Math.min(detectedMimeType.length(), Constants.MAX_TAGGED_DATA_TYPE_LENGTH));
+            }
         }
 
         if (name == null) {
@@ -682,13 +690,11 @@ final class ParameterParser {
             throw new ParameterException(INCORRECT_DATA);
         }
 
-        filename = filename.trim();
         if (filename.length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {
             throw new ParameterException(INCORRECT_TAGGED_DATA_FILENAME);
         }
         return new Attachment.TaggedDataUpload(name, description, tags, type, channel, isText, filename, data);
     }
-
 
     private ParameterParser() {} // never
 
