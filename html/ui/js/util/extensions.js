@@ -19,12 +19,11 @@ var __entityMap = {
 	"<": "&lt;",
 	">": "&gt;",
 	'"': '&quot;',
-	"'": '&#39;',
-	"/": '&#x2F;'
+	"'": '&#39;'
 };
 
 String.prototype.escapeHTML = function() {
-	return String(this).replace(/[&<>"'\/]/g, function(s) {
+	return String(this).replace(/[&<>"']/g, function(s) {
 		return __entityMap[s];
 	});
 };
@@ -78,18 +77,7 @@ $.fn.hasAttr = function(name) {
 
 //https://github.com/bryanwoods/autolink-js/blob/master/autolink.js
 String.prototype['autoLink'] = function () {
-	var entityMap = {
-		"&": "&amp;",
-		"<": "&lt;",
-		">": "&gt;",
-		'"': '&quot;',
-		"'": '&#39;'
-	};
-
-	var output = String(this).replace(/[&<>"']/g, function (s) {
-		return entityMap[s];
-	});
-
+	var output = String(this).escapeHTML();
 	var pattern = /(^|\s)((?:https?|ftp):\/\/[\-A-Z0-9+\u0026\u2019@#\/%?=()~_|!:,.;]*[\-A-Z0-9+\u0026@#\/%=~()_|])/gi;
 	//noinspection HtmlUnknownTarget
 	return output.replace(pattern, "$1<a href='$2' target='_blank'>$2</a>");
