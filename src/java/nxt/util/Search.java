@@ -20,6 +20,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.tika.Tika;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,6 +50,11 @@ public final class Search {
             throw new RuntimeException(e.toString(), e);
         }
         return list.toArray(new String[list.size()]);
+    }
+
+    public static String detectMimeType(byte[] data, String filename) {
+        Tika tika = new Tika();
+        return tika.detect(data, filename);
     }
 
     private Search() {}

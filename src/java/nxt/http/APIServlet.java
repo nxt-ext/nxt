@@ -365,6 +365,7 @@ public final class APIServlet extends HttpServlet {
         map.put("setPhasingOnlyControl", SetPhasingOnlyControl.instance);
         map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
         map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
+        map.put("detectMimeType", DetectMimeType.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
