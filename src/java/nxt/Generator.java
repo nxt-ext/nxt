@@ -41,6 +41,7 @@ public final class Generator implements Comparable<Generator> {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
+    private static final int MAX_FORGERS = Nxt.getIntProperty("nxt.maxNumberOfForgers");
     private static final byte[] fakeForgingPublicKey;
     static {
         byte[] publicKey = null;
@@ -135,8 +136,8 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public static Generator startForging(String secretPhrase) {
-        if (generators.size() >= 100) {
-            throw new RuntimeException("Cannot forge with more than 100 accounts on the same node");
+        if (generators.size() >= MAX_FORGERS) {
+            throw new RuntimeException("Cannot forge with more than " + MAX_FORGERS + " accounts on the same node");
         }
         Generator generator = new Generator(secretPhrase);
         Generator old = generators.putIfAbsent(secretPhrase, generator);

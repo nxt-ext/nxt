@@ -37,6 +37,7 @@ QUnit.test("formatAmount", function (assert) {
     assert.equal(NRS.formatAmount(12.343, true, false), "12.34", "number.rounding");
     assert.equal(NRS.formatAmount("123456700000", false, true), "1'234.567", "1000separator");
     assert.equal(NRS.formatAmount("123456700000000", true, true), "1'234'567", "nxt.rounding");
+    assert.equal(NRS.formatAmount("123456780000000", true, false), "1&#39;234&#39;567.8", "thousands.separator.escaped");
 });
 
 QUnit.test("formatVolume", function (assert) {

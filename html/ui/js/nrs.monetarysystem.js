@@ -549,7 +549,7 @@ var NRS = (function (NRS, $, undefined) {
         var rateNQT = $invoker.data("rateNQT");
         var effectiveRate = $invoker.data("effectiveRate");
         var totalNQT = $invoker.data("totalNQT");
-        var totalNXT = NRS.formatAmount(totalNQT);
+        var totalNXT = NRS.formatAmount(totalNQT, false, true);
         var submitButton = $("#currency_order_modal_button");
         submitButton.html($.t(exchangeType + "_currency")).data("resetText", $.t(exchangeType + "_currency"));
 

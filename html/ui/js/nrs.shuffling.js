@@ -343,7 +343,7 @@ var NRS = (function(NRS, $) {
    			labelI18n: "registration_finish",
    			helpI18n: "shuffling_registration_height_help",
    			inputName: "finishHeight",
-   			initBlockHeight: NRS.lastBlockHeight + 720,
+   			initBlockHeight: NRS.lastBlockHeight + 1440,
    			changeHeightBlocks: 10
    		};
    		NRS.initModalUIElement($(this), '.shuffling_finish_height', 'block_height_modal_ui_element', context);

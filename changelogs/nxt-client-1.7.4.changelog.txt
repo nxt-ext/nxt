@@ -12,7 +12,7 @@ and forum announcements, before upgrading to 1.7. These changes do not affect
 regular end users who just run the NRS client on their desktop or VSP node.
 
 The new features and improvements in the 1.7 series have been documented in
-the 1.7.0e through 1.7.3e changelogs, available in the changelog directory.
+the 1.7.0e through 1.7.3e changelogs, available in the changelogs directory.
 
 
 Here is a high level summary of the new features to be enabled after the
@@ -34,19 +34,24 @@ Dynamic fees, proportional to the relative transaction size.
 
 Improved Exchange Booth UI.
 
-Data Cloud: adding a UI and multiple enhancements to the existing Tagged Data
-feature, to allow decentralized and censorship-free publication and retrieval
-of small files, documents, or arbitrary data. This feature is not dependent on
-the hard fork and will be fully usable immediately on update to this release.
+Data Cloud, adding a UI and multiple enhancements to the existing Tagged Data
+feature, to allow decentralized, censorship-free and tamper-proof publication
+and retrieval of small files, documents, or arbitrary data. This feature is
+not dependent on the hard fork and will be fully usable immediately on update
+to this release.
 
 
 Changes added since the 1.7.3e release:
 
-Added detectMimeType utility API, allowing autodetection of the mime type of
+Added detectMimeType utility API, allowing auto-detection of the mime type of
 uploaded file or data, using the Apache Tika library.
 
-The uploadTaggedData API now uses such mime type autodetection to determine
+The uploadTaggedData API now uses such mime type auto-detection to determine
 the mime type of uploaded data when the user has not explicitly provided a
 type parameter. It also automatically sets the isText property to true for
 data of type text/plain only.
+
+Made the maximum permitted number of forgers or shufflers running at the same
+time configurable, default 100 each, using the nxt.maxNumberOfForgers and
+nxt.maxNumberOfShufflers properties.
 
