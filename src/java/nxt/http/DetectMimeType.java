@@ -35,7 +35,7 @@ public final class DetectMimeType extends APIServlet.APIRequestHandler {
     static final DetectMimeType instance = new DetectMimeType();
 
     private DetectMimeType() {
-        super("file", new APITag[] {APITag.UTILS}, "data", "filename", "isText");
+        super("file", new APITag[] {APITag.DATA, APITag.UTILS}, "data", "filename", "isText");
     }
 
     @Override

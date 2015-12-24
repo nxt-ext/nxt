@@ -31,6 +31,7 @@ import java.util.Set;
 
 public final class Shuffler {
 
+    private static final int MAX_SHUFFLERS = Nxt.getIntProperty("nxt.maxNumberOfShufflers");
     private static final Map<String, Map<Long, Shuffler>> shufflingsMap = new HashMap<>();
     private static final Map<Integer, Set<String>> expirations = new HashMap<>();
 
@@ -48,8 +49,8 @@ public final class Shuffler {
             if (recipientPublicKey == null) {
                 return shuffler;
             }
-            if (shufflingsMap.size() > 100) {
-                throw new ShufflerLimitException("Cannot run more than 100 shufflers on the same node");
+            if (shufflingsMap.size() > MAX_SHUFFLERS) {
+                throw new ShufflerLimitException("Cannot run more than " + MAX_SHUFFLERS + " shufflers on the same node");
             }
             if (shuffler == null) {
                 Shuffling shuffling = Shuffling.getShuffling(shufflingFullHash);
