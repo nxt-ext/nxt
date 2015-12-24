@@ -21,7 +21,7 @@ var NRS = (function(NRS, $) {
 	NRS.blocksPageType = null;
 	NRS.tempBlocks = [];
 	var trackBlockchain = false;
-	NRS.averageBlockGenerationTime = null;
+	NRS.averageBlockGenerationTime = 60;
 
 	NRS.getBlock = function(blockID, callback, pageRequest) {
 		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
@@ -30,14 +30,6 @@ var NRS = (function(NRS, $) {
 			if (response.errorCode && response.errorCode == -1 || !NRS.constants || NRS.constants.EPOCH_BEGINNING == 0) {
 				setTimeout(function (){ NRS.getBlock(blockID, callback, pageRequest); }, 2500);
 			} else {
-				if (NRS.blocks.length >= 2) {
-					var max = Math.min(NRS.blocks.length-1, 10);
-					var diffSum = 0;
-					for (var i=1; i<=max; i++) {
-						diffSum += (NRS.blocks[i-1].timestamp - NRS.blocks[i].timestamp);
-					}
-					NRS.averageBlockGenerationTime = Math.round(diffSum/max);
-				}
 				if (callback) {
 					response.block = blockID;
 					callback(response);
