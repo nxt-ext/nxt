@@ -40,10 +40,10 @@ import javax.servlet.http.HttpServletRequest;
  *  </ul>
  * </li>
  * <li>controlQuorum - The expected quorum.</li>
- * <li>controlMinBalance - The expected minimal balance</li>
- * <li>controlMinBalanceModel - The expected minimal balance model. Possible values:
+ * <li>controlMinBalance - The expected minimum balance</li>
+ * <li>controlMinBalanceModel - The expected minimum balance model. Possible values:
  * <ul>
- *  <li>NONE(0) No minimal balance restriction</li>
+ *  <li>NONE(0) No minimum balance restriction</li>
  *  <li>NQT(1) Nxt balance threshold</li>
  *  <li>ASSET(2) Asset balance threshold</li>
  *  <li>CURRENCY(3) Currency balance threshold</li>
