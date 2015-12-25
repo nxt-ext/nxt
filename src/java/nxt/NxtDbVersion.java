@@ -1136,6 +1136,14 @@ class NxtDbVersion extends DbVersion {
             case 472:
                 apply("CREATE INDEX IF NOT EXISTS referenced_transaction_referenced_transaction_id_idx ON referenced_transaction (referenced_transaction_id)");
             case 473:
+                long shufflingBlockId = 0;
+                try {
+                    shufflingBlockId = BlockDb.findBlockIdAtHeight(Constants.SHUFFLING_BLOCK);
+                } catch (RuntimeException ignore) {}
+                if (shufflingBlockId != 0) {
+                    Logger.logDebugMessage("Deleting blocks starting from height %s", Constants.SHUFFLING_BLOCK);
+                    BlockDb.deleteBlocksFrom(shufflingBlockId);
+                }
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 474:
