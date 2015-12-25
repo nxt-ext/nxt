@@ -1596,5 +1596,6 @@
   "buy_rate_help": "The rate in NXT per currency unit at which you are willing to buy",
   "sell_units_initial_help": "Number of currency units you want to sell",
   "sell_units_limit_help": "For offers that have both buy and sell components, if you buy some currency, and then sell some of it again, you can put a limit to the overall total number of units sold. This total limit cannot be less than the initial number of units to sell",
-  "sell_rate_help": "The rate in NXT per currency unit at which you are willing to sell"
+  "sell_rate_help": "The rate in NXT per currency unit at which you are willing to sell",
+  "expiration_height_help": "Block height on which this offer expires"
 }

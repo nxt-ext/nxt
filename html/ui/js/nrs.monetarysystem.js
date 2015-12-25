@@ -869,6 +869,16 @@ var NRS = (function (NRS, $, undefined) {
         $("#publish_exchange_offer_decimals").val($invoker.data("decimals"));
         $(".currency_code").html(String($invoker.data("code")).escapeHTML());
 
+        context = {
+            labelText: "Expiration Height",
+            labelI18n: "expiration_height",
+            inputName: "expirationHeight",
+            helpI18n: "expiration_height_help",
+            initBlockHeight: NRS.lastBlockHeight + 14 * 1440,
+            changeHeightBlocks: 100
+        };
+        NRS.initModalUIElement($(this), '.exchange_offer_expiration_height', 'block_height_modal_ui_element', context);
+
         NRS.sendRequest("getAccountCurrencies", {
             "currency": $invoker.data("currency"),
             "account": NRS.accountRS,

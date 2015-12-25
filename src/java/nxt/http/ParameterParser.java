@@ -509,15 +509,18 @@ final class ParameterParser {
         return -1;
     }
 
-    static String getSearchQuery(HttpServletRequest req) {
+    static String getSearchQuery(HttpServletRequest req) throws ParameterException {
         String query = Convert.nullToEmpty(req.getParameter("query")).trim();
-        String tags = Convert.emptyToNull(req.getParameter("tag"));
-        if (tags != null && (tags = tags.trim()).length() > 0) {
+        String tags = Convert.nullToEmpty(req.getParameter("tag")).trim();
+        if (query.isEmpty() && tags.isEmpty()) {
+            throw new ParameterException(JSONResponses.missing("query", "tag"));
+        }
+        if (!tags.isEmpty()) {
             StringJoiner stringJoiner = new StringJoiner(" AND TAGS:", "TAGS:", "");
             for (String tag : Search.parseTags(tags, 0, Integer.MAX_VALUE, Integer.MAX_VALUE)) {
                 stringJoiner.add(tag);
             }
-            query = stringJoiner.toString() + (query.equals("") ? "" : (" AND (" + query + ")"));
+            query = stringJoiner.toString() + (query.isEmpty() ? "" : (" AND (" + query + ")"));
         }
         return query;
     }

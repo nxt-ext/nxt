@@ -36,6 +36,9 @@ public final class SearchPolls extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         String query = Convert.nullToEmpty(req.getParameter("query"));
+        if (query.isEmpty()) {
+            return JSONResponses.missing("query");
+        }
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
