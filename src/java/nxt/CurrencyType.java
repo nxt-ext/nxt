@@ -91,7 +91,7 @@ public enum CurrencyType {
                     throw new NxtException.NotValidException("Minimum reserve per unit must be > 0");
                 }
                 if (Math.multiplyExact(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("Minimal reserve per unit is too large");
+                    throw new NxtException.NotValidException("Minimum reserve per unit is too large");
                 }
                 if (attachment.getReserveSupply() <= attachment.getInitialSupply()) {
                     throw new NxtException.NotValidException("Reserve supply must exceed initial supply");
