@@ -24,7 +24,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
     function setLeaseBalanceHelp(period) {
-        var days = Math.round(period / (NRS.lastBlockHeight < 621000 ? 800 : 1440));
+        var days = Math.round(period / 1440);
         $("#lease_balance_help").html($.t("lease_balance_help_var", {
             "blocks": String(period).escapeHTML(),
             "days": String(Math.round(days)).escapeHTML()
