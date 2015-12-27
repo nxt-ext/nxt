@@ -55,3 +55,7 @@ Made the maximum permitted number of forgers or shufflers running at the same
 time configurable, default 100 each, using the nxt.maxNumberOfForgers and
 nxt.maxNumberOfShufflers properties.
 
+The default value of includeCounts parameter in the searchDGSGoods API is now
+also false, this API was inadvertently missed when globally changing the
+defaults to false in the 1.6 branch.
+
