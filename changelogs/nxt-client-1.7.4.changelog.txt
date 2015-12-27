@@ -9,7 +9,7 @@ fully functional.
 There were incompatible API changes introduced in the 1.6 series. API users
 still on 1.5.15 and earlier should make sure to read the 1.6 series changelogs
 and forum announcements, before upgrading to 1.7. These changes do not affect
-regular end users who just run the NRS client on their desktop or VSP node.
+regular end users who just run the NRS client on their desktop or VPS node.
 
 The new features and improvements in the 1.7 series have been documented in
 the 1.7.0e through 1.7.3e changelogs, available in the changelogs directory.
