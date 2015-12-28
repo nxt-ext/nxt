@@ -1071,9 +1071,10 @@ This is an experimental release. It is a required update for all testnet nodes,
 but is also possible to run on main net.
 
 Set the content type to "text/plain; charset=UTF-8" when sending http requests
-to peers. This is an important bug fix, as the incorrect encoding of outgoing blocks
-and transactions containing some Unicode characters can prevent their propagation
-and lead to forks. Everyone running the experimental release should update.
+to peers. This is an important bug fix, as the incorrect encoding of outgoing
+blocks and transactions containing some Unicode characters can prevent their
+propagation and lead to forks. Everyone running the experimental release should
+update.
 
 
 --------------------------------------------------------------------------------
@@ -1160,8 +1161,8 @@ tagged data transaction from the transaction info modal.
 
 Integration of current status of client translations for new 1.5 features,
 new "experimental" state for languages with translation status at 40-50%+,
-added Czech, Greek, Hindi translations in experimental state, updated translation
-state for other languages (Beta: 70-80%+, Stable: 90-95%+).
+added Czech, Greek, Hindi translations in experimental state, updated
+translation state for other languages (Beta: 70-80%+, Stable: 90-95%+).
 
 
 --------------------------------------------------------------------------------
@@ -1211,7 +1212,8 @@ model is "By Hash".
 
 Enhanced the /test page to accept and pre-fill the test forms with any parameter
 values supplied in the url, e.g.:
-http://localhost:7876/test?requestType=getBlocks&lastIndex=10&includeTransactions=true
+http://localhost:7876/test?requestType=getBlocks&lastIndex=10
+&includeTransactions=true
 
 
 This release will perform a full rescan on test net.
@@ -1776,11 +1778,11 @@ polls and votes casted.
 Generic notification system for incoming transactions showing the number
 of transaction types and total new transactions.
 
-Unconfirmed transactions are only displayed in the "Dashboard" and "My Transactions"
-pages and no longer appear in other tables.
+Unconfirmed transactions are only displayed in the "Dashboard" and
+"My Transactions" pages and no longer appear in other tables.
 
-Transaction info dialog for AE Bid and Ask orders now displays a table containing
-the actual trades mathcing the specific order.
+Transaction info dialog for AE Bid and Ask orders now displays a table
+containing the actual trades matching the specific order.
 
 New account login feature for faster login just by Nxt account.
 
@@ -1788,10 +1790,11 @@ User specific client DB with new logout option to clear user data.
 
 Streamlined sidebar/navigation structure.
 
-Send Currency button added to the toolbar which invokes the transfer currency dialog
+Send Currency button added to the toolbar which invokes the transfer currency
+dialog
 
-Environment information, client settings and various diagnostic information is logged 
-to the browser's JavaScript console during startup and login.
+Environment information, client settings and various diagnostic information is
+logged to the browser's JavaScript console during startup and login.
 
 Phasing tab was added to the transaction info dialog of phased transactions.
 
@@ -2030,10 +2033,12 @@ used. Instead, the debug APIs which allow direct manipulation of the blockchain
 database are always enabled, but are now protected with a password, which needs
 to be set in the nxt.adminPassword property. Password is not required when the
 API server is listening on the localhost interface only (the default).
-The password protection can be disabled by setting nxt.disableAdminPassword=true.
+The password protection can be disabled by setting
+nxt.disableAdminPassword=true.
 
-Some refactoring to allow creation and signing of transactions using the Java API
-even in the complete absence of blockchain data, as needed for the MintWorker.
+Some refactoring to allow creation and signing of transactions using the Java
+API even in the complete absence of blockchain data, as needed for the
+MintWorker.
 
 Minor peer networking improvement, addPeers and processBlock requests are now
 executed in the background.
@@ -2266,8 +2271,8 @@ defined for main net.
 
 New features:
 
-Monetary System.
-See https://bitbucket.org/JeanLucPicard/nxt/issue/205/monetary-system-documentation
+Monetary System. See
+https://bitbucket.org/JeanLucPicard/nxt/issue/205/monetary-system-documentation
 for a detailed description.
 See https://bitbucket.org/JeanLucPicard/nxt/issue/207/mint-worker-utility for a
 description of the MintWorker tool for currency minting.
@@ -2352,9 +2357,9 @@ to do a separate getPeer request for each peer.
 Include cumulativeDifficulty in the block JSON.
 
 Allow transaction signing in signTransaction to skip the validation of the
-transaction bytes being signed, if an optional validate=false parameter is added.
-This would be useful when signing transaction bytes on a machine that doesn't have
-the full blockchain downloaded, which normally prevents validation.
+transaction bytes being signed, if an optional validate=false parameter is
+added. This would be useful when signing transaction bytes on a machine that
+doesn't have the full blockchain downloaded, which normally prevents validation.
 
 Allow sending messages with no recipient.
 
@@ -2400,11 +2405,11 @@ Added getDGSGoodsPurchases API to retrieve purchases for a specific goods,
 optionally those with public feedbacks only.
 
 Added getDGSTags API returning all DGS Goods tags, sorted by number of goods
-in stock with that tag and total number of goods with that tag. Takes an optional
-inStockOnly parameter, default true, to retrieve tags for goods in stock only.
-At most three tags per goods are used, tags longer than 20 characters or shorter
-than 3 are ignored, and the parsing of tags is done using the Lucene
-StandardAnalyzer.
+in stock with that tag and total number of goods with that tag. Takes an
+optional inStockOnly parameter, default true, to retrieve tags for goods in
+stock only. At most three tags per goods are used, tags longer than 20
+characters or shorter than 3 are ignored, and the parsing of tags is done using
+the Lucene StandardAnalyzer.
 
 Show purchase counts and public feedback counts in all API responses returning
 Goods JSON, unless includeCounts parameter is false.
@@ -2557,10 +2562,10 @@ instead of keeping all of them in memory only.
 
 Derived objects are those that are constructed based on the information already
 available in the blockchain blocks and transactions - i.e, Accounts, Aliases, 
-Assets, Goods, Purchases, Orders, Trades. Storing them in the database instead of
-in memory means the Asset Exchange and the Digital Goods Store can scale to much
-higher number of assets, orders, and goods, without requiring an ever growing
-amount of memory for each node.
+Assets, Goods, Purchases, Orders, Trades. Storing them in the database instead
+of in memory means the Asset Exchange and the Digital Goods Store can scale to
+much higher number of assets, orders, and goods, without requiring an ever
+growing amount of memory for each node.
 
 Using a standard SQL database tables to store those records also allows for
 much more sophisticated queries, and allows third parties to write and execute
@@ -2573,8 +2578,8 @@ eliminate the need for blockchain rescans on startup, and on fork resolution.
 
 On upgrade from 1.2.8 and older releases, this version will perform an initial
 build of the derived objects tables, which on a fast machine takes about 4 min,
-but may take longer depending on your hardware. The database size will again grow
-during this rescan, but after shutdown should shrink back to around 550 MB.
+but may take longer depending on your hardware. The database size will again
+grow during this rescan, but after shutdown should shrink back to around 550 MB.
 
 There will be no rescans on subsequent restarts, and the startup time is now
 reduced to a few seconds only. There will also be no rescans at runtime on block
@@ -2641,8 +2646,8 @@ The Asset JSON now includes total number of transfers, and number of accounts
 holding the asset.
 
 parseTransaction does not just return an error when trying to parse an invalid
-transaction bytes or JSON, but adds a validate=false field, plus the actual error 
-message, in addition to the parsed transaction JSON.
+transaction bytes or JSON, but adds a validate=false field, plus the actual
+error message, in addition to the parsed transaction JSON.
 
 getState no longer includes total effective balance.
 
@@ -2653,19 +2658,19 @@ getAccountBlocks - like getAccountBlockIds, but returning full block JSON.
 If includeTransactions parameter is true, also includes the transaction JSON.
 
 getAccountCurrentAskOrders and getAccountCurrentBidOrders - 
-like getAccountCurrentAskOrderIds and getAccountCurrentBidOrderIds, but returning
-full order JSON.
+like getAccountCurrentAskOrderIds and getAccountCurrentBidOrderIds, but
+returning full order JSON.
 
 getAllOpenAskOrders and getAllOpenBidOrders now replace getAllOpenOrders, but
 only returning ask or bid orders respectively, and allow firstIndex/lastIndex
 pagination.
 
-getAssetTransfers - retrieves the asset transfers for an asset, account, or both,
-sorted by height descending.
+getAssetTransfers - retrieves the asset transfers for an asset, account, or
+both, sorted by height descending.
 
 getAssetAccounts - accepts an asset parameter and returns all accounts holding
-this asset as of the current height, and the asset quantity each one owns, sorted
-by asset quantity descending.
+this asset as of the current height, and the asset quantity each one owns,
+sorted by asset quantity descending.
 Takes an optional height parameter to allow retrieving asset holders as of a
 previous blockchain height.
 
@@ -2681,8 +2686,8 @@ longConvert - an utility API to convert between signed long ids as used in the
 database and unsigned long ids represented as strings. Accepts an id in either
 form and returns both the signed and unsigned versions.
 
-getECBlock - returns the ecBlockId and ecBlockHeight given an optional timestamp,
-current time if not supplied.
+getECBlock - returns the ecBlockId and ecBlockHeight given an optional
+timestamp, current time if not supplied.
 
 
 New debug API requests:
@@ -2704,8 +2709,8 @@ tables to that height and rebuilds them by rescanning the existing blockchain
 from that height up again. Does not delete blocks or transactions from the
 blockchain, unlike the popOff request. A request to rescan more than 1440 blocks
 when table trimming is enabled will do a full rescan starting from height 0.
-Setting validate parameter to true will also re-verify signatures and re-valudate
-blocks and transactions during the rescan.
+Setting validate parameter to true will also re-verify signatures and
+re-validate blocks and transactions during the rescan.
 
 
 DbShellServlet:
@@ -2864,11 +2869,12 @@ Minor bugfixes.
 --------------------------------------------------------------------------------
 nxt-client-1.2.5f:
 
-Bugfixes. Keep retrying block generation when failing due to invalid transactions.
+Bugfixes. Keep retrying block generation when failing due to invalid
+transactions.
 
-Ignore peer weights when hallmark protection is disabled. Set hallmark protection
-to disabled by default as it can break blockchain downloading in some cases. This
-is a change in nxt-default.properties.
+Ignore peer weights when hallmark protection is disabled. Set hallmark
+protection to disabled by default as it can break blockchain downloading in some
+cases. This is a change in nxt-default.properties.
 
 
 The changelog from 1.2.5b is repeated below:
@@ -2895,8 +2901,8 @@ nxt-client-1.2.5d:
 I am uploading the fork release again so that those who want to form a fork are
 not prevented from doing it.
 
-Bugfixes. Prevent pulling blockchain from nodes not running this release, in order
-to allow forging of a fork.
+Bugfixes. Prevent pulling blockchain from nodes not running this release, in
+order to allow forging of a fork.
 
 
 The changelog from 1.2.5b is repeated below:
@@ -3084,7 +3090,7 @@ attachment without having to add a new transaction type.
 Added PublicKeyAnnouncement attachment. Those will be accepted after DGS block,
 but only enforced after block 215000. After that block, transactions with
 recipient account that does not have a public key will be required to have such
-an attachment in order to announce and set the public key of the reciepient.
+an attachment in order to announce and set the public key of the recipient.
 To add a PublicKeyAnnouncement, just add a "recipientPublicKey" parameter with
 the hex-encoded public key string when sending the first transaction to that
 account. It is harmless (but useless) to keep adding the same recipientPublicKey
@@ -3097,7 +3103,7 @@ The getAccountId request can be used to get the public key for a secret phrase
 
 Added first part of Economic Clustering - fork detection. After DGS block, each
 transaction will include a reference to a recent blockId. For now this is used
-only to detect forks, and transactions refering to a different fork are still
+only to detect forks, and transactions referring to a different fork are still
 not rejected.
 
 Next step of Transparent Forging will be enabled at block 215000: accounts that
@@ -3139,7 +3145,7 @@ New http API calls for creating transactions:
 dgsListing, dgsDelisting, dgsPriceChange, dgsQuantityChange, dgsPurchase,
 dgsDelivery, dgsRefund, dgsFeedback
 
-New http API calls for quering DGS:
+New http API calls for querying DGS:
 getDGSGood, getDGSGoods, getDGSPurchase, getDGSPurchases, getDGSPendingPurchases
 
 Goods and notes exchanged between buyer and seller are encrypted with AES, and
@@ -3177,7 +3183,7 @@ New getBlockId API to get blockId for a given height.
 Improved logging, to handle the case when Nxt is embedded as a library.
 
 Minor improvements: getState and getBlockchainStatus now also show application
-name, block JSON also shows generatorPublickKey, getAccountId also accepts
+name, block JSON also shows generatorPublicKey, getAccountId also accepts
 publicKey as a parameter.
 
 Updated jetty to version 9.2.1.
@@ -3475,11 +3481,12 @@ Added README.txt file, see that for installation and configuration instructions.
 nxt-client-0.9.10e:
 
 Added getAllAssets API which retrieves all Assets, and getAssets API which takes
-a multivalued "asset" parameter and returns the Assets with corresponding assetIds.
+a multivalued "asset" parameter and returns the Assets with corresponding
+assetIds.
 
 Added signTransaction API which takes unsignedTransactionBytes and secretPhrase
-and returns the signed transactionBytes, transaction id, full hash, and signature
-hash. The transaction is not broadcasted.
+and returns the signed transactionBytes, transaction id, full hash, and
+signature hash. The transaction is not broadcasted.
 
 To prevent denial of service attacks, transactions that need to stay in the
 unconfirmed transactions pool, while waiting for their referenced transactions
@@ -3591,9 +3598,10 @@ The transaction JSON also includes referencedTransactionFullHash, if not null,
 and for now also includes referencedTransactionId. Until NQT_BLOCK is passed,
 users of this API should really check both, as for transactions before NQT_BLOCK
 it cannot be guaranteed that referencedTransactionFullHash is available because
-it is not a part of the byte array transaction format. After NQT_BLOCK is passed,
-this will be changed to always include referencedTransactionFullHash in the JSON
-(also for old transactions), and the referencedTransactionId will be removed.
+it is not a part of the byte array transaction format. After NQT_BLOCK is
+passed, this will be changed to always include referencedTransactionFullHash in
+the JSON (also for old transactions), and the referencedTransactionId will be
+removed.
 
 Added nxt.usePeersDb to nxt-default.properties, enabled by default. This is to
 disable use of saved peer addresses, useful for test purposes only.
@@ -3910,7 +3918,7 @@ stopped first, so that the nxt.trace log does not continue to be
 updated while VerifyTrace is verifying it.
 
 Unconfirmed balances and unconfirmed asset balances are logged, but
-not verified by VerifyTrace, because the presense of open or partially
+not verified by VerifyTrace, because the presence of open or partially
 filled orders can make that too complicated. It may be easier to
 program a spreadsheet application to handle such calculations.
 
@@ -4004,7 +4012,7 @@ to the server for broadcasting using the broadcastTransaction API.
 Transaction hashes, which can be used to uniquely identify transactions
 to avoid transaction signature malleability attacks, can now be
 obtained using Transaction.getHash(), and are also available in the
-JSON representaion of transactions. The hash can also be used to retrieve
+JSON representation of transactions. The hash can also be used to retrieve
 a transaction from the server, instead of using transaction id, by
 supplying a hash parameter to the getTransaction http API instead of
 transaction parameter.
@@ -4197,7 +4205,7 @@ Fixed hallmark string in json peer info.
 
 Improved Logger, added removeListener methods.
 
-Don't set Content-lenght headers when using XMLHttpRequest to send POST
+Don't set Content-length headers when using XMLHttpRequest to send POST
 requests.
 
 Added jetty-security jar.
@@ -4790,18 +4798,20 @@ difficult to forget to validate them.
 Many minor and not so minor performance and memory optimizations, based on
 actual profiling measurements, have been applied.
 
-All field and method access modifiers have been reviewed. No java field or method
-is more accessible than it needs to be. Everything that can be private, is now
-private. Everything that should be final, is now final.
+All field and method access modifiers have been reviewed. No java field or
+method is more accessible than it needs to be. Everything that can be private,
+is now private. Everything that should be final, is now final.
 
 All JSON response and error handling has been cleaned up and optimized.
 
-Unnecessary to and from ByteBuffer conversions in block and transaction processing
-have been removed.
+Unnecessary to and from ByteBuffer conversions in block and transaction
+processing have been removed.
 
-A deadline limit of not more than 1440 minutes for new transactions is now enforced.
+A deadline limit of not more than 1440 minutes for new transactions is now
+enforced.
 
-Peers that submit invalid block or transaction data are automatically blacklisted.
+Peers that submit invalid block or transaction data are automatically
+blacklisted.
 
 Java API documentation is now available at http://localhost:7874/doc/ , all APIs
 are subject to change as it is work in progress.
@@ -5045,10 +5055,13 @@ sha256: aa20fb32fe7e6cda7debee59928d5aea8ff7c581c58a56ff68e8252eaf9368c7
 Change log:
 
 Added getGuaranteedBalance API:
-http://localhost:7874/nxt?requestType=getGuaranteedBalance&account=account&numberOfConfirmations=numberOfConfirmations
-returns the balance of an account only considering transactions with confimration count >= numberOfConfirmations.
+http://localhost:7874/nxt?requestType=getGuaranteedBalance&account=account
+&numberOfConfirmations=numberOfConfirmations
+returns the balance of an account only considering transactions with
+confirmation count >= numberOfConfirmations.
 
-The API requests getAccountBlockIds and getAccountTransactionIds now return sorted results.
+The API requests getAccountBlockIds and getAccountTransactionIds now return
+sorted results.
 
 Added getAccountPublicKey and getGuaranteedBalance to admin.html page.
 
@@ -5076,20 +5089,21 @@ http://localhost:7874/nxt?requestType=getAliasId&alias=alias
 returns the id of the alias given alias name
 
 getAccountBlockIds
-http://localhost:/7874/nxt?requestType=getAccountBlockIds&account=account&timestamp=timestamp
+http://localhost:/7874/nxt?requestType=getAccountBlockIds&account=account
+&timestamp=timestamp
 returns the blockIds generated by the account after timestamp
 
 getState will now also return cumulativeDifficulty and totalEffectiveBalance.
-This allows the chance of an account to forge a block to be calculated by the user as
-myEffectiveBalance/totalEffectiveBalance.
+This allows the chance of an account to forge a block to be calculated by the
+user as myEffectiveBalance/totalEffectiveBalance.
 
 Significant memory consumption and performance optimizations to reduce the load
-on the GC and the total memory requirements. It should be possible to run with -Xmx512M
-if needed, more is better but should not be necessary. I hope Raspberry users will be
-happy with this release.
+on the GC and the total memory requirements. It should be possible to run with
+-Xmx512M if needed, more is better but should not be necessary. I hope Raspberry
+users will be happy with this release.
 
-This is experimental because of the multiple memory related optimizations, but should
-perform better than 0.5.3.
+This is experimental because of the multiple memory related optimizations, but
+should perform better than 0.5.3.
 
 
 --------------------------------------------------------------------------------
@@ -5149,7 +5163,7 @@ This is mostly a bugfix release. Change log:
 
 Possible fix for
 https://bitcointalk.org/index.php?topic=397183.msg4343616#msg4343616 ,
-needs more testing. Please report any occurencies of negative Recent blocks
+needs more testing. Please report any occurrences of negative Recent blocks
 and balances, and include the log errors if that happens.
 
 Fixed blacklisting of hallmarked peers.
@@ -5208,50 +5222,57 @@ From the blockchain, the alias for the sha256 sum is NRSbetaversion:
 
 https://localhost:7875/nxt?requestType=getAliasURI&alias=nrsbetaversion
 
-This is to be considered EXPERIMENTAL release. There are quite a few changes so be careful.
-Stay with the stable 0.4.8 version if you don't want to take chances. But our flagship
-NCC-1701-D has been running 0.4.9e since yesterday without issues.
+This is to be considered EXPERIMENTAL release. There are quite a few changes so
+be careful. Stay with the stable 0.4.8 version if you don't want to take
+chances. But our flagship NCC-1701-D has been running 0.4.9e since yesterday
+without issues.
 
 Change Log:
 
-Many concurrency related fixes and optimization. Those should significantly improve performance
-and stability and decrease the likelihood of the client being stuck and needing a restart.
+Many concurrency related fixes and optimization. Those should significantly
+improve performance and stability and decrease the likelihood of the client
+being stuck and needing a restart.
 
-Performance optimizations, reducing the number of temporary objects being created in the peer
-networking, making sure connections are properly closed. Memory requirements are lower now,
-my servers never exceed 1.5 GB. You should be able to run it on a 2 GB VPS node with -Xmx1536M
-without problems now. If you don't attract a lot of traffic (don't publish your IP), memory
-will even stay below 1GB.
+Performance optimizations, reducing the number of temporary objects being
+created in the peer networking, making sure connections are properly closed.
+Memory requirements are lower now, my servers never exceed 1.5 GB. You should be
+able to run it on a 2 GB VPS node with -Xmx1536M without problems now. If you
+don't attract a lot of traffic (don't publish your IP), memory will even stay
+below 1GB.
 
-Unlocking an account now makes sure to automatically lock out all other instances of the same
-account on the same server. In other words, if you open several browser windows to the same
-server (localhost), you can only be logged in to the same account in one of them at a time.
-This does not prevent you however from unlocking the same account on multiple machines (but
-you shouldn't be doing that).
+Unlocking an account now makes sure to automatically lock out all other
+instances of the same account on the same server. In other words, if you open
+several browser windows to the same server (localhost), you can only be logged
+in to the same account in one of them at a time. This does not prevent you
+however from unlocking the same account on multiple machines (but you shouldn't
+be doing that).
 
-Generate authorization token will also ask for a secret phrase confirmation again.
+Generate authorization token will also ask for a secret phrase confirmation
+again.
 
-As you may or may have not noticed, Transparent Forging has already started. My last minute
-decision to start at 32000 somehow didn't make it in the package I released as 0.4.8 (I make
-mistakes too), so 0.4.8 got released with the switchover still at 30000. So block 30000 it is
-now, and we are already there.
+As you may or may have not noticed, Transparent Forging has already started. My
+last minute decision to start at 32000 somehow didn't make it in the package I
+released as 0.4.8 (I make mistakes too), so 0.4.8 got released with the
+switchover still at 30000. So block 30000 it is now, and we are already there.
 
-Minor changes: Added Get Account Aliases, Get Alias URI, and Get Multiple Account Balances
-features to the https://localhost:7875/admin.html page. Added a few more well-known nodes to
-the default in the web.xml.
+Minor changes: Added Get Account Aliases, Get Alias URI, and Get Multiple
+Account Balances features to the https://localhost:7875/admin.html page. Added a
+few more well-known nodes to the default in the web.xml.
 
-There is one serious security issue which is not completely fixed in 0.4.9e. All requests URLs
-are being cached by the browser, and even though they don't appear in the browsing history
-(which is why we didn't discover the problem earlier), they are still in the browser cache.
-Check for yourself using about:cache on firefox.
-This is bad, as it means your secret phrase is being written out to disk as plain text in the
-browser cache. And I am sure javascript exploits will appear which will try to extract it from
-there. To really fix that, all API requests from the browser that include the secret phrase
-have to be sent as POST, rather than GET requests. But this will require some significant
-changes to the javascript client, which will take some time. As we don't plan to maintain the
-current javascript client, I am not sure if such rewriting should even be undertaken now.
-In 0.4.9e I at least added the response headers which prevent caching to disk. Firefox honors
-those, but still caches the request URLs to memory. To be safe, I strongly suggest using a
-separate browser profile only for accessing your Nxt client, or private browsing mode.
-Everybody using 0.4.8 and earlier should immediately delete their browser cache.
+There is one serious security issue which is not completely fixed in 0.4.9e. All
+requests URLs are being cached by the browser, and even though they don't appear
+in the browsing history (which is why we didn't discover the problem earlier),
+they are still in the browser cache. Check for yourself using about:cache on
+firefox. This is bad, as it means your secret phrase is being written out to
+disk as plain text in the browser cache. And I am sure javascript exploits will
+appear which will try to extract it from there. To really fix that, all API
+requests from the browser that include the secret phrase have to be sent as
+POST, rather than GET requests. But this will require some significant changes
+to the javascript client, which will take some time. As we don't plan to
+maintain the current javascript client, I am not sure if such rewriting should
+even be undertaken now. In 0.4.9e I at least added the response headers which
+prevent caching to disk. Firefox honors those, but still caches the request URLs
+to memory. To be safe, I strongly suggest using a separate browser profile only
+for accessing your Nxt client, or private browsing mode. Everybody using 0.4.8
+and earlier should immediately delete their browser cache.
 
