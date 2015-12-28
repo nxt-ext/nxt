@@ -245,6 +245,12 @@ var NRS = (function(NRS, $) {
 			"page": 'tagged_data_search'
 		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="upload_file">File Upload</span></a>',
+			"type": 'MODAL',
+			"modalId": 'upload_data_modal'
+		};
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 	};
 
 	$(".tagged_data_search").on("submit", function(e) {
