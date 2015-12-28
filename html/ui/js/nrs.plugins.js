@@ -296,14 +296,19 @@ var NRS = (function(NRS, $, undefined) {
                 NRS.loadPlugin(pluginId);
             }
         });
+        var growlOptions = {
+            type: "warning",
+            position: {
+                from: "bottom",
+                align: "right"
+            },
+            offset: 20,
+            offsetRight: 20
+        };
         if (NRS.disablePluginsDuringSession) {
-            $.growl($.t('plugins_disabled_for_session_msg'), {
-                "type": "warning"
-            });
+            $.growl($.t('plugins_disabled_for_session_msg'), growlOptions);
         } else if (NRS.settings["enable_plugins"] == "0") {
-            $.growl($.t('plugins_disabled_for_account_msg'), {
-                "type": "warning"
-            });
+            $.growl($.t('plugins_disabled_for_account_msg'), growlOptions);
         } else {
             var msg;
             if (NRS.numRunningPlugins == 1) {
@@ -313,9 +318,7 @@ var NRS = (function(NRS, $, undefined) {
                     'num': String(NRS.numRunningPlugins)
                 });
             }
-            $.growl(msg, {
-                "type": "success"
-            });
+            $.growl(msg, growlOptions);
         }
 
         NRS.loadPageHTMLTemplates();
