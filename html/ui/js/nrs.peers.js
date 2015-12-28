@@ -37,16 +37,17 @@ var NRS = (function(NRS, $) {
     function getPeerServicesLabel(services) {
         var servicesText = "";
         for (var i=0; i<services.length; i++) {
-            servicesText += services[i].substring(0, 1) + services[i].substring(services[i].length - 1) + ",";
+            var shortcut = services[i].substring(0, 1) + services[i].substring(services[i].length - 1);
+            servicesText += "<a data-toggle='tooltip' data-placement='top' data-container='body' title='" + $.t(services[i].toLowerCase() + "_service") + "'>" + shortcut + "</a>";
+            if (i < services.length - 1) {
+                servicesText += "<span> , </span>";
+            }
         }
-        if (servicesText.length == 0) {
-            return servicesText;
-        }
-        return servicesText.substring(0, servicesText.length - 1);
+        return servicesText;
     }
 
     NRS.pages.peers = function() {
-		NRS.sendRequest("getPeers+", {
+        NRS.sendRequest("getPeers+", {
 			"active": "true",
 			"includePeerInfo": "true"
 		}, function(response) {
@@ -89,7 +90,6 @@ var NRS = (function(NRS, $) {
 					rows += (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td>";
 					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>";
 					rows += "<td>" + getPeerServicesLabel(peer.services) + "</td>";
-
 					rows += "<td style='text-align:right;'>";
 					rows += "<a class='btn btn-xs btn-default' href='#' ";
 					if (NRS.needsAdminPassword) {
@@ -110,8 +110,6 @@ var NRS = (function(NRS, $) {
 				$("#peers_up_to_date").html(upToDate + '/' + activePeers).removeClass("loading_dots");
 
 				NRS.dataLoaded(rows);
-				
-				
 			} else {
 				$("#peers_uploaded_volume, #peers_downloaded_volume, #peers_connected, #peers_up_to_date").html("0").removeClass("loading_dots");
 				NRS.dataLoaded();

@@ -201,7 +201,9 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.positionAssetSidebar();
 			}
 		});
-
+		// Enable all static tooltip components
+		// tooltip components generated dynamically (for tables cells for example)
+		// has to be enabled by activating this code on the specific widget
 		$("[data-toggle='tooltip']").tooltip();
 
 		$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
