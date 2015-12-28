@@ -66,6 +66,12 @@ cd -
 zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.log \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
 rm -rf nxt
 
+echo creating full changelog
+echo -e "${PACKAGE}:\n" > changelog-full.txt
+cat changelogs/${CHANGELOG} >> changelog-full.txt
+echo -e "\n--------------------------------------------------------------------------------" >> changelog-full.txt
+cat changelogs/changelog.txt >> changelog-full.txt
+
 #echo signing zip package
 #../jarsigner.sh ${PACKAGE}.zip
 

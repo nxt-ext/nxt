@@ -871,6 +871,7 @@ var NRS = (function (NRS, $, undefined) {
 		} else {
 			$el = $("#" + NRS.currentPage + "_table");
 			$el.find("tbody").empty().append(data);
+            $el.find('[data-toggle="tooltip"]').tooltip();
 		}
 
 		NRS.dataLoadFinished($el);
