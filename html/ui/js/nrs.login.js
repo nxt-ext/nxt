@@ -308,7 +308,7 @@ var NRS = (function(NRS, $, undefined) {
                     }
 
                     $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
-                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-xs"));
+                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-info btn-xs"));
                     $("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
 
 					var passwordNotice = "";
