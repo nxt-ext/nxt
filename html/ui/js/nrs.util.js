@@ -826,7 +826,7 @@ var NRS = (function (NRS, $, undefined) {
         if (!text) {
             text = height;
         }
-        return "<a href='#' class='show_block_modal_action' data-transaction='" + String(height).escapeHTML() + "'>"
+        return "<a href='#' class='show_block_modal_action' data-block='" + String(height).escapeHTML() + "'>"
             + (isEscapedText ? text : String(text).escapeHTML()) + "</a>";
     };
 
