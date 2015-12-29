@@ -814,12 +814,20 @@ var NRS = (function (NRS, $, undefined) {
             "' class='show_account_modal_action user-info" + clazz + "'>" + accountTitle + "</a>";
     };
 
-    NRS.getTransactionLink = function(id, text, isEscapedtext) {
+    NRS.getTransactionLink = function(id, text, isEscapedText) {
         if (!text) {
             text = id;
         }
         return "<a href='#' class='show_transaction_modal_action' data-transaction='" + String(id).escapeHTML() + "'>"
-            + (isEscapedtext ? text : String(text).escapeHTML()) + "</a>";
+            + (isEscapedText ? text : String(text).escapeHTML()) + "</a>";
+    };
+
+    NRS.getBlockLink = function(height, text, isEscapedText) {
+        if (!text) {
+            text = height;
+        }
+        return "<a href='#' class='show_block_modal_action' data-transaction='" + String(height).escapeHTML() + "'>"
+            + (isEscapedText ? text : String(text).escapeHTML()) + "</a>";
     };
 
     NRS.getAccountTitle = function (object, acc) {

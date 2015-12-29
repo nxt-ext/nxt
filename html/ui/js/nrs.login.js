@@ -309,6 +309,7 @@ var NRS = (function(NRS, $, undefined) {
 
                     $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
                     $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-xs"));
+                    $("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
 
 					var passwordNotice = "";
 
@@ -323,11 +324,6 @@ var NRS = (function(NRS, $, undefined) {
 							"type": "danger"
 						});
 					}
-
-					if (NRS.state) {
-						NRS.checkBlockHeight();
-					}
-
 					NRS.getAccountInfo(true, function() {
 						if (NRS.accountInfo.currentLeasingHeightFrom) {
 							NRS.isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);
