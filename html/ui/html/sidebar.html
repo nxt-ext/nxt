@@ -29,14 +29,14 @@
                     </ul>
                 </div>
                 <a id="sideBalance" data-target="#account_details_modal" data-toggle="modal" href="#"><span id="account_balance_sidebar" class="loading_dots"><span>.</span><span>.</span><span>.</span></span> NXT</a>
-                <a href="#" data-page="peers" id="connected_indicator" class="connected goto-page" style="display:none;font-size:13px;"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="connected">Connected</span></a>
-                <a href="#" id="forging_indicator" class="forging" style="display:none;font-size:13px;">
-                    <i class="fa fa-circle" id="forging_status" data-toggle="tooltip" title="" data-placement="bottom" style="font-size:12px;"></i> <span data-18n="forging">Forging</span>
+                <a href="#" data-page="peers" id="connected_indicator" class="connected goto-page" style="display:none;font-size:13px;" data-toggle="tooltip" data-placement="top" title="CONNECTION" data-i18n="[title]server_connection_status"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="connected">Connected</span></a>
+                <a href="#" id="forging_indicator" class="forging" data-toggle="tooltip" title="" data-placement="right" style="display:none;font-size:13px;">
+                    <i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="forging">Forging</span>
                 </a>
-                <div style="margin-top:8px;"></div>
+                <div style="margin-top:8px;">
                     <span style="font-size:12px;" data-i18n="height">HEIGHT</span>
                     <div class="badge" style="background-color: #fff;padding:4px;">
-                        <span id="sidebar_block_link"></span>
+                        <span id="sidebar_block_link" data-toggle="tooltip" data-placement="bottom" title="HEIGHT" data-i18n="[title]current_blockchain_height"></span>
                     </div>
                 </div>
             </div>

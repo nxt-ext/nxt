@@ -105,7 +105,7 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.updateForgingTooltip = function(tooltip) {
-        $("#forging_status").attr('title', tooltip).tooltip('fixTitle');
+        $("#forging_indicator").attr('title', tooltip).tooltip('fixTitle');
     };
 
     function setForgingIndicatorStatus(status) {
@@ -119,7 +119,7 @@ var NRS = (function(NRS, $) {
 
     NRS.updateForgingStatus = function(secretPhrase) {
         var status = NRS.forgingStatus;
-        var tooltip = $("#forging_status").attr('title');
+        var tooltip = $("#forging_indicator").attr('title');
         if (!NRS.accountInfo.publicKey) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_no_public_key");
