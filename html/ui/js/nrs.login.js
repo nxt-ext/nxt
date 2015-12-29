@@ -309,6 +309,9 @@ var NRS = (function(NRS, $, undefined) {
 
                     $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
                     $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-info btn-xs"));
+					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
+						NRS.lastBlockHeight = NRS.state.numberOfBlocks - 1;
+					}
                     $("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
 
 					var passwordNotice = "";
