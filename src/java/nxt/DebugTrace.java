@@ -604,6 +604,15 @@ public final class DebugTrace {
             }
             map.put("asset quantity", String.valueOf(quantity));
             map.put("event", "asset transfer");
+        } else if (attachment instanceof Attachment.ColoredCoinsAssetDelete) {
+            if (isRecipient) {
+                return Collections.emptyMap();
+            }
+            Attachment.ColoredCoinsAssetDelete assetDelete = (Attachment.ColoredCoinsAssetDelete)attachment;
+            map.put("asset", Long.toUnsignedString(assetDelete.getAssetId()));
+            long quantity = assetDelete.getQuantityQNT();
+            map.put("asset quantity", String.valueOf(-quantity));
+            map.put("event", "asset delete");
         } else if (attachment instanceof Attachment.ColoredCoinsOrderCancellation) {
             Attachment.ColoredCoinsOrderCancellation orderCancellation = (Attachment.ColoredCoinsOrderCancellation)attachment;
             map.put("order", Long.toUnsignedString(orderCancellation.getOrderId()));
