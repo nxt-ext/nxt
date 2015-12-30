@@ -67,16 +67,12 @@ public class TestCurrencyExchange extends BlockchainTest {
         Logger.logDebugMessage("currencyExchangeResponse:" + currencyExchangeResponse);
         generateBlock();
 
-        // This is tricky, the buyer committed to invest 106*200=21200 NXT
-        // However the price was 105 so he got only 201 units 21105 NXT
-        // The seller now has 201 less confirmed units but its unconfirmed units did not change because
-        // the offer is still valid so he is still committed to sell 500-201=299 units
         AccountCurrencyBalance afterBuySellerBalance = new AccountCurrencyBalance(ALICE.getSecretPhrase(), currencyId);
-        Assert.assertEquals(new AccountCurrencyBalance(2010, 201 * 105, 0, -201),
-                afterBuySellerBalance.diff(afterOfferSellerBalance)); // TODO need to confirm the 2010 unconfirmed balance diff
+        Assert.assertEquals(new AccountCurrencyBalance(2000, 200 * 105, 0, -200),
+                afterBuySellerBalance.diff(afterOfferSellerBalance));
 
         AccountCurrencyBalance afterBuyBuyerBalance = new AccountCurrencyBalance(BOB.getSecretPhrase(), currencyId);
-        Assert.assertEquals(new AccountCurrencyBalance(-201*105 - Constants.ONE_NXT, -201*105 - Constants.ONE_NXT, 201, 201),
+        Assert.assertEquals(new AccountCurrencyBalance(-200*105 - Constants.ONE_NXT, -200*105 - Constants.ONE_NXT, 200, 200),
                 afterBuyBuyerBalance.diff(initialBuyerBalance));
 
         apiCall = new APICall.Builder("getAllExchanges").build();
@@ -85,7 +81,7 @@ public class TestCurrencyExchange extends BlockchainTest {
         JSONArray exchanges = (JSONArray)getAllExchangesResponse.get("exchanges");
         JSONObject exchange = (JSONObject) exchanges.get(0);
         Assert.assertEquals("105", exchange.get("rateNQT"));
-        Assert.assertEquals("201", exchange.get("units"));
+        Assert.assertEquals("200", exchange.get("units"));
         Assert.assertEquals(currencyId, exchange.get("currency"));
         Assert.assertEquals(initialSellerBalance.getAccountId(), Convert.parseUnsignedLong((String)exchange.get("seller")));
         Assert.assertEquals(initialBuyerBalance.getAccountId(), Convert.parseUnsignedLong((String)exchange.get("buyer")));
