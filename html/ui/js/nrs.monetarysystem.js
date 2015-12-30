@@ -460,9 +460,7 @@ var NRS = (function (NRS, $, undefined) {
                 var type = exchangeRequest.subtype == 5 ? "buy" : "sell";
                 rows += "<tr class=confirmed>" +
                     "<td>" + NRS.getTransactionLink(exchangeRequest.transaction, NRS.getTransactionStatusIcon(exchangeRequest), true) + "</td>" +
-                    "<td>" +
-                        "<a href='#' class='block show_block_modal_action' data-block='" + String(exchangeRequest.height).escapeHTML() + "'>" + exchangeRequest.height + "</a>" +
-                    "</td>" +
+                    "<td>" + NRS.getBlockLink(exchangeRequest.height) + "</td>" +
                     "<td>" + type + "</td>" +
                     "<td>" + NRS.convertToQNTf(exchangeRequest.units, decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(exchangeRequest.rateNQT, decimals) + "</td>" +
