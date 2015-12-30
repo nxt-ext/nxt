@@ -804,6 +804,8 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                         if (foundAllData) {
                             processed.add(myTransaction);
                         }
+                        Db.db.clearCache();
+                        Db.db.commitTransaction();
                     }
                 }
                 Db.db.commitTransaction();
