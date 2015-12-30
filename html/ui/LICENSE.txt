@@ -1,4 +1,4 @@
-Copyright © 2013-2015 The Nxt core developers.
+Copyright © 2013-2016 The Nxt core developers.
 
 The license below applies to the client UI code only, as found under /html/ui.
 For the licensing conditions applicable to the server-side code, see the top
