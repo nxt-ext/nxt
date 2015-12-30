@@ -47,11 +47,6 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.handleInitialBlocks = function(response) {
-        var dashboardBlocksTable = $("#dashboard_blocks_table");
-        if (response.errorCode) {
-			NRS.dataLoadFinished(dashboardBlocksTable);
-			return;
-		}
 		NRS.blocks.push(response);
 		if (NRS.blocks.length < 10 && response.previousBlock) {
 			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
@@ -87,18 +82,8 @@ var NRS = (function(NRS, $) {
 					}
 				}
 			}
-
-			var rows = "";
-            var block;
-			for (var i = 0; i < NRS.blocks.length; i++) {
-				block = NRS.blocks[i];
-				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
-			}
-			block = NRS.blocks[0];
-			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
-			$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
-			dashboardBlocksTable.find("tbody").empty().append(rows);
-			NRS.dataLoadFinished(dashboardBlocksTable);
+			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(NRS.blocks[0].timestamp));
+			$(".nrs_current_block").empty().append(String(NRS.blocks[0].height).escapeHTML());
 		}
 	};
 
@@ -146,11 +131,6 @@ var NRS = (function(NRS, $) {
 
 	//we always update the dashboard page..
 	NRS.incoming.updateDashboardBlocks = function(newBlocks) {
-		var newBlockCount = newBlocks.length;
-		if (newBlockCount > 10) {
-			newBlocks = newBlocks.slice(0, 10);
-			newBlockCount = newBlocks.length;
-		}
         var timeDiff;
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state) {
@@ -199,25 +179,10 @@ var NRS = (function(NRS, $) {
 				NRS.setStateInterval(10);
 			}
 		}
-		var rows = "";
-		for (var i = 0; i < newBlockCount; i++) {
-			var block = newBlocks[i];
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
-		}
-
-        var dashboardBlocksTable = $("#dashboard_blocks_table");
-        if (newBlockCount == 1) {
-			dashboardBlocksTable.find("tbody tr:last").remove();
-		} else if (newBlockCount == 10) {
-			dashboardBlocksTable.find("tbody").empty();
-		} else {
-			dashboardBlocksTable.find("tbody tr").slice(10 - newBlockCount).remove();
-		}
 
 		block = NRS.blocks[0];
 		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
 		$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
-		dashboardBlocksTable.find("tbody").prepend(rows);
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
 		$("#dashboard_table").find("tr.confirmed td.confirmations").each(function() {
