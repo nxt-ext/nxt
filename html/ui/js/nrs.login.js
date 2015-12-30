@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -308,7 +308,11 @@ var NRS = (function(NRS, $, undefined) {
                     }
 
                     $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
-                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-xs"));
+                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-info btn-xs"));
+					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
+						NRS.lastBlockHeight = NRS.state.numberOfBlocks - 1;
+					}
+                    $("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
 
 					var passwordNotice = "";
 
@@ -323,11 +327,6 @@ var NRS = (function(NRS, $, undefined) {
 							"type": "danger"
 						});
 					}
-
-					if (NRS.state) {
-						NRS.checkBlockHeight();
-					}
-
 					NRS.getAccountInfo(true, function() {
 						if (NRS.accountInfo.currentLeasingHeightFrom) {
 							NRS.isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);

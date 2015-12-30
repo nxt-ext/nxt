@@ -1601,5 +1601,10 @@
   "hallmark_service": "Hallmarked Peer",
   "prunable_service": "Service Provider",
   "api_service": "Open API",
-  "api_ssl_service": "Open API over Https"
+  "api_ssl_service": "Open API over Https",
+  "help": "Help",
+  "unconfirmed_transactions_counter": "Number of unconfirmed transactions",
+  "current_blockchain_height": "Current Blockchain Height",
+  "server_connection_status": "Server Connection Status",
+  "cumulative_difficulty": "Cumulative Difficulty"
 }

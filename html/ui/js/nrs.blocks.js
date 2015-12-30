@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -134,7 +134,6 @@ var NRS = (function(NRS, $) {
 		if (blockHeight) {
 			NRS.lastBlockHeight = blockHeight;
 		}
-		//no checks needed at the moment
 	};
 
 	//we always update the dashboard page..
@@ -236,6 +235,10 @@ var NRS = (function(NRS, $) {
 				}));
 			}
 		});
+		var blockLink = $("#sidebar_block_link");
+		if (blockLink.length > 0) {
+			blockLink.html(NRS.getBlockLink(NRS.lastBlockHeight));
+		}
 	};
 
 	NRS.pages.blocks = function() {
