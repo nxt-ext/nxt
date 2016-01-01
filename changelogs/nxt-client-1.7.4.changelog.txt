@@ -59,5 +59,7 @@ The default value of includeCounts parameter in the searchDGSGoods API is now
 also false, this API was inadvertently missed when globally changing the
 defaults to false in the 1.6 branch.
 
+Various UI improvements.
+
 Updated Bouncy Castle library to version 1.54.
 
