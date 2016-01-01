@@ -43,7 +43,7 @@ var NRS = (function(NRS, $, undefined) {
                 entryDetails.holding_formatted_html = NRS.getTransactionLink(entry.holding);
                 delete entryDetails.holding;
             }
-            entryDetails.height_formatted_html = "<a href='#' class='show_block_modal_action' data-block='" + String(entry.height).escapeHTML() + "'>" + String(entry.height).escapeHTML() + "</a>";
+            entryDetails.height_formatted_html = NRS.getBlockLink(entry.height);
             delete entryDetails.block;
             delete entryDetails.height;
             if (entryDetails.isTransactionEvent) {

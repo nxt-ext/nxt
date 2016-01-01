@@ -308,7 +308,7 @@ var NRS = (function(NRS, $, undefined) {
                     }
 
                     $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
-                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-info btn-xs"));
+                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-default btn-xs"));
 					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
 						NRS.lastBlockHeight = NRS.state.numberOfBlocks - 1;
 					}

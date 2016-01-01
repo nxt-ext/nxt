@@ -98,13 +98,17 @@ public final class VerifyTraceFile {
                     String assetId = valueMap.get("asset");
                     issuedAssetQuantities.put(assetId, Long.parseLong(valueMap.get("asset quantity")));
                 }
-                if ("asset transfer".equals(event)) {
-                    if (Genesis.CREATOR_ID == Convert.parseUnsignedLong(accountId)) {
-                        String assetId = valueMap.get("asset");
-                        long deletedQuantity = Long.parseLong(valueMap.get("asset quantity"));
-                        long currentQuantity = issuedAssetQuantities.get(assetId);
-                        issuedAssetQuantities.put(assetId, currentQuantity - deletedQuantity);
-                    }
+                if ("asset transfer".equals(event) && Genesis.CREATOR_ID == Convert.parseUnsignedLong(accountId)) {
+                    String assetId = valueMap.get("asset");
+                    long deletedQuantity = Long.parseLong(valueMap.get("asset quantity"));
+                    long currentQuantity = issuedAssetQuantities.get(assetId);
+                    issuedAssetQuantities.put(assetId, currentQuantity - deletedQuantity);
+                }
+                if ("asset delete".equals(event)) {
+                    String assetId = valueMap.get("asset");
+                    long deletedQuantity = - Long.parseLong(valueMap.get("asset quantity"));
+                    long currentQuantity = issuedAssetQuantities.get(assetId);
+                    issuedAssetQuantities.put(assetId, currentQuantity - deletedQuantity);
                 }
                 Map<String,Map<String,Long>> accountCurrencyMap = accountCurrencyTotals.get(accountId);
                 if (accountCurrencyMap == null) {

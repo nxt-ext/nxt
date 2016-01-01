@@ -82,8 +82,8 @@ var NRS = (function(NRS, $, undefined) {
                         "<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "</td>" +
                         "<td>" + NRS.formatAmount(transaction.amount) + "</td>" +
                         "<td>" + NRS.formatAmount(transaction.fee) + "</td>" +
-                        "<td>" + NRS.getAccountLink(transaction, "recipient") + "</td>" +
                         "<td>" + NRS.getAccountLink(transaction, "sender") + "</td>" +
+                        "<td>" + NRS.getAccountLink(transaction, "recipient") + "</td>" +
                         "</tr>";
                     }
                 }
