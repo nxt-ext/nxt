@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -21,6 +21,7 @@ import nxt.util.Observable;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
 
@@ -54,7 +55,9 @@ public interface TransactionProcessor extends Observable<List<? extends Transact
 
     void processPeerTransactions(JSONObject request) throws NxtException.ValidationException;
 
+    void processLater(Collection<? extends Transaction> transactions);
+
     SortedSet<? extends Transaction> getCachedUnconfirmedTransactions(List<String> exclude);
 
-    List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException;
+    List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.NotValidException;
 }

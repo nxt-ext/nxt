@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -457,6 +457,8 @@ public class AccountLedger {
             PHASING_VOTE_CASTING(11, true),
             POLL_CREATION(12, true),
             VOTE_CASTING(13, true),
+            ACCOUNT_PROPERTY(56, true),
+            ACCOUNT_PROPERTY_DELETE(57, true),
         // TYPE_COLORED_COINS
             ASSET_ASK_ORDER_CANCELLATION(14, true),
             ASSET_ASK_ORDER_PLACEMENT(15, true),
@@ -480,6 +482,7 @@ public class AccountLedger {
             DIGITAL_GOODS_REFUND(31, true),
         // TYPE_ACCOUNT_CONTROL
             ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING(32, true),
+            ACCOUNT_CONTROL_PHASING_ONLY(55, true),
         // TYPE_CURRENCY
             CURRENCY_DELETION(33, true),
             CURRENCY_DISTRIBUTION(34, true),
@@ -497,7 +500,13 @@ public class AccountLedger {
             CURRENCY_UNDO_CROWDFUNDING(46, true),
         // TYPE_DATA
             TAGGED_DATA_UPLOAD(47, true),
-            TAGGED_DATA_EXTEND(48, true);
+            TAGGED_DATA_EXTEND(48, true),
+        // TYPE_SHUFFLING
+            SHUFFLING_REGISTRATION(51, true),
+            SHUFFLING_PROCESSING(52, true),
+            SHUFFLING_CANCELLATION(53, true),
+            SHUFFLING_DISTRIBUTION(54, true);
+
 
         /** Event code mapping */
         private static final Map<Integer, LedgerEvent> eventMap = new HashMap<>();

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -31,19 +31,19 @@ import java.util.List;
 public final class BaseTargetTest {
 
     private static final long MIN_BASE_TARGET = Constants.INITIAL_BASE_TARGET * 9 / 10;
-    private static final long MAX_BASE_TARGET = Constants.INITIAL_BASE_TARGET * 50;
+    private static final long MAX_BASE_TARGET = Constants.isTestnet ? Constants.MAX_BASE_TARGET : Constants.INITIAL_BASE_TARGET * 50;
 
-    private static final int MIN_BLOCKTIME_LIMIT = 54;
-    private static final int MAX_BLOCKTIME_LIMIT = 66;
+    private static final int MIN_BLOCKTIME_LIMIT = 53;
+    private static final int MAX_BLOCKTIME_LIMIT = 67;
 
-    private static final int GAMMA = 70;
+    private static final int GAMMA = 64;
 
     private static final int START_HEIGHT = 170000;
 
     private static final boolean USE_EWMA = false;
     private static final int EWMA_N = 8;
-    private static final int SMA_N = 6;
-    private static final int FREQUENCY = 3;
+    private static final int SMA_N = 3;
+    private static final int FREQUENCY = 2;
 
     private static long calculateBaseTarget(long previousBaseTarget, long blocktimeEMA) {
         long baseTarget;
@@ -102,7 +102,9 @@ public final class BaseTargetTest {
 
             int count = 0;
 
-            try (Connection con = DriverManager.getConnection("jdbc:h2:./nxt_db/nxt;DB_CLOSE_ON_EXIT=FALSE;MVCC=TRUE", "sa", "sa");
+            String dbLocation = Constants.isTestnet ? "nxt_test_db" : "nxt_db";
+
+            try (Connection con = DriverManager.getConnection("jdbc:h2:./" + dbLocation + "/nxt;DB_CLOSE_ON_EXIT=FALSE;MVCC=TRUE", "sa", "sa");
                  PreparedStatement selectBlocks = con.prepareStatement("SELECT * FROM block WHERE height > " + height + " ORDER BY db_id ASC");
                  ResultSet rs = selectBlocks.executeQuery()) {
 
@@ -144,7 +146,9 @@ public final class BaseTargetTest {
                     }
                     testBlocktimeSMA = testBlocktimeSMA / testBlocktimes.size();
 
-                    if (height % FREQUENCY == 0) {
+                    if (testBlocktimes.size() < SMA_N) {
+                        testBaseTarget = baseTarget;
+                    } else if ((height - 1) % FREQUENCY == 0) {
                         testBaseTarget = calculateBaseTarget(previousTestBaseTarget, USE_EWMA ? testBlocktimeEMA : testBlocktimeSMA);
                     } else {
                         testBaseTarget = previousTestBaseTarget;
@@ -196,8 +200,8 @@ public final class BaseTargetTest {
             Logger.logMessage("Max test blocktime " + maxTestBlocktime);
             Logger.logMessage("Min blocktime " + minBlocktime);
             Logger.logMessage("Min test blocktime " + minTestBlocktime);
-            Logger.logMessage("Average blocktime " + totalBlocktime / count);
-            Logger.logMessage("Average test blocktime " + totalTestBlocktime / count);
+            Logger.logMessage("Average blocktime " + ((double)totalBlocktime) / count);
+            Logger.logMessage("Average test blocktime " + ((double)totalTestBlocktime) / count);
             Logger.logMessage("Standard deviation of blocktime " + Math.sqrt(S / count));
             Logger.logMessage("Standard deviation of test blocktime " + Math.sqrt(testS / count));
 

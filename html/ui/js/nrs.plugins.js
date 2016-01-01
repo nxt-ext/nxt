@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -296,14 +296,19 @@ var NRS = (function(NRS, $, undefined) {
                 NRS.loadPlugin(pluginId);
             }
         });
+        var growlOptions = {
+            type: "warning",
+            position: {
+                from: "bottom",
+                align: "right"
+            },
+            offset: 20,
+            offsetRight: 20
+        };
         if (NRS.disablePluginsDuringSession) {
-            $.growl($.t('plugins_disabled_for_session_msg'), {
-                "type": "warning"
-            });
+            $.growl($.t('plugins_disabled_for_session_msg'), growlOptions);
         } else if (NRS.settings["enable_plugins"] == "0") {
-            $.growl($.t('plugins_disabled_for_account_msg'), {
-                "type": "warning"
-            });
+            $.growl($.t('plugins_disabled_for_account_msg'), growlOptions);
         } else {
             var msg;
             if (NRS.numRunningPlugins == 1) {
@@ -313,9 +318,7 @@ var NRS = (function(NRS, $, undefined) {
                     'num': String(NRS.numRunningPlugins)
                 });
             }
-            $.growl(msg, {
-                "type": "success"
-            });
+            $.growl(msg, growlOptions);
         }
 
         NRS.loadPageHTMLTemplates();
@@ -339,7 +342,8 @@ var NRS = (function(NRS, $, undefined) {
 
         var websiteHTML = "&nbsp;";
         if (manifest) {
-            websiteHTML = "<a href='" + encodeURI(String(manifest['infoUrl'])) + "' target='_blank'><span>" + $.t('website') + "</span></a>";
+            var uri = encodeURI(String(manifest['infoUrl']));
+            websiteHTML = "<a href='" + uri + "' target='_blank'><span>" + $.t('website') + "</span></a>";
         }
         html += "<td>" + websiteHTML + "</td>";
 

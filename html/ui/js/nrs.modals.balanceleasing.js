@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -24,7 +24,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
     function setLeaseBalanceHelp(period) {
-        var days = Math.round(period / 900);
+        var days = Math.round(period / (NRS.lastBlockHeight < 621000 ? 800 : 1440));
         $("#lease_balance_help").html($.t("lease_balance_help_var", {
             "blocks": String(period).escapeHTML(),
             "days": String(Math.round(days)).escapeHTML()
@@ -34,12 +34,12 @@ var NRS = (function(NRS, $, undefined) {
 	$("#lease_balance_modal").on("show.bs.modal", function() {
         var leaseBalancePeriod = $("#lease_balance_period");
         leaseBalancePeriod.attr('min', 1440);
-        leaseBalancePeriod.attr('max', NRS.constants.MAX_SHORT_JAVA);
+        leaseBalancePeriod.attr('max', NRS.constants.MAX_UNSIGNED_SHORT_JAVA);
 		setLeaseBalanceHelp(NRS.constants.MAX_SHORT_JAVA);
 	});
 
     $("#lease_balance_period").on("change", function() {
-		if (this.value > NRS.constants.MAX_SHORT_JAVA) {
+		if (this.value > NRS.constants.MAX_UNSIGNED_SHORT_JAVA) {
 			$("#lease_balance_help").html($.t("error_lease_balance_period"));
 		} else {
             setLeaseBalanceHelp(this.value);

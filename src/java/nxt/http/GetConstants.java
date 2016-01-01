@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -20,7 +20,10 @@ import nxt.Constants;
 import nxt.CurrencyMinting;
 import nxt.CurrencyType;
 import nxt.Genesis;
+import nxt.HoldingType;
 import nxt.PhasingPoll;
+import nxt.Shuffling;
+import nxt.ShufflingParticipant;
 import nxt.TransactionType;
 import nxt.VoteWeighting;
 import nxt.crypto.HashFunction;
@@ -48,7 +51,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 response.put("genesisAccountId", Long.toUnsignedString(Genesis.CREATOR_ID));
                 response.put("epochBeginning", Constants.EPOCH_BEGINNING);
                 response.put("maxBlockPayloadLength", Constants.MAX_PAYLOAD_LENGTH);
-                response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH);
+                response.put("maxArbitraryMessageLength", Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2);
 
                 JSONObject transactionJSON = new JSONObject();
                 JSONObject transactionSubTypesJSON = new JSONObject();
@@ -112,6 +115,8 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 }
                 response.put("phasingHashAlgorithms", phasingHashFunctions);
 
+                response.put("maxPhasingDuration", Constants.MAX_PHASING_DURATION);
+
                 JSONObject mintingHashFunctions = new JSONObject();
                 for (HashFunction hashFunction : CurrencyMinting.acceptedHashFunctions) {
                     mintingHashFunctions.put(hashFunction.toString(), hashFunction.getId());
@@ -139,6 +144,24 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                     requestType.put("requirePassword", handler.requirePassword());
                 }
                 response.put("requestTypes", requestTypes);
+
+                JSONObject holdingTypes = new JSONObject();
+                for (HoldingType holdingType : HoldingType.values()) {
+                    holdingTypes.put(holdingType.toString(), holdingType.getCode());
+                }
+                response.put("holdingTypes", holdingTypes);
+
+                JSONObject shufflingStages = new JSONObject();
+                for (Shuffling.Stage stage : Shuffling.Stage.values()) {
+                    shufflingStages.put(stage.toString(), stage.getCode());
+                }
+                response.put("shufflingStages", shufflingStages);
+
+                JSONObject shufflingParticipantStates = new JSONObject();
+                for (ShufflingParticipant.State state : ShufflingParticipant.State.values()) {
+                    shufflingParticipantStates.put(state.toString(), state.getCode());
+                }
+                response.put("shufflingParticipantStates", shufflingParticipantStates);
 
                 CONSTANTS = JSON.prepare(response);
             } catch (Exception e) {

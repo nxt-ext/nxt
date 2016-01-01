@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -199,20 +199,14 @@ var NRS = (function(NRS, $, undefined) {
 
 		$("#create_poll_asset_id_group").css("display", "none");
 		$("#create_poll_ms_currency_group").css("display", "none");
+		$("#shuffling_asset_id_group").css("display", "none");
+		$("#shuffling_ms_currency_group").css("display", "none");
         var pollTypeGroup = $("#create_poll_type_group");
         pollTypeGroup.removeClass("col-xs-6").addClass("col-xs-12");
 		pollTypeGroup.removeClass("col-sm-6").addClass("col-sm-12");
 		pollTypeGroup.removeClass("col-md-6").addClass("col-md-12");
 
 		$(this).find(".tx-modal-approve").empty();
-		var $feeInput = $(this).find("input[name=feeNXT]");
-		if ($feeInput.length) {
-			var defaultFee = $feeInput.data("default");
-			if (!defaultFee) {
-				defaultFee = 1;
-			}
-			$(this).find(".advanced_fee").html(NRS.formatAmount(NRS.convertToNQT(defaultFee)) + " NXT");
-		}
 		NRS.showedFormWarning = false;
 	});
 
@@ -235,20 +229,17 @@ var NRS = (function(NRS, $, undefined) {
 		$modal.modal("hide");
 	};
 
-	$("input[name=feeNXT]").on("change", function() {
-		var $modal = $(this).closest(".modal");
-		var $feeInfo = $modal.find(".advanced_fee");
-		if ($feeInfo.length) {
-			$feeInfo.html(NRS.formatAmount(NRS.convertToNQT($(this).val())) + " NXT");
-		}
-	});
-
 	$(".advanced_info a").on("click", function(e) {
 		e.preventDefault();
 		var $modal = $(this).closest(".modal");
 		var text = $(this).text().toLowerCase();
-		if (text == $.t("advanced")) {
+		if (text == $.t("advanced").toLowerCase()) {
 			var not = ".optional_note, .optional_do_not_sign, .optional_public_key";
+			var requestType = $modal.find('input[name="request_type"]').val();
+			if (requestType != "approveTransaction"
+				&& NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+				not += ", .approve_modal";
+			}
 			$modal.find(".advanced").not(not).fadeIn();
 		} else {
 			$modal.find(".advanced").hide();
@@ -264,7 +255,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 
-		if (text == $.t("advanced")) {
+		if (text == $.t("advanced").toLowerCase()) {
 			$(this).text($.t("basic"));
 		} else {
 			$(this).text($.t("advanced"));

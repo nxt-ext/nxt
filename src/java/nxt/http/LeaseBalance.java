@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -30,13 +30,13 @@ public final class LeaseBalance extends CreateTransaction {
     static final LeaseBalance instance = new LeaseBalance();
 
     private LeaseBalance() {
-        super(new APITag[] {APITag.FORGING, APITag.CREATE_TRANSACTION}, "period", "recipient");
+        super(new APITag[] {APITag.FORGING, APITag.ACCOUNT_CONTROL, APITag.CREATE_TRANSACTION}, "period", "recipient");
     }
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        short period = (short)ParameterParser.getInt(req, "period", Constants.LEASING_DELAY, Short.MAX_VALUE, true);
+        int period = ParameterParser.getInt(req, "period", Constants.LEASING_DELAY, 65535, true);
         Account account = ParameterParser.getSenderAccount(req);
         long recipient = ParameterParser.getAccountId(req, "recipient", true);
         Account recipientAccount = Account.getAccount(recipient);

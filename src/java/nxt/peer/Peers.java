@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -22,6 +22,7 @@ import nxt.Constants;
 import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
+import nxt.http.API;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
@@ -257,6 +258,14 @@ public final class Peers {
         json.put("shareAddress", Peers.shareMyAddress);
         if (!Constants.ENABLE_PRUNING && Constants.INCLUDE_EXPIRED_PRUNABLE) {
             servicesList.add(Peer.Service.PRUNABLE);
+        }
+        if (API.openAPIPort > 0) {
+            json.put("apiPort", API.openAPIPort);
+            servicesList.add(Peer.Service.API);
+        }
+        if (API.openAPISSLPort > 0) {
+            json.put("apiSSLPort", API.openAPISSLPort);
+            servicesList.add(Peer.Service.API_SSL);
         }
         long services = 0;
         for (Peer.Service service : servicesList) {
@@ -660,7 +669,7 @@ public final class Peers {
             // Load the current database entries and map announced address to database entry
             //
             List<PeerDb.Entry> oldPeers = PeerDb.loadPeers();
-            Map<String, PeerDb.Entry> oldMap = new HashMap<>();
+            Map<String, PeerDb.Entry> oldMap = new HashMap<>(oldPeers.size());
             oldPeers.forEach(entry -> oldMap.put(entry.getAddress(), entry));
             //
             // Create the current peer map (note that there can be duplicate peer entries with

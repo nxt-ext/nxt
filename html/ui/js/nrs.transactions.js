@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -677,8 +677,8 @@ var NRS = (function(NRS, $, undefined) {
 
 		var typeIndex = $('#transactions_type_navi').find('li.active a').attr('data-transaction-type');
 		if (typeIndex && typeIndex != "unconfirmed" && typeIndex != "all_unconfirmed" && typeIndex != "phasing") {
-				var typeDict = NRS.transactionTypes[typeIndex];
-				$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
+			var typeDict = NRS.transactionTypes[typeIndex];
+			$.each(typeDict["subTypes"], function(subTypeIndex, subTypeDict) {
 				var subTitleString = $.t(subTypeDict.i18nKeyTitle);
 				html = '<li role="presentation"><a href="#" data-transaction-sub-type="' + subTypeIndex + '">';
 				html += subTypeDict.iconHTML + ' ' + subTitleString + '</a></li>';
@@ -939,6 +939,12 @@ var NRS = (function(NRS, $, undefined) {
 			"titleHTML": '<span data-i18n="account_ledger">Account Ledger</span>',
 			"type": 'PAGE',
 			"page": 'ledger'
+		};
+		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
+		options = {
+			"titleHTML": '<span data-i18n="account_properties">Account Properties</span>',
+			"type": 'PAGE',
+			"page": 'account_properties'
 		};
 		NRS.appendMenuItemToTSMenuItem(sidebarId, options);
 		options = {

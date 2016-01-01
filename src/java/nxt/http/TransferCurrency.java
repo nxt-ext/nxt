@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -43,12 +43,12 @@ public final class TransferCurrency extends CreateTransaction {
         long units = ParameterParser.getLong(req, "units", 0, Long.MAX_VALUE, true);
         Account account = ParameterParser.getSenderAccount(req);
 
-        if (units > account.getUnconfirmedCurrencyUnits(currency.getId())) {
+        Attachment attachment = new Attachment.MonetarySystemCurrencyTransfer(currency.getId(), units);
+        try {
+            return createTransaction(req, account, recipient, 0, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
             return NOT_ENOUGH_CURRENCY;
         }
-
-        Attachment attachment = new Attachment.MonetarySystemCurrencyTransfer(currency.getId(), units);
-        return createTransaction(req, account, recipient, 0, attachment);
     }
 
 }

@@ -7,7 +7,8 @@ QUnit.test("generatePublicKey", function (assert) {
 });
 
 QUnit.test("getPublicKey", function (assert) {
-    assert.equal(NRS.getPublicKey(converters.stringToHexString("12345678")), "a65ae5bc3cdaa9a0dd66f2a87459bbf663140060e99ae5d4dfe4dbef561fdd37", "public.key");
+    var publicKey1 = NRS.getPublicKey(converters.stringToHexString("12345678"));
+    assert.equal(publicKey1, "a65ae5bc3cdaa9a0dd66f2a87459bbf663140060e99ae5d4dfe4dbef561fdd37", "public.key");
 });
 
 QUnit.test("getAccountIdFromPublicKey", function (assert) {
@@ -17,4 +18,19 @@ QUnit.test("getAccountIdFromPublicKey", function (assert) {
 
 QUnit.test("getPrivateKey", function (assert) {
     assert.equal(NRS.getPrivateKey("12345678"), "e8797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f", "private.key");
+});
+
+QUnit.test("encryptDecryptNote", function (assert) {
+    var senderPrivateKey = "rshw9abtpsa2";
+    var senderPublicKeyHex = NRS.getPublicKey(converters.stringToHexString(senderPrivateKey));
+    var receiverPrivateKey = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
+    var receiverPublicKeyHex = NRS.getPublicKey(converters.stringToHexString(receiverPrivateKey));
+    var encryptedNote = NRS.encryptNote("MyMessage", { publicKey: receiverPublicKeyHex }, senderPrivateKey);
+    assert.equal(encryptedNote.message.length, 96, "message.length");
+    assert.equal(encryptedNote.nonce.length, 64, "nonce.length");
+    var decryptedNote = NRS.decryptNote(encryptedNote.message, {
+        nonce: encryptedNote.nonce,
+        publicKey: converters.hexStringToByteArray(senderPublicKeyHex)
+    }, receiverPrivateKey);
+    assert.equal(decryptedNote, "MyMessage", "decrypted");
 });

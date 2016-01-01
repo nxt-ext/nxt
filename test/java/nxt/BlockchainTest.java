@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -35,8 +35,12 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     protected static int baseHeight;
 
-    private static final String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
-    private static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
+    protected static String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
+    protected static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
+    protected static String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+    protected static String secretPhrase2 = "rshw9abtpsa2";
+    protected static String secretPhrase3 = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
+    protected static String secretPhrase4 = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
     private static final String aliceSecretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
     private static final String bobSecretPhrase2 = "rshw9abtpsa2";
@@ -57,6 +61,7 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
             properties.setProperty("nxt.testnetGuaranteedBalanceConfirmations", "1");
             properties.setProperty("nxt.testnetLeasingDelay", "1");
             properties.setProperty("nxt.disableProcessTransactionsThread", "true");
+            properties.setProperty("nxt.deleteFinishedShufflings", "false");
             AbstractForgingTest.init(properties);
             isNxtInitted = true;
         }
@@ -86,7 +91,9 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     @After
     public void destroy() {
-        AbstractForgingTest.shutdown();
+        TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions();
+        blockchainProcessor.popOffTo(baseHeight);
+        shutdown();
     }
 
     public static void generateBlock() {

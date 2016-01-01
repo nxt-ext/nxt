@@ -1,0 +1,65 @@
+This is the first stable release in the 1.7 series. It is a mandatory update
+for everyone. There is a hard fork scheduled for block 621000, estimated to
+occur around Jan 21, 2016, at which new features will be enabled. Nodes that
+do not update to 1.7.4 or later by this date will be left on a fork.
+
+On testnet, the hard fork block is already passed, and all new features are
+fully functional.
+
+There were incompatible API changes introduced in the 1.6 series. API users
+still on 1.5.15 and earlier should make sure to read the 1.6 series changelogs
+and forum announcements, before upgrading to 1.7. These changes do not affect
+regular end users who just run the NRS client on their desktop or VPS node.
+
+The new features and improvements in the 1.7 series have been documented in
+the 1.7.0e through 1.7.3e changelogs, available in the changelogs directory.
+
+
+Here is a high level summary of the new features to be enabled after the
+hard fork:
+
+Coin Shuffling, a fully decentralized coin mixing, to improve account privacy.
+
+Account Control for phased transactions, the Nxt equivalent of multisignature.
+
+Immediate release of certain types of phased transactions on approval.
+
+Improved block times, 60 s average, long block times now extremely unlikely.
+
+Account Properties, assigning arbitrary name/value metadata to user accounts.
+
+Singleton Assets, useful for representing single tradeable objects.
+
+Dynamic fees, proportional to the relative transaction size.
+
+Improved Exchange Booth UI.
+
+Data Cloud, adding a UI and multiple enhancements to the existing Tagged Data
+feature, to allow decentralized, censorship-free and tamper-proof publication
+and retrieval of small files, documents, or arbitrary data. This feature is
+not dependent on the hard fork and will be fully usable immediately on update
+to this release.
+
+
+Changes added since the 1.7.3e release:
+
+Added detectMimeType utility API, allowing auto-detection of the mime type of
+uploaded file or data, using the Apache Tika library.
+
+The uploadTaggedData API now uses such mime type auto-detection to determine
+the mime type of uploaded data when the user has not explicitly provided a
+type parameter. It also automatically sets the isText property to true for
+data of type text/plain only.
+
+Made the maximum permitted number of forgers or shufflers running at the same
+time configurable, default 100 each, using the nxt.maxNumberOfForgers and
+nxt.maxNumberOfShufflers properties.
+
+The default value of includeCounts parameter in the searchDGSGoods API is now
+also false, this API was inadvertently missed when globally changing the
+defaults to false in the 1.6 branch.
+
+Various UI improvements.
+
+Updated Bouncy Castle library to version 1.54.
+

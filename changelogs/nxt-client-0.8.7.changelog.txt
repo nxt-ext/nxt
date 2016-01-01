@@ -1,6 +1,0 @@
-Fixed unconfirmed balance calculations for the genesis block
-account.
-
-Fixed the display of the genesis account balance in the NRS UI.
-
-

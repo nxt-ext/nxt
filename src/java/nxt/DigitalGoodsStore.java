@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -21,6 +21,7 @@ import nxt.crypto.EncryptedData;
 import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
+import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 import nxt.db.VersionedValuesDbTable;
 import nxt.util.Convert;
@@ -34,7 +35,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public final class DigitalGoodsStore {
@@ -320,8 +320,7 @@ public final class DigitalGoodsStore {
             this.name = rs.getString("name");
             this.description = rs.getString("description");
             this.tags = rs.getString("tags");
-            Object[] array = (Object[])rs.getArray("parsed_tags").getArray();
-            this.parsedTags = Arrays.copyOf(array, array.length, String[].class);
+            this.parsedTags = DbUtils.getArray(rs, "parsed_tags", String[].class);
             this.quantity = rs.getInt("quantity");
             this.priceNQT = rs.getLong("price");
             this.delisted = rs.getBoolean("delisted");
@@ -338,7 +337,7 @@ public final class DigitalGoodsStore {
                 pstmt.setString(++i, this.name);
                 pstmt.setString(++i, this.description);
                 pstmt.setString(++i, this.tags);
-                pstmt.setObject(++i, this.parsedTags);
+                DbUtils.setArray(pstmt, ++i, this.parsedTags);
                 pstmt.setInt(++i, this.timestamp);
                 pstmt.setInt(++i, this.quantity);
                 pstmt.setLong(++i, this.priceNQT);

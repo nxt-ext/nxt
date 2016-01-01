@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -29,6 +29,7 @@ import nxt.DigitalGoodsStore;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
+import nxt.Shuffling;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
@@ -152,6 +153,17 @@ final class ParameterParser {
         return values;
     }
 
+    static byte[] getBytes(HttpServletRequest req, String name, boolean isMandatory) throws ParameterException {
+        String paramValue = Convert.emptyToNull(req.getParameter(name));
+        if (paramValue == null) {
+            if (isMandatory) {
+                throw new ParameterException(missing(name));
+            }
+            return Convert.EMPTY_BYTE;
+        }
+        return Convert.parseHexString(paramValue);
+    }
+
     static long getAccountId(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         return getAccountId(req, "account", isMandatory);
     }
@@ -252,8 +264,12 @@ final class ParameterParser {
     }
 
     static Currency getCurrency(HttpServletRequest req) throws ParameterException {
-        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", true));
-        if (currency == null) {
+        return getCurrency(req, true);
+    }
+
+    static Currency getCurrency(HttpServletRequest req, boolean isMandatory) throws ParameterException {
+        Currency currency = Currency.getCurrency(getUnsignedLong(req, "currency", isMandatory));
+        if (isMandatory && currency == null) {
             throw new ParameterException(UNKNOWN_CURRENCY);
         }
         return currency;
@@ -273,6 +289,14 @@ final class ParameterParser {
             throw new ParameterException(UNKNOWN_OFFER);
         }
         return offer;
+    }
+
+    static Shuffling getShuffling(HttpServletRequest req) throws ParameterException {
+        Shuffling shuffling = Shuffling.getShuffling(getUnsignedLong(req, "shuffling", true));
+        if (shuffling == null) {
+            throw new ParameterException(UNKNOWN_SHUFFLING);
+        }
+        return shuffling;
     }
 
     static long getQuantityQNT(HttpServletRequest req) throws ParameterException {
@@ -360,21 +384,35 @@ final class ParameterParser {
         return secretPhrase;
     }
 
-    static Account getSenderAccount(HttpServletRequest req) throws ParameterException {
-        Account account;
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        String publicKeyString = Convert.emptyToNull(req.getParameter("publicKey"));
-        if (secretPhrase != null) {
-            account = Account.getAccount(Crypto.getPublicKey(secretPhrase));
-        } else if (publicKeyString != null) {
+    static byte[] getPublicKey(HttpServletRequest req) throws ParameterException {
+        return getPublicKey(req, null);
+    }
+
+    static byte[] getPublicKey(HttpServletRequest req, String prefix) throws ParameterException {
+        String secretPhraseParam = prefix == null ? "secretPhrase" : (prefix + "SecretPhrase");
+        String publicKeyParam = prefix == null ? "publicKey" : (prefix + "PublicKey");
+        String secretPhrase = Convert.emptyToNull(req.getParameter(secretPhraseParam));
+        if (secretPhrase == null) {
             try {
-                account = Account.getAccount(Convert.parseHexString(publicKeyString));
+                byte[] publicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter(publicKeyParam)));
+                if (publicKey == null) {
+                    throw new ParameterException(missing(secretPhraseParam, publicKeyParam));
+                }
+                if (!Crypto.isCanonicalPublicKey(publicKey)) {
+                    throw new ParameterException(incorrect(publicKeyParam));
+                }
+                return publicKey;
             } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_PUBLIC_KEY);
+                throw new ParameterException(incorrect(publicKeyParam));
             }
         } else {
-            throw new ParameterException(MISSING_SECRET_PHRASE_OR_PUBLIC_KEY);
+            return Crypto.getPublicKey(secretPhrase);
         }
+    }
+
+    static Account getSenderAccount(HttpServletRequest req) throws ParameterException {
+        byte[] publicKey = getPublicKey(req);
+        Account account = Account.getAccount(publicKey);
         if (account == null) {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }
@@ -471,15 +509,18 @@ final class ParameterParser {
         return -1;
     }
 
-    static String getSearchQuery(HttpServletRequest req) {
+    static String getSearchQuery(HttpServletRequest req) throws ParameterException {
         String query = Convert.nullToEmpty(req.getParameter("query")).trim();
-        String tags = Convert.emptyToNull(req.getParameter("tag"));
-        if (tags != null && (tags = tags.trim()).length() > 0) {
+        String tags = Convert.nullToEmpty(req.getParameter("tag")).trim();
+        if (query.isEmpty() && tags.isEmpty()) {
+            throw new ParameterException(JSONResponses.missing("query", "tag"));
+        }
+        if (!tags.isEmpty()) {
             StringJoiner stringJoiner = new StringJoiner(" AND TAGS:", "TAGS:", "");
             for (String tag : Search.parseTags(tags, 0, Integer.MAX_VALUE, Integer.MAX_VALUE)) {
                 stringJoiner.add(tag);
             }
-            query = stringJoiner.toString() + (query.equals("") ? "" : (" AND (" + query + ")"));
+            query = stringJoiner.toString() + (query.isEmpty() ? "" : (" AND (" + query + ")"));
         }
         return query;
     }
@@ -584,10 +625,10 @@ final class ParameterParser {
         String name = Convert.emptyToNull(req.getParameter("name"));
         String description = Convert.nullToEmpty(req.getParameter("description"));
         String tags = Convert.nullToEmpty(req.getParameter("tags"));
-        String type = Convert.nullToEmpty(req.getParameter("type"));
+        String type = Convert.nullToEmpty(req.getParameter("type")).trim();
         String channel = Convert.nullToEmpty(req.getParameter("channel"));
         boolean isText = !"false".equalsIgnoreCase(req.getParameter("isText"));
-        String filename = Convert.nullToEmpty(req.getParameter("filename"));
+        String filename = Convert.nullToEmpty(req.getParameter("filename")).trim();
         String dataValue = Convert.emptyToNull(req.getParameter("data"));
         byte[] data;
         if (dataValue == null) {
@@ -600,8 +641,8 @@ final class ParameterParser {
                 data = fileData.getData();
                 // Depending on how the client submits the form, the filename, can be a regular parameter
                 // or encoded in the multipart form. If its not a parameter we take from the form
-                if (filename.equals("")) {
-                    filename = fileData.getFilename();
+                if (filename.isEmpty() && fileData.getFilename() != null) {
+                    filename = fileData.getFilename().trim();
                 }
                 if (name == null) {
                     name = filename;
@@ -612,6 +653,14 @@ final class ParameterParser {
             }
         } else {
             data = isText ? Convert.toBytes(dataValue) : Convert.parseHexString(dataValue);
+        }
+
+        String detectedMimeType = Search.detectMimeType(data, filename);
+        if (detectedMimeType != null) {
+            isText = detectedMimeType.equals("text/plain");
+            if (type.isEmpty()) {
+                type = detectedMimeType.substring(0, Math.min(detectedMimeType.length(), Constants.MAX_TAGGED_DATA_TYPE_LENGTH));
+            }
         }
 
         if (name == null) {
@@ -644,13 +693,11 @@ final class ParameterParser {
             throw new ParameterException(INCORRECT_DATA);
         }
 
-        filename = filename.trim();
         if (filename.length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {
             throw new ParameterException(INCORRECT_TAGGED_DATA_FILENAME);
         }
         return new Attachment.TaggedDataUpload(name, description, tags, type, channel, isText, filename, data);
     }
-
 
     private ParameterParser() {} // never
 

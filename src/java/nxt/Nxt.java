@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.env.DirProvider;
 import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
@@ -45,7 +46,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.6.2";
+    public static final String VERSION = "1.7.4";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -317,12 +318,14 @@ public final class Nxt {
                 setSystemProperties();
                 logSystemProperties();
                 runtimeMode.init();
+                Thread secureRandomInitThread = initSecureRandom();
                 setServerStatus("NXT Server - Loading database", null);
                 Db.init();
                 setServerStatus("NXT Server - Loading resources", null);
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
                 Account.init();
+                AccountRestrictions.init();
                 AccountLedger.init();
                 Alias.init();
                 Asset.init();
@@ -333,6 +336,7 @@ public final class Nxt {
                 PhasingPoll.init();
                 Trade.init();
                 AssetTransfer.init();
+                AssetDelete.init();
                 Vote.init();
                 PhasingVote.init();
                 Currency.init();
@@ -343,6 +347,8 @@ public final class Nxt {
                 CurrencyTransfer.init();
                 Exchange.init();
                 ExchangeRequest.init();
+                Shuffling.init();
+                ShufflingParticipant.init();
                 PrunableMessage.init();
                 TaggedData.init();
                 Peers.init();
@@ -356,11 +362,14 @@ public final class Nxt {
                     setTime(new Time.FasterTime(Math.max(getEpochTime(), Nxt.getBlockchain().getLastBlock().getTimestamp()), timeMultiplier));
                     Logger.logMessage("TIME WILL FLOW " + timeMultiplier + " TIMES FASTER!");
                 }
-
+                try {
+                    secureRandomInitThread.join(10000);
+                } catch (InterruptedException ignore) {}
+                testSecureRandom();
                 long currentTime = System.currentTimeMillis();
                 Logger.logMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
-                Logger.logMessage("Copyright © 2013-2015 The Nxt Core Developers.");
+                Logger.logMessage("Copyright © 2013-2016 The Nxt Core Developers.");
                 Logger.logMessage("Distributed under GPLv2, with ABSOLUTELY NO WARRANTY.");
                 if (API.getBrowserUri() != null) {
                     Logger.logMessage("Client UI is at " + API.getBrowserUri());
@@ -423,6 +432,30 @@ public final class Nxt {
         Logger.logDebugMessage(String.format("availableProcessors = %s", Runtime.getRuntime().availableProcessors()));
         Logger.logDebugMessage(String.format("maxMemory = %s", Runtime.getRuntime().maxMemory()));
         Logger.logDebugMessage(String.format("processId = %s", getProcessId()));
+    }
+
+    private static Thread initSecureRandom() {
+        Thread secureRandomInitThread = new Thread(() -> {
+            Crypto.getSecureRandom().nextBytes(new byte[1024]);
+        });
+        secureRandomInitThread.setDaemon(true);
+        secureRandomInitThread.start();
+        return secureRandomInitThread;
+    }
+
+    private static void testSecureRandom() {
+        Thread thread = new Thread(() -> {
+            Crypto.getSecureRandom().nextBytes(new byte[1024]);
+        });
+        thread.setDaemon(true);
+        thread.start();
+        try {
+            thread.join(2000);
+            if (thread.isAlive()) {
+                throw new RuntimeException("SecureRandom implementation too slow!!! " +
+                        "Install haveged if on linux, or set nxt.useStrongSecureRandom=false.");
+            }
+        } catch (InterruptedException ignore) {}
     }
 
     public static String getProcessId() {

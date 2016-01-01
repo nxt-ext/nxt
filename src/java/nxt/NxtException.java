@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -87,6 +87,30 @@ public abstract class NxtException extends Exception {
         }
 
         public NotValidException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+    }
+
+    public static class AccountControlException extends NotCurrentlyValidException {
+
+        public AccountControlException(String message) {
+            super(message);
+        }
+
+        public AccountControlException(String message, Throwable cause) {
+            super(message, cause);
+        }
+        
+    }
+
+    public static class InsufficientBalanceException extends NotCurrentlyValidException {
+
+        public InsufficientBalanceException(String message) {
+            super(message);
+        }
+
+        public InsufficientBalanceException(String message, Throwable cause) {
             super(message, cause);
         }
 

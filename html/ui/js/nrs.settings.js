@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -598,8 +598,7 @@ var NRS = (function(NRS, $) {
 		}
 
 		if (key == "24_hour_format") {
-			var $dashboard_dates = $("#dashboard_table a[data-timestamp], #dashboard_blocks_table td[data-timestamp]");
-
+			var $dashboard_dates = $("#dashboard_table").find("a[data-timestamp]");
 			$.each($dashboard_dates, function() {
 				$(this).html(NRS.formatTimestamp($(this).data("timestamp")));
 			});

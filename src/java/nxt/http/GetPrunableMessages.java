@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -21,7 +21,6 @@ import nxt.NxtException;
 import nxt.PrunableMessage;
 import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
-import nxt.db.DbUtils;
 import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -47,14 +46,12 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
         long readerAccountId = secretPhrase == null ? 0 : Account.getId(Crypto.getPublicKey(secretPhrase));
         long otherAccountId = ParameterParser.getAccountId(req, "otherAccount", false);
 
-        DbIterator<PrunableMessage> messages = otherAccountId == 0 ? PrunableMessage.getPrunableMessages(accountId, firstIndex, lastIndex)
-                : PrunableMessage.getPrunableMessages(accountId, otherAccountId, firstIndex, lastIndex);
-
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("prunableMessages", jsonArray);
 
-        try {
+        try (DbIterator<PrunableMessage> messages = otherAccountId == 0 ? PrunableMessage.getPrunableMessages(accountId, firstIndex, lastIndex)
+                : PrunableMessage.getPrunableMessages(accountId, otherAccountId, firstIndex, lastIndex)) {
             while (messages.hasNext()) {
                 PrunableMessage prunableMessage = messages.next();
                 if (prunableMessage.getBlockTimestamp() < timestamp) {
@@ -62,8 +59,6 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
                 }
                 jsonArray.add(JSONData.prunableMessage(prunableMessage, readerAccountId, secretPhrase));
             }
-        } finally {
-            DbUtils.close(messages);
         }
         return response;
     }

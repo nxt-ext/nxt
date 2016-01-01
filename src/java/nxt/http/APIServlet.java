@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -99,7 +99,7 @@ public final class APIServlet extends HttpServlet {
         }
 
         boolean requirePassword() {
-        	return false;
+            return false;
         }
 
         boolean allowRequiredBlockParameters() {
@@ -159,6 +159,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountLedger", GetAccountLedger.instance);
         map.put("getAccountLedgerEntry", GetAccountLedgerEntry.instance);
         map.put("getVoterPhasedTransactions", GetVoterPhasedTransactions.instance);
+        map.put("getLinkedPhasedTransactions", GetLinkedPhasedTransactions.instance);
         map.put("getPolls", GetPolls.instance);
         map.put("getAccountPhasedTransactions", GetAccountPhasedTransactions.instance);
         map.put("getAccountPhasedTransactionCount", GetAccountPhasedTransactionCount.instance);
@@ -168,6 +169,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountCurrencies", GetAccountCurrencies.instance);
         map.put("getAccountCurrencyCount", GetAccountCurrencyCount.instance);
         map.put("getAccountAssetCount", GetAccountAssetCount.instance);
+        map.put("getAccountProperties", GetAccountProperties.instance);
         map.put("sellAlias", SellAlias.instance);
         map.put("buyAlias", BuyAlias.instance);
         map.put("getAlias", GetAlias.instance);
@@ -189,6 +191,7 @@ public final class APIServlet extends HttpServlet {
         map.put("getBlocks", GetBlocks.instance);
         map.put("getBlockchainStatus", GetBlockchainStatus.instance);
         map.put("getBlockchainTransactions", GetBlockchainTransactions.instance);
+        map.put("getReferencingTransactions", GetReferencingTransactions.instance);
         map.put("getConstants", GetConstants.instance);
         map.put("getCurrency", GetCurrency.instance);
         map.put("getCurrencies", GetCurrencies.instance);
@@ -238,7 +241,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getAllTrades", GetAllTrades.instance);
         map.put("getAllExchanges", GetAllExchanges.instance);
         map.put("getAssetTransfers", GetAssetTransfers.instance);
+        map.put("getAssetDeletes", GetAssetDeletes.instance);
         map.put("getExpectedAssetTransfers", GetExpectedAssetTransfers.instance);
+        map.put("getExpectedAssetDeletes", GetExpectedAssetDeletes.instance);
         map.put("getCurrencyTransfers", GetCurrencyTransfers.instance);
         map.put("getExpectedCurrencyTransfers", GetExpectedCurrencyTransfers.instance);
         map.put("getTransaction", GetTransaction.instance);
@@ -257,6 +262,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getSellOffers", GetSellOffers.instance);
         map.put("getExpectedSellOffers", GetExpectedSellOffers.instance);
         map.put("getOffer", GetOffer.instance);
+        map.put("getAvailableToBuy", GetAvailableToBuy.instance);
+        map.put("getAvailableToSell", GetAvailableToSell.instance);
         map.put("getAskOrder", GetAskOrder.instance);
         map.put("getAskOrderIds", GetAskOrderIds.instance);
         map.put("getAskOrders", GetAskOrders.instance);
@@ -270,6 +277,12 @@ public final class APIServlet extends HttpServlet {
         map.put("getAccountExchangeRequests", GetAccountExchangeRequests.instance);
         map.put("getExpectedExchangeRequests", GetExpectedExchangeRequests.instance);
         map.put("getMintingTarget", GetMintingTarget.instance);
+        map.put("getAllShufflings", GetAllShufflings.instance);
+        map.put("getAccountShufflings", GetAccountShufflings.instance);
+        map.put("getAssignedShufflings", GetAssignedShufflings.instance);
+        map.put("getHoldingShufflings", GetHoldingShufflings.instance);
+        map.put("getShuffling", GetShuffling.instance);
+        map.put("getShufflingParticipants", GetShufflingParticipants.instance);
         map.put("getPrunableMessage", GetPrunableMessage.instance);
         map.put("getPrunableMessages", GetPrunableMessages.instance);
         map.put("getAllPrunableMessages", GetAllPrunableMessages.instance);
@@ -289,7 +302,17 @@ public final class APIServlet extends HttpServlet {
         map.put("sendMessage", SendMessage.instance);
         map.put("sendMoney", SendMoney.instance);
         map.put("setAccountInfo", SetAccountInfo.instance);
+        map.put("setAccountProperty", SetAccountProperty.instance);
+        map.put("deleteAccountProperty", DeleteAccountProperty.instance);
         map.put("setAlias", SetAlias.instance);
+        map.put("shufflingCreate", ShufflingCreate.instance);
+        map.put("shufflingRegister", ShufflingRegister.instance);
+        map.put("shufflingProcess", ShufflingProcess.instance);
+        map.put("shufflingVerify", ShufflingVerify.instance);
+        map.put("shufflingCancel", ShufflingCancel.instance);
+        map.put("startShuffler", StartShuffler.instance);
+        map.put("stopShuffler", StopShuffler.instance);
+        map.put("getShufflers", GetShufflers.instance);
         map.put("deleteAlias", DeleteAlias.instance);
         map.put("signTransaction", SignTransaction.instance);
         map.put("startForging", StartForging.instance);
@@ -333,11 +356,16 @@ public final class APIServlet extends HttpServlet {
         map.put("getLog", GetLog.instance);
         map.put("getStackTraces", GetStackTraces.instance);
         map.put("retrievePrunedData", RetrievePrunedData.instance);
+        map.put("retrievePrunedTransaction", RetrievePrunedTransaction.instance);
         map.put("setLogging", SetLogging.instance);
         map.put("shutdown", Shutdown.instance);
         map.put("trimDerivedTables", TrimDerivedTables.instance);
         map.put("hash", Hash.instance);
         map.put("fullHashToId", FullHashToId.instance);
+        map.put("setPhasingOnlyControl", SetPhasingOnlyControl.instance);
+        map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
+        map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
+        map.put("detectMimeType", DetectMimeType.instance);
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
@@ -365,7 +393,7 @@ public final class APIServlet extends HttpServlet {
 
             long startTime = System.currentTimeMillis();
 
-			if (! API.isAllowed(req.getRemoteHost())) {
+            if (! API.isAllowed(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
             }

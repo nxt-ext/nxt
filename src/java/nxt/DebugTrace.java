@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -85,6 +85,8 @@ public final class DebugTrace {
         Nxt.getBlockchainProcessor().addListener(debugTrace::traceBeforeAccept, BlockchainProcessor.Event.BEFORE_BLOCK_ACCEPT);
         Nxt.getBlockchainProcessor().addListener(debugTrace::trace, BlockchainProcessor.Event.BEFORE_BLOCK_APPLY);
         Nxt.getTransactionProcessor().addListener(transactions -> debugTrace.traceRelease(transactions.get(0)), TransactionProcessor.Event.RELEASE_PHASED_TRANSACTION);
+        Shuffling.addListener(debugTrace::traceShufflingDistribute, Shuffling.Event.SHUFFLING_DONE);
+        Shuffling.addListener(debugTrace::traceShufflingCancel, Shuffling.Event.SHUFFLING_CANCELLED);
         return debugTrace;
     }
 
@@ -99,6 +101,7 @@ public final class DebugTrace {
             "crowdfunding", "claim", "mint",
             "asset quantity", "currency units", "transaction", "lessee", "lessor guaranteed balance",
             "purchase", "purchase price", "purchase quantity", "purchase cost", "discount", "refund",
+            "shuffling",
             "sender", "recipient", "block", "timestamp"};
 
     private static final Map<String,String> headers = new HashMap<>();
@@ -205,7 +208,7 @@ public final class DebugTrace {
     private void trace(Block block) {
         for (Transaction transaction : block.getTransactions()) {
             long senderId = transaction.getSenderId();
-            if (transaction.getPhasing() != null) {
+            if (((TransactionImpl)transaction).attachmentIsPhased()) {
                 if (include(senderId)) {
                     log(getValues(senderId, transaction, false, true, false));
                 }
@@ -216,6 +219,9 @@ public final class DebugTrace {
                 log(getValues(senderId, transaction, transaction.getAttachment(), false));
             }
             long recipientId = transaction.getRecipientId();
+            if (transaction.getAmountNQT() > 0 && recipientId == 0) {
+                recipientId = Genesis.CREATOR_ID;
+            }
             if (include(recipientId)) {
                 log(getValues(recipientId, transaction, true, true, true));
                 log(getValues(recipientId, transaction, transaction.getAttachment(), true));
@@ -233,6 +239,49 @@ public final class DebugTrace {
         if (include(recipientId)) {
             log(getValues(recipientId, transaction, true, false, true));
             log(getValues(recipientId, transaction, transaction.getAttachment(), true));
+        }
+    }
+
+    private void traceShufflingDistribute(Shuffling shuffling) {
+        ShufflingParticipant.getParticipants(shuffling.getId()).forEach(shufflingParticipant -> {
+            if (include(shufflingParticipant.getAccountId())) {
+                log(getValues(shufflingParticipant.getAccountId(), shuffling, false));
+            }
+        });
+        for (byte[] recipientPublicKey : shuffling.getRecipientPublicKeys()) {
+            long recipientId = Account.getId(recipientPublicKey);
+            if (include(recipientId)) {
+                log(getValues(recipientId, shuffling, true));
+            }
+        }
+    }
+
+    private void traceShufflingCancel(Shuffling shuffling) {
+        long blamedAccountId = shuffling.getAssigneeAccountId();
+        if (blamedAccountId != 0 && include(blamedAccountId)) {
+            Map<String,String> map = getValues(blamedAccountId, false);
+            map.put("transaction fee", String.valueOf(-Constants.SHUFFLING_DEPOSIT_NQT));
+            map.put("event", "shuffling blame");
+            log(map);
+            long fee = Constants.SHUFFLING_DEPOSIT_NQT / 4;
+            int height = Nxt.getBlockchain().getHeight();
+            for (int i = 0; i < 3; i++) {
+                long generatorId = BlockDb.findBlockAtHeight(height - i - 1).getGeneratorId();
+                if (include(generatorId)) {
+                    Map<String, String> generatorMap = getValues(generatorId, false);
+                    generatorMap.put("generation fee", String.valueOf(fee));
+                    generatorMap.put("event", "shuffling blame");
+                    log(generatorMap);
+                }
+            }
+            fee = Constants.SHUFFLING_DEPOSIT_NQT - 3 * fee;
+            long generatorId = Nxt.getBlockchain().getLastBlock().getGeneratorId();
+            if (include(generatorId)) {
+                Map<String,String> generatorMap = getValues(generatorId, false);
+                generatorMap.put("generation fee", String.valueOf(fee));
+                generatorMap.put("event", "shuffling blame");
+                log(generatorMap);
+            }
         }
     }
 
@@ -381,6 +430,28 @@ public final class DebugTrace {
         return map;
     }
 
+    private Map<String,String> getValues(long accountId, Shuffling shuffling, boolean isRecipient) {
+        Map<String,String> map = getValues(accountId, false);
+        map.put("shuffling", Long.toUnsignedString(shuffling.getId()));
+        String amount = String.valueOf(isRecipient ? shuffling.getAmount() : -shuffling.getAmount());
+        String deposit = String.valueOf(isRecipient ? Constants.SHUFFLING_DEPOSIT_NQT : -Constants.SHUFFLING_DEPOSIT_NQT);
+        if (shuffling.getHoldingType() == HoldingType.NXT) {
+            map.put("transaction amount", amount);
+        } else if (shuffling.getHoldingType() == HoldingType.ASSET) {
+            map.put("asset quantity", amount);
+            map.put("asset", Long.toUnsignedString(shuffling.getHoldingId()));
+            map.put("transaction amount", deposit);
+        } else if (shuffling.getHoldingType() == HoldingType.CURRENCY) {
+            map.put("currency units", amount);
+            map.put("currency", Long.toUnsignedString(shuffling.getHoldingId()));
+            map.put("transaction amount", deposit);
+        } else {
+            throw new RuntimeException("Unsupported holding type " + shuffling.getHoldingType());
+        }
+        map.put("event", "shuffling distribute");
+        return map;
+    }
+
     private Map<String,String> getValues(long accountId, Transaction transaction, boolean isRecipient, boolean logFee, boolean logAmount) {
         long amount = transaction.getAmountNQT();
         long fee = transaction.getFeeNQT();
@@ -416,9 +487,36 @@ public final class DebugTrace {
         if (fee == 0) {
             return Collections.emptyMap();
         }
+        long totalBackFees = 0;
+        if (block.getHeight() > Constants.SHUFFLING_BLOCK) {
+            long[] backFees = new long[3];
+            for (Transaction transaction : block.getTransactions()) {
+                long[] fees = ((TransactionImpl)transaction).getBackFees();
+                for (int i = 0; i < fees.length; i++) {
+                    backFees[i] += fees[i];
+                }
+            }
+            for (int i = 0; i < backFees.length; i++) {
+                if (backFees[i] == 0) {
+                    break;
+                }
+                totalBackFees += backFees[i];
+                long previousGeneratorId = BlockDb.findBlockAtHeight(block.getHeight() - i - 1).getGeneratorId();
+                if (include(previousGeneratorId)) {
+                    Map<String,String> map = getValues(previousGeneratorId, false);
+                    map.put("effective balance", String.valueOf(Account.getAccount(previousGeneratorId).getEffectiveBalanceNXT()));
+                    map.put("generation fee", String.valueOf(backFees[i]));
+                    map.put("block", block.getStringId());
+                    map.put("event", "block");
+                    map.put("timestamp", String.valueOf(block.getTimestamp()));
+                    map.put("height", String.valueOf(block.getHeight()));
+                    log(map);
+                }
+            }
+        }
         Map<String,String> map = getValues(accountId, false);
         map.put("effective balance", String.valueOf(Account.getAccount(accountId).getEffectiveBalanceNXT()));
-        map.put("generation fee", String.valueOf(fee));
+        map.put("generation fee", String.valueOf(fee - totalBackFees));
         map.put("block", block.getStringId());
         map.put("event", "block");
         map.put("timestamp", String.valueOf(block.getTimestamp()));
@@ -506,6 +604,15 @@ public final class DebugTrace {
             }
             map.put("asset quantity", String.valueOf(quantity));
             map.put("event", "asset transfer");
+        } else if (attachment instanceof Attachment.ColoredCoinsAssetDelete) {
+            if (isRecipient) {
+                return Collections.emptyMap();
+            }
+            Attachment.ColoredCoinsAssetDelete assetDelete = (Attachment.ColoredCoinsAssetDelete)attachment;
+            map.put("asset", Long.toUnsignedString(assetDelete.getAssetId()));
+            long quantity = assetDelete.getQuantityQNT();
+            map.put("asset quantity", String.valueOf(-quantity));
+            map.put("event", "asset delete");
         } else if (attachment instanceof Attachment.ColoredCoinsOrderCancellation) {
             Attachment.ColoredCoinsOrderCancellation orderCancellation = (Attachment.ColoredCoinsOrderCancellation)attachment;
             map.put("order", Long.toUnsignedString(orderCancellation.getOrderId()));

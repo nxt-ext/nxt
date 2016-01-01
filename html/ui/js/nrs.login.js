@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -307,7 +307,12 @@ var NRS = (function(NRS, $, undefined) {
                         NRS.disablePluginsDuringSession = true;
                     }
 
-					$("#account_id").html(String(NRS.accountRS).escapeHTML()).css("font-size", "12px");
+                    $("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
+                    $("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-default btn-xs"));
+					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
+						NRS.lastBlockHeight = NRS.state.numberOfBlocks - 1;
+					}
+                    $("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
 
 					var passwordNotice = "";
 
@@ -322,11 +327,6 @@ var NRS = (function(NRS, $, undefined) {
 							"type": "danger"
 						});
 					}
-
-					if (NRS.state) {
-						NRS.checkBlockHeight();
-					}
-
 					NRS.getAccountInfo(true, function() {
 						if (NRS.accountInfo.currentLeasingHeightFrom) {
 							NRS.isLeased = (NRS.lastBlockHeight >= NRS.accountInfo.currentLeasingHeightFrom && NRS.lastBlockHeight <= NRS.accountInfo.currentLeasingHeightTo);
@@ -379,8 +379,6 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
 					}
 
-					NRS.setupClipboardFunctionality();
-
 					if (callback) {
 						callback();
 					}
@@ -426,7 +424,7 @@ var NRS = (function(NRS, $, undefined) {
 					/* Add accounts to dropdown for quick switching */
 					$("#account_id_dropdown .dropdown-menu .switchAccount").remove();
 					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
-						$("#account_id_dropdown .dropdown-menu").append("<li class='switchAccount' style='padding-left:2px;'><b>Switch Account to</b></li>");
+                        $("#account_id_dropdown").show();
 						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
 						$.each(accounts, function(index, account) {
 							if (account != ''){
@@ -440,7 +438,9 @@ var NRS = (function(NRS, $, undefined) {
 								);
 							}
 						});
-					}
+					} else {
+                        $("#account_id_dropdown").hide();
+                    }
 
 					NRS.getInitialTransactions();
 					NRS.updateApprovalRequests();

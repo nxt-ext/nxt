@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -47,11 +47,17 @@ var NRS = (function(NRS, $, undefined) {
 
             var blockDetails = $.extend({}, block);
             delete blockDetails.transactions;
-            delete blockDetails.previousBlockHash;
-            delete blockDetails.nextBlockHash;
-            delete blockDetails.generationSignature;
-            delete blockDetails.payloadHash;
-            delete blockDetails.block;
+            blockDetails.generator_formatted_html = NRS.getAccountLink(blockDetails, "generator");
+            delete blockDetails.generator;
+            delete blockDetails.generatorRS;
+            if (blockDetails.previousBlock) {
+                blockDetails.previous_block_formatted_html = NRS.getBlockLink(blockDetails.height - 1, blockDetails.previousBlock);
+                delete blockDetails.previousBlock;
+            }
+            if (blockDetails.nextBlock) {
+                blockDetails.next_block_formatted_html = NRS.getBlockLink(blockDetails.height + 1, blockDetails.nextBlock);
+                delete blockDetails.nextBlock;
+            }
             if (blockDetails.timestamp) {
                 blockDetails.blockGenerationTime = NRS.formatTimestamp(blockDetails.timestamp);
             }
@@ -72,12 +78,12 @@ var NRS = (function(NRS, $, undefined) {
                         transaction.amount = new BigInteger(transaction.amountNQT);
                         transaction.fee = new BigInteger(transaction.feeNQT);
                         rows += "<tr>" +
-                        "<td><a href='#' class='show_transaction_modal_action' data-transaction='" + String(transaction.transaction).escapeHTML() + "'>" + NRS.formatTimestamp(transaction.timestamp) + "</a></td>" +
+                        "<td>" + NRS.getTransactionLink(transaction.transaction, NRS.formatTimestamp(transaction.timestamp)) + "</td>" +
                         "<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "</td>" +
                         "<td>" + NRS.formatAmount(transaction.amount) + "</td>" +
                         "<td>" + NRS.formatAmount(transaction.fee) + "</td>" +
-                        "<td>" + NRS.getAccountTitle(transaction, "recipient") + "</td>" +
-                        "<td>" + NRS.getAccountTitle(transaction, "sender") + "</td>" +
+                        "<td>" + NRS.getAccountLink(transaction, "sender") + "</td>" +
+                        "<td>" + NRS.getAccountLink(transaction, "recipient") + "</td>" +
                         "</tr>";
                     }
                 }
@@ -86,7 +92,10 @@ var NRS = (function(NRS, $, undefined) {
                 $("#block_info_transactions_none").show();
                 transactionsTable.hide();
             }
-            $("#block_info_modal").modal("show");
+            var blockInfoModal = $('#block_info_modal');
+            if (!blockInfoModal.data('bs.modal') || !blockInfoModal.data('bs.modal').isShown) {
+                blockInfoModal.modal("show");
+            }
         } finally {
             NRS.fetchingModalData = false;
         }

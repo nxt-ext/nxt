@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -19,7 +19,9 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.automaticallyCheckRecipient = function() {
-		var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #transfer_currency_recipient, #send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, #transfer_alias_recipient, #sell_alias_recipient");
+        var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #transfer_currency_recipient, " +
+        "#send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, " +
+        "#transfer_alias_recipient, #sell_alias_recipient, #set_account_property_recipient, #delete_account_property_recipient");
 
 		$recipientFields.on("blur", function() {
 			$(this).trigger("checkRecipient");
@@ -45,7 +47,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	$("#send_message_modal, #send_money_modal, #transfer_currency_modal, #add_contact_modal").on("show.bs.modal", function(e) {
+	$("#send_message_modal, #send_money_modal, #transfer_currency_modal, #add_contact_modal, #set_account_property_modal, #delete_account_property_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 
 		var account = $invoker.data("account");
@@ -64,17 +66,6 @@ var NRS = (function(NRS, $, undefined) {
 			$inputField.val(account).trigger("checkRecipient");
 		}
 	});
-
-    /* Removed variable fee, keeping fees at their minimal
-	$("#send_money_amount").on("input", function(e) {
-		var amount = parseInt($(this).val(), 10);
-		var fee = isNaN(amount) ? 1 : (amount < 500 ? 1 : Math.round(amount / 1000));
-
-		$("#send_money_fee").val(fee);
-
-		$(this).closest(".modal").find(".advanced_fee").html(NRS.formatAmount(NRS.convertToNQT(fee)) + " NXT");
-	});
-	*/
 
 	//todo later: http://twitter.github.io/typeahead.js/
 	$(".modal").on("click", "span.recipient_selector button, span.plain_adress_selector button", function(e) {

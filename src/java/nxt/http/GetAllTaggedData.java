@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -41,7 +41,7 @@ public final class GetAllTaggedData extends APIServlet.APIRequestHandler {
 
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
-        response.put("taggedData", jsonArray);
+        response.put("data", jsonArray);
 
         try (DbIterator<TaggedData> data = TaggedData.getAll(firstIndex, lastIndex)) {
             while (data.hasNext()) {

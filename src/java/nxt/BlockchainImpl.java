@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -515,13 +515,33 @@ final class BlockchainImpl implements Blockchain {
     }
 
     @Override
+    public DbIterator<TransactionImpl> getReferencingTransactions(long transactionId, int from, int to) {
+        Connection con = null;
+        try {
+            con = Db.db.getConnection();
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, referenced_transaction "
+                    + "WHERE referenced_transaction.referenced_transaction_id = ? "
+                    + "AND referenced_transaction.transaction_id = transaction.id "
+                    + "ORDER BY transaction.block_timestamp DESC, transaction.transaction_index DESC "
+                    + DbUtils.limitsClause(from, to));
+            int i = 0;
+            pstmt.setLong(++i, transactionId);
+            DbUtils.setLimits(++i, pstmt, from, to);
+            return getTransactions(con, pstmt);
+        } catch (SQLException e) {
+            DbUtils.close(con);
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    @Override
     public DbIterator<TransactionImpl> getTransactions(Connection con, PreparedStatement pstmt) {
         return new DbIterator<>(con, pstmt, TransactionDb::loadTransaction);
     }
 
     @Override
     public List<TransactionImpl> getExpectedTransactions(Filter<Transaction> filter) {
-        Map<TransactionType, Map<String, Boolean>> duplicates = new HashMap<>();
+        Map<TransactionType, Map<String, Integer>> duplicates = new HashMap<>();
         BlockchainProcessorImpl blockchainProcessor = BlockchainProcessorImpl.getInstance();
         List<TransactionImpl> result = new ArrayList<>();
         readLock();
@@ -531,7 +551,7 @@ final class BlockchainImpl implements Blockchain {
                     for (TransactionImpl phasedTransaction : phasedTransactions) {
                         try {
                             phasedTransaction.validate();
-                            if (!phasedTransaction.isDuplicate(duplicates) && filter.ok(phasedTransaction)) {
+                            if (!phasedTransaction.attachmentIsDuplicate(duplicates, false) && filter.ok(phasedTransaction)) {
                                 result.add(phasedTransaction);
                             }
                         } catch (NxtException.ValidationException ignore) {

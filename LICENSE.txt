@@ -1,5 +1,4 @@
-Copyright © 2013-2015 The Nxt Core Developers.
-
+Copyright © 2013-2016 The Nxt Core Developers.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License version 2,

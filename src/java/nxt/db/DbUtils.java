@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -18,10 +18,13 @@ package nxt.db;
 
 import nxt.util.Logger;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 
 public final class DbUtils {
 
@@ -70,6 +73,14 @@ public final class DbUtils {
         }
     }
 
+    public static void setShortZeroToNull(PreparedStatement pstmt, int index, short s) throws SQLException {
+        if (s != 0) {
+            pstmt.setShort(index, s);
+        } else {
+            pstmt.setNull(index, Types.SMALLINT);
+        }
+    }
+
     public static void setIntZeroToNull(PreparedStatement pstmt, int index, int n) throws SQLException {
         if (n != 0) {
             pstmt.setInt(index, n);
@@ -83,6 +94,36 @@ public final class DbUtils {
             pstmt.setLong(index, l);
         } else {
             pstmt.setNull(index, Types.BIGINT);
+        }
+    }
+
+    public static <T> T[] getArray(ResultSet rs, String columnName, Class<? extends T[]> cls) throws SQLException {
+        return getArray(rs, columnName, cls, null);
+    }
+
+    public static <T> T[] getArray(ResultSet rs, String columnName, Class<? extends T[]> cls, T[] ifNull) throws SQLException {
+        Array array = rs.getArray(columnName);
+        if (array != null) {
+            Object[] objects = (Object[]) array.getArray();
+            return Arrays.copyOf(objects, objects.length, cls);
+        } else {
+            return ifNull;
+        }
+    }
+
+    public static <T> void setArray(PreparedStatement pstmt, int index, T[] array) throws SQLException {
+        if (array != null) {
+            pstmt.setObject(index, array);
+        } else {
+            pstmt.setNull(index, Types.ARRAY);
+        }
+    }
+
+    public static <T> void setArrayEmptyToNull(PreparedStatement pstmt, int index, T[] array) throws SQLException {
+        if (array != null && array.length > 0) {
+            pstmt.setObject(index, array);
+        } else {
+            pstmt.setNull(index, Types.ARRAY);
         }
     }
 

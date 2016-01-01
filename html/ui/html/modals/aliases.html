@@ -1,5 +1,5 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~ Copyright © 2013-2016 The Nxt Core Developers.                            ~
   ~                                                                           ~
   ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
   ~ the top-level directory of this distribution for the individual copyright ~
@@ -66,8 +66,9 @@
                         <input type="text" class="form-control" name="aliasURI" id="register_alias_uri" placeholder="URI" data-i18n="[placeholder]uri" tabindex="2" />
                         <p class="help-block" id="register_alias_help"></p>
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -78,7 +79,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="register_alias_button" data-loading-text="Submitting..." data-i18n="register;[data-loading-text]submitting">Register</button>
@@ -103,8 +104,9 @@
                         <input type="hidden" id="delete_alias_alias" name="aliasName" value="" />
                         <p id="delete_alias_alias_noneditable" style="display:none"></p>
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -115,7 +117,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="delete_alias_button" data-loading-text="Submitting..." data-i18n="delete;[data-loading-text]submitting">Delete Alias</button>
@@ -147,8 +149,9 @@
                         </div>
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -159,7 +162,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="buy_alias;[data-loading-text]submitting;">Buy Alias</button>
@@ -186,8 +189,9 @@
                     </div>
                     <div data-replace-with-modal-template="recipient_modal_template"></div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -200,7 +204,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="transfer_alias;[data-loading-text]submitting">Transfer Alias</button>
@@ -241,8 +245,9 @@
                         </div>
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -255,7 +260,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="sell_alias;[data-loading-text]submitting">Sell Alias</button>
@@ -281,8 +286,9 @@
                         <input type="hidden" name="modal" value="cancel_alias_sale" />
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -292,7 +298,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="cancel_sale;[data-loading-text]submitting">Cancel Sale</button>

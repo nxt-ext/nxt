@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -81,7 +81,7 @@ public enum CurrencyType {
             if (transaction.getType() == MonetarySystem.CURRENCY_ISSUANCE) {
                 Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
                 int issuanceHeight = attachment.getIssuanceHeight();
-                int finishHeight = transaction.getType().getFinishValidationHeight(transaction);
+                int finishHeight = attachment.getFinishValidationHeight(transaction);
                 if  (issuanceHeight <= finishHeight) {
                     throw new NxtException.NotCurrentlyValidException(
                         String.format("Reservable currency activation height %d not higher than transaction apply height %d",
@@ -91,7 +91,7 @@ public enum CurrencyType {
                     throw new NxtException.NotValidException("Minimum reserve per unit must be > 0");
                 }
                 if (Math.multiplyExact(attachment.getMinReservePerUnitNQT(), attachment.getReserveSupply()) > Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("Minimal reserve per unit is too large");
+                    throw new NxtException.NotValidException("Minimum reserve per unit is too large");
                 }
                 if (attachment.getReserveSupply() <= attachment.getInitialSupply()) {
                     throw new NxtException.NotValidException("Reserve supply must exceed initial supply");
@@ -101,7 +101,8 @@ public enum CurrencyType {
                 }
             }
             if (transaction.getType() == MonetarySystem.RESERVE_INCREASE) {
-                if (currency != null && currency.getIssuanceHeight() <= transaction.getType().getFinishValidationHeight(transaction)) {
+                Attachment.MonetarySystemReserveIncrease attachment = (Attachment.MonetarySystemReserveIncrease) transaction.getAttachment();
+                if (currency != null && currency.getIssuanceHeight() <= attachment.getFinishValidationHeight(transaction)) {
                     throw new NxtException.NotCurrentlyValidException("Cannot increase reserve for active currency");
                 }
             }
@@ -208,17 +209,19 @@ public enum CurrencyType {
 
     },
     /**
-     * Support shuffling - not implemented yet<br>
+     * Several accounts can shuffle their currency units and then distributed to recipients<br>
      */
     NON_SHUFFLEABLE(0x20) {
         @Override
         void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
+            if (transaction.getType() == ShufflingTransaction.SHUFFLING_CREATION) {
+                throw new NxtException.NotValidException("Shuffling is not allowed for this currency");
+            }
         }
 
         @Override
-        void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
+        void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
         }
-
     };
 
     private final int code;

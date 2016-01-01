@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -71,10 +71,10 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
             return NO_MESSAGE;
         }
         if (message != null) {
-            response.put("message", message.toString());
+            response.put("message", Convert.toString(message.getMessage(), message.isText()));
             response.put("messageIsPrunable", false);
         } else if (prunableMessage != null) {
-            response.put("message", prunableMessage.toString());
+            response.put("message", Convert.toString(prunableMessage.getMessage(), prunableMessage.isText()));
             response.put("messageIsPrunable", true);
         }
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
@@ -101,7 +101,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                 if (publicKey != null) {
                     try {
                         byte[] decrypted = Account.decryptFrom(publicKey, encryptedData, secretPhrase, uncompress);
-                        response.put("decryptedMessage", isText ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                        response.put("decryptedMessage", Convert.toString(decrypted, isText));
                     } catch (RuntimeException e) {
                         Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
                         JSONData.putException(response, e, "Wrong secretPhrase");
@@ -112,7 +112,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
                 byte[] publicKey = Crypto.getPublicKey(secretPhrase);
                 try {
                     byte[] decrypted = Account.decryptFrom(publicKey, encryptToSelfMessage.getEncryptedData(), secretPhrase, encryptToSelfMessage.isCompressed());
-                    response.put("decryptedMessageToSelf", encryptToSelfMessage.isText() ? Convert.toString(decrypted) : Convert.toHexString(decrypted));
+                    response.put("decryptedMessageToSelf", Convert.toString(decrypted, encryptToSelfMessage.isText()));
                 } catch (RuntimeException e) {
                     Logger.logDebugMessage("Decryption of message to self failed: " + e.toString());
                 }

@@ -1,5 +1,5 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~ Copyright © 2013-2016 The Nxt Core Developers.                            ~
   ~                                                                           ~
   ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
   ~ the top-level directory of this distribution for the individual copyright ~
@@ -78,22 +78,23 @@
     </div>
 </div>
 
-
-<div id="advanced_fee_deadline_template">
-    <div class="row advanced">
-        <div class="col-xs-6 col-sm-6 col-md-6">
+<div id="fee_calculation_modal_template">
+    <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="{{name}}_fee" data-i18n="fee">FEE</label>
+                <button type="button" class="btn btn-info btn-xs btn-calculate-fee" data-loading-text="Calculating..." data-i18n="[data-loading-text]calculating"><span data-i18n="calculate">CALCULATE</span><span class="warning-label" id="{{name}}_recalc"> *</span></button>
                 <div class="input-group">
-                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" min="1" placeholder="Fee" data-i18n="[placeholder]fee" data-default="1" value="1" tabindex="121">
-                    <span class="input-group-addon" style="min-width:50px;"><i class="fa fa-gavel"></i> 
-                        <span id="{{name}}_feeNXT_addition_info" class="feeNXT_approval_addition_info">+0</span>
-                    </span>
-                    <input type="hidden" id="{{name}}_feeNXT_approval_addition" name="feeNXT_approval_addition" value="0" />
+                    <input type="number" name="feeNXT" id="{{name}}_fee" class="form-control" step="any" placeholder="Minimum Fee" data-i18n="[placeholder]minimum_fee" tabindex="100">
                     <span class="input-group-addon">NXT</span>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="advanced_deadline_template">
+    <div class="row advanced">
         <div class="col-xs-6 col-sm-6 col-md-6">
             <div class="form-group">
                 <label for="{{name}}_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
@@ -105,7 +106,23 @@
 
 
 <div id="advanced_approve_template">
+    <div class="advanced_mandatory_approval" id="{{name}}_mandatory_approval" style="display:none;">
+        <div class="row">
+            <div class="col-xs-6">
+                <div class="form-group mandatory_approval_finish_height_group" data-modal-ui-element="block_height_modal_ui_element"></div>
+            </div>
+            <div class="col-xs-6">
+                <div class="phasing_only_enabled_info">
+                    <span data-i18n="mandatory_approval_enabled_info">Mandatory Approval account control is enabled. Please set Finish Height.</span><br/>
+
+                    <a href="#" data-toggle="modal" data-target="#account_details_modal" data-i18n="mandatory_approval_details" data-detailstab="account_control">Account Control Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="advanced approve_modal" id="{{name}}_approve_modal">
+
         <div class="phasing_safe_alert alert alert-warning" role="alert" style="margin-left:0px;display:none;">
             <span style="font-weight:bold;" data-i18n="warning">Warning</span>!
             <span data-i18n="transaction_type_not_phasing_safe">Transaction type not safe for phasing/approval.</span>
@@ -114,28 +131,28 @@
             <!-- Nav tabs -->
             <ul class="nav nav-tabs approve_tab_list" role="tablist">
                 <li role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="top" data-content="Transaction does not need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_no_approval_tab_help">
-                    <a href="#{{name}}_approve_tab_no_approval" aria-controls="{{name}}_approve_tab_no_approval" class="at_no_approval" role="tab" data-fee-nxt-approval-addition="0" data-toggle="tab"><span class="label label-default"><i class="ion-close-circled"></i></span></a>
+                    <a href="#{{name}}_approve_tab_no_approval" aria-controls="{{name}}_approve_tab_no_approval" class="at_no_approval" role="tab" data-toggle="tab"><span class="label label-default"><i class="ion-close-circled"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction execution is delayed, transaction does not need further approval to become valid" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_phased_no_approval_tab_help">
-                    <a href="#{{name}}_approve_tab_phased_no_approval" aria-controls="{{name}}_approve_tab_phased_no_approval" class="at_no_approval" role="tab" data-fee-nxt-approval-addition="1" data-toggle="tab"><span class="label label-warning"><i class="ion-load-a"></i></span></a>
+                    <a href="#{{name}}_approve_tab_phased_no_approval" aria-controls="{{name}}_approve_tab_phased_no_approval" class="at_no_approval" role="tab" data-toggle="tab"><span class="label label-warning"><i class="ion-load-a"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by a certain number of accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
-                    <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-fee-nxt-approval-addition="1" data-toggle="tab"><span class="label label-warning"><i class="fa fa-group"></i></span></a>
+                    <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-group"></i></span></a>
                 </li>    
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by accounts holding a certain amount of NXT" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_balance_tab_help">
-                    <a href="#{{name}}_approve_tab_balance" aria-controls="{{name}}_approve_tab_balance" class="at_balance" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-money"></i></span></a>
+                    <a href="#{{name}}_approve_tab_balance" aria-controls="{{name}}_approve_tab_balance" class="at_balance" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-money"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by asset holders with a certain stake" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_asset_tab_help">
-                    <a href="#{{name}}_approve_tab_asset_holders" aria-controls="{{name}}_approve_tab_asset_holders" class="at_asset_holders" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-signal"></i></span></a>
+                    <a href="#{{name}}_approve_tab_asset_holders" aria-controls="{{name}}_approve_tab_asset_holders" class="at_asset_holders" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-signal"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by currency holders with a certain stake" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_currency_tab_help">
-                    <a href="#{{name}}_approve_tab_currency_holders" aria-controls="{{name}}_approve_tab_currency_holders" class="at_currency_holders" role="tab" data-fee-nxt-approval-addition="20" data-toggle="tab"><span class="label label-warning"><i class="fa fa-bank"></i></span></a>
+                    <a href="#{{name}}_approve_tab_currency_holders" aria-controls="{{name}}_approve_tab_currency_holders" class="at_currency_holders" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-bank"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction is approved by the inclusion of the specified transaction hash in the blockchain" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_transaction_tab_help">
-                    <a href="#{{name}}_approve_tab_transaction" aria-controls="{{name}}_approve_tab_transaction" class="at_transaction" role="tab" data-fee-nxt-approval-addition="1" data-toggle="tab"><span class="label label-warning"><i class="fa fa-thumbs-up"></i></span></a>
+                    <a href="#{{name}}_approve_tab_transaction" aria-controls="{{name}}_approve_tab_transaction" class="at_transaction" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-thumbs-up"></i></span></a>
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction is approved by revealing a hashed secret message" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_hash_tab_help">
-                    <a href="#{{name}}_approve_tab_hash" aria-controls="{{name}}_approve_tab_hash" class="at_hash" role="tab" data-fee-nxt-approval-addition="1" data-toggle="tab"><span class="label label-warning"><i class="fa fa-question"></i></span></a>
+                    <a href="#{{name}}_approve_tab_hash" aria-controls="{{name}}_approve_tab_hash" class="at_hash" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-question"></i></span></a>
                 </li>
             </ul>
 

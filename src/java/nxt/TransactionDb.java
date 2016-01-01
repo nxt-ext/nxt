@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -281,7 +281,8 @@ final class TransactionDb {
         List<PrunableTransaction> result = new ArrayList<>();
         try (PreparedStatement pstmt = con.prepareStatement("SELECT id, type, subtype, "
                 + "has_prunable_attachment AS prunable_attachment, "
-                + "(has_prunable_message OR has_prunable_encrypted_message) AS prunable_message "
+                + "has_prunable_message AS prunable_plain_message, "
+                + "has_prunable_encrypted_message AS prunable_encrypted_message "
                 + "FROM transaction WHERE (timestamp BETWEEN ? AND ?) AND "
                 + "(has_prunable_attachment = TRUE OR has_prunable_message = TRUE OR has_prunable_encrypted_message = TRUE)")) {
             pstmt.setInt(1, minTimestamp);
@@ -293,7 +294,9 @@ final class TransactionDb {
                     byte subtype = rs.getByte("subtype");
                     TransactionType transactionType = TransactionType.findTransactionType(type, subtype);
                     result.add(new PrunableTransaction(id, transactionType,
-                            rs.getBoolean("prunable_attachment"), rs.getBoolean("prunable_message")));
+                            rs.getBoolean("prunable_attachment"),
+                            rs.getBoolean("prunable_plain_message"),
+                            rs.getBoolean("prunable_encrypted_message")));
                 }
             }
         } catch (SQLException e) {
@@ -357,6 +360,14 @@ final class TransactionDb {
                     pstmt.setShort(++i, index++);
                     pstmt.executeUpdate();
                 }
+                if (transaction.referencedTransactionFullHash() != null) {
+                    try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO referenced_transaction "
+                         + "(transaction_id, referenced_transaction_id) VALUES (?, ?)")) {
+                        pstmt.setLong(1, transaction.getId());
+                        pstmt.setLong(2, Convert.fullHashToId(transaction.referencedTransactionFullHash()));
+                        pstmt.executeUpdate();
+                    }
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
@@ -367,13 +378,16 @@ final class TransactionDb {
         private final long id;
         private final TransactionType transactionType;
         private final boolean prunableAttachment;
-        private final boolean prunableMessage;
+        private final boolean prunablePlainMessage;
+        private final boolean prunableEncryptedMessage;
 
-        public PrunableTransaction(long id, TransactionType transactionType, boolean prunableAttachment, boolean prunableMessage) {
+        public PrunableTransaction(long id, TransactionType transactionType, boolean prunableAttachment,
+                                   boolean prunablePlainMessage, boolean prunableEncryptedMessage) {
             this.id = id;
             this.transactionType = transactionType;
             this.prunableAttachment = prunableAttachment;
-            this.prunableMessage = prunableMessage;
+            this.prunablePlainMessage = prunablePlainMessage;
+            this.prunableEncryptedMessage = prunableEncryptedMessage;
         }
 
         public long getId() {
@@ -388,8 +402,12 @@ final class TransactionDb {
             return prunableAttachment;
         }
 
-        public boolean hasPrunableMessage() {
-            return prunableMessage;
+        public boolean hasPrunablePlainMessage() {
+            return prunablePlainMessage;
+        }
+
+        public boolean hasPrunableEncryptedMessage() {
+            return prunableEncryptedMessage;
         }
     }
 

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -88,6 +88,10 @@ public class APICall {
 
         public Builder recipient(long id) {
             return param("recipient", Long.toUnsignedString(id));
+        }
+
+        public String getParam(String key) {
+            return params.get(key).get(0);
         }
 
         public APICall build() {

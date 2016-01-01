@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -91,6 +91,9 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         peerImpl.setPlatform(platform.trim());
 
         peerImpl.setShareAddress(Boolean.TRUE.equals(request.get("shareAddress")));
+
+        peerImpl.setApiPort(request.get("apiPort"));
+        peerImpl.setApiSSLPort(request.get("apiSSLPort"));
 
         if (peerImpl.getServices() != origServices) {
             Peers.notifyListeners(peerImpl, Peers.Event.CHANGED_SERVICES);

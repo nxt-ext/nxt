@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -312,13 +312,10 @@ final class TransactionImpl implements Transaction {
             appendagesSize += appendage.getSize();
         }
         this.appendagesSize = appendagesSize;
-        if (builder.feeNQT <= 0) {
+        if (builder.feeNQT <= 0 || (Constants.correctInvalidFees && builder.signature == null)) {
             int effectiveHeight = (height < Integer.MAX_VALUE ? height : Nxt.getBlockchain().getHeight());
-            if (this.phasing == null) {
-                feeNQT = getMinimumFeeNQT(effectiveHeight);
-            } else {
-                feeNQT = Math.max(getMinimumFeeNQT(effectiveHeight), getMinimumFeeNQT(phasing.getFinishHeight()));
-            }
+            long minFee = getMinimumFeeNQT(effectiveHeight);
+            feeNQT = Math.max(minFee, builder.feeNQT);
         } else {
             feeNQT = builder.feeNQT;
         }
@@ -365,6 +362,10 @@ final class TransactionImpl implements Transaction {
     @Override
     public long getFeeNQT() {
         return feeNQT;
+    }
+
+    long[] getBackFees() {
+        return type.getBackFees(this);
     }
 
     @Override
@@ -567,6 +568,10 @@ final class TransactionImpl implements Transaction {
         return phasing;
     }
 
+    boolean attachmentIsPhased() {
+        return attachment.isPhased(this);
+    }
+
     Appendix.PublicKeyAnnouncement getPublicKeyAnnouncement() {
         return publicKeyAnnouncement;
     }
@@ -728,6 +733,10 @@ final class TransactionImpl implements Transaction {
     static TransactionImpl.BuilderImpl newTransactionBuilder(byte[] bytes, JSONObject prunableAttachments) throws NxtException.NotValidException {
         BuilderImpl builder = newTransactionBuilder(bytes);
         if (prunableAttachments != null) {
+            Attachment.ShufflingProcessing shufflingProcessing = Attachment.ShufflingProcessing.parse(prunableAttachments);
+            if (shufflingProcessing != null) {
+                builder.appendix(shufflingProcessing);
+            }
             Attachment.TaggedDataUpload taggedDataUpload = Attachment.TaggedDataUpload.parse(prunableAttachments);
             if (taggedDataUpload != null) {
                 builder.appendix(taggedDataUpload);
@@ -898,7 +907,8 @@ final class TransactionImpl implements Transaction {
         return signatureOffset() + 64  + (version > 0 ? 4 + 4 + 8 : 0) + appendagesSize;
     }
 
-    int getFullSize() {
+    @Override
+    public int getFullSize() {
         int fullSize = getSize() - appendagesSize;
         for (Appendix.AbstractAppendix appendage : getAppendages()) {
             fullSize += appendage.getFullSize();
@@ -1006,11 +1016,14 @@ final class TransactionImpl implements Transaction {
             throw new NxtException.NotValidException("Transaction size " + getFullSize() + " exceeds maximum payload size");
         }
 
-        long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
-        if (feeNQT < minimumFeeNQT) {
-            throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
-                    ((double)feeNQT)/Constants.ONE_NXT, ((double)minimumFeeNQT)/Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+        if (!validatingAtFinish) {
+            long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
+            if (feeNQT < minimumFeeNQT) {
+                throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
+                        ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+            }
         }
+        AccountRestrictions.checkTransaction(this, validatingAtFinish);
     }
 
     // returns false iff double spending
@@ -1034,11 +1047,11 @@ final class TransactionImpl implements Transaction {
             senderAccount.addToUnconfirmedBalanceNQT(getType().getLedgerEvent(), getId(),
                     0, Constants.UNCONFIRMED_POOL_DEPOSIT_NQT);
         }
-        if (phasing != null && type.isPhasable()) {
+        if (attachmentIsPhased()) {
             senderAccount.addToBalanceNQT(getType().getLedgerEvent(), getId(), 0, -feeNQT);
         }
         for (Appendix.AbstractAppendix appendage : appendages) {
-            if (phasing == null || !appendage.isPhasable()) {
+            if (!appendage.isPhased(this)) {
                 appendage.loadPrunable(this);
                 appendage.apply(this, senderAccount, recipientAccount);
             }
@@ -1050,11 +1063,29 @@ final class TransactionImpl implements Transaction {
         type.undoUnconfirmed(this, senderAccount);
     }
 
-    boolean isDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+    boolean attachmentIsDuplicate(Map<TransactionType, Map<String, Integer>> duplicates, boolean atAcceptanceHeight) {
+        if (!attachmentIsPhased() && !atAcceptanceHeight) {
+            // can happen for phased transactions having non-phasable attachment
+            return false;
+        }
+        if (atAcceptanceHeight) {
+            if (AccountRestrictions.isBlockDuplicate(this, duplicates)) {
+                return true;
+            }
+            // all are checked at acceptance height for block duplicates
+            if (type.isBlockDuplicate(this, duplicates)) {
+                return true;
+            }
+            // phased are not further checked at acceptance height
+            if (attachmentIsPhased()) {
+                return false;
+            }
+        }
+        // non-phased at acceptance height, and phased at execution height
         return type.isDuplicate(this, duplicates);
     }
 
-    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Boolean>> duplicates) {
+    boolean isUnconfirmedDuplicate(Map<TransactionType, Map<String, Integer>> duplicates) {
         return type.isUnconfirmedDuplicate(this, duplicates);
     }
 
@@ -1067,6 +1098,9 @@ final class TransactionImpl implements Transaction {
             }
             Fee fee = blockchainHeight >= appendage.getNextFeeHeight() ? appendage.getNextFee(this) : appendage.getBaselineFee(this);
             totalFee = Math.addExact(totalFee, fee.getFee(this, appendage));
+        }
+        if (referencedTransactionFullHash != null && blockchainHeight > Constants.SHUFFLING_BLOCK) {
+            totalFee = Math.addExact(totalFee, Constants.ONE_NXT);
         }
         return totalFee;
     }

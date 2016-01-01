@@ -1,5 +1,5 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~ Copyright © 2013-2016 The Nxt Core Developers.                            ~
   ~                                                                           ~
   ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
   ~ the top-level directory of this distribution for the individual copyright ~
@@ -60,11 +60,11 @@
                     </span>
                     </a>
                 </li>
-                <li><a href="#" class="goto-page" data-page="contacts"><i class="fa fa-user"></i></a></li>
-                <li><a href="#" class="goto-page" data-page="exchange"><i class="fa fa-exchange"></i></a></li>
+                <li><a href="#" class="goto-page" data-page="contacts"><i class="fa fa-user" data-toggle="tooltip" data-placement="bottom" title="CONTACTS" data-i18n="[title]contacts"></i></a></li>
+                <li><a href="#" class="goto-page" data-page="exchange"><i class="fa fa-exchange" data-toggle="tooltip" data-placement="bottom" title="EXCHANGE" data-i18n="[title]exchange"></i></a></li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-cog"></i>
+                        <i class="fa fa-cog" data-toggle="tooltip" data-placement="bottom" title="SETTINGS" data-i18n="[title]settings"></i>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a role="menuitem" tabindex="-1" href="#" class="goto-page" data-page="blocks"><i class="fa fa-bars"></i><span data-i18n="blocks">Blocks</span></a></li>
@@ -78,31 +78,29 @@
                         <li><a href="#" data-toggle="modal" data-target="#hallmark_modal"><i class="fa fa-building"></i><span data-i18n="generate_hallmark">Generate Hallmark</span></a></li>
                         <li><a href="#" data-toggle="modal" data-target="#hash_modal"><i class="fa fa-calculator"></i><span data-i18n="calculate_hash">Calculate Hash</span></a></li>
                         <li><a href="#" data-toggle="modal" data-target="#transaction_json_modal"><i class="fa fa-asterisk"></i><span data-i18n="transaction_operations">Transaction Operations</span></a></li>
-                        <li role="presentation" class="divider"></li>
-                        <li><a href="#" data-toggle="modal" data-target="#upload_data_modal"><i class="fa fa-upload"></i><span data-i18n="upload_file">Upload File</span></a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-question-circle"></i>
+                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="HELP" data-i18n="[title]help"></i>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a role="menuitem" tabindex="-1" href="#" class="goto-page" data-page="news"><i class="fa fa-book"></i><span data-i18n="news">News</span></a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a role="menuitem" tabindex="-1" href="http://nxt.org/" target="_blank"><i class="fa fa-at"></i>Nxt.org</a></li>
                         <li><a role="menuitem" tabindex="-1" href="https://nxtforum.org/" target="_blank" ><i class="fa fa-at"></i><span data-i18n="link_nxt_forum">Nxt Forum</span></a></li>
-                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_nxt_wiki">Nxt Wiki</span></a></li>
-                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Nxt_client_interface" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_interface_tutorial">Interface Tutorial</span></a></li>
-                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Asset_Exchange" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_asset_exchange_tutorial">Asset Exchange Tutorial</span></a></li>
-                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Monetary_System" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_monetary_system_tutorial">Monetary System Tutorial</span></a></li>
-                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Voting_System" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_voting_system_tutorial">Voting System Tutorial</span></a></li>
-                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Phasing" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_phasing_tutorial">Phasing Tutorial</span></a></li>
-                        <li><a role="menuitem" tabindex="-1" href="https://wiki.nxtcrypto.org/wiki/Plugins" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_plugins_tutorial">Plugins Tutorial</span></a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_nxt_wiki">Nxt Wiki</span></a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/wiki/Nxt_client_interface" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_interface_tutorial">Interface Tutorial</span></a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/wiki/Asset_Exchange" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_asset_exchange_tutorial">Asset Exchange Tutorial</span></a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/wiki/Monetary_System" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_monetary_system_tutorial">Monetary System Tutorial</span></a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/wiki/Voting_System" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_voting_system_tutorial">Voting System Tutorial</span></a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/wiki/Phasing" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_phasing_tutorial">Phasing Tutorial</span></a></li>
+                        <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/wiki/Plugins" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_plugins_tutorial">Plugins Tutorial</span></a></li>
                     </ul>
                 </li>
                 <li class="dropdown" id="logout_button_container">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
-                        <i class="fa fa-power-off"></i>
+                        <i class="fa fa-power-off" data-toggle="tooltip" data-placement="bottom" title="LOGOUT" data-i18n="[title]logout"></i>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a role="menuitem" tabindex="-1" href="#" onclick="NRS.logout()" data-i18n="logout">Log Out</a></li>

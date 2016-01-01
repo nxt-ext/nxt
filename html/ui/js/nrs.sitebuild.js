@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -82,9 +82,10 @@ var NRS = (function(NRS, $, undefined) {
             _replaceModalHTMLTemplateDiv(data, 'recipient_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'add_message_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'add_public_message_modal_template');
+            _replaceModalHTMLTemplateDiv(data, 'fee_calculation_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'secret_phrase_modal_template');
             _replaceModalHTMLTemplateDiv(data, 'admin_password_modal_template');
-            _replaceModalHTMLTemplateDiv(data, 'advanced_fee_deadline_template');
+            _replaceModalHTMLTemplateDiv(data, 'advanced_deadline_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_approve_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_rt_hash_template');
             _replaceModalHTMLTemplateDiv(data, 'advanced_broadcast_template');

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -64,6 +64,12 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
                 response.put("nextLeasingHeightFrom", accountLease.getNextLeasingHeightFrom());
                 response.put("nextLeasingHeightTo", accountLease.getNextLeasingHeightTo());
             }
+        }
+
+        if (!account.getControls().isEmpty()) {
+            JSONArray accountControlsJson = new JSONArray();
+            account.getControls().forEach(accountControl -> accountControlsJson.add(accountControl.toString()));
+            response.put("accountControls", accountControlsJson);
         }
 
         if (includeLessors) {

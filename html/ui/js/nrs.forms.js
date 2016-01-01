@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -33,9 +33,32 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
-	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true])").click(function() {
+	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true]),button.btn-calculate-fee").click(function() {
 		NRS.submitForm($(this).closest(".modal"), $(this));
 	});
+
+	$(".modal input,select,textarea").change(function() {
+        var id = $(this).attr('id');
+        var modal = $(this).closest(".modal");
+		if (!modal) {
+			return;
+		}
+		var feeFieldId = modal.attr('id');
+		if (!feeFieldId) {
+			// Not a modal dialog with fee calculation widget
+			return;
+		}
+        feeFieldId = feeFieldId.replace('_modal', '') + "_fee";
+        if (id == feeFieldId) {
+            return;
+        }
+        var fee = $("#" + feeFieldId);
+        if (fee.val() == "") {
+            return;
+        }
+        var recalcIndicator = $("#" + modal.attr('id').replace('_modal', '') + "_recalc");
+        recalcIndicator.show();
+    });
 
 	function getSuccessMessage(requestType) {
 		var ignore = ["asset_exchange_change_group_name", "asset_exchange_group", "add_contact", "update_contact", "delete_contact",
@@ -167,12 +190,12 @@ var NRS = (function(NRS, $) {
 		return data;
 	};
 
-	NRS.submitForm = function($modal, $btn) {
+    NRS.submitForm = function($modal, $btn) {
 		if (!$btn) {
 			$btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 		}
 
-		var $modal = $btn.closest(".modal");
+		$modal = $btn.closest(".modal");
 
 		$modal.modal("lock");
 		$modal.find("button").prop("disabled", true);
@@ -223,7 +246,7 @@ var NRS = (function(NRS, $) {
 				return;
 			}
 		}
-		
+
 		var invalidElement = false;
 
 		//TODO
@@ -324,6 +347,16 @@ var NRS = (function(NRS, $) {
 		if (!data) {
 			data = NRS.getFormData($form);
 		}
+        if ($btn.hasClass("btn-calculate-fee")) {
+            data.calculateFee = true;
+            data.feeNXT = "0";
+            $form.find(".error_message").html("").hide();
+        } else {
+            delete data.calculateFee;
+            if (!data.feeNXT) {
+                data.feeNXT = "0";
+            }
+        }
 
 		if (data.recipient) {
 			data.recipient = $.trim(data.recipient);
@@ -464,7 +497,8 @@ var NRS = (function(NRS, $) {
 			data.deadline = String(data.deadline * 60); //hours to minutes
 		}
 
-        if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword) {
+        if ("secretPhrase" in data && !data.secretPhrase.length && !NRS.rememberPassword &&
+                !(data.calculateFee && NRS.accountInfo.publicKey)) {
 			$form.find(".error_message").html($.t("error_passphrase_required")).show();
 			if (formErrorFunction) {
 				formErrorFunction(false, data);
@@ -562,16 +596,28 @@ var NRS = (function(NRS, $) {
 			});
 		}
 
-		if (data.doNotBroadcast) {
+		if (data.doNotBroadcast || data.calculateFee) {
 			data.broadcast = "false";
-			delete data.doNotBroadcast;
+            if (data.calculateFee) {
+                if (NRS.accountInfo.publicKey) {
+                    data.publicKey = NRS.accountInfo.publicKey;
+                    delete data.secretPhrase;
+                }
+            }
+            if (data.doNotBroadcast) {
+                delete data.doNotBroadcast;
+            }
 		}
 
 		NRS.sendRequest(requestType, data, function(response) {
 			//todo check again.. response.error
             var formCompleteFunction;
 			if (response.fullHash) {
-				NRS.unlockForm($modal, $btn);
+                NRS.unlockForm($modal, $btn);
+                if (data.calculateFee) {
+                    updateFee($modal, response.transactionJSON.feeNQT);
+                    return;
+                }
 
 				if (!$modal.hasClass("modal-no-hide")) {
 					$modal.modal("hide");
@@ -620,8 +666,12 @@ var NRS = (function(NRS, $) {
 
 				NRS.unlockForm($modal, $btn);
 			} else {
+                if (data.calculateFee) {
+                    NRS.unlockForm($modal, $btn, false);
+                    updateFee($modal, response.transactionJSON.feeNQT);
+                    return;
+                }
 				var sentToFunction = false;
-
 				if (!errorMessage) {
 					formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
 
@@ -639,7 +689,6 @@ var NRS = (function(NRS, $) {
 						errorMessage = $.t("error_unknown");
 					}
 				}
-
 				if (!sentToFunction) {
 					NRS.unlockForm($modal, $btn, true);
 
@@ -661,6 +710,13 @@ var NRS = (function(NRS, $) {
 			$modal.modal("hide");
 		}
 	};
+
+    function updateFee(modal, feeNQT) {
+        var fee = $("#" + modal.attr('id').replace('_modal', '') + "_fee");
+        fee.val(NRS.convertToNXT(feeNQT));
+        var recalcIndicator = $("#" + modal.attr('id').replace('_modal', '') + "_recalc");
+        recalcIndicator.hide();
+    }
 
 	return NRS;
 }(NRS || {}, jQuery));

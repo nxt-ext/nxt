@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -64,7 +64,7 @@ public class APITestServlet extends HttpServlet {
             "           <ul class='nav navbar-nav navbar-right'>\n" +
             "               <li><input type='text' class='form-control' id='search' " + 
             "                    placeholder='Search' style='margin-top:8px;'></li>\n" +
-            "               <li><a href='https://wiki.nxtcrypto.org/wiki/The_Nxt_API' target='_blank' style='margin-left:20px;'>Wiki Docs</a></li>\n" +
+            "               <li><a href='https://nxtwiki.org/wiki/The_Nxt_API' target='_blank' style='margin-left:20px;'>Wiki Docs</a></li>\n" +
             "           </ul>\n" +
             "       </div>\n" +
             "   </div>\n" +
@@ -241,7 +241,7 @@ public class APITestServlet extends HttpServlet {
         }
         buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='/doc/");
         buf.append(className.replace('.', '/')).append(".html' target='_blank'>javadoc</a>&nbsp;&nbsp;\n");
-        buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='https://wiki.nxtcrypto.org/wiki/The_Nxt_API#");
+        buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='https://nxtwiki.org/wiki/The_Nxt_API#");
         appendWikiLink(className.substring(className.lastIndexOf('.') + 1), buf);
         buf.append("' target='_blank'>wiki</a>&nbsp;&nbsp;\n");
         buf.append("&nbsp;&nbsp;&nbsp;\n<input type='checkbox' class='api-call-sel-ALL' ");
@@ -259,7 +259,11 @@ public class APITestServlet extends HttpServlet {
         if (fileParameter != null) {
             buf.append("enctype='multipart/form-data' ");
         }
-        buf.append("onsubmit='return ATS.submitForm(this);'>\n");
+        buf.append("onsubmit='return ATS.submitForm(this");
+        if (fileParameter != null) {
+            buf.append(", \"").append(fileParameter).append("\"");
+        }
+        buf.append(")'>\n");
         buf.append("<input type='hidden' name='requestType' value='").append(requestType).append("'/>\n");
         buf.append("<div class='col-xs-12 col-lg-6' style='min-width: 40%;'>\n");
         buf.append("<table class='table'>\n");
@@ -273,7 +277,7 @@ public class APITestServlet extends HttpServlet {
         for (String parameter : parameters) {
             buf.append("<tr class='api-call-input-tr'>\n");
             buf.append("<td>").append(parameter).append(":</td>\n");
-            buf.append("<td><input type='").append("secretPhrase".equals(parameter) || "adminPassword".equals(parameter) ? "password" : "text").append("' ");
+            buf.append("<td><input type='").append(isPassword(parameter) ? "password" : "text").append("' ");
             buf.append("name='").append(parameter).append("' ");
             String value = Convert.emptyToNull(req.getParameter(parameter));
             if (value != null) {
@@ -303,6 +307,10 @@ public class APITestServlet extends HttpServlet {
         buf.append("</div> <!-- panel-collapse -->\n");
         buf.append("</div> <!-- panel -->\n");
         return buf.toString();
+    }
+
+    private static boolean isPassword(String parameter) {
+        return "secretPhrase".equals(parameter) || "adminPassword".equals(parameter) || "recipientSecretPhrase".equals(parameter);
     }
 
     private static void appendWikiLink(String className, StringBuilder buf) {

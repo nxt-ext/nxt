@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -21,16 +21,16 @@ var NRS = (function(NRS, $) {
 	NRS.blocksPageType = null;
 	NRS.tempBlocks = [];
 	var trackBlockchain = false;
-	NRS.averageBlockGenerationTime = null;
+	NRS.averageBlockGenerationTime = 60;
 
 	NRS.getBlock = function(blockID, callback, pageRequest) {
 		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
 			"block": blockID
 		}, function(response) {
-			if (response.errorCode && response.errorCode == -1) {
+			if (response.errorCode && response.errorCode == -1 || !NRS.constants || NRS.constants.EPOCH_BEGINNING == 0) {
 				setTimeout(function (){ NRS.getBlock(blockID, callback, pageRequest); }, 2500);
 			} else {
-				if (NRS.blocks.length >= 2) {
+				if (NRS.blocks.length >= 2 && NRS.lastBlockHeight < 621000) {
 					var max = Math.min(NRS.blocks.length-1, 10);
 					var diffSum = 0;
 					for (var i=1; i<=max; i++) {
@@ -47,11 +47,6 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.handleInitialBlocks = function(response) {
-        var dashboardBlocksTable = $("#dashboard_blocks_table");
-        if (response.errorCode) {
-			NRS.dataLoadFinished(dashboardBlocksTable);
-			return;
-		}
 		NRS.blocks.push(response);
 		if (NRS.blocks.length < 10 && response.previousBlock) {
 			NRS.getBlock(response.previousBlock, NRS.handleInitialBlocks);
@@ -87,18 +82,8 @@ var NRS = (function(NRS, $) {
 					}
 				}
 			}
-
-			var rows = "";
-            var block;
-			for (var i = 0; i < NRS.blocks.length; i++) {
-				block = NRS.blocks[i];
-				rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
-			}
-			block = NRS.blocks[0];
-			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
-			$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
-			dashboardBlocksTable.find("tbody").empty().append(rows);
-			NRS.dataLoadFinished(dashboardBlocksTable);
+			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(NRS.blocks[0].timestamp));
+			$(".nrs_current_block").empty().append(String(NRS.blocks[0].height).escapeHTML());
 		}
 	};
 
@@ -142,16 +127,10 @@ var NRS = (function(NRS, $) {
 		if (blockHeight) {
 			NRS.lastBlockHeight = blockHeight;
 		}
-		//no checks needed at the moment
 	};
 
 	//we always update the dashboard page..
 	NRS.incoming.updateDashboardBlocks = function(newBlocks) {
-		var newBlockCount = newBlocks.length;
-		if (newBlockCount > 10) {
-			newBlocks = newBlocks.slice(0, 10);
-			newBlockCount = newBlocks.length;
-		}
         var timeDiff;
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state) {
@@ -200,25 +179,10 @@ var NRS = (function(NRS, $) {
 				NRS.setStateInterval(10);
 			}
 		}
-		var rows = "";
-		for (var i = 0; i < newBlockCount; i++) {
-			var block = newBlocks[i];
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td data-timestamp='" + String(block.timestamp).escapeHTML() + "'>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + " + " + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td></tr>";
-		}
-
-        var dashboardBlocksTable = $("#dashboard_blocks_table");
-        if (newBlockCount == 1) {
-			dashboardBlocksTable.find("tbody tr:last").remove();
-		} else if (newBlockCount == 10) {
-			dashboardBlocksTable.find("tbody").empty();
-		} else {
-			dashboardBlocksTable.find("tbody tr").slice(10 - newBlockCount).remove();
-		}
 
 		block = NRS.blocks[0];
 		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
 		$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
-		dashboardBlocksTable.find("tbody").prepend(rows);
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
 		$("#dashboard_table").find("tr.confirmed td.confirmations").each(function() {
@@ -244,6 +208,10 @@ var NRS = (function(NRS, $) {
 				}));
 			}
 		});
+		var blockLink = $("#sidebar_block_link");
+		if (blockLink.length > 0) {
+			blockLink.html(NRS.getBlockLink(NRS.lastBlockHeight));
+		}
 	};
 
 	NRS.pages.blocks = function() {
@@ -302,7 +270,15 @@ var NRS = (function(NRS, $) {
 			totalAmount = totalAmount.add(new BigInteger(block.totalAmountNQT));
 			totalFees = totalFees.add(new BigInteger(block.totalFeeNQT));
 			totalTransactions += block.numberOfTransactions;
-			rows += "<tr><td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(block.timestamp) + "</td><td>" + NRS.formatAmount(block.totalAmountNQT) + "</td><td>" + NRS.formatAmount(block.totalFeeNQT) + "</td><td>" + NRS.formatAmount(block.numberOfTransactions) + "</td><td>" + (block.generator != NRS.constants.GENESIS ? "<a href='#' data-user='" + NRS.getAccountFormatted(block, "generator") + "' class='user_info'>" + NRS.getAccountTitle(block, "generator") + "</a>" : $.t("genesis")) + "</td><td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td></tr>";
+			rows += "<tr>" +
+                "<td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td>" +
+                "<td>" + NRS.formatTimestamp(block.timestamp) + "</td>" +
+                "<td>" + NRS.formatAmount(block.totalAmountNQT) + "</td>" +
+                "<td>" + NRS.formatAmount(block.totalFeeNQT) + "</td>" +
+                "<td>" + NRS.formatAmount(block.numberOfTransactions) + "</td>" +
+                "<td>" + NRS.getAccountLink(block, "generator") + "</td>" +
+                "<td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td>" +
+            "</tr>";
 		}
 
         var blocksAverageAmount = $("#blocks_average_amount");

@@ -37,6 +37,7 @@ QUnit.test("formatAmount", function (assert) {
     assert.equal(NRS.formatAmount(12.343, true, false), "12.34", "number.rounding");
     assert.equal(NRS.formatAmount("123456700000", false, true), "1'234.567", "1000separator");
     assert.equal(NRS.formatAmount("123456700000000", true, true), "1'234'567", "nxt.rounding");
+    assert.equal(NRS.formatAmount("123456780000000", true, false), "1&#39;234&#39;567.8", "thousands.separator.escaped");
 });
 
 QUnit.test("formatVolume", function (assert) {
@@ -159,4 +160,55 @@ QUnit.test("formatTimestamp", function (assert) {
     assert.equal(NRS.formatTimestamp(0, true, true), "1/1/1970", "start.date");
     assert.equal(NRS.formatTimestamp(0, false, true), "1/1/1970 2:00:00 AM", "start.date.time");
     assert.equal(NRS.formatTimestamp(1234567890000, false, true), "2/14/2009 1:31:30 AM", "start.date");
+});
+
+QUnit.test("getAccountLink", function (assert) {
+    NRS.contacts = {};
+
+    assert.equal(NRS.getAccountLink({}, "dummy"), "/", "non.existing");
+    assert.equal(NRS.getAccountLink({ entity: 5873880488492319831 }, "entity"), "<a href='#' data-user='NXT-XKA2-7VJU-VZSY-7R335' class='show_account_modal_action user-info'>/</a>", "numeric");
+    assert.equal(NRS.getAccountLink({ entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity"), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info'>NXT-XK4R-7VJU-6EQG-7R335</a>", "RS");
+    assert.equal(NRS.getAccountLink({ entity: 5873880488492319831, entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity"), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info'>NXT-XK4R-7VJU-6EQG-7R335</a>", "numeric.and.RS");
+    NRS.contacts = { "NXT-XK4R-7VJU-6EQG-7R335": { name: "foo" }};
+    assert.equal(NRS.getAccountLink({ entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity"), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info'>foo</a>", "contact");
+    NRS.accountRS = "NXT-XK4R-7VJU-6EQG-7R335";
+    assert.equal(NRS.getAccountLink({ entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity"), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info'>You</a>", "you");
+    assert.equal(NRS.getAccountLink({ entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity", "NXT-XK4R-7VJU-6EQG-7R335", "My Precious"), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info'>My Precious</a>", "force.account.name");
+    assert.equal(NRS.getAccountLink({ entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity", undefined, undefined, true), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info'>NXT-XK4R-7VJU-6EQG-7R335</a>", "maintain.rs.format");
+    assert.equal(NRS.getAccountLink({ entityRS: "NXT-XK4R-7VJU-6EQG-7R335" }, "entity", undefined, undefined, undefined, "btn btn-xs"), "<a href='#' data-user='NXT-XK4R-7VJU-6EQG-7R335' class='show_account_modal_action user-info btn btn-xs'>You</a>", "add.class");
+    NRS.contacts = null;
+    NRS.accountRS = null;
+    NRS.constants.GENESIS = 1739068987193023818;
+    NRS.constants.GENESIS_RS = "NXT-MR8N-2YLS-3MEQ-3CMAJ";
+    assert.equal(NRS.getAccountLink({ entityRS: NRS.constants.GENESIS_RS }, "entity"), "<a href='#' data-user='NXT-MR8N-2YLS-3MEQ-3CMAJ' class='show_account_modal_action user-info'>Genesis</a>", "genesis");
+});
+
+QUnit.test("generateToken", function (assert) {
+    NRS.constants.EPOCH_BEGINNING = 1385294400000;
+    var token = NRS.generateToken("myToken", "rshw9abtpsa2");
+    assert.ok(token.startsWith("e9cl0jgba7lnp7gke9rdp7hg3uvcl5cnd23"));
+    assert.equal(token.length, 160);
+});
+
+QUnit.test("utf8", function (assert) {
+    // compare the two UTF8 conversion methods
+    var str = "Hello World";
+    var bytes1 = NRS.getUtf8Bytes(str);
+    var bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
+    // Hebrew
+    str = "אבג";
+    bytes1 = NRS.getUtf8Bytes(str);
+    bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
+    // Chinese Simplified
+    str = "简体中文网页";
+    bytes1 = NRS.getUtf8Bytes(str);
+    bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
+    // Chinese Traditional
+    str = "繁體中文網頁";
+    bytes1 = NRS.getUtf8Bytes(str);
+    bytes2 = NRS.strToUTF8Arr(str);
+    assert.deepEqual(bytes1, bytes2);
 });

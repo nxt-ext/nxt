@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -94,13 +94,11 @@ public final class Asset {
         assetTable.insert(new Asset(transaction, attachment));
     }
 
-    static void deleteAsset(long senderId, long assetId, long quantityQNT) {
+    static void deleteAsset(Transaction transaction, long assetId, long quantityQNT) {
         Asset asset = getAsset(assetId);
-        if (asset == null) {
-            return;
-        }
         asset.quantityQNT = Math.max(0, asset.quantityQNT - quantityQNT);
         assetTable.insert(asset);
+        AssetDelete.addAssetDelete(transaction, assetId, quantityQNT);
     }
 
     static void init() {}

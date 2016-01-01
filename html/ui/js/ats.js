@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -134,7 +134,7 @@ var ATS = (function(ATS, $, undefined) {
         }
     };
 
-    ATS.submitForm = function(form) {
+    ATS.submitForm = function(form, fileParameter) {
         var url = '/nxt';
         var params = {};
         for (var i = 0; i < form.elements.length; i++) {
@@ -154,10 +154,17 @@ var ATS = (function(ATS, $, undefined) {
         var formData = null;
         var uploadField;
         if (form.encoding == "multipart/form-data") {
-            uploadField = $('#file' + params["requestType"]);
+            uploadField = $('#' + fileParameter + params["requestType"]);
         }
         if (params["requestType"] == "downloadTaggedData") {
-            window.location = url + "?requestType=downloadTaggedData&transaction=" + params["transaction"];
+            url += "?";
+            for (key in params) {
+                if (!params.hasOwnProperty(key)) {
+                    continue;
+                }
+                url += key + "=" + params[key] + "&";
+            }
+            window.location = url;
             return false;
         } else if (uploadField) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
@@ -169,10 +176,13 @@ var ATS = (function(ATS, $, undefined) {
                 if (!params.hasOwnProperty(key)) {
                     continue;
                 }
+                if (key == fileParameter) {
+                    continue;
+                }
                 formData.append(key, params[key]);
             }
             var file = uploadField[0].files[0];
-            formData.append("file", file);
+            formData.append(fileParameter, file);
             if (file && !formData["filename"]) {
                 formData.append("filename", file.name);
             }

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -41,6 +41,7 @@ public final class Generator implements Comparable<Generator> {
         GENERATION_DEADLINE, START_FORGING, STOP_FORGING
     }
 
+    private static final int MAX_FORGERS = Nxt.getIntProperty("nxt.maxNumberOfForgers");
     private static final byte[] fakeForgingPublicKey;
     static {
         byte[] publicKey = null;
@@ -135,6 +136,9 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public static Generator startForging(String secretPhrase) {
+        if (generators.size() >= MAX_FORGERS) {
+            throw new RuntimeException("Cannot forge with more than " + MAX_FORGERS + " accounts on the same node");
+        }
         Generator generator = new Generator(secretPhrase);
         Generator old = generators.putIfAbsent(secretPhrase, generator);
         if (old != null) {

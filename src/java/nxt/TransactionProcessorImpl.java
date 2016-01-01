@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -162,7 +162,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     };
 
-    private final Map<TransactionType, Map<String, Boolean>> unconfirmedDuplicates = new HashMap<>();
+    private final Map<TransactionType, Map<String, Integer>> unconfirmedDuplicates = new HashMap<>();
 
 
     private final Runnable removeUnconfirmedTransactionsThread = () -> {
@@ -308,9 +308,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         ThreadPool.scheduleThread("RemoveUnconfirmedTransactions", removeUnconfirmedTransactionsThread, 1);
         ThreadPool.scheduleThread("ProcessWaitingTransactions", processWaitingTransactionsThread, 1);
         ThreadPool.runAfterStart(this::rebroadcastAllUnconfirmedTransactions);
-        if (enableTransactionRebroadcasting) {
-            ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 60);
-        }
+        ThreadPool.scheduleThread("RebroadcastTransactions", rebroadcastTransactionsThread, 23);
     }
 
     @Override
@@ -369,6 +367,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return transactions;
     }
 
+    Collection<UnconfirmedTransaction> getWaitingTransactions() {
+        return Collections.unmodifiableCollection(waitingTransactions);
+    }
+
     @Override
     public TransactionImpl[] getAllBroadcastedTransactions() {
         BlockchainImpl.getInstance().readLock();
@@ -397,13 +399,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 return;
             }
             transaction.validate();
-            processTransaction(new UnconfirmedTransaction((TransactionImpl) transaction, System.currentTimeMillis()));
-            Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
-            List<Transaction> acceptedTransactions = Collections.singletonList(transaction);
-            Peers.sendToSomePeers(acceptedTransactions);
-            transactionListeners.notify(acceptedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
-            if (enableTransactionRebroadcasting) {
+            UnconfirmedTransaction unconfirmedTransaction = new UnconfirmedTransaction((TransactionImpl) transaction, System.currentTimeMillis());
+            boolean broadcastLater = BlockchainProcessorImpl.getInstance().isProcessingBlock();
+            if (broadcastLater) {
+                waitingTransactions.add(unconfirmedTransaction);
                 broadcastedTransactions.add((TransactionImpl) transaction);
+                Logger.logDebugMessage("Will broadcast new transaction later " + transaction.getStringId());
+            } else {
+                processTransaction(unconfirmedTransaction);
+                Logger.logDebugMessage("Accepted new transaction " + transaction.getStringId());
+                List<Transaction> acceptedTransactions = Collections.singletonList(transaction);
+                Peers.sendToSomePeers(acceptedTransactions);
+                transactionListeners.notify(acceptedTransactions, Event.ADDED_UNCONFIRMED_TRANSACTIONS);
+                if (enableTransactionRebroadcasting) {
+                    broadcastedTransactions.add((TransactionImpl) transaction);
+                }
             }
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
@@ -533,13 +543,14 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         }
     }
 
-    void processLater(Collection<TransactionImpl> transactions) {
+    @Override
+    public void processLater(Collection<? extends Transaction> transactions) {
         long currentTime = System.currentTimeMillis();
         BlockchainImpl.getInstance().writeLock();
         try {
-            for (TransactionImpl transaction : transactions) {
-                transaction.unsetBlock();
-                waitingTransactions.add(new UnconfirmedTransaction(transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
+            for (Transaction transaction : transactions) {
+                ((TransactionImpl)transaction).unsetBlock();
+                waitingTransactions.add(new UnconfirmedTransaction((TransactionImpl)transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }
         } finally {
             BlockchainImpl.getInstance().writeUnlock();
@@ -661,7 +672,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 }
 
                 if (! transaction.applyUnconfirmed()) {
-                    throw new NxtException.NotCurrentlyValidException("Double spending or insufficient balance");
+                    throw new NxtException.InsufficientBalanceException("Insufficient balance");
                 }
 
                 if (transaction.isUnconfirmedDuplicate(unconfirmedDuplicates)) {
@@ -742,10 +753,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
      *
      * @param   transactions                        Transactions containing prunable data
      * @return                                      Processed transactions
-     * @throws  NxtException.ValidationException    Transaction is not valid
+     * @throws  NxtException.NotValidException    Transaction is not valid
      */
     @Override
-    public List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.ValidationException {
+    public List<Transaction> restorePrunableData(JSONArray transactions) throws NxtException.NotValidException {
         List<Transaction> processed = new ArrayList<>();
         Nxt.getBlockchain().readLock();
         try {
@@ -758,7 +769,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject)transactionJSON);
                     TransactionImpl myTransaction = TransactionDb.findTransactionByFullHash(transaction.fullHash());
                     if (myTransaction != null) {
-                        boolean foundData = true;
+                        boolean foundAllData = true;
                         //
                         // Process each prunable appendage
                         //
@@ -784,31 +795,17 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                                 if (((Appendix.Prunable)appendage).hasPrunableData()) {
                                     Logger.logDebugMessage(String.format("Loading prunable data for transaction %s %s appendage",
                                             Long.toUnsignedString(transaction.getId()), appendage.getAppendixName()));
-                                    Appendix.Phasing phasing = myTransaction.getPhasing();
-                                    int blockTimestamp;
-                                    int height;
-                                    if (phasing != null && appendage.isPhasable()) {
-                                        height = phasing.getFinishHeight();
-                                        Block finishBlock = Nxt.getBlockchain().getBlockAtHeight(height);
-                                        if (finishBlock == null) {
-                                            throw new NxtException.NotValidException(
-                                                    "Transaction " + myTransaction.getStringId()
-                                                    + " prunable data finish block at height " + height + " not found");
-                                        }
-                                        blockTimestamp = finishBlock.getTimestamp();
-                                    } else {
-                                        blockTimestamp = myTransaction.getBlockTimestamp();
-                                        height = myTransaction.getHeight();
-                                    }
-                                    ((Appendix.Prunable)appendage).restorePrunableData(transaction, blockTimestamp, height);
+                                    ((Appendix.Prunable)appendage).restorePrunableData(transaction, myTransaction.getBlockTimestamp(), myTransaction.getHeight());
                                 } else {
-                                    foundData = false;
+                                    foundAllData = false;
                                 }
                             }
                         }
-                        if (foundData) {
-                            processed.add(transaction);
+                        if (foundAllData) {
+                            processed.add(myTransaction);
                         }
+                        Db.db.clearCache();
+                        Db.db.commitTransaction();
                     }
                 }
                 Db.db.commitTransaction();

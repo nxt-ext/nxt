@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -44,20 +44,19 @@ public final class DeleteAssetShares extends CreateTransaction {
         long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
-        long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
-        if (assetBalance < 0 || quantityQNT > assetBalance) {
-            return NOT_ENOUGH_ASSETS;
-        }
-
         JSONStreamAware response;
-        if (Nxt.getBlockchain().getHeight() < Constants.ASSET_DELETE_BLOCK) {
-            // Use AssetTransfer attachment if asset delete is not enabled yet
-            Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT);
-            response = createTransaction(req, account, Genesis.CREATOR_ID, 0, attachment);
-        } else {
-            // Use AssetDelete attachment
-            Attachment attachment = new Attachment.ColoredCoinsAssetDelete(asset.getId(), quantityQNT);
-            response = createTransaction(req, account, attachment);
+        try {
+            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
+                // Use AssetTransfer attachment if asset delete is not enabled yet
+                Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT);
+                response = createTransaction(req, account, Genesis.CREATOR_ID, 0, attachment);
+            } else {
+                // Use AssetDelete attachment
+                Attachment attachment = new Attachment.ColoredCoinsAssetDelete(asset.getId(), quantityQNT);
+                response = createTransaction(req, account, attachment);
+            }
+        } catch (NxtException.InsufficientBalanceException e) {
+            return NOT_ENOUGH_ASSETS;
         }
         return response;
     }

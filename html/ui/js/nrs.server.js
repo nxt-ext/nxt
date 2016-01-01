@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -19,8 +19,6 @@
  */
 var NRS = (function (NRS, $, undefined) {
     var _password;
-
-    NRS.multiQueue = null;
 
     NRS.setServerPassword = function (password) {
         _password = password;
@@ -84,37 +82,29 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         });
-        //feeNXT addition fields
-        var nxtAdditionFields = [
-            "feeNXT_approval_addition"
-        ];
-        for (var i = 0; i < nxtAdditionFields.length; i++) {
-            var nxtAdditionField = nxtAdditionFields[i];
-            if (nxtAdditionField in data && "feeNXT" in data && parseInt(data[nxtAdditionField]) >= 0) {
-                data["feeNXT"] = String(parseFloat(data["feeNXT"]) + parseFloat(data[nxtAdditionField]));
-                delete data[nxtAdditionField];
-            }
-        }
         //convert NXT to NQT...
         var field = "N/A";
         try {
             var nxtFields = [
-                ["feeNXT", "NQT"],
-                ["amountNXT", "NQT"],
-                ["priceNXT", "NQT"],
-                ["refundNXT", "NQT"],
-                ["discountNXT", "NQT"],
-                ["phasingQuorumNXT", ""],
-                ["phasingMinBalanceNXT", ""],
-                ["minBalanceNXT", ""]
+                ["feeNXT", "feeNQT"],
+                ["amountNXT", "amountNQT"],
+                ["priceNXT", "priceNQT"],
+                ["refundNXT", "refundNQT"],
+                ["discountNXT", "discountNQT"],
+                ["phasingQuorumNXT", "phasingQuorum"],
+                ["phasingMinBalanceNXT", "phasingMinBalance"],
+                ["controlQuorumNXT", "controlQuorum"],
+                ["controlMinBalanceNXT", "controlMinBalance"],
+                ["controlMaxFeesNXT", "controlMaxFees"],
+                ["minBalanceNXT", "minBalance"],
+                ["shufflingAmountNXT", "amount"]
             ];
 
             for (i = 0; i < nxtFields.length; i++) {
                 var nxtField = nxtFields[i][0];
-                field = nxtField.replace("NXT", "");
-
+                var nqtField = nxtFields[i][1];
                 if (nxtField in data) {
-                    data[field + nxtFields[i][1]] = NRS.convertToNQT(data[nxtField]);
+                    data[nqtField] = NRS.convertToNQT(data[nxtField]);
                     delete data[nxtField];
                 }
             }
@@ -130,8 +120,12 @@ var NRS = (function (NRS, $, undefined) {
             var currencyFields = [
                 ["phasingQuorumQNTf", "phasingHoldingDecimals"],
                 ["phasingMinBalanceQNTf", "phasingHoldingDecimals"],
+                ["controlQuorumQNTf", "controlHoldingDecimals"],
+                ["controlMinBalanceQNTf", "controlHoldingDecimals"],
                 ["minBalanceQNTf", "create_poll_asset_decimals"],
-                ["minBalanceQNTf", "create_poll_ms_decimals"]
+                ["minBalanceQNTf", "create_poll_ms_decimals"],
+                ["amountQNTf", "shuffling_asset_decimals"],
+                ["amountQNTf", "shuffling_ms_decimals"]
             ];
             var toDelete = [];
             for (i = 0; i < currencyFields.length; i++) {
@@ -139,21 +133,62 @@ var NRS = (function (NRS, $, undefined) {
                 var decimalsField = currencyFields[i][1];
                 field = decimalUnitField.replace("QNTf", "");
 
-                if (decimalUnitField in data) {
+                if (decimalUnitField in data && decimalsField in data) {
                     data[field] = NRS.convertToQNT(parseFloat(data[decimalUnitField]), parseInt(data[decimalsField]));
                     toDelete.push(decimalUnitField);
                     toDelete.push(decimalsField);
                 }
             }
-            $(toDelete, function (key, value) {
-                delete data[value];
-            });
+            for (var i = 0; i < toDelete.length; i++) {
+                delete data[toDelete[i]];
+            }
         } catch (err) {
             callback({
                 "errorCode": 1,
                 "errorDescription": err + " (" + $.t(field) + ")"
             });
             return;
+        }
+
+        //Fill phasing parameters when mandatory approval is enabled
+        if (requestType != "approveTransaction"
+            && NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1
+                && NRS.accountInfo.phasingOnly
+                && NRS.accountInfo.phasingOnly.votingModel >= 0) {
+
+            var phasingControl = NRS.accountInfo.phasingOnly;
+            var maxFees = new BigInteger(phasingControl.maxFees);
+            if (maxFees > 0 && new BigInteger(data.feeNQT).compareTo(new BigInteger(phasingControl.maxFees)) > 0) {
+                callback({
+                    "errorCode": 1,
+                    "errorDescription": $.t("error_fee_exceeds_max_account_control_fee", {
+                        "maxFee": NRS.convertToNXT(phasingControl.maxFees)
+                    })
+                });
+                return;
+            }
+            var phasingDuration = parseInt(data.phasingFinishHeight) - NRS.lastBlockHeight;
+            var minDuration = parseInt(phasingControl.minDuration) > 0 ? parseInt(phasingControl.minDuration) : 0;
+            var maxDuration = parseInt(phasingControl.maxDuration) > 0 ? parseInt(phasingControl.maxDuration) : NRS.constants.SERVER.maxPhasingDuration;
+
+            if (phasingDuration < minDuration || phasingDuration > maxDuration) {
+                callback({
+                    "errorCode": 1,
+                    "errorDescription": $.t("error_finish_height_out_of_account_control_interval", {
+                        "min": NRS.lastBlockHeight + minDuration,
+                        "max": NRS.lastBlockHeight + maxDuration
+                    })
+                });
+                return;
+            }
+
+            var phasingParams = NRS.phasingControlObjectToPhasingParams(phasingControl);
+            $.extend(data, phasingParams);
+            data.phased = true;
+
+            delete data.phasingHashedSecret;
+            delete data.phasingHashedSecretAlgorithm;
+            delete data.phasingLinkedFullHash;
         }
 
         if (!data.recipientPublicKey) {
@@ -183,7 +218,7 @@ var NRS = (function (NRS, $, undefined) {
         //check to see if secretPhrase supplied matches logged in account, if not - show error.
         if ("secretPhrase" in data) {
             accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
-            if (accountId != NRS.account) {
+            if (accountId != NRS.account && !data.calculateFee) {
                 callback({
                     "errorCode": 1,
                     "errorDescription": $.t("error_passphrase_incorrect")
@@ -198,9 +233,6 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.processAjaxRequest = function (requestType, data, callback, isAsync) {
-        if (!NRS.multiQueue) {
-            NRS.multiQueue = $.ajaxMultiQueue(8);
-        }
         var extra = null;
         if (data["_extra"]) {
             extra = data["_extra"];
@@ -257,8 +289,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" &&
-            requestType != "startForging" && requestType != "stopForging" && requestType != "getForging") {
+        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
             } else {
@@ -278,13 +309,6 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         $.support.cors = true;
-        var ajaxCall;
-        if (type == "GET") {
-            ajaxCall = NRS.multiQueue.queue;
-        } else {
-            ajaxCall = $.ajax;
-        }
-
         // Used for passing row query string which is too long for a GET request
         if (data.querystring) {
             data = data.querystring;
@@ -305,7 +329,14 @@ var NRS = (function (NRS, $, undefined) {
                 formData.append(key, data[key]);
             }
             var file = $('#upload_file')[0].files[0];
-            if (file && file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+            if (!file) {
+                callback({
+                    "errorCode": 3,
+                    "errorDescription": $.t("error_no_file_chosen")
+                }, data);
+                return;
+            }
+            if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
                 callback({
                     "errorCode": 3,
                     "errorDescription": $.t("error_file_too_big", {
@@ -323,7 +354,7 @@ var NRS = (function (NRS, $, undefined) {
             processData = true;
         }
 
-        ajaxCall({
+        $.ajax({
             url: url,
             crossDomain: true,
             dataType: "json",
@@ -370,7 +401,7 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     callback(response, data);
                 } else {
-                    if (response.broadcasted == false) {
+                    if (response.broadcasted == false && !data.calculateFee) {
                         async.waterfall([
                             function(callback) {
                                 addMissingData(data);
@@ -390,7 +421,8 @@ var NRS = (function (NRS, $, undefined) {
                                 }
                             },
                             function(callback) {
-                                if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data)) {
+                                if (response.unsignedTransactionBytes &&
+                                    !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment)) {
                                     callback({
                                         "errorCode": 1,
                                         "errorDescription": $.t("error_bytes_validation_server")
@@ -443,7 +475,7 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data, callback, response, extra) {
         var byteArray = converters.hexStringToByteArray(transactionBytes);
-        if (!NRS.verifyTransactionBytes(byteArray, requestType, data)) {
+        if (!NRS.verifyTransactionBytes(byteArray, requestType, data, response.transactionJSON.attachment)) {
             callback({
                 "errorCode": 1,
                 "errorDescription": $.t("error_bytes_validation_server")
@@ -463,7 +495,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.verifyTransactionBytes = function (byteArray, requestType, data) {
+    NRS.verifyTransactionBytes = function (byteArray, requestType, data, attachment) {
         var transaction = {};
         transaction.type = byteArray[0];
         transaction.version = (byteArray[1] & 0xF0) >> 4;
@@ -499,14 +531,14 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         if (transaction.recipient !== data.recipient) {
-            if (data.recipient == NRS.constants.GENESIS && transaction.recipient == "0") {
+            if ((data.recipient == NRS.constants.GENESIS || data.recipient == "") && transaction.recipient == "0") {
                 //ok
             } else {
                 return false;
             }
         }
 
-        if (transaction.amountNQT !== data.amountNQT || transaction.feeNQT !== data.feeNQT) {
+        if (transaction.amountNQT !== data.amountNQT) {
             return false;
         }
 
@@ -528,10 +560,10 @@ var NRS = (function (NRS, $, undefined) {
         } else {
             pos = 160;
         }
-        return NRS.verifyTransactionTypes(byteArray, transaction, requestType, data, pos);
+        return NRS.verifyTransactionTypes(byteArray, transaction, requestType, data, pos, attachment);
     };
 
-    NRS.verifyTransactionTypes = function (byteArray, transaction, requestType, data, pos) {
+    NRS.verifyTransactionTypes = function (byteArray, transaction, requestType, data, pos, attachment) {
         var length = 0;
         var i=0;
         var serverHash, sha256, utfBytes, isText, hashWords, calculatedHash;
@@ -720,6 +752,31 @@ var NRS = (function (NRS, $, undefined) {
                     return false;
                 }
                 break;
+            case "setAccountProperty":
+                if (transaction.type !== 1 && transaction.subtype !== 10) {
+                    return false;
+                }
+                length = byteArray[pos];
+                pos++;
+                if (converters.byteArrayToString(byteArray, pos, length) !== data.property) {
+                    return false;
+                }
+                pos += length;
+                length = byteArray[pos];
+                pos++;
+                if (converters.byteArrayToString(byteArray, pos, length) !== data.value) {
+                    return false;
+                }
+                pos += length;
+                break;
+            case "deleteAccountProperty":
+                if (transaction.type !== 1 && transaction.subtype !== 11) {
+                    return false;
+                }
+                // no way to validate the property id, just skip it
+                String(converters.byteArrayToBigInteger(byteArray, pos));
+                pos += 8;
+                break;
             case "issueAsset":
                 if (transaction.type !== 2 || transaction.subtype !== 0) {
                     return false;
@@ -783,6 +840,18 @@ var NRS = (function (NRS, $, undefined) {
                 transaction.order = String(converters.byteArrayToBigInteger(byteArray, pos));
                 pos += 8;
                 if (transaction.order !== data.order) {
+                    return false;
+                }
+                break;
+            case "deleteAssetShares":
+                if (transaction.type !== 2 || transaction.subtype !== 7) {
+                    return false;
+                }
+                transaction.asset = String(converters.byteArrayToBigInteger(byteArray, pos));
+                pos += 8;
+                transaction.quantityQNT = String(converters.byteArrayToBigInteger(byteArray, pos));
+                pos += 8;
+                if (transaction.asset !== data.asset || transaction.quantityQNT !== data.quantityQNT) {
                     return false;
                 }
                 break;
@@ -934,6 +1003,12 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.period !== data.period) {
                     return false;
                 }
+                break;
+            case "setPhasingOnlyControl":
+                if (transaction.type !== 4 && transaction.subtype !== 1) {
+                    return false;
+                }
+                return validateCommonPhasingData(byteArray, pos, data, "control") != -1;
                 break;
             case "issueCurrency":
                 if (transaction.type !== 5 && transaction.subtype !== 0) {
@@ -1119,12 +1194,12 @@ var NRS = (function (NRS, $, undefined) {
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.tags);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
-                utfBytes = NRS.getUtf8Bytes(data.type);
+                utfBytes = NRS.getUtf8Bytes(attachment.type);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 utfBytes = NRS.getUtf8Bytes(data.channel);
                 sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
                 isText = [];
-                if (String(data.isText) == "true") {
+                if (attachment.isText) {
                     isText.push(1);
                 } else {
                     isText.push(0);
@@ -1149,6 +1224,38 @@ var NRS = (function (NRS, $, undefined) {
                 if (transaction.taggedDataId !== data.transaction) {
                     return false;
                 }
+                break;
+            case "shufflingCreate":
+                if (transaction.type !== 7 && transaction.subtype !== 0) {
+                    return false;
+                }
+                var holding = String(converters.byteArrayToBigInteger(byteArray, pos));
+                if (holding !== "0" && holding !== data.holding ||
+                    holding === "0" && data.holding !== undefined && data.holding !== "" && data.holding !== "0") {
+                    return false;
+                }
+                pos += 8;
+                var holdingType = String(byteArray[pos]);
+                if (holdingType !== "0" && holdingType !== data.holdingType ||
+                    holdingType === "0" && data.holdingType !== undefined && data.holdingType !== "" && data.holdingType !== "0") {
+                    return false;
+                }
+                pos++;
+                var amount = String(converters.byteArrayToBigInteger(byteArray, pos));
+                if (amount !== data.amount) {
+                    return false;
+                }
+                pos += 8;
+                var participantCount = String(byteArray[pos]);
+                if (participantCount !== data.participantCount) {
+                    return false;
+                }
+                pos++;
+                var registrationPeriod = converters.byteArrayToSignedShort(byteArray, pos);
+                if (registrationPeriod !== data.registrationPeriod) {
+                    return false;
+                }
+                pos += 2;
                 break;
             default:
                 //invalid requestType..
@@ -1277,37 +1384,10 @@ var NRS = (function (NRS, $, undefined) {
                 return false;
             }
             pos += 4;
-            if (byteArray[pos] != (parseInt(data.phasingVotingModel) & 0xFF)) {
+            pos = validateCommonPhasingData(byteArray, pos, data, "phasing");
+            if (pos == -1) {
                 return false;
             }
-            pos++;
-            if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== String(data.phasingQuorum)) {
-                return false;
-            }
-            pos += 8;
-            var minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
-            if (minBalance !== "0" && minBalance !== data.phasingMinBalance) {
-                return false;
-            }
-            pos += 8;
-            var whiteListLength = byteArray[pos];
-            pos++;
-            for (i = 0; i < whiteListLength; i++) {
-                var accountId = NRS.convertNumericToRSAccountFormat(converters.byteArrayToBigInteger(byteArray, pos));
-                pos += 8;
-                if (String(accountId) !== data.phasingWhitelisted[i]) {
-                    return false;
-                }
-            }
-            var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
-            if (holdingId !== "0" && holdingId !== data.phasingHolding) {
-                return false;
-            }
-            pos += 8;
-            if (String(byteArray[pos]) !== String(data.phasingMinBalanceModel)) {
-                return false;
-            }
-            pos++;
             var linkedFullHashesLength = byteArray[pos];
             pos++;
             for (i = 0; i < linkedFullHashesLength; i++) {
@@ -1483,6 +1563,42 @@ var NRS = (function (NRS, $, undefined) {
             data.recipient = NRS.constants.GENESIS;
             data.recipientRS = NRS.constants.GENESIS_RS;
         }
+    }
+
+    function validateCommonPhasingData(byteArray, pos, data, prefix) {
+        if (byteArray[pos] != (parseInt(data[prefix + "VotingModel"]) & 0xFF)) {
+            return -1;
+        }
+        pos++;
+        if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== String(data[prefix + "Quorum"])) {
+            return -1;
+        }
+        pos += 8;
+        var minBalance = String(converters.byteArrayToBigInteger(byteArray, pos));
+        if (minBalance !== "0" && minBalance !== data[prefix + "MinBalance"]) {
+            return -1;
+        }
+        pos += 8;
+        var whiteListLength = byteArray[pos];
+        pos++;
+        for (i = 0; i < whiteListLength; i++) {
+            var accountId = converters.byteArrayToBigInteger(byteArray, pos);
+            var accountRS = NRS.convertNumericToRSAccountFormat(accountId);
+            pos += 8;
+            if (String(accountId) !== data[prefix + "Whitelisted"][i] && String(accountRS) !== data[prefix + "Whitelisted"][i]) {
+                return -1;
+            }
+        }
+        var holdingId = String(converters.byteArrayToBigInteger(byteArray, pos));
+        if (holdingId !== "0" && holdingId !== data[prefix + "Holding"]) {
+            return -1;
+        }
+        pos += 8;
+        if (String(byteArray[pos]) !== String(data[prefix + "MinBalanceModel"])) {
+            return -1;
+        }
+        pos++;
+        return pos;
     }
 
     return NRS;

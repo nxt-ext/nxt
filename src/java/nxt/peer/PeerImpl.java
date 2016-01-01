@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -67,6 +67,8 @@ final class PeerImpl implements Peer {
     private volatile Hallmark hallmark;
     private volatile String platform;
     private volatile String application;
+    private volatile int apiPort;
+    private volatile int apiSSLPort;
     private volatile String version;
     private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
@@ -219,6 +221,35 @@ final class PeerImpl implements Peer {
         return Convert.truncate(application, "?", 10, false)
                 + " (" + Convert.truncate(version, "?", 10, false) + ")"
                 + " @ " + Convert.truncate(platform, "?", 10, false);
+    }
+
+    @Override
+    public int getApiPort() {
+        return apiPort;
+    }
+
+    void setApiPort(Object apiPortValue) {
+        if (apiPortValue != null) {
+            try {
+                apiPort = ((Long)apiPortValue).intValue();
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException("Invalid peer apiPort " + apiPortValue);
+            }
+        }
+    }
+
+    public int getApiSSLPort() {
+        return apiSSLPort;
+    }
+
+    void setApiSSLPort(Object apiSSLPortValue) {
+        if (apiSSLPortValue != null) {
+            try {
+                apiSSLPort = ((Long)apiSSLPortValue).intValue();
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException("Invalid peer apiSSLPort " + apiSSLPortValue);
+            }
+        }
     }
 
     @Override
@@ -587,6 +618,8 @@ final class PeerImpl implements Peer {
                 long origServices = services;
                 services = (servicesString != null ? Long.parseUnsignedLong(servicesString) : 0);
                 setApplication((String)response.get("application"));
+                setApiPort(response.get("apiPort"));
+                setApiSSLPort(response.get("apiSSLPort"));
                 lastUpdated = lastConnectAttempt;
                 setVersion((String) response.get("version"));
                 setPlatform((String) response.get("platform"));
@@ -805,6 +838,15 @@ final class PeerImpl implements Peer {
         boolean isProvided;
         synchronized (this) {
             isProvided = ((services & service.getCode()) != 0);
+        }
+        return isProvided;
+    }
+
+    @Override
+    public boolean providesServices(long services) {
+        boolean isProvided;
+        synchronized (this) {
+            isProvided = (services & this.services) == services;
         }
         return isProvided;
     }

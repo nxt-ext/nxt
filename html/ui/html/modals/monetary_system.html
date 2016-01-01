@@ -1,5 +1,5 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ~ Copyright © 2013-2015 The Nxt Core Developers.                            ~
+  ~ Copyright © 2013-2016 The Nxt Core Developers.                            ~
   ~                                                                           ~
   ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
   ~ the top-level directory of this distribution for the individual copyright ~
@@ -42,8 +42,9 @@
                         </div>
                     </div>
                     <div data-replace-with-modal-template="add_message_modal_template"></div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -56,7 +57,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="transfer_currency;[placeholder]submitting">Transfer Currency</button>
@@ -76,25 +77,22 @@
             <div class="modal-body">            
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div id="currency_order_pre_fork_warning" class="callout callout-danger" style="display:none"></div>
                     <div class="form-group">
                         <label data-i18n="exchange_description">EXCHANGE DESCRIPTION</label>
                         <p id="currency_order_description"></p>
                         <input type="hidden" name="currency" id="currency_order_currency" value="" />
                         <input type="hidden" name="units" id="currency_order_units" value="" />
                         <input type="hidden" name="rateNQT" id="currency_order_rate" value="" />
-                        <input type="hidden" name="feeNQT" id="currency_order_fee" value="" />
                         <input type="hidden" name="deadline" id="currency_order_deadline" data-default="24" value="24" />
                     </div>
                     <div class="form-group">
                         <label><span data-i18n="total">TOTAL</span> <i id="currency_order_total_tooltip" class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content=""></i></label>
                         <p id="currency_order_total"></p>
                     </div>
-                    <div class="form-group">
-                        <label data-i18n="fee">FEE</label>
-                        <p id="currency_order_fee_paid"></p>
-                    </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -104,7 +102,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee:</strong> <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." id="currency_order_modal_button" data-i18n="[data-loading-text]submitting"></button>
@@ -210,28 +208,9 @@
                         <label for="issue_currency_issuance_height" data-i18n="issuance_height">ISSUANCE HEIGHT</label> <i>Current Height: <span class="nrs_current_block"></span></i>
                         <input type="number" name="issuanceHeight" id="issue_currency_issuance_height" class="form-control" min="0" placeholder="Issuance Height" data-i18n="issuance_height" tabindex="18" value="0" disabled>
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced" data-advanced="6">
-                            <div class="form-group">
-                                <label for="issue_currency_fee"><span data-i18n="fee">FEE</span> <i class="fa fa-exclamation-circle show_popover" data-content="The fees are the following: 3 Letters - 25000 NXT, 4 Letters - 1000 NXT, 5 Letters - 40 NXT" data-i18n="[data-content]currency_minimum_fee_help" data-container="body" style="color:red"></i></label>
-                                <div class="input-group">
-                                    <input type="text" name="feeNXT" id="issue_currency_fee" class="form-control" placeholder="Fee" min="40" data-default="25000" value="25000" tabindex="19">
-                                    <span class="input-group-addon" style="min-width:50px;"><i class="fa fa-gavel"></i> 
-                                        <span id="{{name}}_feeNXT_addition_info" class="feeNXT_approval_addition_info">+0</span>
-                                    </span>
-                                    <input type="hidden" id="{{name}}_feeNXT_approval_addition" name="feeNXT_approval_addition" value="0" />
-                                    <span class="input-group-addon">NXT</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6 advanced">
-                            <div class="form-group">
-                                <label for="issue_currency_deadline" data-i18n="deadline_hours">DEADLINE (HOURS)</label>
-                                <input type="number" name="deadline" id="issue_currency_deadline" class="form-control" placeholder="Deadline" data-i18n="deadline" min="1" data-default="24" value="24" tabindex="20">
-                            </div>
-                        </div>
-                    </div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -240,7 +219,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">25'000 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="issue_currency;[data-loading-text]submitting">Issue Currency</button>
@@ -270,7 +249,7 @@
 
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container"><p data-i18n="currency_not_distributed">Currency Not Distributed</p></div>
                 </div>
             </div>
@@ -293,14 +272,17 @@
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div style="margin-left:-20px">
                         <div class="form-group">
-                            <label data-i18n="currency">CURRENCY</label>
-                            <p><span class="currency_code"></span><span id="publish_exchange_available" style="font-style:italic"></span></p>
-                            <input type="hidden" name="currency" id="publish_exchange_offer_currency" value="" />
-                            <input type="hidden" name="decimals" id="publish_exchange_offer_decimals" value="" />
+                            <label class="col-sm-10 control-label">
+                                <i class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="bottom" data-content="" data-i18n="[data-content]publish_offer_help" data-trigger="hover"></i>
+                                <span data-i18n="currency">CURRENCY</span>
+                                <span class="currency_code"></span><span id="publish_exchange_available" style="font-style:italic; font-weight:normal"></span>
+                            </label>
                         </div>
                         <div class="form-group">
-                            <label for="buy_currency_units_initial" class="col-sm-3 control-label" data-i18n="buy_units_initial">Buy units (Initial)</label>
-                            <div class="col-sm-9">
+                            <label for="buy_currency_units_initial" class="col-sm-4 control-label">
+                                <span data-i18n="buy_units_initial">Buy units (Initial)</span> <i class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content="" data-i18n="[data-content]buy_units_initial_help" data-trigger="hover"></i>
+                            </label>
+                            <div class="col-sm-8">
                                 <div class="input-group">
                                     <input id="buy_currency_units_initial" type="text" name="initialBuySupply" value="0" class="form-control" data-type="buy" tabindex="2" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
@@ -308,8 +290,10 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="buy_currency_units_total" class="col-sm-3 control-label" data-i18n="buy_units_limit">Buy units (Limit)</label>
-                            <div class="col-sm-9">
+                            <label for="buy_currency_units_total" class="col-sm-4 control-label">
+                                <span data-i18n="buy_units_limit">Buy units (Limit)</span> <i class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content="" data-i18n="[data-content]buy_units_limit_help" data-trigger="hover"></i>
+                            </label>
+                            <div class="col-sm-8">
                                 <div class="input-group">
                                     <input id="buy_currency_units_total" type="text" name="totalBuyLimit" value="0" class="form-control" data-type="buy" tabindex="3" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
@@ -317,17 +301,22 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="buy_currency_rate" class="col-sm-3 control-label" data-i18n="buy_rate_per_unit">Buy Rate per unit</label>
-                            <div class="col-sm-9">
+                            <label for="buy_currency_offer_rate" class="col-sm-4 control-label">
+                                <span data-i18n="buy_rate_per_unit">Buy Rate per unit</span> <i class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content="" data-i18n="[data-content]buy_rate_help" data-trigger="hover"></i>
+                            </label>
+                            <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input id="buy_currency_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" tabindex="4" />
+                                    <input id="buy_currency_offer_rate" type="text" value="0" name="buyRateNQT" class="form-control" data-type="buy" tabindex="4" />
                                     <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                 </div>
                             </div>
                         </div>
+                        <p></p>
                         <div class="form-group">
-                            <label for="sell_currency_units_initial" class="col-sm-3 control-label" data-i18n="sell_units_initial">Sell units (Initial)</label>
-                            <div class="col-sm-9">
+                            <label for="sell_currency_units_initial" class="col-sm-4 control-label">
+                                <span data-i18n="sell_units_initial">Sell units (Initial)</span> <i class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content="" data-i18n="[data-content]sell_units_initial_help" data-trigger="hover"></i>
+                            </label>
+                            <div class="col-sm-8">
                                 <div class="input-group">
                                     <input id="sell_currency_units_initial" type="text" name="initialSellSupply" value="0" class="form-control" data-type="sell" tabindex="5" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
@@ -335,8 +324,10 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="sell_currency_units_total" class="col-sm-3 control-label" data-i18n="sell_units_limit">Sell units (Limit)</label>
-                            <div class="col-sm-9">
+                            <label for="sell_currency_units_total" class="col-sm-4 control-label">
+                                <span data-i18n="sell_units_limit">Sell units (Limit)</span> <i class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content="" data-i18n="[data-content]sell_units_limit_help" data-trigger="hover"></i>
+                            </label>
+                            <div class="col-sm-8">
                                 <div class="input-group">
                                     <input id="sell_currency_units_total" type="text" name="totalSellLimit" value="0" class="form-control" data-type="sell" tabindex="6" />
                                     <span class="input-group-addon"><span class="currency_code"></span></span>
@@ -344,35 +335,38 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="sell_currency_rate" class="col-sm-3 control-label" data-i18n="sell_rate_per_unit">Sell Rate per unit</label>
-                            <div class="col-sm-9">
+                            <label for="sell_currency_offer_rate" class="col-sm-4 control-label">
+                                <span data-i18n="sell_rate_per_unit">Sell Rate per unit</span> <i class="fa fa-question-circle" style="color:#4CAA6E" data-toggle="popover" data-placement="right" data-content="" data-i18n="[data-content]sell_rate_help" data-trigger="hover"></i>
+                            </label>
+                            <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input id="sell_currency_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" tabindex="7" />
+                                    <input id="sell_currency_offer_rate" type="text" value="0" name="sellRateNQT" class="form-control" data-type="sell" tabindex="7" />
                                     <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
                                 </div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="expiration_height" class="col-sm-3 control-label" data-i18n="expiration_height">Expiration Height</label><i><span data-i18n="current_height">Current Height</span>: <span class="nrs_current_block"></span></i>
-                            <div class="col-sm-9">
-                                <div class="input-group">
-                                    <input id="expiration_height" type="number" name="expirationHeight" class="form-control" tabindex="8" />
-                                </div>
+                            <label class="col-sm-1 control-label"></label>
+                            <div class="col-sm-10">
+                                <div class="form-group exchange_offer_expiration_height" data-modal-ui-element="block_height_modal_ui_element"></div>
                             </div>
                         </div>
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
                     <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
                     
+                    <input type="hidden" name="currency" id="publish_exchange_offer_currency"/>
+                    <input type="hidden" name="decimals" id="publish_exchange_offer_decimals"/>
                     <input type="hidden" name="request_type" value="publishExchangeOffer" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="publish_exchange_offer;[data-loading-text]submitting">Publish Exchange Offer</button>
             </div>
@@ -399,8 +393,9 @@
                         <label for="claim_currency_amount" data-i18n="currency_claim_rate">Claim rate</label> <i><span id="claimRate"></span></i>
                         <input type="text" class="form-control" name="units" id="claim_currency_amount" placeholder="Number of units" data-i18n="units" tabindex="1" />
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -410,60 +405,10 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="claim_currency_button" data-loading-text="Submitting..." data-i18n="claim;[data-loading-text]submitting">Claim currency</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="mine_currency_modal" data-transaction-type="5" data-transaction-subtype="7" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title"><span data-i18n="mint_currency">Mint Currency</span> - <span id="mine_currency_code"></span></h4>
-            </div>
-            <div class="modal-body">            
-                <form role="form" autocomplete="off">
-                    <div class="callout callout-danger error_message" style="display:none"></div>
-                    <div class="form-group">
-                        <input type="hidden" name="currency" id="mine_currency_currency" />
-                        <input type="hidden" name="decimals" id="mine_currency_decimals" />
-                    </div>
-                    <div class="form-group">
-                        <label for="mine_currency_units" data-i18n="units">Units</label>
-                        <input type="text" class="form-control" name="units" id="mine_currency_units" data-i18n="units" tabindex="1" />
-                    </div>
-                    <div class="form-group">
-                        <label for="mine_currency_counter" data-i18n="counter">Counter</label>
-                        <input type="text" class="form-control" name="counter" id="mine_currency_counter" data-i18n="counter" tabindex="1" />
-                    </div>
-                    <div class="form-group">
-                        <label for="mine_currency_difficulty" data-i18n="difficulty">Difficulty</label>
-                        <input type="text" class="form-control" name="difficulty" id="mine_currency_difficulty" data-i18n="difficulty" disabled tabindex="1" />
-                    </div>
-                    <div class="form-group">
-                        <label for="mine_currency_nonce" data-i18n="nonce">Nonce</label>
-                        <input type="text" class="form-control" name="nonce" id="mine_currency_nonce" data-i18n="nonce" tabindex="1" />
-                    </div>
-                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
-                    <div data-replace-with-modal-template="advanced_approve_template"></div>
-                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
-                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
-                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-
-                    <input type="hidden" name="request_type" value="currencyMint" />
-                </form>
-            </div>
-            <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
-
-                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="mine_currency_button" data-loading-text="Submitting..." data-i18n="mint;[data-loading-text]submitting">Mint currency</button>
             </div>
         </div>
     </div>
@@ -502,8 +447,9 @@
                         <label for="reserve_currency_total" data-i18n="amount_nxt_reserved">Reserve per Unit</label>
                         <input id="reserve_currency_total" name="amountPerUnitNQT" readonly style="border: none"/>
                     </div>
+                    <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
+                    <div data-replace-with-modal-template="advanced_deadline_template"></div>
                     <div data-replace-with-modal-template="advanced_approve_template"></div>
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
@@ -513,43 +459,10 @@
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
+                <div class="advanced_info"><a href="#" data-i18n="advanced">advanced</a></div>
 
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-primary" id="reserve_currency_button" data-loading-text="Submitting..." data-i18n="reserve;[data-loading-text]submitting">Reserve currency</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="delete_currency_modal" data-transaction-type="5" data-transaction-subtype="8" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title"><span data-i18n="delete_currency">Delete currency</span> - <span id="delete_currency_code"></span></h4>
-            </div>
-            <div class="modal-body">            
-                <form role="form" autocomplete="off">
-                    <div class="callout callout-danger error_message" style="display:none"></div>
-                    <div class="form-group">
-                        <input type="hidden" class="form-control" name="currency" id="delete_currency_currency" />
-                    </div>
-                    <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <div data-replace-with-modal-template="advanced_fee_deadline_template"></div>
-                    <div data-replace-with-modal-template="advanced_approve_template"></div>
-                    <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
-                    <div data-replace-with-modal-template="advanced_broadcast_template"></div>
-                    <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-                    
-                    <input type="hidden" name="request_type" value="deleteCurrency" />
-                </form>
-            </div>
-            <div class="modal-footer" style="margin-top:0;">
-                <div class="advanced_info"><strong data-i18n="fee">Fee</strong>: <span class="advanced_fee">1 NXT</span> - <a href="#" data-i18n="advanced">advanced</a></div>
-
-                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="delete_currency_button" data-loading-text="Submitting..." data-i18n="delete;[data-loading-text]submitting">Delete currency</button>
             </div>
         </div>
     </div>
@@ -585,7 +498,7 @@
                         
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container"><p data-i18n="error">Error</p></div>
                 </div>
             </div>

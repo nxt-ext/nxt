@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -269,15 +269,15 @@ var NRS = (function (NRS, $) {
 		var messageBytes = converters.hexStringToByteArray(message);
 		var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
 
-		var digest = simpleHash(secretPhraseBytes);
-		var s = curve25519.keygen(digest).s;
-		var m = simpleHash(messageBytes);
-		var x = simpleHash(m, s);
-		var y = curve25519.keygen(x).p;
-		var h = simpleHash(m, y);
-		var v = curve25519.sign(h, x, s);
+        var digest = simpleHash(secretPhraseBytes);
+        var s = curve25519.keygen(digest).s;
+        var m = simpleHash(messageBytes);
+        var x = simpleHash(m, s);
+        var y = curve25519.keygen(x).p;
+        var h = simpleHash(m, y);
+        var v = curve25519.sign(h, x, s);
 		return converters.byteArrayToHexString(v.concat(h));
-	};
+    };
 
 	NRS.verifySignature = function(signature, message, publicKey, callback) {
 		var signatureBytes = converters.hexStringToByteArray(signature);
@@ -292,7 +292,7 @@ var NRS = (function (NRS, $) {
             callback({
                 "errorCode": 1,
                 "errorDescription": $.t("error_signature_verification_client")
-            }, data);
+            }, message);
             return false;
         }
         return true;

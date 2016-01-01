@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -23,7 +23,6 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 
 public final class StartForging extends APIServlet.APIRequestHandler {
@@ -43,9 +42,6 @@ public final class StartForging extends APIServlet.APIRequestHandler {
         }
 
         Generator generator = Generator.startForging(secretPhrase);
-        if (generator == null) {
-            return UNKNOWN_ACCOUNT;
-        }
 
         JSONObject response = new JSONObject();
         response.put("deadline", generator.getDeadline());

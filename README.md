@@ -29,6 +29,7 @@ in such a way that no trusted third parties are required anymore.
 ## Run it! ##
 
   - Linux: `./run.sh`
+  - Mac: `./run.command`
   - Window: `run.bat`
 
   - Browse: http://localhost:7876/
@@ -60,7 +61,7 @@ in such a way that no trusted third parties are required anymore.
     - report on BitBucket
 
   - Permissions Denied?
-    - no spaces and only latin charaters in the path to the NRS installation directory
+    - no spaces and only latin characters in the path to the NRS installation directory
     - known jetty issue
 
 ----
@@ -72,11 +73,10 @@ in such a way that no trusted third parties are required anymore.
     - OPERATORS-GUIDE.md
 
   - in the wiki:
-    - wiki.nxtcrypto.org
+    - nxtwiki.org
 
   - on the forums:
     - nxtforum.org
-    - nextcoin.org
     
 ----
 

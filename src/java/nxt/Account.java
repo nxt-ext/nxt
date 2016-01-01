@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -39,7 +39,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
@@ -47,6 +50,10 @@ public final class Account {
     public enum Event {
         BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE, CURRENCY_BALANCE, UNCONFIRMED_CURRENCY_BALANCE,
         LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
+    }
+
+    public enum ControlType {
+        PHASING_ONLY
     }
 
     public static final class AccountAsset {
@@ -327,6 +334,71 @@ public final class Account {
 
     }
 
+    public static final class AccountProperty {
+
+        private final long id;
+        private final DbKey dbKey;
+        private final long recipientId;
+        private final long setterId;
+        private String property;
+        private String value;
+
+        private AccountProperty(long id, long recipientId, long setterId, String property, String value) {
+            this.id = id;
+            this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
+            this.recipientId = recipientId;
+            this.setterId = setterId;
+            this.property = property;
+            this.value = value;
+        }
+
+        private AccountProperty(ResultSet rs) throws SQLException {
+            this.id = rs.getLong("id");
+            this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
+            this.recipientId = rs.getLong("recipient_id");
+            long setterId = rs.getLong("setter_id");
+            this.setterId = setterId == 0 ? recipientId : setterId;
+            this.property = rs.getString("property");
+            this.value = rs.getString("value");
+        }
+
+        private void save(Connection con) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_property "
+                    + "(id, recipient_id, setter_id, property, value, height, latest) "
+                    + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
+                int i = 0;
+                pstmt.setLong(++i, this.id);
+                pstmt.setLong(++i, this.recipientId);
+                DbUtils.setLongZeroToNull(pstmt, ++i, this.setterId != this.recipientId ? this.setterId : 0);
+                DbUtils.setString(pstmt, ++i, this.property);
+                DbUtils.setString(pstmt, ++i, this.value);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+
+        public long getId() {
+            return id;
+        }
+
+        public long getRecipientId() {
+            return recipientId;
+        }
+
+        public long getSetterId() {
+            return setterId;
+        }
+
+        public String getProperty() {
+            return property;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+    }
+
     public static final class PublicKey {
 
         private final long accountId;
@@ -573,6 +645,30 @@ public final class Account {
 
     };
 
+    private static final DbKey.LongKeyFactory<AccountProperty> accountPropertyDbKeyFactory = new DbKey.LongKeyFactory<AccountProperty>("id") {
+
+        @Override
+        public DbKey newKey(AccountProperty accountProperty) {
+            return accountProperty.dbKey;
+        }
+
+    };
+
+    private static final VersionedEntityDbTable<AccountProperty> accountPropertyTable = new VersionedEntityDbTable<AccountProperty>("account_property", accountPropertyDbKeyFactory) {
+
+        @Override
+        protected AccountProperty load(Connection con, ResultSet rs) throws SQLException {
+            return new AccountProperty(rs);
+        }
+
+        @Override
+        protected void save(Connection con, AccountProperty accountProperty) throws SQLException {
+            accountProperty.save(con);
+        }
+
+    };
+
+
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
     private static final Listeners<AccountAsset,Event> assetListeners = new Listeners<>();
@@ -657,6 +753,51 @@ public final class Account {
         return accountTable.getCount(new DbClause.NotNullClause("active_lessee_id"));
     }
 
+    public static AccountProperty getProperty(long propertyId) {
+        return accountPropertyTable.get(accountPropertyDbKeyFactory.newKey(propertyId));
+    }
+
+    public static DbIterator<AccountProperty> getProperties(long recipientId, long setterId, String property, int from, int to) {
+        if (recipientId == 0 && setterId == 0) {
+            throw new IllegalArgumentException("At least one of recipientId and setterId must be specified");
+        }
+        DbClause dbClause = null;
+        if (setterId == recipientId) {
+            dbClause = new DbClause.NullClause("setter_id");
+        } else if (setterId != 0) {
+            dbClause = new DbClause.LongClause("setter_id", setterId);
+        }
+        if (recipientId != 0) {
+            if (dbClause != null) {
+                dbClause = dbClause.and(new DbClause.LongClause("recipient_id", recipientId));
+            } else {
+                dbClause = new DbClause.LongClause("recipient_id", recipientId);
+            }
+        }
+        if (property != null) {
+            dbClause = dbClause.and(new DbClause.StringClause("property", property));
+        }
+        return accountPropertyTable.getManyBy(dbClause, from, to, " ORDER BY property ");
+    }
+
+    public static AccountProperty getProperty(long recipientId, String property) {
+        return getProperty(recipientId, property, recipientId);
+    }
+
+    public static AccountProperty getProperty(long recipientId, String property, long setterId) {
+        if (recipientId == 0 || setterId == 0) {
+            throw new IllegalArgumentException("Both recipientId and setterId must be specified");
+        }
+        DbClause dbClause = new DbClause.LongClause("recipient_id", recipientId);
+        dbClause = dbClause.and(new DbClause.StringClause("property", property));
+        if (setterId != recipientId) {
+            dbClause = dbClause.and(new DbClause.LongClause("setter_id", setterId));
+        } else {
+            dbClause = dbClause.and(new DbClause.NullClause("setter_id"));
+        }
+        return accountPropertyTable.getBy(dbClause);
+    }
+
     public static Account getAccount(long id) {
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey);
@@ -732,8 +873,8 @@ public final class Account {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement(
                     "SELECT * FROM account_lease WHERE current_leasing_height_from = ? AND latest = TRUE "
-                    + "UNION ALL SELECT * FROM account_lease WHERE current_leasing_height_to = ? AND latest = TRUE "
-                    + "ORDER BY current_lessee_id, lessor_id");
+                            + "UNION ALL SELECT * FROM account_lease WHERE current_leasing_height_to = ? AND latest = TRUE "
+                            + "ORDER BY current_lessee_id, lessor_id");
             int i = 0;
             pstmt.setInt(++i, height);
             pstmt.setInt(++i, height);
@@ -882,6 +1023,7 @@ public final class Account {
     private long unconfirmedBalanceNQT;
     private long forgedBalanceNQT;
     private long activeLesseeId;
+    private Set<ControlType> controls;
 
     private Account(long id) {
         if (id != Crypto.rsDecode(Crypto.rsEncode(id))) {
@@ -889,6 +1031,7 @@ public final class Account {
         }
         this.id = id;
         this.dbKey = accountDbKeyFactory.newKey(this.id);
+        this.controls = Collections.emptySet();
     }
 
     private Account(ResultSet rs) throws SQLException {
@@ -898,26 +1041,32 @@ public final class Account {
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
         this.forgedBalanceNQT = rs.getLong("forged_balance");
         this.activeLesseeId = rs.getLong("active_lessee_id");
+        if (rs.getBoolean("has_control_phasing")) {
+            controls = Collections.unmodifiableSet(EnumSet.of(ControlType.PHASING_ONLY));
+        } else {
+            controls = Collections.emptySet();
+        }
     }
 
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account (id, "
                 + "balance, unconfirmed_balance, forged_balance, "
-                + "active_lessee_id, height, latest) "
-                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, TRUE)")) {
+                + "active_lessee_id, has_control_phasing, height, latest) "
+                + "KEY (id, height) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.balanceNQT);
             pstmt.setLong(++i, this.unconfirmedBalanceNQT);
             pstmt.setLong(++i, this.forgedBalanceNQT);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.activeLesseeId);
+            pstmt.setBoolean(++i, controls.contains(ControlType.PHASING_ONLY));
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
             pstmt.executeUpdate();
         }
     }
 
     private void save() {
-        if (balanceNQT == 0 && unconfirmedBalanceNQT == 0 && forgedBalanceNQT == 0 && activeLesseeId == 0) {
+        if (balanceNQT == 0 && unconfirmedBalanceNQT == 0 && forgedBalanceNQT == 0 && activeLesseeId == 0 && controls.isEmpty()) {
             accountTable.delete(this, true);
         } else {
             accountTable.insert(this);
@@ -967,7 +1116,7 @@ public final class Account {
         if (compress && data.length > 0) {
             data = Convert.compress(data);
         }
-        return EncryptedData.encrypt(data, Crypto.getPrivateKey(senderSecretPhrase), publicKey);
+        return EncryptedData.encrypt(data, senderSecretPhrase, publicKey);
     }
 
     public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
@@ -978,7 +1127,7 @@ public final class Account {
     }
 
     public static byte[] decryptFrom(byte[] publicKey, EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
-        byte[] decrypted = encryptedData.decrypt(Crypto.getPrivateKey(recipientSecretPhrase), publicKey);
+        byte[] decrypted = encryptedData.decrypt(recipientSecretPhrase, publicKey);
         if (uncompress && decrypted.length > 0) {
             decrypted = Convert.uncompress(decrypted);
         }
@@ -1022,10 +1171,11 @@ public final class Account {
             }
             return (balanceNQT - receivedInLastBlock) / Constants.ONE_NXT;
         }
+        long effectiveBalanceNQT = getLessorsGuaranteedBalanceNQT(height);
         if (activeLesseeId == 0) {
-            return (getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height) + getLessorsGuaranteedBalanceNQT(height)) / Constants.ONE_NXT;
+            effectiveBalanceNQT += getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height);
         }
-        return getLessorsGuaranteedBalanceNQT(height) / Constants.ONE_NXT;
+        return (height > Constants.SHUFFLING_BLOCK && effectiveBalanceNQT < Constants.MIN_FORGING_BALANCE_NQT) ? 0 : effectiveBalanceNQT / Constants.ONE_NXT;
     }
 
     private long getLessorsGuaranteedBalanceNQT(int height) {
@@ -1044,7 +1194,7 @@ public final class Account {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT account_id, SUM (additions) AS additions "
                      + "FROM account_guaranteed_balance, TABLE (id BIGINT=?) T WHERE account_id = T.id AND height > ? "
-                             + (height < Nxt.getBlockchain().getHeight() ? " AND height <= ? " : "")
+                     + (height < Nxt.getBlockchain().getHeight() ? " AND height <= ? " : "")
                      + " GROUP BY account_id ORDER BY account_id")) {
             pstmt.setObject(1, lessorIds);
             pstmt.setInt(2, height - Constants.GUARANTEED_BALANCE_CONFIRMATIONS);
@@ -1180,7 +1330,11 @@ public final class Account {
         return getUnconfirmedCurrencyUnits(this.id, currencyId);
     }
 
-    void leaseEffectiveBalance(long lesseeId, short period) {
+    public Set<ControlType> getControls() {
+        return controls;
+    }
+
+    void leaseEffectiveBalance(long lesseeId, int period) {
         int height = Nxt.getBlockchain().getHeight();
         AccountLease accountLease = accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(id));
         if (accountLease == null) {
@@ -1202,6 +1356,48 @@ public final class Account {
         }
         accountLeaseTable.insert(accountLease);
         leaseListeners.notify(accountLease, Event.LEASE_SCHEDULED);
+    }
+
+    void addControl(ControlType control) {
+        if (controls.contains(control)) {
+            return;
+        }
+        EnumSet<ControlType> newControls = EnumSet.of(control);
+        newControls.addAll(controls);
+        controls = Collections.unmodifiableSet(newControls);
+        accountTable.insert(this);
+    }
+
+    void removeControl(ControlType control) {
+        if (!controls.contains(control)) {
+            return;
+        }
+        EnumSet<ControlType> newControls = EnumSet.copyOf(controls);
+        newControls.remove(control);
+        controls = Collections.unmodifiableSet(newControls);
+        accountTable.insert(this);
+    }
+
+    void setProperty(Transaction transaction, Account setterAccount, String property, String value) {
+        value = Convert.emptyToNull(value);
+        AccountProperty accountProperty = getProperty(this.id, property, setterAccount.id);
+        if (accountProperty == null) {
+            accountProperty = new AccountProperty(transaction.getId(), this.id, setterAccount.id, property, value);
+        } else {
+            accountProperty.value = value;
+        }
+        accountPropertyTable.insert(accountProperty);
+    }
+
+    void deleteProperty(long propertyId) {
+        AccountProperty accountProperty = accountPropertyTable.get(accountPropertyDbKeyFactory.newKey(propertyId));
+        if (accountProperty == null) {
+            return;
+        }
+        if (accountProperty.getSetterId() != this.id && accountProperty.getRecipientId() != this.id) {
+            throw new RuntimeException("Property " + Long.toUnsignedString(propertyId) + " cannot be deleted by " + Long.toUnsignedString(this.id));
+        }
+        accountPropertyTable.delete(accountProperty);
     }
 
     static boolean setOrVerify(long accountId, byte[] key) {

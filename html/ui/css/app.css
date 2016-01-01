@@ -2820,6 +2820,13 @@ a.list-group-item-header:hover {
   font-size:12px;
 }
 
+.warning-label {
+    content: "*";
+    font-weight: bold;
+    color: red;
+    display: none;
+}
+
 .scrollable-menu {
     height: auto;
     max-height: 500px;
@@ -2949,10 +2956,6 @@ label .popover-content {
 #account_id_dropdown ul.dropdown-menu>li>a {
 	padding:3px 8px;
 }
-.dropdown-menu > li > a.zeroclipboard-is-hover {
-  background-color: #3c8dbc;
-  color: #f9f9f9;
-}
 #remember_password_container,#remember_account_container {
   color:#fff;
   text-align:center;
@@ -2974,7 +2977,7 @@ a.list-group-item.active, a.list-group-item.active:hover, a.list-group-item.acti
 	color:#333 !important;
 }
 .left-side .user-panel .dropdown-menu>li>a { color:#333; }
-.left-side .user-panel .dropdown-menu>li>a.zeroclipboard-is-hover, .left-side .user-panel .dropdown-menu>li>a:hover {
+.left-side .user-panel .dropdown-menu>li>a:hover {
 	color:#fff;
 }
 
@@ -3076,7 +3079,6 @@ input:invalid {
 }
 
 #account_name {
-  font-style:italic;
   text-overflow:ellipsis;
   white-space:nowrap;
   overflow:hidden;
@@ -3263,11 +3265,28 @@ table.purchase td {
   background-color:#f2f2f2;
 }
 
-.approve_modal {
+.approve_modal, .phasing_only_modal, .advanced_mandatory_approval {
   border-bottom: 1px solid #ddd;
   padding: 6px 0px 12px 0px;
   margin-top: 3px;
   margin-bottom: 18px;
+}
+
+.phasing_duration_and_min_fees {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.phasing_only_enabled_info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
 }
 
 .tab_pane_approve {

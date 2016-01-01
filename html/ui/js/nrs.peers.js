@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -33,9 +33,21 @@ var NRS = (function(NRS, $) {
 			NRS.loadPage("peers");
 		});
 	};
-	
-	NRS.pages.peers = function() {
-		NRS.sendRequest("getPeers+", {
+
+    function getPeerServicesLabel(services) {
+        var servicesText = "";
+        for (var i=0; i<services.length; i++) {
+            var shortcut = services[i].substring(0, 1) + services[i].substring(services[i].length - 1);
+            servicesText += "<a data-toggle='tooltip' data-placement='top' data-container='body' title='" + $.t(services[i].toLowerCase() + "_service") + "'>" + shortcut + "</a>";
+            if (i < services.length - 1) {
+                servicesText += "<span> , </span>";
+            }
+        }
+        return servicesText;
+    }
+
+    NRS.pages.peers = function() {
+        NRS.sendRequest("getPeers+", {
 			"active": "true",
 			"includePeerInfo": "true"
 		}, function(response) {
@@ -77,7 +89,7 @@ var NRS = (function(NRS, $) {
 					rows += "<td><span class='label label-" + (NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>";
 					rows += (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td>";
 					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>";
-
+					rows += "<td>" + getPeerServicesLabel(peer.services) + "</td>";
 					rows += "<td style='text-align:right;'>";
 					rows += "<a class='btn btn-xs btn-default' href='#' ";
 					if (NRS.needsAdminPassword) {
@@ -98,8 +110,6 @@ var NRS = (function(NRS, $) {
 				$("#peers_up_to_date").html(upToDate + '/' + activePeers).removeClass("loading_dots");
 
 				NRS.dataLoaded(rows);
-				
-				
 			} else {
 				$("#peers_uploaded_volume, #peers_downloaded_volume, #peers_connected, #peers_up_to_date").html("0").removeClass("loading_dots");
 				NRS.dataLoaded();

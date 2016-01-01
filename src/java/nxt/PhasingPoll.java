@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -25,15 +25,15 @@ import nxt.db.EntityDbTable;
 import nxt.db.ValuesDbTable;
 import nxt.util.Convert;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 public final class PhasingPoll extends AbstractPoll {
@@ -127,10 +127,11 @@ public final class PhasingPoll extends AbstractPoll {
         public void trim(int height) {
             super.trim(height);
             try (Connection con = Db.db.getConnection();
-                 DbIterator<PhasingPoll> pollsToTrim = getFinishingBefore(height);
+                 DbIterator<PhasingPoll> pollsToTrim = phasingPollTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.LT, height), 0, -1);
                  PreparedStatement pstmt1 = con.prepareStatement("DELETE FROM phasing_poll WHERE id = ?");
                  PreparedStatement pstmt2 = con.prepareStatement("DELETE FROM phasing_poll_voter WHERE transaction_id = ?");
-                 PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM phasing_vote WHERE transaction_id = ?")) {
+                 PreparedStatement pstmt3 = con.prepareStatement("DELETE FROM phasing_vote WHERE transaction_id = ?");
+                 PreparedStatement pstmt4 = con.prepareStatement("DELETE FROM phasing_poll_linked_transaction WHERE transaction_id = ?")) {
                 while (pollsToTrim.hasNext()) {
                     long id = pollsToTrim.next().getId();
                     pstmt1.setLong(1, id);
@@ -139,6 +140,8 @@ public final class PhasingPoll extends AbstractPoll {
                     pstmt2.executeUpdate();
                     pstmt3.setLong(1, id);
                     pstmt3.executeUpdate();
+                    pstmt4.setLong(1, id);
+                    pstmt4.executeUpdate();
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
@@ -167,6 +170,35 @@ public final class PhasingPoll extends AbstractPoll {
                 int i = 0;
                 pstmt.setLong(++i, poll.getId());
                 pstmt.setLong(++i, accountId);
+                pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+                pstmt.executeUpdate();
+            }
+        }
+    };
+
+    private static final DbKey.LongKeyFactory<PhasingPoll> linkedTransactionDbKeyFactory = new DbKey.LongKeyFactory<PhasingPoll>("transaction_id") {
+        @Override
+        public DbKey newKey(PhasingPoll poll) {
+            return poll.dbKey;
+        }
+    };
+
+    private static final ValuesDbTable<PhasingPoll, byte[]> linkedTransactionTable = new ValuesDbTable<PhasingPoll, byte[]>("phasing_poll_linked_transaction",
+            linkedTransactionDbKeyFactory) {
+
+        @Override
+        protected byte[] load(Connection con, ResultSet rs) throws SQLException {
+            return rs.getBytes("linked_full_hash");
+        }
+
+        @Override
+        protected void save(Connection con, PhasingPoll poll, byte[] linkedFullHash) throws SQLException {
+            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll_linked_transaction (transaction_id, "
+                    + "linked_full_hash, linked_transaction_id, height) VALUES (?, ?, ?, ?)")) {
+                int i = 0;
+                pstmt.setLong(++i, poll.getId());
+                pstmt.setBytes(++i, linkedFullHash);
+                pstmt.setLong(++i, Convert.fullHashToId(linkedFullHash));
                 pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
                 pstmt.executeUpdate();
             }
@@ -202,29 +234,11 @@ public final class PhasingPoll extends AbstractPoll {
                 0, -1, " ORDER BY db_id ASC ");
     }
 
-    public static int getPhasedCount() {
-        return phasingPollTable.getCount(new DbClause.IntClause("finish_height", DbClause.Op.GT, Nxt.getBlockchain().getHeight()));
-    }
-
-    public static DbIterator<PhasingPoll> getFinishingBefore(int height) {
-        return phasingPollTable.getManyBy(new DbClause.IntClause("finish_height", DbClause.Op.LT, height), 0, Integer.MAX_VALUE);
-    }
-
     public static PhasingPoll getPoll(long id) {
         return phasingPollTable.get(phasingPollDbKeyFactory.newKey(id));
     }
 
-    public static DbIterator<PhasingPoll> getByAccountId(long accountId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongClause("account_id", accountId);
-        return phasingPollTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<PhasingPoll> getByHoldingId(long holdingId, int firstIndex, int lastIndex) {
-        DbClause clause = new DbClause.LongClause("holding_id", holdingId);
-        return phasingPollTable.getManyBy(clause, firstIndex, lastIndex);
-    }
-
-    public static DbIterator<TransactionImpl> getFinishingTransactions(int height) {
+    static DbIterator<TransactionImpl> getFinishingTransactions(int height) {
         Connection con = null;
         try {
             con = Db.db.getConnection();
@@ -244,11 +258,13 @@ public final class PhasingPoll extends AbstractPoll {
         try {
             con = Db.db.getConnection();
             PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* "
-                    + "FROM transaction, phasing_poll, phasing_poll_voter "
+                    + "FROM transaction, phasing_poll_voter, phasing_poll "
+                    + "LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id "
                     + "WHERE transaction.id = phasing_poll.id AND "
                     + "phasing_poll.finish_height > ? AND "
                     + "phasing_poll.id = phasing_poll_voter.transaction_id "
                     + "AND phasing_poll_voter.voter_id = ? "
+                    + "AND phasing_poll_result.id IS NULL "
                     + "ORDER BY transaction.height DESC, transaction.transaction_index DESC "
                     + DbUtils.limitsClause(from, to));
             int i = 0;
@@ -299,8 +315,10 @@ public final class PhasingPoll extends AbstractPoll {
         Connection con = null;
         try {
             con = Db.db.getConnection();
-            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll  " +
+            PreparedStatement pstmt = con.prepareStatement("SELECT transaction.* FROM transaction, phasing_poll " +
+                    " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
                     " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
+                    " AND phasing_poll_result.id IS NULL " +
                     " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC " +
                     DbUtils.limitsClause(from, to));
             int i = 0;
@@ -318,8 +336,10 @@ public final class PhasingPoll extends AbstractPoll {
 
     public static int getAccountPhasedTransactionCount(long accountId) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction, phasing_poll  " +
+             PreparedStatement pstmt = con.prepareStatement("SELECT COUNT(*) FROM transaction, phasing_poll " +
+                     " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
                      " WHERE phasing_poll.id = transaction.id AND (transaction.sender_id = ? OR transaction.recipient_id = ?) " +
+                     " AND phasing_poll_result.id IS NULL " +
                      " AND phasing_poll.finish_height > ?")) {
             int i = 0;
             pstmt.setLong(++i, accountId);
@@ -334,12 +354,56 @@ public final class PhasingPoll extends AbstractPoll {
         }
     }
 
+    public static List<? extends Transaction> getLinkedPhasedTransactions(byte[] linkedTransactionFullHash) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT transaction_id FROM phasing_poll_linked_transaction " +
+                     "WHERE linked_transaction_id = ? AND linked_full_hash = ?")) {
+            int i = 0;
+            pstmt.setLong(++i, Convert.fullHashToId(linkedTransactionFullHash));
+            pstmt.setBytes(++i, linkedTransactionFullHash);
+            List<TransactionImpl> transactions = new ArrayList<>();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    transactions.add(TransactionDb.findTransaction(rs.getLong("transaction_id")));
+                }
+            }
+            return transactions;
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+    static long getSenderPhasedTransactionFees(long accountId) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT SUM(transaction.fee) AS fees FROM transaction, phasing_poll " +
+                     " LEFT JOIN phasing_poll_result ON phasing_poll.id = phasing_poll_result.id " +
+                     " WHERE phasing_poll.id = transaction.id AND transaction.sender_id = ? " +
+                     " AND phasing_poll_result.id IS NULL " +
+                     " AND phasing_poll.finish_height > ? ORDER BY transaction.height DESC, transaction.transaction_index DESC ")) {
+            int i = 0;
+            pstmt.setLong(++i, accountId);
+            pstmt.setInt(++i, Nxt.getBlockchain().getHeight());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                rs.next();
+                return rs.getLong("fees");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+    }
+
+
     static void addPoll(Transaction transaction, Appendix.Phasing appendix) {
         PhasingPoll poll = new PhasingPoll(transaction, appendix);
         phasingPollTable.insert(poll);
-        long[] voters = poll.getWhitelist();
+        long[] voters = poll.whitelist;
         if (voters.length > 0) {
             votersTable.insert(poll, Convert.toList(voters));
+        }
+        if (appendix.getLinkedFullHashes().length > 0) {
+            List<byte[]> linkedFullHashes = new ArrayList<>(appendix.getLinkedFullHashes().length);
+            Collections.addAll(linkedFullHashes, appendix.getLinkedFullHashes());
+            linkedTransactionTable.insert(poll, linkedFullHashes);
         }
     }
 
@@ -349,7 +413,6 @@ public final class PhasingPoll extends AbstractPoll {
     private final DbKey dbKey;
     private final long[] whitelist;
     private final long quorum;
-    private final byte[][] linkedFullHashes;
     private final byte[] hashedSecret;
     private final byte algorithm;
 
@@ -358,7 +421,6 @@ public final class PhasingPoll extends AbstractPoll {
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = appendix.getQuorum();
         this.whitelist = appendix.getWhitelist();
-        this.linkedFullHashes = appendix.getLinkedFullHashes();
         this.hashedSecret = appendix.getHashedSecret();
         this.algorithm = appendix.getAlgorithm();
     }
@@ -368,13 +430,6 @@ public final class PhasingPoll extends AbstractPoll {
         this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
         this.quorum = rs.getLong("quorum");
         this.whitelist = rs.getByte("whitelist_size") == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
-        Array array = rs.getArray("linked_full_hashes");
-        if (array != null) {
-            Object[] hashes = (Object[]) array.getArray();
-            this.linkedFullHashes = Arrays.copyOf(hashes, hashes.length, byte[][].class);
-        } else {
-            this.linkedFullHashes = Convert.EMPTY_BYTES;
-        }
         hashedSecret = rs.getBytes("hashed_secret");
         algorithm = rs.getByte("algorithm");
     }
@@ -396,8 +451,8 @@ public final class PhasingPoll extends AbstractPoll {
         return TransactionDb.getFullHash(this.id);
     }
 
-    public byte[][] getLinkedFullHashes() {
-        return linkedFullHashes;
+    public List<byte[]> getLinkedFullHashes() {
+        return linkedTransactionTable.get(linkedTransactionDbKeyFactory.newKey(this));
     }
 
     public byte[] getHashedSecret() {
@@ -413,14 +468,14 @@ public final class PhasingPoll extends AbstractPoll {
         return hashFunction != null && Arrays.equals(hashedSecret, hashFunction.hash(revealedSecret));
     }
 
-    public long getResult() {
+    public long countVotes() {
         if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.NONE) {
             return 0;
         }
         int height = Math.min(this.finishHeight, Nxt.getBlockchain().getHeight());
         if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
             int count = 0;
-            for (byte[] hash : linkedFullHashes) {
+            for (byte[] hash : getLinkedFullHashes()) {
                 if (TransactionDb.hasTransactionByFullHash(hash, height)) {
                     count += 1;
                 }
@@ -440,10 +495,14 @@ public final class PhasingPoll extends AbstractPoll {
         return cumulativeWeight;
     }
 
+    boolean allowEarlyFinish() {
+        return voteWeighting.isBalanceIndependent() && (whitelist.length > 0 || voteWeighting.getVotingModel() != VoteWeighting.VotingModel.ACCOUNT);
+    }
+
     private void save(Connection con) throws SQLException {
         try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO phasing_poll (id, account_id, "
                 + "finish_height, whitelist_size, voting_model, quorum, min_balance, holding_id, "
-                + "min_balance_model, linked_full_hashes, hashed_secret, algorithm, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + "min_balance_model, hashed_secret, algorithm, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, id);
             pstmt.setLong(++i, accountId);
@@ -454,11 +513,6 @@ public final class PhasingPoll extends AbstractPoll {
             DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getMinBalance());
             DbUtils.setLongZeroToNull(pstmt, ++i, voteWeighting.getHoldingId());
             pstmt.setByte(++i, voteWeighting.getMinBalanceModel().getCode());
-            if (linkedFullHashes.length > 0) {
-                pstmt.setObject(++i, linkedFullHashes);
-            } else {
-                pstmt.setNull(++i, Types.ARRAY);
-            }
             DbUtils.setBytes(pstmt, ++i, hashedSecret);
             pstmt.setByte(++i, algorithm);
             pstmt.setInt(++i, Nxt.getBlockchain().getHeight());

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -26,13 +26,14 @@ public final class EncryptedData {
 
     public static final EncryptedData EMPTY_DATA = new EncryptedData(new byte[0], new byte[0]);
 
-    public static EncryptedData encrypt(byte[] plaintext, byte[] myPrivateKey, byte[] theirPublicKey) {
+    public static EncryptedData encrypt(byte[] plaintext, String secretPhrase, byte[] theirPublicKey) {
         if (plaintext.length == 0) {
             return EMPTY_DATA;
         }
         byte[] nonce = new byte[32];
         Crypto.getSecureRandom().nextBytes(nonce);
-        byte[] data = Crypto.aesEncrypt(plaintext, myPrivateKey, theirPublicKey, nonce);
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), theirPublicKey, nonce);
+        byte[] data = Crypto.aesEncrypt(plaintext, sharedKey);
         return new EncryptedData(data, nonce);
     }
 
@@ -51,21 +52,6 @@ public final class EncryptedData {
         return new EncryptedData(data, nonce);
     }
 
-    /*
-    public static EncryptedData readEncryptedData(ByteBuffer buffer, int length, int maxLength, long nonce)
-            throws NxtException.NotValidException {
-        if (length == 0) {
-            return EMPTY_DATA;
-        }
-        if (length > maxLength) {
-            throw new NxtException.NotValidException("Max encrypted data length exceeded: " + length);
-        }
-        byte[] data = new byte[length];
-        buffer.get(data);
-        return new EncryptedData(data, ByteBuffer.allocate(8).putLong(nonce).array());
-    }
-    */
-
     public static EncryptedData readEncryptedData(byte[] bytes) {
         if (bytes.length == 0) {
             return EMPTY_DATA;
@@ -79,6 +65,20 @@ public final class EncryptedData {
         }
     }
 
+    public static int getEncryptedDataLength(byte[] plaintext) {
+        if (plaintext.length == 0) {
+            return 0;
+        }
+        return Crypto.aesEncrypt(plaintext, new byte[32]).length;
+    }
+
+    public static int getEncryptedSize(byte[] plaintext) {
+        if (plaintext.length == 0) {
+            return 0;
+        }
+        return getEncryptedDataLength(plaintext) + 32;
+    }
+
     private final byte[] data;
     private final byte[] nonce;
 
@@ -87,18 +87,12 @@ public final class EncryptedData {
         this.nonce = nonce;
     }
 
-    /*
-    public EncryptedData(byte[] data, long nonce) {
-        this.data = data;
-        this.nonce = ByteBuffer.allocate(8).putLong(nonce).array();
-    }
-    */
-
-    public byte[] decrypt(byte[] myPrivateKey, byte[] theirPublicKey) {
+    public byte[] decrypt(String secretPhrase, byte[] theirPublicKey) {
         if (data.length == 0) {
             return data;
         }
-        return Crypto.aesDecrypt(data, myPrivateKey, theirPublicKey, nonce);
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), theirPublicKey, nonce);
+        return Crypto.aesDecrypt(data, sharedKey);
     }
 
     public byte[] getData() {

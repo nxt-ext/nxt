@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -43,14 +43,12 @@ public final class TransferAsset extends CreateTransaction {
         long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
-        long assetBalance = account.getUnconfirmedAssetBalanceQNT(asset.getId());
-        if (assetBalance < 0 || quantityQNT > assetBalance) {
+        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT);
+        try {
+            return createTransaction(req, account, recipient, 0, attachment);
+        } catch (NxtException.InsufficientBalanceException e) {
             return NOT_ENOUGH_ASSETS;
         }
-
-        Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT);
-        return createTransaction(req, account, recipient, 0, attachment);
-
     }
 
 }

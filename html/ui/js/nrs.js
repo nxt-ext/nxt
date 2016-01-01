@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -22,9 +22,7 @@
  * @depends {3rdparty/jsbn2.js}
  * @depends {3rdparty/pako.js}
  * @depends {3rdparty/webdb.js}
- * @depends {3rdparty/ajaxmultiqueue.js}
  * @depends {3rdparty/growl.js}
- * @depends {3rdparty/zeroclipboard.js}
  * @depends {crypto/curve25519.js}
  * @depends {crypto/curve25519_.js}
  * @depends {crypto/passphrasegenerator.js}
@@ -68,7 +66,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isAccountForging = false;
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
-    NRS.upnpExternalAddress;
+    NRS.upnpExternalAddress = null;
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
@@ -121,7 +119,7 @@ var NRS = (function(NRS, $, undefined) {
                     NRS.upnpExternalAddress = response[key];
 				}
 			}
-			
+
 			if (!isTestnet) {
 				$(".testnet_only").hide();
 			} else {
@@ -133,11 +131,10 @@ var NRS = (function(NRS, $, undefined) {
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
 			NRS.loadServerConstants();
-			NRS.loadTransactionTypeConstants();
 			NRS.initializePlugins();
             NRS.printEnvInfo();
 		});
-		
+
 		if (!NRS.server) {
 			var hostName = window.location.hostname.toLowerCase();
 			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
@@ -204,13 +201,13 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.positionAssetSidebar();
 			}
 		});
-		
+		// Enable all static tooltip components
+		// tooltip components generated dynamically (for tables cells for example)
+		// has to be enabled by activating this code on the specific widget
 		$("[data-toggle='tooltip']").tooltip();
 
-		$("#dgs_search_account_top, #dgs_search_account_center").mask("NXT-****-****-****-*****", {
-			"unmask": false
-		});
-		
+		$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
+
 		if (NRS.getUrlParameter("account")){
 			NRS.login(false,NRS.getUrlParameter("account"));
 		}
@@ -498,7 +495,7 @@ NRS.addPagination = function () {
 		}
 
 		prevHTML += '</span>';
-		firstHTML += '</span>'; 
+		firstHTML += '</span>';
 		currentHTML += '</span>';
 		nextHTML += '</span>';
 
@@ -510,7 +507,7 @@ NRS.addPagination = function () {
 		}
 	};
 
-	$(".data-pagination").on("click", "a", function(e) {
+	$(document).on("click", ".data-pagination a", function(e) {
 		e.preventDefault();
 
 		NRS.goToPageNumber($(this).data("page"));
@@ -527,7 +524,7 @@ NRS.addPagination = function () {
 		NRS.pages[NRS.currentPage]();
 	};
 
-		
+
 
 	NRS.initUserDBSuccess = function() {
 		NRS.database.select("data", [{
@@ -640,7 +637,7 @@ NRS.addPagination = function () {
 				});
 			} catch (err) {
                 NRS.logConsole("error creating database " + err.message);
-			}		
+			}
 		}
 	};
 
@@ -718,7 +715,7 @@ NRS.addPagination = function () {
 			NRS.initUserDBFail();
 		}
 	};
-	
+
 	/* Display connected state in Sidebar */
 	NRS.checkConnected = function() {
 		NRS.sendRequest("getPeers+", {
@@ -753,7 +750,7 @@ NRS.addPagination = function () {
 
 			if (response.errorCode) {
 				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
-				
+
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
 						if (NRS.newlyCreatedAccount) {
@@ -926,10 +923,10 @@ NRS.addPagination = function () {
 					} else {
 						$("#account_message_count").empty().append("0");
 					}
-				});	
-				
+				});
+
 				/***  ******************   ***/
-				
+
 				NRS.sendRequest("getAliasCount+", {
 					"account":NRS.account
 				}, function(response) {
@@ -937,7 +934,7 @@ NRS.addPagination = function () {
 						$("#account_alias_count").empty().append(response.numberOfAliases);
 					}
 				});
-				
+
 				NRS.sendRequest("getDGSPurchaseCount+", {
 					"buyer": NRS.account
 				}, function(response) {
@@ -982,8 +979,10 @@ NRS.addPagination = function () {
 					NRS.updateAccountLeasingStatus();
 				}
 
+				NRS.updateAccountControlStatus();
+
 				if (response.name) {
-					$("#account_name").html(response.name.escapeHTML()).removeAttr("data-i18n");
+					$("#account_name").html(NRS.addEllipsis(response.name.escapeHTML(), 10)).removeAttr("data-i18n");
 				}
 			}
 
@@ -1066,7 +1065,7 @@ NRS.addPagination = function () {
 					nextTooltip = "Account " + NRS.getAccountTitle(lessorInfo.nextLesseeRS) +" from block " + lessorInfo.nextHeightFrom + " to block " + lessorInfo.nextHeightTo;
 				}
 				rows += "<tr>" +
-					"<td><a href='#' data-user='" + String(lessor).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(lessor) + "</a></td>" +
+					"<td>" + NRS.getAccountLink({ lessorRS: lessor }, "lessor") + "</td>" +
 					"<td>" + String(lessorInfo.effectiveBalanceNXT).escapeHTML() + "</td>" +
 					"<td><label>" + String(blocksLeft).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + blocksLeftTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
 					"<td><label>" + String(nextLessee).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + nextTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
@@ -1091,6 +1090,53 @@ NRS.addPagination = function () {
 			$("#account_leasing_status").html(accountLeasingStatus).show();
 		} else {
 			$("#account_leasing_status").hide();
+		}
+	};
+
+	NRS.updateAccountControlStatus = function() {
+		var onNoPhasingOnly = function() {
+			$("#setup_mandatory_approval").show();
+			$("#mandatory_approval_details").hide();
+			delete NRS.accountInfo.phasingOnly;
+		};
+		if (NRS.accountInfo.accountControls && $.inArray('PHASING_ONLY', NRS.accountInfo.accountControls) > -1) {
+			NRS.sendRequest("getPhasingOnlyControl", {
+				"account": NRS.account
+			}, function (response) {
+				if (response && response.votingModel >= 0) {
+					$("#setup_mandatory_approval").hide();
+					$("#mandatory_approval_details").show();
+
+					NRS.accountInfo.phasingOnly = response;
+					var infoTable = $("#mandatory_approval_info_table");
+					infoTable.find("tbody").empty();
+					var data = {};
+					var params = NRS.phasingControlObjectToPhasingParams(response);
+					params.phasingWhitelist = params.phasingWhitelisted;
+					NRS.getPhasingDetails(data, params);
+					delete data.full_hash_formatted_html;
+					if (response.minDuration) {
+						data.minimum_duration_short = response.minDuration;
+					}
+
+					if (response.maxDuration) {
+						data.maximum_duration_short = response.maxDuration;
+					}
+
+					if (response.maxFees) {
+						data.maximum_fees = NRS.convertToNXT(response.maxFees);
+					}
+
+					infoTable.find("tbody").append(NRS.createInfoTable(data));
+					infoTable.show();
+				} else {
+					onNoPhasingOnly();
+				}
+
+			});
+
+		} else {
+			onNoPhasingOnly();
 		}
 	};
 
@@ -1241,7 +1287,7 @@ NRS.addPagination = function () {
 		var lastNumBlocks = 5000;
         var downloadingBlockchain = $('#downloading_blockchain');
         downloadingBlockchain.find('.last_num_blocks').html($.t('last_num_blocks', { "blocks": lastNumBlocks }));
-		
+
 		if (!NRS.serverConnect || !NRS.peerConnect) {
 			downloadingBlockchain.find(".db_active").hide();
 			downloadingBlockchain.find(".db_halted").show();

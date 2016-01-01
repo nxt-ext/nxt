@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -58,6 +58,7 @@ var NRS = (function(NRS, $) {
 		if (!response.errorCode) {
 			$("#parse_hallmark_output").html($.t("success_hallmark_parsing")).
                 addClass("callout-info").removeClass("callout-danger").show();
+            $("#parse_hallmark_account").val(NRS.convertNumericToRSAccountFormat(response.account));
             $("#parse_hallmark_host").val(response.host);
             $("#parse_hallmark_port").val(response.port);
             $("#parse_hallmark_weight").val(response.weight);

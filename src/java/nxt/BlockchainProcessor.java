@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -28,7 +28,7 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
     enum Event {
         BLOCK_PUSHED, BLOCK_POPPED, BLOCK_GENERATED, BLOCK_SCANNED,
         RESCAN_BEGIN, RESCAN_END,
-        BEFORE_BLOCK_ACCEPT,
+        BEFORE_BLOCK_ACCEPT, AFTER_BLOCK_ACCEPT,
         BEFORE_BLOCK_APPLY, AFTER_BLOCK_APPLY
     }
 
@@ -63,6 +63,8 @@ public interface BlockchainProcessor extends Observable<Block,BlockchainProcesso
     void trimDerivedTables();
 
     int restorePrunedData();
+
+    Transaction restorePrunedTransaction(long transactionId);
 
     class BlockNotAcceptedException extends NxtException {
 

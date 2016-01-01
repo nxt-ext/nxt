@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -22,6 +22,7 @@ import nxt.Attachment;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.PhasingParams;
 import nxt.Transaction;
 import nxt.crypto.Crypto;
 import nxt.util.Convert;
@@ -77,33 +78,13 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     private Appendix.Phasing parsePhasing(HttpServletRequest req) throws ParameterException {
-        byte votingModel = ParameterParser.getByte(req, "phasingVotingModel", (byte)-1, (byte)5, true);
-
-        long quorum = ParameterParser.getLong(req, "phasingQuorum", 0, Long.MAX_VALUE, false);
-
         int finishHeight = ParameterParser.getInt(req, "phasingFinishHeight",
                 Nxt.getBlockchain().getHeight() + 1,
                 Nxt.getBlockchain().getHeight() + Constants.MAX_PHASING_DURATION + 1,
                 true);
-
-        long minBalance = ParameterParser.getLong(req, "phasingMinBalance", 0, Long.MAX_VALUE, false);
-
-        byte minBalanceModel = ParameterParser.getByte(req, "phasingMinBalanceModel", (byte)0, (byte)3, false);
-
-        long holdingId = ParameterParser.getUnsignedLong(req, "phasingHolding", false);
-
-        long[] whitelist = null;
-        String[] whitelistValues = req.getParameterValues("phasingWhitelisted");
-        if (whitelistValues != null && whitelistValues.length > 0) {
-            whitelist = new long[whitelistValues.length];
-            for (int i = 0; i < whitelistValues.length; i++) {
-                whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
-                if (whitelist[i] == 0) {
-                    throw new ParameterException(INCORRECT_WHITELIST);
-                }
-            }
-        }
-
+        
+        PhasingParams phasingParams = parsePhasingParams(req, "phasing");
+        
         byte[][] linkedFullHashes = null;
         String[] linkedFullHashesValues = req.getParameterValues("phasingLinkedFullHash");
         if (linkedFullHashesValues != null && linkedFullHashesValues.length > 0) {
@@ -119,13 +100,31 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         byte[] hashedSecret = Convert.parseHexString(Convert.emptyToNull(req.getParameter("phasingHashedSecret")));
         byte algorithm = ParameterParser.getByte(req, "phasingHashedSecretAlgorithm", (byte) 0, Byte.MAX_VALUE, false);
 
-        return new Appendix.Phasing(finishHeight, votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist,
-                linkedFullHashes, hashedSecret, algorithm);
+        return new Appendix.Phasing(finishHeight, phasingParams, linkedFullHashes, hashedSecret, algorithm);
+    }
+
+    final PhasingParams parsePhasingParams(HttpServletRequest req, String parameterPrefix) throws ParameterException {
+        byte votingModel = ParameterParser.getByte(req, parameterPrefix + "VotingModel", (byte)-1, (byte)5, true);
+        long quorum = ParameterParser.getLong(req, parameterPrefix + "Quorum", 0, Long.MAX_VALUE, false);
+        long minBalance = ParameterParser.getLong(req, parameterPrefix + "MinBalance", 0, Long.MAX_VALUE, false);
+        byte minBalanceModel = ParameterParser.getByte(req, parameterPrefix + "MinBalanceModel", (byte)0, (byte)3, false);
+        long holdingId = ParameterParser.getUnsignedLong(req, parameterPrefix + "Holding", false);
+        long[] whitelist = null;
+        String[] whitelistValues = req.getParameterValues(parameterPrefix + "Whitelisted");
+        if (whitelistValues != null && whitelistValues.length > 0) {
+            whitelist = new long[whitelistValues.length];
+            for (int i = 0; i < whitelistValues.length; i++) {
+                whitelist[i] = Convert.parseAccountId(whitelistValues[i]);
+                if (whitelist[i] == 0) {
+                    throw new ParameterException(INCORRECT_WHITELIST);
+                }
+            }
+        }
+        return new PhasingParams(votingModel, holdingId, quorum, minBalance, minBalanceModel, whitelist);
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, long recipientId,
-                                            long amountNQT, Attachment attachment)
-            throws NxtException {
+                                            long amountNQT, Attachment attachment) throws NxtException {
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
         String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
@@ -220,13 +219,13 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 response.put("broadcasted", true);
             } else {
-                try {
-                    transaction.validate();
-                } catch (NxtException.NotYetEncryptedException ignore) {}
+                transaction.validate();
                 response.put("broadcasted", false);
             }
         } catch (NxtException.NotYetEnabledException e) {
             return FEATURE_NOT_AVAILABLE;
+        } catch (NxtException.InsufficientBalanceException e) {
+            throw e;
         } catch (NxtException.ValidationException e) {
             if (broadcast) {
                 response.clear();

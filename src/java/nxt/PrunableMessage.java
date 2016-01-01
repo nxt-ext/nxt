@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -21,7 +21,6 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.PrunableDbTable;
-import nxt.util.Convert;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -116,40 +115,34 @@ public final class PrunableMessage {
     private final DbKey dbKey;
     private final long senderId;
     private final long recipientId;
-    private final byte[] message;
-    private final EncryptedData encryptedData;
-    private final boolean isText;
-    private final boolean isCompressed;
+    private byte[] message;
+    private EncryptedData encryptedData;
+    private boolean messageIsText;
+    private boolean encryptedMessageIsText;
+    private boolean isCompressed;
     private final int transactionTimestamp;
     private final int blockTimestamp;
     private final int height;
 
-    private PrunableMessage(Transaction transaction, Appendix.PrunablePlainMessage appendix, int blockTimestamp, int height) {
+    private PrunableMessage(Transaction transaction, int blockTimestamp, int height) {
         this.id = transaction.getId();
         this.dbKey = prunableMessageKeyFactory.newKey(this.id);
         this.senderId = transaction.getSenderId();
         this.recipientId = transaction.getRecipientId();
-        this.message = appendix.getMessage();
-        this.encryptedData = null;
-        this.isText = appendix.isText();
-        this.isCompressed = false;
         this.blockTimestamp = blockTimestamp;
         this.height = height;
         this.transactionTimestamp = transaction.getTimestamp();
     }
 
-    private PrunableMessage(Transaction transaction, Appendix.PrunableEncryptedMessage appendix, int blockTimestamp, int height) {
-        this.id = transaction.getId();
-        this.dbKey = prunableMessageKeyFactory.newKey(this.id);
-        this.senderId = transaction.getSenderId();
-        this.recipientId = transaction.getRecipientId();
-        this.message = null;
+    private void setPlain(Appendix.PrunablePlainMessage appendix) {
+        this.message = appendix.getMessage();
+        this.messageIsText = appendix.isText();
+    }
+
+    private void setEncrypted(Appendix.PrunableEncryptedMessage appendix) {
         this.encryptedData = appendix.getEncryptedData();
-        this.isText = appendix.isText();
+        this.encryptedMessageIsText = appendix.isText();
         this.isCompressed = appendix.isCompressed();
-        this.blockTimestamp = blockTimestamp;
-        this.height = height;
-        this.transactionTimestamp = transaction.getTimestamp();
     }
 
     private PrunableMessage(ResultSet rs) throws SQLException {
@@ -157,40 +150,41 @@ public final class PrunableMessage {
         this.dbKey = prunableMessageKeyFactory.newKey(this.id);
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");
-        if (rs.getBoolean("is_encrypted")) {
-            this.encryptedData = EncryptedData.readEncryptedData(rs.getBytes("message"));
-            this.message = null;
-        } else {
-            this.message = rs.getBytes("message");
-            this.encryptedData = null;
+        this.message = rs.getBytes("message");
+        if (this.message != null) {
+            this.messageIsText = rs.getBoolean("message_is_text");
         }
-        this.isText = rs.getBoolean("is_text");
-        this.isCompressed = rs.getBoolean("is_compressed");
+        byte[] encryptedMessage = rs.getBytes("encrypted_message");
+        if (encryptedMessage != null) {
+            this.encryptedData = EncryptedData.readEncryptedData(encryptedMessage);
+            this.encryptedMessageIsText = rs.getBoolean("encrypted_is_text");
+            this.isCompressed = rs.getBoolean("is_compressed");
+        }
         this.blockTimestamp = rs.getInt("block_timestamp");
         this.transactionTimestamp = rs.getInt("transaction_timestamp");
         this.height = rs.getInt("height");
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO prunable_message (id, sender_id, recipient_id, "
-                + "message, is_encrypted, is_text, is_compressed, block_timestamp, transaction_timestamp, height) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+        if (message == null && encryptedData == null) {
+            throw new IllegalStateException("Prunable message not fully initialized");
+        }
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO prunable_message (id, sender_id, recipient_id, "
+                + "message, encrypted_message, message_is_text, encrypted_is_text, is_compressed, block_timestamp, transaction_timestamp, height) "
+                + "KEY (id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);
             pstmt.setLong(++i, this.senderId);
             DbUtils.setLongZeroToNull(pstmt, ++i, this.recipientId);
-            if (message != null) {
-                pstmt.setBytes(++i, message);
-                pstmt.setBoolean(++i, false);
-            } else {
-                pstmt.setBytes(++i, encryptedData.getBytes());
-                pstmt.setBoolean(++i, true);
-            }
-            pstmt.setBoolean(++i, isText);
-            pstmt.setBoolean(++i, isCompressed);
-            pstmt.setInt(++i, blockTimestamp);
-            pstmt.setInt(++i, transactionTimestamp);
-            pstmt.setInt(++i, height);
+            DbUtils.setBytes(pstmt, ++i, this.message);
+            DbUtils.setBytes(pstmt, ++i, this.encryptedData == null ? null : this.encryptedData.getBytes());
+            pstmt.setBoolean(++i, this.messageIsText);
+            pstmt.setBoolean(++i, this.encryptedMessageIsText);
+            pstmt.setBoolean(++i, this.isCompressed);
+            pstmt.setInt(++i, this.blockTimestamp);
+            pstmt.setInt(++i, this.transactionTimestamp);
+            pstmt.setInt(++i, this.height);
             pstmt.executeUpdate();
         }
     }
@@ -203,8 +197,12 @@ public final class PrunableMessage {
         return encryptedData;
     }
 
-    public boolean isText() {
-        return isText;
+    public boolean messageIsText() {
+        return messageIsText;
+    }
+
+    public boolean encryptedMessageIsText() {
+        return encryptedMessageIsText;
     }
 
     public boolean isCompressed() {
@@ -235,21 +233,22 @@ public final class PrunableMessage {
         return height;
     }
 
-    @Override
-    public String toString() {
-        return message != null ? (isText ? Convert.toString(message) : Convert.toHexString(message)) : encryptedData.toString();
-    }
-
     static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
         add(transaction, appendix, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
     }
 
     static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix, int blockTimestamp, int height) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME &&
-                prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null &&
-                appendix.getMessage() != null) {
-            PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix, blockTimestamp, height);
-            prunableMessageTable.insert(prunableMessage);
+        if (appendix.getMessage() != null) {
+            PrunableMessage prunableMessage = prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId()));
+            if (prunableMessage == null) {
+                prunableMessage = new PrunableMessage(transaction, blockTimestamp, height);
+            } else if (prunableMessage.height != height) {
+                throw new RuntimeException("Attempt to modify prunable message from height " + prunableMessage.height + " at height " + height);
+            }
+            if (prunableMessage.getMessage() == null) {
+                prunableMessage.setPlain(appendix);
+                prunableMessageTable.insert(prunableMessage);
+            }
         }
     }
 
@@ -258,20 +257,31 @@ public final class PrunableMessage {
     }
 
     static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix, int blockTimestamp, int height) {
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME &&
-                prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId())) == null &&
-                appendix.getEncryptedData() != null) {
-            PrunableMessage prunableMessage = new PrunableMessage(transaction, appendix, blockTimestamp, height);
-            prunableMessageTable.insert(prunableMessage);
+        if (appendix.getEncryptedData() != null) {
+                PrunableMessage prunableMessage = prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId()));
+            if (prunableMessage == null) {
+                prunableMessage = new PrunableMessage(transaction, blockTimestamp, height);
+            } else if (prunableMessage.height != height) {
+                throw new RuntimeException("Attempt to modify prunable message from height " + prunableMessage.height + " at height " + height);
+            }
+            if (prunableMessage.getEncryptedData() == null) {
+                prunableMessage.setEncrypted(appendix);
+                prunableMessageTable.insert(prunableMessage);
+            }
         }
     }
 
-    static boolean isPruned(long transactionId) {
+    static boolean isPruned(long transactionId, boolean hasPrunablePlainMessage, boolean hasPrunableEncryptedMessage) {
+        if (!hasPrunablePlainMessage && !hasPrunableEncryptedMessage) {
+            return false;
+        }
         try (Connection con = Db.db.getConnection();
-                PreparedStatement pstmt = con.prepareStatement("SELECT 1 FROM prunable_message WHERE id = ?")) {
+                PreparedStatement pstmt = con.prepareStatement("SELECT message, encrypted_message FROM prunable_message WHERE id = ?")) {
             pstmt.setLong(1, transactionId);
             try (ResultSet rs = pstmt.executeQuery()) {
-                return !rs.next();
+                return !rs.next()
+                        || (hasPrunablePlainMessage && rs.getBytes("message") == null)
+                        || (hasPrunableEncryptedMessage && rs.getBytes("encrypted_message") == null);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

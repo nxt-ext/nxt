@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2015 The Nxt Core Developers.                             *
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -17,6 +17,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.AccountRestrictions;
 import nxt.Alias;
 import nxt.Asset;
 import nxt.AssetTransfer;
@@ -30,9 +31,9 @@ import nxt.ExchangeRequest;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.Order;
-import nxt.PhasingPoll;
 import nxt.Poll;
 import nxt.PrunableMessage;
+import nxt.Shuffling;
 import nxt.TaggedData;
 import nxt.Trade;
 import nxt.Vote;
@@ -79,12 +80,14 @@ public final class GetState extends APIServlet.APIRequestHandler {
             response.put("numberOfTags", DigitalGoodsStore.Tag.getCount());
             response.put("numberOfPolls", Poll.getCount());
             response.put("numberOfVotes", Vote.getCount());
-            response.put("numberOfPhasedTransactions", PhasingPoll.getPhasedCount());
             response.put("numberOfPrunableMessages", PrunableMessage.getCount());
             response.put("numberOfTaggedData", TaggedData.getCount());
             response.put("numberOfDataTags", TaggedData.Tag.getTagCount());
             response.put("numberOfAccountLeases", Account.getAccountLeaseCount());
             response.put("numberOfActiveAccountLeases", Account.getActiveLeaseCount());
+            response.put("numberOfShufflings", Shuffling.getCount());
+            response.put("numberOfActiveShufflings", Shuffling.getActiveCount());
+            response.put("numberOfPhasingOnlyAccounts", AccountRestrictions.PhasingOnly.getCount());
         }
         response.put("numberOfPeers", Peers.getAllPeers().size());
         response.put("numberOfActivePeers", Peers.getActivePeers().size());
