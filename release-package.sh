@@ -91,7 +91,7 @@ sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
 echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
 #echo -e "sha256:\n" >> ${CHANGELOG}
 #sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
-echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-installer-${VERSION}.dmg\n" >> ${CHANGELOG}
+echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-installer-${VERSION}.dmg\n" >> ${CHANGELOG}
 
 echo -e "The exe, dmg, and jar packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
 
