@@ -1114,7 +1114,7 @@ class NxtDbVersion extends DbVersion {
             case 469:
                 apply(null);
             case 470:
-                apply("CREATE TABLE referenced_transaction (db_id IDENTITY, transaction_id BIGINT NOT NULL, "
+                apply("CREATE TABLE IF NOT EXISTS referenced_transaction (db_id IDENTITY, transaction_id BIGINT NOT NULL, "
                         + "FOREIGN KEY (transaction_id) REFERENCES transaction (id) ON DELETE CASCADE, "
                         + "referenced_transaction_id BIGINT NOT NULL)");
             case 471:
