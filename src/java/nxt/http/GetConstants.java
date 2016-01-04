@@ -30,10 +30,12 @@ import nxt.crypto.HashFunction;
 import nxt.peer.Peer;
 import nxt.util.JSON;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.Map;
 
 public final class GetConstants extends APIServlet.APIRequestHandler {
@@ -162,6 +164,14 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                     shufflingParticipantStates.put(state.toString(), state.getCode());
                 }
                 response.put("shufflingParticipantStates", shufflingParticipantStates);
+
+                JSONArray disabledAPI = new JSONArray();
+                Collections.addAll(disabledAPI, API.disabledAPI);
+                response.put("disabledAPI", disabledAPI);
+
+                JSONArray disabledAPITags = new JSONArray();
+                API.disabledAPITags.forEach(apiTag -> disabledAPITags.add(apiTag.getDisplayName()));
+                response.put("disabledAPITags", disabledAPITags);
 
                 CONSTANTS = JSON.prepare(response);
             } catch (Exception e) {
