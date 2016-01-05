@@ -61,10 +61,16 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
 
     CreateTransaction(APITag[] apiTags, String... parameters) {
         super(apiTags, addCommonParameters(parameters));
+        if (!getAPITags().contains(APITag.CREATE_TRANSACTION)) {
+            throw new RuntimeException("CreateTransaction API " + getClass().getName() + " is missing APITag.CREATE_TRANSACTION tag");
+        }
     }
 
     CreateTransaction(String fileParameter, APITag[] apiTags, String... parameters) {
         super(fileParameter, apiTags, addCommonParameters(parameters));
+        if (!getAPITags().contains(APITag.CREATE_TRANSACTION)) {
+            throw new RuntimeException("CreateTransaction API " + getClass().getName() + " is missing APITag.CREATE_TRANSACTION tag");
+        }
     }
 
     final JSONStreamAware createTransaction(HttpServletRequest req, Account senderAccount, Attachment attachment)

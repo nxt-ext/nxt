@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -367,8 +368,30 @@ public final class APIServlet extends HttpServlet {
         map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
         map.put("detectMimeType", DetectMimeType.instance);
 
+        API.disabledAPI.forEach(api -> {
+            if (map.remove(api) == null) {
+                throw new RuntimeException("Invalid API in nxt.disabledAPI: " + api);
+            }
+        });
+        API.disabledAPITags.forEach(apiTag -> {
+            Iterator<Map.Entry<String, APIRequestHandler>> iterator = map.entrySet().iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next().getValue().getAPITags().contains(apiTag)) {
+                    iterator.remove();
+                }
+            }
+        });
+        if (!API.disabledAPI.isEmpty()) {
+            Logger.logInfoMessage("Disabled API: " + API.disabledAPI);
+        }
+        if (!API.disabledAPITags.isEmpty()) {
+            Logger.logInfoMessage("Disabled APITags: " + API.disabledAPITags);
+        }
+
         apiRequestHandlers = Collections.unmodifiableMap(map);
     }
+
+    static void initClass() {}
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
