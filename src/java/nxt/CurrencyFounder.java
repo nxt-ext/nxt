@@ -47,8 +47,8 @@ public class CurrencyFounder {
     private static final VersionedEntityDbTable<CurrencyFounder> currencyFounderTable = new VersionedEntityDbTable<CurrencyFounder>("currency_founder", currencyFounderDbKeyFactory) {
 
         @Override
-        protected CurrencyFounder load(Connection con, ResultSet rs) throws SQLException {
-            return new CurrencyFounder(rs);
+        protected CurrencyFounder load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new CurrencyFounder(rs, dbKey);
         }
 
         @Override
@@ -77,10 +77,10 @@ public class CurrencyFounder {
         this.amountPerUnitNQT = amountPerUnitNQT;
     }
 
-    private CurrencyFounder(ResultSet rs) throws SQLException {
+    private CurrencyFounder(ResultSet rs, DbKey dbKey) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
-        this.dbKey = currencyFounderDbKeyFactory.newKey(currencyId, accountId);
+        this.dbKey = dbKey;
         this.amountPerUnitNQT = rs.getLong("amount");
     }
 

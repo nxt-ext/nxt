@@ -48,8 +48,8 @@ public final class AssetDelete {
     private static final EntityDbTable<AssetDelete> assetDeleteTable = new EntityDbTable<AssetDelete>("asset_delete", deleteDbKeyFactory) {
 
         @Override
-        protected AssetDelete load(Connection con, ResultSet rs) throws SQLException {
-            return new AssetDelete(rs);
+        protected AssetDelete load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AssetDelete(rs, dbKey);
         }
 
         @Override
@@ -108,9 +108,9 @@ public final class AssetDelete {
         this.height = Nxt.getBlockchain().getHeight();
     }
 
-    private AssetDelete(ResultSet rs) throws SQLException {
+    private AssetDelete(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = deleteDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.assetId = rs.getLong("asset_id");
         this.accountId = rs.getLong("account_id");
         this.quantityQNT = rs.getLong("quantity");

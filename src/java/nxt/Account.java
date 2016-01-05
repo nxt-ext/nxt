@@ -72,10 +72,10 @@ public final class Account {
             this.unconfirmedQuantityQNT = unconfirmedQuantityQNT;
         }
 
-        private AccountAsset(ResultSet rs) throws SQLException {
+        private AccountAsset(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
             this.assetId = rs.getLong("asset_id");
-            this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
+            this.dbKey = dbKey;
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
         }
@@ -144,10 +144,10 @@ public final class Account {
             this.unconfirmedUnits = unconfirmedQuantityQNT;
         }
 
-        private AccountCurrency(ResultSet rs) throws SQLException {
+        private AccountCurrency(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
             this.currencyId = rs.getLong("currency_id");
-            this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.currencyId);
+            this.dbKey = dbKey;
             this.units = rs.getLong("units");
             this.unconfirmedUnits = rs.getLong("unconfirmed_units");
         }
@@ -219,9 +219,9 @@ public final class Account {
             this.currentLesseeId = currentLesseeId;
         }
 
-        private AccountLease(ResultSet rs) throws SQLException {
+        private AccountLease(ResultSet rs, DbKey dbKey) throws SQLException {
             this.lessorId = rs.getLong("lessor_id");
-            this.dbKey = accountLeaseDbKeyFactory.newKey(this.lessorId);
+            this.dbKey = dbKey;
             this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
             this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
             this.currentLesseeId = rs.getLong("current_lessee_id");
@@ -292,9 +292,9 @@ public final class Account {
             this.description = description;
         }
 
-        private AccountInfo(ResultSet rs) throws SQLException {
+        private AccountInfo(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
-            this.dbKey = accountInfoDbKeyFactory.newKey(this.accountId);
+            this.dbKey = dbKey;
             this.name = rs.getString("name");
             this.description = rs.getString("description");
         }
@@ -352,9 +352,9 @@ public final class Account {
             this.value = value;
         }
 
-        private AccountProperty(ResultSet rs) throws SQLException {
+        private AccountProperty(ResultSet rs, DbKey dbKey) throws SQLException {
             this.id = rs.getLong("id");
-            this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
+            this.dbKey = dbKey;
             this.recipientId = rs.getLong("recipient_id");
             long setterId = rs.getLong("setter_id");
             this.setterId = setterId == 0 ? recipientId : setterId;
@@ -413,9 +413,9 @@ public final class Account {
             this.height = Nxt.getBlockchain().getHeight();
         }
 
-        private PublicKey(ResultSet rs) throws SQLException {
+        private PublicKey(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
-            this.dbKey = publicKeyDbKeyFactory.newKey(accountId);
+            this.dbKey = dbKey;
             this.publicKey = rs.getBytes("public_key");
             this.height = rs.getInt("height");
         }
@@ -471,8 +471,8 @@ public final class Account {
     private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>("account", accountDbKeyFactory) {
 
         @Override
-        protected Account load(Connection con, ResultSet rs) throws SQLException {
-            return new Account(rs);
+        protected Account load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Account(rs, dbKey);
         }
 
         @Override
@@ -504,8 +504,8 @@ public final class Account {
             accountLeaseDbKeyFactory) {
 
         @Override
-        protected AccountLease load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountLease(rs);
+        protected AccountLease load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountLease(rs, dbKey);
         }
 
         @Override
@@ -519,8 +519,8 @@ public final class Account {
             accountInfoDbKeyFactory, "name,description") {
 
         @Override
-        protected AccountInfo load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountInfo(rs);
+        protected AccountInfo load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountInfo(rs, dbKey);
         }
 
         @Override
@@ -547,8 +547,8 @@ public final class Account {
     private static final VersionedPersistentDbTable<PublicKey> publicKeyTable = new VersionedPersistentDbTable<PublicKey>("public_key", publicKeyDbKeyFactory) {
 
         @Override
-        protected PublicKey load(Connection con, ResultSet rs) throws SQLException {
-            return new PublicKey(rs);
+        protected PublicKey load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new PublicKey(rs, dbKey);
         }
 
         @Override
@@ -570,8 +570,8 @@ public final class Account {
     private static final VersionedEntityDbTable<AccountAsset> accountAssetTable = new VersionedEntityDbTable<AccountAsset>("account_asset", accountAssetDbKeyFactory) {
 
         @Override
-        protected AccountAsset load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountAsset(rs);
+        protected AccountAsset load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountAsset(rs, dbKey);
         }
 
         @Override
@@ -613,8 +613,8 @@ public final class Account {
     private static final VersionedEntityDbTable<AccountCurrency> accountCurrencyTable = new VersionedEntityDbTable<AccountCurrency>("account_currency", accountCurrencyDbKeyFactory) {
 
         @Override
-        protected AccountCurrency load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountCurrency(rs);
+        protected AccountCurrency load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountCurrency(rs, dbKey);
         }
 
         @Override
@@ -657,8 +657,8 @@ public final class Account {
     private static final VersionedEntityDbTable<AccountProperty> accountPropertyTable = new VersionedEntityDbTable<AccountProperty>("account_property", accountPropertyDbKeyFactory) {
 
         @Override
-        protected AccountProperty load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountProperty(rs);
+        protected AccountProperty load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountProperty(rs, dbKey);
         }
 
         @Override
@@ -1034,9 +1034,9 @@ public final class Account {
         this.controls = Collections.emptySet();
     }
 
-    private Account(ResultSet rs) throws SQLException {
+    private Account(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = accountDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.balanceNQT = rs.getLong("balance");
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
         this.forgedBalanceNQT = rs.getLong("forged_balance");
@@ -1426,7 +1426,7 @@ public final class Account {
         } else if (! Arrays.equals(publicKey.publicKey, key)) {
             throw new IllegalStateException("Public key mismatch");
         } else if (publicKey.height >= Nxt.getBlockchain().getHeight() - 1) {
-            PublicKey dbPublicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id), false);
+            PublicKey dbPublicKey = publicKeyTable.get(dbKey, false);
             if (dbPublicKey == null || dbPublicKey.publicKey == null) {
                 publicKeyTable.insert(publicKey);
             }

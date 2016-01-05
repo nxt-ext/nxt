@@ -49,8 +49,8 @@ public final class AssetTransfer {
     private static final EntityDbTable<AssetTransfer> assetTransferTable = new EntityDbTable<AssetTransfer>("asset_transfer", transferDbKeyFactory) {
 
         @Override
-        protected AssetTransfer load(Connection con, ResultSet rs) throws SQLException {
-            return new AssetTransfer(rs);
+        protected AssetTransfer load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AssetTransfer(rs, dbKey);
         }
 
         @Override
@@ -154,9 +154,9 @@ public final class AssetTransfer {
         this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
     }
 
-    private AssetTransfer(ResultSet rs) throws SQLException {
+    private AssetTransfer(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = transferDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.assetId = rs.getLong("asset_id");
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");

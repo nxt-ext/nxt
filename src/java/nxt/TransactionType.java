@@ -3109,7 +3109,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.TaggedDataUpload attachment = (Attachment.TaggedDataUpload) transaction.getAttachment();
-                TaggedData.add(transaction, attachment);
+                TaggedData.add((TransactionImpl)transaction, attachment);
             }
 
             @Override

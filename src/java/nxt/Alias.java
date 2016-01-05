@@ -43,9 +43,9 @@ public final class Alias {
             this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
         }
 
-        private Offer(ResultSet rs) throws SQLException {
+        private Offer(ResultSet rs, DbKey dbKey) throws SQLException {
             this.aliasId = rs.getLong("id");
-            this.dbKey = offerDbKeyFactory.newKey(this.aliasId);
+            this.dbKey = dbKey;
             this.priceNQT = rs.getLong("price");
             this.buyerId  = rs.getLong("buyer_id");
         }
@@ -88,8 +88,8 @@ public final class Alias {
     private static final VersionedEntityDbTable<Alias> aliasTable = new VersionedEntityDbTable<Alias>("alias", aliasDbKeyFactory) {
 
         @Override
-        protected Alias load(Connection con, ResultSet rs) throws SQLException {
-            return new Alias(rs);
+        protected Alias load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Alias(rs, dbKey);
         }
 
         @Override
@@ -116,8 +116,8 @@ public final class Alias {
     private static final VersionedEntityDbTable<Offer> offerTable = new VersionedEntityDbTable<Offer>("alias_offer", offerDbKeyFactory) {
 
         @Override
-        protected Offer load(Connection con, ResultSet rs) throws SQLException {
-            return new Offer(rs);
+        protected Offer load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Offer(rs, dbKey);
         }
 
         @Override
@@ -224,9 +224,9 @@ public final class Alias {
         this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
     }
 
-    private Alias(ResultSet rs) throws SQLException {
+    private Alias(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = aliasDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.accountId = rs.getLong("account_id");
         this.aliasName = rs.getString("alias_name");
         this.aliasURI = rs.getString("alias_uri");

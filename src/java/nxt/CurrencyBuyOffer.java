@@ -39,8 +39,8 @@ public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
     private static final VersionedEntityDbTable<CurrencyBuyOffer> buyOfferTable = new VersionedEntityDbTable<CurrencyBuyOffer>("buy_offer", buyOfferDbKeyFactory) {
 
         @Override
-        protected CurrencyBuyOffer load(Connection con, ResultSet rs) throws SQLException {
-            return new CurrencyBuyOffer(rs);
+        protected CurrencyBuyOffer load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new CurrencyBuyOffer(rs, dbKey);
         }
 
         @Override
@@ -117,9 +117,9 @@ public final class CurrencyBuyOffer extends CurrencyExchangeOffer {
         this.dbKey = buyOfferDbKeyFactory.newKey(id);
     }
 
-    private CurrencyBuyOffer(ResultSet rs) throws SQLException {
+    private CurrencyBuyOffer(ResultSet rs, DbKey dbKey) throws SQLException {
         super(rs);
-        this.dbKey = buyOfferDbKeyFactory.newKey(super.id);
+        this.dbKey = dbKey;
     }
 
     @Override

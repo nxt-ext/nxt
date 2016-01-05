@@ -87,6 +87,9 @@ public abstract class ValuesDbTable<T,V> extends DerivedDbTable {
             throw new IllegalStateException("Not in transaction");
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
+        if (dbKey == null) {
+            throw new RuntimeException("DbKey not set");
+        }
         db.getCache(table).put(dbKey, values);
         try (Connection con = db.getConnection()) {
             if (multiversion) {

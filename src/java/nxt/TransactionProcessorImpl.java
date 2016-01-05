@@ -81,7 +81,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     private final EntityDbTable<UnconfirmedTransaction> unconfirmedTransactionTable = new EntityDbTable<UnconfirmedTransaction>("unconfirmed_transaction", unconfirmedTransactionDbKeyFactory) {
 
         @Override
-        protected UnconfirmedTransaction load(Connection con, ResultSet rs) throws SQLException {
+        protected UnconfirmedTransaction load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
             return new UnconfirmedTransaction(rs);
         }
 
@@ -100,7 +100,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 pstmt.setInt(1, height);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     while (rs.next()) {
-                        UnconfirmedTransaction unconfirmedTransaction = load(con, rs);
+                        UnconfirmedTransaction unconfirmedTransaction = load(con, rs, null);
                         waitingTransactions.add(unconfirmedTransaction);
                         transactionCache.remove(unconfirmedTransaction.getId());
                     }

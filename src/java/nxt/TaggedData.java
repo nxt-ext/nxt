@@ -50,8 +50,8 @@ public class TaggedData {
             "tagged_data", taggedDataKeyFactory, "name,description,tags") {
 
         @Override
-        protected TaggedData load(Connection con, ResultSet rs) throws SQLException {
-            return new TaggedData(rs);
+        protected TaggedData load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new TaggedData(rs, dbKey);
         }
 
         @Override
@@ -104,9 +104,9 @@ public class TaggedData {
             this.timestamp = timestamp;
         }
 
-        private Timestamp(ResultSet rs) throws SQLException {
+        private Timestamp(ResultSet rs, DbKey dbKey) throws SQLException {
             this.id = rs.getLong("id");
-            this.dbKey = timestampKeyFactory.newKey(this.id);
+            this.dbKey = dbKey;
             this.timestamp = rs.getInt("timestamp");
         }
 
@@ -137,8 +137,8 @@ public class TaggedData {
             "tagged_data_timestamp", timestampKeyFactory) {
 
         @Override
-        protected Timestamp load(Connection con, ResultSet rs) throws SQLException {
-            return new Timestamp(rs);
+        protected Timestamp load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Timestamp(rs, dbKey);
         }
 
         @Override
@@ -160,8 +160,8 @@ public class TaggedData {
         private static final VersionedPersistentDbTable<Tag> tagTable = new VersionedPersistentDbTable<Tag>("data_tag", tagDbKeyFactory) {
 
             @Override
-            protected Tag load(Connection con, ResultSet rs) throws SQLException {
-                return new Tag(rs);
+            protected Tag load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+                return new Tag(rs, dbKey);
             }
 
             @Override
@@ -250,9 +250,9 @@ public class TaggedData {
             this.height = height;
         }
 
-        private Tag(ResultSet rs) throws SQLException {
+        private Tag(ResultSet rs, DbKey dbKey) throws SQLException {
             this.tag = rs.getString("tag");
-            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+            this.dbKey = dbKey;
             this.count = rs.getInt("tag_count");
             this.height = rs.getInt("height");
         }
@@ -390,9 +390,9 @@ public class TaggedData {
         this.height = height;
     }
 
-    private TaggedData(ResultSet rs) throws SQLException {
+    private TaggedData(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = taggedDataKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.accountId = rs.getLong("account_id");
         this.name = rs.getString("name");
         this.description = rs.getString("description");
@@ -483,9 +483,9 @@ public class TaggedData {
         return blockTimestamp;
     }
 
-    static void add(Transaction transaction, Attachment.TaggedDataUpload attachment) {
+    static void add(TransactionImpl transaction, Attachment.TaggedDataUpload attachment) {
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME && attachment.getData() != null) {
-            TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(transaction.getId()));
+            TaggedData taggedData = taggedDataTable.get(transaction.getDbKey());
             if (taggedData == null) {
                 taggedData = new TaggedData(transaction, attachment);
                 taggedDataTable.insert(taggedData);
@@ -498,14 +498,15 @@ public class TaggedData {
 
     static void extend(Transaction transaction, Attachment.TaggedDataExtend attachment) {
         long taggedDataId = attachment.getTaggedDataId();
-        Timestamp timestamp = timestampTable.get(timestampKeyFactory.newKey(taggedDataId));
+        DbKey dbKey = taggedDataKeyFactory.newKey(taggedDataId);
+        Timestamp timestamp = timestampTable.get(dbKey);
         timestamp.timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, transaction.getTimestamp() - timestamp.timestamp);
         timestampTable.insert(timestamp);
-        List<Long> extendTransactionIds = extendTable.get(extendDbKeyFactory.newKey(taggedDataId));
+        List<Long> extendTransactionIds = extendTable.get(dbKey);
         extendTransactionIds.add(transaction.getId());
         extendTable.insert(taggedDataId, extendTransactionIds);
         if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
-            TaggedData taggedData = taggedDataTable.get(taggedDataKeyFactory.newKey(taggedDataId));
+            TaggedData taggedData = taggedDataTable.get(dbKey);
             if (taggedData == null && attachment.getData() != null) {
                 TransactionImpl uploadTransaction = TransactionDb.findTransaction(taggedDataId);
                 taggedData = new TaggedData(uploadTransaction, attachment);
