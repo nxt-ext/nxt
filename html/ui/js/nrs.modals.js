@@ -19,6 +19,7 @@
  */
 var NRS = (function(NRS, $, undefined) {
 	NRS.fetchingModalData = false;
+	NRS.modalStack = [];
 
 	// save the original function object
 	var _superModal = $.fn.modal;
@@ -228,6 +229,10 @@ var NRS = (function(NRS, $, undefined) {
 		$modal.modal("unlock");
 		$modal.modal("hide");
 	};
+
+	$("button[data-dismiss='modal']").on("click", function() {
+		NRS.modalStack = [];
+	});
 
 	$(".advanced_info a").on("click", function(e) {
 		e.preventDefault();

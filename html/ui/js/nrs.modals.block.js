@@ -25,6 +25,10 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 		NRS.fetchingModalData = true;
+        if ($(this).data("back") == "true") {
+            NRS.modalStack.pop(); // The forward modal
+            NRS.modalStack.pop(); // The current modal
+        }
 		var block = $(this).data("block");
         var isBlockId = $(this).data("id");
         var params = {
@@ -41,6 +45,8 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	NRS.showBlockModal = function(block) {
+        NRS.setBackLink();
+        NRS.modalStack.push({ class: "show_block_modal_action", key: "block", value: block.height });
         try {
             $("#block_info_modal_block").html(String(block.block).escapeHTML());
             $("#block_info_transactions_tab_link").tab("show");

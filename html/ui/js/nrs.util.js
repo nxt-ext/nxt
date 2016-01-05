@@ -830,6 +830,20 @@ var NRS = (function (NRS, $, undefined) {
             + (isEscapedText ? text : String(text).escapeHTML()) + "</a>";
     };
 
+    NRS.setBackLink = function() {
+        var backLink = $(".back-link");
+        if (NRS.modalStack.length > 0) {
+            var backModalInfo = NRS.modalStack[NRS.modalStack.length - 1];
+            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action");
+            backLink.addClass(backModalInfo.class);
+            backLink.data(backModalInfo.key, backModalInfo.value);
+            backLink.data("back", "true");
+            backLink.show();
+        } else {
+            backLink.hide();
+        }
+    };
+
     NRS.getAccountTitle = function (object, acc) {
         var type = typeof object;
 
