@@ -43,6 +43,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
@@ -458,7 +460,7 @@ public final class Account {
 
         @Override
         public DbKey newKey(Account account) {
-            return account.dbKey;
+            return account.dbKey == null ? newKey(account.id) : account.dbKey;
         }
 
         @Override
@@ -668,6 +670,7 @@ public final class Account {
 
     };
 
+    private static final ConcurrentMap<DbKey, byte[]> publicKeyCache = new ConcurrentHashMap<>();
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
@@ -802,7 +805,7 @@ public final class Account {
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey);
         if (account == null) {
-            PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id));
+            PublicKey publicKey = publicKeyTable.get(dbKey);
             if (publicKey != null) {
                 account = accountTable.newEntity(dbKey);
                 account.publicKey = publicKey;
@@ -815,7 +818,7 @@ public final class Account {
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey, height);
         if (account == null) {
-            PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id), height);
+            PublicKey publicKey = publicKeyTable.get(dbKey, height);
             if (publicKey != null) {
                 account = accountTable.newEntity(dbKey);
                 account.publicKey = publicKey;
@@ -830,12 +833,14 @@ public final class Account {
         if (account == null) {
             return null;
         }
-        byte[] accountPublicKey = account.getPublicKey();
-        if (accountPublicKey == null || Arrays.equals(accountPublicKey, publicKey)) {
+        if (account.publicKey == null) {
+            account.publicKey = publicKeyTable.get(accountDbKeyFactory.newKey(account));
+        }
+        if (account.publicKey == null || account.publicKey.publicKey == null || Arrays.equals(account.publicKey.publicKey, publicKey)) {
             return account;
         }
         throw new RuntimeException("DUPLICATE KEY for account " + Long.toUnsignedString(accountId)
-                + " existing key " + Convert.toHexString(accountPublicKey) + " new key " + Convert.toHexString(publicKey));
+                + " existing key " + Convert.toHexString(account.publicKey.publicKey) + " new key " + Convert.toHexString(publicKey));
     }
 
     public static long getId(byte[] publicKey) {
@@ -844,22 +849,29 @@ public final class Account {
     }
 
     public static byte[] getPublicKey(long id) {
-        PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id));
-        return publicKey == null ? null : publicKey.publicKey;
+        DbKey dbKey = publicKeyDbKeyFactory.newKey(id);
+        byte[] key = publicKeyCache.get(dbKey);
+        if (key == null) {
+            PublicKey publicKey = publicKeyTable.get(dbKey);
+            if (publicKey == null || (key = publicKey.publicKey) == null) {
+                return null;
+            }
+            publicKeyCache.put(dbKey, key);
+        }
+        return key;
     }
 
     static Account addOrGetAccount(long id) {
         if (id == 0) {
             throw new IllegalArgumentException("Invalid accountId 0");
         }
-        DbKey accountDbKey = accountDbKeyFactory.newKey(id);
-        Account account = accountTable.get(accountDbKey);
+        DbKey dbKey = accountDbKeyFactory.newKey(id);
+        Account account = accountTable.get(dbKey);
         if (account == null) {
-            account = accountTable.newEntity(accountDbKey);
-            DbKey pkDbKey = publicKeyDbKeyFactory.newKey(id);
-            PublicKey publicKey = publicKeyTable.get(pkDbKey);
+            account = accountTable.newEntity(dbKey);
+            PublicKey publicKey = publicKeyTable.get(dbKey);
             if (publicKey == null) {
-                publicKey = publicKeyTable.newEntity(pkDbKey);
+                publicKey = publicKeyTable.newEntity(dbKey);
                 publicKeyTable.insert(publicKey);
             }
             account.publicKey = publicKey;
@@ -1011,6 +1023,24 @@ public final class Account {
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
+        Nxt.getBlockchainProcessor().addListener(block -> {
+            publicKeyCache.remove(accountDbKeyFactory.newKey(block.getGeneratorId()));
+            block.getTransactions().forEach(transaction -> {
+                publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getSenderId()));
+                if (!transaction.getAppendages(appendix -> (appendix instanceof Appendix.PublicKeyAnnouncement), false).isEmpty()) {
+                    publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getRecipientId()));
+                }
+                if (transaction.getType() == ShufflingTransaction.SHUFFLING_RECIPIENTS) {
+                    Attachment.ShufflingRecipients shufflingRecipients = (Attachment.ShufflingRecipients)transaction.getAttachment();
+                    for (byte[] publicKey : shufflingRecipients.getRecipientPublicKeys()) {
+                        publicKeyCache.remove(accountDbKeyFactory.newKey(Account.getId(publicKey)));
+                    }
+                }
+            });
+        }, BlockchainProcessor.Event.BLOCK_POPPED);
+
+        Nxt.getBlockchainProcessor().addListener(block -> publicKeyCache.clear(), BlockchainProcessor.Event.RESCAN_BEGIN);
+
     }
 
     static void init() {}
@@ -1078,7 +1108,7 @@ public final class Account {
     }
 
     public AccountInfo getAccountInfo() {
-        return accountInfoTable.get(accountInfoDbKeyFactory.newKey(this.id));
+        return accountInfoTable.get(accountDbKeyFactory.newKey(this));
     }
 
     void setAccountInfo(String name, String description) {
@@ -1095,21 +1125,15 @@ public final class Account {
     }
 
     public AccountLease getAccountLease() {
-        return accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(this.id));
-    }
-
-    public byte[] getPublicKey() {
-        if (this.publicKey == null) {
-            this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
-        }
-        return publicKey == null ? null : publicKey.publicKey;
+        return accountLeaseTable.get(accountDbKeyFactory.newKey(this));
     }
 
     public EncryptedData encryptTo(byte[] data, String senderSecretPhrase, boolean compress) {
-        if (getPublicKey() == null) {
+        byte[] key = getPublicKey(this.id);
+        if (key == null) {
             throw new IllegalArgumentException("Recipient account doesn't have a public key set");
         }
-        return Account.encryptTo(publicKey.publicKey, data, senderSecretPhrase, compress);
+        return Account.encryptTo(key, data, senderSecretPhrase, compress);
     }
 
     public static EncryptedData encryptTo(byte[] publicKey, byte[] data, String senderSecretPhrase, boolean compress) {
@@ -1120,10 +1144,11 @@ public final class Account {
     }
 
     public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
-        if (getPublicKey() == null) {
+        byte[] key = getPublicKey(this.id);
+        if (key == null) {
             throw new IllegalArgumentException("Sender account doesn't have a public key set");
         }
-        return Account.decryptFrom(publicKey.publicKey, encryptedData, recipientSecretPhrase, uncompress);
+        return Account.decryptFrom(key, encryptedData, recipientSecretPhrase, uncompress);
     }
 
     public static byte[] decryptFrom(byte[] publicKey, EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
@@ -1153,7 +1178,7 @@ public final class Account {
     public long getEffectiveBalanceNXT(int height) {
         if (height >= Constants.TRANSPARENT_FORGING_BLOCK_6) {
             if (this.publicKey == null) {
-                this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
+                this.publicKey = publicKeyTable.get(accountDbKeyFactory.newKey(this));
             }
             if (this.publicKey == null || this.publicKey.publicKey == null || this.publicKey.height == 0 || height - this.publicKey.height <= 1440) {
                 return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
@@ -1336,7 +1361,7 @@ public final class Account {
 
     void leaseEffectiveBalance(long lesseeId, int period) {
         int height = Nxt.getBlockchain().getHeight();
-        AccountLease accountLease = accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(id));
+        AccountLease accountLease = accountLeaseTable.get(accountDbKeyFactory.newKey(this));
         if (accountLease == null) {
             accountLease = new AccountLease(id,
                     height + Constants.LEASING_DELAY,
@@ -1415,7 +1440,6 @@ public final class Account {
     }
 
     void apply(byte[] key) {
-        DbKey dbKey = publicKeyDbKeyFactory.newKey(id);
         PublicKey publicKey = publicKeyTable.get(dbKey);
         if (publicKey == null) {
             publicKey = publicKeyTable.newEntity(dbKey);
@@ -1431,6 +1455,7 @@ public final class Account {
                 publicKeyTable.insert(publicKey);
             }
         }
+        publicKeyCache.put(dbKey, key);
         this.publicKey = publicKey;
     }
 
