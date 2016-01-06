@@ -280,7 +280,7 @@ final class BlockDb {
         }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE timestamp >= "
-                     + "(SELECT timestamp FROM block WHERE id = ?) ORDER BY timestamp DESC");
+                     + "IFNULL ((SELECT timestamp FROM block WHERE id = ?), " + Integer.MAX_VALUE + ") ORDER BY timestamp DESC");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM block WHERE db_id = ?")) {
             try {
                 pstmtSelect.setLong(1, blockId);

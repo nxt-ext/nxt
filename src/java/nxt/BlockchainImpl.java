@@ -219,7 +219,7 @@ final class BlockchainImpl implements Blockchain {
         // Search the database
         try (Connection con = Db.db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block "
-                            + "WHERE db_id > (SELECT db_id FROM block WHERE id = ?) "
+                            + "WHERE db_id > IFNULL ((SELECT db_id FROM block WHERE id = ?), " + Long.MAX_VALUE + ") "
                             + "ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
@@ -257,7 +257,7 @@ final class BlockchainImpl implements Blockchain {
         // Search the database
         try (Connection con = Db.db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block "
-                        + "WHERE db_id > (SELECT db_id FROM block WHERE id = ?) "
+                        + "WHERE db_id > IFNULL ((SELECT db_id FROM block WHERE id = ?), " + Long.MAX_VALUE + ") "
                         + "ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, limit);
@@ -296,7 +296,7 @@ final class BlockchainImpl implements Blockchain {
         // Search the database
         try (Connection con = Db.db.getConnection();
                 PreparedStatement pstmt = con.prepareStatement("SELECT * FROM block "
-                        + "WHERE db_id > (SELECT db_id FROM block WHERE id = ?) "
+                        + "WHERE db_id > IFNULL ((SELECT db_id FROM block WHERE id = ?), " + Long.MAX_VALUE + ") "
                         + "ORDER BY db_id ASC LIMIT ?")) {
             pstmt.setLong(1, blockId);
             pstmt.setInt(2, blockList.size());
