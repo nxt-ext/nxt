@@ -66,7 +66,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return instance;
     }
 
-    private final Map<Long, UnconfirmedTransaction> transactionCache = new HashMap<>();
+    private final Map<DbKey, UnconfirmedTransaction> transactionCache = new HashMap<>();
     private volatile boolean cacheInitialized = false;
 
     final DbKey.LongKeyFactory<UnconfirmedTransaction> unconfirmedTransactionDbKeyFactory = new DbKey.LongKeyFactory<UnconfirmedTransaction>("id") {
@@ -89,7 +89,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         protected void save(Connection con, UnconfirmedTransaction unconfirmedTransaction) throws SQLException {
             unconfirmedTransaction.save(con);
             if (transactionCache.size() < maxUnconfirmedTransactions) {
-                transactionCache.put(unconfirmedTransaction.getId(), unconfirmedTransaction);
+                transactionCache.put(unconfirmedTransaction.getDbKey(), unconfirmedTransaction);
             }
         }
 
@@ -102,7 +102,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     while (rs.next()) {
                         UnconfirmedTransaction unconfirmedTransaction = load(con, rs, null);
                         waitingTransactions.add(unconfirmedTransaction);
-                        transactionCache.remove(unconfirmedTransaction.getId());
+                        transactionCache.remove(unconfirmedTransaction.getDbKey());
                     }
                 }
             } catch (SQLException e) {
@@ -337,7 +337,21 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
     @Override
     public Transaction getUnconfirmedTransaction(long transactionId) {
-        return unconfirmedTransactionTable.get(unconfirmedTransactionDbKeyFactory.newKey(transactionId));
+        DbKey dbKey = unconfirmedTransactionDbKeyFactory.newKey(transactionId);
+        return getUnconfirmedTransaction(dbKey);
+    }
+
+    Transaction getUnconfirmedTransaction(DbKey dbKey) {
+        Nxt.getBlockchain().readLock();
+        try {
+            Transaction transaction = transactionCache.get(dbKey);
+            if (transaction != null) {
+                return transaction;
+            }
+        } finally {
+            Nxt.getBlockchain().readUnlock();
+        }
+        return unconfirmedTransactionTable.get(dbKey);
     }
 
     private List<Long> getAllUnconfirmedTransactionIds() {
@@ -389,7 +403,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 Logger.logMessage("Transaction " + transaction.getStringId() + " already in blockchain, will not broadcast again");
                 return;
             }
-            if (unconfirmedTransactionTable.get(((TransactionImpl) transaction).getDbKey()) != null) {
+            if (getUnconfirmedTransaction(((TransactionImpl)transaction).getDbKey()) != null) {
                 if (enableTransactionRebroadcasting) {
                     broadcastedTransactions.add((TransactionImpl) transaction);
                     Logger.logMessage("Transaction " + transaction.getStringId() + " already in unconfirmed pool, will re-broadcast");
@@ -534,7 +548,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             int deleted = pstmt.executeUpdate();
             if (deleted > 0) {
                 transaction.undoUnconfirmed();
-                transactionCache.remove(transaction.getId());
+                transactionCache.remove(transaction.getDbKey());
                 transactionListeners.notify(Collections.singletonList(transaction), Event.REMOVED_UNCONFIRMED_TRANSACTIONS);
             }
         } catch (SQLException e) {
@@ -606,7 +620,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
             try {
                 TransactionImpl transaction = TransactionImpl.parseTransaction((JSONObject) transactionData);
                 receivedTransactions.add(transaction);
-                if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
+                if (getUnconfirmedTransaction(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     continue;
                 }
                 transaction.validate();
@@ -659,7 +673,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     throw new NxtException.NotCurrentlyValidException("Blockchain not ready to accept transactions");
                 }
 
-                if (unconfirmedTransactionTable.get(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
+                if (getUnconfirmedTransaction(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     throw new NxtException.ExistingTransactionException("Transaction already processed");
                 }
 
@@ -729,7 +743,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                     DbIterator<UnconfirmedTransaction> it = getAllUnconfirmedTransactions();
                     while (it.hasNext()) {
                         UnconfirmedTransaction unconfirmedTransaction = it.next();
-                        transactionCache.put(unconfirmedTransaction.getId(), unconfirmedTransaction);
+                        transactionCache.put(unconfirmedTransaction.getDbKey(), unconfirmedTransaction);
                     }
                     cacheInitialized = true;
                 }

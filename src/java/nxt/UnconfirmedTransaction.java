@@ -16,6 +16,7 @@
 
 package nxt;
 
+import nxt.db.DbKey;
 import nxt.util.Filter;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -104,6 +105,10 @@ class UnconfirmedTransaction implements Transaction {
     @Override
     public long getId() {
         return transaction.getId();
+    }
+
+    DbKey getDbKey() {
+        return transaction.getDbKey();
     }
 
     @Override
