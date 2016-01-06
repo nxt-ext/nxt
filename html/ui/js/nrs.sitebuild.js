@@ -17,65 +17,65 @@
 /**
  * @depends {3rdparty/jquery-2.1.0.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 
-    _modalUIElements = null;
+    var _modalUIElements = null;
 
-    NRS.loadLockscreenHTML = function(path, options) {
+    NRS.loadLockscreenHTML = function(path) {
     	jQuery.ajaxSetup({ async: false });
     	$.get(path, '', function (data) { $("body").prepend(data); });
     	jQuery.ajaxSetup({ async: true });
-    }
+    };
 
-    NRS.loadHeaderHTML = function(path, options) {
+    NRS.loadHeaderHTML = function(path) {
     	jQuery.ajaxSetup({ async: false });
     	$.get(path, '', function (data) { $("body").prepend(data); });
     	jQuery.ajaxSetup({ async: true });
-    }
+    };
 
-    NRS.loadSidebarHTML = function(path, options) {
+    NRS.loadSidebarHTML = function(path) {
     	jQuery.ajaxSetup({ async: false });
     	$.get(path, '', function (data) { $("#sidebar").append(data); });
     	jQuery.ajaxSetup({ async: true });
-    }
+    };
 
-    NRS.loadSidebarContextHTML = function(path, options) {
+    NRS.loadSidebarContextHTML = function(path) {
     	jQuery.ajaxSetup({ async: false });
     	$.get(path, '', function (data) { $("body").append(data); });
     	jQuery.ajaxSetup({ async: true });
-    }
+    };
 
-    NRS.loadPageHTML = function(path, options) {
+    NRS.loadPageHTML = function(path) {
     	jQuery.ajaxSetup({ async: false });
         NRS.asyncLoadPageHTML(path);
     	jQuery.ajaxSetup({ async: true });
-    }
+    };
 
     NRS.asyncLoadPageHTML = function(path) {
     	$.get(path, '', function (data) { $("#content").append(data); });
-    }
+    };
 
-    NRS.loadModalHTML = function(path, options) {
+    NRS.loadModalHTML = function(path) {
     	jQuery.ajaxSetup({ async: false });
     	$.get(path, '', function (data) { $("body").append(data); });
     	jQuery.ajaxSetup({ async: true });
-    }
+    };
 
     NRS.loadPageHTMLTemplates = function(options) {
         //Not used stub, for future use
-    }
+    };
 
     function _replaceModalHTMLTemplateDiv(data, templateName) {
         var html = $(data).filter('div#' + templateName).html();
         var template = Handlebars.compile(html);
-        $('div[data-replace-with-modal-template="' + templateName + '"]').each(function(i) {
+        $('div[data-replace-with-modal-template="' + templateName + '"]').each(function() {
             var name = $(this).closest('.modal').attr('id').replace('_modal', '');
             var context = { name: name };
             $(this).replaceWith(template(context));
         });
     }
 
-    NRS.loadModalHTMLTemplates = function(options) {
+    NRS.loadModalHTMLTemplates = function() {
         jQuery.ajaxSetup({ async: false });
         
         $.get("html/modals/templates.html", '', function (data) {
@@ -93,15 +93,15 @@ var NRS = (function(NRS, $, undefined) {
         });
 
         jQuery.ajaxSetup({ async: true });
-    }
+    };
 
-    NRS.preloadModalUIElements = function(options) {
+    NRS.preloadModalUIElements = function() {
         jQuery.ajaxSetup({ async: false });
         $.get("html/modals/ui_elements.html", '', function (data) {
             _modalUIElements = data;
         });
         jQuery.ajaxSetup({ async: true });
-    }
+    };
 
     NRS.initModalUIElement = function($modal, selector, elementName, context) {
         var html = $(_modalUIElements).filter('div#' + elementName).html();
@@ -113,20 +113,21 @@ var NRS = (function(NRS, $, undefined) {
         context["modalId"] = modalId;
         context["modalName"] = modalName;
 
-        $elems.each(function(i) {
+        $elems.each(function() {
             $(this).empty();
             $(this).append(template(context));
             $(this).parent().find("[data-i18n]").i18n();
         });
 
        return $elems;
-    }
+    };
 
 
     function _appendToSidebar(menuHTML, id, desiredPosition) {
         if ($('#' + id).length == 0) {
             var inserted = false;
-            $.each($('#sidebar_menu > li'), function(key, elem) {
+            var sidebarMenu = $("#sidebar_menu");
+            $.each(sidebarMenu.find('> li'), function(key, elem) {
                 var compPos = $(elem).data("sidebarPosition");
                 if (!inserted && compPos && desiredPosition <= parseInt(compPos)) {
                     $(menuHTML).insertBefore(elem);
@@ -134,9 +135,9 @@ var NRS = (function(NRS, $, undefined) {
                 }
             });
             if (!inserted) {
-                $('#sidebar_menu').append(menuHTML);
+                sidebarMenu.append(menuHTML);
             }
-            $("#sidebar_menu [data-i18n]").i18n();
+            sidebarMenu.find("[data-i18n]").i18n();
         }
     }
 
@@ -145,7 +146,7 @@ var NRS = (function(NRS, $, undefined) {
         menuHTML += '<a href="#" data-page="' + options["page"] + '">' + options["titleHTML"] + '</a></li>';
         _appendToSidebar(menuHTML, options["id"], options["desiredPosition"]);
 
-    }
+    };
 
     NRS.addTreeviewSidebarMenuItem = function(options) {
         var menuHTML = '<li class="treeview" id="' + options["id"] + '" class="sm_treeview" data-sidebar-position="' + options["desiredPosition"] + '">';
@@ -153,7 +154,7 @@ var NRS = (function(NRS, $, undefined) {
         menuHTML += '<ul class="treeview-menu" style="display: none;"></ul>';
         menuHTML += '</li>';
         _appendToSidebar(menuHTML, options["id"], options["desiredPosition"]);
-    }
+    };
     
     NRS.appendMenuItemToTSMenuItem = function(itemId, options) {
         var menuHTML ='<li class="sm_treeview_submenu"><a href="#" ';
@@ -167,14 +168,14 @@ var NRS = (function(NRS, $, undefined) {
         menuHTML += '><i class="fa fa-angle-double-right"></i> ';
         menuHTML += options["titleHTML"] + ' <span class="badge" style="display:none;"></span></a></li>';
         $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
-    }
+    };
 
     NRS.appendSubHeaderToTSMenuItem = function(itemId, options) {
         var menuHTML ='<li class="sm_treeview_submenu" style="background-color:#eee;color:#777;padding-top:3px;padding-bottom:3px;">';
         menuHTML += '<span class="sm_sub_header"><span style="display:inline-block;width:20px;">&nbsp;</span> ';
         menuHTML += options["titleHTML"] + ' </span></li>';
         $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
-    }
+    };
 
 
     
