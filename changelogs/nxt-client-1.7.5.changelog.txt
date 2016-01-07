@@ -12,3 +12,5 @@ Performance optimizations. Account public keys are now cached in memory. This
 cache currently takes around 12 MB at most, and can be disabled by setting
 nxt.enablePublicKeyCache=false.
 
+Back button added to the transaction info, account info and block info modals,
+use the back button to return to the previous info modal.
