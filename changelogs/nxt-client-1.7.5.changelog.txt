@@ -8,5 +8,7 @@ nxt.disabledAPITags=Create Transaction; Tagged Data
 will disable the startForging and startShuffler API, and all API that are listed
 under the Create Transaction or Tagged Data tabs on the API test page.
 
-Performance optimizations.
+Performance optimizations. Account public keys are now cached in memory. This
+cache currently takes around 12 MB at most, and can be disabled by setting
+nxt.enablePublicKeyCache=false.
 

@@ -670,7 +670,8 @@ public final class Account {
 
     };
 
-    private static final ConcurrentMap<DbKey, byte[]> publicKeyCache = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<DbKey, byte[]> publicKeyCache = Nxt.getBooleanProperty("nxt.enablePublicKeyCache") ?
+            new ConcurrentHashMap<>() : null;
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
@@ -850,13 +851,18 @@ public final class Account {
 
     public static byte[] getPublicKey(long id) {
         DbKey dbKey = publicKeyDbKeyFactory.newKey(id);
-        byte[] key = publicKeyCache.get(dbKey);
+        byte[] key = null;
+        if (publicKeyCache != null) {
+            key = publicKeyCache.get(dbKey);
+        }
         if (key == null) {
             PublicKey publicKey = publicKeyTable.get(dbKey);
             if (publicKey == null || (key = publicKey.publicKey) == null) {
                 return null;
             }
-            publicKeyCache.put(dbKey, key);
+            if (publicKeyCache != null) {
+                publicKeyCache.put(dbKey, key);
+            }
         }
         return key;
     }
@@ -1023,23 +1029,27 @@ public final class Account {
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
-        Nxt.getBlockchainProcessor().addListener(block -> {
-            publicKeyCache.remove(accountDbKeyFactory.newKey(block.getGeneratorId()));
-            block.getTransactions().forEach(transaction -> {
-                publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getSenderId()));
-                if (!transaction.getAppendages(appendix -> (appendix instanceof Appendix.PublicKeyAnnouncement), false).isEmpty()) {
-                    publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getRecipientId()));
-                }
-                if (transaction.getType() == ShufflingTransaction.SHUFFLING_RECIPIENTS) {
-                    Attachment.ShufflingRecipients shufflingRecipients = (Attachment.ShufflingRecipients)transaction.getAttachment();
-                    for (byte[] publicKey : shufflingRecipients.getRecipientPublicKeys()) {
-                        publicKeyCache.remove(accountDbKeyFactory.newKey(Account.getId(publicKey)));
-                    }
-                }
-            });
-        }, BlockchainProcessor.Event.BLOCK_POPPED);
+        if (publicKeyCache != null) {
 
-        Nxt.getBlockchainProcessor().addListener(block -> publicKeyCache.clear(), BlockchainProcessor.Event.RESCAN_BEGIN);
+            Nxt.getBlockchainProcessor().addListener(block -> {
+                publicKeyCache.remove(accountDbKeyFactory.newKey(block.getGeneratorId()));
+                block.getTransactions().forEach(transaction -> {
+                    publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getSenderId()));
+                    if (!transaction.getAppendages(appendix -> (appendix instanceof Appendix.PublicKeyAnnouncement), false).isEmpty()) {
+                        publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getRecipientId()));
+                    }
+                    if (transaction.getType() == ShufflingTransaction.SHUFFLING_RECIPIENTS) {
+                        Attachment.ShufflingRecipients shufflingRecipients = (Attachment.ShufflingRecipients) transaction.getAttachment();
+                        for (byte[] publicKey : shufflingRecipients.getRecipientPublicKeys()) {
+                            publicKeyCache.remove(accountDbKeyFactory.newKey(Account.getId(publicKey)));
+                        }
+                    }
+                });
+            }, BlockchainProcessor.Event.BLOCK_POPPED);
+
+            Nxt.getBlockchainProcessor().addListener(block -> publicKeyCache.clear(), BlockchainProcessor.Event.RESCAN_BEGIN);
+
+        }
 
     }
 
@@ -1455,7 +1465,9 @@ public final class Account {
                 publicKeyTable.insert(publicKey);
             }
         }
-        publicKeyCache.put(dbKey, key);
+        if (publicKeyCache != null) {
+            publicKeyCache.put(dbKey, key);
+        }
         this.publicKey = publicKey;
     }
 
