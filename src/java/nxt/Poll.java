@@ -163,7 +163,7 @@ public final class Poll extends AbstractPoll {
         if (Poll.isPollsProcessing) {
             Nxt.getBlockchainProcessor().addListener(block -> {
                 int height = block.getHeight();
-                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+                if (height >= Constants.PHASING_BLOCK) {
                     Poll.checkPolls(height);
                 }
             }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);

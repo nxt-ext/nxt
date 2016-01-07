@@ -263,6 +263,24 @@ final class BlockDb {
         }
     }
 
+    static void deleteBlocksFromHeight(int height) {
+        long blockId;
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement("SELECT id FROM block WHERE height = ?")) {
+            pstmt.setInt(1, height);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (!rs.next()) {
+                    return;
+                }
+                blockId = rs.getLong("id");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
+        Logger.logDebugMessage("Deleting blocks starting from height %s", height);
+        BlockDb.deleteBlocksFrom(blockId);
+    }
+
     // relying on cascade triggers in the database to delete the transactions and public keys for all deleted blocks
     static void deleteBlocksFrom(long blockId) {
         if (!Db.db.isInTransaction()) {
