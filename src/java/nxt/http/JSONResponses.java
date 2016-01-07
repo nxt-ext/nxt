@@ -191,6 +191,14 @@ public final class JSONResponses {
         ERROR_NOT_ALLOWED = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware ERROR_DISABLED;
+    static {
+        JSONObject response  = new JSONObject();
+        response.put("errorCode", 16);
+        response.put("errorDescription", "This API has been disabled");
+        ERROR_DISABLED = JSON.prepare(response);
+    }
+
     public static final JSONStreamAware ERROR_INCORRECT_REQUEST;
     static {
         JSONObject response  = new JSONObject();

@@ -98,7 +98,7 @@ var NRS = (function (NRS, $) {
                 NRS.constants.REQUEST_TYPES = response.requestTypes;
                 NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
                 NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
-                NRS.constants.DISABLED_APIS = response.disabledAPI;
+                NRS.constants.DISABLED_APIS = response.disabledAPIs;
                 NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
                 NRS.loadTransactionTypeConstants(response);
             }

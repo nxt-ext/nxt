@@ -1,8 +1,8 @@
-Allow disabling of specific API or groups of API using the nxt.disabledAPI and
+Allow disabling of specific API or groups of API using the nxt.disabledAPIs and
 nxt.disabledAPITags properties, each taking a list of API request names, or API
 tag names, separated with ';'. For example:
 
-nxt.disabledAPI=startForging; startShuffler
+nxt.disabledAPIs=startForging; startShuffler
 nxt.disabledAPITags=Create Transaction; Tagged Data
 
 will disable the startForging and startShuffler API, and all API that are listed

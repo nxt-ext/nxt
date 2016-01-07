@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static nxt.http.JSONResponses.ERROR_DISABLED;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 import static nxt.http.JSONResponses.POST_REQUIRED;
@@ -115,10 +116,12 @@ public final class APIServlet extends HttpServlet {
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
     static final Map<String,APIRequestHandler> apiRequestHandlers;
+    private static final Set<String> disabledRequestHandlers;
 
     static {
 
         Map<String,APIRequestHandler> map = new HashMap<>();
+        Set<String> set = new HashSet<>();
 
         map.put("approveTransaction", ApproveTransaction.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
@@ -368,27 +371,31 @@ public final class APIServlet extends HttpServlet {
         map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
         map.put("detectMimeType", DetectMimeType.instance);
 
-        API.disabledAPI.forEach(api -> {
+        API.disabledAPIs.forEach(api -> {
             if (map.remove(api) == null) {
-                throw new RuntimeException("Invalid API in nxt.disabledAPI: " + api);
+                throw new RuntimeException("Invalid API in nxt.disabledAPIs: " + api);
             }
+            set.add(api);
         });
         API.disabledAPITags.forEach(apiTag -> {
             Iterator<Map.Entry<String, APIRequestHandler>> iterator = map.entrySet().iterator();
             while (iterator.hasNext()) {
-                if (iterator.next().getValue().getAPITags().contains(apiTag)) {
+                Map.Entry<String, APIRequestHandler> entry = iterator.next();
+                if (entry.getValue().getAPITags().contains(apiTag)) {
+                    set.add(entry.getKey());
                     iterator.remove();
                 }
             }
         });
-        if (!API.disabledAPI.isEmpty()) {
-            Logger.logInfoMessage("Disabled API: " + API.disabledAPI);
+        if (!API.disabledAPIs.isEmpty()) {
+            Logger.logInfoMessage("Disabled APIs: " + API.disabledAPIs);
         }
         if (!API.disabledAPITags.isEmpty()) {
             Logger.logInfoMessage("Disabled APITags: " + API.disabledAPITags);
         }
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
+        disabledRequestHandlers = set.isEmpty() ? Collections.emptySet() : Collections.unmodifiableSet(set);
     }
 
     static void initClass() {}
@@ -429,7 +436,11 @@ public final class APIServlet extends HttpServlet {
 
             APIRequestHandler apiRequestHandler = apiRequestHandlers.get(requestType);
             if (apiRequestHandler == null) {
-                response = ERROR_INCORRECT_REQUEST;
+                if (disabledRequestHandlers.contains(requestType)) {
+                    response = ERROR_DISABLED;
+                } else {
+                    response = ERROR_INCORRECT_REQUEST;
+                }
                 return;
             }
 
