@@ -415,7 +415,7 @@ public interface Appendix {
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
-                PrunableMessage.add(transaction, this);
+                PrunableMessage.add((TransactionImpl)transaction, this);
             }
         }
 
@@ -466,7 +466,7 @@ public interface Appendix {
 
         @Override
         public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
-            PrunableMessage.add(transaction, this, blockTimestamp, height);
+            PrunableMessage.add((TransactionImpl)transaction, this, blockTimestamp, height);
         }
     }
 
@@ -717,7 +717,7 @@ public interface Appendix {
         @Override
         void apply(Transaction transaction, Account senderAccount, Account recipientAccount) {
             if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
-                PrunableMessage.add(transaction, this);
+                PrunableMessage.add((TransactionImpl)transaction, this);
             }
         }
 
@@ -785,7 +785,7 @@ public interface Appendix {
 
         @Override
         public void restorePrunableData(Transaction transaction, int blockTimestamp, int height) {
-            PrunableMessage.add(transaction, this, blockTimestamp, height);
+            PrunableMessage.add((TransactionImpl)transaction, this, blockTimestamp, height);
         }
     }
 

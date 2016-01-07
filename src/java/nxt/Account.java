@@ -43,6 +43,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @SuppressWarnings({"UnusedDeclaration", "SuspiciousNameCombination"})
 public final class Account {
@@ -72,10 +74,10 @@ public final class Account {
             this.unconfirmedQuantityQNT = unconfirmedQuantityQNT;
         }
 
-        private AccountAsset(ResultSet rs) throws SQLException {
+        private AccountAsset(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
             this.assetId = rs.getLong("asset_id");
-            this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.assetId);
+            this.dbKey = dbKey;
             this.quantityQNT = rs.getLong("quantity");
             this.unconfirmedQuantityQNT = rs.getLong("unconfirmed_quantity");
         }
@@ -144,10 +146,10 @@ public final class Account {
             this.unconfirmedUnits = unconfirmedQuantityQNT;
         }
 
-        private AccountCurrency(ResultSet rs) throws SQLException {
+        private AccountCurrency(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
             this.currencyId = rs.getLong("currency_id");
-            this.dbKey = accountAssetDbKeyFactory.newKey(this.accountId, this.currencyId);
+            this.dbKey = dbKey;
             this.units = rs.getLong("units");
             this.unconfirmedUnits = rs.getLong("unconfirmed_units");
         }
@@ -219,9 +221,9 @@ public final class Account {
             this.currentLesseeId = currentLesseeId;
         }
 
-        private AccountLease(ResultSet rs) throws SQLException {
+        private AccountLease(ResultSet rs, DbKey dbKey) throws SQLException {
             this.lessorId = rs.getLong("lessor_id");
-            this.dbKey = accountLeaseDbKeyFactory.newKey(this.lessorId);
+            this.dbKey = dbKey;
             this.currentLeasingHeightFrom = rs.getInt("current_leasing_height_from");
             this.currentLeasingHeightTo = rs.getInt("current_leasing_height_to");
             this.currentLesseeId = rs.getLong("current_lessee_id");
@@ -292,9 +294,9 @@ public final class Account {
             this.description = description;
         }
 
-        private AccountInfo(ResultSet rs) throws SQLException {
+        private AccountInfo(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
-            this.dbKey = accountInfoDbKeyFactory.newKey(this.accountId);
+            this.dbKey = dbKey;
             this.name = rs.getString("name");
             this.description = rs.getString("description");
         }
@@ -352,9 +354,9 @@ public final class Account {
             this.value = value;
         }
 
-        private AccountProperty(ResultSet rs) throws SQLException {
+        private AccountProperty(ResultSet rs, DbKey dbKey) throws SQLException {
             this.id = rs.getLong("id");
-            this.dbKey = accountPropertyDbKeyFactory.newKey(this.id);
+            this.dbKey = dbKey;
             this.recipientId = rs.getLong("recipient_id");
             long setterId = rs.getLong("setter_id");
             this.setterId = setterId == 0 ? recipientId : setterId;
@@ -413,9 +415,9 @@ public final class Account {
             this.height = Nxt.getBlockchain().getHeight();
         }
 
-        private PublicKey(ResultSet rs) throws SQLException {
+        private PublicKey(ResultSet rs, DbKey dbKey) throws SQLException {
             this.accountId = rs.getLong("account_id");
-            this.dbKey = publicKeyDbKeyFactory.newKey(accountId);
+            this.dbKey = dbKey;
             this.publicKey = rs.getBytes("public_key");
             this.height = rs.getInt("height");
         }
@@ -458,7 +460,7 @@ public final class Account {
 
         @Override
         public DbKey newKey(Account account) {
-            return account.dbKey;
+            return account.dbKey == null ? newKey(account.id) : account.dbKey;
         }
 
         @Override
@@ -471,8 +473,8 @@ public final class Account {
     private static final VersionedEntityDbTable<Account> accountTable = new VersionedEntityDbTable<Account>("account", accountDbKeyFactory) {
 
         @Override
-        protected Account load(Connection con, ResultSet rs) throws SQLException {
-            return new Account(rs);
+        protected Account load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Account(rs, dbKey);
         }
 
         @Override
@@ -504,8 +506,8 @@ public final class Account {
             accountLeaseDbKeyFactory) {
 
         @Override
-        protected AccountLease load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountLease(rs);
+        protected AccountLease load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountLease(rs, dbKey);
         }
 
         @Override
@@ -519,8 +521,8 @@ public final class Account {
             accountInfoDbKeyFactory, "name,description") {
 
         @Override
-        protected AccountInfo load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountInfo(rs);
+        protected AccountInfo load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountInfo(rs, dbKey);
         }
 
         @Override
@@ -547,8 +549,8 @@ public final class Account {
     private static final VersionedPersistentDbTable<PublicKey> publicKeyTable = new VersionedPersistentDbTable<PublicKey>("public_key", publicKeyDbKeyFactory) {
 
         @Override
-        protected PublicKey load(Connection con, ResultSet rs) throws SQLException {
-            return new PublicKey(rs);
+        protected PublicKey load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new PublicKey(rs, dbKey);
         }
 
         @Override
@@ -570,8 +572,8 @@ public final class Account {
     private static final VersionedEntityDbTable<AccountAsset> accountAssetTable = new VersionedEntityDbTable<AccountAsset>("account_asset", accountAssetDbKeyFactory) {
 
         @Override
-        protected AccountAsset load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountAsset(rs);
+        protected AccountAsset load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountAsset(rs, dbKey);
         }
 
         @Override
@@ -613,8 +615,8 @@ public final class Account {
     private static final VersionedEntityDbTable<AccountCurrency> accountCurrencyTable = new VersionedEntityDbTable<AccountCurrency>("account_currency", accountCurrencyDbKeyFactory) {
 
         @Override
-        protected AccountCurrency load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountCurrency(rs);
+        protected AccountCurrency load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountCurrency(rs, dbKey);
         }
 
         @Override
@@ -657,8 +659,8 @@ public final class Account {
     private static final VersionedEntityDbTable<AccountProperty> accountPropertyTable = new VersionedEntityDbTable<AccountProperty>("account_property", accountPropertyDbKeyFactory) {
 
         @Override
-        protected AccountProperty load(Connection con, ResultSet rs) throws SQLException {
-            return new AccountProperty(rs);
+        protected AccountProperty load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new AccountProperty(rs, dbKey);
         }
 
         @Override
@@ -668,6 +670,8 @@ public final class Account {
 
     };
 
+    private static final ConcurrentMap<DbKey, byte[]> publicKeyCache = Nxt.getBooleanProperty("nxt.enablePublicKeyCache") ?
+            new ConcurrentHashMap<>() : null;
 
     private static final Listeners<Account,Event> listeners = new Listeners<>();
 
@@ -802,7 +806,7 @@ public final class Account {
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey);
         if (account == null) {
-            PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id));
+            PublicKey publicKey = publicKeyTable.get(dbKey);
             if (publicKey != null) {
                 account = accountTable.newEntity(dbKey);
                 account.publicKey = publicKey;
@@ -815,7 +819,7 @@ public final class Account {
         DbKey dbKey = accountDbKeyFactory.newKey(id);
         Account account = accountTable.get(dbKey, height);
         if (account == null) {
-            PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id), height);
+            PublicKey publicKey = publicKeyTable.get(dbKey, height);
             if (publicKey != null) {
                 account = accountTable.newEntity(dbKey);
                 account.publicKey = publicKey;
@@ -830,12 +834,14 @@ public final class Account {
         if (account == null) {
             return null;
         }
-        byte[] accountPublicKey = account.getPublicKey();
-        if (accountPublicKey == null || Arrays.equals(accountPublicKey, publicKey)) {
+        if (account.publicKey == null) {
+            account.publicKey = publicKeyTable.get(accountDbKeyFactory.newKey(account));
+        }
+        if (account.publicKey == null || account.publicKey.publicKey == null || Arrays.equals(account.publicKey.publicKey, publicKey)) {
             return account;
         }
         throw new RuntimeException("DUPLICATE KEY for account " + Long.toUnsignedString(accountId)
-                + " existing key " + Convert.toHexString(accountPublicKey) + " new key " + Convert.toHexString(publicKey));
+                + " existing key " + Convert.toHexString(account.publicKey.publicKey) + " new key " + Convert.toHexString(publicKey));
     }
 
     public static long getId(byte[] publicKey) {
@@ -844,22 +850,34 @@ public final class Account {
     }
 
     public static byte[] getPublicKey(long id) {
-        PublicKey publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id));
-        return publicKey == null ? null : publicKey.publicKey;
+        DbKey dbKey = publicKeyDbKeyFactory.newKey(id);
+        byte[] key = null;
+        if (publicKeyCache != null) {
+            key = publicKeyCache.get(dbKey);
+        }
+        if (key == null) {
+            PublicKey publicKey = publicKeyTable.get(dbKey);
+            if (publicKey == null || (key = publicKey.publicKey) == null) {
+                return null;
+            }
+            if (publicKeyCache != null) {
+                publicKeyCache.put(dbKey, key);
+            }
+        }
+        return key;
     }
 
     static Account addOrGetAccount(long id) {
         if (id == 0) {
             throw new IllegalArgumentException("Invalid accountId 0");
         }
-        DbKey accountDbKey = accountDbKeyFactory.newKey(id);
-        Account account = accountTable.get(accountDbKey);
+        DbKey dbKey = accountDbKeyFactory.newKey(id);
+        Account account = accountTable.get(dbKey);
         if (account == null) {
-            account = accountTable.newEntity(accountDbKey);
-            DbKey pkDbKey = publicKeyDbKeyFactory.newKey(id);
-            PublicKey publicKey = publicKeyTable.get(pkDbKey);
+            account = accountTable.newEntity(dbKey);
+            PublicKey publicKey = publicKeyTable.get(dbKey);
             if (publicKey == null) {
-                publicKey = publicKeyTable.newEntity(pkDbKey);
+                publicKey = publicKeyTable.newEntity(dbKey);
                 publicKeyTable.insert(publicKey);
             }
             account.publicKey = publicKey;
@@ -1011,6 +1029,28 @@ public final class Account {
             }
         }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
 
+        if (publicKeyCache != null) {
+
+            Nxt.getBlockchainProcessor().addListener(block -> {
+                publicKeyCache.remove(accountDbKeyFactory.newKey(block.getGeneratorId()));
+                block.getTransactions().forEach(transaction -> {
+                    publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getSenderId()));
+                    if (!transaction.getAppendages(appendix -> (appendix instanceof Appendix.PublicKeyAnnouncement), false).isEmpty()) {
+                        publicKeyCache.remove(accountDbKeyFactory.newKey(transaction.getRecipientId()));
+                    }
+                    if (transaction.getType() == ShufflingTransaction.SHUFFLING_RECIPIENTS) {
+                        Attachment.ShufflingRecipients shufflingRecipients = (Attachment.ShufflingRecipients) transaction.getAttachment();
+                        for (byte[] publicKey : shufflingRecipients.getRecipientPublicKeys()) {
+                            publicKeyCache.remove(accountDbKeyFactory.newKey(Account.getId(publicKey)));
+                        }
+                    }
+                });
+            }, BlockchainProcessor.Event.BLOCK_POPPED);
+
+            Nxt.getBlockchainProcessor().addListener(block -> publicKeyCache.clear(), BlockchainProcessor.Event.RESCAN_BEGIN);
+
+        }
+
     }
 
     static void init() {}
@@ -1034,9 +1074,9 @@ public final class Account {
         this.controls = Collections.emptySet();
     }
 
-    private Account(ResultSet rs) throws SQLException {
+    private Account(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = accountDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.balanceNQT = rs.getLong("balance");
         this.unconfirmedBalanceNQT = rs.getLong("unconfirmed_balance");
         this.forgedBalanceNQT = rs.getLong("forged_balance");
@@ -1078,7 +1118,7 @@ public final class Account {
     }
 
     public AccountInfo getAccountInfo() {
-        return accountInfoTable.get(accountInfoDbKeyFactory.newKey(this.id));
+        return accountInfoTable.get(accountDbKeyFactory.newKey(this));
     }
 
     void setAccountInfo(String name, String description) {
@@ -1095,21 +1135,15 @@ public final class Account {
     }
 
     public AccountLease getAccountLease() {
-        return accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(this.id));
-    }
-
-    public byte[] getPublicKey() {
-        if (this.publicKey == null) {
-            this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
-        }
-        return publicKey == null ? null : publicKey.publicKey;
+        return accountLeaseTable.get(accountDbKeyFactory.newKey(this));
     }
 
     public EncryptedData encryptTo(byte[] data, String senderSecretPhrase, boolean compress) {
-        if (getPublicKey() == null) {
+        byte[] key = getPublicKey(this.id);
+        if (key == null) {
             throw new IllegalArgumentException("Recipient account doesn't have a public key set");
         }
-        return Account.encryptTo(publicKey.publicKey, data, senderSecretPhrase, compress);
+        return Account.encryptTo(key, data, senderSecretPhrase, compress);
     }
 
     public static EncryptedData encryptTo(byte[] publicKey, byte[] data, String senderSecretPhrase, boolean compress) {
@@ -1120,10 +1154,11 @@ public final class Account {
     }
 
     public byte[] decryptFrom(EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
-        if (getPublicKey() == null) {
+        byte[] key = getPublicKey(this.id);
+        if (key == null) {
             throw new IllegalArgumentException("Sender account doesn't have a public key set");
         }
-        return Account.decryptFrom(publicKey.publicKey, encryptedData, recipientSecretPhrase, uncompress);
+        return Account.decryptFrom(key, encryptedData, recipientSecretPhrase, uncompress);
     }
 
     public static byte[] decryptFrom(byte[] publicKey, EncryptedData encryptedData, String recipientSecretPhrase, boolean uncompress) {
@@ -1153,7 +1188,7 @@ public final class Account {
     public long getEffectiveBalanceNXT(int height) {
         if (height >= Constants.TRANSPARENT_FORGING_BLOCK_6) {
             if (this.publicKey == null) {
-                this.publicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(this.id));
+                this.publicKey = publicKeyTable.get(accountDbKeyFactory.newKey(this));
             }
             if (this.publicKey == null || this.publicKey.publicKey == null || this.publicKey.height == 0 || height - this.publicKey.height <= 1440) {
                 return 0; // cfb: Accounts with the public key revealed less than 1440 blocks ago are not allowed to generate blocks
@@ -1336,7 +1371,7 @@ public final class Account {
 
     void leaseEffectiveBalance(long lesseeId, int period) {
         int height = Nxt.getBlockchain().getHeight();
-        AccountLease accountLease = accountLeaseTable.get(accountLeaseDbKeyFactory.newKey(id));
+        AccountLease accountLease = accountLeaseTable.get(accountDbKeyFactory.newKey(this));
         if (accountLease == null) {
             accountLease = new AccountLease(id,
                     height + Constants.LEASING_DELAY,
@@ -1415,7 +1450,6 @@ public final class Account {
     }
 
     void apply(byte[] key) {
-        DbKey dbKey = publicKeyDbKeyFactory.newKey(id);
         PublicKey publicKey = publicKeyTable.get(dbKey);
         if (publicKey == null) {
             publicKey = publicKeyTable.newEntity(dbKey);
@@ -1426,10 +1460,13 @@ public final class Account {
         } else if (! Arrays.equals(publicKey.publicKey, key)) {
             throw new IllegalStateException("Public key mismatch");
         } else if (publicKey.height >= Nxt.getBlockchain().getHeight() - 1) {
-            PublicKey dbPublicKey = publicKeyTable.get(publicKeyDbKeyFactory.newKey(id), false);
+            PublicKey dbPublicKey = publicKeyTable.get(dbKey, false);
             if (dbPublicKey == null || dbPublicKey.publicKey == null) {
                 publicKeyTable.insert(publicKey);
             }
+        }
+        if (publicKeyCache != null) {
+            publicKeyCache.put(dbKey, key);
         }
         this.publicKey = publicKey;
     }

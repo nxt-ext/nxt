@@ -47,7 +47,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
         this.fullTextSearchColumns = fullTextSearchColumns;
     }
 
-    protected abstract T load(Connection con, ResultSet rs) throws SQLException;
+    protected abstract T load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException;
 
     protected abstract void save(Connection con, T t) throws SQLException;
 
@@ -171,7 +171,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 t = (T) db.getCache(table).get(dbKey);
             }
             if (t == null) {
-                t = load(con, rs);
+                t = load(con, rs, dbKey);
                 if (doCache) {
                     db.getCache(table).put(dbKey, t);
                 }
@@ -248,7 +248,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
                 t = (T) db.getCache(table).get(dbKey);
             }
             if (t == null) {
-                t = load(connection, rs);
+                t = load(connection, rs, dbKey);
                 if (doCache) {
                     db.getCache(table).put(dbKey, t);
                 }
@@ -403,6 +403,9 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             throw new IllegalStateException("Not in transaction");
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
+        if (dbKey == null) {
+            throw new RuntimeException("DbKey not set");
+        }
         T cachedT = (T) db.getCache(table).get(dbKey);
         if (cachedT == null) {
             db.getCache(table).put(dbKey, t);

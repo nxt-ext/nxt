@@ -42,17 +42,8 @@ public final class Generator implements Comparable<Generator> {
     }
 
     private static final int MAX_FORGERS = Nxt.getIntProperty("nxt.maxNumberOfForgers");
-    private static final byte[] fakeForgingPublicKey;
-    static {
-        byte[] publicKey = null;
-        if (Nxt.getBooleanProperty("nxt.enableFakeForging")) {
-            Account fakeForgingAccount = Account.getAccount(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount")));
-            if (fakeForgingAccount != null) {
-                publicKey = fakeForgingAccount.getPublicKey();
-            }
-        }
-        fakeForgingPublicKey = publicKey;
-    }
+    private static final byte[] fakeForgingPublicKey = Nxt.getBooleanProperty("nxt.enableFakeForging") ?
+            Account.getPublicKey(Convert.parseAccountId(Nxt.getStringProperty("nxt.fakeForgingAccount"))) : null;
 
     private static final Listeners<Generator,Event> listeners = new Listeners<>();
 
@@ -222,10 +213,6 @@ public final class Generator implements Comparable<Generator> {
                 || hit.compareTo(prevTarget) >= 0
                 || (Constants.isTestnet ? elapsedTime > 300 : elapsedTime > 3600)
                 || Constants.isOffline);
-    }
-
-    static long getHitTime(Account account, Block block) {
-        return getHitTime(BigInteger.valueOf(account.getEffectiveBalanceNXT(block.getHeight())), getHit(account.getPublicKey(), block), block);
     }
 
     static boolean allowsFakeForging(byte[] publicKey) {

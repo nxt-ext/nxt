@@ -1,0 +1,14 @@
+Allow disabling of specific API or groups of API using the nxt.disabledAPI and
+nxt.disabledAPITags properties, each taking a list of API request names, or API
+tag names, separated with ';'. For example:
+
+nxt.disabledAPI=startForging; startShuffler
+nxt.disabledAPITags=Create Transaction; Tagged Data
+
+will disable the startForging and startShuffler API, and all API that are listed
+under the Create Transaction or Tagged Data tabs on the API test page.
+
+Performance optimizations. Account public keys are now cached in memory. This
+cache currently takes around 12 MB at most, and can be disabled by setting
+nxt.enablePublicKeyCache=false.
+

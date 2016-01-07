@@ -28,6 +28,10 @@ var NRS = (function (NRS, $, undefined) {
         if (infoModal && infoModal.data('bs.modal')) {
             isModalVisible = infoModal.data('bs.modal').isShown;
         }
+        if ($(this).data("back") == "true") {
+            NRS.modalStack.pop(); // The forward modal
+            NRS.modalStack.pop(); // the current modal
+        }
         NRS.showTransactionModal(transactionId, isModalVisible);
     });
 
@@ -117,9 +121,11 @@ var NRS = (function (NRS, $, undefined) {
             phasingDetails.hashedSecret = phasingParams.phasingHashedSecret;
             phasingDetails.hashAlgorithm = NRS.getHashAlgorithm(phasingParams.phasingHashedSecretAlgorithm);
         }
-    }
+    };
 
     NRS.processTransactionModalData = function (transaction, isModalVisible) {
+        NRS.setBackLink();
+        NRS.modalStack.push({ class: "show_transaction_modal_action", key: "transaction", value: transaction.transaction });
         try {
             var async = false;
 

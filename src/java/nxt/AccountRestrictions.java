@@ -86,9 +86,9 @@ public final class AccountRestrictions {
             this.maxDuration = maxDuration;
         }
 
-        private PhasingOnly(ResultSet rs) throws SQLException {
-            accountId = rs.getLong("account_id");
-            dbKey = phasingControlDbKeyFactory.newKey(this.accountId);
+        private PhasingOnly(ResultSet rs, DbKey dbKey) throws SQLException {
+            this.accountId = rs.getLong("account_id");
+            this.dbKey = dbKey;
             Long[] whitelist = DbUtils.getArray(rs, "whitelist", Long[].class);
             phasingParams = new PhasingParams(rs.getByte("voting_model"),
                     rs.getLong("holding_id"),
@@ -177,8 +177,8 @@ public final class AccountRestrictions {
     private static final VersionedEntityDbTable<PhasingOnly> phasingControlTable = new VersionedEntityDbTable<PhasingOnly>("account_control_phasing", phasingControlDbKeyFactory) {
 
         @Override
-        protected PhasingOnly load(Connection con, ResultSet rs) throws SQLException {
-            return new PhasingOnly(rs);
+        protected PhasingOnly load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new PhasingOnly(rs, dbKey);
         }
 
         @Override

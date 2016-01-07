@@ -41,8 +41,8 @@ public final class PrunableMessage {
     private static final PrunableDbTable<PrunableMessage> prunableMessageTable = new PrunableDbTable<PrunableMessage>("prunable_message", prunableMessageKeyFactory) {
 
         @Override
-        protected PrunableMessage load(Connection con, ResultSet rs) throws SQLException {
-            return new PrunableMessage(rs);
+        protected PrunableMessage load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new PrunableMessage(rs, dbKey);
         }
 
         @Override
@@ -145,9 +145,9 @@ public final class PrunableMessage {
         this.isCompressed = appendix.isCompressed();
     }
 
-    private PrunableMessage(ResultSet rs) throws SQLException {
+    private PrunableMessage(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = prunableMessageKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");
         this.message = rs.getBytes("message");
@@ -233,13 +233,13 @@ public final class PrunableMessage {
         return height;
     }
 
-    static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix) {
+    static void add(TransactionImpl transaction, Appendix.PrunablePlainMessage appendix) {
         add(transaction, appendix, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
     }
 
-    static void add(Transaction transaction, Appendix.PrunablePlainMessage appendix, int blockTimestamp, int height) {
+    static void add(TransactionImpl transaction, Appendix.PrunablePlainMessage appendix, int blockTimestamp, int height) {
         if (appendix.getMessage() != null) {
-            PrunableMessage prunableMessage = prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId()));
+            PrunableMessage prunableMessage = prunableMessageTable.get(transaction.getDbKey());
             if (prunableMessage == null) {
                 prunableMessage = new PrunableMessage(transaction, blockTimestamp, height);
             } else if (prunableMessage.height != height) {
@@ -252,13 +252,13 @@ public final class PrunableMessage {
         }
     }
 
-    static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix) {
+    static void add(TransactionImpl transaction, Appendix.PrunableEncryptedMessage appendix) {
         add(transaction, appendix, Nxt.getBlockchain().getLastBlockTimestamp(), Nxt.getBlockchain().getHeight());
     }
 
-    static void add(Transaction transaction, Appendix.PrunableEncryptedMessage appendix, int blockTimestamp, int height) {
+    static void add(TransactionImpl transaction, Appendix.PrunableEncryptedMessage appendix, int blockTimestamp, int height) {
         if (appendix.getEncryptedData() != null) {
-                PrunableMessage prunableMessage = prunableMessageTable.get(prunableMessageKeyFactory.newKey(transaction.getId()));
+                PrunableMessage prunableMessage = prunableMessageTable.get(transaction.getDbKey());
             if (prunableMessage == null) {
                 prunableMessage = new PrunableMessage(transaction, blockTimestamp, height);
             } else if (prunableMessage.height != height) {

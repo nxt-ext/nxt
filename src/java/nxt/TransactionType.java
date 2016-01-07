@@ -213,7 +213,7 @@ public abstract class TransactionType {
         }
         long totalAmountNQT = Math.addExact(amountNQT, feeNQT);
         if (senderAccount.getUnconfirmedBalanceNQT() < totalAmountNQT
-                && !(transaction.getTimestamp() == 0 && Arrays.equals(senderAccount.getPublicKey(), Genesis.CREATOR_PUBLIC_KEY))) {
+                && !(transaction.getTimestamp() == 0 && Arrays.equals(transaction.getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))) {
             return false;
         }
         senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -amountNQT, -feeNQT);
@@ -3039,7 +3039,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.TaggedDataUpload attachment = (Attachment.TaggedDataUpload) transaction.getAttachment();
-                TaggedData.add(transaction, attachment);
+                TaggedData.add((TransactionImpl)transaction, attachment);
             }
 
             @Override

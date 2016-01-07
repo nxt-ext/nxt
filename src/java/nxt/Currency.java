@@ -42,7 +42,7 @@ public final class Currency {
 
         @Override
         public DbKey newKey(Currency currency) {
-            return currency.dbKey;
+            return currency.dbKey == null ? newKey(currency.currencyId) : currency.dbKey;
         }
 
     };
@@ -50,8 +50,8 @@ public final class Currency {
     private static final VersionedEntityDbTable<Currency> currencyTable = new VersionedEntityDbTable<Currency>("currency", currencyDbKeyFactory, "code,name,description") {
 
         @Override
-        protected Currency load(Connection con, ResultSet rs) throws SQLException {
-            return new Currency(rs);
+        protected Currency load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Currency(rs, dbKey);
         }
 
         @Override
@@ -78,9 +78,9 @@ public final class Currency {
             this.dbKey = currencySupplyDbKeyFactory.newKey(this.currencyId);
         }
 
-        private CurrencySupply(ResultSet rs) throws SQLException {
+        private CurrencySupply(ResultSet rs, DbKey dbKey) throws SQLException {
             this.currencyId = rs.getLong("id");
-            this.dbKey = currencySupplyDbKeyFactory.newKey(this.currencyId);
+            this.dbKey = dbKey;
             this.currentSupply = rs.getLong("current_supply");
             this.currentReservePerUnitNQT = rs.getLong("current_reserve_per_unit_nqt");
         }
@@ -111,8 +111,8 @@ public final class Currency {
     private static final VersionedEntityDbTable<CurrencySupply> currencySupplyTable = new VersionedEntityDbTable<CurrencySupply>("currency_supply", currencySupplyDbKeyFactory) {
 
         @Override
-        protected CurrencySupply load(Connection con, ResultSet rs) throws SQLException {
-            return new CurrencySupply(rs);
+        protected CurrencySupply load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new CurrencySupply(rs, dbKey);
         }
 
         @Override
@@ -233,9 +233,9 @@ public final class Currency {
         this.decimals = attachment.getDecimals();
     }
 
-    private Currency(ResultSet rs) throws SQLException {
+    private Currency(ResultSet rs, DbKey dbKey) throws SQLException {
         this.currencyId = rs.getLong("id");
-        this.dbKey = currencyDbKeyFactory.newKey(this.currencyId);
+        this.dbKey = dbKey;
         this.accountId = rs.getLong("account_id");
         this.name = rs.getString("name");
         this.code = rs.getString("code");
@@ -376,7 +376,7 @@ public final class Currency {
             return null;
         }
         if (currencySupply == null) {
-            currencySupply = currencySupplyTable.get(currencySupplyDbKeyFactory.newKey(currencyId));
+            currencySupply = currencySupplyTable.get(currencyDbKeyFactory.newKey(this));
             if (currencySupply == null) {
                 currencySupply = new CurrencySupply(this);
             }

@@ -184,7 +184,7 @@ public final class Users {
                 JSONObject response = new JSONObject();
                 response.put("response", "setBalance");
                 response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
-                byte[] accountPublicKey = account.getPublicKey();
+                byte[] accountPublicKey = Account.getPublicKey(account.getId());
                 Users.users.values().forEach(user -> {
                     if (user.getSecretPhrase() != null && Arrays.equals(user.getPublicKey(), accountPublicKey)) {
                         user.send(response);

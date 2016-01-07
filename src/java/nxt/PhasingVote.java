@@ -38,8 +38,8 @@ public class PhasingVote {
     private static final EntityDbTable<PhasingVote> phasingVoteTable = new EntityDbTable<PhasingVote>("phasing_vote", phasingVoteDbKeyFactory) {
 
         @Override
-        protected PhasingVote load(Connection con, ResultSet rs) throws SQLException {
-            return new PhasingVote(rs);
+        protected PhasingVote load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new PhasingVote(rs, dbKey);
         }
 
         @Override
@@ -84,10 +84,10 @@ public class PhasingVote {
         this.voteId = transaction.getId();
     }
 
-    private PhasingVote(ResultSet rs) throws SQLException {
+    private PhasingVote(ResultSet rs, DbKey dbKey) throws SQLException {
         this.phasedTransactionId = rs.getLong("transaction_id");
         this.voterId = rs.getLong("voter_id");
-        this.dbKey = phasingVoteDbKeyFactory.newKey(this.phasedTransactionId, this.voterId);
+        this.dbKey = dbKey;
         this.voteId = rs.getLong("vote_id");
     }
 

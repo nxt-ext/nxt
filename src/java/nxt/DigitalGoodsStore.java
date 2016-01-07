@@ -103,8 +103,8 @@ public final class DigitalGoodsStore {
         private static final VersionedEntityDbTable<Tag> tagTable = new VersionedEntityDbTable<Tag>("tag", tagDbKeyFactory) {
 
             @Override
-            protected Tag load(Connection con, ResultSet rs) throws SQLException {
-                return new Tag(rs);
+            protected Tag load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+                return new Tag(rs, dbKey);
             }
 
             @Override
@@ -180,9 +180,9 @@ public final class DigitalGoodsStore {
             this.dbKey = tagDbKeyFactory.newKey(this.tag);
         }
 
-        private Tag(ResultSet rs) throws SQLException {
+        private Tag(ResultSet rs, DbKey dbKey) throws SQLException {
             this.tag = rs.getString("tag");
-            this.dbKey = tagDbKeyFactory.newKey(this.tag);
+            this.dbKey = dbKey;
             this.inStockCount = rs.getInt("in_stock_count");
             this.totalCount = rs.getInt("total_count");
         }
@@ -227,8 +227,8 @@ public final class DigitalGoodsStore {
         private static final VersionedEntityDbTable<Goods> goodsTable = new VersionedEntityDbTable<Goods>("goods", goodsDbKeyFactory, "name,description,tags") {
 
             @Override
-            protected Goods load(Connection con, ResultSet rs) throws SQLException {
-                return new Goods(rs);
+            protected Goods load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+                return new Goods(rs, dbKey);
             }
 
             @Override
@@ -313,9 +313,9 @@ public final class DigitalGoodsStore {
             this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         }
 
-        private Goods(ResultSet rs) throws SQLException {
+        private Goods(ResultSet rs, DbKey dbKey) throws SQLException {
             this.id = rs.getLong("id");
-            this.dbKey = goodsDbKeyFactory.newKey(this.id);
+            this.dbKey = dbKey;
             this.sellerId = rs.getLong("seller_id");
             this.name = rs.getString("name");
             this.description = rs.getString("description");
@@ -432,8 +432,8 @@ public final class DigitalGoodsStore {
         private static final VersionedEntityDbTable<Purchase> purchaseTable = new VersionedEntityDbTable<Purchase>("purchase", purchaseDbKeyFactory) {
 
             @Override
-            protected Purchase load(Connection con, ResultSet rs) throws SQLException {
-                return new Purchase(rs);
+            protected Purchase load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+                return new Purchase(rs, dbKey);
             }
 
             @Override
@@ -452,7 +452,7 @@ public final class DigitalGoodsStore {
 
             @Override
             public DbKey newKey(Purchase purchase) {
-                return purchase.dbKey;
+                return purchase.dbKey == null ? newKey(purchase.id) : purchase.dbKey;
             }
 
         };
@@ -485,7 +485,7 @@ public final class DigitalGoodsStore {
 
             @Override
             public DbKey newKey(Purchase purchase) {
-                return purchase.dbKey;
+                return purchase.dbKey == null ? newKey(purchase.id) : purchase.dbKey;
             }
 
         };
@@ -684,9 +684,9 @@ public final class DigitalGoodsStore {
             this.isPending = true;
         }
 
-        private Purchase(ResultSet rs) throws SQLException {
+        private Purchase(ResultSet rs, DbKey dbKey) throws SQLException {
             this.id = rs.getLong("id");
-            this.dbKey = purchaseDbKeyFactory.newKey(this.id);
+            this.dbKey = dbKey;
             this.buyerId = rs.getLong("buyer_id");
             this.goodsId = rs.getLong("goods_id");
             this.sellerId = rs.getLong("seller_id");

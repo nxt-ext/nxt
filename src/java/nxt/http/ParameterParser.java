@@ -588,7 +588,7 @@ final class ParameterParser {
                 return null;
             }
             if (recipient != null) {
-                recipientPublicKey = recipient.getPublicKey();
+                recipientPublicKey = Account.getPublicKey(recipient.getId());
             }
             if (recipientPublicKey == null) {
                 recipientPublicKey = Convert.parseHexString(Convert.emptyToNull(req.getParameter("recipientPublicKey")));
