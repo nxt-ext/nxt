@@ -1606,5 +1606,6 @@
   "unconfirmed_transactions_counter": "Number of unconfirmed transactions",
   "current_blockchain_height": "Current Blockchain Height",
   "server_connection_status": "Server Connection Status",
-  "cumulative_difficulty": "Cumulative Difficulty"
+  "cumulative_difficulty": "Cumulative Difficulty",
+  "request_of_type": "request of type __type__ is disabled by the server or does not exist"
 }

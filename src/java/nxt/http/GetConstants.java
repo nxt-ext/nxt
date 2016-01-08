@@ -165,9 +165,9 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                 }
                 response.put("shufflingParticipantStates", shufflingParticipantStates);
 
-                JSONArray disabledAPI = new JSONArray();
-                Collections.addAll(disabledAPI, API.disabledAPI);
-                response.put("disabledAPI", disabledAPI);
+                JSONArray disabledAPIs = new JSONArray();
+                Collections.addAll(disabledAPIs, API.disabledAPIs);
+                response.put("disabledAPIs", disabledAPIs);
 
                 JSONArray disabledAPITags = new JSONArray();
                 API.disabledAPITags.forEach(apiTag -> disabledAPITags.add(apiTag.getDisplayName()));

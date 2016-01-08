@@ -1,8 +1,8 @@
-Allow disabling of specific API or groups of API using the nxt.disabledAPI and
+Allow disabling of specific API or groups of API using the nxt.disabledAPIs and
 nxt.disabledAPITags properties, each taking a list of API request names, or API
 tag names, separated with ';'. For example:
 
-nxt.disabledAPI=startForging; startShuffler
+nxt.disabledAPIs=startForging; startShuffler
 nxt.disabledAPITags=Create Transaction; Tagged Data
 
 will disable the startForging and startShuffler API, and all API that are listed
@@ -12,3 +12,5 @@ Performance optimizations. Account public keys are now cached in memory. This
 cache currently takes around 12 MB at most, and can be disabled by setting
 nxt.enablePublicKeyCache=false.
 
+Back button added to the transaction info, account info and block info modals,
+use the back button to return to the previous info modal.

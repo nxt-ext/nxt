@@ -98,6 +98,8 @@ var NRS = (function (NRS, $) {
                 NRS.constants.REQUEST_TYPES = response.requestTypes;
                 NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
                 NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
+                NRS.constants.DISABLED_APIS = response.disabledAPIs;
+                NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
                 NRS.loadTransactionTypeConstants(response);
             }
         }, false);
@@ -158,6 +160,16 @@ var NRS = (function (NRS, $) {
             return false;
         }
         return NRS.constants.REQUEST_TYPES[requestType].requirePost;
+    };
+
+    NRS.isRequestTypeEnabled = function(requestType) {
+        if ($.isEmptyObject(NRS.constants.REQUEST_TYPES)) {
+            return true;
+        }
+        if (requestType.slice(-1) == "+") {
+            requestType = requestType.slice(0, -1);
+        }
+        return !!NRS.constants.REQUEST_TYPES[requestType];
     };
 
     NRS.isSubmitPassphrase = function (requestType) {
