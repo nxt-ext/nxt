@@ -111,6 +111,9 @@ public class BasicDb {
             String dbDir = Nxt.getDbDir(dbProperties.dbDir);
             dbUrl = String.format("jdbc:%s:%s;%s", dbProperties.dbType, dbDir, dbProperties.dbParams);
         }
+        if (!dbUrl.contains("MV_STORE=")) {
+            dbUrl += ";MV_STORE=FALSE";
+        }
         if (!dbUrl.contains("CACHE_SIZE=")) {
             dbUrl += ";CACHE_SIZE=" + maxCacheSize;
         }
