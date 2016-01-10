@@ -57,6 +57,7 @@ var NRS = (function (NRS, $) {
         "PHASING_HASH_ALGORITHMS": {},
         "MINTING_HASH_ALGORITHMS": {},
         "REQUEST_TYPES": {},
+        "API_TAGS": {},
 
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
@@ -96,6 +97,7 @@ var NRS = (function (NRS, $) {
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
                 NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
                 NRS.constants.REQUEST_TYPES = response.requestTypes;
+                NRS.constants.API_TAGS = response.apiTags;
                 NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
                 NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
                 NRS.constants.DISABLED_APIS = response.disabledAPIs;
@@ -145,21 +147,21 @@ var NRS = (function (NRS, $) {
     };
 
     NRS.isRequireBlockchain = function(requestType) {
-        if (!NRS.constants.REQUEST_TYPES[requestType]) {
+        if ($.isEmptyObject(NRS.constants.REQUEST_TYPES)) {
             // For requests invoked before the getConstants request returns,
             // we implicitly assume that they do not require the blockchain
             return false;
         }
-        return NRS.constants.REQUEST_TYPES[requestType].requireBlockchain;
+        return true == NRS.constants.REQUEST_TYPES[requestType].requireBlockchain;
     };
 
     NRS.isRequirePost = function(requestType) {
-        if (!NRS.constants.REQUEST_TYPES[requestType]) {
+        if ($.isEmptyObject(NRS.constants.REQUEST_TYPES)) {
             // For requests invoked before the getConstants request returns
             // we implicitly assume that they can use GET
             return false;
         }
-        return NRS.constants.REQUEST_TYPES[requestType].requirePost;
+        return true == NRS.constants.REQUEST_TYPES[requestType].requirePost;
     };
 
     NRS.isRequestTypeEnabled = function(requestType) {
@@ -178,6 +180,29 @@ var NRS = (function (NRS, $) {
             requestType == "startShuffler" ||
             requestType == "getForging" ||
             requestType == "markHost";
+    };
+
+    NRS.isApiEnabled = function(depends) {
+        if (!depends) {
+            return true;
+        }
+        var tags = depends.tags;
+        if (tags) {
+            for (var i=0; i < tags.length; i++) {
+                if (!tags[i].enabled) {
+                    return false;
+                }
+            }
+        }
+        var apis = depends.apis;
+        if (apis) {
+            for (i=0; i < apis.length; i++) {
+                if (!apis[i].enabled) {
+                    return false;
+                }
+            }
+        }
+        return true;
     };
 
     return NRS;

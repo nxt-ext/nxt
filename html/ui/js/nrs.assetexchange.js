@@ -2038,7 +2038,8 @@ var NRS = (function (NRS, $, undefined) {
             "id": sidebarId,
             "titleHTML": '<i class="fa fa-signal"></i><span data-i18n="asset_exchange">Asset Exchange</span>',
             "page": 'asset_exchange',
-            "desiredPosition": 30
+            "desiredPosition": 30,
+            "depends": { tags: [ NRS.constants.API_TAGS.AE ] }
         };
         NRS.addTreeviewSidebarMenuItem(options);
         options = {
