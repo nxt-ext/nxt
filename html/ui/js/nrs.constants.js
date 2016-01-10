@@ -166,8 +166,8 @@ var NRS = (function (NRS, $) {
         if ($.isEmptyObject(NRS.constants.REQUEST_TYPES)) {
             return true;
         }
-        if (requestType.slice(-1) == "+") {
-            requestType = requestType.slice(0, -1);
+        if (requestType.indexOf("+") > 0) {
+            requestType = requestType.substring(0, requestType.indexOf("+"));
         }
         return !!NRS.constants.REQUEST_TYPES[requestType];
     };
