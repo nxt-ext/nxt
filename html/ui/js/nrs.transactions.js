@@ -599,7 +599,7 @@ var NRS = (function(NRS, $, undefined) {
             }
         }
         var eventType = String(entry.eventType).escapeHTML();
-        if (eventType.startsWith("ASSET") || eventType.startsWith("CURRENCY")) {
+        if (eventType.indexOf("ASSET") == 0 || eventType.indexOf("CURRENCY") == 0) {
             eventType = eventType.substring(eventType.indexOf("_") + 1);
         }
         eventType = $.t(eventType.toLowerCase());

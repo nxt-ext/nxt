@@ -805,7 +805,7 @@ var NRS = (function (NRS, $, undefined) {
             clazz = "";
         } else {
             if (clazz.length > 0) {
-                if (!String(clazz).startsWith(" ")) {
+                if (String(clazz).indexOf(" ") != 0) {
                     clazz = " " + clazz;
                 }
             }

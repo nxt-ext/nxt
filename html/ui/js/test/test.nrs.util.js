@@ -186,7 +186,7 @@ QUnit.test("getAccountLink", function (assert) {
 QUnit.test("generateToken", function (assert) {
     NRS.constants.EPOCH_BEGINNING = 1385294400000;
     var token = NRS.generateToken("myToken", "rshw9abtpsa2");
-    assert.ok(token.startsWith("e9cl0jgba7lnp7gke9rdp7hg3uvcl5cnd23"));
+    assert.ok(token.indexOf("e9cl0jgba7lnp7gke9rdp7hg3uvcl5cnd23") == 0);
     assert.equal(token.length, 160);
 });
 

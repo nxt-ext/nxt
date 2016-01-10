@@ -911,7 +911,7 @@ var NRS = (function (NRS, $, undefined) {
     $("#asset_exchange_bid_orders_table tbody, #asset_exchange_ask_orders_table tbody").on("click", "td", function (e) {
         var $target = $(e.target);
         var targetClass = $target.prop("class");
-        if ($target.prop("tagName").toLowerCase() == "a" || (targetClass && targetClass.startsWith("fa"))) {
+        if ($target.prop("tagName").toLowerCase() == "a" || (targetClass && targetClass.indexOf("fa") == 0)) {
             return;
         }
 

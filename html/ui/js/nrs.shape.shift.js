@@ -88,7 +88,7 @@ var NRS = (function(NRS, $) {
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
-                if (!action.startsWith("txStat/") && !action.startsWith("cancelpending")) {
+                if (action.indexOf("txStat/") != 0 && action.indexOf("cancelpending") != 0) {
                     $("#shape_shift_status").html($.t("error"));
                 }
             }
