@@ -34,7 +34,7 @@ import java.sql.Statement;
  *
  *   java -cp "classes:lib/*:conf" nxt.tools.CompactDatabase
  *
- * To run the database compact toon on Windows:
+ * To run the database compact tool on Windows:
  *
  *   java -cp "classes;lib/*;conf" -Dnxt.runtime.mode=desktop nxt.tools.CompactDatabase
  */

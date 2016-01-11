@@ -142,6 +142,9 @@ var NRS = (function(NRS, $) {
     }
 
     NRS.addSimpleSidebarMenuItem = function(options) {
+        if (!NRS.isApiEnabled(options.depends)) {
+            return;
+        }
         var menuHTML = '<li id="' + options["id"] + '" class="sm_simple" data-sidebar-position="' + options["desiredPosition"] + '">';
         menuHTML += '<a href="#" data-page="' + options["page"] + '">' + options["titleHTML"] + '</a></li>';
         _appendToSidebar(menuHTML, options["id"], options["desiredPosition"]);
@@ -149,6 +152,9 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.addTreeviewSidebarMenuItem = function(options) {
+        if (!NRS.isApiEnabled(options.depends)) {
+            return;
+        }
         var menuHTML = '<li class="treeview" id="' + options["id"] + '" class="sm_treeview" data-sidebar-position="' + options["desiredPosition"] + '">';
         menuHTML += '<a href="#" data-page="' + options["page"] + '">' + options["titleHTML"] + '<i class="fa pull-right fa-angle-right" style="padding-top:3px"></i></a>';
         menuHTML += '<ul class="treeview-menu" style="display: none;"></ul>';
@@ -157,6 +163,13 @@ var NRS = (function(NRS, $) {
     };
     
     NRS.appendMenuItemToTSMenuItem = function(itemId, options) {
+        if (!NRS.isApiEnabled(options.depends)) {
+            return;
+        }
+        var parentMenu = $('#' + itemId + ' ul.treeview-menu');
+        if (parentMenu.length == 0) {
+            return;
+        }
         var menuHTML ='<li class="sm_treeview_submenu"><a href="#" ';
         if (options["type"] == 'PAGE' && options["page"]) {
             menuHTML += 'data-page="' + options["page"] + '"';
@@ -167,17 +180,22 @@ var NRS = (function(NRS, $) {
         }
         menuHTML += '><i class="fa fa-angle-double-right"></i> ';
         menuHTML += options["titleHTML"] + ' <span class="badge" style="display:none;"></span></a></li>';
-        $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
+        parentMenu.append(menuHTML);
     };
 
     NRS.appendSubHeaderToTSMenuItem = function(itemId, options) {
+        if (!NRS.isApiEnabled(options.depends)) {
+            return;
+        }
+        var parentMenu = $('#' + itemId + ' ul.treeview-menu');
+        if (parentMenu.length == 0) {
+            return;
+        }
         var menuHTML ='<li class="sm_treeview_submenu" style="background-color:#eee;color:#777;padding-top:3px;padding-bottom:3px;">';
         menuHTML += '<span class="sm_sub_header"><span style="display:inline-block;width:20px;">&nbsp;</span> ';
         menuHTML += options["titleHTML"] + ' </span></li>';
-        $('#' + itemId + ' ul.treeview-menu').append(menuHTML);
+        parentMenu.append(menuHTML);
     };
 
-
-    
     return NRS;
 }(NRS || {}, jQuery));

@@ -130,7 +130,8 @@ var NRS = (function(NRS, $) {
             "id": sidebarId,
             "titleHTML": '<i class="fa fa-random"></i> <span data-i18n="shuffling">Shuffling</span>',
             "page": 'active_shufflings',
-            "desiredPosition": 80
+            "desiredPosition": 80,
+            "depends": { tags: [ NRS.constants.API_TAGS.SHUFFLING ] }
         });
         NRS.appendMenuItemToTSMenuItem(sidebarId, {
             "titleHTML": '<span data-i18n="active_shufflings">Active Shufflings</span>',

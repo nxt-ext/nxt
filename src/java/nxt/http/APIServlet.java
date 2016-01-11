@@ -116,12 +116,12 @@ public final class APIServlet extends HttpServlet {
 
     private static final boolean enforcePost = Nxt.getBooleanProperty("nxt.apiServerEnforcePOST");
     static final Map<String,APIRequestHandler> apiRequestHandlers;
-    private static final Set<String> disabledRequestHandlers;
+    static final Map<String,APIRequestHandler> disabledRequestHandlers;
 
     static {
 
         Map<String,APIRequestHandler> map = new HashMap<>();
-        Set<String> set = new HashSet<>();
+        Map<String,APIRequestHandler> disabledMap = new HashMap<>();
 
         map.put("approveTransaction", ApproveTransaction.instance);
         map.put("broadcastTransaction", BroadcastTransaction.instance);
@@ -372,17 +372,18 @@ public final class APIServlet extends HttpServlet {
         map.put("detectMimeType", DetectMimeType.instance);
 
         API.disabledAPIs.forEach(api -> {
-            if (map.remove(api) == null) {
+            APIRequestHandler handler = map.remove(api);
+            if (handler == null) {
                 throw new RuntimeException("Invalid API in nxt.disabledAPIs: " + api);
             }
-            set.add(api);
+            disabledMap.put(api, handler);
         });
         API.disabledAPITags.forEach(apiTag -> {
             Iterator<Map.Entry<String, APIRequestHandler>> iterator = map.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<String, APIRequestHandler> entry = iterator.next();
                 if (entry.getValue().getAPITags().contains(apiTag)) {
-                    set.add(entry.getKey());
+                    disabledMap.put(entry.getKey(), entry.getValue());
                     iterator.remove();
                 }
             }
@@ -395,7 +396,7 @@ public final class APIServlet extends HttpServlet {
         }
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
-        disabledRequestHandlers = set.isEmpty() ? Collections.emptySet() : Collections.unmodifiableSet(set);
+        disabledRequestHandlers = disabledMap.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(disabledMap);
     }
 
     static void initClass() {}
@@ -436,7 +437,7 @@ public final class APIServlet extends HttpServlet {
 
             APIRequestHandler apiRequestHandler = apiRequestHandlers.get(requestType);
             if (apiRequestHandler == null) {
-                if (disabledRequestHandlers.contains(requestType)) {
+                if (disabledRequestHandlers.containsKey(requestType)) {
                     response = ERROR_DISABLED;
                 } else {
                     response = ERROR_INCORRECT_REQUEST;

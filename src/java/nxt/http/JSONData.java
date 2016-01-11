@@ -1064,6 +1064,18 @@ final class JSONData {
         return json;
     }
 
+    static JSONObject apiRequestHandler(APIServlet.APIRequestHandler handler) {
+        JSONObject json = new JSONObject();
+        json.put("allowRequiredBlockParameters", handler.allowRequiredBlockParameters());
+        if (handler.getFileParameter() != null) {
+            json.put("fileParameter", handler.getFileParameter());
+        }
+        json.put("requireBlockchain", handler.requireBlockchain());
+        json.put("requirePost", handler.requirePost());
+        json.put("requirePassword", handler.requirePassword());
+        return json;
+    }
+
     static void putPrunableAttachment(JSONObject json, Transaction transaction) {
         JSONObject prunableAttachment = transaction.getPrunableAttachmentJSON();
         if (prunableAttachment != null) {

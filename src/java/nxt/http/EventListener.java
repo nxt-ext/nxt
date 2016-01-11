@@ -214,7 +214,7 @@ class EventListener implements Runnable, AsyncListener, TransactionalDb.Transact
                 return;
             //
             // A listener with account identifier 0 accepts events for all accounts.
-            // This listener superceds listeners for a single account.
+            // This listener supersedes  listeners for a single account.
             //
             for (EventRegistration event : eventRegistrations) {
                 boolean addListener = true;

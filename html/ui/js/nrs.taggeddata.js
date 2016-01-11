@@ -236,7 +236,8 @@ var NRS = (function(NRS, $) {
 			"id": sidebarId,
 			"titleHTML": '<i class="fa fa-database"></i><span data-i18n="data_cloud">Data Cloud</span>',
 			"page": 'tagged_data_search',
-			"desiredPosition": 60
+			"desiredPosition": 60,
+			"depends": { tags: [ NRS.constants.API_TAGS.DATA ] }
 		};
 		NRS.addTreeviewSidebarMenuItem(options);
 		options = {

@@ -20,7 +20,7 @@
 ### NRS (Nxt Reference Software) ###
   - client-server application
   - access via a Web browser like Mozilla Firefox or Google Chrome
-  - accounts are accessable from everywhere in the world
+  - accounts are accessible from everywhere in the world
   - very strong and long passphrases required
 
 ### Nxt ###

@@ -569,6 +569,9 @@ var NRS = (function(NRS, $, undefined) {
         var balanceType = "nxt";
         var balanceEntity = "NXT";
         var holdingIcon = "";
+        if (change < 0) {
+            change = String(change).substring(1);
+        }
         if (/ASSET_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
                 balanceType = "asset";
@@ -594,12 +597,9 @@ var NRS = (function(NRS, $, undefined) {
             sign = "<i class='fa fa-plus-circle' style='color:#65C62E'></i> ";
         } else if (entry.change < 0) {
             sign = "<i class='fa fa-minus-circle' style='color:#E04434'></i> ";
-            if (change.length > 0) {
-                change = String(change).substring(1);
-            }
         }
         var eventType = String(entry.eventType).escapeHTML();
-        if (eventType.startsWith("ASSET") || eventType.startsWith("CURRENCY")) {
+        if (eventType.indexOf("ASSET") == 0 || eventType.indexOf("CURRENCY") == 0) {
             eventType = eventType.substring(eventType.indexOf("_") + 1);
         }
         eventType = $.t(eventType.toLowerCase());

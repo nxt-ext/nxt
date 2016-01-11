@@ -1043,7 +1043,8 @@ var NRS = (function (NRS, $, undefined) {
             "id": sidebarId,
             "titleHTML": '<i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span>',
             "page": 'monetary_system',
-            "desiredPosition": 40
+            "desiredPosition": 40,
+            "depends": { tags: [ NRS.constants.API_TAGS.MS ] }
         };
         NRS.addTreeviewSidebarMenuItem(options);
         options = {

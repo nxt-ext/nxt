@@ -134,16 +134,14 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
 
                 JSONObject requestTypes = new JSONObject();
                 for (Map.Entry<String, APIServlet.APIRequestHandler> handlerEntry : APIServlet.apiRequestHandlers.entrySet()) {
-                    JSONObject requestType = new JSONObject();
-                    requestTypes.put(handlerEntry.getKey(), requestType);
-                    APIServlet.APIRequestHandler handler = handlerEntry.getValue();
-                    requestType.put("allowRequiredBlockParameters", handler.allowRequiredBlockParameters());
-                    if (handler.getFileParameter() != null) {
-                        requestType.put("fileParameter", handler.getFileParameter());
-                    }
-                    requestType.put("requireBlockchain", handler.requireBlockchain());
-                    requestType.put("requirePost", handler.requirePost());
-                    requestType.put("requirePassword", handler.requirePassword());
+                    JSONObject handlerJSON = JSONData.apiRequestHandler(handlerEntry.getValue());
+                    handlerJSON.put("enabled", true);
+                    requestTypes.put(handlerEntry.getKey(), handlerJSON);
+                }
+                for (Map.Entry<String, APIServlet.APIRequestHandler> handlerEntry : APIServlet.disabledRequestHandlers.entrySet()) {
+                    JSONObject handlerJSON = JSONData.apiRequestHandler(handlerEntry.getValue());
+                    handlerJSON.put("enabled", false);
+                    requestTypes.put(handlerEntry.getKey(), handlerJSON);
                 }
                 response.put("requestTypes", requestTypes);
 
@@ -164,6 +162,15 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
                     shufflingParticipantStates.put(state.toString(), state.getCode());
                 }
                 response.put("shufflingParticipantStates", shufflingParticipantStates);
+
+                JSONObject apiTags = new JSONObject();
+                for (APITag apiTag : APITag.values()) {
+                    JSONObject tagJSON = new JSONObject();
+                    tagJSON.put("name", apiTag.getDisplayName());
+                    tagJSON.put("enabled", !API.disabledAPITags.contains(apiTag));
+                    apiTags.put(apiTag.name(), tagJSON);
+                }
+                response.put("apiTags", apiTags);
 
                 JSONArray disabledAPIs = new JSONArray();
                 Collections.addAll(disabledAPIs, API.disabledAPIs);
