@@ -8,9 +8,20 @@ nxt.disabledAPITags=Create Transaction; Tagged Data
 will disable the startForging and startShuffler API, and all API that are listed
 under the Create Transaction or Tagged Data tabs on the API test page.
 
+The enabled/disabled status of each API or APITag is exposed in getConstants.
+
 Performance optimizations. Account public keys are now cached in memory. This
 cache currently takes around 12 MB at most, and can be disabled by setting
 nxt.enablePublicKeyCache=false.
 
 Back button added to the transaction info, account info and block info modals,
 use the back button to return to the previous info modal.
+
+Updated H2 to version 1.4.190. The MVStore storage engine is disabled by default
+as it is still in beta, PageStore continues to be used. As this version no
+longer accepts implicitly relative jdbc URLs, if you have configured a custom db
+location in nxt.properties, make sure to prefix the path with ./ if it is not
+absolute, e.g. nxt.dbUrl=jdbc:h2:./nxt_db/nxt... instead of
+nxt.dbUrl=jdbc:h2:nxt_db/nxt... . If unpacking on top of existing installation,
+delete the old lib folder first.
+
