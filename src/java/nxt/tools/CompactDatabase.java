@@ -80,6 +80,11 @@ public class CompactDatabase {
             String dbPath = Nxt.getDbDir(Nxt.getStringProperty(dbPrefix + "Dir"));
             dbUrl = String.format("jdbc:%s:%s", dbType, dbPath);
         }
+        String dbParams = Nxt.getStringProperty(dbPrefix + "Params");
+        dbUrl += ";" + dbParams;
+        if (!dbUrl.contains("MV_STORE=")) {
+            dbUrl += ";MV_STORE=FALSE";
+        }
         String dbUsername = Nxt.getStringProperty(dbPrefix + "Username", "sa");
         String dbPassword = Nxt.getStringProperty(dbPrefix + "Password", "sa", true);
         //
