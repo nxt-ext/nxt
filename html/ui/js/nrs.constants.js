@@ -26,6 +26,7 @@ var NRS = (function (NRS, $) {
         'MAX_UNSIGNED_SHORT_JAVA': 65535,
         'MAX_INT_JAVA': 2147483647,
         'MIN_PRUNABLE_MESSAGE_LENGTH': 28,
+        'DISABLED_API_ERROR_CODE': 16,
 
         //Plugin launch status numbers
         'PL_RUNNING': 1,
@@ -147,7 +148,7 @@ var NRS = (function (NRS, $) {
     };
 
     NRS.isRequireBlockchain = function(requestType) {
-        if ($.isEmptyObject(NRS.constants.REQUEST_TYPES)) {
+        if (!NRS.constants.REQUEST_TYPES[requestType]) {
             // For requests invoked before the getConstants request returns,
             // we implicitly assume that they do not require the blockchain
             return false;
@@ -156,7 +157,7 @@ var NRS = (function (NRS, $) {
     };
 
     NRS.isRequirePost = function(requestType) {
-        if ($.isEmptyObject(NRS.constants.REQUEST_TYPES)) {
+        if (!NRS.constants.REQUEST_TYPES[requestType]) {
             // For requests invoked before the getConstants request returns
             // we implicitly assume that they can use GET
             return false;
