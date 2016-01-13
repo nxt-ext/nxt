@@ -557,8 +557,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 //
                 // Process a fork
                 //
-                if (!forkBlocks.isEmpty() && blockchain.getHeight() - startHeight < 720) {
-                    Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
+                int myForkSize = blockchain.getHeight() - startHeight;
+                if (!forkBlocks.isEmpty() && myForkSize < 720) {
+                    Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks, mine is " + myForkSize);
                     processFork(feederPeer, forkBlocks, commonBlock);
                 }
             } finally {
@@ -1399,8 +1400,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new BlockNotAcceptedException("Invalid version " + block.getVersion(), block);
         }
         if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT) {
-            Logger.logWarningMessage("Received block " + block.getStringId() + " from the future, block timestamp is " + block.getTimestamp()
-                    + ", current time is " + curTime + ", system clock may be off");
+            Logger.logWarningMessage("Received block " + block.getStringId() + " from the future, timestamp " + block.getTimestamp()
+                    + " generator " + Long.toUnsignedString(block.getGeneratorId()) + " current time " + curTime + ", system clock may be off");
             throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                     + " current time is " + curTime, block);
         }
