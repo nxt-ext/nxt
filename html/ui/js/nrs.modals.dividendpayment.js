@@ -34,7 +34,7 @@ var NRS = (function(NRS, $, undefined) {
         }
         if (!/^\d+$/.test(data.height)) {
             return {
-                "error": $.t("error_invalid_height")
+                "error": $.t("error_invalid_dividend_height")
             }
         }
         var isDividendHeightBeforeAssetHeight;
@@ -102,7 +102,7 @@ var NRS = (function(NRS, $, undefined) {
                 function (response) {
                     var displayString;
                     if (response.errorCode == 4 || response.errorCode == 8) {
-                        displayString = $.t("error_invalid_height");
+                        displayString = $.t("error_invalid_dividend_height");
                     } else {
                         displayString = $.t("dividend_payment_info_preview_error", {"errorCode": response.errorCode});
                     }

@@ -390,6 +390,7 @@
   "error_invalid_dgs_refund": "Invalid digital goods refund.",
   "error_invalid_field": "__field__ is invalid.",
   "error_invalid_height": "Invalid height value.",
+  "error_invalid_dividend_height": "Invalid dividend payment height",
   "error_invalid_input": "Invalid input.",
   "error_invalid_input_numbers": "Invalid input. Only numbers and a dot are accepted.",
   "error_invalid_ordinary_payment": "Invalid ordinary payment.",
