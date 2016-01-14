@@ -1,3 +1,8 @@
+Code cleanup and removal of logic no longer needed after the 1.7 hard fork has
+been passed. Added checkpoint at block 622000.
+
+Peers running versions older than 1.7 are now blacklisted.
+
 Allow disabling of specific API or groups of API using the nxt.disabledAPIs and
 nxt.disabledAPITags properties, each taking a list of API request names, or API
 tag names, separated with ';'. For example:
@@ -24,4 +29,8 @@ location in nxt.properties, make sure to prefix the path with ./ if it is not
 absolute, e.g. nxt.dbUrl=jdbc:h2:./nxt_db/nxt... instead of
 nxt.dbUrl=jdbc:h2:nxt_db/nxt... . If unpacking on top of existing installation,
 delete the old lib folder first.
+
+Nodes that update from version older than 1.7.3e to this release after the hard
+fork block will have blocks after 621000 deleted, to make sure they switch to
+the 1.7.4 fork.
 
