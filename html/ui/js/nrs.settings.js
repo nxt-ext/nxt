@@ -656,5 +656,9 @@ var NRS = (function(NRS, $) {
 		NRS.updateSettings(key, value);
 	});
 
+	$("#settings_form").submit(function(event) {
+		event.preventDefault();
+	});
+
 	return NRS;
 }(NRS || {}, jQuery));
