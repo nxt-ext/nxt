@@ -10,9 +10,9 @@ under the Create Transaction or Tagged Data tabs on the API test page.
 
 The enabled/disabled status of each API or APITag is exposed in getConstants.
 
-Randomize shuffling transaction timestamps. To prevent timestamp correlation
-attacks, the shufflers now use random transaction timestamps, ranging from the
-last block timestamp up to current time + 15 s.
+Use fixed shuffling transaction timestamps. To prevent timestamp correlation
+attacks, all shufflers now use the same transaction timestamp, set to the last
+block timestamp + 15 s.
 
 Performance optimizations. Account public keys are now cached in memory. This
 cache currently takes around 12 MB at most, and can be disabled by setting
