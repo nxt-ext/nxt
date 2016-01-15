@@ -33,5 +33,17 @@ var NRS = (function(NRS, $) {
         widgetVisibility($("#header_send_message"), { apis: [NRS.constants.REQUEST_TYPES.sendMessage] });
     });
 
+    $("#refreshSearchIndex").on("click", function() {
+        NRS.sendRequest("luceneReindex", {
+            adminPassword: NRS.settings.admin_password
+        }, function (response) {
+            if (response.errorCode) {
+                $.growl(response.errorDescription);
+            } else {
+                $.growl($.t("search_index_refreshed"));
+            }
+        })
+    });
+
     return NRS;
 }(NRS || {}, jQuery));
