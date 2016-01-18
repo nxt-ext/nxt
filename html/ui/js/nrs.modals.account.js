@@ -93,6 +93,15 @@ var NRS = (function(NRS, $) {
 		} else {
 			$("#user_info_description").hide();
 		}
+		var switchAccount = $("#user_info_switch_account");
+        if (NRS.accountRS != account.accountRS) {
+			var click = "NRS.switchAccount(&quot;" + account.accountRS + "&quot;);";
+			switchAccount.html("<a class='btn btn-info btn-xs' onclick='" + click + "'>" + $.t("switch_account") + "</a>");
+			switchAccount.show();
+		} else {
+			switchAccount.hide();
+		}
+
         var userInfoModal = $("#user_info_modal");
         if (!userInfoModal.data('bs.modal') || !userInfoModal.data('bs.modal').isShown) {
             userInfoModal.modal("show");

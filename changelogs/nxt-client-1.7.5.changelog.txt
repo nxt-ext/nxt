@@ -17,7 +17,7 @@ The enabled/disabled status of each API or APITag is exposed in getConstants.
 
 Use fixed shuffling transaction timestamps. To prevent timestamp correlation
 attacks, all shufflers now use the same transaction timestamp, set to the last
-block timestamp + 15 s.
+block timestamp.
 
 Performance optimizations. Account public keys are now cached in memory. This
 cache currently takes around 12 MB at most, and can be disabled by setting
