@@ -2893,20 +2893,22 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
-                if (transaction.getSenderId() == transaction.getRecipientId()
-                        || transaction.getAmountNQT() != 0
-                        || attachment.getPeriod() < Constants.LEASING_DELAY
-                        || attachment.getPeriod() > 65535) {
-                    throw new NxtException.NotValidException("Invalid effective balance leasing: "
-                            + transaction.getJSONObject() + " transaction " + transaction.getStringId());
+                if (transaction.getSenderId() == transaction.getRecipientId()) {
+                    throw new NxtException.NotValidException("Account cannot lease balance to itself");
+                }
+                if (transaction.getAmountNQT() != 0) {
+                    throw new NxtException.NotValidException("Transaction amount must be 0 for effective balance leasing");
+                }
+                if (attachment.getPeriod() < Constants.LEASING_DELAY || attachment.getPeriod() > 65535) {
+                    throw new NxtException.NotValidException("Invalid effective balance leasing period: " + attachment.getPeriod());
                 }
                 if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK && attachment.getPeriod() > Short.MAX_VALUE) {
                     throw new NxtException.NotYetEnabledException("Leasing period longer than 32767 not yet enabled");
                 }
                 byte[] recipientPublicKey = Account.getPublicKey(transaction.getRecipientId());
-                if (recipientPublicKey == null && ! transaction.getStringId().equals("5081403377391821646")) {
+                if (recipientPublicKey == null && Nxt.getBlockchain().getHeight() > Constants.PHASING_BLOCK) {
                     throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
-                            + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
+                            + " recipient account " + Long.toUnsignedString(transaction.getRecipientId()) + " not found or no public key published");
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
                     throw new NxtException.NotCurrentlyValidException("Leasing to Genesis account not allowed");
