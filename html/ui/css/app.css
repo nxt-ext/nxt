@@ -72,8 +72,6 @@ body > .header {
 .right-side {
   background-color: #f9f9f9;
   margin-left: 220px;
-  transition: margin .7s;
-  -webkit-transition: margin .7s;
 }
 /*left side - contains sidebar*/
 .left-side {
@@ -83,8 +81,6 @@ body > .header {
   min-height: inherit !important;
   top: 0;
   bottom: 0;
-  transition: margin .7s;
-  -webkit-transition: margin .7s;
 }
 @media screen and (min-width: 992px) {
   /*Right side strech mode*/
