@@ -144,7 +144,12 @@ public final class Generator implements Comparable<Generator> {
     public static Generator stopForging(String secretPhrase) {
         Generator generator = generators.remove(secretPhrase);
         if (generator != null) {
-            sortedForgers = null;
+            Nxt.getBlockchain().updateLock();
+            try {
+                sortedForgers = null;
+            } finally {
+                Nxt.getBlockchain().updateUnlock();
+            }
             Logger.logDebugMessage(generator + " stopped");
             listeners.notify(generator, Event.STOP_FORGING);
         }
@@ -160,7 +165,12 @@ public final class Generator implements Comparable<Generator> {
             Logger.logDebugMessage(generator + " stopped");
             listeners.notify(generator, Event.STOP_FORGING);
         }
-        sortedForgers = null;
+        Nxt.getBlockchain().updateLock();
+        try {
+            sortedForgers = null;
+        } finally {
+            Nxt.getBlockchain().updateUnlock();
+        }
         return count;
     }
 
@@ -177,7 +187,8 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public static List<Generator> getSortedForgers() {
-        return sortedForgers == null ? Collections.<Generator>emptyList() : sortedForgers;
+        List<Generator> forgers = sortedForgers;
+        return forgers == null ? Collections.<Generator>emptyList() : forgers;
     }
 
     public static long getNextHitTime(long lastBlockId, int curTime) {
@@ -252,7 +263,12 @@ public final class Generator implements Comparable<Generator> {
         if (Nxt.getBlockchain().getHeight() >= Constants.LAST_KNOWN_BLOCK) {
             setLastBlock(Nxt.getBlockchain().getLastBlock());
         }
-        sortedForgers = null;
+        Nxt.getBlockchain().updateLock();
+        try {
+            sortedForgers = null;
+        } finally {
+            Nxt.getBlockchain().updateUnlock();
+        }
     }
 
     public byte[] getPublicKey() {

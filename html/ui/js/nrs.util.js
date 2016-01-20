@@ -1698,7 +1698,7 @@ var NRS = (function (NRS, $, undefined) {
         messageBytes = messageBytes.concat(pubKeyBytes, tsb);
         token = token.concat(tsb, converters.hexStringToByteArray(
             NRS.signBytes(converters.byteArrayToHexString(messageBytes),
-                converters.stringToHexString(secretPhrase))));
+                secretPhrase !== undefined ? converters.stringToHexString(secretPhrase) : undefined)));
 
         var buf = "";
         for (var ptr = 0; ptr < 100; ptr += 5) {
