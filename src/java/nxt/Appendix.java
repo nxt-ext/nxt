@@ -1156,10 +1156,7 @@ public interface Appendix {
             if (transaction.getRecipientId() == 0) {
                 throw new NxtException.NotValidException("PublicKeyAnnouncement cannot be attached to transactions with no recipient");
             }
-            if (publicKey.length != 32) {
-                throw new NxtException.NotValidException("Invalid recipient public key length: " + Convert.toHexString(publicKey));
-            }
-            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && !Crypto.isCanonicalPublicKey(publicKey)) {
+            if (!Crypto.isCanonicalPublicKey(publicKey)) {
                 throw new NxtException.NotValidException("Invalid recipient public key: " + Convert.toHexString(publicKey));
             }
             long recipientId = transaction.getRecipientId();

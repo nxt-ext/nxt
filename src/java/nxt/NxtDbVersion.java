@@ -1030,13 +1030,11 @@ class NxtDbVersion extends DbVersion {
                         + "transaction_id BIGINT NOT NULL, linked_full_hash BINARY(32) NOT NULL, linked_transaction_id BIGINT NOT NULL, "
                         + "height INT NOT NULL)");
             case 434:
-                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_id_link_idx "
-                        + "ON phasing_poll_linked_transaction (transaction_id, linked_transaction_id)");
+                apply(null);
             case 435:
                 apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_height_idx ON phasing_poll_linked_transaction (height)");
             case 436:
-                apply("CREATE INDEX IF NOT EXISTS phasing_poll_linked_transaction_link_id_idx "
-                        + "ON phasing_poll_linked_transaction (linked_transaction_id, transaction_id)");
+                apply(null);
             case 437:
                 apply("ALTER TABLE phasing_poll DROP COLUMN IF EXISTS linked_full_hashes");
             case 438:
@@ -1135,6 +1133,16 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(0, false);
                 apply(null);
             case 474:
+                apply("DROP INDEX IF EXISTS phasing_poll_linked_transaction_id_link_idx");
+            case 475:
+                apply("CREATE " + (Constants.isTestnet ? "" : "UNIQUE ") + "INDEX IF NOT EXISTS phasing_poll_linked_transaction_id_link_idx "
+                        + "ON phasing_poll_linked_transaction (transaction_id, linked_transaction_id)");
+            case 476:
+                apply("DROP INDEX IF EXISTS phasing_poll_linked_transaction_link_id_idx");
+            case 477:
+                apply("CREATE " + (Constants.isTestnet ? "" : "UNIQUE ") + "INDEX IF NOT EXISTS phasing_poll_linked_transaction_link_id_idx "
+                        + "ON phasing_poll_linked_transaction (linked_transaction_id, transaction_id)");
+            case 478:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
