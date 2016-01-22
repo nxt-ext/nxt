@@ -15,6 +15,10 @@ under the Create Transaction or Tagged Data tabs on the API test page.
 
 The enabled/disabled status of each API or APITag is exposed in getConstants.
 
+The getAccountLedger API has been fixed to always apply the firstIndex,
+lastIndex pagination to the final list of entries matching the query, rather
+than to all entries for the given account or based on block height.
+
 Use fixed shuffling transaction timestamps. To prevent timestamp correlation
 attacks, all shufflers now use the same transaction timestamp, set to the last
 block timestamp.

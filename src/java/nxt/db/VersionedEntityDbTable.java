@@ -49,13 +49,12 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
         }
         DbKey dbKey = dbKeyFactory.newKey(t);
         try (Connection con = db.getConnection();
-             PreparedStatement pstmtCount = con.prepareStatement("SELECT COUNT(*) AS count FROM " + table + dbKeyFactory.getPKClause()
-                + " AND height < ?")) {
+             PreparedStatement pstmtCount = con.prepareStatement("SELECT 1 FROM " + table
+                     + dbKeyFactory.getPKClause() + " AND height < ? LIMIT 1")) {
             int i = dbKey.setPK(pstmtCount);
             pstmtCount.setInt(i, Nxt.getBlockchain().getHeight());
             try (ResultSet rs = pstmtCount.executeQuery()) {
-                rs.next();
-                if (rs.getInt("count") > 0) {
+                if (rs.next()) {
                     try (PreparedStatement pstmt = con.prepareStatement("UPDATE " + table
                             + " SET latest = FALSE " + dbKeyFactory.getPKClause() + " AND latest = TRUE LIMIT 1")) {
                         dbKey.setPK(pstmt);
