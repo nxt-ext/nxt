@@ -202,6 +202,9 @@ public class AccountLedger {
         if (!isUnconfirmed && logUnconfirmed == 2) {
             return false;
         }
+        if (trimKeep > 0 && blockchain.getHeight() <= Constants.LAST_KNOWN_BLOCK - trimKeep) {
+            return false;
+        }
         //
         // Don't log account changes if we are scanning the blockchain and the current height
         // is less than the minimum account_ledger trim height
