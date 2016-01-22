@@ -341,6 +341,7 @@ public class AccountLedger {
             if (holdingId != 0)
                 sb.append("AND holding_id = ? ");
         }
+        sb.append("ORDER BY db_id DESC");
         //
         // Get the ledger entries
         //
@@ -396,7 +397,6 @@ public class AccountLedger {
                 blockchain.readUnlock();
             }
         } else {
-            sb.append("ORDER BY db_id DESC");
             blockchain.readLock();
             try (Connection con = Db.db.getConnection();
                  PreparedStatement stmt = con.prepareStatement(sb.toString())) {
