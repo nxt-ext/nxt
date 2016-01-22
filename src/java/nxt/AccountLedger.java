@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +144,7 @@ public class AccountLedger {
      * We don't do anything but we need to be called from Nxt.init() in order to
      * register our table
      */
-    public static void init() {
+    static void init() {
     }
 
     /**
@@ -296,141 +297,83 @@ public class AccountLedger {
     /**
      * Return the ledger entries sorted in descending insert order
      *
-     * If an account identifier is supplied, then firstIndex and lastIndex are relative
-     * to entries for that account where index 0 is the latest entry for the account.
-     * Otherwise, firstIndex and lastIndex are relative to the entry height where index 0
-     * is the latest entry added to the ledger.
      *
      * @param   accountId                   Account identifier or zero if no account identifier
      * @param   event                       Ledger event or null
      * @param   eventId                     Ledger event identifier or zero if no event identifier
      * @param   holding                     Ledger holding or null
      * @param   holdingId                   Ledger holding identifier or zero if no holding identifier
-     * @param   firstIndex                  First entry index
-     * @param   lastIndex                   Last entry index
+     * @param   firstIndex                  First matching entry index, inclusive
+     * @param   lastIndex                   Last matching entry index, inclusive
      * @return                              List of ledger entries
      */
     public static List<LedgerEntry> getEntries(long accountId, LedgerEvent event, long eventId,
                                                 LedgerHolding holding, long holdingId,
                                                 int firstIndex, int lastIndex) {
-        List<LedgerEntry> entryList = new ArrayList<>();
         if (!ledgerEnabled) {
-            return entryList;
+            return Collections.emptyList();
         }
-        int startIndex = Math.max(firstIndex, 0);
-        int stopIndex = Math.max(lastIndex, startIndex);
+        List<LedgerEntry> entryList = new ArrayList<>();
         //
         // Build the SELECT statement to search the entries
-        //
-        // We are searching based on height if no account is specified.  Otherwise, we need
-        // to build a list of database identifiers for the account.
-        //
         StringBuilder sb = new StringBuilder(128);
-        if (accountId == 0) {
-            sb.append("SELECT * FROM account_ledger WHERE height >= ? AND height <= ? ");
-        } else {
-            sb.append("SELECT * FROM account_ledger WHERE db_id IN (SELECT db_id FROM (TABLE (db_id BIGINT = ?))) ");
+        sb.append("SELECT * FROM account_ledger ");
+        if (accountId != 0 || event != null || holding != null) {
+            sb.append("WHERE ");
+        }
+        if (accountId != 0) {
+            sb.append("account_id = ? ");
         }
         if (event != null) {
-            sb.append("AND event_type = ? ");
+            if (accountId != 0) {
+                sb.append("AND ");
+            }
+            sb.append("event_type = ? ");
             if (eventId != 0)
                 sb.append("AND event_id = ? ");
         }
         if (holding != null) {
-            sb.append("AND holding_type = ? ");
+            if (accountId != 0 || event != null) {
+                sb.append("AND ");
+            }
+            sb.append("holding_type = ? ");
             if (holdingId != 0)
                 sb.append("AND holding_id = ? ");
         }
-        sb.append("ORDER BY db_id DESC");
+        sb.append("ORDER BY db_id DESC ");
+        sb.append(DbUtils.limitsClause(firstIndex, lastIndex));
         //
         // Get the ledger entries
         //
-        if (accountId != 0) {
-            blockchain.readLock();
-            try (Connection con = Db.db.getConnection();
-                    PreparedStatement stmt1 = con.prepareStatement("SELECT db_id FROM account_ledger "
-                            + "WHERE account_id = ? ORDER BY db_id DESC");
-                    PreparedStatement stmt2 = con.prepareStatement(sb.toString())) {
-                //
-                // Build the database identifier list in descending order
-                //
-                List<Long> dbIdList = new ArrayList<>();
-                stmt1.setLong(1, accountId);
-                try (ResultSet rs = stmt1.executeQuery()) {
-                    while (rs.next()) {
-                        dbIdList.add(rs.getLong(1));
-                    }
-                }
-                if (startIndex >= dbIdList.size())
-                    return entryList;
-                stopIndex = Math.min(stopIndex, dbIdList.size()-1);
-                Long[] dbIds = new Long[stopIndex - startIndex + 1];
-                int index = 0;
-                for (int i=startIndex; i<=stopIndex; i++) {
-                    dbIds[index++] = dbIdList.get(i);
-                }
-                //
-                // Search based on the database identifier list
-                //
-                stmt2.setObject(1, dbIds);
-                int i = 1;
-                if (event != null) {
-                    stmt2.setByte(++i, (byte)event.getCode());
-                    if (eventId != 0) {
-                        stmt2.setLong(++i, eventId);
-                    }
-                }
-                if (holding != null) {
-                    stmt2.setByte(++i, (byte)holding.getCode());
-                    if (holdingId != 0) {
-                        stmt2.setLong(++i, holdingId);
-                    }
-                }
-                try (ResultSet rs = stmt2.executeQuery()) {
-                    while (rs.next()) {
-                        entryList.add(new LedgerEntry(rs));
-                    }
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
-            } finally {
-                blockchain.readUnlock();
+        blockchain.readLock();
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmt = con.prepareStatement(sb.toString())) {
+            int i = 0;
+            if (accountId != 0) {
+                pstmt.setLong(++i, accountId);
             }
-        } else {
-            blockchain.readLock();
-            try (Connection con = Db.db.getConnection();
-                 PreparedStatement stmt = con.prepareStatement(sb.toString())) {
-                int height = blockchain.getHeight();
-                int highHeight = Math.max(height - startIndex, 0);
-                int lowHeight = Math.max(height - stopIndex, 0);
-                //
-                // Search based on the block height
-                //
-                stmt.setInt(1, lowHeight);
-                stmt.setInt(2, highHeight);
-                int i = 2;
-                if (event != null) {
-                    stmt.setByte(++i, (byte)event.getCode());
-                    if (eventId != 0) {
-                        stmt.setLong(++i, eventId);
-                    }
+            if (event != null) {
+                pstmt.setByte(++i, (byte)event.getCode());
+                if (eventId != 0) {
+                    pstmt.setLong(++i, eventId);
                 }
-                if (holding != null) {
-                    stmt.setByte(++i, (byte)holding.getCode());
-                    if (holdingId != 0) {
-                        stmt.setLong(++i, holdingId);
-                    }
-                }
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        entryList.add(new LedgerEntry(rs));
-                    }
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e.toString(), e);
-            } finally {
-                blockchain.readUnlock();
             }
+            if (holding != null) {
+                pstmt.setByte(++i, (byte)holding.getCode());
+                if (holdingId != 0) {
+                    pstmt.setLong(++i, holdingId);
+                }
+            }
+            DbUtils.setLimits(++i, pstmt, firstIndex, lastIndex);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    entryList.add(new LedgerEntry(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        } finally {
+            blockchain.readUnlock();
         }
         return entryList;
     }
