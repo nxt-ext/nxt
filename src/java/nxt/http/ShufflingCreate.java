@@ -37,11 +37,13 @@ public final class ShufflingCreate extends CreateTransaction {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         HoldingType holdingType = HoldingType.get(ParameterParser.getByte(req, "holdingType", (byte) 0, (byte) 2, false));
-        long amount = ParameterParser.getLong(req, "amount", holdingType == HoldingType.NXT ? Constants.SHUFFLING_DEPOSIT_NQT : 1L,
-                Long.MAX_VALUE, true);
         long holdingId = ParameterParser.getUnsignedLong(req, "holding", holdingType != HoldingType.NXT);
         if (holdingType == HoldingType.NXT && holdingId != 0) {
             return JSONResponses.incorrect("holding", "holding only used for currency or asset shuffling");
+        }
+        long amount = ParameterParser.getLong(req, "amount", 0L, Long.MAX_VALUE, true);
+        if (holdingType == HoldingType.NXT && amount < Constants.SHUFFLING_DEPOSIT_NQT) {
+            return JSONResponses.incorrect("amount", "Minimum shuffling amount is " + Constants.SHUFFLING_DEPOSIT_NQT / Constants.ONE_NXT + " NXT");
         }
         byte participantCount = ParameterParser.getByte(req, "participantCount", Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS,
                 Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS, true);
