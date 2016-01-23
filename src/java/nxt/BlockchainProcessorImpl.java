@@ -114,7 +114,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     116, 4, 27, -14, 114, 28, 79, -104, 100, -74, 61, -64, -6, -53, 103
             }
             :
-            null;
+            new byte[] {
+                    90, 15, -6, -42, -105, -103, 83, -17, -112, 51, -53, 110, 98, -54, -4, 2,
+                    30, -69, 25, 91, 52, 126, -40, -91, -23, 118, -121, 70, 116, 60, -49, -86
+            };
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
