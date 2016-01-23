@@ -1546,13 +1546,9 @@ public abstract class TransactionType {
 
             @Override
             boolean isBlockDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
-                if (Nxt.getBlockchain().getHeight() <= Constants.SHUFFLING_BLOCK) {
-                    return false;
-                }
-                if (isSingletonIssuance(transaction)) {
-                    return false;
-                }
-                return isDuplicate(ColoredCoins.ASSET_ISSUANCE, getName(), duplicates, true);
+                return Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
+                        && !isSingletonIssuance(transaction)
+                        && isDuplicate(ColoredCoins.ASSET_ISSUANCE, getName(), duplicates, true);
             }
 
             @Override
