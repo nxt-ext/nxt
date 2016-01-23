@@ -15,6 +15,10 @@ under the Create Transaction or Tagged Data tabs on the API test page.
 
 The enabled/disabled status of each API or APITag is exposed in getConstants.
 
+The client UI hides menus related to disabled API tags and the "Send NXT",
+"Send Currency" and "Send Message" buttons are hidden automatically when
+their corresponding API is disabled.
+
 The getAccountLedger API has been fixed to always apply the firstIndex,
 lastIndex pagination to the final list of entries matching the query, rather
 than to all entries for the given account or based on block height.
@@ -37,6 +41,19 @@ location in nxt.properties, make sure to prefix the path with ./ if it is not
 absolute, e.g. nxt.dbUrl=jdbc:h2:./nxt_db/nxt... instead of
 nxt.dbUrl=jdbc:h2:nxt_db/nxt... . If unpacking on top of existing installation,
 delete the old lib folder first.
+
+Token generation is now supported when using the "Remember Passphrase" option
+and the NRS.signBytes() method now uses the remembered passphrase in case the
+passphrase parameter is not specified.
+
+The transition effect displayed when hiding the left menu was disabled since
+it is causing UI rendering problems under certain conditions. 
+
+"Switch Account" button added to the account info dialog. Clicking it would
+switch the wallet to this account.
+
+"Refresh Search Index" button added to the "Settings" menu. Use it to rebuild
+the search index in case you are no longer getting correct search results.
 
 Nodes that update from version older than 1.7.3e to this release after the hard
 fork block will have blocks after 621000 deleted, to make sure they switch to
