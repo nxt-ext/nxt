@@ -596,7 +596,6 @@ var NRS = (function (NRS, $, undefined) {
             $("#asset_decimals").html(String(asset.decimals).escapeHTML());
             $("#asset_name").html(String(asset.name).escapeHTML());
             $("#asset_description").html(String(asset.description).autoLink());
-            $("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
             $(".asset_name").html(String(asset.name).escapeHTML());
             $("#sell_asset_button").data("asset", assetId);
             $("#buy_asset_button").data("asset", assetId);
@@ -643,7 +642,7 @@ var NRS = (function (NRS, $, undefined) {
                     "asset": assetId
                 }, function (response) {
                     if (!response.errorCode) {
-                        if (response.asset != asset.asset || response.account != asset.account || response.accountRS != asset.accountRS || response.decimals != asset.decimals || response.description != asset.description || response.name != asset.name || response.quantityQNT != asset.quantityQNT) {
+                        if (response.asset != asset.asset || response.account != asset.account || response.accountRS != asset.accountRS || response.decimals != asset.decimals || response.description != asset.description || response.name != asset.name) {
                             NRS.database.delete("assets", [{
                                 "asset": asset.asset
                             }], function () {
@@ -655,8 +654,11 @@ var NRS = (function (NRS, $, undefined) {
                                 }, 50);
                             });
                         }
+                        $("#asset_quantity").html(NRS.formatQuantity(response.quantityQNT, response.decimals));
                     }
                 });
+            } else {
+                $("#asset_quantity").html(NRS.formatQuantity(asset.quantityQNT, asset.decimals));
             }
 
             if (asset.viewingAsset) {
