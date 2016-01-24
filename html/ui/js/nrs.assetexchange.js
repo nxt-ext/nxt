@@ -821,9 +821,9 @@ var NRS = (function (NRS, $, undefined) {
                         "<td>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
                         "<td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals) + "</td>" +
                         "<td style='color:";
-                        if (NRS.getAccountTitle(trade, "buyer") == "You") {
+                        if (trade.buyer == NRS.account && trade.buyer != trade.seller) {
                             rows += "red";
-                        } else if (NRS.getAccountTitle(trade, "seller") == "You") {
+                        } else if (trade.seller == NRS.account && trade.buyer != trade.seller) {
                             rows += "green";
                         } else {
                             rows += "black";
