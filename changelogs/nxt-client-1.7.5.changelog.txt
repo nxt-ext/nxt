@@ -55,6 +55,10 @@ switch the wallet to this account.
 "Refresh Search Index" button added to the "Settings" menu. Use it to rebuild
 the search index in case you are no longer getting correct search results.
 
+run.bat now works on Windows XP and Windows 2003. Database, configuration
+files and logs are stored in the roaming folder under the user folder and
+tray icon is operational.
+
 Nodes that update from version older than 1.7.3e to this release after the hard
 fork block will have blocks after 621000 deleted, to make sure they switch to
 the 1.7.4 fork.
