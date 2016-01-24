@@ -345,7 +345,7 @@ var NRS = (function(NRS, $) {
    			helpI18n: "shuffling_registration_height_help",
    			inputName: "finishHeight",
    			initBlockHeight: NRS.lastBlockHeight + 1440,
-   			changeHeightBlocks: 10
+   			changeHeightBlocks: 500
    		};
    		NRS.initModalUIElement($(this), '.shuffling_finish_height', 'block_height_modal_ui_element', context);
         // Activating context help popovers - from some reason this code is activated
