@@ -149,6 +149,50 @@ public final class PhasingParams {
         voteWeighting.validate();
 
     }
+
+    void checkApprovable() throws NxtException.NotCurrentlyValidException {
+        if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
+            Currency currency = Currency.getCurrency(voteWeighting.getHoldingId());
+            if (currency == null) {
+                throw new NxtException.NotCurrentlyValidException("Currency " + Long.toUnsignedString(voteWeighting.getHoldingId()) + " not found");
+            }
+            if (quorum > currency.getMaxSupply()) {
+                throw new NxtException.NotCurrentlyValidException("Quorum of " + quorum
+                        + " exceeds max currency supply " + currency.getMaxSupply());
+            }
+            if (voteWeighting.getMinBalance() > currency.getMaxSupply()) {
+                throw new NxtException.NotCurrentlyValidException("MinBalance of " + voteWeighting.getMinBalance()
+                        + " exceeds max currency supply " + currency.getMaxSupply());
+            }
+        } else if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.ASSET) {
+            Asset asset = Asset.getAsset(voteWeighting.getHoldingId());
+            if (quorum > asset.getQuantityQNT()) {
+                throw new NxtException.NotCurrentlyValidException("Quorum of " + quorum
+                        + " exceeds total current asset quantity " + asset.getQuantityQNT());
+            }
+            if (voteWeighting.getMinBalance() > asset.getQuantityQNT()) {
+                throw new NxtException.NotCurrentlyValidException("MinBalance of " + voteWeighting.getMinBalance()
+                        + " exceeds total current asset quantity " + asset.getQuantityQNT());
+            }
+        } else if (voteWeighting.getMinBalance() > 0) {
+            if (voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.ASSET) {
+                Asset asset = Asset.getAsset(voteWeighting.getHoldingId());
+                if (voteWeighting.getMinBalance() > asset.getQuantityQNT()) {
+                    throw new NxtException.NotCurrentlyValidException("MinBalance of " + voteWeighting.getMinBalance()
+                            + " exceeds total current asset quantity " + asset.getQuantityQNT());
+                }
+            } else if (voteWeighting.getMinBalanceModel() == VoteWeighting.MinBalanceModel.CURRENCY) {
+                Currency currency = Currency.getCurrency(voteWeighting.getHoldingId());
+                if (currency == null) {
+                    throw new NxtException.NotCurrentlyValidException("Currency " + Long.toUnsignedString(voteWeighting.getHoldingId()) + " not found");
+                }
+                if (voteWeighting.getMinBalance() > currency.getMaxSupply()) {
+                    throw new NxtException.NotCurrentlyValidException("MinBalance of " + voteWeighting.getMinBalance()
+                            + " exceeds max currency supply " + currency.getMaxSupply());
+                }
+            }
+        }
+    }
     
     public long getQuorum() {
         return quorum;

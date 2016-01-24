@@ -1321,6 +1321,7 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             params.validate();
+            params.checkApprovable();
             int currentHeight = Nxt.getBlockchain().getHeight();
             if (params.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
                 if (linkedFullHashes.length == 0 || linkedFullHashes.length > Constants.MAX_PHASING_LINKED_TRANSACTIONS) {
@@ -1383,7 +1384,7 @@ public interface Appendix {
 
         @Override
         void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
-            params.getVoteWeighting().validate();
+            params.checkApprovable();
         }
 
         @Override

@@ -2883,6 +2883,7 @@ public abstract class TransactionType {
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
                 VotingModel votingModel = attachment.getPhasingParams().getVoteWeighting().getVotingModel();
                 attachment.getPhasingParams().validate();
+                attachment.getPhasingParams().checkApprovable();
                 if (votingModel == VotingModel.NONE) {
                     Account senderAccount = Account.getAccount(transaction.getSenderId());
                     if (senderAccount == null || !senderAccount.getControls().contains(ControlType.PHASING_ONLY)) {
