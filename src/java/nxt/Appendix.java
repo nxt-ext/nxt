@@ -130,7 +130,7 @@ public interface Appendix {
         }
 
         boolean verifyVersion(byte transactionVersion) {
-            return transactionVersion == 0 ? version == 0 : version > 0;
+            return transactionVersion == 0 ? version == 0 : version == 1;
         }
 
         @Override
@@ -550,6 +550,11 @@ public interface Appendix {
             if ((getVersion() != 2 && !isCompressed) || (getVersion() == 2 && isCompressed)) {
                 throw new NxtException.NotValidException("Version mismatch - version " + getVersion() + ", isCompressed " + isCompressed);
             }
+        }
+
+        @Override
+        final boolean verifyVersion(byte transactionVersion) {
+            return transactionVersion == 0 ? getVersion() == 0 : (getVersion() == 1 || getVersion() == 2);
         }
 
         @Override
