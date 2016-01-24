@@ -52,8 +52,10 @@ it is causing UI rendering problems under certain conditions.
 "Switch Account" button added to the account info dialog. Clicking it would
 switch the wallet to this account.
 
-"Refresh Search Index" button added to the "Settings" menu. Use it to rebuild
+"Refresh Search Index" option added to the "Settings" menu. Use it to rebuild
 the search index in case you are no longer getting correct search results.
+
+Added UI for issuing singleton asset.
 
 run.bat now works on Windows XP and Windows 2003. Database, configuration
 files and logs are stored in the roaming folder under the user folder and
