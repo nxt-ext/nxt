@@ -2034,6 +2034,26 @@ var NRS = (function (NRS, $, undefined) {
         NRS.loadPage("approval_requests_asset");
     });
 
+    $("#issue_asset_modal").on("show.bs.modal", function (e) {
+        $('#issue_asset_quantity, #issue_asset_decimals').prop("readonly", false);
+    });
+
+    $('#issue_asset_singleton').change(function () {
+        var assetQuantity = $('#issue_asset_quantity');
+        var assetDecimals = $('#issue_asset_decimals');
+        if ($(this).is(":checked")) {
+            assetQuantity.val("1");
+            assetQuantity.prop("readonly", true);
+            assetDecimals.val("0");
+            assetDecimals.prop("readonly", true);
+        } else {
+            assetQuantity.prop("readonly", false);
+            assetQuantity.val("");
+            assetDecimals.prop("readonly", false);
+            assetDecimals.val("0");
+        }
+    });
+
     NRS.setup.asset_exchange = function () {
         var sidebarId = 'sidebar_asset_exchange';
         var options = {
