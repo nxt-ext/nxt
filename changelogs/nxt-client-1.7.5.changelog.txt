@@ -32,7 +32,7 @@ cache currently takes around 12 MB at most, and can be disabled by setting
 nxt.enablePublicKeyCache=false.
 
 Back button added to the transaction info, account info, block info and ledger
-info modals. use the back button to return to the previous info modal.
+info modals. Use the back button to return to the previous info modal.
 
 Updated H2 to version 1.4.191. The MVStore storage engine is disabled by default
 as it is still in beta, PageStore continues to be used. As this version no
