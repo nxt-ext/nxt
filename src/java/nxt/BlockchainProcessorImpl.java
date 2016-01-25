@@ -1666,7 +1666,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
         BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
         previousBlock.loadTransactions();
-        blockchain.setLastBlock(block, previousBlock);
+        blockchain.setLastBlock(previousBlock);
         BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
         return previousBlock;

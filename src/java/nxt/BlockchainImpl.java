@@ -84,12 +84,6 @@ final class BlockchainImpl implements Blockchain {
         lastBlock.set(block);
     }
 
-    void setLastBlock(BlockImpl previousBlock, BlockImpl block) {
-        if (! lastBlock.compareAndSet(previousBlock, block)) {
-            throw new IllegalStateException("Last block is no longer previous block");
-        }
-    }
-
     @Override
     public int getHeight() {
         BlockImpl last = lastBlock.get();
