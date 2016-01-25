@@ -143,8 +143,8 @@ public final class Shuffling {
     private static final VersionedEntityDbTable<Shuffling> shufflingTable = new VersionedEntityDbTable<Shuffling>("shuffling", shufflingDbKeyFactory) {
 
         @Override
-        protected Shuffling load(Connection con, ResultSet rs) throws SQLException {
-            return new Shuffling(rs);
+        protected Shuffling load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Shuffling(rs, dbKey);
         }
 
         @Override
@@ -299,9 +299,9 @@ public final class Shuffling {
         this.registrantCount = 1;
     }
 
-    private Shuffling(ResultSet rs) throws SQLException {
+    private Shuffling(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = shufflingDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.holdingId = rs.getLong("holding_id");
         this.holdingType = HoldingType.get(rs.getByte("holding_type"));
         this.issuerId = rs.getLong("issuer_id");

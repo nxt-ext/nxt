@@ -92,10 +92,10 @@ public final class ShufflingParticipant {
             this.height = height;
         }
 
-        private ShufflingData(ResultSet rs) throws SQLException {
+        private ShufflingData(ResultSet rs, DbKey dbKey) throws SQLException {
             this.shufflingId = rs.getLong("shuffling_id");
             this.accountId = rs.getLong("account_id");
-            this.dbKey = shufflingDataDbKeyFactory.newKey(shufflingId, accountId);
+            this.dbKey = dbKey;
             this.data = DbUtils.getArray(rs, "data", byte[][].class, Convert.EMPTY_BYTES);
             this.transactionTimestamp = rs.getInt("transaction_timestamp");
             this.height = rs.getInt("height");
@@ -131,8 +131,8 @@ public final class ShufflingParticipant {
     private static final VersionedEntityDbTable<ShufflingParticipant> shufflingParticipantTable = new VersionedEntityDbTable<ShufflingParticipant>("shuffling_participant", shufflingParticipantDbKeyFactory) {
 
         @Override
-        protected ShufflingParticipant load(Connection con, ResultSet rs) throws SQLException {
-            return new ShufflingParticipant(rs);
+        protected ShufflingParticipant load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new ShufflingParticipant(rs, dbKey);
         }
 
         @Override
@@ -154,8 +154,8 @@ public final class ShufflingParticipant {
     private static final PrunableDbTable<ShufflingData> shufflingDataTable = new PrunableDbTable<ShufflingData>("shuffling_data", shufflingDataDbKeyFactory) {
 
         @Override
-        protected ShufflingData load(Connection con, ResultSet rs) throws SQLException {
-            return new ShufflingData(rs);
+        protected ShufflingData load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new ShufflingData(rs, dbKey);
         }
 
         @Override
@@ -219,10 +219,10 @@ public final class ShufflingParticipant {
         this.keySeeds = Convert.EMPTY_BYTES;
     }
 
-    private ShufflingParticipant(ResultSet rs) throws SQLException {
+    private ShufflingParticipant(ResultSet rs, DbKey dbKey) throws SQLException {
         this.shufflingId = rs.getLong("shuffling_id");
         this.accountId = rs.getLong("account_id");
-        this.dbKey = shufflingParticipantDbKeyFactory.newKey(shufflingId, accountId);
+        this.dbKey = dbKey;
         this.nextAccountId = rs.getLong("next_account_id");
         this.index = rs.getInt("participant_index");
         this.state = State.get(rs.getByte("state"));

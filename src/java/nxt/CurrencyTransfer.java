@@ -49,8 +49,8 @@ public final class CurrencyTransfer {
     private static final EntityDbTable<CurrencyTransfer> currencyTransferTable = new EntityDbTable<CurrencyTransfer>("currency_transfer", currencyTransferDbKeyFactory) {
 
         @Override
-        protected CurrencyTransfer load(Connection con, ResultSet rs) throws SQLException {
-            return new CurrencyTransfer(rs);
+        protected CurrencyTransfer load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new CurrencyTransfer(rs, dbKey);
         }
 
         @Override
@@ -154,9 +154,9 @@ public final class CurrencyTransfer {
         this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
     }
 
-    private CurrencyTransfer(ResultSet rs) throws SQLException {
+    private CurrencyTransfer(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = currencyTransferDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.currencyId = rs.getLong("currency_id");
         this.senderId = rs.getLong("sender_id");
         this.recipientId = rs.getLong("recipient_id");

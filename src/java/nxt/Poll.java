@@ -64,15 +64,15 @@ public final class Poll extends AbstractPoll {
     private static final DbKey.LongKeyFactory<Poll> pollDbKeyFactory = new DbKey.LongKeyFactory<Poll>("id") {
         @Override
         public DbKey newKey(Poll poll) {
-            return poll.dbKey;
+            return poll.dbKey == null ? newKey(poll.id) : poll.dbKey;
         }
     };
 
     private final static EntityDbTable<Poll> pollTable = new EntityDbTable<Poll>("poll", pollDbKeyFactory, "name,description") {
 
         @Override
-        protected Poll load(Connection con, ResultSet rs) throws SQLException {
-            return new Poll(rs);
+        protected Poll load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Poll(rs, dbKey);
         }
 
         @Override
@@ -163,7 +163,7 @@ public final class Poll extends AbstractPoll {
         if (Poll.isPollsProcessing) {
             Nxt.getBlockchainProcessor().addListener(block -> {
                 int height = block.getHeight();
-                if (height >= Constants.VOTING_SYSTEM_BLOCK) {
+                if (height >= Constants.PHASING_BLOCK) {
                     Poll.checkPolls(height);
                 }
             }, BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
@@ -207,9 +207,9 @@ public final class Poll extends AbstractPoll {
         this.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
     }
 
-    private Poll(ResultSet rs) throws SQLException {
+    private Poll(ResultSet rs, DbKey dbKey) throws SQLException {
         super(rs);
-        this.dbKey = pollDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.name = rs.getString("name");
         this.description = rs.getString("description");
         this.options = DbUtils.getArray(rs, "options", String[].class);
@@ -257,7 +257,7 @@ public final class Poll extends AbstractPoll {
 
     public List<OptionResult> getResults() {
         if (Poll.isPollsProcessing && isFinished()) {
-            return pollResultsTable.get(pollResultsDbKeyFactory.newKey(id));
+            return pollResultsTable.get(pollDbKeyFactory.newKey(this));
         } else {
             return countResults(voteWeighting);
         }

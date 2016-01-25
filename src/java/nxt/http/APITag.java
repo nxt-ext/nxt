@@ -16,6 +16,9 @@
 
 package nxt.http;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public enum APITag {
 
     ACCOUNTS("Accounts"), ACCOUNT_CONTROL("Account Control"), ALIASES("Aliases"), AE("Asset Exchange"), BLOCKS("Blocks"),
@@ -24,6 +27,23 @@ public enum APITag {
     SHUFFLING("Shuffling"), DATA("Tagged Data"), TOKENS("Tokens"), TRANSACTIONS("Transactions"), VS("Voting System"),
     UTILS("Utils"), DEBUG("Debug");
 
+    private static final Map<String, APITag> apiTags = new HashMap<>();
+    static {
+        for (APITag apiTag : values()) {
+            if (apiTags.put(apiTag.getDisplayName(), apiTag) != null) {
+                throw new RuntimeException("Duplicate APITag name: " + apiTag.getDisplayName());
+            }
+        }
+    }
+
+    public static APITag fromDisplayName(String displayName) {
+        APITag apiTag = apiTags.get(displayName);
+        if (apiTag == null) {
+            throw new IllegalArgumentException("Invalid APITag name: " + displayName);
+        }
+        return apiTag;
+    }
+
     private final String displayName;
 
     APITag(String displayName) {
@@ -31,6 +51,11 @@ public enum APITag {
     }
 
     public String getDisplayName() {
+        return displayName;
+    }
+
+    @Override
+    public String toString() {
         return displayName;
     }
 

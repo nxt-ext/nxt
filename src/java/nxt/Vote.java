@@ -38,8 +38,8 @@ public final class Vote {
     private static final EntityDbTable<Vote> voteTable = new EntityDbTable<Vote>("vote", voteDbKeyFactory) {
 
         @Override
-        protected Vote load(Connection con, ResultSet rs) throws SQLException {
-            return new Vote(rs);
+        protected Vote load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Vote(rs, dbKey);
         }
 
         @Override
@@ -103,9 +103,9 @@ public final class Vote {
         this.voteBytes = attachment.getPollVote();
     }
 
-    private Vote(ResultSet rs) throws SQLException {
+    private Vote(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = voteDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.pollId = rs.getLong("poll_id");
         this.voterId = rs.getLong("voter_id");
         this.voteBytes = rs.getBytes("vote_bytes");

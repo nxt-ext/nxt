@@ -341,7 +341,8 @@ var NRS = (function(NRS, $) {
 			"id": sidebarId,
 			"titleHTML": '<i class="fa fa-shopping-cart"></i><span data-i18n="marketplace">Marketplace</span>',
 			"page": 'dgs_search',
-			"desiredPosition": 60
+			"desiredPosition": 60,
+			"depends": { tags: [ NRS.constants.API_TAGS.DGS ] }
 		};
 		NRS.addTreeviewSidebarMenuItem(options);
 		options = {

@@ -26,6 +26,10 @@ var NRS = (function(NRS, $) {
 	$("body").on("click", ".show_account_modal_action, a[data-user].user_info", function(e) {
 		e.preventDefault();
 		var account = $(this).data("user");
+        if ($(this).data("back") == "true") {
+            NRS.modalStack.pop(); // The forward modal
+            NRS.modalStack.pop(); // The current modal
+        }
 		NRS.showAccountModal(account);
 	});
 
@@ -40,6 +44,8 @@ var NRS = (function(NRS, $) {
 			NRS.userInfoModal.user = account;
 			NRS.fetchingModalData = true;
 		}
+        NRS.setBackLink();
+		NRS.modalStack.push({ class: "show_account_modal_action", key: "user", value: account});
 
 		$("#user_info_modal_account").html(NRS.getAccountFormatted(NRS.userInfoModal.user));
 		var accountButton;
@@ -87,11 +93,22 @@ var NRS = (function(NRS, $) {
 		} else {
 			$("#user_info_description").hide();
 		}
+		var switchAccount = $("#user_info_switch_account");
+        if (NRS.accountRS != account.accountRS) {
+			var click = "NRS.switchAccount(&quot;" + account.accountRS + "&quot;);";
+			switchAccount.html("<a class='btn btn-info btn-xs' onclick='" + click + "'>" + $.t("switch_account") + "</a>");
+			switchAccount.show();
+		} else {
+			switchAccount.hide();
+		}
 
-		$("#user_info_modal").modal("show");
+        var userInfoModal = $("#user_info_modal");
+        if (!userInfoModal.data('bs.modal') || !userInfoModal.data('bs.modal').isShown) {
+            userInfoModal.modal("show");
+        }
 	};
 
-    var userInfoModal = $("#user_info_modal");
+	var userInfoModal = $("#user_info_modal");
     userInfoModal.on("hidden.bs.modal", function() {
 		$(this).find(".user_info_modal_content").hide();
 		$(this).find(".user_info_modal_content table tbody").empty();
@@ -162,7 +179,7 @@ var NRS = (function(NRS, $) {
 						"<td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>" +
 						"<td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td>" +
 						"<td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td>" +
-						"<td>" + NRS.getAccountTitle(transaction, account) + "</td>" +
+						"<td>" + NRS.getAccountLink(transaction, account) + "</td>" +
 					"</tr>";
 				}
 

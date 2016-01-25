@@ -51,8 +51,8 @@ public final class Trade {
     private static final EntityDbTable<Trade> tradeTable = new EntityDbTable<Trade>("trade", tradeDbKeyFactory) {
 
         @Override
-        protected Trade load(Connection con, ResultSet rs) throws SQLException {
-            return new Trade(rs);
+        protected Trade load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Trade(rs, dbKey);
         }
 
         @Override
@@ -94,7 +94,7 @@ public final class Trade {
                 pstmt.setLong(1, assetId);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
-                        result.add(new Trade(rs));
+                        result.add(new Trade(rs, null));
                     }
                 }
             }
@@ -198,7 +198,7 @@ public final class Trade {
         if (askOrderHeight < bidOrderHeight) {
             this.isBuy = true;
         } else if (askOrderHeight == bidOrderHeight) {
-            if (this.height <= Constants.VOTING_SYSTEM_BLOCK) {
+            if (this.height <= Constants.PHASING_BLOCK) {
                 this.isBuy = askOrderId < bidOrderId;
             } else {
                 this.isBuy = askOrder.getTransactionHeight() < bidOrder.getTransactionHeight() ||
@@ -211,7 +211,7 @@ public final class Trade {
         this.priceNQT = isBuy ? askOrder.getPriceNQT() : bidOrder.getPriceNQT();
     }
 
-    private Trade(ResultSet rs) throws SQLException {
+    private Trade(ResultSet rs, DbKey dbKey) throws SQLException {
         this.assetId = rs.getLong("asset_id");
         this.blockId = rs.getLong("block_id");
         this.askOrderId = rs.getLong("ask_order_id");
@@ -220,7 +220,7 @@ public final class Trade {
         this.bidOrderHeight = rs.getInt("bid_order_height");
         this.sellerId = rs.getLong("seller_id");
         this.buyerId = rs.getLong("buyer_id");
-        this.dbKey = tradeDbKeyFactory.newKey(this.askOrderId, this.bidOrderId);
+        this.dbKey = dbKey;
         this.quantityQNT = rs.getLong("quantity");
         this.priceNQT = rs.getLong("price");
         this.timestamp = rs.getInt("timestamp");

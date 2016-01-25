@@ -62,12 +62,9 @@ public interface Fee {
         // the first size unit is free if constantFee is 0
         @Override
         public final long getFee(TransactionImpl transaction, Appendix appendage) {
-            int size = getSize(transaction, appendage);
-            if (size <= 0) {
+            int size = getSize(transaction, appendage) - 1;
+            if (size < 0) {
                 return constantFee;
-            }
-            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
-                size -= 1;
             }
             return Math.addExact(constantFee, Math.multiplyExact((long) (size / unitSize), feePerSize));
         }

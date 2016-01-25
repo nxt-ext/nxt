@@ -20,6 +20,7 @@ import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.VersionedEntityDbTable;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -84,9 +85,12 @@ public class Hub {
                     while (hubs.hasNext()) {
                         Hub hub = hubs.next();
                         Account account = Account.getAccount(hub.getAccountId());
-                        if (account != null && account.getEffectiveBalanceNXT(block.getHeight()) >= Constants.MIN_HUB_EFFECTIVE_BALANCE
-                                && account.getPublicKey() != null) {
-                            currentHits.add(new Hit(hub, Generator.getHitTime(account, block)));
+                        if (account != null) {
+                            long effectiveBalance = account.getEffectiveBalanceNXT(block.getHeight());
+                            if (effectiveBalance >= Constants.MIN_HUB_EFFECTIVE_BALANCE) {
+                                currentHits.add(new Hit(hub, Generator.getHitTime(BigInteger.valueOf(effectiveBalance),
+                                        Generator.getHit(Account.getPublicKey(hub.getAccountId()), block), block)));
+                            }
                         }
                     }
                 }

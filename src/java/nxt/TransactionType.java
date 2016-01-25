@@ -213,7 +213,7 @@ public abstract class TransactionType {
         }
         long totalAmountNQT = Math.addExact(amountNQT, feeNQT);
         if (senderAccount.getUnconfirmedBalanceNQT() < totalAmountNQT
-                && !(transaction.getTimestamp() == 0 && Arrays.equals(senderAccount.getPublicKey(), Genesis.CREATOR_PUBLIC_KEY))) {
+                && !(transaction.getTimestamp() == 0 && Arrays.equals(transaction.getSenderPublicKey(), Genesis.CREATOR_PUBLIC_KEY))) {
             return false;
         }
         senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -amountNQT, -feeNQT);
@@ -318,7 +318,7 @@ public abstract class TransactionType {
     }
 
     int getBaselineFeeHeight() {
-        return 1;
+        return Constants.SHUFFLING_BLOCK;
     }
 
     int getNextFeeHeight() {
@@ -468,7 +468,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid arbitrary message: " + attachment.getJSONObject());
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID && Nxt.getBlockchain().getHeight() > Constants.MONETARY_SYSTEM_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Sending messages to Genesis not allowed.");
+                    throw new NxtException.NotValidException("Sending messages to Genesis not allowed.");
                 }
             }
 
@@ -515,13 +515,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return ALIAS_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -654,7 +649,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Alias doesn't belong to sender: " + aliasName);
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
-                    throw new NxtException.NotCurrentlyValidException("Selling alias to Genesis not allowed");
+                    throw new NxtException.NotValidException("Selling alias to Genesis not allowed");
                 }
             }
 
@@ -828,11 +823,6 @@ public abstract class TransactionType {
 
         public final static TransactionType POLL_CREATION = new Messaging() {
 
-            private final Fee POLL_FEE = (transaction, appendage) -> {
-                int numOptions = ((Attachment.MessagingPollCreation)appendage).getPollOptions().length;
-                return numOptions <= 20 ? 10 * Constants.ONE_NXT : (10 + numOptions - 20) * Constants.ONE_NXT;
-            };
-
             private final Fee POLL_OPTIONS_FEE = new Fee.SizeBasedFee(10 * Constants.ONE_NXT, Constants.ONE_NXT, 1) {
                 @Override
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
@@ -853,7 +843,7 @@ public abstract class TransactionType {
                 }
             };
 
-            private final Fee POLL_FEE_2 = (transaction, appendage) ->
+            private final Fee POLL_FEE = (transaction, appendage) ->
                     POLL_OPTIONS_FEE.getFee(transaction, appendage) + POLL_SIZE_FEE.getFee(transaction, appendage);
 
             @Override
@@ -874,16 +864,6 @@ public abstract class TransactionType {
             @Override
             Fee getBaselineFee(Transaction transaction) {
                 return POLL_FEE;
-            }
-
-            @Override
-            Fee getNextFee(Transaction transaction) {
-                return POLL_FEE_2;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -936,7 +916,7 @@ public abstract class TransactionType {
                 }
 
                 if (attachment.getMinRangeValue() < Constants.MIN_VOTE_VALUE || attachment.getMaxRangeValue() > Constants.MAX_VOTE_VALUE
-                        || (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && attachment.getMaxRangeValue() < attachment.getMinRangeValue())){
+                        || attachment.getMaxRangeValue() < attachment.getMinRangeValue()) {
                     throw new NxtException.NotValidException("Invalid range: " + attachment.getJSONObject());
                 }
 
@@ -1276,13 +1256,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return ACCOUNT_INFO_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -1370,9 +1345,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
-                }
                 Attachment.MessagingAccountProperty attachment = (Attachment.MessagingAccountProperty)transaction.getAttachment();
                 if (attachment.getProperty().length() > Constants.MAX_ACCOUNT_PROPERTY_NAME_LENGTH
                         || attachment.getProperty().length() == 0
@@ -1434,9 +1406,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Account properties not yet enabled");
-                }
                 Attachment.MessagingAccountPropertyDelete attachment = (Attachment.MessagingAccountPropertyDelete)transaction.getAttachment();
                 Account.AccountProperty accountProperty = Account.getProperty(attachment.getPropertyId());
                 if (accountProperty == null) {
@@ -1489,8 +1458,6 @@ public abstract class TransactionType {
 
         public static final TransactionType ASSET_ISSUANCE = new ColoredCoins() {
 
-            private final Fee ASSET_ISSUANCE_FEE = new Fee.ConstantFee(1000 * Constants.ONE_NXT);
-
             private final Fee SINGLETON_ASSET_FEE = new Fee.SizeBasedFee(Constants.ONE_NXT, Constants.ONE_NXT, 32) {
                 public int getSize(TransactionImpl transaction, Appendix appendage) {
                     Attachment.ColoredCoinsAssetIssuance attachment = (Attachment.ColoredCoinsAssetIssuance) transaction.getAttachment();
@@ -1498,8 +1465,8 @@ public abstract class TransactionType {
                 }
             };
 
-            private final Fee ASSET_ISSUANCE_FEE_2 = (transaction, appendage) -> isSingletonIssuance(transaction) ?
-                    SINGLETON_ASSET_FEE.getFee(transaction, appendage) : ASSET_ISSUANCE_FEE.getFee(transaction, appendage);
+            private final Fee ASSET_ISSUANCE_FEE = (transaction, appendage) -> isSingletonIssuance(transaction) ?
+                    SINGLETON_ASSET_FEE.getFee(transaction, appendage) : 1000 * Constants.ONE_NXT;
 
             @Override
             public final byte getSubtype() {
@@ -1519,16 +1486,6 @@ public abstract class TransactionType {
             @Override
             Fee getBaselineFee(Transaction transaction) {
                 return ASSET_ISSUANCE_FEE;
-            }
-
-            @Override
-            Fee getNextFee(Transaction transaction) {
-                return ASSET_ISSUANCE_FEE_2;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -1589,13 +1546,9 @@ public abstract class TransactionType {
 
             @Override
             boolean isBlockDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
-                if (Nxt.getBlockchain().getHeight() <= Constants.SHUFFLING_BLOCK) {
-                    return false;
-                }
-                if (isSingletonIssuance(transaction)) {
-                    return false;
-                }
-                return isDuplicate(ColoredCoins.ASSET_ISSUANCE, getName(), duplicates, true);
+                return Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
+                        && !isSingletonIssuance(transaction)
+                        && isDuplicate(ColoredCoins.ASSET_ISSUANCE, getName(), duplicates, true);
             }
 
             @Override
@@ -1685,7 +1638,7 @@ public abstract class TransactionType {
                     throw new NxtException.NotValidException("Invalid asset transfer amount or comment: " + attachment.getJSONObject());
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID && attachment.getFinishValidationHeight(transaction) > Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset transfer to Genesis no longer allowed, "
+                    throw new NxtException.NotValidException("Asset transfer to Genesis no longer allowed, "
                             + "use asset delete attachment instead");
                 }
                 if (transaction.getVersion() > 0 && attachment.getComment() != null) {
@@ -1770,9 +1723,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset delete not yet enabled at height " + Nxt.getBlockchain().getHeight());
-                }
                 Attachment.ColoredCoinsAssetDelete attachment = (Attachment.ColoredCoinsAssetDelete)transaction.getAttachment();
                 if (attachment.getAssetId() == 0) {
                     throw new NxtException.NotValidException("Invalid asset identifier: " + attachment.getJSONObject());
@@ -2098,14 +2048,10 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
                 long assetId = attachment.getAssetId();
                 Asset asset = Asset.getAsset(assetId, attachment.getHeight());
-                //TODO: enable bugfix after hardfork
-                /*
                 if (asset == null) {
                     return true;
                 }
-                */
-                long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
-                        - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
+                long quantityQNT = asset.getQuantityQNT() - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 if (senderAccount.getUnconfirmedBalanceNQT() >= totalDividendPayment) {
                     senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), -totalDividendPayment);
@@ -2126,14 +2072,10 @@ public abstract class TransactionType {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
                 long assetId = attachment.getAssetId();
                 Asset asset = Asset.getAsset(assetId, attachment.getHeight());
-                //TODO: enable bugfix after hardfork
-                /*
                 if (asset == null) {
                     return;
                 }
-                */
-                long quantityQNT = (asset == null ? Asset.getAsset(assetId).getInitialQuantityQNT() : asset.getQuantityQNT())
-                        - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
+                long quantityQNT = asset.getQuantityQNT() - senderAccount.getAssetBalanceQNT(assetId, attachment.getHeight());
                 long totalDividendPayment = Math.multiplyExact(attachment.getAmountNQTPerQNT(), quantityQNT);
                 senderAccount.addToUnconfirmedBalanceNQT(getLedgerEvent(), transaction.getId(), totalDividendPayment);
             }
@@ -2154,9 +2096,14 @@ public abstract class TransactionType {
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
-                if (attachment.getHeight() > Nxt.getBlockchain().getHeight()
-                        || attachment.getHeight() <= attachment.getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight());
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight()
+                            + ", must not exceed current blockchain height " + Nxt.getBlockchain().getHeight());
+                }
+                if (attachment.getHeight() <= attachment.getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight()
+                            + ", must be less than " + Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK
+                            + " blocks before " + attachment.getFinishValidationHeight(transaction));
                 }
             }
 
@@ -2230,13 +2177,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return DGS_LISTING_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -2606,13 +2548,8 @@ public abstract class TransactionType {
             }
 
             @Override
-            Fee getNextFee(Transaction transaction) {
+            Fee getBaselineFee(Transaction transaction) {
                 return DGS_DELIVERY_FEE;
-            }
-
-            @Override
-            int getNextFeeHeight() {
-                return Constants.SHUFFLING_BLOCK;
             }
 
             @Override
@@ -2888,23 +2825,22 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.AccountControlEffectiveBalanceLeasing attachment = (Attachment.AccountControlEffectiveBalanceLeasing)transaction.getAttachment();
-                if (transaction.getSenderId() == transaction.getRecipientId()
-                        || transaction.getAmountNQT() != 0
-                        || attachment.getPeriod() < Constants.LEASING_DELAY
-                        || attachment.getPeriod() > 65535) {
-                    throw new NxtException.NotValidException("Invalid effective balance leasing: "
-                            + transaction.getJSONObject() + " transaction " + transaction.getStringId());
+                if (transaction.getSenderId() == transaction.getRecipientId()) {
+                    throw new NxtException.NotValidException("Account cannot lease balance to itself");
                 }
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK && attachment.getPeriod() > Short.MAX_VALUE) {
-                    throw new NxtException.NotYetEnabledException("Leasing period longer than 32767 not yet enabled");
+                if (transaction.getAmountNQT() != 0) {
+                    throw new NxtException.NotValidException("Transaction amount must be 0 for effective balance leasing");
+                }
+                if (attachment.getPeriod() < Constants.LEASING_DELAY || attachment.getPeriod() > 65535) {
+                    throw new NxtException.NotValidException("Invalid effective balance leasing period: " + attachment.getPeriod());
                 }
                 byte[] recipientPublicKey = Account.getPublicKey(transaction.getRecipientId());
-                if (recipientPublicKey == null && ! transaction.getStringId().equals("5081403377391821646")) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
-                            + " recipient account " + transaction.getRecipientId() + " not found or no public key published");
+                if (recipientPublicKey == null && Nxt.getBlockchain().getHeight() > Constants.PHASING_BLOCK) {
+                    throw new NxtException.NotValidException("Invalid effective balance leasing: "
+                            + " recipient account " + Long.toUnsignedString(transaction.getRecipientId()) + " not found or no public key published");
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
-                    throw new NxtException.NotCurrentlyValidException("Leasing to Genesis account not allowed");
+                    throw new NxtException.NotValidException("Leasing to Genesis account not allowed");
                 }
             }
 
@@ -2944,9 +2880,6 @@ public abstract class TransactionType {
 
             @Override
             void validateAttachment(Transaction transaction) throws ValidationException {
-                if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                    throw new NxtException.NotYetEnabledException("Phasing only account control not yet enabled");
-                }
                 Attachment.SetPhasingOnly attachment = (Attachment.SetPhasingOnly)transaction.getAttachment();
                 VotingModel votingModel = attachment.getPhasingParams().getVoteWeighting().getVotingModel();
                 attachment.getPhasingParams().validate();
@@ -3109,7 +3042,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.TaggedDataUpload attachment = (Attachment.TaggedDataUpload) transaction.getAttachment();
-                TaggedData.add(transaction, attachment);
+                TaggedData.add((TransactionImpl)transaction, attachment);
             }
 
             @Override

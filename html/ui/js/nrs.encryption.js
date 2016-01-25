@@ -266,6 +266,16 @@ var NRS = (function (NRS, $) {
 	};
 
 	NRS.signBytes = function(message, secretPhrase) {
+		if (!secretPhrase) {
+			if (NRS.rememberPassword) {
+				secretPhrase = _password;
+			} else {
+				throw {
+					"message": $.t("error_encryption_passphrase_required"),
+					"errorCode": 1
+				};
+			}
+		}
 		var messageBytes = converters.hexStringToByteArray(message);
 		var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
 

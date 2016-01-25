@@ -40,8 +40,8 @@ public final class ExchangeRequest {
     private static final EntityDbTable<ExchangeRequest> exchangeRequestTable = new EntityDbTable<ExchangeRequest>("exchange_request", exchangeRequestDbKeyFactory) {
 
         @Override
-        protected ExchangeRequest load(Connection con, ResultSet rs) throws SQLException {
-            return new ExchangeRequest(rs);
+        protected ExchangeRequest load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new ExchangeRequest(rs, dbKey);
         }
 
         @Override
@@ -119,9 +119,9 @@ public final class ExchangeRequest {
         this.timestamp = block.getTimestamp();
     }
 
-    private ExchangeRequest(ResultSet rs) throws SQLException {
+    private ExchangeRequest(ResultSet rs, DbKey dbKey) throws SQLException {
         this.id = rs.getLong("id");
-        this.dbKey = exchangeRequestDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.accountId = rs.getLong("account_id");
         this.currencyId = rs.getLong("currency_id");
         this.units = rs.getLong("units");

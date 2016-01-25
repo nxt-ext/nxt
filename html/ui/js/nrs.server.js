@@ -66,6 +66,15 @@ var NRS = (function (NRS, $, undefined) {
             NRS.logConsole("Undefined request type");
             return;
         }
+        if (!NRS.isRequestTypeEnabled(requestType)) {
+            callback({
+                "errorCode": 1,
+                "errorDescription": $.t("request_of_type", {
+                    type: requestType
+                })
+            });
+            return;
+        }
         if (data == undefined) {
             NRS.logConsole("Undefined data for " + requestType);
             return;

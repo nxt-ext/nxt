@@ -490,8 +490,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <!-- todo -->
-                <h4 class="modal-title">Block <strong><span id="block_info_modal_block"></span></strong> Info</h4>
+                <h4 class="modal-title">
+                    <a href='#' class="fa fa-arrow-circle-left back-link"></a>
+                    <span data-i18n="block">Block</span>&nbsp;<strong><span id="block_info_modal_block"></span></strong>&nbsp;<span data-i18n="info">Info</span>
+                </h4>
             </div>
             <div class="modal-body">    
                 <div class="tabbable">
@@ -540,7 +542,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" data-i18n="ledger_entry">Ledger Entry</h4>
+                <h4 class="modal-title">
+                    <a href='#' class="fa fa-arrow-circle-left back-link"></a>
+                    <span data-i18n="ledger_entry">Ledger Entry</span>&nbsp;<strong><span id="ledger_info_modal_entry"></span></strong>&nbsp;<span data-i18n="info">Info</span>
+                </h4>
             </div>
             <div class="modal-body">
                 <table class="table table-striped" id="ledger_info_details_table" style="margin-bottom:0">
@@ -561,13 +566,21 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <!-- todo -->
-                <h4 class="modal-title">Account <strong><span id="user_info_modal_account"></span></strong> Info</h4>
+                <h4 class="modal-title">
+                    <a href='#' class="fa fa-arrow-circle-left back-link"></a>
+                    <span data-i18n="account">Account</span>&nbsp;<strong><span id="user_info_modal_account"></span></strong>&nbsp;<span data-i18n="info">Info</span>
+                </h4>
             </div>
             <div class="modal-body">    
                 <div class="callout callout-info">
-                    <!-- todo -->
-                    The account <span id="user_info_modal_account_name_container">named <span id="user_info_modal_account_name" style="font-weight:bold"></span></span> has a balance of <strong><span id="user_info_modal_account_balance"></span></strong>.
+                    <span data-i18n="account">Account</span>&nbsp;
+                    <span id="user_info_modal_account_name_container">
+                        <span data-i18n="named">named</span>&nbsp;
+                        <span id="user_info_modal_account_name" style="font-weight:bold"></span>
+                    </span>
+                    <span data-i18n="has_a_balance_of">has a balance of</span>&nbsp;
+                    <strong><span id="user_info_modal_account_balance"></span></strong>
+                    <span id="user_info_switch_account"></span>
                 </div>
                     
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">

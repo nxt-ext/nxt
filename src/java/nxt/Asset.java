@@ -40,8 +40,8 @@ public final class Asset {
     private static final VersionedEntityDbTable<Asset> assetTable = new VersionedEntityDbTable<Asset>("asset", assetDbKeyFactory, "name,description") {
 
         @Override
-        protected Asset load(Connection con, ResultSet rs) throws SQLException {
-            return new Asset(rs);
+        protected Asset load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Asset(rs, dbKey);
         }
 
         @Override
@@ -124,9 +124,9 @@ public final class Asset {
         this.decimals = attachment.getDecimals();
     }
 
-    private Asset(ResultSet rs) throws SQLException {
+    private Asset(ResultSet rs, DbKey dbKey) throws SQLException {
         this.assetId = rs.getLong("id");
-        this.dbKey = assetDbKeyFactory.newKey(this.assetId);
+        this.dbKey = dbKey;
         this.accountId = rs.getLong("account_id");
         this.name = rs.getString("name");
         this.description = rs.getString("description");

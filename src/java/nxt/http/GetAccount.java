@@ -46,8 +46,9 @@ public final class GetAccount extends APIServlet.APIRequestHandler {
         JSONObject response = JSONData.accountBalance(account, includeEffectiveBalance);
         JSONData.putAccount(response, "account", account.getId());
 
-        if (account.getPublicKey() != null) {
-            response.put("publicKey", Convert.toHexString(account.getPublicKey()));
+        byte[] publicKey = Account.getPublicKey(account.getId());
+        if (publicKey != null) {
+            response.put("publicKey", Convert.toHexString(publicKey));
         }
         Account.AccountInfo accountInfo = account.getAccountInfo();
         if (accountInfo != null) {

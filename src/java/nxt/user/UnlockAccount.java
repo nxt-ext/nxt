@@ -94,7 +94,7 @@ public final class UnlockAccount extends UserServlet.UserRequestHandler {
             response.put("balanceNQT", account.getUnconfirmedBalanceNQT());
 
             JSONArray myTransactions = new JSONArray();
-            byte[] accountPublicKey = account.getPublicKey();
+            byte[] accountPublicKey = Account.getPublicKey(accountId);
             try (DbIterator<? extends Transaction> transactions = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
                 while (transactions.hasNext()) {
                     Transaction transaction = transactions.next();

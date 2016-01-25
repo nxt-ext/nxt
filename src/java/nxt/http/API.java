@@ -73,6 +73,9 @@ public final class API {
     public static final int openAPIPort;
     public static final int openAPISSLPort;
 
+    public static final List<String> disabledAPIs;
+    public static final List<APITag> disabledAPITags;
+
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
     static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
@@ -84,6 +87,14 @@ public final class API {
     private static URI browserUri;
 
     static {
+        List<String> disabled = Nxt.getStringListProperty("nxt.disabledAPIs");
+        Collections.sort(disabled);
+        disabledAPIs = Collections.unmodifiableList(disabled);
+        disabled = Nxt.getStringListProperty("nxt.disabledAPITags");
+        Collections.sort(disabled);
+        List<APITag> apiTags = new ArrayList<>(disabled.size());
+        disabled.forEach(tagName -> apiTags.add(APITag.fromDisplayName(tagName)));
+        disabledAPITags = Collections.unmodifiableList(apiTags);
         List<String> allowedBotHostsList = Nxt.getStringListProperty("nxt.allowedBotHosts");
         if (! allowedBotHostsList.contains("*")) {
             Set<String> hosts = new HashSet<>();
@@ -230,6 +241,8 @@ public final class API {
                                 UPnP.addPort(((ServerConnector)apiConnector).getPort());
                         }
                     }
+                    APIServlet.initClass();
+                    APITestServlet.initClass();
                     apiServer.start();
                     Logger.logMessage("Started API server at " + host + ":" + port + (enableSSL && port != sslPort ? ", " + host + ":" + sslPort : ""));
                 } catch (Exception e) {

@@ -67,9 +67,9 @@ public final class PhasingPoll extends AbstractPoll {
             this.height = Nxt.getBlockchain().getHeight();
         }
 
-        private PhasingPollResult(ResultSet rs) throws SQLException {
+        private PhasingPollResult(ResultSet rs, DbKey dbKey) throws SQLException {
             this.id = rs.getLong("id");
-            this.dbKey = resultDbKeyFactory.newKey(this.id);
+            this.dbKey = dbKey;
             this.result = rs.getLong("result");
             this.approved = rs.getBoolean("approved");
             this.height = rs.getInt("height");
@@ -114,8 +114,8 @@ public final class PhasingPoll extends AbstractPoll {
     private static final EntityDbTable<PhasingPoll> phasingPollTable = new EntityDbTable<PhasingPoll>("phasing_poll", phasingPollDbKeyFactory) {
 
         @Override
-        protected PhasingPoll load(Connection con, ResultSet rs) throws SQLException {
-            return new PhasingPoll(rs);
+        protected PhasingPoll load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new PhasingPoll(rs, dbKey);
         }
 
         @Override
@@ -152,7 +152,7 @@ public final class PhasingPoll extends AbstractPoll {
     private static final DbKey.LongKeyFactory<PhasingPoll> votersDbKeyFactory = new DbKey.LongKeyFactory<PhasingPoll>("transaction_id") {
         @Override
         public DbKey newKey(PhasingPoll poll) {
-            return poll.dbKey;
+            return poll.dbKey == null ? newKey(poll.id) : poll.dbKey;
         }
     };
 
@@ -179,7 +179,7 @@ public final class PhasingPoll extends AbstractPoll {
     private static final DbKey.LongKeyFactory<PhasingPoll> linkedTransactionDbKeyFactory = new DbKey.LongKeyFactory<PhasingPoll>("transaction_id") {
         @Override
         public DbKey newKey(PhasingPoll poll) {
-            return poll.dbKey;
+            return poll.dbKey == null ? newKey(poll.id) : poll.dbKey;
         }
     };
 
@@ -215,8 +215,8 @@ public final class PhasingPoll extends AbstractPoll {
     private static final EntityDbTable<PhasingPollResult> resultTable = new EntityDbTable<PhasingPollResult>("phasing_poll_result", resultDbKeyFactory) {
 
         @Override
-        protected PhasingPollResult load(Connection con, ResultSet rs) throws SQLException {
-            return new PhasingPollResult(rs);
+        protected PhasingPollResult load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new PhasingPollResult(rs, dbKey);
         }
 
         @Override
@@ -356,7 +356,7 @@ public final class PhasingPoll extends AbstractPoll {
 
     public static List<? extends Transaction> getLinkedPhasedTransactions(byte[] linkedTransactionFullHash) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT DISTINCT transaction_id FROM phasing_poll_linked_transaction " +
+             PreparedStatement pstmt = con.prepareStatement("SELECT transaction_id FROM phasing_poll_linked_transaction " +
                      "WHERE linked_transaction_id = ? AND linked_full_hash = ?")) {
             int i = 0;
             pstmt.setLong(++i, Convert.fullHashToId(linkedTransactionFullHash));
@@ -425,9 +425,9 @@ public final class PhasingPoll extends AbstractPoll {
         this.algorithm = appendix.getAlgorithm();
     }
 
-    private PhasingPoll(ResultSet rs) throws SQLException {
+    private PhasingPoll(ResultSet rs, DbKey dbKey) throws SQLException {
         super(rs);
-        this.dbKey = phasingPollDbKeyFactory.newKey(this.id);
+        this.dbKey = dbKey;
         this.quorum = rs.getLong("quorum");
         this.whitelist = rs.getByte("whitelist_size") == 0 ? Convert.EMPTY_LONG : Convert.toArray(votersTable.get(votersDbKeyFactory.newKey(this)));
         hashedSecret = rs.getBytes("hashed_secret");

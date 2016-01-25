@@ -25,16 +25,31 @@ var NRS = (function(NRS, $, undefined) {
 			return;
 		}
 		NRS.fetchingModalData = true;
-		var entryId = $(this).data("entry");
-		var change = $(this).data("change");
-		var balance = $(this).data("balance");
-        NRS.sendRequest("getAccountLedgerEntry+", { ledgerId: entryId }, function(response) {
+        var ledgerId, change, balance;
+        if (typeof $(this).data("entry") == "object") {
+            var dataObject = $(this).data("entry");
+            ledgerId = dataObject["entry"];
+            change = dataObject["change"];
+            balance = dataObject["balance"];
+        } else {
+            ledgerId = $(this).data("entry");
+            change = $(this).data("change");
+            balance = $(this).data("balance");
+        }
+        if ($(this).data("back") == "true") {
+            NRS.modalStack.pop(); // The forward modal
+            NRS.modalStack.pop(); // The current modal
+        }
+        NRS.sendRequest("getAccountLedgerEntry+", { ledgerId: ledgerId }, function(response) {
 			NRS.showLedgerEntryModal(response, change, balance);
 		});
 	});
 
 	NRS.showLedgerEntryModal = function(entry, change, balance) {
         try {
+            NRS.setBackLink();
+    		NRS.modalStack.push({ class: "show_ledger_modal_action", key: "entry", value: { entry: entry.ledgerId, change: change, balance: balance }});
+            $("#ledger_info_modal_entry").html(entry.ledgerId);
             var entryDetails = $.extend({}, entry);
             if (entryDetails.timestamp) {
                 entryDetails.entryTime = NRS.formatTimestamp(entryDetails.timestamp);

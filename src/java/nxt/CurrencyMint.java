@@ -67,8 +67,8 @@ public final class CurrencyMint {
     private static final VersionedEntityDbTable<CurrencyMint> currencyMintTable = new VersionedEntityDbTable<CurrencyMint>("currency_mint", currencyMintDbKeyFactory) {
 
         @Override
-        protected CurrencyMint load(Connection con, ResultSet rs) throws SQLException {
-            return new CurrencyMint(rs);
+        protected CurrencyMint load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new CurrencyMint(rs, dbKey);
         }
 
         @Override
@@ -103,10 +103,10 @@ public final class CurrencyMint {
         this.counter = counter;
     }
 
-    private CurrencyMint(ResultSet rs) throws SQLException {
+    private CurrencyMint(ResultSet rs, DbKey dbKey) throws SQLException {
         this.currencyId = rs.getLong("currency_id");
         this.accountId = rs.getLong("account_id");
-        this.dbKey = currencyMintDbKeyFactory.newKey(this.currencyId, this.accountId);
+        this.dbKey = dbKey;
         this.counter = rs.getLong("counter");
     }
 

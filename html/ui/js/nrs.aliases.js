@@ -105,7 +105,8 @@ var NRS = (function (NRS, $, undefined) {
             "id": 'sidebar_aliases',
             "titleHTML": '<i class="fa fa-bookmark"></i> <span data-i18n="aliases">Aliases</span>',
             "page": 'aliases',
-            "desiredPosition": 100
+            "desiredPosition": 100,
+            "depends": { tags: [ NRS.constants.API_TAGS.ALIASES ] }
         };
         NRS.addSimpleSidebarMenuItem(options);
     };

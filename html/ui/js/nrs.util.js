@@ -805,7 +805,7 @@ var NRS = (function (NRS, $, undefined) {
             clazz = "";
         } else {
             if (clazz.length > 0) {
-                if (!String(clazz).startsWith(" ")) {
+                if (String(clazz).indexOf(" ") != 0) {
                     clazz = " " + clazz;
                 }
             }
@@ -828,6 +828,20 @@ var NRS = (function (NRS, $, undefined) {
         }
         return "<a href='#' class='show_block_modal_action' data-block='" + String(height).escapeHTML() + "'>"
             + (isEscapedText ? text : String(text).escapeHTML()) + "</a>";
+    };
+
+    NRS.setBackLink = function() {
+        var backLink = $(".back-link");
+        if (NRS.modalStack.length > 0) {
+            var backModalInfo = NRS.modalStack[NRS.modalStack.length - 1];
+            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action");
+            backLink.addClass(backModalInfo.class);
+            backLink.data(backModalInfo.key, backModalInfo.value);
+            backLink.data("back", "true");
+            backLink.show();
+        } else {
+            backLink.hide();
+        }
     };
 
     NRS.getAccountTitle = function (object, acc) {
@@ -1684,7 +1698,7 @@ var NRS = (function (NRS, $, undefined) {
         messageBytes = messageBytes.concat(pubKeyBytes, tsb);
         token = token.concat(tsb, converters.hexStringToByteArray(
             NRS.signBytes(converters.byteArrayToHexString(messageBytes),
-                converters.stringToHexString(secretPhrase))));
+                secretPhrase !== undefined ? converters.stringToHexString(secretPhrase) : undefined)));
 
         var buf = "";
         for (var ptr = 0; ptr < 100; ptr += 5) {

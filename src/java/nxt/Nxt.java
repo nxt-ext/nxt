@@ -36,6 +36,7 @@ import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.AccessControlException;
@@ -46,7 +47,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.7.4";
+    public static final String VERSION = "1.7.5";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -135,11 +136,21 @@ public final class Nxt {
                     if (!dirProvider.isLoadPropertyFileFromUserDir()) {
                         return properties;
                     }
-                    if (!Files.isReadable(Paths.get(dirProvider.getUserHomeDir()))) {
-                        System.out.printf("Creating dir %s\n", dirProvider.getUserHomeDir());
-                        Files.createDirectory(Paths.get(dirProvider.getUserHomeDir()));
+                    String homeDir = dirProvider.getUserHomeDir();
+                    if (!Files.isReadable(Paths.get(homeDir))) {
+                        System.out.printf("Creating dir %s\n", homeDir);
+                        try {
+                            Files.createDirectory(Paths.get(homeDir));
+                        } catch(Exception e) {
+                            if (!(e instanceof NoSuchFileException)) {
+                                throw e;
+                            }
+                            // Fix for WinXP and 2003 which does have a roaming sub folder
+                            Files.createDirectory(Paths.get(homeDir).getParent());
+                            Files.createDirectory(Paths.get(homeDir));
+                        }
                     }
-                    Path confDir = Paths.get(dirProvider.getUserHomeDir(), CONFIG_DIR);
+                    Path confDir = Paths.get(homeDir, CONFIG_DIR);
                     if (!Files.isReadable(confDir)) {
                         System.out.printf("Creating dir %s\n", confDir);
                         Files.createDirectory(confDir);

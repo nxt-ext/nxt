@@ -191,8 +191,8 @@ public abstract class Order {
 
         private static final VersionedEntityDbTable<Ask> askOrderTable = new VersionedEntityDbTable<Ask>("ask_order", askOrderDbKeyFactory) {
             @Override
-            protected Ask load(Connection con, ResultSet rs) throws SQLException {
-                return new Ask(rs);
+            protected Ask load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+                return new Ask(rs, dbKey);
             }
 
             @Override
@@ -270,9 +270,9 @@ public abstract class Order {
             this.dbKey = askOrderDbKeyFactory.newKey(super.id);
         }
 
-        private Ask(ResultSet rs) throws SQLException {
+        private Ask(ResultSet rs, DbKey dbKey) throws SQLException {
             super(rs);
-            this.dbKey = askOrderDbKeyFactory.newKey(super.id);
+            this.dbKey = dbKey;
         }
 
         private void save(Connection con, String table) throws SQLException {
@@ -320,8 +320,8 @@ public abstract class Order {
         private static final VersionedEntityDbTable<Bid> bidOrderTable = new VersionedEntityDbTable<Bid>("bid_order", bidOrderDbKeyFactory) {
 
             @Override
-            protected Bid load(Connection con, ResultSet rs) throws SQLException {
-                return new Bid(rs);
+            protected Bid load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+                return new Bid(rs, dbKey);
             }
 
             @Override
@@ -399,9 +399,9 @@ public abstract class Order {
             this.dbKey = bidOrderDbKeyFactory.newKey(super.id);
         }
 
-        private Bid(ResultSet rs) throws SQLException {
+        private Bid(ResultSet rs, DbKey dbKey) throws SQLException {
             super(rs);
-            this.dbKey = bidOrderDbKeyFactory.newKey(super.id);
+            this.dbKey = dbKey;
         }
 
         private void save(Connection con, String table) throws SQLException {

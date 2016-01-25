@@ -51,8 +51,8 @@ public final class Exchange {
     private static final EntityDbTable<Exchange> exchangeTable = new EntityDbTable<Exchange>("exchange", exchangeDbKeyFactory) {
 
         @Override
-        protected Exchange load(Connection con, ResultSet rs) throws SQLException {
-            return new Exchange(rs);
+        protected Exchange load(Connection con, ResultSet rs, DbKey dbKey) throws SQLException {
+            return new Exchange(rs, dbKey);
         }
 
         @Override
@@ -90,7 +90,7 @@ public final class Exchange {
                 pstmt.setLong(1, currencyId);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
-                        result.add(new Exchange(rs));
+                        result.add(new Exchange(rs, null));
                     }
                 }
             }
@@ -189,14 +189,14 @@ public final class Exchange {
         this.rate = offer.getRateNQT();
     }
 
-    private Exchange(ResultSet rs) throws SQLException {
+    private Exchange(ResultSet rs, DbKey dbKey) throws SQLException {
         this.transactionId = rs.getLong("transaction_id");
         this.currencyId = rs.getLong("currency_id");
         this.blockId = rs.getLong("block_id");
         this.offerId = rs.getLong("offer_id");
         this.sellerId = rs.getLong("seller_id");
         this.buyerId = rs.getLong("buyer_id");
-        this.dbKey = exchangeDbKeyFactory.newKey(this.transactionId, this.offerId);
+        this.dbKey = dbKey;
         this.units = rs.getLong("units");
         this.rate = rs.getLong("rate");
         this.timestamp = rs.getInt("timestamp");

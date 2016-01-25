@@ -114,7 +114,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     116, 4, 27, -14, 114, 28, 79, -104, 100, -74, 61, -64, -6, -53, 103
             }
             :
-            null;
+            new byte[] {
+                    90, 15, -6, -42, -105, -103, 83, -17, -112, 51, -53, 110, 98, -54, -4, 2,
+                    30, -69, 25, 91, 52, 126, -40, -91, -23, 118, -121, 70, 116, 60, -49, -86
+            };
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -557,8 +560,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 //
                 // Process a fork
                 //
-                if (!forkBlocks.isEmpty() && blockchain.getHeight() - startHeight < 720) {
-                    Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks");
+                int myForkSize = blockchain.getHeight() - startHeight;
+                if (!forkBlocks.isEmpty() && myForkSize < 720) {
+                    Logger.logDebugMessage("Will process a fork of " + forkBlocks.size() + " blocks, mine is " + myForkSize);
                     processFork(feederPeer, forkBlocks, commonBlock);
                 }
             } finally {
@@ -1399,8 +1403,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new BlockNotAcceptedException("Invalid version " + block.getVersion(), block);
         }
         if (block.getTimestamp() > curTime + Constants.MAX_TIMEDRIFT) {
-            Logger.logWarningMessage("Received block " + block.getStringId() + " from the future, block timestamp is " + block.getTimestamp()
-                    + ", current time is " + curTime + ", system clock may be off");
+            Logger.logWarningMessage("Received block " + block.getStringId() + " from the future, timestamp " + block.getTimestamp()
+                    + " generator " + Long.toUnsignedString(block.getGeneratorId()) + " current time " + curTime + ", system clock may be off");
             throw new BlockOutOfOrderException("Invalid timestamp: " + block.getTimestamp()
                     + " current time is " + curTime, block);
         }
@@ -1590,11 +1594,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                 });
             }
-            if (!Constants.isTestnet && block.getHeight() == Constants.SHUFFLING_BLOCK) {
-                //TODO: temporary bugfix for transaction 11815651636695037775, remove after hardfork
-                Account.getAccount(Convert.parseUnsignedLong("4345946899368325355")).addToUnconfirmedBalanceNQT(AccountLedger.LedgerEvent.ASSET_DIVIDEND_PAYMENT,
-                        Convert.parseUnsignedLong("11815651636695037775"), 100 * Constants.ONE_NXT);
-            }
             blockListeners.notify(block, Event.AFTER_BLOCK_APPLY);
             if (block.getTransactions().size() > 0) {
                 TransactionProcessorImpl.getInstance().notifyListeners(block.getTransactions(), TransactionProcessor.Event.ADDED_CONFIRMED_TRANSACTIONS);
@@ -1667,7 +1666,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         }
         BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
         previousBlock.loadTransactions();
-        blockchain.setLastBlock(block, previousBlock);
+        blockchain.setLastBlock(previousBlock);
         BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
         return previousBlock;
