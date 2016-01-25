@@ -183,6 +183,10 @@ final class BlockImpl implements Block {
         return nextBlockId;
     }
 
+    void setNextBlockId(long nextBlockId) {
+        this.nextBlockId = nextBlockId;
+    }
+
     @Override
     public int getHeight() {
         if (height == -1) {

@@ -257,6 +257,13 @@ final class BlockDb {
                     pstmt.setLong(2, block.getPreviousBlockId());
                     pstmt.executeUpdate();
                 }
+                BlockImpl previousBlock;
+                synchronized (blockCache) {
+                    previousBlock = blockCache.get(block.getPreviousBlockId());
+                }
+                if (previousBlock != null) {
+                    previousBlock.setNextBlockId(block.getId());
+                }
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

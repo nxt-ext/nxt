@@ -1,3 +1,74 @@
+nxt-client-1.7.5:
+
+Code cleanup and removal of logic no longer needed after the 1.7 hard fork has
+been passed. Added checkpoint at block 622000.
+
+Peers running versions older than 1.7 are now blacklisted.
+
+Allow disabling of specific API or groups of API using the nxt.disabledAPIs and
+nxt.disabledAPITags properties, each taking a list of API request names, or API
+tag names, separated with ';'. For example:
+
+nxt.disabledAPIs=startForging; startShuffler
+nxt.disabledAPITags=Create Transaction; Tagged Data
+
+will disable the startForging and startShuffler API, and all API that are listed
+under the Create Transaction or Tagged Data tabs on the API test page.
+
+The enabled/disabled status of each API or APITag is exposed in getConstants.
+
+The client UI hides menus related to disabled API tags and the "Send NXT",
+"Send Currency" and "Send Message" buttons are hidden automatically when
+their corresponding API is disabled.
+
+The getAccountLedger API has been fixed to always apply the firstIndex,
+lastIndex pagination to the final list of entries matching the query, rather
+than to all entries for the given account or based on block height.
+
+Use fixed shuffling transaction timestamps. To prevent timestamp correlation
+attacks, all shufflers now use the same transaction timestamp, set to the last
+block timestamp.
+
+Performance optimizations. Account public keys are now cached in memory. This
+cache currently takes around 12 MB at most, and can be disabled by setting
+nxt.enablePublicKeyCache=false.
+
+Back button added to the transaction info, account info, block info and ledger
+info modals. Use the back button to return to the previous info modal.
+
+Updated H2 to version 1.4.191. The MVStore storage engine is disabled by default
+as it is still in beta, PageStore continues to be used. As this version no
+longer accepts implicitly relative jdbc URLs, if you have configured a custom db
+location in nxt.properties, make sure to prefix the path with ./ if it is not
+absolute, e.g. nxt.dbUrl=jdbc:h2:./nxt_db/nxt... instead of
+nxt.dbUrl=jdbc:h2:nxt_db/nxt... . If unpacking on top of existing installation,
+delete the old lib folder first.
+
+Token generation is now supported when using the "Remember Passphrase" option
+and the NRS.signBytes() method now uses the remembered passphrase in case the
+passphrase parameter is not specified.
+
+The transition effect displayed when hiding the left menu was disabled since
+it is causing UI rendering problems under certain conditions. 
+
+"Switch Account" button added to the account info dialog. Clicking it would
+switch the wallet to this account.
+
+"Refresh Search Index" option added to the "Settings" menu. Use it to rebuild
+the search index in case you are no longer getting correct search results.
+
+Added UI for issuing singleton asset.
+
+run.bat now works on Windows XP and Windows 2003. Database, configuration
+files and logs are stored in the roaming folder under the user folder and
+tray icon is operational.
+
+Nodes that update from version older than 1.7.3e to this release after the hard
+fork block will have blocks after 621000 deleted, to make sure they switch to
+the 1.7.4 fork.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.7.4:
 
 This is the first stable release in the 1.7 series. It is a mandatory update

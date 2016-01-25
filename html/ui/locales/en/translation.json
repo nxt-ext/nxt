@@ -1433,7 +1433,6 @@
   "exchange_welcome": "Welcome to the Coin Exchange",
   "exchange_greeting_1": "The coin exchange functionality is based on a 3rd party service.",
   "exchange_greeting_2": "Using the exchange may reveal your client IP to this service.",
-  "accept_exchange_link": "Accept",
   "unavailable": "Unavailable",
   "download_nrs_zip": "Zip file",
   "download_nrs_windows_installer": "Windows installer",
@@ -1609,5 +1608,12 @@
   "cumulative_difficulty": "Cumulative Difficulty",
   "request_of_type": "request of type __type__ is disabled by the server or does not exist",
   "search_index_refreshed": "Search Index Refreshed",
-  "is_singleton_asset": "Singleton Asset"
+  "is_singleton_asset": "Singleton Asset",
+  "no_shufflings": "There are no shufflings",
+  "has_a_balance_of": "has a balance of",
+  "symbol": "Symbol",
+  "send_amount": "Send Amount",
+  "shift": "Shift",
+  "accept_exchange": "Accept",
+  "minimum_fee": "Minimum Fee"
 }
