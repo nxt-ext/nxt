@@ -172,10 +172,10 @@ var NRS = (function(NRS, $) {
                         row += "<td>" + String(rate).escapeHTML() + "</td>";
                         row += "<td>" + String(quotedRate).escapeHTML() + "</td>";
                         row += "<td>" + NRS.formatAmount(diff, 2) + "%</td>";
-                        row += "<td><a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_shape_shift_" + op + "_modal' " +
+                        row += "<td><a href='#' class='btn btn-xs btn-default' data-18n='shift' data-toggle='modal' data-target='#m_shape_shift_" + op + "_modal' " +
                             "data-pair='" + pair + "' data-rate='" + data.rate + "' data-min='" + data.minimum + "' data-max='" + data.limit +
                             "' data-fee='" + data.minerFee + "'>Shift</a>";
-                        row += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_send_amount_" + op + "_modal' " +
+                        row += "<a href='#' class='btn btn-xs btn-default' data-18n='send_amount' data-toggle='modal' data-target='#m_send_amount_" + op + "_modal' " +
                             "data-pair='" + pair + "' data-rate='" + data.rate + "' data-min='" + data.minimum + "' data-max='" + data.limit +
                             "' data-fee='" + data.minerFee + "'>Send Amount</a></td>";
                         row += "</tr>";
