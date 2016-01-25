@@ -440,7 +440,7 @@ var NRS = (function(NRS, $) {
         $("#m_shape_shift_buy_max").val(invoker.data("max"));
         $("#m_shape_shift_buy_max_coin").html("NXT");
         $("#m_shape_shift_buy_rate").val(invoker.data("rate"));
-        $("#m_shape_shift_buy_rate_text").html(coin + " per 1 NXT");
+        $("#m_shape_shift_buy_rate_text").html("NXT/" + coin);
         $("#m_shape_shift_withdrawal_address_coin").html(coin);
         $("#m_shape_shift_buy_fee").val(invoker.data("fee"));
         $("#m_shape_shift_buy_fee_coin").html(coin);
@@ -510,7 +510,7 @@ var NRS = (function(NRS, $) {
         NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
         $("#m_send_amount_buy_title").html($.t("exchange_nxt_to_coin_send_amount", { coin: coin }));
         $("#m_send_amount_buy_withdrawal_amount_coin").html(coin);
-        $("#m_send_amount_buy_rate_text").html(coin + " per 1 NXT");
+        $("#m_send_amount_buy_rate_text").html("NXT/" + coin);
         $("#m_send_amount_withdrawal_address_coin").html(coin + " address");
         $("#m_send_amount_buy_fee_coin").html(coin);
         $("#m_send_amount_buy_pair").val(pair);
@@ -629,7 +629,7 @@ var NRS = (function(NRS, $) {
                 $("#m_shape_shift_sell_max").val(data.max);
                 $("#m_shape_shift_sell_max_coin").html(coin);
                 $("#m_shape_shift_sell_rate").val(data.rate);
-                $("#m_shape_shift_sell_rate_text").html("NXT per 1 " + coin);
+                $("#m_shape_shift_sell_rate_text").html(coin + "/NXT");
                 $("#m_shape_shift_sell_fee").val(data.fee);
                 $("#m_shape_shift_sell_fee_coin").html("NXT");
                 $("#m_shape_shift_sell_pair").val(pair);
@@ -710,7 +710,7 @@ var NRS = (function(NRS, $) {
         var coin = pairToCoin(pair);
         NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
         $("#m_send_amount_sell_title").html($.t("exchange_coin_to_nxt_send_amount", { coin: coin }));
-        $("#m_send_amount_sell_rate_text").html(coin + " per 1 NXT");
+        $("#m_send_amount_sell_rate_text").html("NXT/" + coin);
         $("#m_send_amount_sell_fee_coin").html("NXT");
         $("#m_send_amount_sell_withdrawal_amount_coin").html("NXT");
         $("#m_send_amount_sell_deposit_amount_coin").html(coin);
