@@ -262,7 +262,7 @@ final class BlockDb {
                     previousBlock = blockCache.get(block.getPreviousBlockId());
                 }
                 if (previousBlock != null) {
-                    previousBlock.setNextBlockId(block.getPreviousBlockId());
+                    previousBlock.setNextBlockId(block.getId());
                 }
             }
         } catch (SQLException e) {
