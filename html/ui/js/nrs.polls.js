@@ -274,7 +274,8 @@ var NRS = (function(NRS, $, undefined) {
 			"id": sidebarId,
 			"titleHTML": '<i class="fa fa-check-square-o"></i><span data-i18n="voting_system">Voting</span>',
 			"page": 'polls',
-			"desiredPosition": 50
+			"desiredPosition": 50,
+			"depends": { tags: [ NRS.constants.API_TAGS.VS ] }
 		};
 		NRS.addTreeviewSidebarMenuItem(options);
 		options = {

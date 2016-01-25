@@ -73,7 +73,7 @@ public final class API {
     public static final int openAPIPort;
     public static final int openAPISSLPort;
 
-    public static final List<String> disabledAPI;
+    public static final List<String> disabledAPIs;
     public static final List<APITag> disabledAPITags;
 
     private static final Set<String> allowedBotHosts;
@@ -87,9 +87,9 @@ public final class API {
     private static URI browserUri;
 
     static {
-        List<String> disabled = Nxt.getStringListProperty("nxt.disabledAPI");
+        List<String> disabled = Nxt.getStringListProperty("nxt.disabledAPIs");
         Collections.sort(disabled);
-        disabledAPI = Collections.unmodifiableList(disabled);
+        disabledAPIs = Collections.unmodifiableList(disabled);
         disabled = Nxt.getStringListProperty("nxt.disabledAPITags");
         Collections.sort(disabled);
         List<APITag> apiTags = new ArrayList<>(disabled.size());

@@ -91,17 +91,13 @@ import java.util.List;
  *     </tr>
  *     <tr>
  *       <td>firstIndex</td>
- *       <td>The first ledger entry to search.  The default is 0 if 'firstIndex' is not specified.
- *           If an account identifier is specified, the index refers to entries for the specified account and
- *           index 0 is the latest entry for the account.
- *           Otherwise, the index refers to the entry block height and index 0 is the latest block.
+ *       <td>Return matching entries starting from this index, inclusive, default is 0. Sort is always most recent first.
  *       </td>
  *     </tr>
  *     <tr>
  *       <td>lastIndex</td>
- *       <td>The last ledger entry to search.  The default is the earliest ledger entry if 'lastIndex'
- *           is not specified.
- *           The maximum number of entries searched is determined by the nxt.maxAPIRecords property
+ *       <td>The index of the last matching entry to return, inclusive.
+ *           The maximum number of entries returned is limited by the nxt.maxAPIRecords property
  *           unless the administrator password is specified.
  *       </td>
  *     </tr>

@@ -34,7 +34,7 @@ import java.sql.Statement;
  *
  *   java -cp "classes:lib/*:conf" nxt.tools.CompactDatabase
  *
- * To run the database compact toon on Windows:
+ * To run the database compact tool on Windows:
  *
  *   java -cp "classes;lib/*;conf" -Dnxt.runtime.mode=desktop nxt.tools.CompactDatabase
  */
@@ -79,6 +79,11 @@ public class CompactDatabase {
         if (dbUrl == null) {
             String dbPath = Nxt.getDbDir(Nxt.getStringProperty(dbPrefix + "Dir"));
             dbUrl = String.format("jdbc:%s:%s", dbType, dbPath);
+        }
+        String dbParams = Nxt.getStringProperty(dbPrefix + "Params");
+        dbUrl += ";" + dbParams;
+        if (!dbUrl.contains("MV_STORE=")) {
+            dbUrl += ";MV_STORE=FALSE";
         }
         String dbUsername = Nxt.getStringProperty(dbPrefix + "Username", "sa");
         String dbPassword = Nxt.getStringProperty(dbPrefix + "Password", "sa", true);

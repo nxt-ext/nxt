@@ -19,9 +19,6 @@ package nxt.http;
 import nxt.Account;
 import nxt.Asset;
 import nxt.Attachment;
-import nxt.Constants;
-import nxt.Genesis;
-import nxt.Nxt;
 import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
@@ -44,21 +41,12 @@ public final class DeleteAssetShares extends CreateTransaction {
         long quantityQNT = ParameterParser.getQuantityQNT(req);
         Account account = ParameterParser.getSenderAccount(req);
 
-        JSONStreamAware response;
+        Attachment attachment = new Attachment.ColoredCoinsAssetDelete(asset.getId(), quantityQNT);
         try {
-            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK) {
-                // Use AssetTransfer attachment if asset delete is not enabled yet
-                Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(asset.getId(), quantityQNT);
-                response = createTransaction(req, account, Genesis.CREATOR_ID, 0, attachment);
-            } else {
-                // Use AssetDelete attachment
-                Attachment attachment = new Attachment.ColoredCoinsAssetDelete(asset.getId(), quantityQNT);
-                response = createTransaction(req, account, attachment);
-            }
+            return createTransaction(req, account, attachment);
         } catch (NxtException.InsufficientBalanceException e) {
             return NOT_ENOUGH_ASSETS;
         }
-        return response;
     }
 
 }

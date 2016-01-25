@@ -282,7 +282,8 @@ var NRS = (function(NRS, $, undefined) {
                 "id": sidebarId,
                 "titleHTML": '<i class="fa fa-plug"></i> <span data-i18n="plugins">Plugins</span>',
                 "page": 'plugins',
-                "desiredPosition": 110
+                "desiredPosition": 110,
+                "depends": { apis: [ NRS.constants.REQUEST_TYPES.getPlugins ] }
             };
             NRS.addTreeviewSidebarMenuItem(options);
         }

@@ -198,7 +198,7 @@ public final class Trade {
         if (askOrderHeight < bidOrderHeight) {
             this.isBuy = true;
         } else if (askOrderHeight == bidOrderHeight) {
-            if (this.height <= Constants.VOTING_SYSTEM_BLOCK) {
+            if (this.height <= Constants.PHASING_BLOCK) {
                 this.isBuy = askOrderId < bidOrderId;
             } else {
                 this.isBuy = askOrder.getTransactionHeight() < bidOrder.getTransactionHeight() ||

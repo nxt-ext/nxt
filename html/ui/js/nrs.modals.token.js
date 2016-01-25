@@ -81,13 +81,15 @@ var NRS = (function(NRS, $) {
             tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
             return;
         }
-        var secretPhrase = $.trim($("#generate_token_password").val());
-        var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
-        if (publicKey != NRS.publicKey) {
-            tokenOutput.html($.t("error_incorrect_passphrase"));
-            tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
-            return;
-        }
+        if (!NRS.rememberPassword) {
+			var secretPhrase = $.trim($("#generate_token_password").val());
+			var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
+			if (publicKey != NRS.publicKey) {
+				tokenOutput.html($.t("error_incorrect_passphrase"));
+				tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
+				return;
+			}
+		}
         var token = NRS.generateToken(data, secretPhrase);
         tokenOutput.html($.t("generated_token_is") + "<br/><br/><textarea readonly style='width:100%' rows='3'>" + token + "</textarea>");
         tokenOutput.addClass("callout-info").removeClass("callout-danger").show();

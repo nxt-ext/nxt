@@ -27,12 +27,11 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span> 
         </a>
-        <div class="navbar-right">
+        <div id="header_right" class="navbar-right">
             <ul class="nav navbar-nav sends">
-                <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
-                <li class="dropdown"><a href="#" data-toggle="modal" data-target="#transfer_currency_modal" data-i18n="send_currency">Send Currency</a></li>
-                <li class="dropdown"><a href="#" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
-
+                <li id="header_send_money" class="dropdown"><a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a></li>
+                <li id="header_transfer_currency" class="dropdown"><a href="#" data-toggle="modal" data-target="#transfer_currency_modal" data-i18n="send_currency">Send Currency</a></li>
+                <li id="header_send_message" class="dropdown"><a href="#" data-toggle="modal" data-target="#send_message_modal" data-i18n="send_message">Send Message</a></li>
             </ul>
             <ul class="nav navbar-nav">
                 <li><a href="#" id="unconfirmed_notification_menu" class="goto-page" data-page="transactions" data-subpage="unconfirmed" style="padding-top:13px;padding-bottom:13px;display:none;">
@@ -78,6 +77,8 @@
                         <li><a href="#" data-toggle="modal" data-target="#hallmark_modal"><i class="fa fa-building"></i><span data-i18n="generate_hallmark">Generate Hallmark</span></a></li>
                         <li><a href="#" data-toggle="modal" data-target="#hash_modal"><i class="fa fa-calculator"></i><span data-i18n="calculate_hash">Calculate Hash</span></a></li>
                         <li><a href="#" data-toggle="modal" data-target="#transaction_json_modal"><i class="fa fa-asterisk"></i><span data-i18n="transaction_operations">Transaction Operations</span></a></li>
+                        <li role="presentation" class="divider"></li>
+                        <li><a href="#" id="refreshSearchIndex"><i class="fa fa-search"></i><span data-i18n="refresh_search_index">Refresh Search Index</span></a></li>
                     </ul>
                 </li>
                 <li class="dropdown">

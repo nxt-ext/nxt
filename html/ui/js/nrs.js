@@ -879,8 +879,10 @@ NRS.addPagination = function () {
 				if (response.accountCurrencies) {
                     var currencies = [];
                     var currencyBalances = response.accountCurrencies;
+					var numberOfCurrencies = currencyBalances.length;
+					$("#account_nr_currencies").html(numberOfCurrencies);
                     var currencyBalancesMap = {};
-                    for (i = 0; i < currencyBalances.length; i++) {
+                    for (i = 0; i < numberOfCurrencies; i++) {
                         if (currencyBalances[i].units != "0") {
                             currencies.push(currencyBalances[i].currency);
                             currencyBalancesMap[currencyBalances[i].currency] = currencyBalances[i].units;
@@ -896,10 +898,8 @@ NRS.addPagination = function () {
                                 currencyTotal += currencyBalancesMap[exchange.currency] * exchange.rateNQT / 100000000;
                             }
                             $("#account_currencies_balance").html(NRS.formatStyledAmount(new Big(currencyTotal).toFixed(8)));
-                            $("#account_nr_currencies").html(response.exchanges.length);
                         } else {
                             $("#account_currencies_balance").html(0);
-                            $("#account_nr_currencies").html(0);
                         }
                     });
                 } else {

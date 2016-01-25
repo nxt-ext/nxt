@@ -17,7 +17,7 @@
 <div id="active_shufflings_page" class="paginated page">
     <script type="text/x-handlebars-template">
         <section class="content-header">
-            <h1 data-i18n="active_shufflings">Active Shufflings</h1>
+            <h1>{{i18n "active_shufflings"}}</h1>
         </section>
         <section class="content">
             <div class="alert alert-danger" role="alert">{{i18n "shuffling_node_running_warning"}}</div>
@@ -68,7 +68,7 @@
 <div id="my_shufflings_page" class="paginated page">
     <script type="text/x-handlebars-template">
         <section class="content-header">
-            <h1 data-i18n="my_shufflings">My Shufflings</h1>
+            <h1>{{i18n "my_shufflings"}}</h1>
             <div style="position:absolute;top:9px;right:9px;">
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="#m_shuffling_create_modal" data-i18n="create_shuffling">Create Shuffling</button>
             </div>
@@ -114,7 +114,7 @@
                 <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                 <div class="data-empty-container">
                     <p>
-                        <span data-i18n="no_shufflings">There are no shufflings</span>, 
+                        <span data-i18n="no_shufflings">There are no shufflings</span>.
                     </p>
                 </div>
                 <div class="data-pagination"></div>                

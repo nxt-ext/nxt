@@ -135,7 +135,7 @@ public interface Appendix {
 
         @Override
         public int getBaselineFeeHeight() {
-            return 1;
+            return Constants.SHUFFLING_BLOCK;
         }
 
         @Override
@@ -211,7 +211,7 @@ public interface Appendix {
             if (messageLength < 0) {
                 messageLength &= Integer.MAX_VALUE;
             }
-            if (messageLength > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
+            if (messageLength > 1000) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + messageLength);
             }
             this.message = new byte[messageLength];
@@ -268,19 +268,13 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) {
+        public Fee getBaselineFee(Transaction transaction) {
             return MESSAGE_FEE;
         }
 
         @Override
-        public int getNextFeeHeight() {
-            return Constants.SHUFFLING_BLOCK;
-        }
-
-        @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (message.length > (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
-                    ? Constants.MAX_ARBITRARY_MESSAGE_LENGTH_2 : Constants.MAX_ARBITRARY_MESSAGE_LENGTH)) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && message.length > Constants.MAX_ARBITRARY_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Invalid arbitrary message length: " + message.length);
             }
         }
@@ -496,7 +490,7 @@ public interface Appendix {
             if (length < 0) {
                 length &= Integer.MAX_VALUE;
             }
-            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, Constants.MAX_ENCRYPTED_MESSAGE_LENGTH);
+            this.encryptedData = EncryptedData.readEncryptedData(buffer, length, 1000);
             this.isCompressed = getVersion() != 2;
         }
 
@@ -538,19 +532,13 @@ public interface Appendix {
         }
 
         @Override
-        public Fee getNextFee(Transaction transaction) {
+        public Fee getBaselineFee(Transaction transaction) {
             return ENCRYPTED_MESSAGE_FEE;
         }
 
         @Override
-        public int getNextFeeHeight() {
-            return Constants.SHUFFLING_BLOCK;
-        }
-
-        @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
-            if (getEncryptedDataLength() > (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK
-                    ? Constants.MAX_ENCRYPTED_MESSAGE_LENGTH_2 : Constants.MAX_ENCRYPTED_MESSAGE_LENGTH)) {
+            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && getEncryptedDataLength() > Constants.MAX_ENCRYPTED_MESSAGE_LENGTH) {
                 throw new NxtException.NotValidException("Max encrypted message length exceeded");
             }
             if (encryptedData != null) {
@@ -706,9 +694,6 @@ public interface Appendix {
         void validate(Transaction transaction) throws NxtException.ValidationException {
             if (transaction.getEncryptedMessage() != null) {
                 throw new NxtException.NotValidException("Cannot have both encrypted and prunable encrypted message attachments");
-            }
-            if (Nxt.getBlockchain().getHeight() < Constants.SHUFFLING_BLOCK && transaction.getPrunablePlainMessage() != null) {
-                throw new NxtException.NotYetEnabledException("Cannot have both plain and encrypted prunable message attachments yet");
             }
             EncryptedData ed = getEncryptedData();
             if (ed == null && Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MIN_PRUNABLE_LIFETIME) {
@@ -1171,10 +1156,7 @@ public interface Appendix {
             if (transaction.getRecipientId() == 0) {
                 throw new NxtException.NotValidException("PublicKeyAnnouncement cannot be attached to transactions with no recipient");
             }
-            if (publicKey.length != 32) {
-                throw new NxtException.NotValidException("Invalid recipient public key length: " + Convert.toHexString(publicKey));
-            }
-            if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK && !Crypto.isCanonicalPublicKey(publicKey)) {
+            if (!Crypto.isCanonicalPublicKey(publicKey)) {
                 throw new NxtException.NotValidException("Invalid recipient public key: " + Convert.toHexString(publicKey));
             }
             long recipientId = transaction.getRecipientId();
@@ -1209,9 +1191,7 @@ public interface Appendix {
 
         private static final String appendixName = "Phasing";
 
-        private static final Fee PHASING_FEE = new Fee.ConstantFee(20 * Constants.ONE_NXT);
-
-        private static final Fee PHASING_FEE_2 = new Fee() {
+        private static final Fee PHASING_FEE = new Fee() {
             @Override
             public long getFee(TransactionImpl transaction, Appendix appendage) {
                 long fee = 0;
@@ -1418,20 +1398,7 @@ public interface Appendix {
 
         @Override
         public Fee getBaselineFee(Transaction transaction) {
-            if (params.getVoteWeighting().isBalanceIndependent()) {
-                return Fee.DEFAULT_FEE;
-            }
             return PHASING_FEE;
-        }
-
-        @Override
-        public Fee getNextFee(Transaction transaction) {
-            return PHASING_FEE_2;
-        }
-
-        @Override
-        public int getNextFeeHeight() {
-            return Constants.SHUFFLING_BLOCK;
         }
 
         private void release(TransactionImpl transaction) {

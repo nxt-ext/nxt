@@ -55,10 +55,8 @@ public final class Constants {
     public static final int MAX_ALIAS_URI_LENGTH = 1000;
     public static final int MAX_ALIAS_LENGTH = 100;
 
-    public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 1000;
-    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 1000;
-    public static final int MAX_ARBITRARY_MESSAGE_LENGTH_2 = 160;
-    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH_2 = 160 + 16;
+    public static final int MAX_ARBITRARY_MESSAGE_LENGTH = 160;
+    public static final int MAX_ENCRYPTED_MESSAGE_LENGTH = 160 + 16;
 
     public static final int MAX_PRUNABLE_MESSAGE_LENGTH = 42 * 1024;
     public static final int MAX_PRUNABLE_ENCRYPTED_MESSAGE_LENGTH = 42 * 1024;
@@ -145,16 +143,15 @@ public final class Constants {
     public static final int MAX_REFERENCED_TRANSACTION_TIMESPAN = 60 * 1440 * 60;
     public static final int DIGITAL_GOODS_STORE_BLOCK = isTestnet ? 77341 : 213000;
     public static final int MONETARY_SYSTEM_BLOCK = isTestnet ? 150000 : 330000;
-    public static final int VOTING_SYSTEM_BLOCK = isTestnet ? 220000 : 445000;
     public static final int PHASING_BLOCK = isTestnet ? 220000 : 445000;
-    public static final int SHUFFLING_BLOCK = isTestnet ? 483000 : 621000;
     public static final int CHECKSUM_BLOCK_16 = isTestnet ? 450000 : 556000;
+    public static final int SHUFFLING_BLOCK = isTestnet ? 483000 : 621000;
     public static final int CHECKSUM_BLOCK_17 = isTestnet ? 484000 : 622000;
 
-    public static final int LAST_CHECKSUM_BLOCK = isTestnet ? CHECKSUM_BLOCK_17 : CHECKSUM_BLOCK_16;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 528000 : 608000;
+    public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_17;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 555000 : 623000;
 
-    public static final int[] MIN_VERSION =  isTestnet ? new int[] {1, 7} : new int[] {1, 5};
+    public static final int[] MIN_VERSION = new int[] {1, 7};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
     public static final long SHUFFLING_DEPOSIT_NQT = (isTestnet ? 7 : 1000) * ONE_NXT;

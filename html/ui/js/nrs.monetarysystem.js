@@ -550,6 +550,7 @@ var NRS = (function (NRS, $, undefined) {
         var totalNXT = NRS.formatAmount(totalNQT, false, true);
         var submitButton = $("#currency_order_modal_button");
         submitButton.html($.t(exchangeType + "_currency")).data("resetText", $.t(exchangeType + "_currency"));
+        submitButton.prop('disabled', false);
 
         if (rateNQT == "0" || unitsQNT == "0") {
             $.growl($.t("error_unit_rate_required"), {
@@ -558,16 +559,6 @@ var NRS = (function (NRS, $, undefined) {
             return e.preventDefault();
         }
 
-        var maxRate = NRS.convertToNXT(new BigInteger(rateNQT).multiply(new BigInteger("" + Math.pow(10, currencyDecimals))));
-        var preForkWarning = $("#currency_order_pre_fork_warning");
-        if (effectiveRate != maxRate && exchangeType == "buy" && !NRS.isTestNet && NRS.lastBlockHeight < 621000) {
-            preForkWarning.html($.t("currency_exchange_pre_fork_warning"));
-            preForkWarning.show();
-            submitButton.prop('disabled', true);
-        } else {
-            preForkWarning.hide();
-            submitButton.prop('disabled', false);
-        }
         var description;
         var tooltipTitle;
         if (exchangeType == "buy") {
@@ -1043,7 +1034,8 @@ var NRS = (function (NRS, $, undefined) {
             "id": sidebarId,
             "titleHTML": '<i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span>',
             "page": 'monetary_system',
-            "desiredPosition": 40
+            "desiredPosition": 40,
+            "depends": { tags: [ NRS.constants.API_TAGS.MS ] }
         };
         NRS.addTreeviewSidebarMenuItem(options);
         options = {

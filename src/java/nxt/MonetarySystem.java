@@ -488,10 +488,10 @@ public abstract class MonetarySystem extends TransactionType {
             }
             if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
                 if (attachment.getTotalBuyLimit() == 0 && attachment.getTotalSellLimit() == 0) {
-                    throw new NxtException.NotCurrentlyValidException("Total buy and sell limits cannot be both 0");
+                    throw new NxtException.NotValidException("Total buy and sell limits cannot be both 0");
                 }
                 if (attachment.getInitialBuySupply() == 0 && attachment.getInitialSellSupply() == 0) {
-                    throw new NxtException.NotCurrentlyValidException("Initial buy and sell supply cannot be both 0");
+                    throw new NxtException.NotValidException("Initial buy and sell supply cannot be both 0");
                 }
             }
             if (attachment.getExpirationHeight() <= attachment.getFinishValidationHeight(transaction)) {

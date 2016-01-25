@@ -567,16 +567,20 @@ var NRS = (function(NRS, $) {
 				}
 
 				if (decimals < 2 || decimals > 6) {
-					NRS.showedFormWarning = true;
-                    var entity = (requestType == 'issueCurrency' ? 'currency' : 'asset');
-					$form.find(".error_message").html($.t("error_decimal_positions_warning", {
-                        "entity": entity
-                    })).show();
-					if (formErrorFunction) {
-						formErrorFunction(false, data);
+					if (requestType == "issueAsset" && data.quantityQNT == "1") {
+						// Singleton asset no need to warn
+					} else {
+						NRS.showedFormWarning = true;
+						var entity = (requestType == 'issueCurrency' ? 'currency' : 'asset');
+						$form.find(".error_message").html($.t("error_decimal_positions_warning", {
+							"entity": entity
+						})).show();
+						if (formErrorFunction) {
+							formErrorFunction(false, data);
+						}
+						NRS.unlockForm($modal, $btn);
+						return;
 					}
-					NRS.unlockForm($modal, $btn);
-					return;
 				}
 			}
 

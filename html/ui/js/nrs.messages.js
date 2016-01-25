@@ -59,7 +59,8 @@ var NRS = (function(NRS, $) {
 			"id": 'sidebar_messages',
 			"titleHTML": '<i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span>',
 			"page": 'messages',
-			"desiredPosition": 90
+			"desiredPosition": 90,
+			"depends": { tags: [ NRS.constants.API_TAGS.MESSAGES ] }
 		};
 		NRS.addSimpleSidebarMenuItem(options);
 	};

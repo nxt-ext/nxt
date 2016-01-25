@@ -569,6 +569,9 @@ var NRS = (function(NRS, $, undefined) {
         var balanceType = "nxt";
         var balanceEntity = "NXT";
         var holdingIcon = "";
+        if (change < 0) {
+            change = String(change).substring(1);
+        }
         if (/ASSET_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
                 balanceType = "asset";
@@ -594,12 +597,9 @@ var NRS = (function(NRS, $, undefined) {
             sign = "<i class='fa fa-plus-circle' style='color:#65C62E'></i> ";
         } else if (entry.change < 0) {
             sign = "<i class='fa fa-minus-circle' style='color:#E04434'></i> ";
-            if (change.length > 0) {
-                change = String(change).substring(1);
-            }
         }
         var eventType = String(entry.eventType).escapeHTML();
-        if (eventType.startsWith("ASSET") || eventType.startsWith("CURRENCY")) {
+        if (eventType.indexOf("ASSET") == 0 || eventType.indexOf("CURRENCY") == 0) {
             eventType = eventType.substring(eventType.indexOf("_") + 1);
         }
         eventType = $.t(eventType.toLowerCase());
@@ -672,7 +672,7 @@ var NRS = (function(NRS, $, undefined) {
         var subtypeNavi = $('#transactions_sub_type_navi');
         subtypeNavi.empty();
 		var html  = '<li role="presentation" class="active"><a href="#" data-transaction-sub-type="">';
-		html += '<span data-i18n="all_types">All Types</span></a></li>';
+		html += '<span>' + $.t("all_types") + '</span></a></li>';
 		subtypeNavi.append(html);
 
 		var typeIndex = $('#transactions_type_navi').find('li.active a').attr('data-transaction-type');
