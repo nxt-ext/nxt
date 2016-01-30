@@ -43,4 +43,48 @@ public interface AddOn {
 
     }
 
+    final class AfterStart implements AddOn {
+
+        @Override
+        public void init() {
+            String afterStartScript = Nxt.getStringProperty("nxt.afterStartScript");
+            if (afterStartScript != null) {
+                ThreadPool.runAfterStart(() -> {
+                    try {
+                        Runtime.getRuntime().exec(afterStartScript);
+                    } catch (Exception e) {
+                        Logger.logErrorMessage("Failed to run after start script: " + afterStartScript, e);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void shutdown() {
+
+        }
+
+    }
+
+    final class BeforeShutdown implements AddOn {
+
+        final String beforeShutdownScript = Nxt.getStringProperty("nxt.beforeShutdownScript");
+
+        @Override
+        public void init() {
+        }
+
+        @Override
+        public void shutdown() {
+            if (beforeShutdownScript != null) {
+                try {
+                    Runtime.getRuntime().exec(beforeShutdownScript);
+                } catch (Exception e) {
+                    Logger.logShutdownMessage("Failed to run after start script: " + beforeShutdownScript, e);
+                }
+            }
+        }
+
+    }
+
 }
