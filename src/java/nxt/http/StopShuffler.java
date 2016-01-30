@@ -51,12 +51,16 @@ public final class StopShuffler extends APIServlet.APIRequestHandler {
             response.put("stoppedShuffler", shuffler != null);
         } else {
             API.verifyPassword(req);
-            if (accountId != 0 && shufflingFullHash.length == 0) {
+            if (accountId != 0 && shufflingFullHash.length != 0) {
                 Shuffler shuffler = Shuffler.stopShuffler(accountId, shufflingFullHash);
                 response.put("stoppedShuffler", shuffler != null);
-            } else {
+            } else if (accountId == 0 && shufflingFullHash.length == 0) {
                 Shuffler.stopAllShufflers();
                 response.put("stoppedAllShufflers", true);
+            } else if (accountId != 0) {
+                return JSONResponses.missing("shufflingFullHash");
+            } else if (shufflingFullHash.length != 0) {
+                return JSONResponses.missing("account");
             }
         }
         return response;
