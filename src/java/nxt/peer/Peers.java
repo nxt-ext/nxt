@@ -146,10 +146,11 @@ public final class Peers {
 
     static {
 
-        myPlatform = Nxt.getStringProperty("nxt.myPlatform");
-        if (myPlatform.length() > MAX_PLATFORM_LENGTH) {
-            throw new RuntimeException("nxt.myPlatform length exceeds " + MAX_PLATFORM_LENGTH);
+        String platform = Nxt.getStringProperty("nxt.myPlatform", System.getProperty("os.name") + " " + System.getProperty("os.arch"));
+        if (platform.length() > MAX_PLATFORM_LENGTH) {
+            platform = platform.substring(0, MAX_PLATFORM_LENGTH);
         }
+        myPlatform = platform;
         myAddress = Convert.emptyToNull(Nxt.getStringProperty("nxt.myAddress", "").trim());
         if (myAddress != null && myAddress.endsWith(":" + TESTNET_PEER_PORT) && !Constants.isTestnet) {
             throw new RuntimeException("Port " + TESTNET_PEER_PORT + " should only be used for testnet!!!");
