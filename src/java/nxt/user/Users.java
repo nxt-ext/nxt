@@ -107,10 +107,10 @@ public final class Users {
                 SslContextFactory sslContextFactory = new SslContextFactory();
                 sslContextFactory.setKeyStorePath(Nxt.getStringProperty("nxt.keyStorePath"));
                 sslContextFactory.setKeyStorePassword(Nxt.getStringProperty("nxt.keyStorePassword", null, true));
-                sslContextFactory.setExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
+                sslContextFactory.addExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
                         "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
                         "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
-                sslContextFactory.setExcludeProtocols("SSLv3");
+                sslContextFactory.addExcludeProtocols("SSLv3");
                 connector = new ServerConnector(userServer, new SslConnectionFactory(sslContextFactory, "http/1.1"),
                         new HttpConnectionFactory(https_config));
             } else {
