@@ -32,26 +32,26 @@ import nxt.crypto.Crypto;
 import static nxt.http.JSONResponses.*;
 
 /**
- * Start an account monitor
+ * <p>Start an account monitor</p>
  *
- * An account monitor will transfer NXT, ASSET or CURRENCY from the funding account
+ * <p>An account monitor will transfer NXT, ASSET or CURRENCY from the funding account
  * to a recipient account when the amount held by the recipient account drops below
  * the threshold.  The transfer will not be done until the current block
  * height is greater than equal to the block height of the last transfer plus the
- * interval.  The asset or currency is specified by the holding identifier.
+ * interval.  The asset or currency is specified by the holding identifier.</p>
  *
- * The funding account is identified by the secret phrase.  The secret phrase must
- * be specified since the account monitor needs to sign the transactions that it submits.
+ * <p>The funding account is identified by the secret phrase.  The secret phrase must
+ * be specified since the account monitor needs to sign the transactions that it submits.</p>
  *
- * The recipient accounts are identified by the specified account property.  Each account
+ * <p>The recipient accounts are identified by the specified account property.  Each account
  * that has this property set by the funding account  will be monitored for changes.
  * The property value can be omitted or it can consist of a string containing one or more
- * comma-separated value in the format 'name=value' when name can be 'amount', 'threshold' or 'interval.
+ * comma-separated values in the format 'name=value' when name can be 'amount', 'threshold' or 'interval.
  * For example, 'amount=25,threshold=10,interval=1440'.  The specified vvalues will
- * override the default values specified when the account monitor is started.
+ * override the default values specified when the account monitor is started.</p>
  *
- * NXT amounts are specified with 8 decimal places.  Asset and Currency decimal places
- * are determined by the asset or currency definition.
+ * <p>NXT amounts are specified with 8 decimal places.  Asset and Currency decimal places
+ * are determined by the asset or currency definition.</p>
  */
 public final class StartAccountMonitor extends APIServlet.APIRequestHandler {
 

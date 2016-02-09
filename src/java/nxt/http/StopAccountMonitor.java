@@ -26,15 +26,15 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * Stop an account monitor
+ * <p>Stop an account monitor</p>
  *
- * A single account monitor will be stopped when the secret phrase is specified.
+ * <p>A single account monitor will be stopped when the secret phrase is specified.
  * Otherwise, the administrator password must be specified and all account monitors
- * will be stopped.
+ * will be stopped.</p>
  *
- * The account monitor type and account property name must be specified when the secret
+ * <p>The account monitor type and account property name must be specified when the secret
  * phrase is specified.  In addition, the holding identifier must be specified when
- * the monitor type is ASSET or CURRENCY.
+ * the monitor type is ASSET or CURRENCY.</p>
  */
 public class StopAccountMonitor extends APIServlet.APIRequestHandler {
 
