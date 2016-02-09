@@ -150,6 +150,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PROPERTY = incorrect("property", "(cannot be deleted by this account)");
     public static final JSONStreamAware UNKNOWN_PROPERTY = unknown("property");
     public static final JSONStreamAware MISSING_PROPERTY = missing("property");
+    public static final JSONStreamAware MISSING_MONITOR_TYPE = missing("type");
+    public static final JSONStreamAware INCORRECT_MONITOR_TYPE = incorrect("type", "(specify NXT, ASSET or CURRENCY)");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
@@ -444,6 +446,22 @@ public final class JSONResponses {
             default:
                 throw new RuntimeException();
         }
+    }
+
+    public static final JSONStreamAware MONITOR_ALREADY_STARTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Account monitor already started");
+        MONITOR_ALREADY_STARTED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware MONITOR_NOT_STARTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Account monitor not started");
+        MONITOR_NOT_STARTED = JSON.prepare(response);
     }
 
     private JSONResponses() {} // never

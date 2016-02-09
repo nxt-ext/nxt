@@ -17,6 +17,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.AccountMonitor;
 import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
@@ -507,6 +508,26 @@ final class ParameterParser {
             }
         }
         return -1;
+    }
+
+    static AccountMonitor.MonitorType getMonitorType(HttpServletRequest req) throws ParameterException {
+        String type = Convert.emptyToNull(req.getParameter("type"));
+        if (type == null) {
+            throw new ParameterException(MISSING_MONITOR_TYPE);
+        }
+        try {
+            return AccountMonitor.MonitorType.valueOf(type.trim());
+        } catch (IllegalArgumentException exc) {
+            throw new ParameterException(INCORRECT_MONITOR_TYPE);
+        }
+    }
+
+    static String getAccountProperty(HttpServletRequest req) throws ParameterException {
+        String property = Convert.emptyToNull(req.getParameter("property"));
+        if (property == null) {
+            throw new ParameterException(MISSING_PROPERTY);
+        }
+        return property;
     }
 
     static String getSearchQuery(HttpServletRequest req) throws ParameterException {
