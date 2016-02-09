@@ -1446,7 +1446,7 @@ public final class Account {
         }
         accountPropertyTable.delete(accountProperty);
         listeners.notify(this, Event.DELETE_PROPERTY);
-        propertyListeners.notify(accountProperty, Event.SET_PROPERTY);
+        propertyListeners.notify(accountProperty, Event.DELETE_PROPERTY);
     }
 
     static boolean setOrVerify(long accountId, byte[] key) {
