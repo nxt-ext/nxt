@@ -690,17 +690,21 @@ NRS.addPagination = function () {
 
 
 		try {
+			NRS.logConsole("Opening database " + dbName);
 			NRS.database = new WebDB(dbName, schema, NRS.constants.DB_VERSION, 4, function(error) {
 				if (!error) {
+					NRS.logConsole("Database is open");
 					NRS.database.select("data", [{
 						"id": "settings"
 					}], function(error, result) {
 						if (result && result.length > 0) {
+							NRS.logConsole("Settings already exist");
 							NRS.databaseFirstStart = false;
 							NRS.initUserDBSuccess();
 						} else {
+							NRS.logConsole("Settings not found");
 							NRS.databaseFirstStart = true;
-							if (NRS.databaseFirstStart && NRS.legacyDatabaseWithData) {
+							if (NRS.legacyDatabaseWithData) {
 								NRS.initUserDBWithLegacyData();
 							} else {
 								NRS.initUserDBSuccess();
@@ -708,10 +712,13 @@ NRS.addPagination = function () {
 						}
 					});
 				} else {
+					NRS.logConsole("Error opening database " + error);
 					NRS.initUserDBFail();
 				}
 			});
-		} catch (err) {
+			NRS.logConsole("Opening database " + NRS.database);
+		} catch (e) {
+			NRS.logConsole("Exception opening database " + e.message);
 			NRS.initUserDBFail();
 		}
 	};
