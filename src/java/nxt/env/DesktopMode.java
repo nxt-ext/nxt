@@ -16,6 +16,8 @@
 
 package nxt.env;
 
+import nxt.util.Logger;
+
 import javax.swing.*;
 import java.io.File;
 import java.net.URI;
@@ -32,8 +34,18 @@ public class DesktopMode implements RuntimeMode {
     }
 
     @Override
-    public void setServerStatus(String status, URI wallet, File logFileDir) {
-        desktopSystemTray.setToolTip(new SystemTrayDataProvider(status, wallet, logFileDir));
+    public void setServerStatus(ServerStatus status, URI wallet, File logFileDir) {
+        desktopSystemTray.setToolTip(new SystemTrayDataProvider(status.getMessage(), wallet, logFileDir));
+        if (status.isLaunchApplication()) {
+            try {
+                Class.forName("javafx.application.Application");
+            } catch (ClassNotFoundException e) {
+                Logger.logInfoMessage("javafx not supported, cannot launch desktop wallet");
+                return;
+            }
+            Logger.logInfoMessage("Launching desktop wallet");
+            DesktopApplication.launch();
+        }
     }
 
     @Override

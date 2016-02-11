@@ -29,5 +29,7 @@ public interface DirProvider {
 
     File getLogFileDir();
 
+    File getConfDir();
+
     String getUserHomeDir();
 }

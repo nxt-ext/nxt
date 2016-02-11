@@ -369,7 +369,10 @@ var NRS = (function(NRS, $, undefined) {
 					if (!NRS.downloadingBlockchain) {
 						NRS.checkIfOnAFork();
 					}
-					if(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+					NRS.logConsole("User Agent: " + String(navigator.userAgent));
+					if(navigator.userAgent.indexOf('Safari') != -1 &&
+						navigator.userAgent.indexOf('Chrome') == -1 &&
+						navigator.userAgent.indexOf('JavaFX') == -1) {
 						// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
 						NRS.createDatabase("NRS_USER_DB");
 						$.growl($.t("nrs_safari_no_account_based_db"), {

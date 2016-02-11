@@ -41,6 +41,11 @@ public class DefaultDirProvider implements DirProvider {
     }
 
     @Override
+    public File getConfDir() {
+        return new File(getUserHomeDir(), "conf");
+    }
+
+    @Override
     public String getUserHomeDir() {
         return Paths.get(".").toAbsolutePath().getParent().toString();
     }
