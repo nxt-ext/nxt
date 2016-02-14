@@ -31,7 +31,11 @@ var NRS = (function (NRS, $) {
                 if (isDisplayTimeExact) {
                     postfix = " (" + NRS.timeExact() + ")";
                 }
-                console.log(prefix + msg + postfix);
+                var line = prefix + msg + postfix;
+                console.log(line);
+                if (window.java) {
+                    window.java.log(line);
+                }
             } catch (e) {
                 // IE11 when running in compatibility mode
             }
