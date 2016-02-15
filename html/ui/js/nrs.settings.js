@@ -495,7 +495,7 @@ var NRS = (function(NRS, $) {
                             callback(null);
                         });
                     } else {
-						NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+						NRS.settings = $.extend({}, NRS.defaultSettings, NRS.getAccountJSONItem("settings"));
 						NRS.logConsole("Loading settings from local storage");
                         NRS.applySettings();
                         callback(null);
@@ -545,8 +545,8 @@ var NRS = (function(NRS, $) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
 					$("[data-i18n]").i18n();
 				});
-				if (key && localstorage) {
-					localStorage.setItem('i18next_lng', NRS.settings["language"]);
+				if (key) {
+					NRS.setStrItem('i18next_lng', NRS.settings["language"]);
 				}
 			}
 		}
@@ -633,7 +633,7 @@ var NRS = (function(NRS, $) {
 				id: "settings"
 			}]);
 		} else {
-			localStorage.setItem("settings", JSON.stringify(NRS.settings));
+			NRS.setAccountJSONItem("settings", NRS.settings);
 		}
 		NRS.applySettings(key);
 	};

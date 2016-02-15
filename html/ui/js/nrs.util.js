@@ -1214,30 +1214,6 @@ var NRS = (function (NRS, $, undefined) {
 		});
 	};
 
-    NRS.getStrItem = function(key) {
-        return localStorage.getItem(key);
-    };
-
-    NRS.setStrItem = function(key, data) {
-        NRS.logConsole("NRS.setStrItem: key " + key + " data " + data);
-        localStorage.setItem(key, data);
-	};
-
-    NRS.getJSONItem = function(key) {
-        return JSON.parse(localStorage.getItem(key));
-    };
-
-    NRS.setJSONItem = function(key, data) {
-        var jsonData = JSON.stringify(data);
-        NRS.logConsole("NRS.setJSONItem: key " + key + " data " + jsonData);
-        localStorage.setItem(key, jsonData);
-	};
-
-    NRS.removeItem = function(key) {
-        NRS.logConsole("NRS.removeItem: key " + key);
-		localStorage.removeItem(key);
-	};
-
     NRS.translateServerError = function (response) {
         var match;
 		if (!response.errorDescription) {

@@ -549,12 +549,12 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.legacyDatabase) {
 			indexedDB.deleteDatabase(NRS.legacyDatabase.name);
 		}
-		localStorage.removeItem("logged_in");
-		localStorage.removeItem("settings");
-		localStorage.removeItem("savedNxtAccounts");
-		localStorage.removeItem("language");
-		localStorage.removeItem("themeChoice");
-		localStorage.removeItem("remember_passphrase");
+		NRS.removeItem("logged_in");
+		NRS.removeAccountItem("settings");
+		NRS.removeItem("savedNxtAccounts");
+		NRS.removeItem("language");
+		NRS.removeItem("themeChoice");
+		NRS.removeItem("remember_passphrase");
 		NRS.logout();
 	});
 
