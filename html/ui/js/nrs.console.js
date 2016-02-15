@@ -33,9 +33,6 @@ var NRS = (function (NRS, $) {
                 }
                 var line = prefix + msg + postfix;
                 console.log(line);
-                if (window.java) {
-                    window.java.log(line);
-                }
             } catch (e) {
                 // IE11 when running in compatibility mode
             }
