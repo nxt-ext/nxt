@@ -1466,6 +1466,7 @@ function checkLocalStorage() {
         storage.removeItem(uid);
         fail && (storage = false);
     } catch (exception) {
+        NRS.logConsole("checkLocalStorage " + exception.message)
     }
     return storage;
 }
