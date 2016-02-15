@@ -22,13 +22,14 @@ in such a way that no trusted third parties are required anymore.
     - *general* - Java 8
     - *Ubuntu* - `http://www.webupd8.org/2012/09/install-oracle-java-8-in-ubuntu-via-ppa.html`
     - *Debian* - `http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html`
+    - *FreeBSD* = `pkg install openjdk8`
 
   - *repository* - `git clone https://bitbucket.org/JeanLucPicard/nxt.git`
   
 ----
 ## Run it! ##
 
-  - Linux: `./run.sh`
+  - Unix: `./run.sh`
   - Mac: `./run.command`
   - Window: `run.bat`
 
