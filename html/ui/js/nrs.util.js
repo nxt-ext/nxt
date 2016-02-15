@@ -1214,38 +1214,28 @@ var NRS = (function (NRS, $, undefined) {
 		});
 	};
 
-    NRS.setCookie = function (name, value, days) {
-		var expires;
-		if (days) {
-			var date = new Date();
-			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-		} else {
-			expires = "";
-		}
-        //noinspection JSDeprecatedSymbols
-		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
+    NRS.getStrItem = function(key) {
+        return localStorage.getItem(key);
+    };
+
+    NRS.setStrItem = function(key, data) {
+        NRS.logConsole("NRS.setStrItem: key " + key + " data " + data);
+        localStorage.setItem(key, data);
 	};
 
-    NRS.getCookie = function (name) {
-        //noinspection JSDeprecatedSymbols
-		var nameEQ = escape(name) + "=";
-		var ca = document.cookie.split(';');
-		for (var i = 0; i < ca.length; i++) {
-			var c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1, c.length);
-		}
-            if (c.indexOf(nameEQ) === 0) {
-                //noinspection JSDeprecatedSymbols
-                return unescape(c.substring(nameEQ.length, c.length));
-            }
-        }
-		return null;
+    NRS.getJSONItem = function(key) {
+        return JSON.parse(localStorage.getItem(key));
+    };
+
+    NRS.setJSONItem = function(key, data) {
+        var jsonData = JSON.stringify(data);
+        NRS.logConsole("NRS.setJSONItem: key " + key + " data " + jsonData);
+        localStorage.setItem(key, jsonData);
 	};
 
-    NRS.deleteCookie = function (name) {
-		NRS.setCookie(name, "", -1);
+    NRS.removeItem = function(key) {
+        NRS.logConsole("NRS.removeItem: key " + key);
+		localStorage.removeItem(key);
 	};
 
     NRS.translateServerError = function (response) {

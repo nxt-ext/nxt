@@ -83,7 +83,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.incoming = {};
 	NRS.setup = {};
 
-    NRS.hasLocalStorage = _checkDOMenabled();
 	NRS.appVersion = "";
 	NRS.appPlatform = "";
 	NRS.assetTableKeys = [];
@@ -144,23 +143,32 @@ var NRS = (function(NRS, $, undefined) {
 		if (!NRS.isLocalHost) {
 			$(".remote_warning").show();
 		}
-
+		var hasLocalStorage = false;
 		try {
 			//noinspection BadExpressionStatementJS
-            window.localStorage;
+            window.localStorage && localStorage;
+			hasLocalStorage = checkLocalStorage();
 		} catch (err) {
-			NRS.hasLocalStorage = false;
+			NRS.logConsole("localStorage is disabled, error " + err.message);
+			hasLocalStorage = false;
 		}
-		if(!(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1)) {
-			// Not Safari
+
+		if (!hasLocalStorage) {
+			NRS.logConsole("localStorage is disabled, cannot load wallet");
+			// TODO add visible warning
+			return; // do not load client if local storage is disabled
+		}
+
+		if(!(navigator.userAgent.indexOf('Safari') != -1 &&
+			navigator.userAgent.indexOf('Chrome') == -1) &&
+			navigator.userAgent.indexOf('JavaFX') == -1) {
 			// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
 			NRS.createLegacyDatabase();
 		}
 
-		if (NRS.getCookie("remember_passphrase")) {
+		if (NRS.getStrItem("remember_passphrase")) {
 			$("#remember_password").prop("checked", true);
 		}
-
 		NRS.getSettings();
 
 		NRS.getState(function() {
@@ -688,7 +696,11 @@ NRS.addPagination = function () {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 		NRS.pollsTableKeys = ["account", "accountRS", "poll", "description", "name", "finishHeight"];
 
-
+		if (navigator.userAgent.indexOf("JavaFX/") >= 0) {
+			NRS.logConsole("IndexedDB not supported by JavaFX WebEngine, need to relay on localStorage");
+			NRS.initUserDBFail();
+			return;
+		}
 		try {
 			NRS.logConsole("Opening database " + dbName);
 			NRS.database = new WebDB(dbName, schema, NRS.constants.DB_VERSION, 4, function(error) {
@@ -1439,10 +1451,11 @@ NRS.addPagination = function () {
 }(NRS || {}, jQuery));
 
 $(document).ready(function() {
+	console.log("document.ready");
 	NRS.init();
 });
 
-function _checkDOMenabled() {
+function checkLocalStorage() {
     var storage;
     var fail;
     var uid;

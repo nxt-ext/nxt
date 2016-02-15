@@ -121,7 +121,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			});
 		} else {
-			NRS.setCookie("notification_timestamps", tsDictString, 100);
+			NRS.setStrItem("notification_timestamps", tsDictString);
 		}
 	}
 
@@ -217,7 +217,7 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 				} else {
-					tsDictString = NRS.getCookie("notification_timestamps");
+					tsDictString = NRS.getStrItem("notification_timestamps");
 					NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
 				}
 			}

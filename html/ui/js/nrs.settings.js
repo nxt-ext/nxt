@@ -455,11 +455,11 @@ var NRS = (function(NRS, $) {
 	NRS.getSettings = function() {
 		if (!NRS.account) {
 			NRS.settings = NRS.defaultSettings;
-			if (NRS.getCookie("language")) {
-				NRS.settings["language"] = NRS.getCookie("language");
+			if (NRS.getStrItem("language")) {
+				NRS.settings["language"] = NRS.getStrItem("language");
 			}
-			if (NRS.getCookie("themeChoice")) {
-				NRS.settings["themeChoice"] = NRS.getCookie("themeChoice");
+			if (NRS.getStrItem("themeChoice")) {
+				NRS.settings["themeChoice"] = NRS.getStrItem("themeChoice");
 			}
 			NRS.createLangSelect();
 			NRS.applySettings();
@@ -495,12 +495,8 @@ var NRS = (function(NRS, $) {
                             callback(null);
                         });
                     } else {
-                        if (NRS.hasLocalStorage) {
-                            NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
-                            NRS.logConsole("Loading settings from local storage");
-                        } else {
-                            NRS.settings = NRS.defaultSettings;
-                        }
+						NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
+						NRS.logConsole("Loading settings from local storage");
                         NRS.applySettings();
                         callback(null);
                     }
@@ -549,8 +545,8 @@ var NRS = (function(NRS, $) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
 					$("[data-i18n]").i18n();
 				});
-				if (key && window.localstorage) {
-					window.localStorage.setItem('i18next_lng', NRS.settings["language"]);
+				if (key && localstorage) {
+					localStorage.setItem('i18next_lng', NRS.settings["language"]);
 				}
 			}
 		}
@@ -606,9 +602,9 @@ var NRS = (function(NRS, $) {
 
 		if (!key || key == "remember_passphrase") {
 			if (NRS.settings["remember_passphrase"] == "1") {
-				NRS.setCookie("remember_passphrase", 1, 1000);
+				NRS.setStrItem("remember_passphrase", 1);
 			} else {
-				NRS.deleteCookie("remember_passphrase");
+				NRS.removeItem("remember_passphrase");
 			}
 		}
 		if (!key || key == "admin_password") {
@@ -623,10 +619,10 @@ var NRS = (function(NRS, $) {
 			NRS.settings[key] = value;
 
 			if (key == "themeChoice") {
-				NRS.setCookie("themeChoice", value, 1000);
+				NRS.setStrItem("themeChoice", value);
 			}
 			if (key == "language") {
-				NRS.setCookie("language", value, 1000);
+				NRS.setStrItem("language", value);
 			}
 		}
 
@@ -636,7 +632,7 @@ var NRS = (function(NRS, $) {
 			}, [{
 				id: "settings"
 			}]);
-		} else if (NRS.hasLocalStorage) {
+		} else {
 			localStorage.setItem("settings", JSON.stringify(NRS.settings));
 		}
 		NRS.applySettings(key);
