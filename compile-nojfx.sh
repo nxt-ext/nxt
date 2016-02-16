@@ -8,6 +8,6 @@ SP=src/java/
 /bin/mkdir -p classes/
 
 javac -encoding utf8 -sourcepath "${SP}" -classpath "${CP}" -d classes/ src/java/nxt/*.java src/java/nxt/*/*.java  \
-src/java/nxt/*/*/*.java src/java/nxtdesktop/*.java || exit 1
+src/java/nxt/*/*/*.java || exit 1
 
 echo "nxt class files compiled successfully"

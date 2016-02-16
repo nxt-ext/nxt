@@ -100,7 +100,13 @@ public class DesktopSystemTray {
             }
         });
 
-        openDesktopApplication.addActionListener(e -> DesktopApplication.launch());
+        openDesktopApplication.addActionListener(e -> {
+            try {
+                Class.forName("nxtdesktop.DesktopApplication").getMethod("launch").invoke(null);
+            } catch (ReflectiveOperationException exception) {
+                Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to launch", exception);
+            }
+        });
 
         viewLog.addActionListener(e -> {
             try {

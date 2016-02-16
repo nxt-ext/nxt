@@ -44,7 +44,11 @@ public class DesktopMode implements RuntimeMode {
                 return;
             }
             Logger.logInfoMessage("Launching desktop wallet");
-            DesktopApplication.launch();
+            try {
+                Class.forName("nxtdesktop.DesktopApplication").getMethod("launch").invoke(null);
+            } catch (ReflectiveOperationException e) {
+                Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to launch", e);
+            }
         }
     }
 
