@@ -32,6 +32,9 @@ import netscape.javascript.JSObject;
 import nxt.Nxt;
 import nxt.http.API;
 import nxt.util.Logger;
+import nxt.util.TrustAllSSLProvider;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class DesktopApplication extends Application {
 
@@ -76,7 +79,12 @@ public class DesktopApplication extends Application {
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
                     stage.setTitle("NXT Wallet " + webEngine.getLocation());
                 });
-        webEngine.load(API.getWelcomePageUri().toString());
+        String url = API.getWelcomePageUri().toString();
+        if (url.startsWith("https")) {
+            HttpsURLConnection.setDefaultSSLSocketFactory(TrustAllSSLProvider.getSslSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(TrustAllSSLProvider.getHostNameVerifier());
+        }
+        webEngine.load(url);
         Scene scene = new Scene(browser);
         String address = API.getServerRootUri().toString();
         stage.getIcons().add(new Image(address + "/img/nxt-icon-32x32.png"));
