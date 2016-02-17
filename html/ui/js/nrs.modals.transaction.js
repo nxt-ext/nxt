@@ -1581,7 +1581,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
         if (transaction.block) {
-            data["link_formatted_html"] = NRS.getTaggedDataLink(attachment.data, transaction.transaction, attachment.isText);
+            data["link_formatted_html"] = NRS.getTaggedDataLink(transaction.transaction, attachment.isText);
         }
         return data;
     };

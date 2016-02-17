@@ -2083,6 +2083,15 @@ public abstract class TransactionType {
             @Override
             void validateAttachment(Transaction transaction) throws NxtException.ValidationException {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
+                if (attachment.getHeight() > Nxt.getBlockchain().getHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight()
+                            + ", must not exceed current blockchain height " + Nxt.getBlockchain().getHeight());
+                }
+                if (attachment.getHeight() <= attachment.getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
+                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight()
+                            + ", must be less than " + Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK
+                            + " blocks before " + attachment.getFinishValidationHeight(transaction));
+                }
                 Asset asset;
                 if (Nxt.getBlockchain().getHeight() > Constants.SHUFFLING_BLOCK) {
                     asset = Asset.getAsset(attachment.getAssetId(), attachment.getHeight());
@@ -2095,15 +2104,6 @@ public abstract class TransactionType {
                 }
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
-                }
-                if (attachment.getHeight() > Nxt.getBlockchain().getHeight()) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight()
-                            + ", must not exceed current blockchain height " + Nxt.getBlockchain().getHeight());
-                }
-                if (attachment.getHeight() <= attachment.getFinishValidationHeight(transaction) - Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK) {
-                    throw new NxtException.NotCurrentlyValidException("Invalid dividend payment height: " + attachment.getHeight()
-                            + ", must be less than " + Constants.MAX_DIVIDEND_PAYMENT_ROLLBACK
-                            + " blocks before " + attachment.getFinishValidationHeight(transaction));
                 }
             }
 

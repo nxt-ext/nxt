@@ -289,11 +289,12 @@ final class BlockDb {
     }
 
     // relying on cascade triggers in the database to delete the transactions and public keys for all deleted blocks
-    static void deleteBlocksFrom(long blockId) {
+    static BlockImpl deleteBlocksFrom(long blockId) {
         if (!Db.db.isInTransaction()) {
+            BlockImpl lastBlock;
             try {
                 Db.db.beginTransaction();
-                deleteBlocksFrom(blockId);
+                lastBlock = deleteBlocksFrom(blockId);
                 Db.db.commitTransaction();
             } catch (Exception e) {
                 Db.db.rollbackTransaction();
@@ -301,7 +302,7 @@ final class BlockDb {
             } finally {
                 Db.db.endTransaction();
             }
-            return;
+            return lastBlock;
         }
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT db_id FROM block WHERE timestamp >= "
@@ -317,6 +318,14 @@ final class BlockDb {
                         Db.db.commitTransaction();
                     }
 	            }
+                BlockImpl lastBlock = findLastBlock();
+                lastBlock.setNextBlockId(0);
+                try (PreparedStatement pstmt = con.prepareStatement("UPDATE block SET next_block_id = NULL WHERE id = ?")) {
+                    pstmt.setLong(1, lastBlock.getId());
+                    pstmt.executeUpdate();
+                }
+                Db.db.commitTransaction();
+                return lastBlock;
             } catch (SQLException e) {
                 Db.db.rollbackTransaction();
                 throw e;
