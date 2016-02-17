@@ -49,6 +49,12 @@ public class DesktopApplication extends Application {
         }
     }
 
+    public static void shutdown() {
+        System.out.println("shutting down JavaFX platform");
+        Platform.exit();
+        System.out.println("JavaFX platform shutdown complete");
+    }
+
     @Override
     public void start(Stage stage) throws Exception {
         DesktopApplication.stage = stage;
@@ -82,7 +88,7 @@ public class DesktopApplication extends Application {
     }
 
     public void stop() {
-        Logger.logInfoMessage("Application stopped");
+        System.out.println("DesktopApplication stopped"); // Should never happen
     }
 
     public void log(String message) {

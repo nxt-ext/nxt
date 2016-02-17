@@ -25,6 +25,7 @@ import java.net.URI;
 public class DesktopMode implements RuntimeMode {
 
     private DesktopSystemTray desktopSystemTray;
+    private Class desktopApplication;
 
     @Override
     public void init() {
@@ -45,7 +46,8 @@ public class DesktopMode implements RuntimeMode {
             }
             Logger.logInfoMessage("Launching desktop wallet");
             try {
-                Class.forName("nxtdesktop.DesktopApplication").getMethod("launch").invoke(null);
+                desktopApplication = Class.forName("nxtdesktop.DesktopApplication");
+                desktopApplication.getMethod("launch").invoke(null);
             } catch (ReflectiveOperationException e) {
                 Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to launch", e);
             }
@@ -55,5 +57,13 @@ public class DesktopMode implements RuntimeMode {
     @Override
     public void shutdown() {
         desktopSystemTray.shutdown();
+        if (desktopApplication == null) {
+            return;
+        }
+        try {
+            desktopApplication.getMethod("shutdown").invoke(null);
+        } catch (ReflectiveOperationException e) {
+            Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to shutdown", e);
+        }
     }
 }
