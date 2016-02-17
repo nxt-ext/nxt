@@ -17,39 +17,15 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $) {
+var NRS = (function (NRS) {
 
-    function widgetVisibility(widget, depends) {
-        if (NRS.isApiEnabled(depends)) {
-            widget.show();
-        } else {
-            widget.hide();
-        }
-    }
+    NRS.isContactsPageAvailable = function() {
+        return window.indexedDB ? true : false;
+    };
 
-    $(window).load(function() {
-        widgetVisibility($("#header_send_money"), { apis: [NRS.constants.REQUEST_TYPES.sendMoney] });
-        widgetVisibility($("#header_transfer_currency"), { apis: [NRS.constants.REQUEST_TYPES.transferCurrency] });
-        widgetVisibility($("#header_send_message"), { apis: [NRS.constants.REQUEST_TYPES.sendMessage] });
-        if (!NRS.isContactsPageAvailable()) {
-            $("#contacts_menu_li").remove();
-        }
-        if (!NRS.isCoinExchangePageAvailable()) {
-            $("#exchange_menu_li").remove();
-        }
-    });
-
-    $("#refreshSearchIndex").on("click", function() {
-        NRS.sendRequest("luceneReindex", {
-            adminPassword: NRS.settings.admin_password
-        }, function (response) {
-            if (response.errorCode) {
-                $.growl(response.errorDescription);
-            } else {
-                $.growl($.t("search_index_refreshed"));
-            }
-        })
-    });
+    NRS.isCoinExchangePageAvailable = function() {
+        return navigator.userAgent.indexOf("JavaFX") == -1; // JavaFX does not support cors required by ShapeShift
+    };
 
     return NRS;
 }(NRS || {}, jQuery));
