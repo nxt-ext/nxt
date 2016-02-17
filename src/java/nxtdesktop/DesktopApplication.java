@@ -77,7 +77,7 @@ public class DesktopApplication extends Application {
                     JSObject window = (JSObject)webEngine.executeScript("window");
                     window.setMember("java", this);
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
-                    stage.setTitle("NXT Wallet " + webEngine.getLocation());
+                    stage.setTitle("NXT Desktop - " + webEngine.getLocation());
                 });
         String url = API.getWelcomePageUri().toString();
         if (url.startsWith("https")) {
