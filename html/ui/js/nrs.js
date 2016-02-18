@@ -1447,6 +1447,22 @@ NRS.addPagination = function () {
 		}
 	});
 
+	function checkLocalStorage() {
+	    var storage;
+	    var fail;
+	    var uid;
+	    try {
+	        uid = String(new Date());
+	        (storage = window.localStorage).setItem(uid, uid);
+	        fail = storage.getItem(uid) != uid;
+	        storage.removeItem(uid);
+	        fail && (storage = false);
+	    } catch (exception) {
+	        NRS.logConsole("checkLocalStorage " + exception.message)
+	    }
+	    return storage;
+	}
+
 	return NRS;
 }(NRS || {}, jQuery));
 
@@ -1454,19 +1470,3 @@ $(document).ready(function() {
 	console.log("document.ready");
 	NRS.init();
 });
-
-function checkLocalStorage() {
-    var storage;
-    var fail;
-    var uid;
-    try {
-        uid = String(new Date());
-        (storage = window.localStorage).setItem(uid, uid);
-        fail = storage.getItem(uid) != uid;
-        storage.removeItem(uid);
-        fail && (storage = false);
-    } catch (exception) {
-        NRS.logConsole("checkLocalStorage " + exception.message)
-    }
-    return storage;
-}
