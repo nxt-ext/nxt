@@ -18,7 +18,6 @@ package nxtdesktop;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Worker;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -30,16 +29,28 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import netscape.javascript.JSObject;
 import nxt.Nxt;
+import nxt.TaggedData;
 import nxt.http.API;
+import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.TrustAllSSLProvider;
 
 import javax.net.ssl.HttpsURLConnection;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DesktopApplication extends Application {
 
     static volatile boolean isLaunched;
     static volatile Stage stage;
+    JSObject nrs;
 
     public static void launch() {
         if (!isLaunched) {
@@ -70,15 +81,23 @@ public class DesktopApplication extends Application {
         browser.setMinWidth(width);
         WebEngine webEngine = browser.getEngine();
         webEngine.setUserDataDirectory(Nxt.getConfDir());
+
         Worker<Void> loadWorker = webEngine.getLoadWorker();
-        ReadOnlyObjectProperty<Worker.State> stateProperty = loadWorker.stateProperty();
-        stateProperty.addListener(
+        loadWorker.stateProperty().addListener(
                 (ov, oldState, newState) -> {
                     JSObject window = (JSObject)webEngine.executeScript("window");
                     window.setMember("java", this);
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
+                    if (newState == Worker.State.SUCCEEDED) {
+                        nrs = (JSObject) webEngine.executeScript("NRS");
+                    }
                 });
+
+        webEngine.locationProperty().addListener((observable, oldValue, newValue) -> {
+            webViewURLChange(newValue);
+        });
+
         String url = API.getWelcomePageUri().toString();
         if (url.startsWith("https")) {
             HttpsURLConnection.setDefaultSSLSocketFactory(TrustAllSSLProvider.getSslSocketFactory());
@@ -95,12 +114,82 @@ public class DesktopApplication extends Application {
         Platform.setImplicitExit(false); // So that we can reopen the application in case the user closed it
     }
 
+    private void webViewURLChange(String newValue) {
+        Logger.logInfoMessage("webview address changed to " + newValue);
+        URL url;
+        try {
+            url = new URL(newValue);
+        } catch (MalformedURLException e) {
+            Logger.logInfoMessage("Malformed URL " + newValue, e);
+            return;
+        }
+        String query = url.getQuery();
+        if (query == null) {
+            return;
+        }
+        String[] paramPairs = query.split("&");
+        Map<String, String> params = new HashMap<>();
+        for (String paramPair : paramPairs) {
+            String[] keyValuePair = paramPair.split("=");
+            if (keyValuePair.length == 2) {
+                params.put(keyValuePair[0], keyValuePair[1]);
+            }
+        }
+        if (!"downloadTaggedData".equals(params.get("requestType"))) {
+            Logger.logInfoMessage(String.format("requestType %s is not a download request", params.get("requestType")));
+            return;
+        }
+        long transactionId = Convert.parseUnsignedLong(params.get("transaction"));
+        TaggedData taggedData = TaggedData.getData(transactionId);
+        boolean retrieve = "true".equals(params.get("retrieve"));
+        if (taggedData == null && retrieve) {
+            if (Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId) == null) {
+                growl("Pruned transaction data not currently available from any peer");
+                return;
+            }
+            taggedData = TaggedData.getData(transactionId);
+        }
+        if (taggedData == null) {
+            growl("Tagged data not found");
+            return;
+        }
+        byte[] data = taggedData.getData();
+        String filename = taggedData.getFilename();
+        if (filename == null || filename.trim().isEmpty()) {
+            filename = taggedData.getName().trim();
+        }
+        Path folderPath = Paths.get(System.getProperty("user.home"), "downloads");
+        Path path = Paths.get(folderPath.toString(), filename);
+        Logger.logInfoMessage("Downloading data to " + path.toAbsolutePath());
+        try {
+            OutputStream outputStream = Files.newOutputStream(path);
+            outputStream.write(data);
+            outputStream.close();
+            growl(String.format("File %s saved to folder %s", filename, folderPath));
+        } catch (IOException e) {
+            growl("Download failed " + e.getMessage(), e);
+        }
+    }
+
     public void stop() {
         System.out.println("DesktopApplication stopped"); // Should never happen
     }
 
     public void log(String message) {
         Logger.logInfoMessage(message);
+    }
+
+    public void growl(String msg) {
+        growl(msg, null);
+    }
+
+    public void growl(String msg, Exception e) {
+        if (e == null) {
+            Logger.logInfoMessage(msg);
+        } else {
+            Logger.logInfoMessage(msg, e);
+        }
+        nrs.call("growl", msg);
     }
 
 }
