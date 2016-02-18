@@ -103,6 +103,10 @@ public class DesktopApplication extends Application {
             HttpsURLConnection.setDefaultSSLSocketFactory(TrustAllSSLProvider.getSslSocketFactory());
             HttpsURLConnection.setDefaultHostnameVerifier(TrustAllSSLProvider.getHostNameVerifier());
         }
+        String defaultAccount = Nxt.getStringProperty("nxt.defaultDesktopAccount");
+        if (defaultAccount != null && !defaultAccount.equals("")) {
+            url += "?account=" + defaultAccount;
+        }
         webEngine.load(url);
         Scene scene = new Scene(browser);
         String address = API.getServerRootUri().toString();
