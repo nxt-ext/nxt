@@ -54,7 +54,11 @@ var NRS = (function(NRS, $) {
 			$("#user_info_modal_add_as_contact").hide();
 		} else {
 			accountButton = NRS.userInfoModal.user;
-			$("#user_info_modal_add_as_contact").show();
+			if (NRS.isContactsPageAvailable()) {
+				$("#user_info_modal_add_as_contact").show();
+			} else {
+				$("#user_info_modal_add_as_contact").hide();
+			}
 		}
 
 		$("#user_info_modal_actions").find("button").data("account", accountButton);
