@@ -19,6 +19,7 @@
  */
 var NRS = (function (NRS) {
 
+    // The methods below are invoked by Java code
     NRS.growl = function(msg) {
         $.growl(msg);
     };
