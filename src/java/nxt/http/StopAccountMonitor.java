@@ -48,7 +48,7 @@ public class StopAccountMonitor extends APIServlet.APIRequestHandler {
      *
      * @param   req                 Client request
      * @return                      Client response
-     * @throws  NxtException        Unable to process request
+     * @throws  ParameterException        Unable to process request
      */
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {

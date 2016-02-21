@@ -101,6 +101,9 @@ public final class AccountMonitor {
     /** Fund account secret phrase */
     private final String secretPhrase;
 
+    /** Fund account public key */
+    private final byte[] publicKey;
+
     /**
      * Create an account monitor
      *
@@ -125,6 +128,7 @@ public final class AccountMonitor {
         this.accountId = accountId;
         this.accountName = Crypto.rsEncode(accountId);
         this.secretPhrase = secretPhrase;
+        this.publicKey = Crypto.getPublicKey(secretPhrase);
     }
 
     /**
@@ -202,7 +206,7 @@ public final class AccountMonitor {
     /**
      * Start account monitor
      *
-     * One or more funding parameters can be overriden in the account property value
+     * One or more funding parameters can be overridden in the account property value
      * string: amount=n,threshold=n,interval=n.
      *
      * @param   monitorType         Monitor type
@@ -211,19 +215,18 @@ public final class AccountMonitor {
      * @param   amount              Fund amount
      * @param   threshold           Fund threshold
      * @param   interval            Fund interval
-     * @param   accountId           Fund account identifier
      * @param   secretPhrase        Fund account secret phrase
      * @return                      TRUE if the monitor was started
      */
     public static boolean startMonitor(MonitorType monitorType, long holdingId, String property,
-                                    long amount, long threshold, int interval,
-                                    long accountId, String secretPhrase) {
+                                    long amount, long threshold, int interval, String secretPhrase) {
         //
         // Initialize account monitor processing if it hasn't been done yet.  We do this now
         // instead of during NRS initialization so we don't start the monitor thread if it
         // won't be used.
         //
         init();
+        long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         //
         // Create the account monitor
         //
@@ -358,7 +361,7 @@ public final class AccountMonitor {
      * Pending fund transactions will still be processed
      *
      * @param   monitorType         Monitor type
-     * @param   holdingId           Asset or currency identifier, ignored for NXT monotir
+     * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
      * @param   property            Account property
      * @param   accountId           Fund account identifier
      * @return                      TRUE if the monitor was stopped
@@ -600,7 +603,7 @@ public final class AccountMonitor {
                                             throws NxtException {
         AccountMonitor monitor = monitoredAccount.monitor;
         if (targetAccount.getBalanceNQT() < monitoredAccount.threshold) {
-            Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(monitor.secretPhrase),
+            Transaction.Builder builder = Nxt.newTransactionBuilder(monitor.publicKey,
                     monitoredAccount.amount, 0, (short)1440, Attachment.ORDINARY_PAYMENT);
             builder.recipientId(monitoredAccount.accountId)
                    .timestamp(Nxt.getBlockchain().getLastBlockTimestamp());
@@ -631,13 +634,13 @@ public final class AccountMonitor {
         AccountMonitor monitor = monitoredAccount.monitor;
         Account.AccountAsset targetAsset = Account.getAccountAsset(targetAccount.getId(), monitor.holdingId);
         Account.AccountAsset fundingAsset = Account.getAccountAsset(fundingAccount.getId(), monitor.holdingId);
-        if (fundingAsset == null || fundingAsset.getQuantityQNT() < monitoredAccount.amount) {
+        if (fundingAsset == null || fundingAsset.getUnconfirmedQuantityQNT() < monitoredAccount.amount) {
             Logger.logWarningMessage(
                     String.format("Funding account %s has insufficient quantity for asset %s; funding transaction discarded",
                             monitor.accountName, Long.toUnsignedString(monitor.holdingId)));
         } else if (targetAsset == null || targetAsset.getQuantityQNT() < monitoredAccount.threshold) {
             Attachment attachment = new Attachment.ColoredCoinsAssetTransfer(monitor.holdingId, monitoredAccount.amount);
-            Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(monitor.secretPhrase),
+            Transaction.Builder builder = Nxt.newTransactionBuilder(monitor.publicKey,
                     0, 0, (short)1440, attachment);
             builder.recipientId(monitoredAccount.accountId)
                    .timestamp(Nxt.getBlockchain().getLastBlockTimestamp());
@@ -668,13 +671,13 @@ public final class AccountMonitor {
         AccountMonitor monitor = monitoredAccount.monitor;
         Account.AccountCurrency targetCurrency = Account.getAccountCurrency(targetAccount.getId(), monitor.holdingId);
         Account.AccountCurrency fundingCurrency = Account.getAccountCurrency(fundingAccount.getId(), monitor.holdingId);
-        if (fundingCurrency == null || fundingCurrency.getUnits() < monitoredAccount.amount) {
+        if (fundingCurrency == null || fundingCurrency.getUnconfirmedUnits() < monitoredAccount.amount) {
             Logger.logWarningMessage(
                     String.format("Funding account %s has insufficient quantity for currency %s; funding transaction discarded",
                             monitor.accountName, Long.toUnsignedString(monitor.holdingId)));
         } else if (targetCurrency == null || targetCurrency.getUnits() < monitoredAccount.threshold) {
             Attachment attachment = new Attachment.MonetarySystemCurrencyTransfer(monitor.holdingId, monitoredAccount.amount);
-            Transaction.Builder builder = Nxt.newTransactionBuilder(Crypto.getPublicKey(monitor.secretPhrase),
+            Transaction.Builder builder = Nxt.newTransactionBuilder(monitor.publicKey,
                     0, 0, (short)1440, attachment);
             builder.recipientId(monitoredAccount.accountId)
                    .timestamp(Nxt.getBlockchain().getLastBlockTimestamp());

@@ -22,14 +22,14 @@ import nxt.Asset;
 import nxt.Constants;
 import nxt.Currency;
 import nxt.NxtException;
-
+import nxt.crypto.Crypto;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import nxt.crypto.Crypto;
 
-import static nxt.http.JSONResponses.*;
+import static nxt.http.JSONResponses.MONITOR_ALREADY_STARTED;
+import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
 
 /**
  * <p>Start an account monitor</p>
@@ -47,7 +47,7 @@ import static nxt.http.JSONResponses.*;
  * that has this property set by the funding account  will be monitored for changes.
  * The property value can be omitted or it can consist of a string containing one or more
  * comma-separated values in the format 'name=value' when name can be 'amount', 'threshold' or 'interval.
- * For example, 'amount=25,threshold=10,interval=1440'.  The specified vvalues will
+ * For example, 'amount=25,threshold=10,interval=1440'.  The specified values will
  * override the default values specified when the account monitor is started.</p>
  *
  * <p>NXT amounts are specified with 8 decimal places.  Asset and Currency decimal places
@@ -97,8 +97,7 @@ public final class StartAccountMonitor extends APIServlet.APIRequestHandler {
         if (account == null) {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }
-        if (AccountMonitor.startMonitor(monitorType, holdingId, property, amount, threshold, interval,
-                    account.getId(), secretPhrase)) {
+        if (AccountMonitor.startMonitor(monitorType, holdingId, property, amount, threshold, interval, secretPhrase)) {
             JSONObject response = new JSONObject();
             response.put("started", true);
             return response;

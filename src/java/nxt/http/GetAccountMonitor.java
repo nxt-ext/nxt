@@ -16,15 +16,13 @@
 
 package nxt.http;
 
-import javax.servlet.http.HttpServletRequest;
-
 import nxt.Account;
 import nxt.AccountMonitor;
 import nxt.crypto.Crypto;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONStreamAware;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 import static nxt.http.JSONResponses.MONITOR_NOT_STARTED;
@@ -52,7 +50,7 @@ public class GetAccountMonitor extends APIServlet.APIRequestHandler {
      *
      * @param   req                 Client request
      * @return                      Client response
-     * @throws  NxtException        Unable to process request
+     * @throws  ParameterException        Unable to process request
      */
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
@@ -80,11 +78,6 @@ public class GetAccountMonitor extends APIServlet.APIRequestHandler {
             monitors.forEach(monitor -> response.add(JSONData.accountMonitor(monitor)));
             return response;
         }
-    }
-
-    @Override
-    boolean requirePost() {
-        return true;
     }
 
     @Override
