@@ -16,8 +16,8 @@
 
 package nxt;
 
-import nxt.db.DbIterator;
 import nxt.crypto.Crypto;
+import nxt.db.DbIterator;
 import nxt.util.Listener;
 import nxt.util.Logger;
 
@@ -232,46 +232,51 @@ public final class AccountMonitor {
         //
         AccountMonitor monitor = new AccountMonitor(monitorType, holdingId, property,
                 amount, threshold, interval, accountId, secretPhrase);
-        //
-        // Locate monitored accounts based on the account property and the setter identifier
-        //
-        List<MonitoredAccount> accountList = new ArrayList<>();
-        try (DbIterator<Account.AccountProperty> it = Account.getProperties(0, accountId, property, 0, Integer.MAX_VALUE)) {
-            while (it.hasNext()) {
-                Account.AccountProperty accountProperty = it.next();
-                MonitoredAccount account = createMonitoredAccount(accountProperty.getRecipientId(), monitor, accountProperty.getValue());
-                accountList.add(account);
-            }
-        }
-        //
-        // Activate the account monitor and check each monitored account to see if we need to submit
-        // an initial fund transaction
-        //
-        synchronized(monitors) {
-            if (monitors.size() > MAX_MONITORS) {
-                throw new RuntimeException("Maximum of " + MAX_MONITORS + " account monitors already started");
-            }
-            if (monitors.contains(monitor)) {
-                Logger.logDebugMessage(String.format("%s monitor already started for account %s, property '%s', holding %s",
-                        monitorType.name(), monitor.accountName, property, Long.toUnsignedString(holdingId)));
-                return false;
-            }
-            accountList.forEach(account -> {
-                List<MonitoredAccount> activeList = accounts.get(account.accountId);
-                if (activeList == null) {
-                    activeList = new ArrayList<>();
-                    accounts.put(account.accountId, activeList);
+        Nxt.getBlockchain().readLock();
+        try {
+            //
+            // Locate monitored accounts based on the account property and the setter identifier
+            //
+            List<MonitoredAccount> accountList = new ArrayList<>();
+            try (DbIterator<Account.AccountProperty> it = Account.getProperties(0, accountId, property, 0, Integer.MAX_VALUE)) {
+                while (it.hasNext()) {
+                    Account.AccountProperty accountProperty = it.next();
+                    MonitoredAccount account = createMonitoredAccount(accountProperty.getRecipientId(), monitor, accountProperty.getValue());
+                    accountList.add(account);
                 }
-                activeList.add(account);
-                pendingEvents.add(account);
-                Logger.logDebugMessage(String.format("Created %s monitor for target account %s, property '%s', holding %s, "
-                        + "amount %d, threshold %d, interval %d",
-                        monitorType.name(), account.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId),
-                        account.amount, account.threshold, account.interval));
-            });
-            monitors.add(monitor);
-            Logger.logInfoMessage(String.format("%s monitor started for funding account %s, property '%s', holding %s",
-                    monitorType.name(), monitor.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId)));
+            }
+            //
+            // Activate the account monitor and check each monitored account to see if we need to submit
+            // an initial fund transaction
+            //
+            synchronized (monitors) {
+                if (monitors.size() > MAX_MONITORS) {
+                    throw new RuntimeException("Maximum of " + MAX_MONITORS + " account monitors already started");
+                }
+                if (monitors.contains(monitor)) {
+                    Logger.logDebugMessage(String.format("%s monitor already started for account %s, property '%s', holding %s",
+                            monitorType.name(), monitor.accountName, property, Long.toUnsignedString(holdingId)));
+                    return false;
+                }
+                accountList.forEach(account -> {
+                    List<MonitoredAccount> activeList = accounts.get(account.accountId);
+                    if (activeList == null) {
+                        activeList = new ArrayList<>();
+                        accounts.put(account.accountId, activeList);
+                    }
+                    activeList.add(account);
+                    pendingEvents.add(account);
+                    Logger.logDebugMessage(String.format("Created %s monitor for target account %s, property '%s', holding %s, "
+                                    + "amount %d, threshold %d, interval %d",
+                            monitorType.name(), account.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId),
+                            account.amount, account.threshold, account.interval));
+                });
+                monitors.add(monitor);
+                Logger.logInfoMessage(String.format("%s monitor started for funding account %s, property '%s', holding %s",
+                        monitorType.name(), monitor.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId)));
+            }
+        } finally {
+            Nxt.getBlockchain().readUnlock();
         }
         return true;
     }
