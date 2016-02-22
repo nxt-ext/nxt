@@ -32,7 +32,11 @@ var NRS = (function (NRS, $) {
                     postfix = " (" + NRS.timeExact() + ")";
                 }
                 var line = prefix + msg + postfix;
-                console.log(line);
+                if (java) {
+                    java.log(line);
+                } else {
+                    console.log(line);
+                }
             } catch (e) {
                 // IE11 when running in compatibility mode
             }
