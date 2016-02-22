@@ -27,5 +27,9 @@ var NRS = (function (NRS) {
         return navigator.userAgent.indexOf("JavaFX") == -1; // JavaFX does not support cors required by ShapeShift
     };
 
+    NRS.isWebWalletLinkVisible = function() {
+        return navigator.userAgent.indexOf("JavaFX") >= 0; // When using JavaFX add a link to a web wallet
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

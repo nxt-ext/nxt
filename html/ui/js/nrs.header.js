@@ -37,6 +37,9 @@ var NRS = (function(NRS, $) {
         if (!NRS.isCoinExchangePageAvailable()) {
             $("#exchange_menu_li").remove();
         }
+        if (!NRS.isWebWalletLinkVisible()) {
+            $("#web_wallet_li").remove();
+        }
     });
 
     $("#refreshSearchIndex").on("click", function() {
@@ -49,6 +52,12 @@ var NRS = (function(NRS, $) {
                 $.growl($.t("search_index_refreshed"));
             }
         })
+    });
+
+    $("#header_open_web_wallet").on("click", function() {
+        if (java) {
+            java.openBrowser(NRS.accountRS);
+        }
     });
 
     return NRS;

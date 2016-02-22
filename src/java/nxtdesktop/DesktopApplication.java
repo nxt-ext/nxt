@@ -36,9 +36,11 @@ import nxt.util.Logger;
 import nxt.util.TrustAllSSLProvider;
 
 import javax.net.ssl.HttpsURLConnection;
+import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -181,6 +183,18 @@ public class DesktopApplication extends Application {
 
     public void log(String message) {
         Logger.logInfoMessage(message);
+    }
+
+    // Invoked from JavaScript
+    @SuppressWarnings("unused")
+    public void openBrowser(String account) {
+        String url = API.getWelcomePageUri().toString();
+        url += "?account=" + account;
+        try {
+            Desktop.getDesktop().browse(new URI(url));
+        } catch (Exception e) {
+            Logger.logInfoMessage("Cannot open " + url + " error " + e.getMessage());
+        }
     }
 
     public void growl(String msg) {
