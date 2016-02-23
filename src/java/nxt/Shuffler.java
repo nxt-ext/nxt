@@ -375,7 +375,8 @@ public final class Shuffler {
     }
 
     private void verify(Shuffling shuffling) {
-        if (shuffling.getParticipant(accountId).getIndex() != shuffling.getParticipantCount() - 1) {
+        ShufflingParticipant shufflingParticipant = shuffling.getParticipant(accountId);
+        if (shufflingParticipant != null && shufflingParticipant.getIndex() != shuffling.getParticipantCount() - 1) {
             boolean found = false;
             for (byte[] key : shuffling.getRecipientPublicKeys()) {
                 if (Arrays.equals(key, recipientPublicKey)) {
@@ -395,7 +396,8 @@ public final class Shuffler {
         if (accountId == shuffling.getAssigneeAccountId()) {
             return;
         }
-        if (shuffling.getParticipant(accountId).getIndex() == shuffling.getParticipantCount() - 1) {
+        ShufflingParticipant shufflingParticipant = shuffling.getParticipant(accountId);
+        if (shufflingParticipant == null || shufflingParticipant.getIndex() == shuffling.getParticipantCount() - 1) {
             return;
         }
         if (ShufflingParticipant.getData(shuffling.getId(), accountId) == null) {

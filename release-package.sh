@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 VERSION=$1
 if [ -x ${VERSION} ];
 then
@@ -28,7 +28,7 @@ rm -rf ${PACKAGE}.zip
 mkdir -p nxt/
 mkdir -p nxt/logs
 
-if [ "${OBFUSCATE}" == "obfuscate" ]; 
+if [ "${OBFUSCATE}" = "obfuscate" ]; 
 then
 echo obfuscate
 /opt/proguard/bin/proguard.sh @nxt.pro
@@ -67,9 +67,11 @@ zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.lo
 rm -rf nxt
 
 echo creating full changelog
-echo -e "${PACKAGE}:\n" > changelog-full.txt
+echo "${PACKAGE}:" > changelog-full.txt
+echo >> changelog-full.txt
 cat changelogs/${CHANGELOG} >> changelog-full.txt
-echo -e "\n--------------------------------------------------------------------------------" >> changelog-full.txt
+echo >> changelog-full.txt
+echo "--------------------------------------------------------------------------------" >> changelog-full.txt
 cat changelogs/changelog.txt >> changelog-full.txt
 
 #echo signing zip package
@@ -79,27 +81,41 @@ echo signing jar package
 ../jarsigner.sh ${PACKAGE}.jar
 
 echo creating change log ${CHANGELOG}
-echo -e "Release $1\n" > ${CHANGELOG}
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.zip\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
+echo "Release $1" > ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.zip" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "sha256:" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
 sha256sum ${PACKAGE}.zip >> ${CHANGELOG}
 
-echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "sha256:" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
 sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
 
-echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
-#echo -e "sha256:\n" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+#echo "sha256:" >> ${CHANGELOG}
 #sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-installer-${VERSION}.dmg\n" >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-installer-${VERSION}.dmg" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
 
-echo -e "The exe, dmg, and jar packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
+echo "The exe, dmg, and jar packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
 
-if [ "${OBFUSCATE}" == "obfuscate" ];
+if [ "${OBFUSCATE}" = "obfuscate" ];
 then
-echo -e "\n\nThis is an experimental release for testing only. Source code is not provided." >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "This is an experimental release for testing only. Source code is not provided." >> ${CHANGELOG}
 fi
-echo -e "\n\nChange log:\n" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "Change log:" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
 
 cat changelogs/${CHANGELOG} >> ${CHANGELOG}
 echo >> ${CHANGELOG}

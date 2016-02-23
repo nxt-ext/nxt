@@ -500,12 +500,16 @@ public class TaggedData {
         long taggedDataId = attachment.getTaggedDataId();
         DbKey dbKey = taggedDataKeyFactory.newKey(taggedDataId);
         Timestamp timestamp = timestampTable.get(dbKey);
-        timestamp.timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, transaction.getTimestamp() - timestamp.timestamp);
+        if (transaction.getTimestamp() - Constants.MIN_PRUNABLE_LIFETIME > timestamp.timestamp) {
+            timestamp.timestamp = transaction.getTimestamp();
+        } else {
+            timestamp.timestamp = timestamp.timestamp + Math.min(Constants.MIN_PRUNABLE_LIFETIME, Integer.MAX_VALUE - timestamp.timestamp);
+        }
         timestampTable.insert(timestamp);
         List<Long> extendTransactionIds = extendTable.get(dbKey);
         extendTransactionIds.add(transaction.getId());
         extendTable.insert(taggedDataId, extendTransactionIds);
-        if (Nxt.getEpochTime() - transaction.getTimestamp() < Constants.MAX_PRUNABLE_LIFETIME) {
+        if (Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME < timestamp.timestamp) {
             TaggedData taggedData = taggedDataTable.get(dbKey);
             if (taggedData == null && attachment.getData() != null) {
                 TransactionImpl uploadTransaction = TransactionDb.findTransaction(taggedDataId);
@@ -528,7 +532,11 @@ public class TaggedData {
         int timestamp = transaction.getTimestamp();
         for (long extendTransactionId : TaggedData.getExtendTransactionIds(transaction.getId())) {
             Transaction extendTransaction = TransactionDb.findTransaction(extendTransactionId);
-            timestamp += Math.max(Constants.MIN_PRUNABLE_LIFETIME, extendTransaction.getTimestamp() - timestamp);
+            if (extendTransaction.getTimestamp() - Constants.MIN_PRUNABLE_LIFETIME > timestamp) {
+                timestamp = extendTransaction.getTimestamp();
+            } else {
+                timestamp = timestamp + Math.min(Constants.MIN_PRUNABLE_LIFETIME, Integer.MAX_VALUE - timestamp);
+            }
             taggedData.transactionTimestamp = timestamp;
             taggedData.blockTimestamp = extendTransaction.getBlockTimestamp();
             taggedData.height = extendTransaction.getHeight();

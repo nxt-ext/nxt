@@ -57,6 +57,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -143,18 +144,23 @@ public final class API {
             //
             // Create the HTTPS connector
             //
+            final SslContextFactory sslContextFactory;
             if (enableSSL) {
                 HttpConfiguration https_config = new HttpConfiguration();
                 https_config.setSecureScheme("https");
                 https_config.setSecurePort(sslPort);
                 https_config.addCustomizer(new SecureRequestCustomizer());
-                SslContextFactory sslContextFactory = new SslContextFactory();
+                sslContextFactory = new SslContextFactory();
                 sslContextFactory.setKeyStorePath(Nxt.getStringProperty("nxt.keyStorePath"));
                 sslContextFactory.setKeyStorePassword(Nxt.getStringProperty("nxt.keyStorePassword", null, true));
-                sslContextFactory.setExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
+                sslContextFactory.addExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
                         "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
                         "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
-                sslContextFactory.setExcludeProtocols("SSLv3");
+                sslContextFactory.addExcludeProtocols("SSLv3");
+                List<String> ciphers = Nxt.getStringListProperty("nxt.apiSSLCiphers");
+                if (!ciphers.isEmpty()) {
+                    sslContextFactory.setIncludeCipherSuites(ciphers.toArray(new String[ciphers.size()]));
+                }
                 connector = new ServerConnector(apiServer, new SslConnectionFactory(sslContextFactory, "http/1.1"),
                         new HttpConnectionFactory(https_config));
                 connector.setPort(sslPort);
@@ -163,6 +169,8 @@ public final class API {
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTPS port " + sslPort);
+            } else {
+                sslContextFactory = null;
             }
             try {
                 browserUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "/index.html", null, null);
@@ -244,6 +252,10 @@ public final class API {
                     APIServlet.initClass();
                     APITestServlet.initClass();
                     apiServer.start();
+                    if (sslContextFactory != null) {
+                        Logger.logDebugMessage("API SSL Protocols: " + Arrays.toString(sslContextFactory.getSelectedProtocols()));
+                        Logger.logDebugMessage("API SSL Ciphers: " + Arrays.toString(sslContextFactory.getSelectedCipherSuites()));
+                    }
                     Logger.logMessage("Started API server at " + host + ":" + port + (enableSSL && port != sslPort ? ", " + host + ":" + sslPort : ""));
                 } catch (Exception e) {
                     Logger.logErrorMessage("Failed to start API server", e);
