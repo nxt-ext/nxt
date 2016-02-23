@@ -62,7 +62,7 @@ var NRS = (function (NRS) {
             }
         }
         NRS.setJSONItem(table, item);
-        callback(data);
+        callback(null, data);
     };
 
     NRS.storageUpdate = function(table, data, query, callback) {
@@ -76,22 +76,29 @@ var NRS = (function (NRS) {
             }
         }
         NRS.setJSONItem(table, item);
-        callback(data);
+        callback(null, data);
     };
 
-    NRS.storageDelete = function(table, key, query, callback) {
+    NRS.storageDelete = function(table, query, callback) {
         if (NRS.databaseSupport) {
             return NRS.database.delete(table, query, callback);
         }
         var item = NRS.getJSONItem(table);
         for (var i=0; i<query.length; i++) {
-            delete item[query[i][key]]
+            for (var key in item) {
+                if (!item.hasOwnProperty(key)) {
+                    continue;
+                }
+                if (query[i] == key) {
+                    delete item[key];
+                }
+            }
         }
         NRS.setJSONItem(table, item);
-        callback(data);
+        callback(null);
     };
 
-    NRS.storageDeleteTable = function(table) {
+    NRS.storageDrop = function(table) {
         NRS.removeItem(table);
     };
 
