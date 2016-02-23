@@ -23,7 +23,7 @@ import nxt.env.RuntimeMode;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
-import nxt.util.AddOn;
+import nxt.addons.AddOn;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
