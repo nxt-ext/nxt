@@ -19,83 +19,96 @@
  */
 var NRS = (function (NRS) {
 
-    NRS.storageSelect = function(table, query, callback) {
+    NRS.storageSelect = function(table, key, query, callback) {
         if (NRS.databaseSupport) {
             NRS.database.select(table, query, callback);
             return;
         }
-        var item = NRS.getJSONItem(table);
+        var items = NRS.getJSONItem(table);
+        if (!items) {
+            callback("No items to select", []);
+            return;
+        }
         var response = [];
-        if (!query) {
-            for (var key in item) {
-                if (!item.hasOwnProperty(key)) {
-                    continue;
-                }
-                var entry = {};
-                entry[key] = item[key];
-                response.push(entry);
+        for (var i=0; i<items.length; i++) {
+            if (!query) {
+                response.push(items[i]);
+                continue;
             }
-        } else {
-            for (var i = 0; i < query.length; i++) {
-                if (item[query[i]]) {
-                    response.push(item[query[i]]);
+            for (var j=0; j<query.length; j++) {
+                if (items[i][key] == query[j][key]) {
+                    response.push(items[i]);
                 }
             }
         }
         callback(null, response);
     };
 
-    NRS.storageInsert = function(table, data, callback) {
+    NRS.storageInsert = function(table, key, data, callback) {
         if (NRS.databaseSupport) {
-            return NRS.database.insert(table, data, callback);
+            return NRS.database.insert(items, data, callback);
         }
-        var item = NRS.getJSONItem(table);
-        if (!item) {
-            item = {};
+        var items = NRS.getJSONItem(table);
+        if (!items) {
+            items = [];
         }
-        for (var i=0; i<data.length; i++) {
-            for (var key in data[i]) {
-                if (!data[i].hasOwnProperty(key)) {
-                    continue;
+        for (var i=0; i<items.length; i++) {
+            for (var j=0; j<data.length; j++) {
+                if (items[i][key] == data[j][key]) {
+                    callback("Key already exists: " + items[i][key], []);
+                    return;
                 }
-                item[key] = data[i][key];
             }
         }
-        NRS.setJSONItem(table, item);
-        callback(null, data);
+        for (i=0; i<data.length; i++) {
+            items.push(data[i]);
+        }
+        NRS.setJSONItem(table, items);
+        callback(null, items);
     };
 
-    NRS.storageUpdate = function(table, data, query, callback) {
+    NRS.storageUpdate = function(table, key, data, query, callback) {
         if (NRS.databaseSupport) {
             return NRS.database.update(table, data, query, callback);
         }
-        var item = NRS.getJSONItem(table);
-        for (var i=0; i<query.length; i++) {
-            if (item[query[i]]) {
-                item[query[i]] = data;
+        var items = NRS.getJSONItem(table);
+        if (!items) {
+            callback("No items to update", []);
+            return;
+        }
+        if (!query) {
+            callback("No update query", []);
+            return;
+        }
+        for (var i=0; i<items.length; i++) {
+            for (var j=0; j<query.length; j++) {
+                if (items[i][key] == query[j][key]) {
+                    items[i] = data[0];
+                }
             }
         }
-        NRS.setJSONItem(table, item);
-        callback(null, data);
+        NRS.setJSONItem(table, items);
+        callback(null, items);
     };
 
-    NRS.storageDelete = function(table, query, callback) {
+    NRS.storageDelete = function(table, key, query, callback) {
         if (NRS.databaseSupport) {
             return NRS.database.delete(table, query, callback);
         }
-        var item = NRS.getJSONItem(table);
-        for (var i=0; i<query.length; i++) {
-            for (var key in item) {
-                if (!item.hasOwnProperty(key)) {
-                    continue;
-                }
-                if (query[i] == key) {
-                    delete item[key];
+        var items = NRS.getJSONItem(table);
+        if (!items) {
+            callback("No items to delete", []);
+            return;
+        }
+        for (var i=0; i<items.length; i++) {
+            for (var j=0; j<query.length; j++) {
+                if (items[i][key] == query[j][key]) {
+                    items.splice(i, 1);
                 }
             }
         }
-        NRS.setJSONItem(table, item);
-        callback(null);
+        NRS.setJSONItem(table, items);
+        callback(null, items);
     };
 
     NRS.storageDrop = function(table) {

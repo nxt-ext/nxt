@@ -555,6 +555,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.removeItem("language");
 		NRS.removeItem("themeChoice");
 		NRS.removeItem("remember_passphrase");
+		NRS.removeItem("polls");
 		NRS.logout();
 	});
 
