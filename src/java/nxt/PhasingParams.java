@@ -151,6 +151,9 @@ public final class PhasingParams {
     }
 
     void checkApprovable() throws NxtException.NotCurrentlyValidException {
+        if (Nxt.getBlockchain().getHeight() < Constants.BLOCK_18) {
+            return;
+        }
         if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
             Currency currency = Currency.getCurrency(voteWeighting.getHoldingId());
             if (currency == null) {
