@@ -451,7 +451,9 @@ public class AccountLedger {
             SHUFFLING_REGISTRATION(51, true),
             SHUFFLING_PROCESSING(52, true),
             SHUFFLING_CANCELLATION(53, true),
-            SHUFFLING_DISTRIBUTION(54, true);
+            SHUFFLING_DISTRIBUTION(54, true),
+        // FNXT DISTRIBUTION
+            FNXT_DISTRIBUTION(58, false);
 
 
         /** Event code mapping */

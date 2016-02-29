@@ -1162,6 +1162,10 @@ class NxtDbVersion extends DbVersion {
                     throw new RuntimeException(e.toString(), e);
                 }
             case 479:
+                apply("CREATE TABLE IF NOT EXISTS account_fnxt (id BIGINT NOT NULL, balance VARBINARY NOT NULL, height INT NOT NULL)");
+            case 480:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fnxt_id_idx ON account_fnxt (id, height DESC)");
+            case 481:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
