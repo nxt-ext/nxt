@@ -21,10 +21,6 @@ var NRS = (function(NRS, $, undefined) {
 	$(".sidebar_context").on("contextmenu", "a", function(e) {
 		e.preventDefault();
 
-		if (!NRS.databaseSupport) {
-			return;
-		}
-
 		NRS.closeContextMenu();
 
 		if ($(this).hasClass("no-context")) {
