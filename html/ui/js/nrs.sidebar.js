@@ -17,36 +17,27 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	$(".sidebar_context").on("contextmenu", "a", function(e) {
 		e.preventDefault();
-
 		NRS.closeContextMenu();
-
 		if ($(this).hasClass("no-context")) {
 			return;
 		}
 
 		NRS.selectedContext = $(this);
-
 		NRS.selectedContext.addClass("context");
-
 		$(document).on("click.contextmenu", NRS.closeContextMenu);
-
 		var contextMenu = $(this).data("context");
-
 		if (!contextMenu) {
 			contextMenu = $(this).closest(".list-group").attr("id") + "_context";
 		}
 
 		var $contextMenu = $("#" + contextMenu);
-
 		if ($contextMenu.length) {
 			var $options = $contextMenu.find("ul.dropdown-menu a");
-
 			$.each($options, function() {
 				var requiredClass = $(this).data("class");
-
 				if (!requiredClass) {
 					$(this).show();
 				} else if (NRS.selectedContext.hasClass(requiredClass)) {
@@ -62,7 +53,6 @@ var NRS = (function(NRS, $, undefined) {
 				top: e.pageY
 			});
 		}
-
 		return false;
 	});
 
@@ -72,14 +62,13 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$(".context_menu").hide();
-
 		if (NRS.selectedContext) {
 			NRS.selectedContext.removeClass("context");
 			//NRS.selectedContext = null;
 		}
 
 		$(document).off("click.contextmenu");
-	}
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));
