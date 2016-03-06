@@ -22,8 +22,8 @@ var NRS = (function(NRS, $, undefined) {
 	var _voteCache = {};
 
 	function _setFollowButtonStates() {
-		NRS.storageSelect("polls", "poll", null, function(error, polls) {
-			$.each(polls, function(index, poll) {
+		NRS.storageSelect("polls", null, function (error, polls) {
+			$.each(polls, function (index, poll) {
 				$('.follow_button:visible[data-follow="' + poll.poll + '"]').attr('disabled', true);
 			});
 		});
@@ -769,9 +769,9 @@ var NRS = (function(NRS, $, undefined) {
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 		NRS.followedPolls = [];
 		NRS.followedPollIds = [];
-		NRS.storageSelect("polls", "poll", null, function(error, polls) {
+		NRS.storageSelect("polls", null, function (error, polls) {
 			//select already bookmarked polls
-			$.each(polls, function(index, poll) {
+			$.each(polls, function (index, poll) {
 				NRS.cachePoll(poll);
 			});
 			NRS.loadFollowedPollsSidebar(callback);
@@ -876,13 +876,13 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 
-		NRS.storageSelect("polls", "poll", newPollIds, function(error, existingPolls) {
+		NRS.storageSelect("polls", newPollIds, function (error, existingPolls) {
 			var existingIds = [];
 			if (existingPolls.length) {
-				$.each(existingPolls, function(index, poll) {
+				$.each(existingPolls, function (index, poll) {
 					existingIds.push(poll.poll);
 				});
-				newPoll = $.grep(newPolls, function(v) {
+				newPoll = $.grep(newPolls, function (v) {
 					return (existingIds.indexOf(v.poll) === -1);
 				});
 			}
@@ -892,8 +892,8 @@ var NRS = (function(NRS, $, undefined) {
 					callback([], polls);
 				}
 			} else {
-				NRS.storageInsert("polls", "poll", newPolls, function() {
-					$.each(newPolls, function(key, poll) {
+				NRS.storageInsert("polls", "poll", newPolls, function () {
+					$.each(newPolls, function (key, poll) {
 						poll.name = poll.name.toLowerCase();
 						NRS.followedPollIds.push(poll.poll);
 						NRS.followedPolls.push(poll);
@@ -901,7 +901,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					if (callback) {
 						//for some reason we need to wait a little or DB won't be able to fetch inserted record yet..
-						setTimeout(function() {
+						setTimeout(function () {
 							callback(newPolls, polls);
 						}, 50);
 					}
@@ -1002,9 +1002,9 @@ var NRS = (function(NRS, $, undefined) {
             return;
         }
 
-		NRS.storageSelect("polls", "poll", [{
+		NRS.storageSelect("polls", [{
 			"poll": currentPollID
-		}], function(error, poll) {
+		}], function (error, poll) {
 			if (poll && poll.length && poll[0].poll == currentPollID) {
 				NRS.loadPoll(poll[0], refresh);
 			}
@@ -1018,10 +1018,10 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.closeContextMenu();
 		if (option == "remove_from_bookmarks") {
-			NRS.storageDelete("polls", "poll", [{
+			NRS.storageDelete("polls", [{
 				"poll": pollId
-			}], function() {
-				setTimeout(function() {
+			}], function () {
+				setTimeout(function () {
 					NRS.loadPage("followed_polls");
 					$.growl($.t("success_poll_bookmark_removal"), {
 						"type": "success"

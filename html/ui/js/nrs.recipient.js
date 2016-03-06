@@ -247,8 +247,8 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		} else if (!(/^\d+$/.test(account))) {
-			if (NRS.databaseSupport && account.charAt(0) != '@') {
-				NRS.database.select("contacts", [{
+			if (account.charAt(0) != '@') {
+				NRS.storageSelect("contacts", [{
 					"name": account
 				}], function(error, contact) {
 					if (!error && contact.length) {

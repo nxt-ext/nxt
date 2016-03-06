@@ -31,9 +31,6 @@ var NRS = (function(NRS, $) {
         widgetVisibility($("#header_send_money"), { apis: [NRS.constants.REQUEST_TYPES.sendMoney] });
         widgetVisibility($("#header_transfer_currency"), { apis: [NRS.constants.REQUEST_TYPES.transferCurrency] });
         widgetVisibility($("#header_send_message"), { apis: [NRS.constants.REQUEST_TYPES.sendMessage] });
-        if (!NRS.isContactsPageAvailable()) {
-            $("#contacts_menu_li").remove();
-        }
         if (!NRS.isCoinExchangePageAvailable()) {
             $("#exchange_menu_li").remove();
         }

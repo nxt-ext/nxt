@@ -19,7 +19,7 @@
  */
 var NRS = (function (NRS) {
 
-    NRS.storageSelect = function(table, key, query, callback) {
+    NRS.storageSelect = function (table, query, callback) {
         if (NRS.databaseSupport) {
             NRS.database.select(table, query, callback);
             return;
@@ -36,17 +36,19 @@ var NRS = (function (NRS) {
                 continue;
             }
             for (var j=0; j<query.length; j++) {
-                if (items[i][key] == query[j][key]) {
-                    response.push(items[i]);
-                }
+                Object.keys(query[j]).forEach(function(key) {
+                    if (items[i][key] == query[j][key]) {
+                        response.push(items[i]);
+                    }
+                })
             }
         }
         callback(null, response);
     };
 
-    NRS.storageInsert = function(table, key, data, callback) {
+    NRS.storageInsert = function(table, key, data, callback, isAutoIncrement) {
         if (NRS.databaseSupport) {
-            return NRS.database.insert(items, data, callback);
+            return NRS.database.insert(table, data, callback);
         }
         var items = NRS.getJSONItem(table);
         if (!items) {
@@ -60,14 +62,36 @@ var NRS = (function (NRS) {
                 }
             }
         }
-        for (i=0; i<data.length; i++) {
-            items.push(data[i]);
+
+        if ($.isArray(data)) {
+            for (i = 0; i < data.length; i++) {
+                insertItem(data[i]);
+            }
+        } else {
+            insertItem(data);
         }
         NRS.setJSONItem(table, items);
         callback(null, items);
+
+        function insertItem(item) {
+            if (!isAutoIncrement) {
+                items.push(item);
+                return;
+            }
+            if (item.id) {
+                callback("Cannot use auto increment id since data already contains id value", []);
+                return;
+            }
+            if (items.length == 0) {
+                item.id = 1;
+            } else {
+                item.id = items[items.length - 1].id + 1;
+            }
+            items.push(item);
+        }
     };
 
-    NRS.storageUpdate = function(table, key, data, query, callback) {
+    NRS.storageUpdate = function (table, data, query, callback) {
         if (NRS.databaseSupport) {
             return NRS.database.update(table, data, query, callback);
         }
@@ -82,16 +106,22 @@ var NRS = (function (NRS) {
         }
         for (var i=0; i<items.length; i++) {
             for (var j=0; j<query.length; j++) {
-                if (items[i][key] == query[j][key]) {
-                    items[i] = data[0];
-                }
+                Object.keys(query[j]).forEach(function(key) {
+                    if (items[i][key] == query[j][key]) {
+                        var id = items[i].id;
+                        items[i] = data;
+                        if (id && !data.id) {
+                            items[i].id = id;
+                        }
+                    }
+                });
             }
         }
         NRS.setJSONItem(table, items);
         callback(null, items);
     };
 
-    NRS.storageDelete = function(table, key, query, callback) {
+    NRS.storageDelete = function (table, query, callback) {
         if (NRS.databaseSupport) {
             return NRS.database.delete(table, query, callback);
         }
@@ -102,9 +132,11 @@ var NRS = (function (NRS) {
         }
         for (var i=0; i<items.length; i++) {
             for (var j=0; j<query.length; j++) {
-                if (items[i][key] == query[j][key]) {
-                    items.splice(i, 1);
-                }
+                Object.keys(query[j]).forEach(function(key) {
+                    if (items[i][key] == query[j][key]) {
+                        items.splice(i, 1);
+                    }
+                })
             }
         }
         NRS.setJSONItem(table, items);
