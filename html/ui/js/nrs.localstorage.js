@@ -161,7 +161,7 @@ var NRS = (function (NRS) {
         }
     };
 
-    NRS.storageDrop = function(table) {
+    NRS.localStorageDrop = function(table) {
         NRS.removeAccountItem(table);
     };
 

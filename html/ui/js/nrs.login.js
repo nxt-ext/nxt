@@ -554,10 +554,10 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.removeItem("language");
 		NRS.removeItem("themeChoice");
 		NRS.removeItem("remember_passphrase");
-		NRS.storageDrop("data");
-		NRS.storageDrop("polls");
-		NRS.storageDrop("contacts");
-		NRS.storageDrop("assets");
+		NRS.localStorageDrop("data");
+		NRS.localStorageDrop("polls");
+		NRS.localStorageDrop("contacts");
+		NRS.localStorageDrop("assets");
 		NRS.logout();
 	});
 

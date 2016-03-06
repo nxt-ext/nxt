@@ -1,7 +1,7 @@
 QUnit.module("nxt.localstorage");
 
 function init() {
-    NRS.storageDrop("items");
+    NRS.localStorageDrop("items");
     var data = [];
     data.push({"id": "1", "name": "abc" });
     data.push({"id": "2", "name": "def" });
@@ -10,7 +10,7 @@ function init() {
 }
 
 function initAutoInc() {
-    NRS.storageDrop("items");
+    NRS.localStorageDrop("items");
     var data = [];
     data.push({"key": "111", "value": "abc" });
     data.push({"key": "222", "value": "def" });
@@ -67,7 +67,7 @@ QUnit.test("insert.unique", function (assert) {
 });
 
 QUnit.test("insert.autoinc", function (assert) {
-    NRS.storageDrop("items");
+    NRS.localStorageDrop("items");
     var data = [];
     data.push({"id": "1", "name": "abc" });
     NRS.storageInsert("items", "id", data, function(error) {
@@ -134,7 +134,7 @@ QUnit.test("delete", function (assert) {
             assert.equal(response[0]["id"], "1");
         })
     });
-    NRS.storageDrop("items");
+    NRS.localStorageDrop("items");
     NRS.storageDelete("items", null, function (error, response) {
         assert.equal(error, null);
         assert.equal(response.length, 0);
