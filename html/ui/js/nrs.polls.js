@@ -1079,7 +1079,7 @@ var NRS = (function(NRS, $, undefined) {
 			}, function(response) {
 				if (!response.errorCode) {
 					if (response.poll != poll.poll || response.account != poll.account || response.accountRS != poll.accountRS || response.description != poll.description || response.name != poll.name) {
-						NRS.database.delete("polls", [{
+						NRS.storageDelete("polls", [{
 							"poll": poll.poll
 						}], function() {
 							setTimeout(function() {
