@@ -28,6 +28,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import netscape.javascript.JSObject;
+import nxt.BlockchainProcessor;
 import nxt.Nxt;
 import nxt.TaggedData;
 import nxt.http.API;
@@ -92,7 +93,7 @@ public class DesktopApplication extends Application {
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
                     if (newState == Worker.State.SUCCEEDED) {
-                        nrs = (JSObject) webEngine.executeScript("NRS");
+                        Nxt.getBlockchainProcessor().addListener((block) -> Platform.runLater(() -> webEngine.executeScript("NRS.getState()")), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
                     }
                 });
 
