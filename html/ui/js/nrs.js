@@ -532,16 +532,14 @@ NRS.addPagination = function () {
 		NRS.pages[NRS.currentPage]();
 	};
 
-
-
-	NRS.initUserDBSuccess = function() {
-		NRS.database.select("data", [{
+	function initUserDB() {
+		NRS.storageSelect("data", [{
 			"id": "asset_exchange_version"
 		}], function(error, result) {
 			if (!result || !result.length) {
-				NRS.database.delete("assets", [], function(error) {
+				NRS.storageDelete("assets", [], function(error) {
 					if (!error) {
-						NRS.database.insert("data", {
+						NRS.storageInsert("data", "id", {
 							"id": "asset_exchange_version",
 							"contents": 2
 						});
@@ -550,27 +548,30 @@ NRS.addPagination = function () {
 			}
 		});
 
-		NRS.database.select("data", [{
+		NRS.storageSelect("data", [{
 			"id": "closed_groups"
 		}], function(error, result) {
 			if (result && result.length) {
 				NRS.closedGroups = result[0].contents.split("#");
 			} else {
-				NRS.database.insert("data", {
+				NRS.storageInsert("data", "id", {
 					id: "closed_groups",
 					contents: ""
 				});
 			}
 		});
-
-		NRS.databaseSupport = true;
-        NRS.logConsole("Browser database initialized");
 		NRS.loadContacts();
 		NRS.getSettings();
 		NRS.updateNotifications();
 		NRS.setUnconfirmedNotifications();
 		NRS.setPhasingNotifications();
-	};
+	}
+
+	NRS.initUserDBSuccess = function() {
+		NRS.databaseSupport = true;
+		initUserDB();
+        NRS.logConsole("IndexedDB initialized");
+    };
 
 	NRS.initUserDBWithLegacyData = function() {
 		var legacyTables = ["contacts", "assets", "data"];
@@ -584,14 +585,12 @@ NRS.addPagination = function () {
 		setTimeout(function(){ NRS.initUserDBSuccess(); }, 1000);
 	};
 
-	NRS.initUserDBFail = function() {
+	NRS.initLocalStorage = function() {
 		NRS.database = null;
 		NRS.databaseSupport = false;
-		NRS.getSettings();
-		NRS.updateNotifications();
-		NRS.setUnconfirmedNotifications();
-		NRS.setPhasingNotifications();
-	};
+		initUserDB();
+        NRS.logConsole("local storage initialized");
+    };
 
 	NRS.createLegacyDatabase = function() {
 		var schema = {};
@@ -697,8 +696,8 @@ NRS.addPagination = function () {
 		NRS.pollsTableKeys = ["account", "accountRS", "poll", "description", "name", "finishHeight"];
 
 		if (navigator.userAgent.indexOf("JavaFX/") >= 0) {
-			NRS.logConsole("IndexedDB not supported by JavaFX WebEngine, need to relay on localStorage");
-			NRS.initUserDBFail();
+			NRS.logConsole("IndexedDB not supported by the JavaFX WebEngine, using localStorage instead");
+			NRS.initLocalStorage();
 			return;
 		}
 		try {
@@ -725,13 +724,13 @@ NRS.addPagination = function () {
 					});
 				} else {
 					NRS.logConsole("Error opening database " + error);
-					NRS.initUserDBFail();
+					NRS.initLocalStorage();
 				}
 			});
 			NRS.logConsole("Opening database " + NRS.database);
 		} catch (e) {
 			NRS.logConsole("Exception opening database " + e.message);
-			NRS.initUserDBFail();
+			NRS.initLocalStorage();
 		}
 	};
 
@@ -820,46 +819,37 @@ NRS.addPagination = function () {
 				//only show if happened within last week
 				var showAssetDifference = (!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7));
 
-				if (NRS.databaseSupport) {
-					NRS.database.select("data", [{
-						"id": "asset_balances"
-					}], function(error, asset_balance) {
-						if (asset_balance && asset_balance.length) {
-							var previous_balances = asset_balance[0].contents;
-							if (!NRS.accountInfo.assetBalances) {
-								NRS.accountInfo.assetBalances = [];
-							}
-							var current_balances = JSON.stringify(NRS.accountInfo.assetBalances);
-							if (previous_balances != current_balances) {
-								if (previous_balances != "undefined" && typeof previous_balances != "undefined") {
-									previous_balances = JSON.parse(previous_balances);
-								} else {
-									previous_balances = [];
-								}
-								NRS.database.update("data", {
-									contents: current_balances
-								}, [{
-									id: "asset_balances"
-								}]);
-								if (showAssetDifference) {
-									NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
-								}
-							}
-						} else {
-							NRS.database.insert("data", {
-								id: "asset_balances",
-								contents: JSON.stringify(NRS.accountInfo.assetBalances)
-							});
+				NRS.storageSelect("data", [{
+					"id": "asset_balances"
+				}], function(error, asset_balance) {
+					if (asset_balance && asset_balance.length) {
+						var previous_balances = asset_balance[0].contents;
+						if (!NRS.accountInfo.assetBalances) {
+							NRS.accountInfo.assetBalances = [];
 						}
-					});
-				} else if (showAssetDifference && previousAccountInfo && previousAccountInfo.assetBalances) {
-					var previousBalances = JSON.stringify(previousAccountInfo.assetBalances);
-					var currentBalances = JSON.stringify(NRS.accountInfo.assetBalances);
-
-					if (previousBalances != currentBalances) {
-						NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previousAccountInfo.assetBalances);
+						var current_balances = JSON.stringify(NRS.accountInfo.assetBalances);
+						if (previous_balances != current_balances) {
+							if (previous_balances != "undefined" && typeof previous_balances != "undefined") {
+								previous_balances = JSON.parse(previous_balances);
+							} else {
+								previous_balances = [];
+							}
+							NRS.storageUpdate("data", {
+								contents: current_balances
+							}, [{
+								id: "asset_balances"
+							}]);
+							if (showAssetDifference) {
+								NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
+							}
+						}
+					} else {
+						NRS.storageInsert("data", "id", {
+							id: "asset_balances",
+							contents: JSON.stringify(NRS.accountInfo.assetBalances)
+						});
 					}
-				}
+				});
 
 				$("#account_balance, #account_balance_sidebar").html(NRS.formatStyledAmount(response.unconfirmedBalanceNQT));
 				$("#account_forged_balance").html(NRS.formatStyledAmount(response.forgedBalanceNQT));

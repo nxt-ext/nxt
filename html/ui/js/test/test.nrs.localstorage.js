@@ -101,11 +101,11 @@ QUnit.test("update", function (assert) {
 
 QUnit.test("update.autoinc", function (assert) {
     initAutoInc();
-    NRS.storageUpdate("items", {"key": "333", name: "qqq"}, [{key: "333"}], function () {
+    NRS.storageUpdate("items", {"key": "333", value: "qqq"}, [{key: "333"}], function () {
         NRS.storageSelect("items", null, function (error, response) {
             assert.equal(error, null);
             assert.equal(response.length, 3);
-            assert.equal(response[2]["name"], "qqq");
+            assert.equal(response[2]["value"], "qqq");
             assert.equal(response[2]["id"], 3);
         })
     });
@@ -133,5 +133,10 @@ QUnit.test("delete", function (assert) {
             assert.equal(response.length, 1);
             assert.equal(response[0]["id"], "1");
         })
+    });
+    NRS.storageDrop("items");
+    NRS.storageDelete("items", null, function (error, response) {
+        assert.equal(error, null);
+        assert.equal(response.length, 0);
     });
 });

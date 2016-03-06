@@ -33,7 +33,7 @@ var NRS = (function (NRS) {
         }
         var response = [];
         for (var i=0; i<items.length; i++) {
-            if (!query) {
+            if (!query || query.length == 0) {
                 response.push(items[i]);
                 continue;
             }
@@ -122,11 +122,9 @@ var NRS = (function (NRS) {
             for (var j=0; j<query.length; j++) {
                 Object.keys(query[j]).forEach(function(key) {
                     if (items[i][key] == query[j][key]) {
-                        var id = items[i].id;
-                        items[i] = data;
-                        if (id && !data.id) {
-                            items[i].id = id;
-                        }
+                        Object.keys(data).forEach(function(dataKey) {
+                            items[i][dataKey] = data[dataKey];
+                        })
                     }
                 });
             }
@@ -144,7 +142,7 @@ var NRS = (function (NRS) {
         var items = NRS.getAccountJSONItem(table);
         if (!items) {
             if (callback) {
-                callback("No items to delete", []);
+                callback(null, []);
             }
             return;
         }

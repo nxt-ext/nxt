@@ -557,6 +557,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.storageDrop("data");
 		NRS.storageDrop("polls");
 		NRS.storageDrop("contacts");
+		NRS.storageDrop("assets");
 		NRS.logout();
 	});
 
