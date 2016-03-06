@@ -550,13 +550,13 @@ var NRS = (function(NRS, $, undefined) {
 			indexedDB.deleteDatabase(NRS.legacyDatabase.name);
 		}
 		NRS.removeItem("logged_in");
-		NRS.removeAccountItem("settings");
 		NRS.removeItem("savedNxtAccounts");
 		NRS.removeItem("language");
 		NRS.removeItem("themeChoice");
 		NRS.removeItem("remember_passphrase");
-		NRS.removeItem("polls");
-		NRS.removeItem("contacts");
+		NRS.storageDrop("data");
+		NRS.storageDrop("polls");
+		NRS.storageDrop("contacts");
 		NRS.logout();
 	});
 

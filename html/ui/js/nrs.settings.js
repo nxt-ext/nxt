@@ -263,7 +263,7 @@ var NRS = (function(NRS, $) {
         if (NRS.settings["exchange"] != -1) {
             $("#settings_exchange_initial").remove();
         }
-		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
+		if (NRS.database && NRS.database["name"] == "NRS_USER_DB") {
 			$("#settings_db_warning").show();
 		}
 		NRS.pageLoaded();
@@ -466,43 +466,39 @@ var NRS = (function(NRS, $) {
 		} else {
             async.waterfall([
                 function (callback) {
-                    if (NRS.databaseSupport) {
-                        NRS.database.select("data", [{
-                            "id": "settings"
-                        }], function (error, result) {
-                            if (result && result.length) {
-                                NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
-                            } else {
-                                NRS.database.insert("data", {
-                                    id: "settings",
-                                    contents: "{}"
-                                });
-                                NRS.settings = NRS.defaultSettings;
-                            }
-                            NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
-                            for (var setting in NRS.defaultSettings) {
-                                if (!NRS.defaultSettings.hasOwnProperty(setting)) {
-                                    continue;
-                                }
-                                var value = NRS.settings[setting];
-                                var status = (NRS.defaultSettings[setting] !== value ? "modified" : "default");
-                                if (setting.search("password") >= 0) {
-                                    value = new Array(value.length + 1).join('*');
-                                }
-                                NRS.logConsole(setting + " = " + value + " [" + status + "]");
-                            }
-                            NRS.applySettings();
-                            callback(null);
-                        });
-                    } else {
-						NRS.settings = $.extend({}, NRS.defaultSettings, NRS.getAccountJSONItem("settings"));
-						NRS.logConsole("Loading settings from local storage");
-                        NRS.applySettings();
-                        callback(null);
-                    }
+					NRS.storageSelect("data", [{
+						"id": "settings"
+					}], function (error, result) {
+						if (result && result.length) {
+							NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
+						} else {
+							NRS.storageInsert("data", "id", {
+								id: "settings",
+								contents: "{}"
+							});
+							NRS.settings = NRS.defaultSettings;
+						}
+						NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
+						for (var setting in NRS.defaultSettings) {
+							if (!NRS.defaultSettings.hasOwnProperty(setting)) {
+								continue;
+							}
+							var value = NRS.settings[setting];
+							var status = (NRS.defaultSettings[setting] !== value ? "modified" : "default");
+							if (setting.search("password") >= 0) {
+								value = new Array(value.length + 1).join('*');
+							}
+							NRS.logConsole(setting + " = " + value + " [" + status + "]");
+						}
+						NRS.applySettings();
+						callback(null);
+					});
                 },
-                function (callback) {
+                function() {
                     for (var schema in NRS.defaultColors) {
+						if (!NRS.defaultColors.hasOwnProperty(schema)) {
+							continue;
+						}
                         var color = NRS.settings[schema + "_color"];
                         if (color) {
                             NRS.updateStyle(schema, color);
@@ -626,15 +622,11 @@ var NRS = (function(NRS, $) {
 			}
 		}
 
-		if (NRS.databaseSupport) {
-			NRS.database.update("data", {
-				contents: JSON.stringify(NRS.settings)
-			}, [{
-				id: "settings"
-			}]);
-		} else {
-			NRS.setAccountJSONItem("settings", NRS.settings);
-		}
+		NRS.storageUpdate("data", {
+			contents: JSON.stringify(NRS.settings)
+		}, [{
+			id: "settings"
+		}]);
 		NRS.applySettings(key);
 	};
 

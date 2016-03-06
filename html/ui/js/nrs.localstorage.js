@@ -26,7 +26,9 @@ var NRS = (function (NRS) {
         }
         var items = NRS.getAccountJSONItem(table);
         if (!items) {
-            callback("No items to select", []);
+            if (callback) {
+                callback("No items to select", []);
+            }
             return;
         }
         var response = [];
@@ -43,7 +45,9 @@ var NRS = (function (NRS) {
                 })
             }
         }
-        callback(null, response);
+        if (callback) {
+            callback(null, response);
+        }
     };
 
     NRS.storageInsert = function(table, key, data, callback, isAutoIncrement) {
@@ -57,7 +61,9 @@ var NRS = (function (NRS) {
         for (var i=0; i<items.length; i++) {
             for (var j=0; j<data.length; j++) {
                 if (items[i][key] == data[j][key]) {
-                    callback("Key already exists: " + items[i][key], []);
+                    if (callback) {
+                        callback("Key already exists: " + items[i][key], []);
+                    }
                     return;
                 }
             }
@@ -71,7 +77,9 @@ var NRS = (function (NRS) {
             insertItem(data);
         }
         NRS.setAccountJSONItem(table, items);
-        callback(null, items);
+        if (callback) {
+            callback(null, items);
+        }
 
         function insertItem(item) {
             if (!isAutoIncrement) {
@@ -79,7 +87,9 @@ var NRS = (function (NRS) {
                 return;
             }
             if (item.id) {
-                callback("Cannot use auto increment id since data already contains id value", []);
+                if (callback) {
+                    callback("Cannot use auto increment id since data already contains id value", []);
+                }
                 return;
             }
             if (items.length == 0) {
@@ -97,11 +107,15 @@ var NRS = (function (NRS) {
         }
         var items = NRS.getAccountJSONItem(table);
         if (!items) {
-            callback("No items to update", []);
+            if (callback) {
+                callback("No items to update", []);
+            }
             return;
         }
         if (!query) {
-            callback("No update query", []);
+            if (callback) {
+                callback("No update query", []);
+            }
             return;
         }
         for (var i=0; i<items.length; i++) {
@@ -118,7 +132,9 @@ var NRS = (function (NRS) {
             }
         }
         NRS.setAccountJSONItem(table, items);
-        callback(null, items);
+        if (callback) {
+            callback(null, items);
+        }
     };
 
     NRS.storageDelete = function (table, query, callback) {
@@ -127,7 +143,9 @@ var NRS = (function (NRS) {
         }
         var items = NRS.getAccountJSONItem(table);
         if (!items) {
-            callback("No items to delete", []);
+            if (callback) {
+                callback("No items to delete", []);
+            }
             return;
         }
         for (var i=0; i<items.length; i++) {
@@ -140,7 +158,9 @@ var NRS = (function (NRS) {
             }
         }
         NRS.setAccountJSONItem(table, items);
-        callback(null, items);
+        if (callback) {
+            callback(null, items);
+        }
     };
 
     NRS.storageDrop = function(table) {
