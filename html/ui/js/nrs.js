@@ -259,6 +259,7 @@ var NRS = (function(NRS, $, undefined) {
 				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
 
 				NRS.state = response;
+                NRS.logConsole("getBlockchainStatus last block height " + (NRS.state.numberOfBlocks - 1));
 				NRS.serverConnect = true;
 
 				if (firstTime) {
