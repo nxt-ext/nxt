@@ -24,7 +24,7 @@ var NRS = (function (NRS) {
             NRS.database.select(table, query, callback);
             return;
         }
-        var items = NRS.getJSONItem(table);
+        var items = NRS.getAccountJSONItem(table);
         if (!items) {
             callback("No items to select", []);
             return;
@@ -50,7 +50,7 @@ var NRS = (function (NRS) {
         if (NRS.databaseSupport) {
             return NRS.database.insert(table, data, callback);
         }
-        var items = NRS.getJSONItem(table);
+        var items = NRS.getAccountJSONItem(table);
         if (!items) {
             items = [];
         }
@@ -70,7 +70,7 @@ var NRS = (function (NRS) {
         } else {
             insertItem(data);
         }
-        NRS.setJSONItem(table, items);
+        NRS.setAccountJSONItem(table, items);
         callback(null, items);
 
         function insertItem(item) {
@@ -95,7 +95,7 @@ var NRS = (function (NRS) {
         if (NRS.databaseSupport) {
             return NRS.database.update(table, data, query, callback);
         }
-        var items = NRS.getJSONItem(table);
+        var items = NRS.getAccountJSONItem(table);
         if (!items) {
             callback("No items to update", []);
             return;
@@ -117,7 +117,7 @@ var NRS = (function (NRS) {
                 });
             }
         }
-        NRS.setJSONItem(table, items);
+        NRS.setAccountJSONItem(table, items);
         callback(null, items);
     };
 
@@ -125,7 +125,7 @@ var NRS = (function (NRS) {
         if (NRS.databaseSupport) {
             return NRS.database.delete(table, query, callback);
         }
-        var items = NRS.getJSONItem(table);
+        var items = NRS.getAccountJSONItem(table);
         if (!items) {
             callback("No items to delete", []);
             return;
@@ -139,12 +139,12 @@ var NRS = (function (NRS) {
                 })
             }
         }
-        NRS.setJSONItem(table, items);
+        NRS.setAccountJSONItem(table, items);
         callback(null, items);
     };
 
     NRS.storageDrop = function(table) {
-        NRS.removeItem(table);
+        NRS.removeAccountItem(table);
     };
 
     NRS.getStrItem = function (key) {
