@@ -400,7 +400,7 @@ var NRS = (function(NRS, $) {
 
 	NRS.forms.sendMessageComplete = function(response, data) {
 		data.message = data._extra.message;
-		if (!(data["_extra"] && data["_extra"].convertedAccount) && NRS.isContactsPageAvailable()) {
+		if (!(data["_extra"] && data["_extra"].convertedAccount)) {
 			$.growl($.t("success_message_sent") + " <a href='#' data-account='" + NRS.getAccountFormatted(data, "recipient") + "' data-toggle='modal' data-target='#add_contact_modal' style='text-decoration:underline'>" + $.t("add_recipient_to_contacts_q") + "</a>", {
 				"type": "success"
 			});

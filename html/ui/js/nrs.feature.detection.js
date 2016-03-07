@@ -19,16 +19,14 @@
  */
 var NRS = (function (NRS) {
 
-    NRS.isContactsPageAvailable = function() {
-        return window.indexedDB ? true : false;
-    };
+    var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
 
     NRS.isCoinExchangePageAvailable = function() {
-        return navigator.userAgent.indexOf("JavaFX") == -1; // JavaFX does not support cors required by ShapeShift
+        return !isDesktopApplication; // JavaFX does not support CORS required by ShapeShift
     };
 
     NRS.isWebWalletLinkVisible = function() {
-        return navigator.userAgent.indexOf("JavaFX") >= 0; // When using JavaFX add a link to a web wallet
+        return isDesktopApplication; // When using JavaFX add a link to a web wallet
     };
 
     return NRS;
