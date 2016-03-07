@@ -37,7 +37,7 @@ final class DistributionListener implements Listener<Block> {
     private static final int DISTRIBUTION_STEP = 20; // take snapshots every 20 blocks
     private static final long FNXT_ASSET_ID = Long.parseUnsignedLong("111111111111111111");
     private static final long FNXT_ISSUER_ID = Long.parseUnsignedLong("22222222222222222");
-    private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf((DISTRIBUTION_END - DISTRIBUTION_START) * 10000 / DISTRIBUTION_STEP);
+    private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf(10000L * (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_STEP);
 
     private static final DerivedDbTable accountFNXTTable = new DerivedDbTable("account_fnxt") {
         @Override
@@ -49,7 +49,7 @@ final class DistributionListener implements Listener<Block> {
                     }
                 } else {
                     try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_fnxt WHERE (id, height) NOT IN "
-                            + "(SELECT (id, MAX(height)) FROM account_fnxt WHERE height < ? GROUP BY id) AND height < ?")) {
+                            + "(SELECT (id, MAX(height)) FROM account_fnxt WHERE height < ? GROUP BY id) AND height < ? AND height >= 0")) {
                         pstmt.setInt(1, height);
                         pstmt.setInt(2, height);
                         pstmt.executeUpdate();
@@ -74,7 +74,7 @@ final class DistributionListener implements Listener<Block> {
         if (currentHeight <= DISTRIBUTION_START || currentHeight > DISTRIBUTION_END || (currentHeight - DISTRIBUTION_START) % DISTRIBUTION_FREQUENCY != 0) {
             return;
         }
-        Logger.logDebugMessage("Running distribution at height " + currentHeight);
+        Logger.logDebugMessage("Running FNXT balance update at height " + currentHeight);
         Map<Long, BigInteger> accountBalanceTotals = new HashMap<>();
         for (int height = currentHeight - DISTRIBUTION_FREQUENCY + DISTRIBUTION_STEP; height <= currentHeight; height += DISTRIBUTION_STEP) {
             //Logger.logDebugMessage("Calculating balances at height " + height);
@@ -120,7 +120,7 @@ final class DistributionListener implements Listener<Block> {
             }
             Db.db.commitTransaction();
             if (currentHeight == DISTRIBUTION_END) {
-                Logger.logDebugMessage("Final distribution");
+                Logger.logDebugMessage("Running FNXT distribution at height " + currentHeight);
                 long totalDistributed = 0;
                 int count = 0;
                 try (Statement stmt = con.createStatement();
