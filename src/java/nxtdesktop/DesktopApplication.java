@@ -53,6 +53,7 @@ public class DesktopApplication extends Application {
 
     static volatile boolean isLaunched;
     static volatile Stage stage;
+    static volatile WebEngine webEngine;
     JSObject nrs;
 
     public static void launch() {
@@ -61,8 +62,26 @@ public class DesktopApplication extends Application {
             Application.launch(DesktopApplication.class);
             return;
         }
-        if (stage != null && !stage.isShowing()) {
-            Platform.runLater(() -> stage.show());
+        if (stage != null) {
+            Platform.runLater(() -> showStage(false));
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public static void refresh() {
+        Platform.runLater(() -> showStage(true));
+    }
+
+    private static void showStage(boolean isRefresh) {
+        if (isRefresh) {
+            webEngine.load(getUrl());
+        }
+        if (!stage.isShowing()) {
+            stage.show();
+        } else if (stage.isIconified()) {
+            stage.setIconified(false);
+        } else {
+            stage.toFront();
         }
     }
 
@@ -82,7 +101,7 @@ public class DesktopApplication extends Application {
         int width = (int) Math.min(primaryScreenBounds.getMaxX() - 100, 1618);
         browser.setMinHeight(height);
         browser.setMinWidth(width);
-        WebEngine webEngine = browser.getEngine();
+        webEngine = browser.getEngine();
         webEngine.setUserDataDirectory(Nxt.getConfDir());
 
         Worker<Void> loadWorker = webEngine.getLoadWorker();
@@ -93,6 +112,7 @@ public class DesktopApplication extends Application {
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
                     if (newState == Worker.State.SUCCEEDED) {
+                        nrs = (JSObject) webEngine.executeScript("NRS");
                         Nxt.getBlockchainProcessor().addListener((block) -> Platform.runLater(() -> webEngine.executeScript("NRS.getState()")), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
                     }
                 });
@@ -101,6 +121,18 @@ public class DesktopApplication extends Application {
             webViewURLChange(newValue);
         });
 
+        webEngine.load(getUrl());
+        Scene scene = new Scene(browser);
+        String address = API.getServerRootUri().toString();
+        stage.getIcons().add(new Image(address + "/img/nxt-icon-32x32.png"));
+        stage.initStyle(StageStyle.DECORATED);
+        stage.setScene(scene);
+        stage.sizeToScene();
+        stage.show();
+        Platform.setImplicitExit(false); // So that we can reopen the application in case the user closed it
+    }
+
+    private static String getUrl() {
         String url = API.getWelcomePageUri().toString();
         if (url.startsWith("https")) {
             HttpsURLConnection.setDefaultSSLSocketFactory(TrustAllSSLProvider.getSslSocketFactory());
@@ -110,15 +142,7 @@ public class DesktopApplication extends Application {
         if (defaultAccount != null && !defaultAccount.equals("")) {
             url += "?account=" + defaultAccount;
         }
-        webEngine.load(url);
-        Scene scene = new Scene(browser);
-        String address = API.getServerRootUri().toString();
-        stage.getIcons().add(new Image(address + "/img/nxt-icon-32x32.png"));
-        stage.initStyle(StageStyle.DECORATED);
-        stage.setScene(scene);
-        stage.sizeToScene();
-        stage.show();
-        Platform.setImplicitExit(false); // So that we can reopen the application in case the user closed it
+        return url;
     }
 
     private void webViewURLChange(String newValue) {

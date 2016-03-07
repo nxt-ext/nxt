@@ -67,7 +67,8 @@ public class DesktopSystemTray {
         if (!Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             openWalletInBrowser.setEnabled(false);
         }
-        MenuItem openDesktopApplication = new MenuItem("Open Desktop Application");
+        MenuItem showDesktopApplication = new MenuItem("Show Desktop Application");
+        MenuItem refreshDesktopApplication = new MenuItem("Refresh Wallet");
         viewLog = new MenuItem("View Log File");
         if (!Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
             viewLog.setEnabled(false);
@@ -78,7 +79,8 @@ public class DesktopSystemTray {
         popup.add(viewLog);
         popup.addSeparator();
         popup.add(openWalletInBrowser);
-        popup.add(openDesktopApplication);
+        popup.add(showDesktopApplication);
+        popup.add(refreshDesktopApplication);
         popup.addSeparator();
         popup.add(shutdown);
         trayIcon.setPopupMenu(popup);
@@ -100,11 +102,19 @@ public class DesktopSystemTray {
             }
         });
 
-        openDesktopApplication.addActionListener(e -> {
+        showDesktopApplication.addActionListener(e -> {
             try {
                 Class.forName("nxtdesktop.DesktopApplication").getMethod("launch").invoke(null);
             } catch (ReflectiveOperationException exception) {
                 Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to launch", exception);
+            }
+        });
+
+        refreshDesktopApplication.addActionListener(e -> {
+            try {
+                Class.forName("nxtdesktop.DesktopApplication").getMethod("refresh").invoke(null);
+            } catch (ReflectiveOperationException exception) {
+                Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to refresh", exception);
             }
         });
 
@@ -119,7 +129,10 @@ public class DesktopSystemTray {
         status.addActionListener(e -> displayStatus());
 
         shutdown.addActionListener(e -> {
-            if(JOptionPane.showConfirmDialog (null, "Are you sure ?", "Confirm Shutdown", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            if(JOptionPane.showConfirmDialog (null,
+                    "Sure you want to shutdown NXT?\n\nIf you do, this will stop forging, shufflers and account monitors.\n",
+                    "Shutdown",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 Logger.logInfoMessage("Shutdown requested by System Tray");
                 System.exit(0); // Implicitly invokes shutdown using the shutdown hook
             }
