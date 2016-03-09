@@ -28,9 +28,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import netscape.javascript.JSObject;
-import nxt.BlockchainProcessor;
-import nxt.Nxt;
-import nxt.TaggedData;
+import nxt.*;
 import nxt.http.API;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -46,8 +44,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DesktopApplication extends Application {
 
@@ -55,6 +54,7 @@ public class DesktopApplication extends Application {
     static volatile Stage stage;
     static volatile WebEngine webEngine;
     JSObject nrs;
+    int lastKnownHeight;
 
     public static void launch() {
         if (!isLaunched) {
@@ -113,7 +113,15 @@ public class DesktopApplication extends Application {
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
                     if (newState == Worker.State.SUCCEEDED) {
                         nrs = (JSObject) webEngine.executeScript("NRS");
-                        Nxt.getBlockchainProcessor().addListener((block) -> Platform.runLater(() -> webEngine.executeScript("NRS.getState()")), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+                        BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
+                        blockchainProcessor.addListener((block) ->
+                                updateClientState(BlockchainProcessor.Event.BLOCK_GENERATED, block), BlockchainProcessor.Event.BLOCK_GENERATED);
+                        blockchainProcessor.addListener((block) ->
+                                updateClientState(BlockchainProcessor.Event.AFTER_BLOCK_APPLY, block), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+                        blockchainProcessor.addListener((block) ->
+                                updateClientState(BlockchainProcessor.Event.BLOCK_PUSHED, block), BlockchainProcessor.Event.BLOCK_PUSHED);
+                        Nxt.getTransactionProcessor().addListener((transaction) ->
+                                updateClientState(TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS, transaction), TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
                     }
                 });
 
@@ -130,6 +138,29 @@ public class DesktopApplication extends Application {
         stage.sizeToScene();
         stage.show();
         Platform.setImplicitExit(false); // So that we can reopen the application in case the user closed it
+    }
+
+    private void updateClientState(BlockchainProcessor.Event blockEvent, Block block) {
+        if (block.getHeight() > lastKnownHeight || block.getHeight() % 720 == 0) {
+            String msg = blockEvent.toString() + " id " + block.getStringId() + " height " + block.getHeight();
+            if (block.getHeight() > lastKnownHeight) {
+                lastKnownHeight = block.getHeight();
+            }
+            updateClientState(msg);
+        }
+    }
+
+    private void updateClientState(TransactionProcessor.Event transactionEvent, List<? extends Transaction> transactions) {
+        if (transactions.size() == 0) {
+            return;
+        }
+        String msg = transactionEvent.toString() + " ids " +
+                transactions.stream().map(Transaction::getStringId).collect(Collectors.joining(","));
+        updateClientState(msg);
+    }
+
+    private void updateClientState(String msg) {
+        Platform.runLater(() -> webEngine.executeScript("NRS.getState(null, '" + msg + "')"));
     }
 
     private static String getUrl() {

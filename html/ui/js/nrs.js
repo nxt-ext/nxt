@@ -175,7 +175,7 @@ var NRS = (function(NRS, $, undefined) {
 			setTimeout(function() {
 				NRS.checkAliasVersions();
 			}, 5000);
-		});
+		}, "init");
 
 		$("body").popover({
 			"selector": ".show_popover",
@@ -234,6 +234,9 @@ var NRS = (function(NRS, $, undefined) {
 	}
 
 	NRS.setStateInterval = function(seconds) {
+		if (!NRS.isPollGetState()) {
+			return;
+		}
 		if (seconds == stateIntervalSeconds && stateInterval) {
 			return;
 		}
@@ -242,14 +245,15 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		stateIntervalSeconds = seconds;
 		stateInterval = setInterval(function() {
-			NRS.getState();
+			NRS.getState(null, "timer");
 			NRS.updateForgingStatus();
 		}, 1000 * seconds);
 	};
 
 	var _firstTimeAfterLoginRun = false;
 
-	NRS.getState = function(callback) {
+	NRS.getState = function(callback, msg) {
+		NRS.logConsole("getState event " + msg);
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
@@ -259,7 +263,6 @@ var NRS = (function(NRS, $, undefined) {
 				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
 
 				NRS.state = response;
-                NRS.logConsole("getBlockchainStatus last block height " + (NRS.state.numberOfBlocks - 1));
 				NRS.serverConnect = true;
 
 				if (firstTime) {

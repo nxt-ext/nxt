@@ -29,5 +29,9 @@ var NRS = (function (NRS) {
         return isDesktopApplication; // When using JavaFX add a link to a web wallet
     };
 
+    NRS.isPollGetState = function() {
+        return !isDesktopApplication; // When using JavaFX do not poll the server
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
