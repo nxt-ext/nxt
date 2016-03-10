@@ -682,6 +682,10 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
+    NRS.baseTargetPercent = function(block) {
+        return Math.round(block.baseTarget / 153722867 * 100)
+    };
+
     NRS.isPrivateIP = function (ip) {
 		if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
 			return false;
@@ -1573,7 +1577,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.phasingControlObjectToPhasingParams = function(controlObj) {
-        var phasingParams = {}
+        var phasingParams = {};
 
         phasingParams.phasingVotingModel = controlObj.votingModel;
         phasingParams.phasingQuorum = controlObj.quorum;

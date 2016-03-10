@@ -1345,24 +1345,29 @@ NRS.addPagination = function () {
 
 	NRS.checkIfOnAFork = function() {
 		if (!NRS.downloadingBlockchain) {
-			var onAFork = true;
-
+			var isForgingAllBlocks = true;
 			if (NRS.blocks && NRS.blocks.length >= 10) {
 				for (var i = 0; i < 10; i++) {
 					if (NRS.blocks[i].generator != NRS.account) {
-						onAFork = false;
+						isForgingAllBlocks = false;
 						break;
 					}
 				}
 			} else {
-				onAFork = false;
+				isForgingAllBlocks = false;
 			}
 
-			if (onAFork) {
+			if (isForgingAllBlocks) {
 				$.growl($.t("fork_warning"), {
 					"type": "danger"
 				});
 			}
+
+            if (NRS.baseTargetPercent(NRS.blocks[0]) > 1000 && !NRS.isTestNet) {
+                $.growl($.t("fork_warning_base_target"), {
+                    "type": "danger"
+                });
+            }
 		}
 	};
 

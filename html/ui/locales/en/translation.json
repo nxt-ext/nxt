@@ -1616,5 +1616,6 @@
   "shift": "Shift",
   "accept_exchange": "Accept",
   "minimum_fee": "Minimum Fee",
-  "web_wallet": "Web Wallet"
+  "web_wallet": "Web Wallet",
+  "fork_warning_base_target": "Warning: You are most likely on a fork (base target is very high)."
 }
