@@ -432,7 +432,7 @@ var NRS = (function (NRS, $, undefined) {
 
         var registerAliasUri = $("#register_alias_uri");
         if (type == "uri") {
-            $("#register_alias_uri.masked").trigger("unmask", true);
+            registerAliasUri.unmask();
             $("#register_alias_uri_label").html($.t("uri"));
             registerAliasUri.prop("placeholder", $.t("uri"));
             if (uri) {
@@ -482,7 +482,7 @@ var NRS = (function (NRS, $, undefined) {
             }
             $("#register_alias_help").html($.t("alias_account_help")).show();
         } else {
-            $("#register_alias_uri.masked").trigger("unmask", true);
+            registerAliasUri.unmask();
             $("#register_alias_uri_label").html($.t("data"));
             registerAliasUri.prop("placeholder", $.t("data"));
             if (uri) {
