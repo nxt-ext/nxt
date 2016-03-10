@@ -33,6 +33,11 @@ var NRS = (function(NRS, $) {
 	NRS.pages.contacts = function() {
 		$("#contacts_table_container").show();
 		$("#contact_page_database_error").hide();
+		if (NRS.isExportContactsAvailable()) {
+			$("#export_contacts_button").show();
+		} else {
+			$("#export_contacts_button").hide();
+		}
 		NRS.storageSelect("contacts", null, function (error, contacts) {
 			var rows = "";
 			if (contacts && contacts.length) {
@@ -447,7 +452,7 @@ var NRS = (function(NRS, $) {
 		};
 		reader.readAsText(file);
 		var button = importContactsButtonField;
-		button.replaceWith( button = button.clone(true) ); // Recreate button to clean it
+		button.replaceWith(button.clone(true) ); // Recreate button to clean it
 		return false;
 	});
 

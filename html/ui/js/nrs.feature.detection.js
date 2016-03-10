@@ -33,5 +33,9 @@ var NRS = (function (NRS) {
         return !isDesktopApplication; // When using JavaFX do not poll the server
     };
 
+    NRS.isExportContactsAvailable = function() {
+        return !isDesktopApplication; // When using JavaFX you cannot export the contact list
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
