@@ -130,7 +130,7 @@ public class DesktopSystemTray {
 
         shutdown.addActionListener(e -> {
             if(JOptionPane.showConfirmDialog (null,
-                    "Sure you want to shutdown NXT?\n\nIf you do, this will stop forging, shufflers and account monitors.\n",
+                    "Sure you want to shutdown NXT?\n\nIf you do, this will stop forging, shufflers and account monitors.\n\n",
                     "Shutdown",
                     JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 Logger.logInfoMessage("Shutdown requested by System Tray");
