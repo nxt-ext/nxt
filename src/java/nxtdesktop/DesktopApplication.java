@@ -54,7 +54,6 @@ public class DesktopApplication extends Application {
     static volatile Stage stage;
     static volatile WebEngine webEngine;
     JSObject nrs;
-    int lastKnownHeight;
 
     public static void launch() {
         if (!isLaunched) {
@@ -115,11 +114,9 @@ public class DesktopApplication extends Application {
                         nrs = (JSObject) webEngine.executeScript("NRS");
                         BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
                         blockchainProcessor.addListener((block) ->
-                                updateClientState(BlockchainProcessor.Event.BLOCK_GENERATED, block), BlockchainProcessor.Event.BLOCK_GENERATED);
+                                updateClientState(BlockchainProcessor.Event.BLOCK_PUSHED, block), BlockchainProcessor.Event.BLOCK_PUSHED);
                         blockchainProcessor.addListener((block) ->
                                 updateClientState(BlockchainProcessor.Event.AFTER_BLOCK_APPLY, block), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-                        blockchainProcessor.addListener((block) ->
-                                updateClientState(BlockchainProcessor.Event.BLOCK_PUSHED, block), BlockchainProcessor.Event.BLOCK_PUSHED);
                         Nxt.getTransactionProcessor().addListener((transaction) ->
                                 updateClientState(TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS, transaction), TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
                     }
@@ -141,13 +138,23 @@ public class DesktopApplication extends Application {
     }
 
     private void updateClientState(BlockchainProcessor.Event blockEvent, Block block) {
-        if (block.getHeight() > lastKnownHeight || block.getHeight() % 720 == 0) {
-            String msg = blockEvent.toString() + " id " + block.getStringId() + " height " + block.getHeight();
-            if (block.getHeight() > lastKnownHeight) {
-                lastKnownHeight = block.getHeight();
+        BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
+        if (blockEvent == BlockchainProcessor.Event.BLOCK_PUSHED && blockchainProcessor.isDownloading()) {
+            if (!(block.getHeight() % 100 == 0)) {
+                return;
             }
-            updateClientState(msg);
         }
+        if (blockEvent == BlockchainProcessor.Event.AFTER_BLOCK_APPLY) {
+            if (blockchainProcessor.isScanning()) {
+                if (!(block.getHeight() % 100 == 0)) {
+                    return;
+                }
+            } else {
+                return;
+            }
+        }
+        String msg = blockEvent.toString() + " id " + block.getStringId() + " height " + block.getHeight();
+        updateClientState(msg);
     }
 
     private void updateClientState(TransactionProcessor.Event transactionEvent, List<? extends Transaction> transactions) {
