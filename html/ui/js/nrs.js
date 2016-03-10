@@ -264,7 +264,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				NRS.state = response;
 				NRS.serverConnect = true;
-
+				$("#sidebar_block_link").html(NRS.getBlockLink(NRS.state.numberOfBlocks - 1));
 				if (firstTime) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
 					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
