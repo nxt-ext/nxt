@@ -275,16 +275,11 @@ var NRS = (function (NRS, $, undefined) {
         var $modal = $(this);
 
         var $invoker = $(e.relatedTarget);
-
-        NRS.fetchingModalData = true;
-
         var alias = String($invoker.data("alias"));
 
         NRS.sendRequest("getAlias", {
             "aliasName": alias
         }, function (response) {
-            NRS.fetchingModalData = false;
-
             if (response.errorCode) {
                 e.preventDefault();
                 $.growl($.t("error_alias_not_found"), {
@@ -337,10 +332,7 @@ var NRS = (function (NRS, $, undefined) {
         var registerAliasModal = $("#register_alias_modal");
 
         if (alias) {
-            NRS.fetchingModalData = true;
-
             alias = String(alias);
-
             NRS.sendRequest("getAlias", {
                 "aliasName": alias
             }, function (response) {
@@ -349,7 +341,6 @@ var NRS = (function (NRS, $, undefined) {
                     $.growl($.t("error_alias_not_found"), {
                         "type": "danger"
                     });
-                    NRS.fetchingModalData = false;
                 } else {
                     var aliasURI = [];
                     if (/http:\/\//i.test(response.aliasURI)) {
@@ -566,13 +557,6 @@ var NRS = (function (NRS, $, undefined) {
 
     $("#alias_search").on("submit", function (e) {
         e.preventDefault();
-
-        if (NRS.fetchingModalData) {
-            return;
-        }
-
-        NRS.fetchingModalData = true;
-
         var alias = $.trim($("#alias_search").find("input[name=q]").val());
 
         $("#alias_info_table").find("tbody").empty();
@@ -584,7 +568,6 @@ var NRS = (function (NRS, $, undefined) {
                 $.growl($.t("error_alias_not_found") + " <a href='#' data-toggle='modal' data-target='#register_alias_modal' data-prefill-alias='" + String(alias).escapeHTML() + "'>" + $.t("register_q") + "</a>", {
                     "type": "danger"
                 });
-                NRS.fetchingModalData = false;
             } else {
                 $("#alias_info_modal_alias").html(String(response.aliasName).escapeHTML());
 
@@ -613,7 +596,6 @@ var NRS = (function (NRS, $, undefined) {
                 $("#alias_info_table").find("tbody").append(NRS.createInfoTable(data));
 
                 $("#alias_info_modal").modal("show");
-                NRS.fetchingModalData = false;
             }
         });
     });
