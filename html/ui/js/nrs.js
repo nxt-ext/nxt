@@ -699,8 +699,8 @@ NRS.addPagination = function () {
 		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
 		NRS.pollsTableKeys = ["account", "accountRS", "poll", "description", "name", "finishHeight"];
 
-		if (navigator.userAgent.indexOf("JavaFX/") >= 0) {
-			NRS.logConsole("IndexedDB not supported by the JavaFX WebEngine, using localStorage instead");
+		if (!NRS.isIndexedDBSupported()) {
+			NRS.logConsole("IndexedDB not supported by the rendering engine, using localStorage instead");
 			NRS.initLocalStorage();
 			return;
 		}

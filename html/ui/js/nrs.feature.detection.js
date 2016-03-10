@@ -21,6 +21,10 @@ var NRS = (function (NRS) {
 
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
 
+    NRS.isIndexedDBSupported = function() {
+        return window.indexedDB !== undefined;
+    };
+
     NRS.isCoinExchangePageAvailable = function() {
         return !isDesktopApplication; // JavaFX does not support CORS required by ShapeShift
     };
