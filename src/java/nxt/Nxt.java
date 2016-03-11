@@ -310,6 +310,7 @@ public final class Nxt {
         Logger.logShutdownMessage("Shutting down...");
         API.shutdown();
         Users.shutdown();
+        AccountMonitor.shutdown();
         ThreadPool.shutdown();
         Peers.shutdown();
         Db.shutdown();

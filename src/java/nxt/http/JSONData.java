@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.AccountLedger.LedgerEntry;
+import nxt.AccountMonitor;
 import nxt.AccountRestrictions;
 import nxt.Alias;
 import nxt.Appendix;
@@ -996,6 +997,19 @@ final class JSONData {
         response.put("hitTime", generator.getHitTime());
         response.put("remaining", Math.max(deadline - elapsedTime, 0));
         return response;
+    }
+
+    static JSONObject accountMonitor(AccountMonitor monitor) {
+        JSONObject json = new JSONObject();
+        json.put("holdingType", monitor.getHoldingType().getCode());
+        json.put("account", Long.toUnsignedString(monitor.getAccountId()));
+        json.put("accountRS", monitor.getAccountName());
+        json.put("holding", Long.toUnsignedString(monitor.getHoldingId()));
+        json.put("property", monitor.getProperty());
+        json.put("amount", String.valueOf(monitor.getAmount()));
+        json.put("threshold", String.valueOf(monitor.getThreshold()));
+        json.put("interval", monitor.getInterval());
+        return json;
     }
 
     static JSONObject prunableMessage(PrunableMessage prunableMessage, long readerAccountId, String secretPhrase) {
