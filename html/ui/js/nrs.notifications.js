@@ -92,7 +92,7 @@ var NRS = (function(NRS, $, undefined) {
 				template: template
 			});
 		}
-	}
+	};
 
 	NRS.saveNotificationTimestamps = function() {
 		var tsDict = {};
@@ -103,27 +103,23 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 		var tsDictString = JSON.stringify(tsDict);
-		if(NRS.databaseSupport) {
-			NRS.database.select("data", [{
-				"id": "notification_timestamps"
-			}], function(error, result) {
-				if (result && result.length > 0) {
-					NRS.database.update("data", {
-						contents: tsDictString
-					}, [{
-						id: "notification_timestamps"
-					}]);
-				} else {
-					NRS.database.insert("data", {
-						id: "notification_timestamps",
-						contents: tsDictString
-					});
-				}
-			});
-		} else {
-			NRS.setCookie("notification_timestamps", tsDictString, 100);
-		}
-	}
+		NRS.storageSelect("data", [{
+			"id": "notification_timestamps"
+		}], function(error, result) {
+			if (result && result.length > 0) {
+				NRS.storageUpdate("data", {
+					contents: tsDictString
+				}, [{
+					id: "notification_timestamps"
+				}]);
+			} else {
+				NRS.storageInsert("data", "id", {
+					id: "notification_timestamps",
+					contents: tsDictString
+				});
+			}
+		});
+	};
 
 	NRS.resetNotificationState = function(page) {
 		NRS.sendRequest("getTime", {}, function(response) {
@@ -146,7 +142,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.updateNotificationUI();
 			}
 		});
-	}
+	};
 
 	NRS.initNotificationCounts = function(time) {
 		var fromTS = time - 60 * 60 * 24 * 14;
@@ -173,13 +169,12 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			NRS.updateNotificationUI();
 		});
-	}
+	};
 
 	NRS.loadNotificationsFromTimestamps = function(time, tsDictString) {
+		var tsDict = {};
 		if (tsDictString != "") {
-			var tsDict = JSON.parse(tsDictString);
-		} else {
-			var tsDict = {};
+			tsDict = JSON.parse(tsDictString);
 		}
 
 		$.each(NRS.transactionTypes, function(typeIndex, typeDict) {
@@ -196,49 +191,46 @@ var NRS = (function(NRS, $, undefined) {
 		});
 		NRS.initNotificationCounts(time);
 		NRS.saveNotificationTimestamps();
-	}
+	};
 
 	NRS.updateNotifications = function() {
 		NRS.sendRequest("getTime", {}, function(response) {
 			if (response.time) {
 				var tsDictString = "";
-				if (NRS.databaseSupport) {
-					NRS.database.select("data", [{
-						"id": "notification_timestamps"
-					}], function(error, result) {
-						//console.log(result);
-						if (result) {
-							if (result.length > 0) {
-								tsDictString = result[0].contents;
-								NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
-							} else {
-								NRS.loadNotificationsFromTimestamps(response.time, "");
-							}
+				NRS.storageSelect("data", [{
+					"id": "notification_timestamps"
+				}], function(error, result) {
+					//console.log(result);
+					if (result) {
+						if (result.length > 0) {
+							tsDictString = result[0].contents;
+							NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
+						} else {
+							NRS.loadNotificationsFromTimestamps(response.time, "");
 						}
-					});
-				} else {
-					tsDictString = NRS.getCookie("notification_timestamps");
-					NRS.loadNotificationsFromTimestamps(response.time, tsDictString);
-				}
+					}
+				});
 			}
 		});
-	}
+	};
 
 	NRS.setUnconfirmedNotifications = function() {
 		$('#unconfirmed_notification_counter').html(String(NRS.unconfirmedTransactions.length));
 		$('#unconfirmed_notification_menu').show();
-	}
+	};
 
 	NRS.setPhasingNotifications = function() {
 		NRS.sendRequest("getAccountPhasedTransactionCount", {
 			"account": NRS.account
 		}, function(response) {
+			//noinspection JSUnresolvedVariable
 			if (response.numberOfPhasedTransactions != undefined) {
+				//noinspection JSUnresolvedVariable
 				$('#phasing_notification_counter').html(String(response.numberOfPhasedTransactions));
 				$('#phasing_notification_menu').show();
 			}
 		});
-	}
+	};
 
 
 	return NRS;

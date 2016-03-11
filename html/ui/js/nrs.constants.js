@@ -198,7 +198,7 @@ var NRS = (function (NRS, $) {
         var apis = depends.apis;
         if (apis) {
             for (i=0; i < apis.length; i++) {
-                if (!apis[i].enabled) {
+                if (apis[i] && !apis[i].enabled) {
                     return false;
                 }
             }

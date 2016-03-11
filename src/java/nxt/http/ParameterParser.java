@@ -26,6 +26,7 @@ import nxt.Currency;
 import nxt.CurrencyBuyOffer;
 import nxt.CurrencySellOffer;
 import nxt.DigitalGoodsStore;
+import nxt.HoldingType;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
@@ -507,6 +508,26 @@ final class ParameterParser {
             }
         }
         return -1;
+    }
+
+    static HoldingType getHoldingType(HttpServletRequest req) throws ParameterException {
+        return HoldingType.get(ParameterParser.getByte(req, "holdingType", (byte) 0, (byte) 2, false));
+    }
+
+    static long getHoldingId(HttpServletRequest req, HoldingType holdingType) throws ParameterException {
+        long holdingId = ParameterParser.getUnsignedLong(req, "holding", holdingType != HoldingType.NXT);
+        if (holdingType == HoldingType.NXT && holdingId != 0) {
+            throw new ParameterException(JSONResponses.incorrect("holding", "holding id should not be specified if holdingType is NXT"));
+        }
+        return holdingId;
+    }
+
+    static String getAccountProperty(HttpServletRequest req) throws ParameterException {
+        String property = Convert.emptyToNull(req.getParameter("property"));
+        if (property == null) {
+            throw new ParameterException(MISSING_PROPERTY);
+        }
+        return property;
     }
 
     static String getSearchQuery(HttpServletRequest req) throws ParameterException {

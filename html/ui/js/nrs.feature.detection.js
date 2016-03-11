@@ -14,22 +14,32 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.env;
+/**
+ * @depends {nrs.js}
+ */
+var NRS = (function (NRS) {
 
-import java.io.File;
-import java.util.Properties;
+    var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
 
-public interface DirProvider {
+    NRS.isIndexedDBSupported = function() {
+        return window.indexedDB !== undefined;
+    };
 
-    boolean isLoadPropertyFileFromUserDir();
+    NRS.isCoinExchangePageAvailable = function() {
+        return !isDesktopApplication; // JavaFX does not support CORS required by ShapeShift
+    };
 
-    void updateLogFileHandler(Properties loggingProperties);
+    NRS.isWebWalletLinkVisible = function() {
+        return isDesktopApplication; // When using JavaFX add a link to a web wallet
+    };
 
-    String getDbDir(String dbDir);
+    NRS.isPollGetState = function() {
+        return !isDesktopApplication; // When using JavaFX do not poll the server
+    };
 
-    File getLogFileDir();
+    NRS.isExportContactsAvailable = function() {
+        return !isDesktopApplication; // When using JavaFX you cannot export the contact list
+    };
 
-    File getConfDir();
-
-    String getUserHomeDir();
-}
+    return NRS;
+}(NRS || {}, jQuery));

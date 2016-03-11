@@ -25,7 +25,7 @@ public interface RuntimeMode {
 
     void init();
 
-    void setServerStatus(String status, URI wallet, File logFileDir);
+    void setServerStatus(ServerStatus status, URI wallet, File logFileDir);
 
     void shutdown();
 }

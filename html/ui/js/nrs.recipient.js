@@ -17,7 +17,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	NRS.automaticallyCheckRecipient = function() {
         var $recipientFields = $("#send_money_recipient, #transfer_asset_recipient, #transfer_currency_recipient, " +
         "#send_message_recipient, #add_contact_account_id, #update_contact_account_id, #lease_balance_recipient, " +
@@ -45,30 +45,26 @@ var NRS = (function(NRS, $, undefined) {
 
 			callout.removeClass("callout-info callout-danger callout-warning").addClass("callout-danger").html($.t("error_numeric_ids_not_allowed")).show();
 		});
-	}
+	};
 
 	$("#send_message_modal, #send_money_modal, #transfer_currency_modal, #add_contact_modal, #set_account_property_modal, #delete_account_property_modal").on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
-
 		var account = $invoker.data("account");
-
 		if (!account) {
 			account = $invoker.data("contact");
 		}
-
 		if (account) {
 			var $inputField = $(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]");
-
 			if (!/NXT\-/i.test(account)) {
 				$inputField.addClass("noMask");
 			}
-
 			$inputField.val(account).trigger("checkRecipient");
 		}
 	});
 
 	//todo later: http://twitter.github.io/typeahead.js/
-	$(".modal").on("click", "span.recipient_selector button, span.plain_adress_selector button", function(e) {
+	var modal = $(".modal");
+    modal.on("click", "span.recipient_selector button, span.plain_address_selector button", function(e) {
 		if (!Object.keys(NRS.contacts).length) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -80,27 +76,31 @@ var NRS = (function(NRS, $, undefined) {
 		$list.empty();
 
 		for (var accountId in NRS.contacts) {
+			if (!NRS.contacts.hasOwnProperty(accountId)) {
+				continue;
+			}
 			$list.append("<li><a href='#' data-contact-id='" + accountId + "' data-contact='" + String(NRS.contacts[accountId].name).escapeHTML() + "'>" + String(NRS.contacts[accountId].name).escapeHTML() + "</a></li>");
 		}
 	});
 
-	$(".modal").on("click", "span.recipient_selector ul li a", function(e) {
+	modal.on("click", "span.recipient_selector ul li a", function(e) {
 		e.preventDefault();
 		$(this).closest("form").find("input[name=converted_account_id]").val("");
 		$(this).closest("form").find("input[name=recipient],input[name=account_id]").not("[type=hidden]").trigger("unmask").val($(this).data("contact")).trigger("blur");
 	});
 
-	$(".modal").on("click", "span.plain_adress_selector ul li a", function(e) {
+	modal.on("click", "span.plain_address_selector ul li a", function(e) {
 		e.preventDefault();
-		$(this).closest(".input-group").find("input.plain_adress_selector_input").not("[type=hidden]").trigger("unmask").val($(this).data("contact-id")).trigger("blur");
+		$(this).closest(".input-group").find("input.plain_address_selector_input").not("[type=hidden]").trigger("unmask").val($(this).data("contact-id")).trigger("blur");
 	});
 
-	$(".modal").on("keyup blur show", ".plain_adress_selector_input", function(e) {
+	modal.on("keyup blur show", ".plain_address_selector_input", function() {
 		var currentValue = $(this).val();
+		var contactInfo;
 		if (NRS.contacts[currentValue]) {
-			var contactInfo = NRS.contacts[currentValue]['name'];
+			contactInfo = NRS.contacts[currentValue]['name'];
 		} else {
-			var contactInfo = " ";
+			contactInfo = " ";
 		}
 		$(this).closest(".input-group").find(".pas_contact_info").text(contactInfo);
 	});
@@ -115,7 +115,7 @@ var NRS = (function(NRS, $, undefined) {
 				"type": "success"
 			});
 		}
-	}
+	};
 
 	NRS.sendMoneyShowAccountInformation = function(accountId) {
 		NRS.getAccountError(accountId, function(response) {
@@ -126,7 +126,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			}
 		});
-	}
+	};
 
 	NRS.getAccountError = function(accountId, callback) {
 		NRS.sendRequest("getAccount", {
@@ -186,11 +186,11 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		});
-	}
+	};
 
 	NRS.correctAddressMistake = function(el) {
 		$(el).closest(".modal-body").find("input[name=recipient],input[name=account_id]").val($(el).data("address")).trigger("blur");
-	}
+	};
 
 	NRS.checkRecipient = function(account, modal) {
 		var classes = "callout-info callout-danger callout-warning";
@@ -198,7 +198,6 @@ var NRS = (function(NRS, $, undefined) {
 		var callout = modal.find(".account_info").first();
 		var accountInputField = modal.find("input[name=converted_account_id]");
 		var merchantInfoField = modal.find("input[name=merchant_info]");
-		var recipientPublicKeyField = modal.find("input[name=recipientPublicKey]");
 
 		accountInputField.val("");
 		merchantInfoField.val("");
@@ -238,7 +237,7 @@ var NRS = (function(NRS, $, undefined) {
 						"count": address.guess.length
 					}) + "<ul>";
 					for (var i = 0; i < address.guess.length; i++) {
-						html += "<li><span clas='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[i], account) + "</span></li>";
+						html += "<li><span class='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[i], account) + "</span></li>";
 					}
 
 					callout.removeClass(classes).addClass("callout-danger").html(html).show();
@@ -247,8 +246,8 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		} else if (!(/^\d+$/.test(account))) {
-			if (NRS.databaseSupport && account.charAt(0) != '@') {
-				NRS.database.select("contacts", [{
+			if (account.charAt(0) != '@') {
+				NRS.storageSelect("contacts", [{
 					"name": account
 				}], function(error, contact) {
 					if (!error && contact.length) {
@@ -289,7 +288,7 @@ var NRS = (function(NRS, $, undefined) {
 		} else {
 			callout.removeClass(classes).addClass("callout-danger").html($.t("error_numeric_ids_not_allowed")).show();
 		}
-	}
+	};
 
 	NRS.checkRecipientAlias = function(account, modal) {
 		var classes = "callout-info callout-danger callout-warning";
@@ -365,7 +364,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 		});
-	}
+	};
 
 	function checkForMerchant(accountInfo, modal) {
 		var requestType = modal.find("input[name=request_type]").val();

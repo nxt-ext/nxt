@@ -109,9 +109,8 @@ var NRS = (function(NRS, $, undefined) {
 		var $inputFields = $(this).find("input[name=recipient], input[name=account_id], input[name=phasingWhitelisted]").not("[type=hidden]");
 		$.each($inputFields, function() {
 			if ($(this).hasClass("noMask")) {
-				$(this).mask("NXT-****-****-****-*****", {
-					"noMask": true
-				}).removeClass("noMask");
+				$(this).unmask();
+				$(this).removeClass("noMask");
 			} else {
 				$(this).mask("NXT-****-****-****-*****");
 			}

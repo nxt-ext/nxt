@@ -109,9 +109,12 @@ var NRS = (function(NRS, $, undefined) {
                 reader.html5_qrcode_stop();
             },
             function (error) {},
-            function (videoError) {
+            function (videoError, localMediaStream) {
                 console.log(videoError);
                 reader.hide();
+				if (!localMediaStream) {
+					$(".qr_code_reader_link").hide(); // Video is not supported, disable all links
+				}
                 if (reader.data('stream')) {
                     reader.html5_qrcode_stop();
                 }
