@@ -43,6 +43,7 @@ public class WindowsUserDirProvider implements DirProvider {
         loggingProperties.setProperty(LOG_FILE_PATTERN, logFilePattern.toString());
 
         Path logDirPath = logFilePattern.getParent();
+        System.out.printf("Logs dir %s\n", logDirPath.toString());
         this.logFileDir = new File(logDirPath.toString());
         if (!Files.isReadable(logDirPath)) {
             System.out.printf("Creating dir %s\n", logDirPath);
@@ -62,6 +63,11 @@ public class WindowsUserDirProvider implements DirProvider {
     @Override
     public File getLogFileDir() {
         return logFileDir;
+    }
+
+    @Override
+    public File getConfDir() {
+        return new File(NXT_USER_HOME, "conf");
     }
 
     @Override

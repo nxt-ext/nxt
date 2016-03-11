@@ -58,8 +58,7 @@
                         videoError(error, localMediaStream);
                     });
                 } else {
-                    console.log('Native web camera streaming (getUserMedia) not supported in this browser.');
-                    // Display a friendly "sorry" message to the user
+                    videoError('Native web camera streaming (getUserMedia) not supported in this browser.');
                 }
 
                 qrcode.callback = function (result) {

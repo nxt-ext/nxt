@@ -159,6 +159,8 @@
             <executable targetfile="${INSTALL_PATH}/mint.sh"/>
             <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/compile.sh"/>
+            <file src="compile-nojfx.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/compile-nojfx.sh"/>
             <file src="jar.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/jar.sh"/>
             <file src="javadoc.sh" targetdir="${INSTALL_PATH}" override="true"/>

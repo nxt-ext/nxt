@@ -682,6 +682,10 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
+    NRS.baseTargetPercent = function(block) {
+        return Math.round(block.baseTarget / 153722867 * 100)
+    };
+
     NRS.isPrivateIP = function (ip) {
 		if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
 			return false;
@@ -1214,40 +1218,6 @@ var NRS = (function (NRS, $, undefined) {
 		});
 	};
 
-    NRS.setCookie = function (name, value, days) {
-		var expires;
-		if (days) {
-			var date = new Date();
-			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-		} else {
-			expires = "";
-		}
-        //noinspection JSDeprecatedSymbols
-		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
-	};
-
-    NRS.getCookie = function (name) {
-        //noinspection JSDeprecatedSymbols
-		var nameEQ = escape(name) + "=";
-		var ca = document.cookie.split(';');
-		for (var i = 0; i < ca.length; i++) {
-			var c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1, c.length);
-		}
-            if (c.indexOf(nameEQ) === 0) {
-                //noinspection JSDeprecatedSymbols
-                return unescape(c.substring(nameEQ.length, c.length));
-            }
-        }
-		return null;
-	};
-
-    NRS.deleteCookie = function (name) {
-		NRS.setCookie(name, "", -1);
-	};
-
     NRS.translateServerError = function (response) {
         var match;
 		if (!response.errorDescription) {
@@ -1607,7 +1577,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.phasingControlObjectToPhasingParams = function(controlObj) {
-        var phasingParams = {}
+        var phasingParams = {};
 
         phasingParams.phasingVotingModel = controlObj.votingModel;
         phasingParams.phasingQuorum = controlObj.quorum;

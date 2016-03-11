@@ -14,22 +14,15 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.env;
+/**
+ * @depends {nrs.js}
+ */
+var NRS = (function (NRS) {
 
-import java.io.File;
-import java.util.Properties;
+    // The methods below are invoked by Java code
+    NRS.growl = function(msg) {
+        $.growl(msg);
+    };
 
-public interface DirProvider {
-
-    boolean isLoadPropertyFileFromUserDir();
-
-    void updateLogFileHandler(Properties loggingProperties);
-
-    String getDbDir(String dbDir);
-
-    File getLogFileDir();
-
-    File getConfDir();
-
-    String getUserHomeDir();
-}
+    return NRS;
+}(NRS || {}, jQuery));

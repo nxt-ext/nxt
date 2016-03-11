@@ -263,7 +263,7 @@ var NRS = (function(NRS, $) {
         if (NRS.settings["exchange"] != -1) {
             $("#settings_exchange_initial").remove();
         }
-		if ((NRS.database && NRS.database["name"] == "NRS_USER_DB") || (!NRS.databaseSupport)) {
+		if (NRS.database && NRS.database["name"] == "NRS_USER_DB") {
 			$("#settings_db_warning").show();
 		}
 		NRS.pageLoaded();
@@ -455,58 +455,50 @@ var NRS = (function(NRS, $) {
 	NRS.getSettings = function() {
 		if (!NRS.account) {
 			NRS.settings = NRS.defaultSettings;
-			if (NRS.getCookie("language")) {
-				NRS.settings["language"] = NRS.getCookie("language");
+			if (NRS.getStrItem("language")) {
+				NRS.settings["language"] = NRS.getStrItem("language");
 			}
-			if (NRS.getCookie("themeChoice")) {
-				NRS.settings["themeChoice"] = NRS.getCookie("themeChoice");
+			if (NRS.getStrItem("themeChoice")) {
+				NRS.settings["themeChoice"] = NRS.getStrItem("themeChoice");
 			}
 			NRS.createLangSelect();
 			NRS.applySettings();
 		} else {
             async.waterfall([
                 function (callback) {
-                    if (NRS.databaseSupport) {
-                        NRS.database.select("data", [{
-                            "id": "settings"
-                        }], function (error, result) {
-                            if (result && result.length) {
-                                NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
-                            } else {
-                                NRS.database.insert("data", {
-                                    id: "settings",
-                                    contents: "{}"
-                                });
-                                NRS.settings = NRS.defaultSettings;
-                            }
-                            NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
-                            for (var setting in NRS.defaultSettings) {
-                                if (!NRS.defaultSettings.hasOwnProperty(setting)) {
-                                    continue;
-                                }
-                                var value = NRS.settings[setting];
-                                var status = (NRS.defaultSettings[setting] !== value ? "modified" : "default");
-                                if (setting.search("password") >= 0) {
-                                    value = new Array(value.length + 1).join('*');
-                                }
-                                NRS.logConsole(setting + " = " + value + " [" + status + "]");
-                            }
-                            NRS.applySettings();
-                            callback(null);
-                        });
-                    } else {
-                        if (NRS.hasLocalStorage) {
-                            NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(localStorage.getItem("settings")));
-                            NRS.logConsole("Loading settings from local storage");
-                        } else {
-                            NRS.settings = NRS.defaultSettings;
-                        }
-                        NRS.applySettings();
-                        callback(null);
-                    }
+					NRS.storageSelect("data", [{
+						"id": "settings"
+					}], function (error, result) {
+						if (result && result.length) {
+							NRS.settings = $.extend({}, NRS.defaultSettings, JSON.parse(result[0].contents));
+						} else {
+							NRS.storageInsert("data", "id", {
+								id: "settings",
+								contents: "{}"
+							});
+							NRS.settings = NRS.defaultSettings;
+						}
+						NRS.logConsole("User settings for account " + NRS.convertNumericToRSAccountFormat(NRS.account));
+						for (var setting in NRS.defaultSettings) {
+							if (!NRS.defaultSettings.hasOwnProperty(setting)) {
+								continue;
+							}
+							var value = NRS.settings[setting];
+							var status = (NRS.defaultSettings[setting] !== value ? "modified" : "default");
+							if (setting.search("password") >= 0) {
+								value = new Array(value.length + 1).join('*');
+							}
+							NRS.logConsole(setting + " = " + value + " [" + status + "]");
+						}
+						NRS.applySettings();
+						callback(null);
+					});
                 },
-                function (callback) {
+                function() {
                     for (var schema in NRS.defaultColors) {
+						if (!NRS.defaultColors.hasOwnProperty(schema)) {
+							continue;
+						}
                         var color = NRS.settings[schema + "_color"];
                         if (color) {
                             NRS.updateStyle(schema, color);
@@ -549,8 +541,8 @@ var NRS = (function(NRS, $) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
 					$("[data-i18n]").i18n();
 				});
-				if (key && window.localstorage) {
-					window.localStorage.setItem('i18next_lng', NRS.settings["language"]);
+				if (key) {
+					NRS.setStrItem('i18next_lng', NRS.settings["language"]);
 				}
 			}
 		}
@@ -606,9 +598,9 @@ var NRS = (function(NRS, $) {
 
 		if (!key || key == "remember_passphrase") {
 			if (NRS.settings["remember_passphrase"] == "1") {
-				NRS.setCookie("remember_passphrase", 1, 1000);
+				NRS.setStrItem("remember_passphrase", 1);
 			} else {
-				NRS.deleteCookie("remember_passphrase");
+				NRS.removeItem("remember_passphrase");
 			}
 		}
 		if (!key || key == "admin_password") {
@@ -623,22 +615,18 @@ var NRS = (function(NRS, $) {
 			NRS.settings[key] = value;
 
 			if (key == "themeChoice") {
-				NRS.setCookie("themeChoice", value, 1000);
+				NRS.setStrItem("themeChoice", value);
 			}
 			if (key == "language") {
-				NRS.setCookie("language", value, 1000);
+				NRS.setStrItem("language", value);
 			}
 		}
 
-		if (NRS.databaseSupport) {
-			NRS.database.update("data", {
-				contents: JSON.stringify(NRS.settings)
-			}, [{
-				id: "settings"
-			}]);
-		} else if (NRS.hasLocalStorage) {
-			localStorage.setItem("settings", JSON.stringify(NRS.settings));
-		}
+		NRS.storageUpdate("data", {
+			contents: JSON.stringify(NRS.settings)
+		}, [{
+			id: "settings"
+		}]);
 		NRS.applySettings(key);
 	};
 
