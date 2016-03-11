@@ -32,9 +32,9 @@ import javax.servlet.http.HttpServletRequest;
  * Otherwise, the administrator password must be specified and all account monitors
  * will be stopped.</p>
  *
- * <p>The account monitor type and account property name must be specified when the secret
- * phrase is specified.  In addition, the holding identifier must be specified when
- * the monitor type is ASSET or CURRENCY.</p>
+ * <p>The account monitor holding type and account property name must be specified when the secret
+ * phrase is specified. Holding type codes are listed in getConstants.
+ *  In addition, the holding identifier must be specified when the holding type is ASSET or CURRENCY.</p>
  */
 public class StopAccountMonitor extends APIServlet.APIRequestHandler {
 

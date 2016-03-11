@@ -39,7 +39,8 @@ import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
  * to a recipient account when the amount held by the recipient account drops below
  * the threshold.  The transfer will not be done until the current block
  * height is greater than equal to the block height of the last transfer plus the
- * interval.  The asset or currency is specified by the holding identifier.</p>
+ * interval. Holding type codes are listed in getConstants. The asset or currency is
+ * specified by the holding identifier.</p>
  *
  * <p>The funding account is identified by the secret phrase.  The secret phrase must
  * be specified since the account monitor needs to sign the transactions that it submits.</p>
