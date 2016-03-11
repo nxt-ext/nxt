@@ -46,7 +46,7 @@ public class DesktopSystemTray {
     private JPanel statusPanel;
     private ImageIcon imageIcon;
     private TrayIcon trayIcon;
-    private MenuItem openWallet;
+    private MenuItem openWalletInBrowser;
     private MenuItem viewLog;
     private SystemTrayDataProvider dataProvider;
     private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.MEDIUM, Locale.getDefault());
@@ -63,10 +63,12 @@ public class DesktopSystemTray {
         tray = SystemTray.getSystemTray();
 
         MenuItem shutdown = new MenuItem("Shutdown");
-        openWallet = new MenuItem("Open Wallet");
+        openWalletInBrowser = new MenuItem("Open Wallet in Browser");
         if (!Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-            openWallet.setEnabled(false);
+            openWalletInBrowser.setEnabled(false);
         }
+        MenuItem showDesktopApplication = new MenuItem("Show Desktop Application");
+        MenuItem refreshDesktopApplication = new MenuItem("Refresh Wallet");
         viewLog = new MenuItem("View Log File");
         if (!Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
             viewLog.setEnabled(false);
@@ -76,7 +78,9 @@ public class DesktopSystemTray {
         popup.add(status);
         popup.add(viewLog);
         popup.addSeparator();
-        popup.add(openWallet);
+        popup.add(openWalletInBrowser);
+        popup.add(showDesktopApplication);
+        popup.add(refreshDesktopApplication);
         popup.addSeparator();
         popup.add(shutdown);
         trayIcon.setPopupMenu(popup);
@@ -90,11 +94,27 @@ public class DesktopSystemTray {
 
         trayIcon.addActionListener(e -> displayStatus());
 
-        openWallet.addActionListener(e -> {
+        openWalletInBrowser.addActionListener(e -> {
             try {
                 Desktop.getDesktop().browse(dataProvider.getWallet());
             } catch (IOException ex) {
-                Logger.logInfoMessage("Cannot open wallet", ex);
+                Logger.logInfoMessage("Cannot open wallet in browser", ex);
+            }
+        });
+
+        showDesktopApplication.addActionListener(e -> {
+            try {
+                Class.forName("nxtdesktop.DesktopApplication").getMethod("launch").invoke(null);
+            } catch (ReflectiveOperationException exception) {
+                Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to launch", exception);
+            }
+        });
+
+        refreshDesktopApplication.addActionListener(e -> {
+            try {
+                Class.forName("nxtdesktop.DesktopApplication").getMethod("refresh").invoke(null);
+            } catch (ReflectiveOperationException exception) {
+                Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to refresh", exception);
             }
         });
 
@@ -109,7 +129,10 @@ public class DesktopSystemTray {
         status.addActionListener(e -> displayStatus());
 
         shutdown.addActionListener(e -> {
-            if(JOptionPane.showConfirmDialog (null, "Are you sure ?", "Confirm Shutdown", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+            if(JOptionPane.showConfirmDialog (null,
+                    "Sure you want to shutdown NXT?\n\nIf you do, this will stop forging, shufflers and account monitors.\n\n",
+                    "Shutdown",
+                    JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
                 Logger.logInfoMessage("Shutdown requested by System Tray");
                 System.exit(0); // Implicitly invokes shutdown using the shutdown hook
             }
@@ -151,7 +174,7 @@ public class DesktopSystemTray {
         addDataRow(statusPanel, "Version", Nxt.VERSION);
         addDataRow(statusPanel, "Network", (Constants.isTestnet) ? "TestNet" : "MainNet");
         addDataRow(statusPanel, "Working offline", "" + Constants.isOffline);
-        addDataRow(statusPanel, "Wallet", String.valueOf(API.getBrowserUri()));
+        addDataRow(statusPanel, "Wallet", String.valueOf(API.getWelcomePageUri()));
         addDataRow(statusPanel, "Peer port", String.valueOf(Peers.getDefaultPeerPort()));
         addDataRow(statusPanel, "Program folder", String.valueOf(Paths.get(".").toAbsolutePath().getParent()));
         addDataRow(statusPanel, "User folder", String.valueOf(Paths.get(Nxt.getUserHomeDir()).toAbsolutePath()));
@@ -232,7 +255,7 @@ public class DesktopSystemTray {
     void setToolTip(final SystemTrayDataProvider dataProvider) {
         SwingUtilities.invokeLater(() -> {
             trayIcon.setToolTip(dataProvider.getToolTip());
-            openWallet.setEnabled(dataProvider.getWallet() != null && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE));
+            openWalletInBrowser.setEnabled(dataProvider.getWallet() != null && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE));
             viewLog.setEnabled(dataProvider.getWallet() != null);
             DesktopSystemTray.this.dataProvider = dataProvider;
         });

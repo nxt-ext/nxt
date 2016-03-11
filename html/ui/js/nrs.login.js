@@ -38,7 +38,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.showLoginOrWelcomeScreen = function() {
-		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
+		if (localStorage.getItem("logged_in")) {
 			NRS.showLoginScreen();
 		} else {
 			NRS.showWelcomeScreen();
@@ -145,10 +145,10 @@ var NRS = (function(NRS, $, undefined) {
 	
 	NRS.listAccounts = function() {
 		$('#login_account').empty();
-		if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+		if (NRS.getStrItem("savedNxtAccounts") && NRS.getStrItem("savedNxtAccounts") != ""){
 			$('#login_account_container').show();
 			$('#login_account_container_other').hide();
-			var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+			var accounts = NRS.getStrItem("savedNxtAccounts").split(";");
 			$.each(accounts, function(index, account) {
 				if (account != ''){
 					$('#login_account')
@@ -207,11 +207,12 @@ var NRS = (function(NRS, $, undefined) {
 	});
 	
 	NRS.removeAccount = function(account) {
-		var accounts = NRS.getCookie("savedNxtAccounts").replace(account+';','');
-		if (accounts == '')
-			NRS.deleteCookie('savedNxtAccounts');
-		else 
-			NRS.setCookie("savedNxtAccounts",accounts,30);
+		var accounts = NRS.getStrItem("savedNxtAccounts").replace(account+';','');
+		if (accounts == '') {
+			NRS.removeItem('savedNxtAccounts');
+		} else {
+			NRS.setStrItem("savedNxtAccounts", accounts);
+		}
 		NRS.listAccounts();
 	};
 
@@ -369,7 +370,10 @@ var NRS = (function(NRS, $, undefined) {
 					if (!NRS.downloadingBlockchain) {
 						NRS.checkIfOnAFork();
 					}
-					if(navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+					NRS.logConsole("User Agent: " + String(navigator.userAgent));
+					if(navigator.userAgent.indexOf('Safari') != -1 &&
+						navigator.userAgent.indexOf('Chrome') == -1 &&
+						navigator.userAgent.indexOf('JavaFX') == -1) {
 						// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
 						NRS.createDatabase("NRS_USER_DB");
 						$.growl($.t("nrs_safari_no_account_based_db"), {
@@ -401,8 +405,8 @@ var NRS = (function(NRS, $, undefined) {
 
 					if ($("#remember_account").is(":checked") || NRS.newlyCreatedAccount) {
 						var accountExists = 0;
-						if (NRS.getCookie("savedNxtAccounts")) {
-							var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+						if (NRS.getStrItem("savedNxtAccounts")) {
+							var accounts = NRS.getStrItem("savedNxtAccounts").split(";");
 							$.each(accounts, function(index, account) {
 								if (account == NRS.accountRS) {
                                     accountExists = 1;
@@ -410,11 +414,11 @@ var NRS = (function(NRS, $, undefined) {
 							});
 						}
 						if (!accountExists){
-							if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts") != ""){
-								var accounts = NRS.getCookie("savedNxtAccounts") + NRS.accountRS + ";";
-								NRS.setCookie("savedNxtAccounts",accounts,30);
+							if (NRS.getStrItem("savedNxtAccounts") && NRS.getStrItem("savedNxtAccounts") != ""){
+								var accounts = NRS.getStrItem("savedNxtAccounts") + NRS.accountRS + ";";
+								NRS.setStrItem("savedNxtAccounts", accounts);
 							} else {
-                                NRS.setCookie("savedNxtAccounts", NRS.accountRS + ";", 30);
+                                NRS.setStrItem("savedNxtAccounts", NRS.accountRS + ";");
                             }
 						}
 					}
@@ -423,9 +427,9 @@ var NRS = (function(NRS, $, undefined) {
 					
 					/* Add accounts to dropdown for quick switching */
 					$("#account_id_dropdown .dropdown-menu .switchAccount").remove();
-					if (NRS.getCookie("savedNxtAccounts") && NRS.getCookie("savedNxtAccounts")!=""){
+					if (NRS.getStrItem("savedNxtAccounts") && NRS.getStrItem("savedNxtAccounts")!=""){
                         $("#account_id_dropdown").show();
-						var accounts = NRS.getCookie("savedNxtAccounts").split(";");
+						var accounts = NRS.getStrItem("savedNxtAccounts").split(";");
 						$.each(accounts, function(index, account) {
 							if (account != ''){
 								$('#account_id_dropdown .dropdown-menu')
@@ -506,7 +510,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.showLockscreen = function() {
 		NRS.listAccounts();
-		if (NRS.hasLocalStorage && localStorage.getItem("logged_in")) {
+		if (localStorage.getItem("logged_in")) {
 			NRS.showLoginScreen();
 		} else {
 			NRS.showWelcomeScreen();
@@ -516,7 +520,7 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.unlock = function() {
-		if (NRS.hasLocalStorage && !localStorage.getItem("logged_in")) {
+		if (!localStorage.getItem("logged_in")) {
 			localStorage.setItem("logged_in", true);
 		}
 		$("#lockscreen").hide();
@@ -545,15 +549,15 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.legacyDatabase) {
 			indexedDB.deleteDatabase(NRS.legacyDatabase.name);
 		}
-		if (NRS.hasLocalStorage) {
-			localStorage.removeItem("logged_in");
-			localStorage.removeItem("settings")
-		}
-		var cookies = document.cookie.split(";");
-		for (var i = 0; i < cookies.length; i++) {
-			NRS.deleteCookie(cookies[i].split("=")[0]);
-		}
-
+		NRS.removeItem("logged_in");
+		NRS.removeItem("savedNxtAccounts");
+		NRS.removeItem("language");
+		NRS.removeItem("themeChoice");
+		NRS.removeItem("remember_passphrase");
+		NRS.localStorageDrop("data");
+		NRS.localStorageDrop("polls");
+		NRS.localStorageDrop("contacts");
+		NRS.localStorageDrop("assets");
 		NRS.logout();
 	});
 

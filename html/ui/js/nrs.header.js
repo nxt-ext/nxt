@@ -31,6 +31,12 @@ var NRS = (function(NRS, $) {
         widgetVisibility($("#header_send_money"), { apis: [NRS.constants.REQUEST_TYPES.sendMoney] });
         widgetVisibility($("#header_transfer_currency"), { apis: [NRS.constants.REQUEST_TYPES.transferCurrency] });
         widgetVisibility($("#header_send_message"), { apis: [NRS.constants.REQUEST_TYPES.sendMessage] });
+        if (!NRS.isCoinExchangePageAvailable()) {
+            $("#exchange_menu_li").remove();
+        }
+        if (!NRS.isWebWalletLinkVisible()) {
+            $("#web_wallet_li").remove();
+        }
     });
 
     $("#refreshSearchIndex").on("click", function() {
@@ -43,6 +49,12 @@ var NRS = (function(NRS, $) {
                 $.growl($.t("search_index_refreshed"));
             }
         })
+    });
+
+    $("#header_open_web_wallet").on("click", function() {
+        if (java) {
+            java.openBrowser(NRS.accountRS);
+        }
     });
 
     return NRS;

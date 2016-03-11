@@ -27,15 +27,11 @@ import nxt.crypto.HashFunction;
 import nxt.http.API;
 import nxt.util.Convert;
 import nxt.util.Logger;
+import nxt.util.TrustAllSSLProvider;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -48,9 +44,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,35 +61,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class MintWorker {
-
-    // Verify-all name verifier
-    private final static HostnameVerifier hostNameVerifier = (hostname, session) -> true;
-
-    // Trust-all socket factory
-    private static final SSLSocketFactory sslSocketFactory;
-    static {
-        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-            public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {
-            }
-            public void checkServerTrusted(X509Certificate[] certs, String authType) {
-            }
-        }};
-        SSLContext sc;
-        try {
-            sc = SSLContext.getInstance("TLS");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-        try {
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-        } catch (KeyManagementException e) {
-            throw new IllegalStateException(e);
-        }
-        sslSocketFactory = sc.getSocketFactory();
-    }
 
     public static void main(String[] args) {
         MintWorker mintWorker = new MintWorker();
@@ -270,8 +234,8 @@ public class MintWorker {
         boolean useHttps = Nxt.getBooleanProperty("nxt.mint.useHttps");
         if (useHttps) {
             protocol = "https";
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
-            HttpsURLConnection.setDefaultHostnameVerifier(hostNameVerifier);
+            HttpsURLConnection.setDefaultSSLSocketFactory(TrustAllSSLProvider.getSslSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(TrustAllSSLProvider.getHostNameVerifier());
         }
         int port = Constants.isTestnet ? API.TESTNET_API_PORT : Nxt.getIntProperty("nxt.apiServerPort");
         String urlParams = getUrlParams(params);

@@ -20,6 +20,7 @@ import nxt.crypto.Crypto;
 import nxt.env.DirProvider;
 import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
+import nxt.env.ServerStatus;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
@@ -30,10 +31,7 @@ import nxt.util.ThreadPool;
 import nxt.util.Time;
 import org.json.simple.JSONObject;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Files;
@@ -67,7 +65,9 @@ public final class Nxt {
         System.out.println("Initializing Nxt server version " + Nxt.VERSION);
         printCommandLineArguments();
         runtimeMode = RuntimeEnvironment.getRuntimeMode();
+        System.out.printf("Runtime mode %s\n", runtimeMode.getClass().getName());
         dirProvider = RuntimeEnvironment.getDirProvider();
+        System.out.println("User home folder " + dirProvider.getUserHomeDir());
         loadProperties(defaultProperties, NXT_DEFAULT_PROPERTIES, true);
         if (!VERSION.equals(Nxt.defaultProperties.getProperty("nxt.version"))) {
             throw new RuntimeException("Using an nxt-default.properties file from a version other than " + VERSION + " is not supported!!!");
@@ -312,6 +312,7 @@ public final class Nxt {
         shutdownAddOns();
         API.shutdown();
         Users.shutdown();
+        AccountMonitor.shutdown();
         ThreadPool.shutdown();
         Peers.shutdown();
         Db.shutdown();
@@ -332,9 +333,9 @@ public final class Nxt {
                 logSystemProperties();
                 runtimeMode.init();
                 Thread secureRandomInitThread = initSecureRandom();
-                setServerStatus("NXT Server - Loading database", null);
+                setServerStatus(ServerStatus.BEFORE_DATABASE, null);
                 Db.init();
-                setServerStatus("NXT Server - Loading resources", null);
+                setServerStatus(ServerStatus.AFTER_DATABASE, null);
                 TransactionProcessorImpl.getInstance();
                 BlockchainProcessorImpl.getInstance();
                 Account.init();
@@ -385,10 +386,10 @@ public final class Nxt {
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
                 Logger.logMessage("Copyright © 2013-2016 The Nxt Core Developers.");
                 Logger.logMessage("Distributed under GPLv2, with ABSOLUTELY NO WARRANTY.");
-                if (API.getBrowserUri() != null) {
-                    Logger.logMessage("Client UI is at " + API.getBrowserUri());
+                if (API.getWelcomePageUri() != null) {
+                    Logger.logMessage("Client UI is at " + API.getWelcomePageUri());
                 }
-                setServerStatus("NXT Server - Online", API.getBrowserUri());
+                setServerStatus(ServerStatus.STARTED, API.getWelcomePageUri());
                 if (Constants.isTestnet) {
                     Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
                 }
@@ -523,7 +524,11 @@ public final class Nxt {
         return dirProvider.getUserHomeDir();
     }
 
-    public static void setServerStatus(String status, URI wallet) {
+    public static File getConfDir() {
+        return dirProvider.getConfDir();
+    }
+
+    public static void setServerStatus(ServerStatus status, URI wallet) {
         runtimeMode.setServerStatus(status, wallet, dirProvider.getLogFileDir());
     }
 
