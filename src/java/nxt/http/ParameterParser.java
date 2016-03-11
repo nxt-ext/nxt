@@ -17,7 +17,6 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.AccountMonitor;
 import nxt.Alias;
 import nxt.Appendix;
 import nxt.Asset;
@@ -27,6 +26,7 @@ import nxt.Currency;
 import nxt.CurrencyBuyOffer;
 import nxt.CurrencySellOffer;
 import nxt.DigitalGoodsStore;
+import nxt.HoldingType;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
@@ -510,16 +510,16 @@ final class ParameterParser {
         return -1;
     }
 
-    static AccountMonitor.MonitorType getMonitorType(HttpServletRequest req) throws ParameterException {
-        String type = Convert.emptyToNull(req.getParameter("type"));
-        if (type == null) {
-            throw new ParameterException(MISSING_MONITOR_TYPE);
+    static HoldingType getHoldingType(HttpServletRequest req) throws ParameterException {
+        return HoldingType.get(ParameterParser.getByte(req, "holdingType", (byte) 0, (byte) 2, false));
+    }
+
+    static long getHoldingId(HttpServletRequest req, HoldingType holdingType) throws ParameterException {
+        long holdingId = ParameterParser.getUnsignedLong(req, "holding", holdingType != HoldingType.NXT);
+        if (holdingType == HoldingType.NXT && holdingId != 0) {
+            throw new ParameterException(JSONResponses.incorrect("holding", "holding id should not be specified if holdingType is NXT"));
         }
-        try {
-            return AccountMonitor.MonitorType.valueOf(type.trim());
-        } catch (IllegalArgumentException exc) {
-            throw new ParameterException(INCORRECT_MONITOR_TYPE);
-        }
+        return holdingId;
     }
 
     static String getAccountProperty(HttpServletRequest req) throws ParameterException {

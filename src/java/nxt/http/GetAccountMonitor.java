@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.AccountMonitor;
+import nxt.HoldingType;
 import nxt.crypto.Crypto;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONStreamAware;
@@ -43,7 +44,7 @@ public class GetAccountMonitor extends APIServlet.APIRequestHandler {
     static final GetAccountMonitor instance = new GetAccountMonitor();
 
     private GetAccountMonitor() {
-        super(new APITag[] {APITag.ACCOUNTS}, "type", "holding", "property", "secretPhrase", "adminPassword");
+        super(new APITag[] {APITag.ACCOUNTS}, "holdingType", "holding", "property", "secretPhrase", "adminPassword");
     }
     /**
      * Process the request
@@ -57,16 +58,10 @@ public class GetAccountMonitor extends APIServlet.APIRequestHandler {
         String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         if (secretPhrase != null) {
             long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
-            AccountMonitor.MonitorType monitorType = ParameterParser.getMonitorType(req);
+            HoldingType holdingType = ParameterParser.getHoldingType(req);
+            long holdingId = ParameterParser.getHoldingId(req, holdingType);
             String property = ParameterParser.getAccountProperty(req);
-            long holdingId = 0;
-            switch (monitorType) {
-                case ASSET:
-                case CURRENCY:
-                    holdingId = ParameterParser.getUnsignedLong(req, "holding", true);
-                    break;
-            }
-            AccountMonitor monitor = AccountMonitor.getMonitor(monitorType, holdingId, property, accountId);
+            AccountMonitor monitor = AccountMonitor.getMonitor(holdingType, holdingId, property, accountId);
             if (monitor == null) {
                 return MONITOR_NOT_STARTED;
             }

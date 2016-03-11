@@ -150,8 +150,6 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PROPERTY = incorrect("property", "(cannot be deleted by this account)");
     public static final JSONStreamAware UNKNOWN_PROPERTY = unknown("property");
     public static final JSONStreamAware MISSING_PROPERTY = missing("property");
-    public static final JSONStreamAware MISSING_MONITOR_TYPE = missing("type");
-    public static final JSONStreamAware INCORRECT_MONITOR_TYPE = incorrect("type", "(specify NXT, ASSET or CURRENCY)");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {

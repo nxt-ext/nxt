@@ -39,11 +39,6 @@ import java.util.concurrent.Semaphore;
  */
 public final class AccountMonitor {
 
-    /** Account monitor types */
-    public enum MonitorType {
-        NXT, ASSET, CURRENCY
-    }
-
     /** Minimum monitor amount */
     public static final long MIN_FUND_AMOUNT = 1;
 
@@ -74,8 +69,8 @@ public final class AccountMonitor {
     /** Pending updates */
     private static final ConcurrentLinkedQueue<MonitoredAccount> pendingEvents = new ConcurrentLinkedQueue<>();
 
-    /** Account monitor type */
-    private final MonitorType monitorType;
+    /** Account monitor holding type */
+    private final HoldingType holdingType;
 
     /** Holding identifier */
     private final long holdingId;
@@ -107,7 +102,7 @@ public final class AccountMonitor {
     /**
      * Create an account monitor
      *
-     * @param   monitorType         Monitor type
+     * @param   holdingType         Holding type
      * @param   holdingId           Asset or Currency identifier, ignored for NXT monitor
      * @param   property            Account property name
      * @param   amount              Fund amount
@@ -116,11 +111,11 @@ public final class AccountMonitor {
      * @param   accountId           Fund account identifier
      * @param   secretPhrase        Fund account secret phrase
      */
-    private AccountMonitor(MonitorType monitorType, long holdingId, String property,
+    private AccountMonitor(HoldingType holdingType, long holdingId, String property,
                                     long amount, long threshold, int interval,
                                     long accountId, String secretPhrase) {
-        this.monitorType = monitorType;
-        this.holdingId = (monitorType != MonitorType.NXT ? holdingId : 0);
+        this.holdingType = holdingType;
+        this.holdingId = (holdingType != HoldingType.NXT ? holdingId : 0);
         this.property = property;
         this.amount = amount;
         this.threshold = threshold;
@@ -132,12 +127,12 @@ public final class AccountMonitor {
     }
 
     /**
-     * Return the monitor type
+     * Return the monitor holding type
      *
-     * @return                      Monitor type
+     * @return                      Holding type
      */
-    public MonitorType getType() {
-        return monitorType;
+    public HoldingType getHoldingType() {
+        return holdingType;
     }
 
     /**
@@ -209,7 +204,7 @@ public final class AccountMonitor {
      * One or more funding parameters can be overridden in the account property value
      * string: amount=n,threshold=n,interval=n.
      *
-     * @param   monitorType         Monitor type
+     * @param   holdingType         Holding type
      * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
      * @param   property            Account property name
      * @param   amount              Fund amount
@@ -218,7 +213,7 @@ public final class AccountMonitor {
      * @param   secretPhrase        Fund account secret phrase
      * @return                      TRUE if the monitor was started
      */
-    public static boolean startMonitor(MonitorType monitorType, long holdingId, String property,
+    public static boolean startMonitor(HoldingType holdingType, long holdingId, String property,
                                     long amount, long threshold, int interval, String secretPhrase) {
         //
         // Initialize account monitor processing if it hasn't been done yet.  We do this now
@@ -230,7 +225,7 @@ public final class AccountMonitor {
         //
         // Create the account monitor
         //
-        AccountMonitor monitor = new AccountMonitor(monitorType, holdingId, property,
+        AccountMonitor monitor = new AccountMonitor(holdingType, holdingId, property,
                 amount, threshold, interval, accountId, secretPhrase);
         Nxt.getBlockchain().readLock();
         try {
@@ -255,7 +250,7 @@ public final class AccountMonitor {
                 }
                 if (monitors.contains(monitor)) {
                     Logger.logDebugMessage(String.format("%s monitor already started for account %s, property '%s', holding %s",
-                            monitorType.name(), monitor.accountName, property, Long.toUnsignedString(holdingId)));
+                            holdingType.name(), monitor.accountName, property, Long.toUnsignedString(holdingId)));
                     return false;
                 }
                 accountList.forEach(account -> {
@@ -268,12 +263,12 @@ public final class AccountMonitor {
                     pendingEvents.add(account);
                     Logger.logDebugMessage(String.format("Created %s monitor for target account %s, property '%s', holding %s, "
                                     + "amount %d, threshold %d, interval %d",
-                            monitorType.name(), account.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId),
+                            holdingType.name(), account.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId),
                             account.amount, account.threshold, account.interval));
                 });
                 monitors.add(monitor);
                 Logger.logInfoMessage(String.format("%s monitor started for funding account %s, property '%s', holding %s",
-                        monitorType.name(), monitor.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId)));
+                        holdingType.name(), monitor.accountName, monitor.property, Long.toUnsignedString(monitor.holdingId)));
             }
         } finally {
             Nxt.getBlockchain().readUnlock();
@@ -365,13 +360,13 @@ public final class AccountMonitor {
      *
      * Pending fund transactions will still be processed
      *
-     * @param   monitorType         Monitor type
+     * @param   holdingType         Monitor holding type
      * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
      * @param   property            Account property
      * @param   accountId           Fund account identifier
      * @return                      TRUE if the monitor was stopped
      */
-    public static boolean stopMonitor(MonitorType monitorType, long holdingId, String property, long accountId) {
+    public static boolean stopMonitor(HoldingType holdingType, long holdingId, String property, long accountId) {
         AccountMonitor monitor = null;
         boolean wasStopped = false;
         synchronized(monitors) {
@@ -381,8 +376,8 @@ public final class AccountMonitor {
             Iterator<AccountMonitor> monitorIt = monitors.iterator();
             while (monitorIt.hasNext()) {
                 monitor = monitorIt.next();
-                if (monitor.monitorType == monitorType && monitor.property.equals(property) &&
-                        (monitorType == MonitorType.NXT || monitor.holdingId == holdingId) &&
+                if (monitor.holdingType == holdingType && monitor.property.equals(property) &&
+                        (holdingType == HoldingType.NXT || monitor.holdingId == holdingId) &&
                         monitor.accountId == accountId) {
                     monitorIt.remove();
                     wasStopped = true;
@@ -409,7 +404,7 @@ public final class AccountMonitor {
                     }
                 }
                 Logger.logInfoMessage(String.format("%s monitor stopped for fund account %s, property '%s', holding %d",
-                    monitorType.name(), monitor.accountName, monitor.property, monitor.holdingId));
+                    holdingType.name(), monitor.accountName, monitor.property, monitor.holdingId));
             }
         }
         return wasStopped;
@@ -418,17 +413,17 @@ public final class AccountMonitor {
     /**
      * Get account monitor
      *
-     * @param   monitorType         Monitor type
+     * @param   holdingType         Holding type
      * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
      * @param   property            Account property
      * @param   accountId           Account identifier
      * @return                      Account monitor or null
      */
-    public static AccountMonitor getMonitor(MonitorType monitorType, long holdingId, String property, long accountId) {
+    public static AccountMonitor getMonitor(HoldingType holdingType, long holdingId, String property, long accountId) {
         AccountMonitor result = null;
         synchronized(monitors) {
             for (AccountMonitor monitor : monitors) {
-                if (monitor.monitorType == monitorType && monitor.holdingId == holdingId &&
+                if (monitor.holdingType == holdingType && monitor.holdingId == holdingId &&
                         monitor.property.equals(property) && monitor.accountId == accountId) {
                     result = monitor;
                     break;
@@ -505,7 +500,7 @@ public final class AccountMonitor {
      */
     @Override
     public int hashCode() {
-        return monitorType.hashCode() + (int)holdingId + property.hashCode() + (int)accountId;
+        return holdingType.hashCode() + (int)holdingId + property.hashCode() + (int)accountId;
     }
 
     /**
@@ -519,7 +514,7 @@ public final class AccountMonitor {
         boolean isEqual = false;
         if (obj != null && (obj instanceof AccountMonitor)) {
             AccountMonitor monitor = (AccountMonitor)obj;
-            if (monitorType == monitor.monitorType && holdingId == monitor.holdingId &&
+            if (holdingType == monitor.holdingType && holdingId == monitor.holdingId &&
                     property.equals(monitor.property) && accountId == monitor.accountId) {
                 isEqual = true;
             }
@@ -565,7 +560,7 @@ public final class AccountMonitor {
                                 Logger.logErrorMessage(String.format("Funding account %s no longer exists",
                                         monitoredAccount.monitor.accountName));
                             } else {
-                                switch (monitoredAccount.monitor.monitorType) {
+                                switch (monitoredAccount.monitor.holdingType) {
                                     case NXT:
                                         processNxtEvent(monitoredAccount, targetAccount, fundingAccount);
                                         break;
@@ -579,7 +574,7 @@ public final class AccountMonitor {
                             }
                         } catch (Exception exc) {
                             Logger.logErrorMessage(String.format("Unable to process %s event for account %s, property '%s', holding %s",
-                                    monitoredAccount.monitor.monitorType.name(), monitoredAccount.accountName,
+                                    monitoredAccount.monitor.holdingType.name(), monitoredAccount.accountName,
                                     monitoredAccount.monitor.property, Long.toUnsignedString(monitoredAccount.monitor.holdingId)), exc);
                         }
                     }
@@ -768,7 +763,7 @@ public final class AccountMonitor {
                 List<MonitoredAccount> accountList = accounts.get(account.getId());
                 if (accountList != null) {
                     accountList.forEach((maccount) -> {
-                       if (maccount.monitor.monitorType == MonitorType.NXT && balance < maccount.threshold &&
+                       if (maccount.monitor.holdingType == HoldingType.NXT && balance < maccount.threshold &&
                                !pendingEvents.contains(maccount)) {
                            pendingEvents.add(maccount);
                        }
@@ -802,7 +797,7 @@ public final class AccountMonitor {
                 List<MonitoredAccount> accountList = accounts.get(asset.getAccountId());
                 if (accountList != null) {
                     accountList.forEach((maccount) -> {
-                        if (maccount.monitor.monitorType == MonitorType.ASSET &&
+                        if (maccount.monitor.holdingType == HoldingType.ASSET &&
                                 maccount.monitor.holdingId == assetId &&
                                 balance < maccount.threshold &&
                                 !pendingEvents.contains(maccount)) {
@@ -838,7 +833,7 @@ public final class AccountMonitor {
                 List<MonitoredAccount> accountList = accounts.get(currency.getAccountId());
                 if (accountList != null) {
                     accountList.forEach((maccount) -> {
-                        if (maccount.monitor.monitorType == MonitorType.CURRENCY &&
+                        if (maccount.monitor.holdingType == HoldingType.CURRENCY &&
                                 maccount.monitor.holdingId == currencyId &&
                                 balance < maccount.threshold &&
                                 !pendingEvents.contains(maccount)) {
@@ -886,7 +881,7 @@ public final class AccountMonitor {
                                 Logger.logDebugMessage(
                                         String.format("Updated %s monitor for account %s, property '%s', holding %s, "
                                                 + "amount %d, threshold %d, interval %d",
-                                                account.monitor.monitorType.name(), account.accountName,
+                                                account.monitor.holdingType.name(), account.accountName,
                                                 property.getProperty(), Long.toUnsignedString(account.monitor.holdingId),
                                                 account.amount, account.threshold, account.interval));
                             }
@@ -909,7 +904,7 @@ public final class AccountMonitor {
                                 Logger.logDebugMessage(
                                         String.format("Created %s monitor for account %s, property '%s', holding %s, "
                                                 + "amount %d, threshold %d, interval %d",
-                                                monitor.monitorType.name(), account.accountName,
+                                                monitor.holdingType.name(), account.accountName,
                                                 property.getProperty(), Long.toUnsignedString(monitor.holdingId),
                                                 account.amount, account.threshold, account.interval));
                             }
@@ -948,7 +943,7 @@ public final class AccountMonitor {
                             it.remove();
                             Logger.logDebugMessage(
                                     String.format("Deleted %s monitor for account %s, property '%s', holding %s",
-                                            account.monitor.monitorType.name(), account.accountName,
+                                            account.monitor.holdingType.name(), account.accountName,
                                             property.getProperty(), Long.toUnsignedString(account.monitor.holdingId)));
                         }
                     }

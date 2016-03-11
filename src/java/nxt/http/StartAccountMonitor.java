@@ -21,6 +21,7 @@ import nxt.AccountMonitor;
 import nxt.Asset;
 import nxt.Constants;
 import nxt.Currency;
+import nxt.HoldingType;
 import nxt.NxtException;
 import nxt.crypto.Crypto;
 import org.json.simple.JSONObject;
@@ -58,7 +59,7 @@ public final class StartAccountMonitor extends APIServlet.APIRequestHandler {
     static final StartAccountMonitor instance = new StartAccountMonitor();
 
     private StartAccountMonitor() {
-        super(new APITag[] {APITag.ACCOUNTS}, "type", "holding", "property", "amount", "threshold", "interval", "secretPhrase");
+        super(new APITag[] {APITag.ACCOUNTS}, "holdingType", "holding", "property", "amount", "threshold", "interval", "secretPhrase");
     }
 
     /**
@@ -70,23 +71,21 @@ public final class StartAccountMonitor extends APIServlet.APIRequestHandler {
      */
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        AccountMonitor.MonitorType monitorType = ParameterParser.getMonitorType(req);
+        HoldingType holdingType = ParameterParser.getHoldingType(req);
+        long holdingId = ParameterParser.getHoldingId(req, holdingType);
         String property = ParameterParser.getAccountProperty(req);
         long amount = ParameterParser.getLong(req, "amount", AccountMonitor.MIN_FUND_AMOUNT, Constants.MAX_BALANCE_NQT, true);
         long threshold = ParameterParser.getLong(req, "threshold", AccountMonitor.MIN_FUND_THRESHOLD, Constants.MAX_BALANCE_NQT, true);
         int interval = ParameterParser.getInt(req, "interval", AccountMonitor.MIN_FUND_INTERVAL, Integer.MAX_VALUE, true);
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
-        long holdingId = 0;
-        switch (monitorType) {
+        switch (holdingType) {
             case ASSET:
-                holdingId = ParameterParser.getUnsignedLong(req, "holding", true);
                 Asset asset = Asset.getAsset(holdingId);
                 if (asset == null) {
                     throw new ParameterException(JSONResponses.UNKNOWN_ASSET);
                 }
                 break;
             case CURRENCY:
-                holdingId = ParameterParser.getUnsignedLong(req, "holding", true);
                 Currency currency = Currency.getCurrency(holdingId);
                 if (currency == null) {
                     throw new ParameterException(JSONResponses.UNKNOWN_CURRENCY);
@@ -97,7 +96,7 @@ public final class StartAccountMonitor extends APIServlet.APIRequestHandler {
         if (account == null) {
             throw new ParameterException(UNKNOWN_ACCOUNT);
         }
-        if (AccountMonitor.startMonitor(monitorType, holdingId, property, amount, threshold, interval, secretPhrase)) {
+        if (AccountMonitor.startMonitor(holdingType, holdingId, property, amount, threshold, interval, secretPhrase)) {
             JSONObject response = new JSONObject();
             response.put("started", true);
             return response;

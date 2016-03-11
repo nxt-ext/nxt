@@ -1001,7 +1001,7 @@ final class JSONData {
 
     static JSONObject accountMonitor(AccountMonitor monitor) {
         JSONObject json = new JSONObject();
-        json.put("type", monitor.getType().name());
+        json.put("holdingType", monitor.getHoldingType().getCode());
         json.put("account", Long.toUnsignedString(monitor.getAccountId()));
         json.put("accountRS", monitor.getAccountName());
         json.put("holding", Long.toUnsignedString(monitor.getHoldingId()));
