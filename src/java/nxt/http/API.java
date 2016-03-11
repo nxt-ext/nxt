@@ -85,7 +85,8 @@ public final class API {
     static final boolean enableAPIUPnP = Nxt.getBooleanProperty("nxt.enableAPIUPnP");
 
     private static final Server apiServer;
-    private static URI browserUri;
+    private static URI welcomePageUri;
+    private static URI serverRootUri;
 
     static {
         List<String> disabled = Nxt.getStringListProperty("nxt.disabledAPIs");
@@ -173,7 +174,8 @@ public final class API {
                 sslContextFactory = null;
             }
             try {
-                browserUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "/index.html", null, null);
+                welcomePageUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "/index.html", null, null);
+                serverRootUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "", null, null);
             } catch (URISyntaxException e) {
                 Logger.logInfoMessage("Cannot resolve browser URI", e);
             }
@@ -374,8 +376,12 @@ public final class API {
 
     }
 
-    public static URI getBrowserUri() {
-        return browserUri;
+    public static URI getWelcomePageUri() {
+        return welcomePageUri;
+    }
+
+    public static URI getServerRootUri() {
+        return serverRootUri;
     }
 
     private API() {} // never
