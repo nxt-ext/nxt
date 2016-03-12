@@ -569,6 +569,54 @@ NRS.addPagination = function () {
 		NRS.updateNotifications();
 		NRS.setUnconfirmedNotifications();
 		NRS.setPhasingNotifications();
+		var page = NRS.getUrlParameter("page");
+		if (page) {
+			page = page.escapeHTML();
+			if (NRS.pages[page]) {
+				NRS.goToPage(page);
+			} else {
+				$.growl($.t("page") + " " + page + " " + $.t("does_not_exist"), {
+					"type": "danger",
+					"offset": 50
+				});
+			}
+		}
+		var modal = NRS.getUrlParameter("modal");
+		if (modal) {
+			modal = "#" + modal.escapeHTML();
+			var urlParams = window.location.search.substring(1).split('&');
+			if($(modal)[0]) {
+                var isValidParams = true;
+				for (var i = 0; i < urlParams.length; i++) {
+					var paramKeyValue = urlParams[i].split('=');
+                    if (paramKeyValue.length != 2) {
+                        continue;
+                    }
+					var key = paramKeyValue[0].escapeHTML();
+					if (key == "account" || key == "modal") {
+                        continue;
+                    }
+                    var value = paramKeyValue[1].escapeHTML();
+                    if ($(modal).find("input[name=" + key + "]")[0]) {
+						$(modal).find("input[name=" + key + "]").val(value);
+					} else {
+						$.growl($.t("input") + " " + key + " " + $.t("does_not_exist_in") + " " + modal, {
+							"type": "danger",
+							"offset": 50
+						});
+                        isValidParams = false;
+					}
+				}
+                if (isValidParams) {
+                    $(modal).modal();
+                }
+			} else {
+				$.growl($.t("modal") + " " + modal + " " + $.t("does_not_exist"), {
+					"type": "danger",
+					"offset": 50
+				});
+			}
+		}
 	}
 
 	NRS.initUserDBSuccess = function() {
