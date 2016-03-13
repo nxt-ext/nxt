@@ -1622,5 +1622,7 @@
   "page": "Page",
   "modal": "Modal",
   "does_not_exist": "does not exist",
-  "does_not_exist_in ": "does not exist in"
+  "does_not_exist_in ": "does not exist in",
+  "for": "for",
+  "must_be_true_or_false": "must be 'true' or 'false'"
 }
