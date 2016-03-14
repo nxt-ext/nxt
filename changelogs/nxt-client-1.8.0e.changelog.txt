@@ -11,6 +11,10 @@ the Nxt desktop icon or start menu shortcut.
 More details about the JavaFX UI are available at:
 https://bitbucket.org/JeanLucPicard/nxt/issues/338/desktop-wallet
 
+The pre-compiled package will still run if JavaFX is not available, but to
+recompile the code on such platforms the compile-nojfx.sh script must be used,
+which skips the compilation of the desktop wallet.
+
 The installer now creates a start and stop menu shortcuts and desktop icons on
 Unix platforms too, which start the NRS client in desktop mode. From the
 command line, use the new start.sh script to start the client in desktop mode,
@@ -64,7 +68,7 @@ the peer info, as found in the java os.platform and os.arch system properties.
 
 Other minor bugfixes and optimizations.
 
-Updated jetty to version 9.3.7, lucene to 5.3.2, and slf4j to 1.7.15. Delete
-the old lib directory when installing on top of a previous installation.
-
+Updated jetty to version 9.3.7, lucene to 5.3.2, tika to 1.12, and slf4j to
+1.7.18. Delete the old lib directory when installing on top of a previous
+installation.
 
