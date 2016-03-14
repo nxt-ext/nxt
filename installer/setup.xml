@@ -130,6 +130,12 @@
             <fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore nxt-private.iml"/>
             <fileset dir="contrib" targetdir="${INSTALL_PATH}/contrib" override="true" excludes=".gitignore"/>
             <fileset dir="logs" targetdir="${INSTALL_PATH}/logs" override="true" excludes=".gitignore"/>
+            <updatecheck>
+                <include name="lib/**" />
+                <include name="classes/**" />
+                <include name="html/**" />
+                <exclude name="html/ui/plugins/**" />
+            </updatecheck>
         </pack>
 
         <pack name="server.windows" os="windows" required="yes">
