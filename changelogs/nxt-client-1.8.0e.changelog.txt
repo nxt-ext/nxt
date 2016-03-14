@@ -11,6 +11,12 @@ the Nxt desktop icon or start menu shortcut.
 More details about the JavaFX UI are available at:
 https://bitbucket.org/JeanLucPicard/nxt/issues/338/desktop-wallet
 
+The property nxt.defaultDesktopAccount can be used to specify an account to
+login to automatically once the desktop wallet loads.
+
+The desktop wallet UI can be disabled by setting
+nxt.launchDesktopApplication=false
+
 The pre-compiled package will still run if JavaFX is not available, but to
 recompile the code on such platforms the compile-nojfx.sh script must be used,
 which skips the compilation of the desktop wallet.
