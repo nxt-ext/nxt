@@ -31,7 +31,11 @@ import nxt.util.ThreadPool;
 import nxt.util.Time;
 import org.json.simple.JSONObject;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Files;
@@ -46,7 +50,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.7.5";
+    public static final String VERSION = "1.8.0e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -439,7 +443,8 @@ public final class Nxt {
                 "sun.arch.data.model",
                 "os.name",
                 "file.encoding",
-                RuntimeMode.RUNTIME_MODE_ARG
+                RuntimeEnvironment.RUNTIME_MODE_ARG,
+                RuntimeEnvironment.DIRPROVIDER_ARG
         };
         for (String property : loggedProperties) {
             Logger.logDebugMessage(String.format("%s = %s", property, System.getProperty(property)));

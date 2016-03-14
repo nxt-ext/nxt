@@ -1539,13 +1539,16 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.getUrlParameter = function (sParam) {
-		var sPageURL = window.location.search.substring(1);
-		var sURLVariables = sPageURL.split('&');
-        for (var i = 0; i < sURLVariables.length; i++) {
-			var sParameterName = sURLVariables[i].split('=');
-            if (sParameterName[0] == sParam) {
-				return sParameterName[1];
+    NRS.getUrlParameter = function (param) {
+		var url = window.location.search.substring(1);
+		var urlParams = url.split('&');
+        for (var i = 0; i < urlParams.length; i++) {
+			var paramKeyValue = urlParams[i].split('=');
+            if (paramKeyValue.length != 2) {
+                continue;
+            }
+            if (paramKeyValue[0] == param) {
+				return paramKeyValue[1];
 			}
 		}
 		return false;

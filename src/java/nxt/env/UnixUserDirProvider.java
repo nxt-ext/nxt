@@ -16,14 +16,14 @@
 
 package nxt.env;
 
-import java.io.File;
-import java.net.URI;
+import java.nio.file.Paths;
 
-public interface RuntimeMode {
+public class UnixUserDirProvider extends DesktopUserDirProvider {
 
-    void init();
+    private static final String NXT_USER_HOME = Paths.get(System.getProperty("user.home"), ".nxt").toString();
 
-    void setServerStatus(ServerStatus status, URI wallet, File logFileDir);
-
-    void shutdown();
+    @Override
+    public String getUserHomeDir() {
+        return NXT_USER_HOME;
+    }
 }

@@ -29,11 +29,13 @@ in such a way that no trusted third parties are required anymore.
 ----
 ## Run it! ##
 
-  - Unix: `./run.sh`
+  - click on the Nxt icon, or start from the command line:
+  - Unix: `./start.sh`
   - Mac: `./run.command`
   - Window: `run.bat`
 
-  - Browse: http://localhost:7876/
+  - wait for the JavaFX wallet window to open
+  - on platforms without JavaFX, open http://localhost:7876/ in a browser
 
 ----
 ## Compile it! ##
@@ -56,8 +58,8 @@ in such a way that no trusted third parties are required anymore.
 ## Troubleshooting the NRS (Nxt Reference Software) ##
 
   - How to Stop the NRS Server?
-    - ctrl+c
-    - close the console window
+    - click on Nxt Stop icon, or run `./stop.sh`
+    - or if started from command line, ctrl+c or close the console window
 
   - UI Errors or Stacktraces?
     - report on BitBucket
