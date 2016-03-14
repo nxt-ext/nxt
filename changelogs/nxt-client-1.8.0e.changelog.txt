@@ -80,3 +80,19 @@ previous installation. If using the installer, old libraries will be deleted
 automatically, as well as any existing files under the classes and html
 directories, excluding html/ui/plugins.
 
+
+Server-side addOns:
+
+It is now possible to trigger script execution, or really add any custom Java
+code to the server, by writing a class which implements the nxt.addons.AddOn
+interface, making sure it is on the classpath, and enabling it by adding its
+name to the nxt.addOns property. See the example addOns in the nxt.addons
+package. The AfterStart and BeforeShutdown addOns can be used to trigger
+scripts to be run just after the server has started, and just before shutdown.
+
+This is an unsupported feature for developers only. While in the 1.x series
+the Java API is expected to be stable, it will undergo significant refactoring
+in 2.0. Keep any custom addOn code simple, and be prepared to have to change it
+for 2.0 or discard it. It should also be obvious that such custom Java code can
+crash your node or have unexpected side effects.
+

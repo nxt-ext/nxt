@@ -24,6 +24,7 @@ import nxt.env.ServerStatus;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
+import nxt.addons.AddOn;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
@@ -312,6 +313,7 @@ public final class Nxt {
 
     public static void shutdown() {
         Logger.logShutdownMessage("Shutting down...");
+        shutdownAddOns();
         API.shutdown();
         Users.shutdown();
         AccountMonitor.shutdown();
@@ -372,6 +374,7 @@ public final class Nxt {
                 API.init();
                 Users.init();
                 DebugTrace.init();
+                initAddOns();
                 int timeMultiplier = (Constants.isTestnet && Constants.isOffline) ? Math.max(Nxt.getIntProperty("nxt.timeMultiplier"), 1) : 1;
                 ThreadPool.start(timeMultiplier);
                 if (timeMultiplier > 1) {
@@ -473,6 +476,33 @@ public final class Nxt {
                         "Install haveged if on linux, or set nxt.useStrongSecureRandom=false.");
             }
         } catch (InterruptedException ignore) {}
+    }
+
+    private static final List<AddOn> addOns;
+    static {
+        List<AddOn> addOnsList = new ArrayList<>();
+        getStringListProperty("nxt.addOns").forEach(addOn -> {
+            try {
+                addOnsList.add((AddOn)Class.forName(addOn).newInstance());
+            } catch (ReflectiveOperationException e) {
+                Logger.logErrorMessage(e.getMessage(), e);
+            }
+        });
+        addOns = Collections.unmodifiableList(addOnsList);
+    }
+
+    private static void initAddOns() {
+        addOns.forEach(addOn -> {
+            Logger.logInfoMessage("Initializing " + addOn.getClass().getName());
+            addOn.init();
+        });
+    }
+
+    private static void shutdownAddOns() {
+        addOns.forEach(addOn -> {
+            Logger.logShutdownMessage("Shutting down " + addOn.getClass().getName());
+            addOn.shutdown();
+        });
     }
 
     public static String getProcessId() {
