@@ -87,6 +87,7 @@
         <res id="LicencePanel.licence" src="LICENSE.txt"/>
         <res id="Installer.image" src="html/ui/img/installer_left_pane.png"/>
         <res id="shortcutSpec.xml" src="../installer/shortcutSpec.xml"/>
+        <res id="Unix_shortcutSpec.xml" src="../installer/Unix_shortcutSpec.xml"/>
         <res id="RegistrySpec.xml" src="../installer/RegistrySpec.xml"/>
     </resources>
 
@@ -100,9 +101,7 @@
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
         <panel classname="TargetPanel"/>
-        <panel classname="ShortcutPanel">
-            <os family="windows"/>
-        </panel>
+        <panel classname="ShortcutPanel"/>
         <panel classname="InstallPanel"/>
         <panel classname="SimpleFinishPanel"/>
     </panels>
@@ -131,6 +130,12 @@
             <fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore nxt-private.iml"/>
             <fileset dir="contrib" targetdir="${INSTALL_PATH}/contrib" override="true" excludes=".gitignore"/>
             <fileset dir="logs" targetdir="${INSTALL_PATH}/logs" override="true" excludes=".gitignore"/>
+            <updatecheck>
+                <include name="lib/**" />
+                <include name="classes/**" />
+                <include name="html/**" />
+                <exclude name="html/ui/plugins/**" />
+            </updatecheck>
         </pack>
 
         <pack name="server.windows" os="windows" required="yes">
@@ -155,6 +160,10 @@
             <executable targetfile="${INSTALL_PATH}/run-tor.sh"/>
             <file src="run-desktop.sh" targetdir="${INSTALL_PATH}" override="false"/>
             <executable targetfile="${INSTALL_PATH}/run-desktop.sh"/>
+            <file src="start.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <executable targetfile="${INSTALL_PATH}/start.sh"/>
+            <file src="stop.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <executable targetfile="${INSTALL_PATH}/stop.sh"/>
             <file src="mint.sh" targetdir="${INSTALL_PATH}" override="false"/>
             <executable targetfile="${INSTALL_PATH}/mint.sh"/>
             <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>

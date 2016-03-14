@@ -14,16 +14,12 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.env;
+package nxt.addons;
 
-import java.io.File;
-import java.net.URI;
-
-public interface RuntimeMode {
+public interface AddOn {
 
     void init();
 
-    void setServerStatus(ServerStatus status, URI wallet, File logFileDir);
-
     void shutdown();
+
 }

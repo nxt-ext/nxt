@@ -1,0 +1,98 @@
+This is an experimental release. It adds several new features, which however do
+not require a hard fork.
+
+
+JavaFX UI:
+
+A desktop wallet UI, mostly equivalent to the in-browser UI, is launched on
+supported platforms automatically when the server is started by clicking on
+the Nxt desktop icon or start menu shortcut.
+
+More details about the JavaFX UI are available at:
+https://bitbucket.org/JeanLucPicard/nxt/issues/338/desktop-wallet
+
+The property nxt.defaultDesktopAccount can be used to specify an account to
+login to automatically once the desktop wallet loads.
+
+The desktop wallet UI can be disabled by setting
+nxt.launchDesktopApplication=false
+
+The pre-compiled package will still run if JavaFX is not available, but to
+recompile the code on such platforms the compile-nojfx.sh script must be used,
+which skips the compilation of the desktop wallet.
+
+The installer now creates a start and stop menu shortcuts and desktop icons on
+Unix platforms too, which start the NRS client in desktop mode. From the
+command line, use the new start.sh script to start the client in desktop mode,
+and the corresponding stop.sh script to stop it. The start.sh and stop.sh
+scripts can be run from any directory.
+
+Incompatible change:
+
+Note that when run in desktop mode on Unix, the ~/.nxt directory is now used to
+store configuration files, logs, and the nxt_db blockchain database. This makes
+it simpler to upgrade to a new version, by deleting the content of the old nxt
+installation directory, as no user configuration files or database files are
+stored in it.
+
+The run.sh script continues to use command line mode, i.e. does not attempt to
+start the desktop wallet and desktop tray icon, and continues to use the nxt
+installation directory from within which it must be run to store the nxt_db
+database, logs, and configuration files. Users who want to use desktop mode but
+still use the nxt installation directory instead of ~/.nxt for those files can
+use the run-desktop.sh script instead.
+
+
+Account Monitor:
+
+The new Account Monitor feature provides monitoring account balances, and their
+automated replenishment from a funding account, based on account properties set
+by the funding account to the monitored accounts.
+
+NXT, asset, or currency balances can be monitored. If a balance falls below
+the configured threshold, a transaction will be submitted to transfer units
+from the funding account to the monitored account. A transfer will remain
+pending if the number of blocks since the previous transfer transaction is less
+than the interval configured for the monitor.
+
+The APIs for the Account Monitor feature are StartAccountMonitor,
+GetAccountMonitor, and StopAccountMonitor. Detailed documentation for those is
+provided in the API javadoc files.
+
+
+Client UI page or modal redirection. By adding page or modal parameters to the
+http://localhost:7876/index.html URL, the client can be redirected to open a
+specific page or modal pop-up, with pre-populated parameter values.
+For usage example, see:
+https://bitbucket.org/JeanLucPicard/nxt/pull-requests/42/added-page-redirect-modal-popup-with
+
+The nxt.apiSSLCiphers property can be used to select which SSL ciphers should
+be enabled for the API server when using SSL.
+
+Unless overridden in nxt.myPlatform, the real system platform is now shown in
+the peer info, as found in the java os.platform and os.arch system properties.
+
+Other minor bugfixes and optimizations.
+
+Updated jetty to version 9.3.7, lucene to 5.3.2, tika to 1.12, and slf4j to
+1.7.18. Delete the old lib directory first when installing manually on top of a
+previous installation. If using the installer, old libraries will be deleted
+automatically, as well as any existing files under the classes and html
+directories, excluding html/ui/plugins.
+
+
+Server-side addOns:
+
+It is now possible to trigger script execution, or really add any custom Java
+code to the server, by writing a class which implements the nxt.addons.AddOn
+interface, making sure it is on the classpath, and enabling it by adding its
+name to the nxt.addOns property. See the example addOns in the nxt.addons
+package. The AfterStart and BeforeShutdown addOns can be used to trigger
+scripts to be run just after the server has started, and just before shutdown.
+
+This is an unsupported feature for developers only. While in the 1.x series
+the Java API is expected to be stable, it will undergo significant refactoring
+in 2.0. Keep any custom addOn code simple, and be prepared to have to change it
+for 2.0 or discard it. It should also be obvious that such custom Java code can
+crash your node or have unexpected side effects.
+

@@ -1617,5 +1617,12 @@
   "accept_exchange": "Accept",
   "minimum_fee": "Minimum Fee",
   "web_wallet": "Web Wallet",
-  "fork_warning_base_target": "Warning: You are most likely on a fork (base target is very high)."
+  "fork_warning_base_target": "Warning: You are most likely on a fork (base target is very high).",
+  "input": "Input",
+  "page": "Page",
+  "modal": "Modal",
+  "does_not_exist": "does not exist",
+  "does_not_exist_in ": "does not exist in",
+  "for": "for",
+  "must_be_true_or_false": "must be 'true' or 'false'"
 }

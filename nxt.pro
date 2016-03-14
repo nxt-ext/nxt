@@ -3,6 +3,7 @@
 
 -libraryjars <java.home>/lib/rt.jar
 -libraryjars <java.home>/lib/jce.jar
+-libraryjars <java.home>/lib/ext/jfxrt.jar
 -libraryjars conf
 -libraryjars lib
 
@@ -19,8 +20,14 @@
     <methods>;
 }
 -keep class nxt.env.service.NxtService_ServiceManagement
+-keep class * extends nxt.env.DirProvider
 -keepclassmembers class nxt.env.RuntimeEnvironment {
     static boolean isHeadless();
+}
+-keepclassmembers class * {
+    void launch();
+    void shutdown();
+    void refresh();
 }
 # Keep - Applications. Keep all application classes, along with their 'main'
 # methods.

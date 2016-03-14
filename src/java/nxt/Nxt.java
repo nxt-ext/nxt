@@ -24,13 +24,18 @@ import nxt.env.ServerStatus;
 import nxt.http.API;
 import nxt.peer.Peers;
 import nxt.user.Users;
+import nxt.addons.AddOn;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import nxt.util.Time;
 import org.json.simple.JSONObject;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Files;
@@ -45,7 +50,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.7.5";
+    public static final String VERSION = "1.8.0e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -308,6 +313,7 @@ public final class Nxt {
 
     public static void shutdown() {
         Logger.logShutdownMessage("Shutting down...");
+        shutdownAddOns();
         API.shutdown();
         Users.shutdown();
         AccountMonitor.shutdown();
@@ -369,6 +375,7 @@ public final class Nxt {
                 API.init();
                 Users.init();
                 DebugTrace.init();
+                initAddOns();
                 int timeMultiplier = (Constants.isTestnet && Constants.isOffline) ? Math.max(Nxt.getIntProperty("nxt.timeMultiplier"), 1) : 1;
                 ThreadPool.start(timeMultiplier);
                 if (timeMultiplier > 1) {
@@ -437,7 +444,8 @@ public final class Nxt {
                 "sun.arch.data.model",
                 "os.name",
                 "file.encoding",
-                RuntimeMode.RUNTIME_MODE_ARG
+                RuntimeEnvironment.RUNTIME_MODE_ARG,
+                RuntimeEnvironment.DIRPROVIDER_ARG
         };
         for (String property : loggedProperties) {
             Logger.logDebugMessage(String.format("%s = %s", property, System.getProperty(property)));
@@ -469,6 +477,33 @@ public final class Nxt {
                         "Install haveged if on linux, or set nxt.useStrongSecureRandom=false.");
             }
         } catch (InterruptedException ignore) {}
+    }
+
+    private static final List<AddOn> addOns;
+    static {
+        List<AddOn> addOnsList = new ArrayList<>();
+        getStringListProperty("nxt.addOns").forEach(addOn -> {
+            try {
+                addOnsList.add((AddOn)Class.forName(addOn).newInstance());
+            } catch (ReflectiveOperationException e) {
+                Logger.logErrorMessage(e.getMessage(), e);
+            }
+        });
+        addOns = Collections.unmodifiableList(addOnsList);
+    }
+
+    private static void initAddOns() {
+        addOns.forEach(addOn -> {
+            Logger.logInfoMessage("Initializing " + addOn.getClass().getName());
+            addOn.init();
+        });
+    }
+
+    private static void shutdownAddOns() {
+        addOns.forEach(addOn -> {
+            Logger.logShutdownMessage("Shutting down " + addOn.getClass().getName());
+            addOn.shutdown();
+        });
     }
 
     public static String getProcessId() {
