@@ -14,16 +14,31 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.env;
+package nxt.addons;
 
-import java.io.File;
-import java.net.URI;
+import nxt.Nxt;
+import nxt.util.Logger;
+import nxt.util.ThreadPool;
 
-public interface RuntimeMode {
+public final class AfterStart implements AddOn {
 
-    void init();
+    @Override
+    public void init() {
+        String afterStartScript = Nxt.getStringProperty("nxt.afterStartScript");
+        if (afterStartScript != null) {
+            ThreadPool.runAfterStart(() -> {
+                try {
+                    Runtime.getRuntime().exec(afterStartScript);
+                } catch (Exception e) {
+                    Logger.logErrorMessage("Failed to run after start script: " + afterStartScript, e);
+                }
+            });
+        }
+    }
 
-    void setServerStatus(ServerStatus status, URI wallet, File logFileDir);
+    @Override
+    public void shutdown() {
 
-    void shutdown();
+    }
+
 }

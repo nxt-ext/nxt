@@ -21,15 +21,24 @@ import java.lang.reflect.Method;
 
 public class RuntimeEnvironment {
 
-    public static boolean isWindowsRuntime() {
-        return System.getProperty("os.name").startsWith("Windows");
+    public static final String RUNTIME_MODE_ARG = "nxt.runtime.mode";
+    public static final String DIRPROVIDER_ARG = "nxt.runtime.dirProvider";
+
+    private static final String osname = System.getProperty("os.name").toLowerCase();
+
+    private static boolean isWindowsRuntime() {
+        return osname.startsWith("windows");
+    }
+
+    private static boolean isUnixRuntime() {
+        return osname.contains("nux") || osname.contains("nix") || osname.contains("aix") || osname.contains("bsd") || osname.contains("sunos");
     }
 
     private static boolean isWindowsService() {
-        return "service".equalsIgnoreCase(System.getProperty(RuntimeMode.RUNTIME_MODE_ARG)) && isWindowsRuntime();
+        return "service".equalsIgnoreCase(System.getProperty(RUNTIME_MODE_ARG)) && isWindowsRuntime();
     }
 
-    static boolean isHeadless() {
+    private static boolean isHeadless() {
         boolean isHeadless;
         try {
             // Load by reflection to prevent exception in case java.awt does not exist
@@ -43,11 +52,7 @@ public class RuntimeEnvironment {
     }
 
     private static boolean isDesktopEnabled() {
-        return "desktop".equalsIgnoreCase(System.getProperty(RuntimeMode.RUNTIME_MODE_ARG)) && !isHeadless();
-    }
-
-    public static boolean isWindowsDesktopMode() {
-        return isDesktopEnabled() && isWindowsRuntime();
+        return "desktop".equalsIgnoreCase(System.getProperty(RUNTIME_MODE_ARG)) && !isHeadless();
     }
 
     public static RuntimeMode getRuntimeMode() {
@@ -62,8 +67,22 @@ public class RuntimeEnvironment {
     }
 
     public static DirProvider getDirProvider() {
-        if (isWindowsDesktopMode()) {
-            return new WindowsUserDirProvider();
+        String dirProvider = System.getProperty(DIRPROVIDER_ARG);
+        if (dirProvider != null) {
+            try {
+                return (DirProvider)Class.forName(dirProvider).newInstance();
+            } catch (ReflectiveOperationException e) {
+                System.out.println("Failed to instantiate dirProvider " + dirProvider);
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
+        if (isDesktopEnabled()) {
+            if (isWindowsRuntime()) {
+                return new WindowsUserDirProvider();
+            }
+            if (isUnixRuntime()) {
+                return new UnixUserDirProvider();
+            }
         }
         return new DefaultDirProvider();
     }

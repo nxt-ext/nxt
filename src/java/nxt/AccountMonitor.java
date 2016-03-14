@@ -111,7 +111,7 @@ public final class AccountMonitor {
      * @param   accountId           Fund account identifier
      * @param   secretPhrase        Fund account secret phrase
      */
-    private AccountMonitor(HoldingType holdingType, long holdingId, String property,
+    private  AccountMonitor(HoldingType holdingType, long holdingId, String property,
                                     long amount, long threshold, int interval,
                                     long accountId, String secretPhrase) {
         this.holdingType = holdingType;
@@ -301,10 +301,10 @@ public final class AccountMonitor {
             }
             for (String value : values) {
                 int pos = value.indexOf('=');
-                if (pos < 1) {
+                if (pos < 1 || pos == value.length() - 1) {
                     throw new IllegalArgumentException(
-                                    String.format("Account %s, property '%s', value '%s' is not valid",
-                                    Crypto.rsEncode(accountId), monitor.property, value));
+                                    String.format("Account %s, property '%s', value '%s' is not valid at position %d",
+                                    Crypto.rsEncode(accountId), monitor.property, value, pos));
                 }
                 String name = value.substring(0, pos).trim().toLowerCase();
                 String param = value.substring(pos+1).trim();

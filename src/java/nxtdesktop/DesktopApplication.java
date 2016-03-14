@@ -28,7 +28,12 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import netscape.javascript.JSObject;
-import nxt.*;
+import nxt.Block;
+import nxt.BlockchainProcessor;
+import nxt.Nxt;
+import nxt.TaggedData;
+import nxt.Transaction;
+import nxt.TransactionProcessor;
 import nxt.http.API;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -44,8 +49,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DesktopApplication extends Application {

@@ -18,12 +18,15 @@
 ## How does it work? ##
 
 ### NRS (Nxt Reference Software) ###
+
   - client-server application
-  - access via a Web browser like Mozilla Firefox or Google Chrome
+  - JavaFX UI on supported platforms
+  - also access via a Web browser like Mozilla Firefox or Google Chrome
   - accounts are accessible from everywhere in the world
   - very strong and long passphrases required
 
 ### Nxt ###
+
   - peer-to-peer protocol
   - efficient blockchain technology (can run on low-power devices)
   - allows payment *transactions*, *exchange trading*, *name registrations*, *voting* and much more

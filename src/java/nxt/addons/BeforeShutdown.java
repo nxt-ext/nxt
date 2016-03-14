@@ -14,16 +14,28 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.env;
+package nxt.addons;
 
-import java.io.File;
-import java.net.URI;
+import nxt.Nxt;
+import nxt.util.Logger;
 
-public interface RuntimeMode {
+public final class BeforeShutdown implements AddOn {
 
-    void init();
+    final String beforeShutdownScript = Nxt.getStringProperty("nxt.beforeShutdownScript");
 
-    void setServerStatus(ServerStatus status, URI wallet, File logFileDir);
+    @Override
+    public void init() {
+    }
 
-    void shutdown();
+    @Override
+    public void shutdown() {
+        if (beforeShutdownScript != null) {
+            try {
+                Runtime.getRuntime().exec(beforeShutdownScript);
+            } catch (Exception e) {
+                Logger.logShutdownMessage("Failed to run after start script: " + beforeShutdownScript, e);
+            }
+        }
+    }
+
 }
