@@ -1419,7 +1419,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new BlockNotAcceptedException("Duplicate block or invalid id", block);
         }
         if (!block.verifyGenerationSignature() && !Generator.allowsFakeForging(block.getGeneratorPublicKey())) {
-            throw new BlockNotAcceptedException("Generation signature verification failed", block);
+            Account generatorAccount = Account.getAccount(block.getGeneratorId());
+            long generatorBalance = generatorAccount == null ? 0 : generatorAccount.getEffectiveBalanceNXT();
+            throw new BlockNotAcceptedException("Generation signature verification failed, effective balance " + generatorBalance, block);
         }
         if (!block.verifyBlockSignature()) {
             throw new BlockNotAcceptedException("Block signature verification failed", block);
