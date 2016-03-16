@@ -18,6 +18,7 @@ package nxt;
 
 import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
 
@@ -111,7 +112,7 @@ public final class AccountMonitor {
      * @param   accountId           Fund account identifier
      * @param   secretPhrase        Fund account secret phrase
      */
-    private  AccountMonitor(HoldingType holdingType, long holdingId, String property,
+    private AccountMonitor(HoldingType holdingType, long holdingId, String property,
                                     long amount, long threshold, int interval,
                                     long accountId, String secretPhrase) {
         this.holdingType = holdingType;
@@ -121,7 +122,7 @@ public final class AccountMonitor {
         this.threshold = threshold;
         this.interval = interval;
         this.accountId = accountId;
-        this.accountName = Crypto.rsEncode(accountId);
+        this.accountName = Convert.rsAccount(accountId);
         this.secretPhrase = secretPhrase;
         this.publicKey = Crypto.getPublicKey(secretPhrase);
     }
@@ -297,14 +298,14 @@ public final class AccountMonitor {
             if (values.length == 0) {
                 throw new IllegalArgumentException(
                                 String.format("Account %s, property '%s', value '%s' is not valid",
-                                Crypto.rsEncode(accountId), monitor.property, propertyValue));
+                                        Convert.rsAccount(accountId), monitor.property, propertyValue));
             }
             for (String value : values) {
                 int pos = value.indexOf('=');
                 if (pos < 1 || pos == value.length() - 1) {
                     throw new IllegalArgumentException(
                                     String.format("Account %s, property '%s', value '%s' is not valid at position %d",
-                                    Crypto.rsEncode(accountId), monitor.property, value, pos));
+                                            Convert.rsAccount(accountId), monitor.property, value, pos));
                 }
                 String name = value.substring(0, pos).trim().toLowerCase();
                 String param = value.substring(pos+1).trim();
@@ -330,7 +331,7 @@ public final class AccountMonitor {
                     default:
                         throw new IllegalArgumentException(
                                     String.format("Account %s, property '%s', value '%s' is not valid",
-                                    Crypto.rsEncode(accountId), monitor.property, value));
+                                            Convert.rsAccount(accountId), monitor.property, value));
                 }
             }
         }
@@ -732,7 +733,7 @@ public final class AccountMonitor {
          */
         public MonitoredAccount(long accountId, AccountMonitor monitor, long amount, long threshold, int interval) {
             this.accountId = accountId;
-            this.accountName = Crypto.rsEncode(accountId);
+            this.accountName = Convert.rsAccount(accountId);
             this.monitor = monitor;
             this.amount = amount;
             this.threshold = threshold;
@@ -912,7 +913,7 @@ public final class AccountMonitor {
                     }
                 }
             } catch (Exception exc) {
-                Logger.logErrorMessage("Unable to process SET_PROPERTY event for account " + Crypto.rsEncode(accountId), exc);
+                Logger.logErrorMessage("Unable to process SET_PROPERTY event for account " + Convert.rsAccount(accountId), exc);
             }
         }
     }
