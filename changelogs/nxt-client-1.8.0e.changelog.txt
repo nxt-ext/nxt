@@ -89,6 +89,9 @@ interface, making sure it is on the classpath, and enabling it by adding its
 name to the nxt.addOns property. See the example addOns in the nxt.addons
 package. The AfterStart and BeforeShutdown addOns can be used to trigger
 scripts to be run just after the server has started, and just before shutdown.
+Java source files for addons can be placed under addons/src to be compiled with
+the compile.sh script, and the resulting class files under addons/classes will
+be included on the classpath at runtime.
 
 This is an unsupported feature for developers only. While in the 1.x series
 the Java API is expected to be stable, it will undergo significant refactoring
