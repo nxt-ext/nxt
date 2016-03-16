@@ -1624,5 +1624,13 @@
   "does_not_exist": "does not exist",
   "does_not_exist_in ": "does not exist in",
   "for": "for",
-  "must_be_true_or_false": "must be 'true' or 'false'"
+  "must_be_true_or_false": "must be 'true' or 'false'",
+  "monitors": "Monitors",
+  "threshold": "Threshold",
+  "interval": "Interval",
+  "no_monitors": "There are no account monitors",
+  "start_account_monitor": "Start Account Monitor",
+  "number_of_blocks": "Number Of Blocks",
+  "monitor_started": "Monitor Started",
+  "funding": "Funding"
 }
