@@ -21,6 +21,7 @@ import nxt.AccountMonitor;
 import nxt.HoldingType;
 import nxt.crypto.Crypto;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,8 +70,10 @@ public class GetAccountMonitor extends APIServlet.APIRequestHandler {
         } else {
             API.verifyPassword(req);
             List<AccountMonitor> monitors = AccountMonitor.getAllMonitors();
-            JSONArray response = new JSONArray();
-            monitors.forEach(monitor -> response.add(JSONData.accountMonitor(monitor)));
+            JSONObject response = new JSONObject();
+            JSONArray jsonArray = new JSONArray();
+            monitors.forEach(monitor -> jsonArray.add(JSONData.accountMonitor(monitor)));
+            response.put("monitors", jsonArray);
             return response;
         }
     }
