@@ -74,7 +74,7 @@ the peer info, as found in the java os.platform and os.arch system properties.
 
 Other minor bugfixes and optimizations.
 
-Updated jetty to version 9.3.7, lucene to 5.3.2, tika to 1.12, and slf4j to
+Updated jetty to version 9.3.8, lucene to 5.3.2, tika to 1.12, and slf4j to
 1.7.18. Delete the old lib directory first when installing manually on top of a
 previous installation. If using the installer, old libraries will be deleted
 automatically, as well as any existing files under the classes and html
