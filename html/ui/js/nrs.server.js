@@ -136,10 +136,7 @@ var NRS = (function (NRS, $, undefined) {
                 ["minBalanceQNTf", "create_poll_asset_decimals"],
                 ["minBalanceQNTf", "create_poll_ms_decimals"],
                 ["amountQNTf", "shuffling_asset_decimals"],
-                ["amountQNTf", "shuffling_ms_decimals"],
-                ["amountQNTf", "monitor_asset_decimals"],
-                ["amountQNTf", "monitor_ms_decimals"],
-                ["thresholdQNTf", "threshold_ms_decimals"]
+                ["amountQNTf", "shuffling_ms_decimals"]
             ];
             var toDelete = [];
             for (i = 0; i < currencyFields.length; i++) {
