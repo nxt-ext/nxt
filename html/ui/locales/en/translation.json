@@ -1628,14 +1628,14 @@
   "monitors": "Monitors",
   "threshold": "Threshold",
   "interval": "Interval",
-  "no_monitors": "There are no account monitors",
-  "start_account_monitor": "Start Account Monitor",
+  "no_monitors": "There are no funding monitors",
+  "start_account_monitor": "Start Funding Monitor",
   "number_of_blocks": "Number Of Blocks",
   "monitor_started": "Monitor Started",
   "funding": "Funding",
   "stop": "Stop",
-  "account_monitors": "Account Monitors",
-  "stop_account_monitor": "Stop Account Monitor",
+  "account_monitors": "Funding Monitors",
+  "stop_account_monitor": "Stop Funding Monitor",
   "control_property": "Control Property",
   "monitor_stopped": "Monitor Stopped"
 }
