@@ -35,6 +35,7 @@
                         <th>{{i18n "amount"}}</th>
                         <th>{{i18n "threshold"}}</th>
                         <th>{{i18n "interval"}}</th>
+                        <th>{{i18n "action"}}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -45,6 +46,7 @@
                                 <td>{{{amountFormatted}}}</td>
                                 <td>{{{thresholdFormatted}}}</td>
                                 <td>{{interval}}</td>
+                                <td>{{{statusLinkFormatted}}}&nbsp{{{stopLinkFormatted}}}</td>
                             </tr>
                         {{/each}}
                     </tbody>

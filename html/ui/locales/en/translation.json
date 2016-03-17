@@ -1632,5 +1632,10 @@
   "start_account_monitor": "Start Account Monitor",
   "number_of_blocks": "Number Of Blocks",
   "monitor_started": "Monitor Started",
-  "funding": "Funding"
+  "funding": "Funding",
+  "stop": "Stop",
+  "account_monitors": "Account Monitors",
+  "stop_account_monitor": "Stop Account Monitor",
+  "control_property": "Control Property",
+  "monitor_stopped": "Monitor Stopped"
 }

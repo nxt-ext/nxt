@@ -34,7 +34,10 @@ var NRS = (function(NRS, $) {
             property: response.property,
             amountFormatted: NRS.formatAmount(response.amount),
             thresholdFormatted: NRS.formatAmount(response.threshold),
-            interval: response.interval
+            interval: response.interval,
+            stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_account_monitor_modal' " +
+            "data-account='" + response.accountRS + "' " +
+            "data-property='" + response.property + "'>" + $.t("stop") + "</a>"
         };
     };
 
@@ -86,6 +89,23 @@ var NRS = (function(NRS, $) {
 
     NRS.forms.startAccountMonitorComplete = function() {
         $.growl($.t("monitor_started"));
+        NRS.loadPage("account_monitors");
+    };
+
+    $("#stop_account_monitor_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        var account = $invoker.data("account");
+        if (account) {
+            $("#stop_monitor_account").val(account);
+        }
+        var property = $invoker.data("property");
+        if (property) {
+            $("#stop_monitor_property").val(property);
+        }
+    });
+
+    NRS.forms.stopAccountMonitorComplete = function() {
+        $.growl($.t("monitor_stopped"));
         NRS.loadPage("account_monitors");
     };
 
