@@ -370,9 +370,9 @@ public final class APIServlet extends HttpServlet {
         map.put("getPhasingOnlyControl", GetPhasingOnlyControl.instance);
         map.put("getAllPhasingOnlyControls", GetAllPhasingOnlyControls.instance);
         map.put("detectMimeType", DetectMimeType.instance);
-        map.put("startAccountMonitor", StartAccountMonitor.instance);
-        map.put("stopAccountMonitor", StopAccountMonitor.instance);
-        map.put("getAccountMonitor", GetAccountMonitor.instance);
+        map.put("startFundingMonitor", StartFundingMonitor.instance);
+        map.put("stopFundingMonitor", StopFundingMonitor.instance);
+        map.put("getFundingMonitor", GetFundingMonitor.instance);
 
         API.disabledAPIs.forEach(api -> {
             APIRequestHandler handler = map.remove(api);

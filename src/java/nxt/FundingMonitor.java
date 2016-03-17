@@ -21,6 +21,9 @@ import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
+import org.json.simple.parser.ParseException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,14 +34,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 
 /**
- * Monitor account status based on account properties
- *
+ * Monitor account balances based on account properties
+ * <p>
  * NXT, ASSET and CURRENCY balances can be monitored.  If a balance falls below the threshold, a transaction
  * will be submitted to transfer units from the funding account to the monitored account.  A transfer will
  * remain pending if the number of blocks since the previous transfer transaction is less than the monitor
  * interval.
  */
-public final class AccountMonitor {
+public final class FundingMonitor {
 
     /** Minimum monitor amount */
     public static final long MIN_FUND_AMOUNT = 1;
@@ -59,7 +62,7 @@ public final class AccountMonitor {
     private static volatile boolean stopped = false;
 
     /** Active monitors */
-    private static final List<AccountMonitor> monitors = new ArrayList<>();
+    private static final List<FundingMonitor> monitors = new ArrayList<>();
 
     /** Monitored accounts */
     private static final Map<Long, List<MonitoredAccount>> accounts = new HashMap<>();
@@ -101,7 +104,7 @@ public final class AccountMonitor {
     private final byte[] publicKey;
 
     /**
-     * Create an account monitor
+     * Create a monitor
      *
      * @param   holdingType         Holding type
      * @param   holdingId           Asset or Currency identifier, ignored for NXT monitor
@@ -112,7 +115,7 @@ public final class AccountMonitor {
      * @param   accountId           Fund account identifier
      * @param   secretPhrase        Fund account secret phrase
      */
-    private AccountMonitor(HoldingType holdingType, long holdingId, String property,
+    private FundingMonitor(HoldingType holdingType, long holdingId, String property,
                                     long amount, long threshold, int interval,
                                     long accountId, String secretPhrase) {
         this.holdingType = holdingType;
@@ -200,10 +203,10 @@ public final class AccountMonitor {
     }
 
     /**
-     * Start account monitor
-     *
+     * Start the monitor
+     * <p>
      * One or more funding parameters can be overridden in the account property value
-     * string: amount=n,threshold=n,interval=n.
+     * string: {"amount":"unsigned-long","threshold":"unsigned-long","interval":integer}
      *
      * @param   holdingType         Holding type
      * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
@@ -217,16 +220,16 @@ public final class AccountMonitor {
     public static boolean startMonitor(HoldingType holdingType, long holdingId, String property,
                                     long amount, long threshold, int interval, String secretPhrase) {
         //
-        // Initialize account monitor processing if it hasn't been done yet.  We do this now
+        // Initialize monitor processing if it hasn't been done yet.  We do this now
         // instead of during NRS initialization so we don't start the monitor thread if it
         // won't be used.
         //
         init();
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         //
-        // Create the account monitor
+        // Create the monitor
         //
-        AccountMonitor monitor = new AccountMonitor(holdingType, holdingId, property,
+        FundingMonitor monitor = new FundingMonitor(holdingType, holdingId, property,
                 amount, threshold, interval, accountId, secretPhrase);
         Nxt.getBlockchain().readLock();
         try {
@@ -237,17 +240,18 @@ public final class AccountMonitor {
             try (DbIterator<Account.AccountProperty> it = Account.getProperties(0, accountId, property, 0, Integer.MAX_VALUE)) {
                 while (it.hasNext()) {
                     Account.AccountProperty accountProperty = it.next();
-                    MonitoredAccount account = createMonitoredAccount(accountProperty.getRecipientId(), monitor, accountProperty.getValue());
+                    MonitoredAccount account = createMonitoredAccount(accountProperty.getRecipientId(),
+                            monitor, accountProperty.getValue());
                     accountList.add(account);
                 }
             }
             //
-            // Activate the account monitor and check each monitored account to see if we need to submit
+            // Activate the monitor and check each monitored account to see if we need to submit
             // an initial fund transaction
             //
             synchronized (monitors) {
                 if (monitors.size() > MAX_MONITORS) {
-                    throw new RuntimeException("Maximum of " + MAX_MONITORS + " account monitors already started");
+                    throw new RuntimeException("Maximum of " + MAX_MONITORS + " monitors already started");
                 }
                 if (monitors.contains(monitor)) {
                     Logger.logDebugMessage(String.format("%s monitor already started for account %s, property '%s', holding %s",
@@ -281,65 +285,58 @@ public final class AccountMonitor {
      * Create a monitored account
      *
      * The amount, threshold and interval values specified when the monitor was started can be overridden
-     * by specifying one or more comma-separated values in the property value string in the format
-     * 'amount=n,interval=n,threshold=n'
+     * by specifying one or more values in the property value string
      *
      * @param   accountId           Account identifier
      * @param   monitor             Account monitor
      * @param   propertyValue       Account property value
      * @return                      Monitored account
      */
-    private static MonitoredAccount createMonitoredAccount(long accountId, AccountMonitor monitor, String propertyValue) {
+    private static MonitoredAccount createMonitoredAccount(long accountId, FundingMonitor monitor, String propertyValue) {
         long monitorAmount = monitor.amount;
         long monitorThreshold = monitor.threshold;
         int monitorInterval = monitor.interval;
         if (propertyValue != null && !propertyValue.isEmpty()) {
-            String[] values = propertyValue.split(",");
-            if (values.length == 0) {
-                throw new IllegalArgumentException(
-                                String.format("Account %s, property '%s', value '%s' is not valid",
-                                        Convert.rsAccount(accountId), monitor.property, propertyValue));
-            }
-            for (String value : values) {
-                int pos = value.indexOf('=');
-                if (pos < 1 || pos == value.length() - 1) {
-                    throw new IllegalArgumentException(
-                                    String.format("Account %s, property '%s', value '%s' is not valid at position %d",
-                                            Convert.rsAccount(accountId), monitor.property, value, pos));
+            try {
+                Object parsedValue = JSONValue.parseWithException(propertyValue);
+                if (!(parsedValue instanceof JSONObject)) {
+                    throw new IllegalArgumentException("Property value is not a JSON object");
                 }
-                String name = value.substring(0, pos).trim().toLowerCase();
-                String param = value.substring(pos+1).trim();
-                switch (name) {
-                    case "amount":
-                        monitorAmount = Long.valueOf(param);
-                        if (monitorAmount < MIN_FUND_AMOUNT) {
-                            throw new IllegalArgumentException("Minimum fund amount is " + MIN_FUND_AMOUNT);
-                        }
-                        break;
-                    case "threshold":
-                        monitorThreshold = Long.valueOf(param);
-                        if (monitorThreshold < MIN_FUND_THRESHOLD) {
-                            throw new IllegalArgumentException("Minimum fund threshold is " + MIN_FUND_THRESHOLD);
-                        }
-                        break;
-                    case "interval":
-                        monitorInterval = Integer.valueOf(param);
-                        if (monitorInterval < MIN_FUND_INTERVAL) {
-                            throw new IllegalArgumentException("Minimum fund interval is " + MIN_FUND_INTERVAL);
-                        }
-                        break;
-                    default:
-                        throw new IllegalArgumentException(
-                                    String.format("Account %s, property '%s', value '%s' is not valid",
-                                            Convert.rsAccount(accountId), monitor.property, value));
-                }
+                JSONObject jsonValue = (JSONObject)parsedValue;
+                monitorAmount = getValue(jsonValue.get("amount"), monitorAmount);
+                monitorThreshold = getValue(jsonValue.get("threshold"), monitorThreshold);
+                monitorInterval = (int)getValue(jsonValue.get("interval"), monitorInterval);
+            } catch (IllegalArgumentException | ParseException exc) {
+                String errorMessage = String.format("Account %s, property '%s', value '%s' is not valid",
+                            Convert.rsAccount(accountId), monitor.property, propertyValue);
+                throw new IllegalArgumentException(errorMessage, exc);
             }
         }
         return new MonitoredAccount(accountId, monitor, monitorAmount, monitorThreshold, monitorInterval);
     }
 
     /**
-     * Stop all account monitors
+     * Convert a JSON parameter to a numeric value
+     *
+     * @param   jsonValue           The parsed JSON value
+     * @param   defaultValue        The default value
+     * @return                      The JSON value or the default value
+     */
+    private static long getValue(Object jsonValue, long defaultValue) {
+        if (jsonValue == null) {
+            return defaultValue;
+        }
+        if (jsonValue instanceof Long) {
+            return (Long)jsonValue;
+        }
+        if (jsonValue instanceof String) {
+            return Long.parseUnsignedLong((String)jsonValue);
+        }
+        throw new IllegalArgumentException("JSON value is not a number or an unsigned long string");
+    }
+
+    /**
+     * Stop all monitors
      *
      * Pending fund transactions will still be processed
      *
@@ -352,12 +349,12 @@ public final class AccountMonitor {
             monitors.clear();
             accounts.clear();
         }
-        Logger.logInfoMessage("All account monitors stopped");
+        Logger.logInfoMessage("All monitors stopped");
         return stopCount;
     }
 
     /**
-     * Stop account monitor
+     * Stop monitor
      *
      * Pending fund transactions will still be processed
      *
@@ -368,13 +365,13 @@ public final class AccountMonitor {
      * @return                      TRUE if the monitor was stopped
      */
     public static boolean stopMonitor(HoldingType holdingType, long holdingId, String property, long accountId) {
-        AccountMonitor monitor = null;
+        FundingMonitor monitor = null;
         boolean wasStopped = false;
         synchronized(monitors) {
             //
             // Deactivate the monitor
             //
-            Iterator<AccountMonitor> monitorIt = monitors.iterator();
+            Iterator<FundingMonitor> monitorIt = monitors.iterator();
             while (monitorIt.hasNext()) {
                 monitor = monitorIt.next();
                 if (monitor.holdingType == holdingType && monitor.property.equals(property) &&
@@ -412,7 +409,7 @@ public final class AccountMonitor {
     }
 
     /**
-     * Get account monitor
+     * Get monitor
      *
      * @param   holdingType         Holding type
      * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
@@ -420,10 +417,10 @@ public final class AccountMonitor {
      * @param   accountId           Account identifier
      * @return                      Account monitor or null
      */
-    public static AccountMonitor getMonitor(HoldingType holdingType, long holdingId, String property, long accountId) {
-        AccountMonitor result = null;
+    public static FundingMonitor getMonitor(HoldingType holdingType, long holdingId, String property, long accountId) {
+        FundingMonitor result = null;
         synchronized(monitors) {
-            for (AccountMonitor monitor : monitors) {
+            for (FundingMonitor monitor : monitors) {
                 if (monitor.holdingType == holdingType && monitor.holdingId == holdingId &&
                         monitor.property.equals(property) && monitor.accountId == accountId) {
                     result = monitor;
@@ -435,16 +432,35 @@ public final class AccountMonitor {
     }
 
     /**
-     * Get all account monitors
+     * Get all monitors
      *
      * @return                      Account monitor list
      */
-    public static List<AccountMonitor> getAllMonitors() {
-        List<AccountMonitor> allMonitors = new ArrayList<>();
+    public static List<FundingMonitor> getAllMonitors() {
+        List<FundingMonitor> allMonitors = new ArrayList<>();
         synchronized(monitors) {
             allMonitors.addAll(monitors);
         }
         return allMonitors;
+    }
+
+    /** Get all monitored accounts for a single monitor
+     *
+     * @param  monitor              Monitor
+     * @return                      List of monitored accounts
+     */
+    public static List<MonitoredAccount> getMonitoredAccounts(FundingMonitor monitor) {
+        List<MonitoredAccount> monitoredAccounts = new ArrayList<>();
+        synchronized(monitors) {
+            accounts.values().forEach(monitorList -> {
+                monitorList.forEach(account -> {
+                    if (account.monitor == monitor) {
+                        monitoredAccounts.add(account);
+                    }
+                });
+            });
+        }
+        return monitoredAccounts;
     }
 
     /**
@@ -505,7 +521,7 @@ public final class AccountMonitor {
     }
 
     /**
-     * Check if two account monitors are equal
+     * Check if two monitors are equal
      *
      * @param   obj                 Comparison object
      * @return                      TRUE if the objects are equal
@@ -513,8 +529,8 @@ public final class AccountMonitor {
     @Override
     public boolean equals(Object obj) {
         boolean isEqual = false;
-        if (obj != null && (obj instanceof AccountMonitor)) {
-            AccountMonitor monitor = (AccountMonitor)obj;
+        if (obj != null && (obj instanceof FundingMonitor)) {
+            FundingMonitor monitor = (FundingMonitor)obj;
             if (holdingType == monitor.holdingType && holdingId == monitor.holdingId &&
                     property.equals(monitor.property) && accountId == monitor.accountId) {
                 isEqual = true;
@@ -602,7 +618,7 @@ public final class AccountMonitor {
      */
     private static void processNxtEvent(MonitoredAccount monitoredAccount, Account targetAccount, Account fundingAccount)
                                             throws NxtException {
-        AccountMonitor monitor = monitoredAccount.monitor;
+        FundingMonitor monitor = monitoredAccount.monitor;
         if (targetAccount.getBalanceNQT() < monitoredAccount.threshold) {
             Transaction.Builder builder = Nxt.newTransactionBuilder(monitor.publicKey,
                     monitoredAccount.amount, 0, (short)1440, Attachment.ORDINARY_PAYMENT);
@@ -632,7 +648,7 @@ public final class AccountMonitor {
      */
     private static void processAssetEvent(MonitoredAccount monitoredAccount, Account targetAccount, Account fundingAccount)
                                             throws NxtException {
-        AccountMonitor monitor = monitoredAccount.monitor;
+        FundingMonitor monitor = monitoredAccount.monitor;
         Account.AccountAsset targetAsset = Account.getAccountAsset(targetAccount.getId(), monitor.holdingId);
         Account.AccountAsset fundingAsset = Account.getAccountAsset(fundingAccount.getId(), monitor.holdingId);
         if (fundingAsset == null || fundingAsset.getUnconfirmedQuantityQNT() < monitoredAccount.amount) {
@@ -669,7 +685,7 @@ public final class AccountMonitor {
      */
     private static void processCurrencyEvent(MonitoredAccount monitoredAccount, Account targetAccount, Account fundingAccount)
                                             throws NxtException {
-        AccountMonitor monitor = monitoredAccount.monitor;
+        FundingMonitor monitor = monitoredAccount.monitor;
         Account.AccountCurrency targetCurrency = Account.getAccountCurrency(targetAccount.getId(), monitor.holdingId);
         Account.AccountCurrency fundingCurrency = Account.getAccountCurrency(fundingAccount.getId(), monitor.holdingId);
         if (fundingCurrency == null || fundingCurrency.getUnconfirmedUnits() < monitoredAccount.amount) {
@@ -699,7 +715,7 @@ public final class AccountMonitor {
     /**
      * Monitored account
      */
-    private static final class MonitoredAccount {
+    public static final class MonitoredAccount {
 
         /** Account identifier */
         private final long accountId;
@@ -707,8 +723,8 @@ public final class AccountMonitor {
         /** Account name */
         private final String accountName;
 
-        /** Associated account monitor */
-        private final AccountMonitor monitor;
+        /** Associated monitor */
+        private final FundingMonitor monitor;
 
         /** Fund amount */
         private long amount;
@@ -731,13 +747,58 @@ public final class AccountMonitor {
          * @param   threshold           Fund threshold
          * @param   interval            Fund interval
          */
-        public MonitoredAccount(long accountId, AccountMonitor monitor, long amount, long threshold, int interval) {
+        private MonitoredAccount(long accountId, FundingMonitor monitor, long amount, long threshold, int interval) {
             this.accountId = accountId;
             this.accountName = Convert.rsAccount(accountId);
             this.monitor = monitor;
             this.amount = amount;
             this.threshold = threshold;
             this.interval = interval;
+        }
+
+        /**
+         * Get the account identifier
+         *
+         * @return                      Account identifier
+         */
+        public long getAccountId() {
+            return accountId;
+        }
+
+        /**
+         * Get the account name (Reed-Solomon encoded account identifier)
+         *
+         * @return                      Account name
+         */
+        public String getAccountName() {
+            return accountName;
+        }
+
+        /**
+         * Get the funding amount
+         *
+         * @return                      Funding amount
+         */
+        public long getAmount() {
+            return amount;
+        }
+
+        /**
+         * Get the funding threshold
+         *
+         * @return                      Funding threshold
+         */
+        public long getThreshold() {
+            return threshold;
+        }
+
+        /**
+         * Get the funding interval
+         *
+         * @return                      Funding interval
+         */
+        public int getInterval() {
+            return interval;
         }
     }
 
@@ -892,7 +953,7 @@ public final class AccountMonitor {
                     // Create a new monitored account if there is an active monitor for this account property
                     //
                     if (addMonitoredAccount) {
-                        for (AccountMonitor monitor : monitors) {
+                        for (FundingMonitor monitor : monitors) {
                             if (monitor.property.equals(property.getProperty())) {
                                 MonitoredAccount account = createMonitoredAccount(accountId, monitor, property.getValue());
                                 accountList = accounts.get(accountId);
