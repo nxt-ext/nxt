@@ -16,10 +16,8 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.AccountMonitor;
 import nxt.HoldingType;
-import nxt.crypto.Crypto;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -41,7 +39,7 @@ public class StopAccountMonitor extends APIServlet.APIRequestHandler {
     static final StopAccountMonitor instance = new StopAccountMonitor();
 
     private StopAccountMonitor() {
-        super(new APITag[] {APITag.ACCOUNTS}, "holdingType", "holding", "property", "secretPhrase", "adminPassword");
+        super(new APITag[] {APITag.ACCOUNTS}, "holdingType", "holding", "property", "account", "adminPassword");
     }
     /**
      * Process the request
@@ -52,10 +50,9 @@ public class StopAccountMonitor extends APIServlet.APIRequestHandler {
      */
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
+        long accountId = ParameterParser.getAccountId(req, false);
         JSONObject response = new JSONObject();
-        if (secretPhrase != null) {
-            long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+        if (accountId != 0) {
             HoldingType holdingType = ParameterParser.getHoldingType(req);
             long holdingId = ParameterParser.getHoldingId(req, holdingType);
             String property = ParameterParser.getAccountProperty(req);
