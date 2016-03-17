@@ -29,15 +29,34 @@ var NRS = (function(NRS, $) {
     NRS.jsondata = NRS.jsondata||{};
 
     NRS.jsondata.monitors = function (response) {
+        var params = "\"" + response.accountRS + "\",\"" + response.property + "\"";
         return {
             accountFormatted: NRS.getAccountLink(response, "account"),
             property: response.property,
             amountFormatted: NRS.formatAmount(response.amount),
             thresholdFormatted: NRS.formatAmount(response.threshold),
             interval: response.interval,
+            statusLinkFormatted: "<a href='#' class='btn btn-xs' " +
+                        "onClick='NRS.goToMonitor(" + params + ");'>" +
+                         $.t("status") + "</a>",
             stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_account_monitor_modal' " +
-            "data-account='" + response.accountRS + "' " +
-            "data-property='" + response.property + "'>" + $.t("stop") + "</a>"
+                        "data-account='" + response.accountRS + "' " +
+                        "data-property='" + response.property + "'>" + $.t("stop") + "</a>"
+        };
+    };
+
+    NRS.jsondata.properties = function (response) {
+        try {
+            var value = JSON.parse(response.value);
+        } catch (e) {
+            NRS.logConsole(e.message);
+        }
+        return {
+            accountFormatted: NRS.getAccountLink(response, "recipient"),
+            property: response.property,
+            amountFormatted: value.amount ? NRS.formatAmount(value.amount) : "?",
+            thresholdFormatted: value.threshold ? NRS.formatAmount(value.amount) : "?",
+            interval: value.interval ? value.interval : "?"
         };
     };
 
@@ -58,7 +77,7 @@ var NRS = (function(NRS, $) {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         };
-        NRS.sendRequest("getAccountMonitor", params,
+        NRS.sendRequest("getFundingMonitor", params,
             function (response) {
                 if (isErrorResponse(response)) {
                     view.render({
@@ -74,8 +93,8 @@ var NRS = (function(NRS, $) {
                 }
                 view.monitors.length = 0;
                 response.monitors.forEach(
-                    function (monitorsJson) {
-                        view.monitors.push(NRS.jsondata.monitors(monitorsJson))
+                    function (monitorJson) {
+                        view.monitors.push(NRS.jsondata.monitors(monitorJson))
                     }
                 );
                 view.render({
@@ -87,7 +106,7 @@ var NRS = (function(NRS, $) {
         )
     };
 
-    NRS.forms.startAccountMonitorComplete = function() {
+    NRS.forms.startFundingMonitorComplete = function() {
         $.growl($.t("monitor_started"));
         NRS.loadPage("account_monitors");
     };
@@ -107,9 +126,64 @@ var NRS = (function(NRS, $) {
         }
     });
 
-    NRS.forms.stopAccountMonitorComplete = function() {
+    NRS.forms.stopFundingMonitorComplete = function() {
         $.growl($.t("monitor_stopped"));
         NRS.loadPage("account_monitors");
+    };
+
+    NRS.goToMonitor = function(account, property) {
+   		NRS.goToPage("account_monitor_status", function() {
+            var selection = {};
+            selection.account = account;
+            selection.property = property;
+            return selection;
+        });
+   	};
+
+    NRS.pages.account_monitor_status = function (callback) {
+        var selection = callback();
+        $("#monitor_funding_account").text(selection.account);
+        $("#monitor_control_property").text(selection.property);
+        NRS.hasMorePages = false;
+        var view = NRS.simpleview.get('account_monitor_status_page', {
+            errorMessage: null,
+            isLoading: true,
+            isEmpty: false,
+            properties: []
+        });
+        var params = {
+            "setter": selection.account,
+            "property": selection.property,
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+        };
+        NRS.sendRequest("getAccountProperties", params,
+            function (response) {
+                if (isErrorResponse(response)) {
+                    view.render({
+                        errorMessage: getErrorMessage(response),
+                        isLoading: false,
+                        isEmpty: false
+                    });
+                    return;
+                }
+                if (response.properties.length > NRS.itemsPerPage) {
+                    NRS.hasMorePages = true;
+                    response.properties.pop();
+                }
+                view.properties.length = 0;
+                response.properties.forEach(
+                    function (propertiesJson) {
+                        view.properties.push(NRS.jsondata.properties(propertiesJson))
+                    }
+                );
+                view.render({
+                    isLoading: false,
+                    isEmpty: view.properties.length == 0
+                });
+                NRS.pageLoaded();
+            }
+        )
     };
 
     return NRS;

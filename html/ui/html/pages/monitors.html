@@ -62,3 +62,54 @@
         </section>
     </script>
 </div>
+
+<div id="account_monitor_status_page" class="paginated page">
+    <script type="text/x-handlebars-template">
+        <section class="content-header">
+            <h1>{{i18n "account_monitor_status"}}</h1>
+            <div style="position:absolute;top:9px;right:9px;">
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#add_monitored_account_modal" data-i18n="add_monitored_account">Add Monitored Account</button>
+            </div>
+        </section>
+        <section class="content">
+            <div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
+                <strong data-i18n="funding_account">Funding Account</strong>: <span id="monitor_funding_account"></span><br />
+                <strong data-i18n="control_property">Control Property</strong>: <span id="monitor_control_property"></span><br />
+            </div>
+            {{#if errorMessage}}
+            <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
+            {{/if}}
+            <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>{{i18n "account"}}</th>
+                        <th>{{i18n "amount"}}</th>
+                        <th>{{i18n "threshold"}}</th>
+                        <th>{{i18n "interval"}}</th>
+                        <th>{{i18n "action"}}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {{#each monitors}}
+                            <tr>
+                                <td>{{{accountFormatted}}}</td>
+                                <td>{{{amountFormatted}}}</td>
+                                <td>{{{thresholdFormatted}}}</td>
+                                <td>{{interval}}</td>
+                                <td>{{{delLinkFormatted}}}</td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container">
+                    <p>
+                        <span data-i18n="no_monitored_accounts">There are no account monitored by this funding monitor</span>.
+                    </p>
+                </div>
+                <div class="data-pagination"></div>
+            </div>
+        </section>
+    </script>
+</div>
