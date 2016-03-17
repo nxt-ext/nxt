@@ -94,7 +94,8 @@ public class GetFundingMonitor extends APIServlet.APIRequestHandler {
             return response;
         } else {
             List<FundingMonitor> monitors = FundingMonitor.getAllMonitors();
-            JSONArray response = new JSONArray();
+            JSONObject response = new JSONObject();
+            JSONArray jsonArray = new JSONArray();
             monitors.forEach(monitor -> {
                 JSONObject monitorJSON = JSONData.accountMonitor(monitor);
                 if (includeMonitoredAccounts) {
@@ -103,8 +104,9 @@ public class GetFundingMonitor extends APIServlet.APIRequestHandler {
                     accountList.forEach(account -> jsonAccounts.add(JSONData.monitoredAccount(account)));
                     monitorJSON.put("monitoredAccounts", jsonAccounts);
                 }
-                response.add(monitorJSON);
+                jsonArray.add(monitorJSON);
             });
+            response.put("monitors", jsonArray);
             return response;
         }
     }
