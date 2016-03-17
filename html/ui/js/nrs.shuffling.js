@@ -323,7 +323,7 @@ var NRS = (function(NRS, $) {
    		var context = {
    			labelText: "Currency",
    			labelI18n: "currency",
-   			inputCodeName: "monitor_ms_code",
+   			inputCodeName: "shuffling_ms_code",
    			inputIdName: "holding",
    			inputDecimalsName: "shuffling_ms_decimals",
    			helpI18n: "add_currency_modal_help"
