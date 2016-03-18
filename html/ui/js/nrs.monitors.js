@@ -38,7 +38,7 @@ var NRS = (function(NRS, $) {
             thresholdFormatted: NRS.formatAmount(response.threshold),
             interval: String(response.interval).escapeHTML(),
             statusLinkFormatted: "<a href='#' class='btn btn-xs' " +
-                        "onClick='NRS.goToMonitor(" + JSON.stringify(response) + ");'>" +
+                        "onclick='NRS.goToMonitor(" + JSON.stringify(response) + ");'>" +
                          $.t("status") + "</a>",
             stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_funding_monitor_modal' " +
                         "data-account='" + String(response.accountRS).escapeHTML() + "' " +
