@@ -130,7 +130,9 @@
             <fileset dir="src" targetdir="${INSTALL_PATH}/src" override="true" excludes=".gitignore nxt-private.iml"/>
             <fileset dir="contrib" targetdir="${INSTALL_PATH}/contrib" override="true" excludes=".gitignore"/>
             <fileset dir="logs" targetdir="${INSTALL_PATH}/logs" override="true" excludes=".gitignore"/>
+            <fileset dir="addons" targetdir="${INSTALL_PATH}/addons" override="true" excludes=".gitignore"/>
             <updatecheck>
+                <include name="*.desktop" />
                 <include name="lib/**" />
                 <include name="classes/**" />
                 <include name="html/**" />
@@ -144,9 +146,9 @@
             <file src="nxt.exe" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="nxtservice.exe" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="nxtservice.jar" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="run.bat" targetdir="${INSTALL_PATH}" override="false"/>
-            <file src="mint.bat" targetdir="${INSTALL_PATH}" override="false"/>
-            <file src="compact.bat" targetdir="${INSTALL_PATH}" override="false"/>
+            <file src="run.bat" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="mint.bat" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="compact.bat" targetdir="${INSTALL_PATH}" override="true"/>
             <parsable targetfile="${INSTALL_PATH}/run.bat"/>
             <singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
             <singlefile src="resource/nxtservice.properties" target="${INSTALL_PATH}/resource/nxtservice.properties" override="true"/>
@@ -154,17 +156,17 @@
 
         <pack name="server.unix" os="unix" required="yes">
             <description>Unix Specific Resources</description>
-            <file src="run.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <file src="run.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/run.sh"/>
             <file src="run-tor.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/run-tor.sh"/>
-            <file src="run-desktop.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <file src="run-desktop.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/run-desktop.sh"/>
-            <file src="start.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <file src="start.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/start.sh"/>
-            <file src="stop.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <file src="stop.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/stop.sh"/>
-            <file src="mint.sh" targetdir="${INSTALL_PATH}" override="false"/>
+            <file src="mint.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/mint.sh"/>
             <file src="compile.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/compile.sh"/>

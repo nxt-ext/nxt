@@ -1624,5 +1624,21 @@
   "does_not_exist": "does not exist",
   "does_not_exist_in ": "does not exist in",
   "for": "for",
-  "must_be_true_or_false": "must be 'true' or 'false'"
+  "must_be_true_or_false": "must be 'true' or 'false'",
+  "monitors": "Monitors",
+  "threshold": "Threshold",
+  "interval": "Interval",
+  "no_monitors": "There are no funding monitors",
+  "start_funding_monitor": "Start Funding Monitor",
+  "number_of_blocks": "Number Of Blocks",
+  "monitor_started": "Monitor Started",
+  "funding": "Funding",
+  "stop": "Stop",
+  "funding_monitors": "Funding Monitors",
+  "stop_funding_monitor": "Stop Funding Monitor",
+  "control_property": "Control Property",
+  "monitor_stopped": "Monitor Stopped",
+  "funding_monitor_status": "Funding Monitor Status",
+  "remove_monitored_account": "Remove Monitored Account",
+  "remove": "Remove"
 }

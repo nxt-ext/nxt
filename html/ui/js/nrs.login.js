@@ -387,11 +387,6 @@ var NRS = (function(NRS, $, undefined) {
 						callback();
 					}
 					
-					if (passLogin) {
-						NRS.checkLocationHash(password);
-						$(window).on("hashchange", NRS.checkLocationHash);
-					}
-
 					$.each(NRS.pages, function(key, value) {
 						if(key in NRS.setup) {
 							NRS.setup[key]();

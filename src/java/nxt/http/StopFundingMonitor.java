@@ -17,31 +17,36 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.AccountMonitor;
-import nxt.HoldingType;
+import nxt.FundingMonitor;
 import nxt.crypto.Crypto;
+import nxt.HoldingType;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * <p>Stop an account monitor</p>
- *
- * <p>A single account monitor will be stopped when the secret phrase is specified.
- * Otherwise, the administrator password must be specified and all account monitors
- * will be stopped.</p>
- *
- * <p>The account monitor holding type and account property name must be specified when the secret
- * phrase is specified. Holding type codes are listed in getConstants.
- *  In addition, the holding identifier must be specified when the holding type is ASSET or CURRENCY.</p>
+ * Stop a funding monitor
+ * <p>
+ * When the secret phrase is specified, a single monitor will be stopped.
+ * The monitor is identified by the secret phrase, holding and account property.
+ * The administrator password is not required and will be ignored.
+ * <p>
+ * When the administrator password is specified, a single monitor can be
+ * stopped by specifying the funding account, holding and account property.
+ * If no account is specified, all monitors will be stopped.
+ * <p>
+ * The holding type and account property name must be specified when the secret
+ * phrase or account is specified. Holding type codes are listed in getConstants.
+ * In addition, the holding identifier must be specified when the holding type is ASSET or CURRENCY.
  */
-public class StopAccountMonitor extends APIServlet.APIRequestHandler {
+public class StopFundingMonitor extends APIServlet.APIRequestHandler {
 
-    static final StopAccountMonitor instance = new StopAccountMonitor();
+    static final StopFundingMonitor instance = new StopFundingMonitor();
 
-    private StopAccountMonitor() {
-        super(new APITag[] {APITag.ACCOUNTS}, "holdingType", "holding", "property", "secretPhrase", "adminPassword");
+    private StopFundingMonitor() {
+        super(new APITag[] {APITag.ACCOUNTS}, "holdingType", "holding", "property", "secretPhrase",
+                "account", "adminPassword");
     }
     /**
      * Process the request
@@ -53,17 +58,28 @@ public class StopAccountMonitor extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         String secretPhrase = ParameterParser.getSecretPhrase(req, false);
+        long accountId = ParameterParser.getAccountId(req, false);
         JSONObject response = new JSONObject();
-        if (secretPhrase != null) {
-            long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+        if (secretPhrase == null) {
+            API.verifyPassword(req);
+        }
+        if (secretPhrase != null || accountId != 0) {
+            if (secretPhrase != null) {
+                if (accountId != 0) {
+                    if (Account.getId(Crypto.getPublicKey(secretPhrase)) != accountId) {
+                        return JSONResponses.INCORRECT_ACCOUNT;
+                    }
+                } else {
+                    accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+                }
+            }
             HoldingType holdingType = ParameterParser.getHoldingType(req);
             long holdingId = ParameterParser.getHoldingId(req, holdingType);
             String property = ParameterParser.getAccountProperty(req);
-            boolean stopped = AccountMonitor.stopMonitor(holdingType, holdingId, property, accountId);
+            boolean stopped = FundingMonitor.stopMonitor(holdingType, holdingId, property, accountId);
             response.put("stopped", stopped ? 1 : 0);
         } else {
-            API.verifyPassword(req);
-            int count = AccountMonitor.stopAllMonitors();
+            int count = FundingMonitor.stopAllMonitors();
             response.put("stopped", count);
         }
         return response;

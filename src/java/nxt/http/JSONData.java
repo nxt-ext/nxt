@@ -18,7 +18,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.AccountLedger.LedgerEntry;
-import nxt.AccountMonitor;
+import nxt.FundingMonitor;
 import nxt.AccountRestrictions;
 import nxt.Alias;
 import nxt.Appendix;
@@ -999,7 +999,7 @@ final class JSONData {
         return response;
     }
 
-    static JSONObject accountMonitor(AccountMonitor monitor) {
+    static JSONObject accountMonitor(FundingMonitor monitor, boolean includeMonitoredAccounts) {
         JSONObject json = new JSONObject();
         json.put("holdingType", monitor.getHoldingType().getCode());
         json.put("account", Long.toUnsignedString(monitor.getAccountId()));
@@ -1009,6 +1009,22 @@ final class JSONData {
         json.put("amount", String.valueOf(monitor.getAmount()));
         json.put("threshold", String.valueOf(monitor.getThreshold()));
         json.put("interval", monitor.getInterval());
+        if (includeMonitoredAccounts) {
+            JSONArray jsonAccounts = new JSONArray();
+            List<FundingMonitor.MonitoredAccount> accountList = FundingMonitor.getMonitoredAccounts(monitor);
+            accountList.forEach(account -> jsonAccounts.add(JSONData.monitoredAccount(account)));
+            json.put("monitoredAccounts", jsonAccounts);
+        }
+        return json;
+    }
+
+    static JSONObject monitoredAccount(FundingMonitor.MonitoredAccount account) {
+        JSONObject json = new JSONObject();
+        json.put("account", Long.toUnsignedString(account.getAccountId()));
+        json.put("accountRS", account.getAccountName());
+        json.put("amount", String.valueOf(account.getAmount()));
+        json.put("threshold", String.valueOf(account.getThreshold()));
+        json.put("interval", account.getInterval());
         return json;
     }
 

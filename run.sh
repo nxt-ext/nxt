@@ -1,2 +1,2 @@
 #!/bin/sh
-java -cp classes:lib/*:conf nxt.Nxt
+java -cp classes:lib/*:conf:addons/classes nxt.Nxt
