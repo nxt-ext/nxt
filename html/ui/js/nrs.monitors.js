@@ -39,7 +39,7 @@ var NRS = (function(NRS, $) {
             statusLinkFormatted: "<a href='#' class='btn btn-xs' " +
                         "onClick='NRS.goToMonitor(" + params + ");'>" +
                          $.t("status") + "</a>",
-            stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_account_monitor_modal' " +
+            stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_funding_monitor_modal' " +
                         "data-account='" + response.accountRS + "' " +
                         "data-property='" + response.property + "'>" + $.t("stop") + "</a>"
         };
@@ -60,13 +60,13 @@ var NRS = (function(NRS, $) {
         };
     };
 
-    NRS.incoming.account_monitors = function() {
-        NRS.loadPage("account_monitors");
+    NRS.incoming.funding_monitors = function() {
+        NRS.loadPage("funding_monitors");
     };
 
-    NRS.pages.account_monitors = function () {
+    NRS.pages.funding_monitors = function () {
         NRS.hasMorePages = false;
-        var view = NRS.simpleview.get('account_monitors_page', {
+        var view = NRS.simpleview.get('funding_monitors_page', {
             errorMessage: null,
             isLoading: true,
             isEmpty: false,
@@ -108,10 +108,10 @@ var NRS = (function(NRS, $) {
 
     NRS.forms.startFundingMonitorComplete = function() {
         $.growl($.t("monitor_started"));
-        NRS.loadPage("account_monitors");
+        NRS.loadPage("funding_monitors");
     };
 
-    $("#stop_account_monitor_modal").on("show.bs.modal", function(e) {
+    $("#stop_funding_monitor_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
         var account = $invoker.data("account");
         if (account) {
@@ -128,11 +128,11 @@ var NRS = (function(NRS, $) {
 
     NRS.forms.stopFundingMonitorComplete = function() {
         $.growl($.t("monitor_stopped"));
-        NRS.loadPage("account_monitors");
+        NRS.loadPage("funding_monitors");
     };
 
     NRS.goToMonitor = function(account, property) {
-   		NRS.goToPage("account_monitor_status", function() {
+   		NRS.goToPage("funding_monitor_status", function() {
             var selection = {};
             selection.account = account;
             selection.property = property;
@@ -140,12 +140,12 @@ var NRS = (function(NRS, $) {
         });
    	};
 
-    NRS.pages.account_monitor_status = function (callback) {
+    NRS.pages.funding_monitor_status = function (callback) {
         var selection = callback();
         $("#monitor_funding_account").text(selection.account);
         $("#monitor_control_property").text(selection.property);
         NRS.hasMorePages = false;
-        var view = NRS.simpleview.get('account_monitor_status_page', {
+        var view = NRS.simpleview.get('funding_monitor_status_page', {
             errorMessage: null,
             isLoading: true,
             isEmpty: false,

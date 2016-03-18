@@ -1629,13 +1629,14 @@
   "threshold": "Threshold",
   "interval": "Interval",
   "no_monitors": "There are no funding monitors",
-  "start_account_monitor": "Start Funding Monitor",
+  "start_funding_monitor": "Start Funding Monitor",
   "number_of_blocks": "Number Of Blocks",
   "monitor_started": "Monitor Started",
   "funding": "Funding",
   "stop": "Stop",
-  "account_monitors": "Funding Monitors",
-  "stop_account_monitor": "Stop Funding Monitor",
+  "funding_monitors": "Funding Monitors",
+  "stop_funding_monitor": "Stop Funding Monitor",
   "control_property": "Control Property",
-  "monitor_stopped": "Monitor Stopped"
+  "monitor_stopped": "Monitor Stopped",
+  "funding_monitor_status": "Funding Monitor Status"
 }
