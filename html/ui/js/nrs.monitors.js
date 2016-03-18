@@ -18,6 +18,8 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
+    var currentMonitor;
+
     function isErrorResponse(response) {
         return response.errorCode || response.errorDescription || response.errorMessage || response.error;
     }
@@ -53,9 +55,9 @@ var NRS = (function(NRS, $) {
         return {
             accountFormatted: NRS.getAccountLink(response, "recipient"),
             property: response.property,
-            amountFormatted: value.amount ? NRS.formatAmount(value.amount) : "?",
-            thresholdFormatted: value.threshold ? NRS.formatAmount(value.amount) : "?",
-            interval: value.interval ? value.interval : "?"
+            amountFormatted: value.amount ? "<b>" + NRS.formatAmount(value.amount) : NRS.formatAmount(currentMonitor.amount),
+            thresholdFormatted: value.threshold ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
+            intervalFormatted: value.interval ? "<b>" + value.interval : currentMonitor.interval
         };
     };
 
@@ -137,9 +139,9 @@ var NRS = (function(NRS, $) {
    	};
 
     NRS.pages.funding_monitor_status = function (callback) {
-        var monitor = callback();
-        $("#monitor_funding_account").html(monitor.account);
-        $("#monitor_control_property").html(monitor.property);
+        currentMonitor = callback();
+        $("#monitor_funding_account").html(String(currentMonitor.account).escapeHTML());
+        $("#monitor_control_property").html(String(currentMonitor.property).escapeHTML());
         NRS.hasMorePages = false;
         var view = NRS.simpleview.get('funding_monitor_status_page', {
             errorMessage: null,
@@ -148,8 +150,8 @@ var NRS = (function(NRS, $) {
             properties: []
         });
         var params = {
-            "setter": monitor.account,
-            "property": monitor.property,
+            "setter": currentMonitor.account,
+            "property": currentMonitor.property,
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         };
@@ -175,12 +177,42 @@ var NRS = (function(NRS, $) {
                 );
                 view.render({
                     isLoading: false,
-                    isEmpty: view.properties.length == 0
+                    isEmpty: view.properties.length == 0,
+                    fundingAccountFormatted: NRS.getAccountLink(currentMonitor, "account"),
+                    controlProperty: currentMonitor.property
                 });
                 NRS.pageLoaded();
             }
         )
     };
+
+    $("#add_monitored_account_modal").on("show.bs.modal", function() {
+        $("#add_monitored_account_property").val(currentMonitor.property);
+        $("#add_monitored_account_amount").val(NRS.convertToNXT(currentMonitor.amount));
+        $("#add_monitored_account_threshold").val(NRS.convertToNXT(currentMonitor.threshold));
+        $("#add_monitored_account_interval").val(currentMonitor.interval);
+        $("#add_monitored_account_value").val("{}");
+    });
+
+    $(".add_monitored_account_value").on('change', function() {
+        if (!currentMonitor) {
+            return;
+        }
+        var value = {};
+        var amount = NRS.convertToNQT($("#add_monitored_account_amount").val());
+        if (currentMonitor.amount != amount) {
+            value.amount = amount;
+        }
+        var threshold = NRS.convertToNQT($("#add_monitored_account_threshold").val());
+        if (currentMonitor.threshold != threshold) {
+            value.threshold = threshold;
+        }
+        var interval = $("#add_monitored_account_interval").val();
+        if (currentMonitor.interval != interval) {
+            value.interval = interval;
+        }
+        $("#add_monitored_account_value").val(JSON.stringify(value));
+    });
 
     return NRS;
 

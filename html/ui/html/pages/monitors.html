@@ -73,8 +73,8 @@
         </section>
         <section class="content">
             <div style="float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px">
-                <strong data-i18n="funding_account">Funding Account</strong>: <span id="monitor_funding_account"></span><br />
-                <strong data-i18n="control_property">Control Property</strong>: <span id="monitor_control_property"></span><br />
+                <strong data-i18n="funding_account">Funding Account</strong>: <span>{{{fundingAccountFormatted}}}</span><br />
+                <strong data-i18n="control_property">Control Property</strong>: <span>{{controlProperty}}</span><br />
             </div>
             {{#if errorMessage}}
             <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
@@ -91,12 +91,12 @@
                     </tr>
                     </thead>
                     <tbody>
-                        {{#each monitors}}
+                        {{#each properties}}
                             <tr>
                                 <td>{{{accountFormatted}}}</td>
                                 <td>{{{amountFormatted}}}</td>
                                 <td>{{{thresholdFormatted}}}</td>
-                                <td>{{interval}}</td>
+                                <td>{{{intervalFormatted}}}</td>
                                 <td>{{{delLinkFormatted}}}</td>
                             </tr>
                         {{/each}}
