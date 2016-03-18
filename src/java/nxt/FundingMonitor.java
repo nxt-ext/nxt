@@ -206,7 +206,7 @@ public final class FundingMonitor {
      * Start the monitor
      * <p>
      * One or more funding parameters can be overridden in the account property value
-     * string: {"amount":"unsigned-long","threshold":"unsigned-long","interval":integer}
+     * string: {"amount":"long","threshold":"long","interval":integer}
      *
      * @param   holdingType         Holding type
      * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
@@ -326,13 +326,7 @@ public final class FundingMonitor {
         if (jsonValue == null) {
             return defaultValue;
         }
-        if (jsonValue instanceof Long) {
-            return (Long)jsonValue;
-        }
-        if (jsonValue instanceof String) {
-            return Long.parseUnsignedLong((String)jsonValue);
-        }
-        throw new IllegalArgumentException("JSON value is not a number or an unsigned long string");
+        return Convert.parseLong(jsonValue);
     }
 
     /**
@@ -454,7 +448,7 @@ public final class FundingMonitor {
         synchronized(monitors) {
             accounts.values().forEach(monitorList -> {
                 monitorList.forEach(account -> {
-                    if (account.monitor == monitor) {
+                    if (account.monitor.equals(monitor)) {
                         monitoredAccounts.add(account);
                     }
                 });
@@ -748,6 +742,15 @@ public final class FundingMonitor {
          * @param   interval            Fund interval
          */
         private MonitoredAccount(long accountId, FundingMonitor monitor, long amount, long threshold, int interval) {
+            if (amount < MIN_FUND_AMOUNT) {
+                throw new IllegalArgumentException("Minimum fund amount is " + MIN_FUND_AMOUNT);
+            }
+            if (threshold < MIN_FUND_THRESHOLD) {
+                throw new IllegalArgumentException("Minimum fund threshold is " + MIN_FUND_THRESHOLD);
+            }
+            if (interval < MIN_FUND_INTERVAL) {
+                throw new IllegalArgumentException("Minimum fund interval is " + MIN_FUND_INTERVAL);
+            }
             this.accountId = accountId;
             this.accountName = Convert.rsAccount(accountId);
             this.monitor = monitor;

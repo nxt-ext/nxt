@@ -43,9 +43,9 @@ still use the nxt installation directory instead of ~/.nxt for those files can
 use the run-desktop.sh script instead.
 
 
-Account Monitor:
+Funding Monitor:
 
-The new Account Monitor feature provides monitoring account balances, and their
+The new Funding Monitor feature provides monitoring account balances, and their
 automated replenishment from a funding account, based on account properties set
 by the funding account to the monitored accounts.
 
@@ -55,8 +55,8 @@ from the funding account to the monitored account. A transfer will remain
 pending if the number of blocks since the previous transfer transaction is less
 than the interval configured for the monitor.
 
-The APIs for the Account Monitor feature are StartAccountMonitor,
-GetAccountMonitor, and StopAccountMonitor. Detailed documentation for those is
+The APIs for the Funding Monitor feature are StartFundingMonitor,
+GetFundingMonitor, and StopFundingMonitor. Detailed documentation for those is
 provided in the API javadoc files.
 
 

@@ -48,10 +48,9 @@ import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
  * The recipient accounts are identified by the specified account property.  Each account
  * that has this property set by the funding account will be monitored for changes.
  * The property value can be omitted or it can consist of a JSON string containing one or more
- * values in the format: {"amount":unsigned-long,"threshold":unsigned-long,"interval":integer}
+ * values in the format: {"amount":long,"threshold":long,"interval":integer}
  * <p>
- * The values can be specified as numeric values or as unsigned-long strings.  Values greater than the maximum
- * signed long value must be specified as unsigned-long strings.
+ * The long values can be specified as numeric values or as strings.
  * <p>
  * For example, {"amount":25,"threshold":10,"interval":1440}.  The specified values will
  * override the default values specified when the account monitor is started.
@@ -80,11 +79,11 @@ public final class StartFundingMonitor extends APIServlet.APIRequestHandler {
         HoldingType holdingType = ParameterParser.getHoldingType(req);
         long holdingId = ParameterParser.getHoldingId(req, holdingType);
         String property = ParameterParser.getAccountProperty(req);
-        long amount = ParameterParser.getUnsignedLong(req, "amount", true);
+        long amount = ParameterParser.getLong(req, "amount", 0, Long.MAX_VALUE, true);
         if (amount < FundingMonitor.MIN_FUND_AMOUNT) {
             throw new ParameterException(incorrect("amount", "Minimum funding amount is " + FundingMonitor.MIN_FUND_AMOUNT));
         }
-        long threshold = ParameterParser.getUnsignedLong(req, "threshold", true);
+        long threshold = ParameterParser.getLong(req, "threshold", 0, Long.MAX_VALUE, true);
         if (threshold < FundingMonitor.MIN_FUND_THRESHOLD) {
             throw new ParameterException(incorrect("threshold", "Minimum funding threshold is " + FundingMonitor.MIN_FUND_THRESHOLD));
         }

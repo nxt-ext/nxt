@@ -84,26 +84,13 @@ public class GetFundingMonitor extends APIServlet.APIRequestHandler {
             if (monitor == null) {
                 return MONITOR_NOT_STARTED;
             }
-            JSONObject response = JSONData.accountMonitor(monitor);
-            if (includeMonitoredAccounts) {
-                JSONArray jsonAccounts = new JSONArray();
-                List<FundingMonitor.MonitoredAccount> accountList = FundingMonitor.getMonitoredAccounts(monitor);
-                accountList.forEach(account -> jsonAccounts.add(JSONData.monitoredAccount(account)));
-                response.put("monitoredAccounts", jsonAccounts);
-            }
-            return response;
+            return JSONData.accountMonitor(monitor, includeMonitoredAccounts);
         } else {
             List<FundingMonitor> monitors = FundingMonitor.getAllMonitors();
             JSONObject response = new JSONObject();
             JSONArray jsonArray = new JSONArray();
             monitors.forEach(monitor -> {
-                JSONObject monitorJSON = JSONData.accountMonitor(monitor);
-                if (includeMonitoredAccounts) {
-                    JSONArray jsonAccounts = new JSONArray();
-                    List<FundingMonitor.MonitoredAccount> accountList = FundingMonitor.getMonitoredAccounts(monitor);
-                    accountList.forEach(account -> jsonAccounts.add(JSONData.monitoredAccount(account)));
-                    monitorJSON.put("monitoredAccounts", jsonAccounts);
-                }
+                JSONObject monitorJSON = JSONData.accountMonitor(monitor, includeMonitoredAccounts);
                 jsonArray.add(monitorJSON);
             });
             response.put("monitors", jsonArray);

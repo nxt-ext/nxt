@@ -999,7 +999,7 @@ final class JSONData {
         return response;
     }
 
-    static JSONObject accountMonitor(FundingMonitor monitor) {
+    static JSONObject accountMonitor(FundingMonitor monitor, boolean includeMonitoredAccounts) {
         JSONObject json = new JSONObject();
         json.put("holdingType", monitor.getHoldingType().getCode());
         json.put("account", Long.toUnsignedString(monitor.getAccountId()));
@@ -1009,6 +1009,12 @@ final class JSONData {
         json.put("amount", String.valueOf(monitor.getAmount()));
         json.put("threshold", String.valueOf(monitor.getThreshold()));
         json.put("interval", monitor.getInterval());
+        if (includeMonitoredAccounts) {
+            JSONArray jsonAccounts = new JSONArray();
+            List<FundingMonitor.MonitoredAccount> accountList = FundingMonitor.getMonitoredAccounts(monitor);
+            accountList.forEach(account -> jsonAccounts.add(JSONData.monitoredAccount(account)));
+            json.put("monitoredAccounts", jsonAccounts);
+        }
         return json;
     }
 
