@@ -1638,5 +1638,7 @@
   "stop_funding_monitor": "Stop Funding Monitor",
   "control_property": "Control Property",
   "monitor_stopped": "Monitor Stopped",
-  "funding_monitor_status": "Funding Monitor Status"
+  "funding_monitor_status": "Funding Monitor Status",
+  "remove_monitored_account": "Remove Monitored Account",
+  "remove": "Remove"
 }

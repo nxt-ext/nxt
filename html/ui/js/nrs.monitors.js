@@ -33,16 +33,16 @@ var NRS = (function(NRS, $) {
     NRS.jsondata.monitors = function (response) {
         return {
             accountFormatted: NRS.getAccountLink(response, "account"),
-            property: response.property,
+            property: String(response.property).escapeHTML(),
             amountFormatted: NRS.formatAmount(response.amount),
             thresholdFormatted: NRS.formatAmount(response.threshold),
-            interval: response.interval,
+            interval: String(response.interval).escapeHTML(),
             statusLinkFormatted: "<a href='#' class='btn btn-xs' " +
                         "onClick='NRS.goToMonitor(" + JSON.stringify(response) + ");'>" +
                          $.t("status") + "</a>",
             stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_funding_monitor_modal' " +
-                        "data-account='" + response.accountRS + "' " +
-                        "data-property='" + response.property + "'>" + $.t("stop") + "</a>"
+                        "data-account='" + String(response.accountRS).escapeHTML() + "' " +
+                        "data-property='" + String(response.property).escapeHTML() + "'>" + $.t("stop") + "</a>"
         };
     };
 
@@ -54,10 +54,14 @@ var NRS = (function(NRS, $) {
         }
         return {
             accountFormatted: NRS.getAccountLink(response, "recipient"),
-            property: response.property,
+            property: String(response.property).escapeHTML(),
             amountFormatted: value.amount ? "<b>" + NRS.formatAmount(value.amount) : NRS.formatAmount(currentMonitor.amount),
             thresholdFormatted: value.threshold ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
-            intervalFormatted: value.interval ? "<b>" + value.interval : currentMonitor.interval
+            intervalFormatted: value.interval ? "<b>" + String(value.interval).escapeHTML() : String(currentMonitor.interval).escapeHTML(),
+            removeLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#remove_monitored_account_modal' " +
+                        "data-recipient='" + response.recipientRS + "' " +
+                        "data-property='" + response.property + "' " +
+                        "data-value='" + response.value + "'>" + $.t("remove") + "</a>"
         };
     };
 
@@ -138,6 +142,10 @@ var NRS = (function(NRS, $) {
         });
    	};
 
+    NRS.incoming.funding_monitors_status = function() {
+        NRS.loadPage("funding_monitor_status");
+    };
+
     NRS.pages.funding_monitor_status = function (callback) {
         currentMonitor = callback();
         $("#monitor_funding_account").html(String(currentMonitor.account).escapeHTML());
@@ -212,6 +220,17 @@ var NRS = (function(NRS, $) {
             value.interval = interval;
         }
         $("#add_monitored_account_value").val(JSON.stringify(value));
+    });
+
+    $("#remove_monitored_account_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        $("#remove_monitored_account_recipient").val(String($invoker.data("recipient")).escapeHTML());
+        $("#remove_monitored_account_property").val(String($invoker.data("property")).escapeHTML());
+        var value = $invoker.data("value");
+        if (typeof(value) == "object") {
+            value = JSON.stringify(value);
+        }
+        $("#remove_monitored_account_value").val(String(value).escapeHTML());
     });
 
     return NRS;
