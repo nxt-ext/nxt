@@ -12,6 +12,6 @@ mkdir -p ~/.nxt/
 REALPATH=`realpath "$0"`
 DIR=`dirname "${REALPATH}"`
 cd "${DIR}"
-nohup java -cp classes:lib/*:conf -Dnxt.runtime.mode=desktop nxt.Nxt > /dev/null 2>&1 &
+nohup java -cp classes:lib/*:conf:addons/classes -Dnxt.runtime.mode=desktop nxt.Nxt > /dev/null 2>&1 &
 echo $! > ~/.nxt/nxt.pid
 cd - > /dev/null

@@ -106,7 +106,9 @@ var NRS = (function (NRS, $, undefined) {
                 ["controlMinBalanceNXT", "controlMinBalance"],
                 ["controlMaxFeesNXT", "controlMaxFees"],
                 ["minBalanceNXT", "minBalance"],
-                ["shufflingAmountNXT", "amount"]
+                ["shufflingAmountNXT", "amount"],
+                ["monitorAmountNXT", "amount"],
+                ["monitorThresholdNXT", "threshold"]
             ];
 
             for (i = 0; i < nxtFields.length; i++) {

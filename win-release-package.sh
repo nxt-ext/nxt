@@ -27,6 +27,7 @@ rm -rf ${PACKAGE}.exe
 rm -rf ${PACKAGE}.zip
 mkdir -p nxt/
 mkdir -p nxt/logs
+mkdir -p nxt/addons/src
 
 if [ "${OBFUSCATE}" == "obfuscate" ];
 then

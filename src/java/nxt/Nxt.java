@@ -316,7 +316,7 @@ public final class Nxt {
         shutdownAddOns();
         API.shutdown();
         Users.shutdown();
-        AccountMonitor.shutdown();
+        FundingMonitor.shutdown();
         ThreadPool.shutdown();
         Peers.shutdown();
         Db.shutdown();

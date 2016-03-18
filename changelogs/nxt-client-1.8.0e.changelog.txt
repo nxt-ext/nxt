@@ -43,9 +43,9 @@ still use the nxt installation directory instead of ~/.nxt for those files can
 use the run-desktop.sh script instead.
 
 
-Account Monitor:
+Funding Monitor:
 
-The new Account Monitor feature provides monitoring account balances, and their
+The new Funding Monitor feature provides monitoring account balances, and their
 automated replenishment from a funding account, based on account properties set
 by the funding account to the monitored accounts.
 
@@ -55,8 +55,8 @@ from the funding account to the monitored account. A transfer will remain
 pending if the number of blocks since the previous transfer transaction is less
 than the interval configured for the monitor.
 
-The APIs for the Account Monitor feature are StartAccountMonitor,
-GetAccountMonitor, and StopAccountMonitor. Detailed documentation for those is
+The APIs for the Funding Monitor feature are StartFundingMonitor,
+GetFundingMonitor, and StopFundingMonitor. Detailed documentation for those is
 provided in the API javadoc files.
 
 
@@ -74,7 +74,7 @@ the peer info, as found in the java os.platform and os.arch system properties.
 
 Other minor bugfixes and optimizations.
 
-Updated jetty to version 9.3.7, lucene to 5.3.2, tika to 1.12, and slf4j to
+Updated jetty to version 9.3.8, lucene to 5.3.2, tika to 1.12, and slf4j to
 1.7.18. Delete the old lib directory first when installing manually on top of a
 previous installation. If using the installer, old libraries will be deleted
 automatically, as well as any existing files under the classes and html
@@ -89,6 +89,9 @@ interface, making sure it is on the classpath, and enabling it by adding its
 name to the nxt.addOns property. See the example addOns in the nxt.addons
 package. The AfterStart and BeforeShutdown addOns can be used to trigger
 scripts to be run just after the server has started, and just before shutdown.
+Java source files for addons can be placed under addons/src to be compiled with
+the compile.sh script, and the resulting class files under addons/classes will
+be included on the classpath at runtime.
 
 This is an unsupported feature for developers only. While in the 1.x series
 the Java API is expected to be stable, it will undergo significant refactoring

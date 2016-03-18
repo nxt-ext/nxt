@@ -1334,35 +1334,6 @@ NRS.addPagination = function () {
 		}
 	};
 
-	NRS.checkLocationHash = function(password) {
-		if (window.location.hash) {
-			var hash = window.location.hash.replace("#", "").split(":");
-
-			if (hash.length == 2) {
-                var $modal = "";
-                if (hash[0] == "message") {
-					$modal = $("#send_message_modal");
-				} else if (hash[0] == "send") {
-					$modal = $("#send_money_modal");
-				} else if (hash[0] == "asset") {
-					NRS.goToAsset(hash[1]);
-					return;
-				}
-
-				if ($modal) {
-					var account_id = String($.trim(hash[1]));
-					$modal.find("input[name=recipient]").val(account_id.unescapeHTML()).trigger("blur");
-					if (password && typeof password == "string") {
-						$modal.find("input[name=secretPhrase]").val(password);
-					}
-					$modal.modal("show");
-				}
-			}
-
-			window.location.hash = "#";
-		}
-	};
-
 	NRS.updateBlockchainDownloadProgress = function() {
 		var lastNumBlocks = 5000;
         var downloadingBlockchain = $('#downloading_blockchain');
