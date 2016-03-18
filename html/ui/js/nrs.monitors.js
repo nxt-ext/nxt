@@ -29,7 +29,6 @@ var NRS = (function(NRS, $) {
     NRS.jsondata = NRS.jsondata||{};
 
     NRS.jsondata.monitors = function (response) {
-        var params = "\"" + response.accountRS + "\",\"" + response.property + "\"";
         return {
             accountFormatted: NRS.getAccountLink(response, "account"),
             property: response.property,
@@ -37,7 +36,7 @@ var NRS = (function(NRS, $) {
             thresholdFormatted: NRS.formatAmount(response.threshold),
             interval: response.interval,
             statusLinkFormatted: "<a href='#' class='btn btn-xs' " +
-                        "onClick='NRS.goToMonitor(" + params + ");'>" +
+                        "onClick='NRS.goToMonitor(" + JSON.stringify(response) + ");'>" +
                          $.t("status") + "</a>",
             stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_funding_monitor_modal' " +
                         "data-account='" + response.accountRS + "' " +
@@ -131,19 +130,16 @@ var NRS = (function(NRS, $) {
         NRS.loadPage("funding_monitors");
     };
 
-    NRS.goToMonitor = function(account, property) {
+    NRS.goToMonitor = function(monitor) {
    		NRS.goToPage("funding_monitor_status", function() {
-            var selection = {};
-            selection.account = account;
-            selection.property = property;
-            return selection;
+            return monitor;
         });
    	};
 
     NRS.pages.funding_monitor_status = function (callback) {
-        var selection = callback();
-        $("#monitor_funding_account").text(selection.account);
-        $("#monitor_control_property").text(selection.property);
+        var monitor = callback();
+        $("#monitor_funding_account").html(monitor.account);
+        $("#monitor_control_property").html(monitor.property);
         NRS.hasMorePages = false;
         var view = NRS.simpleview.get('funding_monitor_status_page', {
             errorMessage: null,
@@ -152,8 +148,8 @@ var NRS = (function(NRS, $) {
             properties: []
         });
         var params = {
-            "setter": selection.account,
-            "property": selection.property,
+            "setter": monitor.account,
+            "property": monitor.property,
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         };
