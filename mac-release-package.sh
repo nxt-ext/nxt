@@ -8,7 +8,7 @@ fi
 PACKAGE=nxt-client-${VERSION}
 echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
-OBFUSCATE=$2	
+OBFUSCATE=$2
 MACVERSION=$3
 if [ -x ${MACVERSION} ];
 then
@@ -32,15 +32,16 @@ rm -rf ${PACKAGE}.exe
 rm -rf ${PACKAGE}.zip
 mkdir -p nxt/
 mkdir -p nxt/logs
+mkdir -p nxt/addons/src
 
-if [ "${OBFUSCATE}" == "obfuscate" ]; 
+if [ "${OBFUSCATE}" = "obfuscate" ]; 
 then
 echo obfuscate
 ~/proguard/proguard5.2.1/bin/proguard.sh @nxt.pro
 mv ../nxt.map ../nxt.map.${VERSION}
 else
 FILES="${FILES} classes src COPYING.txt"
-FILES="${FILES} compile.sh javadoc.sh jar.sh package.sh"
+FILES="${FILES} compile.sh compile-nojfx.sh javadoc.sh jar.sh package.sh"
 FILES="${FILES} win-compile.sh win-javadoc.sh win-package.sh"
 echo javadoc
 ./javadoc.sh
