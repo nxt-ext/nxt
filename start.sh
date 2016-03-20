@@ -9,8 +9,7 @@ if [ -e ~/.nxt/nxt.pid ]; then
     fi
 fi
 mkdir -p ~/.nxt/
-REALPATH=`realpath "$0"`
-DIR=`dirname "${REALPATH}"`
+DIR=`dirname "$0"`
 cd "${DIR}"
 nohup java -cp classes:lib/*:conf:addons/classes -Dnxt.runtime.mode=desktop nxt.Nxt > /dev/null 2>&1 &
 echo $! > ~/.nxt/nxt.pid
