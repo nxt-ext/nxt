@@ -1640,5 +1640,9 @@
   "monitor_stopped": "Monitor Stopped",
   "funding_monitor_status": "Funding Monitor Status",
   "remove_monitored_account": "Remove Monitored Account",
-  "remove": "Remove"
+  "remove": "Remove",
+  "no_listings": "No Recent Listings",
+  "no_purchases": "No Recent Purchases",
+  "recent_listings": "Recent Listings",
+  "recent_purchases": "Recent Purchases"
 }

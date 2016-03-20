@@ -276,6 +276,9 @@ var NRS = (function(NRS, $) {
 			}
 		});
 
+        NRS.dgs_listings("recent_listings","getDGSGoods+");
+        NRS.dgs_listings("recent_purchases","getDGSPurchases+");
+
 		$("#dgs_search_center").show();
 		$("#dgs_search_top").hide();
 		$("#dgs_search_results").hide();
@@ -1112,6 +1115,50 @@ var NRS = (function(NRS, $) {
 			$("#dgs_purchase_modal").modal("show");
 		});
 	};
+
+    NRS.dgs_listings = function (table, api) {
+        var listingsTable = $("#" + table + "_table");
+        listingsTable.find("tbody").empty();
+        listingsTable.parent().addClass("data-loading").removeClass("data-empty");
+        var view = NRS.simpleview.get(table, {
+            errorMessage: null,
+            isLoading: true,
+            isEmpty: false,
+            data: []
+        });
+        NRS.sendRequest(api, {
+            "firstIndex": 0,
+            "lastIndex": 9
+        }, function (response) {
+            var accountKey;
+            if (api == "getDGSGoods+") {
+                response = response.goods;
+                accountKey = "seller";
+            } else if (api == "getDGSPurchases+") {
+                response = response.purchases;
+                accountKey = "buyer";
+            }
+            for (var i = 0; i < response.length; i++) {
+                var item = response[i];
+                var name = item.name;
+                if (name && name.length > 45) {
+                    name = name.substring(0, 45) + "...";
+                }
+                var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
+                view.data.push({
+                    "timestamp": NRS.formatTimestamp(item.timestamp),
+                    "good": good,
+                    "price": NRS.formatAmount(item.priceNQT, NRS.decimals),
+                    "account": NRS.getAccountLink(item, accountKey)
+                })
+            }
+            view.render({
+                isLoading: false,
+                isEmpty: view.data.length == 0
+            });
+            NRS.pageLoaded();
+        });
+    };
 
 	return NRS;
 }(NRS || {}, jQuery));
