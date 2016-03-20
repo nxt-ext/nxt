@@ -21,6 +21,8 @@
 }
 -keep class nxt.env.service.NxtService_ServiceManagement
 -keep class * extends nxt.env.DirProvider
+-keep class * extends nxt.addons.AddOn
+-keep class nxt.addons.AddOn
 -keepclassmembers class nxt.env.RuntimeEnvironment {
     static boolean isHeadless();
 }
