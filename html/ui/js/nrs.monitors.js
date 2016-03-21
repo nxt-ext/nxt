@@ -46,7 +46,7 @@ var NRS = (function(NRS, $) {
         };
     };
 
-    NRS.jsondata.properties = function (response) {
+    NRS.jsondata.monitoredAccount = function (response) {
         try {
             var value = JSON.parse(response.value);
         } catch (e) {
@@ -155,7 +155,7 @@ var NRS = (function(NRS, $) {
             errorMessage: null,
             isLoading: true,
             isEmpty: false,
-            properties: []
+            monitoredAccount: []
         });
         var params = {
             "setter": currentMonitor.account,
@@ -177,15 +177,15 @@ var NRS = (function(NRS, $) {
                     NRS.hasMorePages = true;
                     response.properties.pop();
                 }
-                view.properties.length = 0;
+                view.monitoredAccount.length = 0;
                 response.properties.forEach(
                     function (propertiesJson) {
-                        view.properties.push(NRS.jsondata.properties(propertiesJson))
+                        view.monitoredAccount.push(NRS.jsondata.monitoredAccount(propertiesJson))
                     }
                 );
                 view.render({
                     isLoading: false,
-                    isEmpty: view.properties.length == 0,
+                    isEmpty: view.monitoredAccount.length == 0,
                     fundingAccountFormatted: NRS.getAccountLink(currentMonitor, "account"),
                     controlProperty: currentMonitor.property
                 });
