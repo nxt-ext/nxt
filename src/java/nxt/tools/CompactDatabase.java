@@ -49,7 +49,6 @@ public class CompactDatabase {
         //
         // Initialize Nxt properties and logging
         //
-        Nxt.getEpochTime();
         Logger.init();
         //
         // Compact the database
