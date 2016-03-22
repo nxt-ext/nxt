@@ -625,8 +625,8 @@ public final class FundingMonitor {
             } else {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 monitoredAccount.height = Nxt.getBlockchain().getHeight();
-                Logger.logDebugMessage(String.format("NXT funding transaction %s for %s NXT submitted from %s to %s",
-                        Long.toUnsignedString(transaction.getId()), Long.toUnsignedString(monitoredAccount.amount),
+                Logger.logDebugMessage(String.format("NXT funding transaction %s for %f NXT submitted from %s to %s",
+                        transaction.getStringId(), (double)monitoredAccount.amount / Constants.ONE_NXT,
                         monitor.accountName, monitoredAccount.accountName));
             }
         }
@@ -662,8 +662,8 @@ public final class FundingMonitor {
             } else {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 monitoredAccount.height = Nxt.getBlockchain().getHeight();
-                Logger.logDebugMessage(String.format("ASSET funding transaction %s submitted for %s units from %s to %s",
-                        Long.toUnsignedString(transaction.getId()), Long.toUnsignedString(monitoredAccount.amount),
+                Logger.logDebugMessage(String.format("ASSET funding transaction %s submitted for %d units from %s to %s",
+                        transaction.getStringId(), monitoredAccount.amount,
                         monitor.accountName, monitoredAccount.accountName));
             }
         }
@@ -699,8 +699,8 @@ public final class FundingMonitor {
             } else {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 monitoredAccount.height = Nxt.getBlockchain().getHeight();
-                Logger.logDebugMessage(String.format("CURRENCY funding transaction %s submitted for %s units from %s to %s",
-                        Long.toUnsignedString(transaction.getId()), Long.toUnsignedString(monitoredAccount.amount),
+                Logger.logDebugMessage(String.format("CURRENCY funding transaction %s submitted for %d units from %s to %s",
+                        transaction.getStringId(), monitoredAccount.amount,
                         monitor.accountName, monitoredAccount.accountName));
             }
         }
