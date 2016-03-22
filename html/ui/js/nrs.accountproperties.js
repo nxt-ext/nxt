@@ -63,14 +63,14 @@ var NRS = (function(NRS, $) {
         );
     };
 
-    function normalizeValue(value) {
+    NRS.normalizePropertyValue = function(value) {
         if (value == null) {
             value = "";
         } else if (typeof value === "object") {
             value = JSON.stringify(value);
         }
         return String(value).escapeHTML();
-    }
+    };
 
     NRS.jsondata.properties = function (response, type) {
         var updateAction = "";
@@ -79,7 +79,7 @@ var NRS = (function(NRS, $) {
         if (response.recipientRS) {
             recipientToken = "data-recipient='" + response.recipientRS + "' ";
         }
-        var value = normalizeValue(response.value);
+        var value = NRS.normalizePropertyValue(response.value);
         if (type == INCOMING) {
             deleteAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#delete_account_property_modal' " +
             "data-setter='" + response.setterRS + "' " +
@@ -146,7 +146,7 @@ var NRS = (function(NRS, $) {
         } else {
             propertyInput.prop('readonly', false);
         }
-        $("#set_account_property_value").val(normalizeValue($invoker.data("value")));
+        $("#set_account_property_value").val(NRS.normalizePropertyValue($invoker.data("value")));
     });
 
     $("#delete_account_property_modal").on("show.bs.modal", function(e) {

@@ -55,13 +55,13 @@ var NRS = (function(NRS, $) {
         return {
             accountFormatted: NRS.getAccountLink(response, "recipient"),
             property: String(response.property).escapeHTML(),
-            amountFormatted: value.amount ? "<b>" + NRS.formatAmount(value.amount) : NRS.formatAmount(currentMonitor.amount),
-            thresholdFormatted: value.threshold ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
-            intervalFormatted: value.interval ? "<b>" + String(value.interval).escapeHTML() : String(currentMonitor.interval).escapeHTML(),
+            amountFormatted: (value && value.amount) ? "<b>" + NRS.formatAmount(value.amount) : NRS.formatAmount(currentMonitor.amount),
+            thresholdFormatted: (value && value.threshold) ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
+            intervalFormatted: (value && value.interval) ? "<b>" + String(value.interval).escapeHTML() : String(currentMonitor.interval).escapeHTML(),
             removeLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#remove_monitored_account_modal' " +
                         "data-recipient='" + response.recipientRS + "' " +
                         "data-property='" + response.property + "' " +
-                        "data-value='" + response.value + "'>" + $.t("remove") + "</a>"
+                        "data-value='" + NRS.normalizePropertyValue(response.value) + "'>" + $.t("remove") + "</a>"
         };
     };
 
