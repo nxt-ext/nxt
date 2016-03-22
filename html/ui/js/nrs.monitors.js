@@ -199,7 +199,7 @@ var NRS = (function(NRS, $) {
         $("#add_monitored_account_amount").val(NRS.convertToNXT(currentMonitor.amount));
         $("#add_monitored_account_threshold").val(NRS.convertToNXT(currentMonitor.threshold));
         $("#add_monitored_account_interval").val(currentMonitor.interval);
-        $("#add_monitored_account_value").val("{}");
+        $("#add_monitored_account_value").val("");
     });
 
     $(".add_monitored_account_value").on('change', function() {
@@ -219,7 +219,12 @@ var NRS = (function(NRS, $) {
         if (currentMonitor.interval != interval) {
             value.interval = interval;
         }
-        $("#add_monitored_account_value").val(JSON.stringify(value));
+        if (jQuery.isEmptyObject(value)) {
+            value = "";
+        } else {
+            value = JSON.stringify(value);
+        }
+        $("#add_monitored_account_value").val(value);
     });
 
     $("#remove_monitored_account_modal").on("show.bs.modal", function(e) {
