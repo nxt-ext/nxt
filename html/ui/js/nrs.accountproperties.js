@@ -63,6 +63,15 @@ var NRS = (function(NRS, $) {
         );
     };
 
+    function normalizeValue(value) {
+        if (value == null) {
+            value = "";
+        } else if (typeof value === "object") {
+            value = JSON.stringify(value);
+        }
+        return String(value).escapeHTML();
+    }
+
     NRS.jsondata.properties = function (response, type) {
         var updateAction = "";
         var deleteAction = "";
@@ -70,6 +79,7 @@ var NRS = (function(NRS, $) {
         if (response.recipientRS) {
             recipientToken = "data-recipient='" + response.recipientRS + "' ";
         }
+        var value = normalizeValue(response.value);
         if (type == INCOMING) {
             deleteAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#delete_account_property_modal' " +
             "data-setter='" + response.setterRS + "' " +
@@ -80,7 +90,7 @@ var NRS = (function(NRS, $) {
                 updateAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#set_account_property_modal' " +
                 "data-recipient='" + NRS.accountRS + "' " +
                 "data-property='" + String(response.property).escapeHTML() + "' " +
-                "data-value='" + String(response.value).escapeHTML() + "'>" + $.t("update") + "</a>";
+                "data-value='" + value + "'>" + $.t("update") + "</a>";
             }
         } else {
             deleteAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#delete_account_property_modal' " +
@@ -91,13 +101,13 @@ var NRS = (function(NRS, $) {
             updateAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#set_account_property_modal' " +
             recipientToken +
             "data-property='" + String(response.property).escapeHTML() + "' " +
-            "data-value='" + String(response.value).escapeHTML() + "'>" + $.t("update") + "</a>";
+            "data-value='" + value + "'>" + $.t("update") + "</a>";
         }
 
         return {
             accountFormatted: type == INCOMING ? NRS.getAccountLink(response, "setter") : NRS.getAccountLink(response, "recipient"),
             property: String(response.property).escapeHTML(),
-            value: String(response.value).escapeHTML(),
+            value: value,
             action_update: updateAction,
             action_delete: deleteAction
         };
@@ -136,10 +146,7 @@ var NRS = (function(NRS, $) {
         } else {
             propertyInput.prop('readonly', false);
         }
-        var value = $invoker.data("value");
-        if (property) {
-            $("#set_account_property_value").val(value);
-        }
+        $("#set_account_property_value").val(normalizeValue($invoker.data("value")));
     });
 
     $("#delete_account_property_modal").on("show.bs.modal", function(e) {
