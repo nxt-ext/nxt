@@ -522,9 +522,9 @@ final class ParameterParser {
         return holdingId;
     }
 
-    static String getAccountProperty(HttpServletRequest req) throws ParameterException {
+    static String getAccountProperty(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         String property = Convert.emptyToNull(req.getParameter("property"));
-        if (property == null) {
+        if (property == null && isMandatory) {
             throw new ParameterException(MISSING_PROPERTY);
         }
         return property;
