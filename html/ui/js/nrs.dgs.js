@@ -480,7 +480,7 @@ var NRS = (function(NRS, $) {
     var example;
     if (modal == "dgs_listing_modal" ) {
         example = "#dgs_product_picture_example"
-    } else {
+    } else if (modal == "dgs_picture_change_modal"){
         example = "#dgs_change_picture_example"
     }
 		$(example).attr("src", "img/No_image_available.png");
