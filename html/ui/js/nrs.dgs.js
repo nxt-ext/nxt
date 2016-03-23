@@ -495,9 +495,9 @@ var NRS = (function(NRS, $) {
         var hex = this.toString();//force conversion
         var result = "";
         for (var i = 0; i < hex.length; i += 2) {
-            back += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            result += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
         }
-        return back;
+        return result;
     }
 
     NRS.forms.makebase64 = function () {
@@ -511,7 +511,6 @@ var NRS = (function(NRS, $) {
         img.onload = function() {
             reader.onload = function(output){
                 imageBase64 = output.target.result;
-                console.log(imageBase64);
                 hexdata = imageBase64.split(",");
                 document.getElementById("dgs_listing_image_hex").value = hexdata[1].toString().hexEncode();
                 $("#dgs_product_picture_example").attr("src", "data:image;base64," + hexdata[1].hexEncode().hexDecode());
