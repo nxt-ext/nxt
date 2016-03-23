@@ -359,7 +359,21 @@ var NRS = (function (NRS, $, undefined) {
             }
             formData.append("file", file); // file data
             type = "POST";
-        } else {
+        } else if (requestType == "dgsListing") {
+                           contentType = false;
+                           processData = false;
+                           formData = new FormData();
+                           for (var key in data) {
+                               if (!data.hasOwnProperty(key)) {
+                                   continue;
+                               }
+                               formData.append(key, data[key]);
+                           }
+                           var modal = "#dgs_listing_modal";
+                           var input = $(modal).find("input[name=message]");
+                           formData.append("message", input.val());
+                           type = "POST";
+                       } else {
             // JQuery defaults
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
             processData = true;
