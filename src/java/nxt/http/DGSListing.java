@@ -37,7 +37,7 @@ public final class DGSListing extends CreateTransaction {
     static final DGSListing instance = new DGSListing();
 
     private DGSListing() {
-        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+        super("messageFile", new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
                 "name", "description", "tags", "quantity", "priceNQT");
     }
 
