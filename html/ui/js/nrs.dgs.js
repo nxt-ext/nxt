@@ -829,21 +829,9 @@ var NRS = (function(NRS, $) {
 							"type": "danger"
 						});
 					} else {
-
-					NRS.sendRequest("getPrunableMessage", {
-                    					"transaction": response.goods,
-                    					"retreive": true
-                    				}, function(transactiondata) {
-                    					if (transactiondata.errorCode) {
-                    						e.preventDefault();
-                    						$.growl($.t("error_products"), {
-                    							"type": "danger"
-                    						});
-                    					} else {
-
 						var output = "<table>";
 						var picture = new Image();
-						if (!transactiondata.message) {
+						if (!good.hasImage) {
 						    picture.src = "img/No_image_available.png";
 						}
 						else {
@@ -982,10 +970,8 @@ var NRS = (function(NRS, $) {
 								$btn.show();
 							}
 						}
-						}
-						},false);
 					}
-				}, false);
+				},false);
 			}
 		}, false);
 	}).on("hidden.bs.modal", function() {
@@ -1031,19 +1017,10 @@ var NRS = (function(NRS, $) {
 					"type": "danger"
 				});
 			} else {
-			NRS.sendRequest("getPrunableMessage", {
-                "transaction": response.goods,
-                "retrieve": true
-            }, function(transactiondata) {
-                if (transactiondata.errorCode) {
-                    e.preventDefault();
-                    $.growl($.t("error_products"), {
-                        "type": "danger"
-                    });
-                } else {
+
 				var output = "<table>";
 				var picture = new Image();
-                if (!transactiondata.message) {
+                if (!response.hasImage) {
                     picture.src = "img/No_image_available.png";
                 }
                 else {
@@ -1063,10 +1040,6 @@ var NRS = (function(NRS, $) {
 				}
 				output += "</table>";
                 $modal.find(".goods_info").html(output);
-				}
-				},false);
-			}
-
 
 			if (type == "dgs_quantity_change_modal") {
 				$("#dgs_quantity_change_current_quantity, #dgs_quantity_change_quantity").val(String(response.quantity).escapeHTML());
@@ -1083,7 +1056,8 @@ var NRS = (function(NRS, $) {
 					$("#dgs_total_purchase_price").html(NRS.formatAmount(totalNQT) + " NXT");
 				});
 			}
-		}, false);
+			}
+		},false);
 	}).on("hidden.bs.modal", function() {
 		$("#dgs_purchase_quantity").off("change");
 
