@@ -370,7 +370,7 @@ var NRS = (function (NRS, $, undefined) {
                                formData.append(key, data[key]);
                            }
                            var modal = "#dgs_listing_modal";
-                           var input = $(modal).find("input[name=message]");
+                           var input = $(modal).find("input[name=image_hex]");
                            formData.append("message", input.val());
                            type = "POST";
                        } else {

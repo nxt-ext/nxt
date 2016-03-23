@@ -477,6 +477,29 @@ var NRS = (function(NRS, $) {
 		NRS.loadPage("my_dgs_listings");
 	};
 
+    String.prototype.hexEncode = function(){
+        var hex;
+        var result = "";
+        for (var i=0; i<this.length; i++) {
+            hex = this.charCodeAt(i).toString(16);
+            if (hex.length == 1) {
+                result += ("0" + hex);
+            } else {
+                result += (hex);
+            }
+        }
+        return result
+    }
+
+    String.prototype.hexDecode = function(){
+        var hex = this.toString();//force conversion
+        var result = "";
+        for (var i = 0; i < hex.length; i += 2) {
+            back += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        }
+        return back;
+    }
+
     NRS.forms.makebase64 = function () {
     var modal = "#dgs_listing_modal";
     var input = $(modal).find("input[name=image]");
@@ -487,11 +510,13 @@ var NRS = (function(NRS, $) {
             img.src = window.URL.createObjectURL(image);
             img.onload = function() {
                 reader.onload = function(output){
-                document.getElementById("dgs_listing_message").value = output.target.result;
-                $("#dgs_product_picture_example").attr("src", output.target.result);
-                };
+                imageBase64 = output.target.result;
+                hexdata = imageBase64.split(",");
+                document.getElementById("dgs_listing_message").value = hexdata[1].toString().hexEncode();
+                $("#dgs_product_picture_example").attr("src", "data:image;base64," + hexdata[1].hexEncode().hexDecode());
+                }
                 reader.readAsDataURL(image);
-               };
+                }
     }
 	NRS.forms.dgsListing = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
@@ -842,7 +867,7 @@ var NRS = (function(NRS, $) {
 						    picture.src = "img/No_image_available.png";
 						}
 						else {
-                            picture.src = transactiondata.message;
+                            picture.src =  "data:image;base64," + transactiondata.message.hexDecode();
 						}
 						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 4 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 						output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
@@ -999,6 +1024,27 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
+function hexToBinary(s) {
+    var i, k, part, ret = '';
+    // lookup table for easier conversion. '0' characters are padded for '1' to '7'
+    var lookupTable = {
+        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100',
+        '5': '0101', '6': '0110', '7': '0111', '8': '1000', '9': '1001',
+        'a': '1010', 'b': '1011', 'c': '1100', 'd': '1101',
+        'e': '1110', 'f': '1111',
+        'A': '1010', 'B': '1011', 'C': '1100', 'D': '1101',
+        'E': '1110', 'F': '1111'
+    };
+    for (i = 0; i < s.length; i += 1) {
+        if (lookupTable.hasOwnProperty(s[i])) {
+            ret += lookupTable[s[i]];
+        } else {
+            return { valid: false };
+        }
+    }
+    return { valid: true, result: ret };
+}
+
 	$("#dgs_product_modal, #dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
@@ -1044,7 +1090,7 @@ var NRS = (function(NRS, $) {
                     picture.src = "img/No_image_available.png";
                 }
                 else {
-                    picture.src = transactiondata.message;
+                    picture.src =  "data:image;base64," + transactiondata.message.hexDecode();
                 }
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 4 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
