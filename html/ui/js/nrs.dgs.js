@@ -825,8 +825,8 @@ var NRS = (function(NRS, $) {
 						});
 					} else {
 
-					NRS.sendRequest("getTransaction", {
-                    					"getPrunableMessage": response.goods,
+					NRS.sendRequest("getPrunableMessage", {
+                    					"transaction": response.goods,
                     					"retreive": true
                     				}, function(good) {
                     					if (transactiondata.errorCode) {
