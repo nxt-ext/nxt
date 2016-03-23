@@ -384,7 +384,32 @@ var NRS = (function (NRS, $, undefined) {
             }
                            formData.append("messageFile", image);
                            type = "POST";
-                       } else {
+                       } else if (requestType == "dgsPictureChange") {
+                                                   contentType = false;
+                                                   processData = false;
+                                                   formData = new FormData();
+                                                   for (var key in data) {
+                                                       if (!data.hasOwnProperty(key)) {
+                                                           continue;
+                                                       }
+                                                       formData.append(key, data[key]);
+                                                   }
+                                                   var modal = "#dgs_picture_change_modal";
+                                                   var imagefile = $(modal).find("input[name=image]");
+                                        var image = imagefile[0].files[0];
+                                    if (image.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+                                        callback({
+                                            "errorCode": 3,
+                                            "errorDescription": $.t("error_file_too_big", {
+                                                "size": image.size,
+                                                "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                                            })
+                                        }, data);
+                                        return;
+                                    }
+                                                   formData.append("messageFile", image);
+                                                   type = "POST";
+                                               } else {
             // JQuery defaults
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
             processData = true;
