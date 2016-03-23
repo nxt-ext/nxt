@@ -511,8 +511,9 @@ var NRS = (function(NRS, $) {
         img.onload = function() {
             reader.onload = function(output){
                 imageBase64 = output.target.result;
+                console.log(imageBase64);
                 hexdata = imageBase64.split(",");
-                document.getElementById("dgs_listing_message").value = hexdata[1].toString().hexEncode();
+                document.getElementById("dgs_listing_image_hex").value = hexdata[1].toString().hexEncode();
                 $("#dgs_product_picture_example").attr("src", "data:image;base64," + hexdata[1].hexEncode().hexDecode());
             }
         reader.readAsDataURL(image);
