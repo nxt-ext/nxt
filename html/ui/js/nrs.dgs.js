@@ -476,15 +476,6 @@ var NRS = (function(NRS, $) {
 		NRS.loadPage("my_dgs_listings");
 	};
 
-	String.prototype.hexDecode = function(){
-		var hex = this.toString();//force conversion
-		var result = "";
-		for (var i = 0; i < hex.length; i += 2) {
-			result += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-		}
-		return result;
-	}
-
     NRS.forms.makebase64 = function () {
 		$("#dgs_product_picture_example").attr("src", "img/No_image_available.png");
         var modal = "#dgs_listing_modal";
@@ -856,7 +847,7 @@ var NRS = (function(NRS, $) {
 						    picture.src = "img/No_image_available.png";
 						}
 						else {
-							picture.src =  "data:image;base64," + btoa(transactiondata.message.hexDecode());
+							picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
 						}
 						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 4 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 						output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
@@ -1056,7 +1047,7 @@ var NRS = (function(NRS, $) {
                     picture.src = "img/No_image_available.png";
                 }
                 else {
-                    picture.src =  "data:image;base64," + btoa(transactiondata.message.hexDecode());
+					picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
                 }
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 4 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
