@@ -465,7 +465,9 @@ var NRS = (function(NRS, $) {
 				}
 				for (var i = 0; i < response.goods.length; i++) {
                var good = response.goods[i];
-               rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_picture_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>"+ $.t("Change Picture") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
+               //Implementation of dgsPictureChange. Disable due to hardfork requirement
+               //rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_picture_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>"+ $.t("Change Picture") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
+               rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 				}
 			}
 			NRS.dataLoaded(rows);
@@ -480,6 +482,7 @@ var NRS = (function(NRS, $) {
     var example;
     if (modal == "dgs_listing_modal" ) {
         example = "#dgs_product_picture_example"
+    //Implementation of dgsPictureChange. Disable due to hardfork requirement
     } else if (modal == "dgs_picture_change_modal"){
         example = "#dgs_change_picture_example"
     }
@@ -801,6 +804,7 @@ var NRS = (function(NRS, $) {
 		$("#dgs_product_picture_example").attr("src", "img/No_image_available.png");
 	});
 
+    //Implementation of dgsPictureChange. Disable due to hardfork requirement
     $("#dgs_picture_change_modal").on("show.bs.modal", function() {
 		$("#dgs_change_picture_example").attr("src", "img/No_image_available.png");
 	});
@@ -1053,8 +1057,8 @@ var NRS = (function(NRS, $) {
 				$("#dgs_quantity_change_current_quantity, #dgs_quantity_change_quantity").val(String(response.quantity).escapeHTML());
 			} else if (type == "dgs_price_change_modal") {
 				$("#dgs_price_change_current_price, #dgs_price_change_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
+		    //Implementation of dgsPictureChange. Disable due to hardfork requirement
 		    } else if (type == "dgs_picture_change_modal") {
-		        console.log("HERE");
 		        $("#dgs_picture_change_current_quantity").val(String(response.quantity).escapeHTML());
 		        $("#dgs_picture_change_current_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
 			} else if (type == "dgs_purchase_modal") {
