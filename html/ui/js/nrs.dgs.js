@@ -290,7 +290,6 @@ var NRS = (function(NRS, $) {
 		}
 	};
 
-
 	NRS.pages.dgs_search = function(callback) {
         var dgsDisabled = $("#dgs_disabled");
         var topSection = $("#dgs_top");
@@ -477,33 +476,19 @@ var NRS = (function(NRS, $) {
 		NRS.loadPage("my_dgs_listings");
 	};
 
-    String.prototype.hexEncode = function(){
-        var hex;
-        var result = "";
-        for (var i=0; i<this.length; i++) {
-            hex = this.charCodeAt(i).toString(16);
-            if (hex.length == 1) {
-                result += ("0" + hex);
-            } else {
-                result += (hex);
-            }
-        }
-        return result
-    }
-
-    String.prototype.hexDecode = function(){
-        var hex = this.toString();//force conversion
-        var result = "";
-        for (var i = 0; i < hex.length; i += 2) {
-            result += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-        }
-        return result;
-    }
+	String.prototype.hexDecode = function(){
+		var hex = this.toString();//force conversion
+		var result = "";
+		for (var i = 0; i < hex.length; i += 2) {
+			result += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+		}
+		return result;
+	}
 
     NRS.forms.makebase64 = function () {
+		$("#dgs_product_picture_example").attr("src", "img/No_image_available.png");
         var modal = "#dgs_listing_modal";
         var input = $(modal).find("input[name=image]");
-        var output = $(modal).find("input[name=message]");
         var reader = new FileReader();
         var image = input[0].files[0];
         var img = new Image();
@@ -512,8 +497,7 @@ var NRS = (function(NRS, $) {
             reader.onload = function(output){
                 imageBase64 = output.target.result;
                 hexdata = imageBase64.split(",");
-                document.getElementById("dgs_listing_image_hex").value = hexdata[1].toString().hexEncode();
-                $("#dgs_product_picture_example").attr("src", "data:image;base64," + hexdata[1].hexEncode().hexDecode());
+                $("#dgs_product_picture_example").attr("src", imageBase64);
             }
         reader.readAsDataURL(image);
         }
@@ -818,6 +802,10 @@ var NRS = (function(NRS, $) {
 		}
 	};
 
+	$("#dgs_listing_modal").on("show.bs.modal", function() {
+		$("#dgs_product_picture_example").attr("src", "img/No_image_available.png");
+	});
+
 	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_feedback_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal, #dgs_view_refund_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
@@ -844,7 +832,7 @@ var NRS = (function(NRS, $) {
 				NRS.sendRequest("getDGSGood", {
 					"goods": response.goods
 				}, function(good) {
-					if (response.errorCode) {
+					if (good.errorCode) {
 						e.preventDefault();
 						$.growl($.t("error_products"), {
 							"type": "danger"
@@ -854,7 +842,7 @@ var NRS = (function(NRS, $) {
 					NRS.sendRequest("getPrunableMessage", {
                     					"transaction": response.goods,
                     					"retreive": true
-                    				}, function(good) {
+                    				}, function(transactiondata) {
                     					if (transactiondata.errorCode) {
                     						e.preventDefault();
                     						$.growl($.t("error_products"), {
@@ -868,7 +856,7 @@ var NRS = (function(NRS, $) {
 						    picture.src = "img/No_image_available.png";
 						}
 						else {
-                            picture.src =  "data:image;base64," + transactiondata.message.hexDecode();
+							picture.src =  "data:image;base64," + btoa(transactiondata.message.hexDecode());
 						}
 						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 4 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 						output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
@@ -1011,7 +999,6 @@ var NRS = (function(NRS, $) {
 		}, false);
 	}).on("hidden.bs.modal", function() {
 		var type = $(this).attr("id");
-
 		NRS.removeDecryptionForm($(this));
 
 		$(this).find(".purchase_info").html($.t("loading"));
@@ -1053,7 +1040,6 @@ var NRS = (function(NRS, $) {
 					"type": "danger"
 				});
 			} else {
-
 			NRS.sendRequest("getPrunableMessage", {
                 "transaction": response.goods,
                 "retrieve": true
@@ -1070,7 +1056,7 @@ var NRS = (function(NRS, $) {
                     picture.src = "img/No_image_available.png";
                 }
                 else {
-                    picture.src =  "data:image;base64," + transactiondata.message.hexDecode();
+                    picture.src =  "data:image;base64," + btoa(transactiondata.message.hexDecode());
                 }
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 4 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";

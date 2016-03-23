@@ -350,7 +350,7 @@ var NRS = (function (NRS, $, undefined) {
             if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
                 callback({
                     "errorCode": 3,
-                    "errorDescription": $.t("error_file_too_big", {
+                    "errorDescription": $.t("image_file_too_big", {
                         "size": file.size,
                         "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
                     })
@@ -370,8 +370,19 @@ var NRS = (function (NRS, $, undefined) {
                                formData.append(key, data[key]);
                            }
                            var modal = "#dgs_listing_modal";
-                           var input = $(modal).find("input[name=image_hex]");
-                           formData.append("message", input.val());
+                           var imagefile = $(modal).find("input[name=image]");
+                var image = imagefile[0].files[0];
+            if (image.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+                callback({
+                    "errorCode": 3,
+                    "errorDescription": $.t("error_file_too_big", {
+                        "size": image.size,
+                        "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                    })
+                }, data);
+                return;
+            }
+                           formData.append("messageFile", image);
                            type = "POST";
                        } else {
             // JQuery defaults
