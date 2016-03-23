@@ -18,7 +18,6 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.AccountLedger.LedgerEntry;
-import nxt.FundingMonitor;
 import nxt.AccountRestrictions;
 import nxt.Alias;
 import nxt.Appendix;
@@ -36,6 +35,7 @@ import nxt.CurrencyType;
 import nxt.DigitalGoodsStore;
 import nxt.Exchange;
 import nxt.ExchangeRequest;
+import nxt.FundingMonitor;
 import nxt.Generator;
 import nxt.HoldingType;
 import nxt.MonetarySystem;
@@ -470,6 +470,7 @@ final class JSONData {
         json.put("parsedTags", tagsJSON);
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
+        json.put("hasImage", goods.hasImage());
         if (includeCounts) {
             json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false, true));
             json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true, true));
