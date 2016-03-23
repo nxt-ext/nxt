@@ -594,6 +594,9 @@ final class ParameterParser {
                 throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
             }
         }
+        if (req.getContentType() == null || !req.getContentType().startsWith("multipart/form-data")) {
+            return null;
+        }
         try {
             Part part = req.getPart("messageFile");
             if (part == null) {
