@@ -785,6 +785,10 @@ var NRS = (function(NRS, $) {
 
 		var purchase = $invoker.data("purchase");
 
+        if (NRS.getUrlParameter("purchase")) {
+            purchase = NRS.getUrlParameter("purchase").escapeHTML();
+        }
+
 		$modal.find("input[name=purchase]").val(purchase);
 
 		NRS.sendRequest("getDGSPurchase", {
@@ -972,6 +976,10 @@ var NRS = (function(NRS, $) {
 			goods = $invoker.data("goods");
 		}
 
+        if (NRS.getUrlParameter("goods")) {
+            goods = NRS.getUrlParameter("goods").escapeHTML();
+		}
+
 		$modal.find("input[name=goods]").val(goods);
 
 		NRS.sendRequest("getDGSGood", {
@@ -1031,6 +1039,11 @@ var NRS = (function(NRS, $) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
 		var goods = $invoker.data("goods");
+
+		if (NRS.getUrlParameter("goods")) {
+            goods = NRS.getUrlParameter("goods").escapeHTML();
+        }
+
 		$modal.find(".modal_content table").empty();
 		NRS.sendRequest("getDGSGoodsPurchases+", {
 			"goods": goods,
