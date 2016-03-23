@@ -59,8 +59,8 @@ var NRS = (function(NRS, $) {
             thresholdFormatted: (value && value.threshold) ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
             intervalFormatted: (value && value.interval) ? "<b>" + String(value.interval).escapeHTML() : String(currentMonitor.interval).escapeHTML(),
             removeLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#remove_monitored_account_modal' " +
-                        "data-recipient='" + response.recipientRS + "' " +
-                        "data-property='" + response.property + "' " +
+                        "data-recipient='" + String(response.recipientRS).escapeHTML() + "' " +
+                        "data-property='" + String(response.property).escapeHTML() + "' " +
                         "data-value='" + NRS.normalizePropertyValue(response.value) + "'>" + $.t("remove") + "</a>"
         };
     };
@@ -78,6 +78,7 @@ var NRS = (function(NRS, $) {
             monitors: []
         });
         var params = {
+            "account": NRS.accountRS,
             "adminPassword": NRS.settings.admin_password,
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
@@ -229,13 +230,9 @@ var NRS = (function(NRS, $) {
 
     $("#remove_monitored_account_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
-        $("#remove_monitored_account_recipient").val(String($invoker.data("recipient")).escapeHTML());
-        $("#remove_monitored_account_property").val(String($invoker.data("property")).escapeHTML());
-        var value = $invoker.data("value");
-        if (typeof(value) == "object") {
-            value = JSON.stringify(value);
-        }
-        $("#remove_monitored_account_value").val(String(value).escapeHTML());
+        $("#remove_monitored_account_recipient").val($invoker.data("recipient"));
+        $("#remove_monitored_account_property").val($invoker.data("property"));
+        $("#remove_monitored_account_value").val(NRS.normalizePropertyValue($invoker.data("value")));
     });
 
     return NRS;

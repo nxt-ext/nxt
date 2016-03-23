@@ -65,9 +65,9 @@ var NRS = (function(NRS, $) {
 
     NRS.normalizePropertyValue = function(value) {
         if (value == null) {
-            value = "";
+            return "";
         } else if (typeof value === "object") {
-            value = JSON.stringify(value);
+            return JSON.stringify(value);
         }
         return String(value).escapeHTML();
     };
