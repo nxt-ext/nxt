@@ -501,24 +501,24 @@ var NRS = (function(NRS, $) {
     }
 
     NRS.forms.makebase64 = function () {
-    var modal = "#dgs_listing_modal";
-    var input = $(modal).find("input[name=image]");
-    var output = $(modal).find("input[name=message]");
-    var reader = new FileReader();
-            var image = input[0].files[0];
-            var img = new Image();
-            img.src = window.URL.createObjectURL(image);
-            img.onload = function() {
-                reader.onload = function(output){
+        var modal = "#dgs_listing_modal";
+        var input = $(modal).find("input[name=image]");
+        var output = $(modal).find("input[name=message]");
+        var reader = new FileReader();
+        var image = input[0].files[0];
+        var img = new Image();
+        img.src = window.URL.createObjectURL(image);
+        img.onload = function() {
+            reader.onload = function(output){
                 imageBase64 = output.target.result;
                 hexdata = imageBase64.split(",");
                 document.getElementById("dgs_listing_message").value = hexdata[1].toString().hexEncode();
                 $("#dgs_product_picture_example").attr("src", "data:image;base64," + hexdata[1].hexEncode().hexDecode());
-                }
-                //reader.readAsDataURL(image);
-                reader.getAsBinary(image);
-                }
+            }
+        reader.readAsDataURL(image);
+        }
     }
+
 	NRS.forms.dgsListing = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
 		$.each(data, function(key, value) {
