@@ -515,7 +515,8 @@ var NRS = (function(NRS, $) {
                 document.getElementById("dgs_listing_message").value = hexdata[1].toString().hexEncode();
                 $("#dgs_product_picture_example").attr("src", "data:image;base64," + hexdata[1].hexEncode().hexDecode());
                 }
-                reader.readAsDataURL(image);
+                //reader.readAsDataURL(image);
+                reader.getAsBinary(image);
                 }
     }
 	NRS.forms.dgsListing = function($modal) {
@@ -1023,27 +1024,6 @@ var NRS = (function(NRS, $) {
 			$(this).find("button.btn-primary").data("purchase", "");
 		}
 	});
-
-function hexToBinary(s) {
-    var i, k, part, ret = '';
-    // lookup table for easier conversion. '0' characters are padded for '1' to '7'
-    var lookupTable = {
-        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100',
-        '5': '0101', '6': '0110', '7': '0111', '8': '1000', '9': '1001',
-        'a': '1010', 'b': '1011', 'c': '1100', 'd': '1101',
-        'e': '1110', 'f': '1111',
-        'A': '1010', 'B': '1011', 'C': '1100', 'D': '1101',
-        'E': '1110', 'F': '1111'
-    };
-    for (i = 0; i < s.length; i += 1) {
-        if (lookupTable.hasOwnProperty(s[i])) {
-            ret += lookupTable[s[i]];
-        } else {
-            return { valid: false };
-        }
-    }
-    return { valid: true, result: ret };
-}
 
 	$("#dgs_product_modal, #dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
