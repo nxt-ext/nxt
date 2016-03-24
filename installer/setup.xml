@@ -94,6 +94,7 @@
     <variables>
         <variable name="$InstallerFrame.logfilePath" value="default"/>
         <variable name="DesktopShortcutCheckboxEnabled" value="true"/>
+        <variable name="TargetPanel.dir.mac" value="/Applications/nxt.app"/>
     </variables>
 
     <panels>
@@ -101,7 +102,7 @@
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
         <panel classname="TargetPanel"/>
-        <panel classname="ShortcutPanel"/>
+        <panel classname="ShortcutPanel" condition="!izpack.macinstall"/>
         <panel classname="InstallPanel"/>
         <panel classname="SimpleFinishPanel"/>
     </panels>
@@ -191,10 +192,10 @@
 
         <pack name="server.mac" os="mac_osx" required="yes" uninstall="false">
             <description>Mac Specific Resources</description>
-            <singlefile src="mac-run.sh" target="${INSTALL_PATH}/run.command"/>
-            <executable targetfile="${INSTALL_PATH}/run.command"/>
-            <parsable targetfile="${INSTALL_PATH}/run.command"/>
-        </pack>
+            <fileset dir="resource/mac/Contents" targetdir="${INSTALL_PATH}/Contents" override="true"/>		
+			<parsable targetfile="${INSTALL_PATH}/Contents/MacOS/nxt"/>
+			<executable targetfile="${INSTALL_PATH}/Contents/MacOS/nxt"/>		
+		</pack>
 
         <pack name="jre.mac" os="mac_osx" required="yes" uninstall="false">
             <description>Java 64 bit for Mac</description>
