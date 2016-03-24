@@ -193,6 +193,7 @@
         <pack name="server.mac" os="mac_osx" required="yes" uninstall="false">
             <description>Mac Specific Resources</description>
             <fileset dir="resource/mac/Contents" targetdir="${INSTALL_PATH}/Contents" override="true"/>		
+			<parsable targetfile="${INSTALL_PATH}/Contents/MacOS/nxt"/>
 			<executable targetfile="${INSTALL_PATH}/Contents/MacOS/nxt"/>		
 		</pack>
 
