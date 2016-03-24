@@ -30,7 +30,8 @@ var NRS = (function (NRS) {
     };
 
     NRS.isWebWalletLinkVisible = function() {
-        return isDesktopApplication; // When using JavaFX add a link to a web wallet
+        // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
+        return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
     };
 
     NRS.isPollGetState = function() {
