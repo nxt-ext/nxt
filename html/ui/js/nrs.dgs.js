@@ -29,6 +29,7 @@ var NRS = (function(NRS, $) {
 		var html = "";
 		var id = 'good_'+ String(good.goods).escapeHTML();
         var picture = new Image();
+
 		if (!good.hasImage) {
             picture.src = "img/No_image_available.png";
         }
@@ -37,26 +38,30 @@ var NRS = (function(NRS, $) {
         }
 
 		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
+		html += "<div style='float:right'>";
 		html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>";
 		html += "<strong>" + $.t("seller") + '</strong>: <span><a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(good, "seller") + '\')">' + NRS.getAccountTitle(good, "seller") + "</a></span> ";
 		html += "(<a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='show_account_modal_action user_info'>" + $.t('info') + "</a>)<br>";
 		html += "<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.goods).escapeHTML() + "</a><br>";
+        html += "</div>";
+        html += "<div style='float:right;clear:both'>";
 
+        if (good.numberOfPurchases>0) {
+            html +=	"<div><span class='purchases'><strong>" + $.t("purchases", "Purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span></div>";
+        }
         if (good.numberOfPublicFeedbacks > 0) {
+            html += "<div>";
             html += "<a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "'data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback', 'Show Feedback') + "</a>";
+            html += "</div>"
         }
 
         html += "</div>";
-		html += "<table>";
-		html += "<tr><td style='padding: 0 15px;' rowspan = 4><img height='100' width='100' id='dgs_product_picture' src='"+ picture.src + "' /></td><td><h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3></td></tr>";
-		html += "<tr><td><div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div></td></tr>";
-		html += "<tr><td><div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div></div></td></tr>";
-		html += "<div><tr><td><span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; ";
-
-        if (good.numberOfPurchases>0) {
-		    html +=	"<span class='purchases'><strong>" + $.t("purchases", "Purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>&nbsp;&nbsp; ";
-		}
-
+        html += "</div>";
+		html += "<div style='float:left'><img height='100' width='100' id='dgs_product_picture' src='"+ picture.src + "' />&nbsp;&nbsp;&nbsp;&nbsp; </div>"
+		html += "<div><h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3></div>";
+		html += "<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>";
+		html += "<div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div></div>";
+		html += "<div><span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; ";
 		html += "<span class='tags' style='display:inline-block;'><strong>" + $.t("tags") + "</strong>: ";
 
 		var tags = good.parsedTags;
@@ -68,11 +73,8 @@ var NRS = (function(NRS, $) {
 		}
 
 		html += "</span>";
-		html += "</div>";
-		html += '</td></tr>';
-		html += '</table>';
 		html += '</div>';
-
+        html += '</div>';
 
 		return html;
 	};
@@ -316,6 +318,7 @@ var NRS = (function(NRS, $) {
 			topSection.hide();
 			searchCenter.hide();
 			pagination.hide();
+			$("#dgs_listings").hide();
             $("#dgs_search_results").hide();
             return;
 		}

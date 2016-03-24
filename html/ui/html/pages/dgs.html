@@ -143,19 +143,20 @@
     <section id="dgs_listings" class="content">
         <div class="col-xs-6">
             <div class="box box-primary">
-                <div class="box-header"><h3 class="box-title" data-i18n="recent_listings">Recent Listings</h3></div>
+                <div class="box-header"><h3 class="box-title" data-i18n="recent_listings" align="center">Recent Listings</h3></div>
                 <div class="box-body no-padding" id="recent_listings">
                     <script type="text/x-handlebars-template">
                         <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
                             <table class="table table-striped" id="recent_listings_table">
                                 <thead>
-                                <tr>
-                                    <th>{{i18n "timestamp"}}</th>
-                                    <th>{{i18n "name"}}</th>
-                                    <th>{{i18n "price"}}</th>
-                                    <th>{{i18n "seller"}}</th>
-                                    <th style="text-align:center;">{{i18n "image"}}</th>
-                                </tr>
+                                    <tr>
+                                        <th>{{i18n "timestamp_listing"}}</th>
+                                        <th>{{i18n "name"}}</th>
+                                        <th>{{i18n "price"}}</th>
+                                        <th>{{i18n "buyer"}}</th>
+                                        <th></th>
+                                        <!-- <th>{{i18n "image"}}</th> -->
+                                    </tr>
                                 </thead>
                                 <tbody>
                                 {{#each data}}
@@ -165,6 +166,7 @@
                                     <td style="vertical-align:middle;">{{{price}}}</td>
                                     <td style="vertical-align:middle;">{{{account}}}</td>
                                     <td style="vertical-align:middle; text-align:center;">{{{image}}}</td>
+
                                 </tr>
                                 {{/each}}
                                 </tbody>
@@ -182,40 +184,40 @@
         </div>
         <div class="col-xs-6">
             <div class="box box-primary">
-                <div class="box-header"><h3 class="box-title" data-i18n="recent_purchases">Recent Purchases</h3></div>
+                <div class="box-header"><h3 class="box-title" data-i18n="recent_purchases"align="center">Recent Purchases</h3></div>
                 <div class="box-body no-padding" id="recent_purchases">
                     <script type="text/x-handlebars-template">
                         <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
                             <table class="table table-striped" id="recent_purchases_table">
                                 <thead>
-                                <tr>
-                                    <th>{{i18n "timestamp"}}</th>
-                                    <th>{{i18n "name"}}</th>
-                                    <th>{{i18n "price"}}</th>
-                                    <th>{{i18n "buyer"}}</th>
-                                    <th style="text-align:center;">{{i18n "image"}}</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {{#each data}}
-                                <tr>
-                                    <td style="vertical-align:middle;">{{{timestamp}}}</td>
-                                    <td style="vertical-align:middle;">{{{good}}}</td>
-                                    <td style="vertical-align:middle;">{{{price}}}</td>
-                                    <td style="vertical-align:middle;">{{{account}}}</td>
-                                    <td style="vertical-align:middle; text-align:center;">{{{image}}}</td>
-                                </tr>
-                                {{/each}}
-                                </tbody>
-                            </table>
-                            <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32"/></div>
-                            <div class="data-empty-container">
-                                <p>
-                                    <span>{{i18n "no_purchases"}}</span>
-                                </p>
-                            </div>
-                        </div>
-                    </script>
+                                    <tr>
+                                       <th>{{i18n "timestamp_buy"}}</th>
+                                       <th>{{i18n "name"}}</th>
+                                       <th>{{i18n "price"}}</th>
+                                       <th>{{i18n "buyer"}}</th>
+                                       <th></th>
+                                    </tr>
+                               </thead>
+                               <tbody>
+                               {{#each data}}
+                               <tr>
+                                   <td style="vertical-align:middle;">{{{timestamp}}}</td>
+                                   <td style="vertical-align:middle;">{{{good}}}</td>
+                                   <td style="vertical-align:middle;">{{{price}}}</td>
+                                   <td style="vertical-align:middle;">{{{account}}}</td>
+                                   <td style="vertical-align:middle; text-align:center;">{{{image}}}</td>
+                               </tr>
+                               {{/each}}
+                               </tbody>
+                           </table>
+                           <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32"/></div>
+                           <div class="data-empty-container">
+                               <p>
+                                   <span>{{i18n "no_purchases"}}</span>
+                               </p>
+                           </div>
+                       </div>
+                   </script>
                 </div>
             </div>
         </div>

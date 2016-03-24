@@ -1647,5 +1647,7 @@
   "no_purchases": "No Recent Purchases",
   "recent_listings": "Recent Listings",
   "recent_purchases": "Recent Purchases",
-  "image": "Image"
+  "image": "Image",
+  "timestamp_listing": "Listing Date",
+  "timestamp_buy": "Purchase Date"
 }
