@@ -101,7 +101,7 @@
         <panel classname="CheckedHelloPanel" id="hellopanel"/>
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
-        <panel classname="TargetPanel">
+        <panel classname="TargetPanel"/>
         <panel classname="ShortcutPanel" condition="!izpack.macinstall"/>
         <panel classname="InstallPanel"/>
         <panel classname="SimpleFinishPanel"/>
