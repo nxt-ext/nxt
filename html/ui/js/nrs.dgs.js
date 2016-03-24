@@ -51,13 +51,13 @@ var NRS = (function(NRS, $) {
         }
         if (good.numberOfPublicFeedbacks > 0) {
             html += "<div>";
-            html += "<a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "'data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback', 'Show Feedback') + "</a>";
+            html += "<a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback', 'Show Feedback') + "</a>";
             html += "</div>"
         }
 
         html += "</div>";
         html += "</div>";
-		html += "<div style='float:left'><img height='100' width='100' id='dgs_product_picture' src='"+ picture.src + "' />&nbsp;&nbsp;&nbsp;&nbsp; </div>"
+		html += "<div style='float:left'><img height='100' width='100' id='dgs_product_picture' src='"+ picture.src + "' />&nbsp;&nbsp;&nbsp;&nbsp; </div>";
 		html += "<div><h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3></div>";
 		html += "<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>";
 		html += "<div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div></div>";
@@ -1198,7 +1198,6 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.dgs_listings = function (table, api) {
-		event.preventDefault();
 		var listingsTable = $("#" + table + "_table");
 		listingsTable.find("tbody").empty();
 		listingsTable.parent().addClass("data-loading").removeClass("data-empty");
