@@ -301,6 +301,7 @@ var NRS = (function(NRS, $) {
 			topSection.hide();
 			searchCenter.hide();
 			pagination.hide();
+			$("#dgs_listings").hide();
             $("#dgs_search_results").hide();
             return;
 		}
@@ -1132,7 +1133,6 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.dgs_listings = function (table, api) {
-		event.preventDefault();
 		var listingsTable = $("#" + table + "_table");
 		listingsTable.find("tbody").empty();
 		listingsTable.parent().addClass("data-loading").removeClass("data-empty");
