@@ -490,7 +490,7 @@ var NRS = (function(NRS, $) {
     NRS.dgs_makebase64 = function (modal) {
     var example;
     if (modal == "dgs_listing_modal" ) {
-        example = "#dgs_product_picture_example"
+        example = "#dgs_product_picture_example";
     //Implementation of dgsPictureChange. Disable due to hardfork requirement
     } else if (modal == "dgs_picture_change_modal"){
         example = "#dgs_change_picture_example"
@@ -506,10 +506,10 @@ var NRS = (function(NRS, $) {
                 imageBase64 = output.target.result;
                 hexdata = imageBase64.split(",");
                 $(example).attr("src", imageBase64);
-            }
+            };
         reader.readAsDataURL(image);
         }
-    }
+    };
 
 	NRS.forms.dgsListing = function($modal) {
 		var data = NRS.getFormData($modal.find("form:first"));
@@ -1148,7 +1148,7 @@ var NRS = (function(NRS, $) {
 
 	$(".dgs_fulltext_search").on("submit", function(e) {
 		e.preventDefault();
-		
+
 		var query = $.trim($(this).find("input[name=fs_q]").val());
 
 		if (query != "") {
@@ -1173,7 +1173,7 @@ var NRS = (function(NRS, $) {
 		var $visible_modal = $(".modal.in");
 
 		if ($visible_modal.length) {
-			$visible_modal.modal("hide");
+            $visible_modal.modal("hide");
 		}
 
 		NRS.goToGoods($(this).data("seller"), $(this).data("goto-goods"));
