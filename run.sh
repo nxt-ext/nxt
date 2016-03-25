@@ -1,2 +1,7 @@
 #!/bin/sh
-java -cp classes:lib/*:conf:addons/classes nxt.Nxt
+if [ -x jre/bin/java ]; then
+    JAVA=./jre/bin/java
+else
+    JAVA=java
+fi
+${JAVA} -cp classes:lib/*:conf:addons/classes nxt.Nxt
