@@ -32,8 +32,7 @@ var NRS = (function(NRS, $) {
 
 		if (!good.hasImage) {
             picture.src = "img/No_image_available.png";
-        }
-        else {
+        } else {
             picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
         }
 
@@ -483,10 +482,8 @@ var NRS = (function(NRS, $) {
 					response.goods.pop();
 				}
 				for (var i = 0; i < response.goods.length; i++) {
-               var good = response.goods[i];
-               //Implementation of dgsPictureChange. Disable due to hardfork requirement
-               //rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_picture_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>"+ $.t("Change Picture") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
-               rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
+               		var good = response.goods[i];
+               		rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 				}
 			}
 			NRS.dataLoaded(rows);
@@ -498,14 +495,8 @@ var NRS = (function(NRS, $) {
 	};
 
     NRS.dgs_makebase64 = function (modal) {
-    var example;
-    if (modal == "dgs_listing_modal" ) {
-        example = "#dgs_product_picture_example";
-    //Implementation of dgsPictureChange. Disable due to hardfork requirement
-    } else if (modal == "dgs_picture_change_modal"){
-        example = "#dgs_change_picture_example"
-    }
-		$(example).attr("src", "img/No_image_available.png");
+        var example = "#dgs_product_picture_example";
+    	$(example).attr("src", "img/No_image_available.png");
         var input = $("#" + modal).find("input[name=image]");
         var reader = new FileReader();
         var image = input[0].files[0];
@@ -822,11 +813,6 @@ var NRS = (function(NRS, $) {
 		$("#dgs_product_picture_example").attr("src", "img/No_image_available.png");
 	});
 
-    //Implementation of dgsPictureChange. Disable due to hardfork requirement
-    $("#dgs_picture_change_modal").on("show.bs.modal", function() {
-		$("#dgs_change_picture_example").attr("src", "img/No_image_available.png");
-	});
-
 	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_feedback_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal, #dgs_view_refund_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
@@ -863,8 +849,7 @@ var NRS = (function(NRS, $) {
 						var picture = new Image();
 						if (!good.hasImage) {
 						    picture.src = "img/No_image_available.png";
-						}
-						else {
+						} else {
 							picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
 						}
 						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 5 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
@@ -1075,10 +1060,6 @@ var NRS = (function(NRS, $) {
 				$("#dgs_quantity_change_current_quantity, #dgs_quantity_change_quantity").val(String(response.quantity).escapeHTML());
 			} else if (type == "dgs_price_change_modal") {
 				$("#dgs_price_change_current_price, #dgs_price_change_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
-		    //Implementation of dgsPictureChange. Disable due to hardfork requirement
-		    } else if (type == "dgs_picture_change_modal") {
-		        $("#dgs_picture_change_current_quantity").val(String(response.quantity).escapeHTML());
-		        $("#dgs_picture_change_current_price").val(NRS.convertToNXT(response.priceNQT).escapeHTML());
 			} else if (type == "dgs_purchase_modal") {
 				$modal.find("input[name=recipient]").val(response.sellerRS);
 

@@ -328,7 +328,7 @@ var NRS = (function (NRS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        if (requestType == "uploadTaggedData") {
+        if (requestType == "uploadTaggedData" || requestType == "dgsListing") {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
@@ -339,7 +339,12 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 formData.append(key, data[key]);
             }
-            var file = $('#upload_file')[0].files[0];
+            var file;
+            if (requestType == "uploadTaggedData") {
+                file = $('#upload_file')[0].files[0];
+            } else if (requestType == "dgsListing") {
+                file = $('#dgs_listing_image')[0].files[0];
+            }
             if (!file) {
                 callback({
                     "errorCode": 3,
@@ -348,77 +353,32 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
             if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+                var errordesc;
+                if (requestType == "uploadTaggedData") {
+                    errordesc = "error_file_too_big";
+                } else if (requestType == "dgsListing") {
+                    errordesc = "error_image_too_big";
+                }
                 callback({
                     "errorCode": 3,
-                    "errorDescription": $.t("image_file_too_big", {
+                    "errorDescription": $.t(errordesc, {
                         "size": file.size,
                         "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
                     })
                 }, data);
                 return;
             }
-            formData.append("file", file); // file data
+            if (requestType == "uploadTaggedData") {
+                formData.append("file", file); // file data;
+            } else if (requestType == "dgsListing") {
+                formData.append("messageFile", file);
+            }
             type = "POST";
-        } else if (requestType == "dgsListing") {
-            contentType = false;
-            processData = false;
-            formData = new FormData();
-            for (var key in data) {
-                if (!data.hasOwnProperty(key)) {
-                    continue;
-                }
-                formData.append(key, data[key]);
-            }
-            var modal = "#dgs_listing_modal";
-            var imagefile = $(modal).find("input[name=image]");
-            var image = imagefile[0].files[0];
-            if (image) {
-                if (image.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
-                    callback({
-                        "errorCode": 3,
-                        "errorDescription": $.t("error_file_too_big", {
-                            "size": image.size,
-                            "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
-                        })
-                    }, data);
-                    return;
-                }
-            }
-            formData.append("messageFile", image);
-            type = "POST";
-            //Implementation of dgsPictureChange. Disable due to hardfork requirement
-            } else if (requestType == "dgsPictureChange") {
-                contentType = false;
-                processData = false;
-                formData = new FormData();
-                for (var key in data) {
-                    if (!data.hasOwnProperty(key)) {
-                        continue;
-                    }
-                    formData.append(key, data[key]);
-                }
-                var modal = "#dgs_picture_change_modal";
-                var imagefile = $(modal).find("input[name=image]");
-                var image = imagefile[0].files[0];
-                if (image) {
-                    if (image.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
-                        callback({
-                            "errorCode": 3,
-                            "errorDescription": $.t("error_file_too_big", {
-                                "size": image.size,
-                                "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
-                            })
-                        }, data);
-                    return;
-                    }
-                }
-                formData.append("messageFile", image);
-                type = "POST";
-            } else {
-                // JQuery defaults
-                contentType = "application/x-www-form-urlencoded; charset=UTF-8";
-                processData = true;
-            }
+        } else {
+            // JQuery defaults
+            contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+            processData = true;
+        }
 
         $.ajax({
             url: url,
