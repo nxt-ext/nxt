@@ -86,6 +86,7 @@ echo creating sh package
 echo "#!/bin/sh\nexec java -jar \"\${0}\"\n\n" > ${PACKAGE}.sh
 cat ${PACKAGE}.jar >> ${PACKAGE}.sh
 chmod a+rx ${PACKAGE}.sh
+rm -f ${PACKAGE}.jar
 
 echo creating change log ${CHANGELOG}
 echo "Release $1" > ${CHANGELOG}
@@ -95,13 +96,6 @@ echo >> ${CHANGELOG}
 echo "sha256:" >> ${CHANGELOG}
 echo >> ${CHANGELOG}
 sha256sum ${PACKAGE}.zip >> ${CHANGELOG}
-
-echo >> ${CHANGELOG}
-echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar" >> ${CHANGELOG}
-echo >> ${CHANGELOG}
-echo "sha256:" >> ${CHANGELOG}
-echo >> ${CHANGELOG}
-sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
 
 echo >> ${CHANGELOG}
 echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.sh" >> ${CHANGELOG}
@@ -118,7 +112,7 @@ echo >> ${CHANGELOG}
 echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-installer-${VERSION}.dmg" >> ${CHANGELOG}
 echo >> ${CHANGELOG}
 
-echo "The exe, dmg, jar and sh packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
+echo "The exe, dmg, and sh packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
 
 if [ "${OBFUSCATE}" = "obfuscate" ];
 then
@@ -135,20 +129,17 @@ cat changelogs/${CHANGELOG} >> ${CHANGELOG}
 echo >> ${CHANGELOG}
 
 gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.zip
-gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.jar
 gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.sh
 #gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.exe
 
 gpg --clearsign --sign-with 0x811D6940E1E4240C ${CHANGELOG}
 rm -f ${CHANGELOG}
 gpgv ${PACKAGE}.zip.asc ${PACKAGE}.zip
-gpgv ${PACKAGE}.jar.asc ${PACKAGE}.jar
 gpgv ${PACKAGE}.sh.asc ${PACKAGE}.sh
 #gpgv ${PACKAGE}.exe.asc ${PACKAGE}.exe
 gpgv ${CHANGELOG}.asc
 sha256sum -c ${CHANGELOG}.asc
 #jarsigner -verify ${PACKAGE}.zip
-jarsigner -verify ${PACKAGE}.jar
 jarsigner -verify ${PACKAGE}.sh
 
 
