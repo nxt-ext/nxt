@@ -5,5 +5,10 @@
 # transactions will be sent over tor only. Requires a tor proxy running
 # at localhost:9050. Set nxt.shareMyAddress=false when using tor.
 
-java -DsocksProxyHost=localhost -DsocksProxyPort=9050 -cp classes:lib/*:conf:addons/classes nxt.Nxt
+if [ -x jre/bin/java ]; then
+    JAVA=./jre/bin/java
+else
+    JAVA=java
+fi
+${JAVA} -DsocksProxyHost=localhost -DsocksProxyPort=9050 -Djava.security.manager -Djava.security.policy=nxt.policy -cp classes:lib/*:conf:addons/classes nxt.Nxt
 

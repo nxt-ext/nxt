@@ -122,6 +122,8 @@
             <file src="OPERATORS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="README.md" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="USERS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="nxt.policy" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="nxtdesktop.policy" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="conf/nxt-default.properties" targetdir="${INSTALL_PATH}/conf" override="true"/>
             <file src="conf/logging-default.properties" targetdir="${INSTALL_PATH}/conf" override="true"/>
             <fileset dir="lib" targetdir="${INSTALL_PATH}/lib" override="true" excludes=".gitignore"/>

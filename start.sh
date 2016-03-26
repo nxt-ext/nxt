@@ -16,6 +16,6 @@ if [ -x jre/bin/java ]; then
 else
     JAVA=java
 fi
-nohup ${JAVA} -cp classes:lib/*:conf:addons/classes -Dnxt.runtime.mode=desktop nxt.Nxt > /dev/null 2>&1 &
+nohup ${JAVA} -cp classes:lib/*:conf:addons/classes  -Djava.security.manager -Djava.security.policy=nxtdesktop.policy -Dnxt.runtime.mode=desktop nxt.Nxt > /dev/null 2>&1 &
 echo $! > ~/.nxt/nxt.pid
 cd - > /dev/null

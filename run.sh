@@ -4,4 +4,4 @@ if [ -x jre/bin/java ]; then
 else
     JAVA=java
 fi
-${JAVA} -cp classes:lib/*:conf:addons/classes nxt.Nxt
+${JAVA} -Djava.security.manager -Djava.security.policy=nxt.policy -cp classes:lib/*:conf:addons/classes nxt.Nxt
