@@ -62,6 +62,7 @@ var NRS = (function (NRS, $) {
 
         'SERVER': {},
         'MAX_TAGGED_DATA_DATA_LENGTH': 0,
+        'MAX_PRUNABLE_MESSAGE_LENGTH': 0,
         'GENESIS': '',
         'GENESIS_RS': '',
         'EPOCH_BEGINNING': 0,
@@ -94,6 +95,7 @@ var NRS = (function (NRS, $) {
                 NRS.constants.PHASING_HASH_ALGORITHMS = response.phasingHashAlgorithms;
                 NRS.constants.MINTING_HASH_ALGORITHMS = response.mintingHashAlgorithms;
                 NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
+                NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH = response.maxPrunableMessageLength;
                 NRS.constants.GENESIS = response.genesisAccountId;
                 NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
                 NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
@@ -193,10 +195,12 @@ var NRS = (function (NRS, $) {
             config.selector = "#upload_file";
             config.requestParam = "file";
             config.errorDescription = "error_file_too_big";
+            config.maxSize = NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH;
         } else if (requestType == "dgsListing") {
             config.selector = "#dgs_listing_image";
             config.requestParam = "messageFile";
             config.errorDescription = "error_image_too_big";
+            config.maxSize = NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH;
         }
         return config;
     };

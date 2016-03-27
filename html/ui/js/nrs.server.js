@@ -348,7 +348,7 @@ var NRS = (function (NRS, $, undefined) {
                 }, data);
                 return;
             }
-            if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+            if (file.size > config.maxSize) {
                 var description = config.errorDescription;
                 callback({
                     "errorCode": 3,
