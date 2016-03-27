@@ -40,9 +40,10 @@ var NRS = (function(NRS, $) {
 		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
 			html += "<table width='100%'>";
 				html += "<tr>";
-					html += "<td rowspan =20 width='110' style='vertical-align:top;'>";
-						html += "<img height='100' width='100' id='dgs_product_picture' src='"+ picture.src + "' />";
+					html += "<td rowspan =20 style='vertical-align:top;width:100px;height:100px;'>";
+						html += "<img style='max-height:100%;max-width:100%' id='dgs_product_picture' src='"+ picture.src + "' />";
 					html += "</td>";
+					html += "<td style='width:10px'>&nbsp;</td>";
 					html += "<td>";
 						html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>";
 							html += "<strong>" + $.t("seller") + '</strong>: <span><a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(good, "seller") + '\')">' + NRS.getAccountTitle(good, "seller") + "</a></span> ";
@@ -857,7 +858,7 @@ var NRS = (function(NRS, $) {
 						} else {
 							picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
 						}
-						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 5 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
+						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 20 height="100" width="100"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 						output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 						output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 						if (good.delisted) {
@@ -1046,7 +1047,7 @@ var NRS = (function(NRS, $) {
                 else {
 					picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
                 }
-				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 5 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
+				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 20 height="100" width="100"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 				output += "<tr><th><strong>" + $.t("date") + "</strong>:</th><td>" + NRS.formatTimestamp(response.timestamp) + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + " (" + '<a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(response, "seller") + '\')" data-dismiss="modal">View Store</a>' + ")</td></tr>";
@@ -1219,7 +1220,7 @@ var NRS = (function(NRS, $) {
                 else {
                     picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
                 }
-				var image = '<img height="100" width="100" src="' + picture.src + '"/>';
+				var image = '<img style="max-height:100%;max-width:100%" src="' + picture.src + '"/>';
 				var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
 				var account;
 				if (accountKey == "seller") {
