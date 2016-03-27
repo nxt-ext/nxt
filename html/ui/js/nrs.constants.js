@@ -183,6 +183,24 @@ var NRS = (function (NRS, $) {
             requestType == "markHost";
     };
 
+    NRS.isFileUploadRequest = function (requestType) {
+        return requestType == "uploadTaggedData" || requestType == "dgsListing";
+    };
+
+    NRS.getFileUploadConfig = function (requestType) {
+        var config = {};
+        if (requestType == "uploadTaggedData") {
+            config.selector = "#upload_file";
+            config.requestParam = "file";
+            config.errorDescription = "error_file_too_big";
+        } else if (requestType == "dgsListing") {
+            config.selector = "#dgs_listing_image";
+            config.requestParam = "messageFile";
+            config.errorDescription = "error_image_too_big";
+        }
+        return config;
+    };
+
     NRS.isApiEnabled = function(depends) {
         if (!depends) {
             return true;

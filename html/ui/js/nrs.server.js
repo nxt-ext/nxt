@@ -328,7 +328,7 @@ var NRS = (function (NRS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        if (requestType == "uploadTaggedData" || requestType == "dgsListing") {
+        if (NRS.isFileUploadRequest(requestType)) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
@@ -339,12 +339,8 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 formData.append(key, data[key]);
             }
-            var file;
-            if (requestType == "uploadTaggedData") {
-                file = $('#upload_file')[0].files[0];
-            } else if (requestType == "dgsListing") {
-                file = $('#dgs_listing_image')[0].files[0];
-            }
+            var config = NRS.getFileUploadConfig(requestType);
+            var file = $(config.selector)[0].files[0];
             if (!file) {
                 callback({
                     "errorCode": 3,
@@ -353,26 +349,17 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
             if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
-                var errordesc;
-                if (requestType == "uploadTaggedData") {
-                    errordesc = "error_file_too_big";
-                } else if (requestType == "dgsListing") {
-                    errordesc = "error_image_too_big";
-                }
+                var description = config.errorDescription;
                 callback({
                     "errorCode": 3,
-                    "errorDescription": $.t(errordesc, {
+                    "errorDescription": $.t(description, {
                         "size": file.size,
                         "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
                     })
                 }, data);
                 return;
             }
-            if (requestType == "uploadTaggedData") {
-                formData.append("file", file); // file data;
-            } else if (requestType == "dgsListing") {
-                formData.append("messageFile", file);
-            }
+            formData.append(config.requestParam, file); // file data;
             type = "POST";
         } else {
             // JQuery defaults
