@@ -17,7 +17,6 @@
 package nxt.http;
 
 import nxt.Generator;
-import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -35,7 +34,7 @@ public final class StopForging extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         JSONObject response = new JSONObject();
         if (secretPhrase != null) {
             Generator generator = Generator.stopForging(secretPhrase);
