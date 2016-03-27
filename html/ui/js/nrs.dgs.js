@@ -24,6 +24,7 @@ var NRS = (function(NRS, $) {
 		"page": "",
 		"searchStr": ""
 	};
+    var missingImage = "/img/no_image_available.png";
 
 	NRS.getMarketplaceItemHTML = function(good) {
 		var html = "";
@@ -31,7 +32,7 @@ var NRS = (function(NRS, $) {
         var picture = new Image();
 
 		if (!good.hasImage) {
-            picture.src = "img/No_image_available.png";
+            picture.src = missingImage;
         } else {
             picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
         }
@@ -495,8 +496,8 @@ var NRS = (function(NRS, $) {
 	};
 
     NRS.dgs_makebase64 = function (modal) {
-        var example = "#dgs_product_picture_example";
-    	$(example).attr("src", "img/No_image_available.png");
+        var example = $("#dgs_product_picture_example");
+        example.attr("src", missingImage);
         var input = $("#" + modal).find("input[name=image]");
         var reader = new FileReader();
         var image = input[0].files[0];
@@ -504,9 +505,7 @@ var NRS = (function(NRS, $) {
         img.src = window.URL.createObjectURL(image);
         img.onload = function() {
             reader.onload = function(output){
-                imageBase64 = output.target.result;
-                hexdata = imageBase64.split(",");
-                $(example).attr("src", imageBase64);
+                example.attr("src", output.target.result);
             };
         reader.readAsDataURL(image);
         }
@@ -810,7 +809,7 @@ var NRS = (function(NRS, $) {
 	};
 
 	$("#dgs_listing_modal").on("show.bs.modal", function() {
-		$("#dgs_product_picture_example").attr("src", "img/No_image_available.png");
+		$("#dgs_product_picture_example").attr("src", missingImage);
 	});
 
 	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_feedback_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal, #dgs_view_refund_modal").on("show.bs.modal", function(e) {
@@ -848,7 +847,7 @@ var NRS = (function(NRS, $) {
 						var output = "<table>";
 						var picture = new Image();
 						if (!good.hasImage) {
-						    picture.src = "img/No_image_available.png";
+						    picture.src = missingImage;
 						} else {
 							picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
 						}
@@ -1036,7 +1035,7 @@ var NRS = (function(NRS, $) {
 				var output = "<table>";
 				var picture = new Image();
                 if (!response.hasImage) {
-                    picture.src = "img/No_image_available.png";
+                    picture.src = missingImage;
                 }
                 else {
 					picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
@@ -1208,7 +1207,7 @@ var NRS = (function(NRS, $) {
 				}
 				var picture = new Image();
 				if (!item.hasImage) {
-                    picture.src = "img/No_image_available.png";
+                    picture.src = missingImage;
                 }
                 else {
                     picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
