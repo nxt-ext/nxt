@@ -38,44 +38,50 @@ var NRS = (function(NRS, $) {
         }
 
 		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
-		html += "<div style='float:right'>";
-		html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>";
-		html += "<strong>" + $.t("seller") + '</strong>: <span><a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(good, "seller") + '\')">' + NRS.getAccountTitle(good, "seller") + "</a></span> ";
-		html += "(<a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='show_account_modal_action user_info'>" + $.t('info') + "</a>)<br>";
-		html += "<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.goods).escapeHTML() + "</a><br>";
-        html += "</div>";
-        html += "<div style='float:right;clear:both'>";
+			html += "<table width='100%'>";
+				html += "<tr>";
+					html += "<td rowspan =20 width='110' style='vertical-align:top;'>";
+						html += "<img height='100' width='100' id='dgs_product_picture' src='"+ picture.src + "' />";
+					html += "</td>";
+					html += "<td>";
+						html += "<div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>";
+							html += "<strong>" + $.t("seller") + '</strong>: <span><a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(good, "seller") + '\')">' + NRS.getAccountTitle(good, "seller") + "</a></span> ";
+							html += "(<a href='#' data-user='" + NRS.getAccountFormatted(good, "seller") + "' class='show_account_modal_action user_info'>" + $.t('info') + "</a>)<br>";
+							html += "<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.goods).escapeHTML() + "</a><br>";
+							html += "<strong>" + $.t("timestamp_listing") + "</strong>: " + NRS.formatTimestamp(good.timestamp);
+        				html += "</div>";
+						html += "<div><h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3></div>";
+						html += "<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>";
+						html += "<div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div>";
+							if (good.numberOfPublicFeedbacks > 0) {
+								html += "<span style='float:right;clear:right;'><a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback', 'Show Feedback') + "</a></span>";
+							}
+						html += "</div>";
+						html += "<div>";
+							html += "<span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; ";
+							html += "<span class='tags' style='display:inline-block;'><strong>" + $.t("tags") + "</strong>: ";
 
-        if (good.numberOfPurchases>0) {
-            html +=	"<div><span class='purchases'><strong>" + $.t("purchases", "Purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span></div>";
-        }
-        if (good.numberOfPublicFeedbacks > 0) {
-            html += "<div>";
-            html += "<a href='#' class='feedback' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_show_feedback_modal'>" + $.t('show_feedback', 'Show Feedback') + "</a>";
-            html += "</div>"
-        }
+							var tags = good.parsedTags;
+							for (var i=0; i<tags.length; i++) {
+								html += '<span style="display:inline-block;background-color:#fff;padding:2px 5px 2px 5px;border:1px solid #f2f2f2;">';
+								html += '<a href="#" class="tags" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
+								html += String(tags[i]).escapeHTML() + '</a>';
+								html += '</span>';
+							}
 
-        html += "</div>";
-        html += "</div>";
-		html += "<div style='float:left'><img height='100' width='100' id='dgs_product_picture' src='"+ picture.src + "' />&nbsp;&nbsp;&nbsp;&nbsp; </div>";
-		html += "<div><h3 class='title'><a href='#' data-goods='" + String(good.goods).escapeHTML() + "' data-toggle='modal' data-target='#dgs_purchase_modal'>" + String(good.name).escapeHTML() + "</a></h3></div>";
-		html += "<div class='price'><strong>" + NRS.formatAmount(good.priceNQT) + " NXT</strong></div>";
-		html += "<div class='showmore'><div class='moreblock description'>" + String(good.description).autoLink().nl2br() + "</div></div>";
-		html += "<div><span class='quantity'><strong>" + $.t("quantity") + "</strong>: " + NRS.format(good.quantity) + "</span>&nbsp;&nbsp; ";
-		html += "<span class='tags' style='display:inline-block;'><strong>" + $.t("tags") + "</strong>: ";
+							html += "</span>";
 
-		var tags = good.parsedTags;
-		for (var i=0; i<tags.length; i++) {
-			html += '<span style="display:inline-block;background-color:#fff;padding:2px 5px 2px 5px;border:1px solid #f2f2f2;">';
-			html += '<a href="#" class="tags" onclick="event.preventDefault(); NRS.dgs_search_tag(\'' + String(tags[i]).escapeHTML() + '\');">';
-			html += String(tags[i]).escapeHTML() + '</a>';
-			html += '</span>';
-		}
+							if (good.numberOfPurchases>0) {
+								html +=	"<span class='purchases' style='float:right;clear:right;'><strong>" + $.t("purchases", "Purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>";
+							}
 
-		html += "</span>";
-		html += '</div>';
+
+
+						html += '</div>';
+					html += "</td>";
+				html += "</tr>";
+			html += "</table>";
         html += '</div>';
-
 		return html;
 	};
 
@@ -1041,8 +1047,9 @@ var NRS = (function(NRS, $) {
 					picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
                 }
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 5 width = 100><img height="100" width="100" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
+				output += "<tr><th><strong>" + $.t("date") + "</strong>:</th><td>" + NRS.formatTimestamp(response.timestamp) + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
-				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + "</td></tr>";
+				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + " (" + '<a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(response, "seller") + '\')" data-dismiss="modal">View Store</a>' + ")</td></tr>";
 				if (response.delisted) {
 					output += "<tr><th><strong>" + $.t("status") + "</strong>:</th><td>" + $.t("no_longer_for_sale") + "</td></tr>";
 				} else {
