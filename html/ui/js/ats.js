@@ -162,7 +162,7 @@ var ATS = (function(ATS, $, undefined) {
                 if (!params.hasOwnProperty(key)) {
                     continue;
                 }
-                url += key + "=" + params[key] + "&";
+                url += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]) + "&";
             }
             window.location = url;
             return false;
