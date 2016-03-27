@@ -17,11 +17,14 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Appendix;
 import nxt.Attachment;
 import nxt.Constants;
 import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.JSON;
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MediaType;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -66,17 +69,12 @@ public final class DGSListing extends CreateTransaction {
             return INCORRECT_DGS_LISTING_TAGS;
         }
 
-        //TODO: allow only prunable, binary, image message attachments
-        /*
-        String messageValue = Convert.emptyToNull(req.getParameter("message"));
-        if (messageValue != null) {
-            if (!"true".equalsIgnoreCase(req.getParameter("messageIsPrunable"))) {
-                return MESSAGE_NOT_PRUNABLE;
-            }
-            if (!"false".equalsIgnoreCase(req.getParameter("messageIsText"))) {
+        Appendix.PrunablePlainMessage prunablePlainMessage = (Appendix.PrunablePlainMessage)ParameterParser.getPlainMessage(req, true);
+        if (prunablePlainMessage != null) {
+            if (prunablePlainMessage.isText()) {
                 return MESSAGE_NOT_BINARY;
             }
-            byte[] image = Convert.parseHexString(messageValue);
+            byte[] image = prunablePlainMessage.getMessage();
             Tika tika = new Tika();
             String mediaTypeName = tika.detect(image);
             MediaType mediaType = MediaType.parse(mediaTypeName);
@@ -84,20 +82,11 @@ public final class DGSListing extends CreateTransaction {
                 return MESSAGE_NOT_IMAGE;
             }
         }
-        */
 
         Account account = ParameterParser.getSenderAccount(req);
         Attachment attachment = new Attachment.DigitalGoodsListing(name, description, tags, quantity, priceNQT);
         return createTransaction(req, account, attachment);
 
-    }
-
-    private static final JSONStreamAware MESSAGE_NOT_PRUNABLE;
-    static {
-        JSONObject response = new JSONObject();
-        response.put("errorCode", 7);
-        response.put("errorDescription", "Only prunable message attachments accepted as DGS listing images");
-        MESSAGE_NOT_PRUNABLE = JSON.prepare(response);
     }
 
     private static final JSONStreamAware MESSAGE_NOT_BINARY;
