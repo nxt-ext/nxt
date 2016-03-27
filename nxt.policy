@@ -16,7 +16,21 @@ grant {
   permission javax.net.ssl.SSLPermission "setHostnameVerifier";
   permission java.net.NetPermission "getCookieHandler";
   permission java.awt.AWTPermission "*";
-  permission java.net.URLPermission "http:*", "*";
-  permission java.net.URLPermission "https:*", "*";
+  permission java.net.URLPermission "http:*", "*:*";
+  permission java.net.URLPermission "https:*", "*:*";
+  permission java.lang.RuntimePermission "getFileStoreAttributes";
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
+  permission java.net.NetPermission "getNetworkInformation";
 };
 
+grant codeBase "file:classes/-" {
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+};
+
+grant codeBase "file:lib/-" {
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+};
+
+grant codeBase "file:nxt.jar" {
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+};
