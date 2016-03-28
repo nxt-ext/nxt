@@ -3197,10 +3197,12 @@ hr {
   white-space:nowrap;
   padding-right:5px;
 }
-
+/*
+Removed due to pictures
 .purchase_info td {
   width:99%;
 }
+*/
 .goods_info h3, .purchase_info h3 {
   margin-bottom:5px;
   margin-top:0px;

@@ -82,6 +82,21 @@ https://bitbucket.org/JeanLucPicard/nxt/pull-requests/42/added-page-redirect-mod
 The Marketplace has been enhanced by adding recent listings and recent
 purchases tables, showing the last 10 goods listed or purchased.
 
+Marketplace listings now can have images. Image files are uploaded as prunable
+unencrypted binary message attachments to the DGSListing transaction. A new
+messageFile file parameter has been added to the dgsListing API, to allow
+direct upload of files as multipart form data. This parameter is also supported
+by all createTransaction APIs which allow message attachments, but is not
+exposed on their /test API pages.
+
+Image attachments that have been pruned are retrieved automatically from
+archival nodes when the user views the page.
+
+A new downloadPrunableMessage API has been added, to allow downloading of
+prunable message attachments directly as binary data. An optional secretPhrase
+parameter is supported, to allow decryption and downloading of the encrypted
+part of the message instead of the plain text part.
+
 The nxt.apiSSLCiphers property can be used to select which SSL ciphers should
 be enabled for the API server when using SSL.
 

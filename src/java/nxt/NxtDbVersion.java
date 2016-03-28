@@ -1162,6 +1162,8 @@ class NxtDbVersion extends DbVersion {
                     throw new RuntimeException(e.toString(), e);
                 }
             case 479:
+                apply("ALTER TABLE goods ADD COLUMN IF NOT EXISTS has_image BOOLEAN NOT NULL DEFAULT FALSE");
+            case 480:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

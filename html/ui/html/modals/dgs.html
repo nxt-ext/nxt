@@ -21,7 +21,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="list_product_for_sale">List Product For Sale</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
@@ -53,6 +53,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="dgs_listing_image" data-i18n="image">Image</label>
+                                <input type="file" name="image" id="dgs_listing_image" class="form-control" tabindex="6" onchange='NRS.dgs_makebase64("dgs_listing_modal")'>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6" style="width:100px;height:100px;">
+                            <img style='max-height:100%;max-width:100%' id="dgs_product_picture_example" src="/img/no_image_available.png"/>
+                        </div>
+                    </div>
                     <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
                     <div data-replace-with-modal-template="advanced_deadline_template"></div>
@@ -60,7 +71,8 @@
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
                     <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-
+                    <input type="hidden" name="messageIsPrunable" value="true" />
+                    <input type="hidden" name="messageIsText" value="false" />
                     <input type="hidden" name="request_type" value="dgsListing" />
                 </form>
             </div>
@@ -81,7 +93,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="confirm_marketplace_deletion">Confirm Marketplace Deletion</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <p data-i18n="confirm_marketplace_deletion_help">Please confirm if you want to delete this item.</p>
@@ -117,7 +129,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_item_price_change">Marketplace Item Price Change</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <input type="hidden" name="goods" id="dgs_price_change_goods" value="" />
@@ -169,7 +181,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_item_quantity_change">Marketplace Item Quantity Change</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <input type="hidden" name="goods" id="dgs_quantity_change_goods" value="" />
@@ -218,7 +230,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="product_info">Product Info</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="row">
@@ -240,7 +252,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="product_feedback">Product Feedback</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <div class="data-container modal_content" style="max-height: 350px; overflow: auto; display: block;">
                     <table class="table">
                     </table>
@@ -261,7 +273,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_purchase">Marketplace Purchase</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="row">
@@ -275,6 +287,7 @@
                         <label for="dgs_total_purchase_price" data-i18n="price">PRICE</label>
                         <p id="dgs_total_purchase_price"></p>
                     </div>
+
                     <div class="row">
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <div class="form-group">
@@ -297,7 +310,6 @@
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
                     <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-
                     <input type="hidden" name="request_type" value="dgsPurchase" />
                 </form>
             </div>
@@ -318,7 +330,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_purchase_delivery">Marketplace Purchase Delivery</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="row">
@@ -331,11 +343,11 @@
                         <label for="dgs_delivery_data" data-i18n="data">DATA</label>
                         <textarea class="form-control" id="dgs_delivery_data" name="data" rows="3" tabindex="2"></textarea>
                         <div style="margin-top:3px;">
-                            <label style="font-weight:normal;color:#666" data-i18n="data_is_encrypted">Data is encrypted.</span></label>
+                            <label style="font-weight:normal;color:#666" data-i18n="data_is_encrypted">Data is encrypted.</label>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="dgs_delivery_discount" data-i18n="discount">DISCOUNT</label>    
+                        <label for="dgs_delivery_discount" data-i18n="discount">DISCOUNT</label>
                         <div class="input-group">
                             <input type="number" name="discountNXT" id="dgs_delivery_discount" class="form-control" min="0" placeholder="Discount" data-i18n="discount" step="any" data-default="0" value="0" tabindex="3">
                             <span class="input-group-addon">NXT</span>
@@ -369,7 +381,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_delivery">Marketplace Delivery</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="row">
@@ -393,7 +405,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_purchase">Marketplace Purchase</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="row" style="margin-bottom:0">
@@ -416,7 +428,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_refund">Marketplace Refund</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="row">
@@ -439,7 +451,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_purchase_refund">Marketplace Purchase Refund</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="row">
@@ -483,7 +495,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="marketplace_purchase_feedback">Marketplace Purchase Feedback</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <input type="hidden" name="recipient" id="dgs_feedback_recipient" value="" />
@@ -501,9 +513,6 @@
                             <option value="private" data-i18n="private_feedback">Private Feedback</option>
                             <option value="public" data-i18n="public_feedback">Public Feedback</option>
                         </select>
-                        <div style="margin-top:3px">
-                            <label for="dgs_feedback_permanent" style="font-weight:normal;color:#666"><input type="checkbox" name="permanent_message" id="dgs_feedback_permanent" value="1" data-default="unchecked" /> <span data-i18n="permanent_message">Message is Never Deleted</span></label>
-                        </div>
                     </div>
                     <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
@@ -512,7 +521,7 @@
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
                     <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-                    
+                    <input type="hidden" name="permanent_message" value="true" />
                     <input type="hidden" name="request_type" value="dgsFeedback" />
                 </form>
             </div>
