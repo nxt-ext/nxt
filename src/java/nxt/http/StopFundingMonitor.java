@@ -75,7 +75,7 @@ public class StopFundingMonitor extends APIServlet.APIRequestHandler {
             }
             HoldingType holdingType = ParameterParser.getHoldingType(req);
             long holdingId = ParameterParser.getHoldingId(req, holdingType);
-            String property = ParameterParser.getAccountProperty(req);
+            String property = ParameterParser.getAccountProperty(req, true);
             boolean stopped = FundingMonitor.stopMonitor(holdingType, holdingId, property, accountId);
             response.put("stopped", stopped ? 1 : 0);
         } else {

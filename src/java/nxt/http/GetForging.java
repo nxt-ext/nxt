@@ -20,7 +20,6 @@ import nxt.Account;
 import nxt.Generator;
 import nxt.Nxt;
 import nxt.crypto.Crypto;
-import nxt.util.Convert;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -42,7 +41,7 @@ public final class GetForging extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         int elapsedTime = Nxt.getEpochTime() - Nxt.getBlockchain().getLastBlock().getTimestamp();
         if (secretPhrase != null) {
             Account account = Account.getAccount(Crypto.getPublicKey(secretPhrase));

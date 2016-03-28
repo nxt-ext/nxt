@@ -373,6 +373,7 @@ public final class APIServlet extends HttpServlet {
         map.put("startFundingMonitor", StartFundingMonitor.instance);
         map.put("stopFundingMonitor", StopFundingMonitor.instance);
         map.put("getFundingMonitor", GetFundingMonitor.instance);
+        map.put("downloadPrunableMessage", DownloadPrunableMessage.instance);
 
         API.disabledAPIs.forEach(api -> {
             APIRequestHandler handler = map.remove(api);

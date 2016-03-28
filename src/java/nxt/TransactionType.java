@@ -2208,6 +2208,7 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
+                //TODO: at next hard fork, add validation that only prunable, binary, image message attachments are allowed
             }
 
             @Override

@@ -27,7 +27,6 @@ import java.io.IOException;
 
 import static nxt.http.JSONResponses.INCORRECT_FILE;
 import static nxt.http.JSONResponses.INCORRECT_TOKEN;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
 
 public final class GenerateFileToken extends APIServlet.APIRequestHandler {
@@ -40,10 +39,7 @@ public final class GenerateFileToken extends APIServlet.APIRequestHandler {
 
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        String secretPhrase = req.getParameter("secretPhrase");
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        }
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         byte[] data;
         try {
             Part part = req.getPart("file");

@@ -17,13 +17,13 @@
 package nxt.http;
 
 import nxt.Token;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static nxt.http.JSONResponses.INCORRECT_WEBSITE;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_WEBSITE;
 
 
@@ -36,13 +36,11 @@ public final class GenerateToken extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        String secretPhrase = req.getParameter("secretPhrase");
-        String website = req.getParameter("website");
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        } else if (website == null) {
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
+        String website = Convert.emptyToNull(req.getParameter("website"));
+        if (website == null) {
             return MISSING_WEBSITE;
         }
 

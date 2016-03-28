@@ -20,6 +20,7 @@ import nxt.Account;
 import nxt.FundingMonitor;
 import nxt.HoldingType;
 import nxt.crypto.Crypto;
+import nxt.util.Filter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -27,21 +28,20 @@ import org.json.simple.JSONStreamAware;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import static nxt.http.JSONResponses.MONITOR_NOT_STARTED;
-
 /**
  * Get a funding monitor
  * <p>
- * A single monitor will be returned when the secret phrase is specified.
- * The monitor is identified by the secret phrase, holding and account property.
+ * The monitors for a single funding account will be returned when the secret phrase is specified.
+ * A single monitor will be returned if holding and property are specified.
+ * Otherwise, all monitors for the funding account will be returned
  * The administrator password is not required and will be ignored.
  * <p>
- * When the administrator password is specified, a single monitor can be
- * returned by specifying the funding account, holding and account property.
- * If no account is specified, all monitors will be returned.
+ * When the administrator password is specified, all monitors will be returned
+ * unless the funding account is also specified.  A single monitor will be returned if
+ * holding and property are specified.  Otherwise, all monitors for the
+ * funding account will be returned.
  * <p>
- * The monitor holding type and account property name must be specified when the secret
- * phrase or account is specified. Holding type codes are listed in getConstants.
+ * Holding type codes are listed in getConstants.
  * In addition, the holding identifier must be specified when the holding type is ASSET or CURRENCY.
  */
 public class GetFundingMonitor extends APIServlet.APIRequestHandler {
@@ -62,40 +62,47 @@ public class GetFundingMonitor extends APIServlet.APIRequestHandler {
     @Override
     JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         String secretPhrase = ParameterParser.getSecretPhrase(req, false);
-        long accountId = ParameterParser.getAccountId(req, false);
+        long account = ParameterParser.getAccountId(req, false);
         boolean includeMonitoredAccounts = "true".equalsIgnoreCase(req.getParameter("includeMonitoredAccounts"));
         if (secretPhrase == null) {
             API.verifyPassword(req);
         }
-        if (secretPhrase != null || accountId != 0) {
+        List<FundingMonitor> monitors;
+        if (secretPhrase != null || account != 0) {
             if (secretPhrase != null) {
-                if (accountId != 0) {
-                    if (Account.getId(Crypto.getPublicKey(secretPhrase)) != accountId) {
+                if (account != 0) {
+                    if (Account.getId(Crypto.getPublicKey(secretPhrase)) != account) {
                         return JSONResponses.INCORRECT_ACCOUNT;
                     }
                 } else {
-                    accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
+                    account = Account.getId(Crypto.getPublicKey(secretPhrase));
                 }
             }
-            HoldingType holdingType = ParameterParser.getHoldingType(req);
-            long holdingId = ParameterParser.getHoldingId(req, holdingType);
-            String property = ParameterParser.getAccountProperty(req);
-            FundingMonitor monitor = FundingMonitor.getMonitor(holdingType, holdingId, property, accountId);
-            if (monitor == null) {
-                return MONITOR_NOT_STARTED;
+            final long accountId = account;
+            final HoldingType holdingType = ParameterParser.getHoldingType(req);
+            final long holdingId = ParameterParser.getHoldingId(req, holdingType);
+            final String property = ParameterParser.getAccountProperty(req, false);
+            Filter<FundingMonitor> filter;
+            if (property != null) {
+                filter = (monitor) -> monitor.getAccountId() == accountId &&
+                        monitor.getProperty().equals(property) &&
+                        monitor.getHoldingType() == holdingType &&
+                        monitor.getHoldingId() == holdingId;
+            } else {
+                filter = (monitor) -> monitor.getAccountId() == accountId;
             }
-            return JSONData.accountMonitor(monitor, includeMonitoredAccounts);
+            monitors = FundingMonitor.getMonitors(filter);
         } else {
-            List<FundingMonitor> monitors = FundingMonitor.getAllMonitors();
-            JSONObject response = new JSONObject();
-            JSONArray jsonArray = new JSONArray();
-            monitors.forEach(monitor -> {
-                JSONObject monitorJSON = JSONData.accountMonitor(monitor, includeMonitoredAccounts);
-                jsonArray.add(monitorJSON);
-            });
-            response.put("monitors", jsonArray);
-            return response;
+            monitors = FundingMonitor.getAllMonitors();
         }
+        JSONObject response = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        monitors.forEach(monitor -> {
+            JSONObject monitorJSON = JSONData.accountMonitor(monitor, includeMonitoredAccounts);
+            jsonArray.add(monitorJSON);
+        });
+        response.put("monitors", jsonArray);
+        return response;
     }
 
     @Override

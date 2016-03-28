@@ -156,13 +156,13 @@ var ATS = (function(ATS, $, undefined) {
         if (form.encoding == "multipart/form-data") {
             uploadField = $('#' + fileParameter + params["requestType"]);
         }
-        if (params["requestType"] == "downloadTaggedData") {
+        if (params["requestType"] == "downloadTaggedData" || params["requestType"] == "downloadPrunableMessage") {
             url += "?";
             for (key in params) {
                 if (!params.hasOwnProperty(key)) {
                     continue;
                 }
-                url += key + "=" + params[key] + "&";
+                url += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]) + "&";
             }
             window.location = url;
             return false;
