@@ -14,33 +14,43 @@
  *                                                                            *
  ******************************************************************************/
 
-/**
- * @depends {nrs.js}
- */
-var NRS = (function (NRS) {
+package nxt.addons;
 
-    var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
+import nxt.Nxt;
+import nxt.util.Logger;
 
-    NRS.isIndexedDBSupported = function() {
-        return window.indexedDB !== undefined;
-    };
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-    NRS.isCoinExchangePageAvailable = function() {
-        return !isDesktopApplication; // JavaFX does not support CORS required by ShapeShift
-    };
+public final class AddOns {
 
-    NRS.isWebWalletLinkVisible = function() {
-        // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
-        return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
-    };
+    private static final List<AddOn> addOns;
+    static {
+        List<AddOn> addOnsList = new ArrayList<>();
+        Nxt.getStringListProperty("nxt.addOns").forEach(addOn -> {
+            try {
+                addOnsList.add((AddOn)Class.forName(addOn).newInstance());
+            } catch (ReflectiveOperationException e) {
+                Logger.logErrorMessage(e.getMessage(), e);
+            }
+        });
+        addOns = Collections.unmodifiableList(addOnsList);
+        addOns.forEach(addOn -> {
+            Logger.logInfoMessage("Initializing " + addOn.getClass().getName());
+            addOn.init();
+        });
+    }
 
-    NRS.isPollGetState = function() {
-        return !isDesktopApplication; // When using JavaFX do not poll the server
-    };
+    public static void init() {}
 
-    NRS.isExportContactsAvailable = function() {
-        return !isDesktopApplication; // When using JavaFX you cannot export the contact list
-    };
+    public static void shutdown() {
+        addOns.forEach(addOn -> {
+            Logger.logShutdownMessage("Shutting down " + addOn.getClass().getName());
+            addOn.shutdown();
+        });
+    }
 
-    return NRS;
-}(NRS || {}, jQuery));
+    private AddOns() {}
+
+}

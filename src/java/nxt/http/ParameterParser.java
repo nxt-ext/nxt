@@ -522,9 +522,9 @@ final class ParameterParser {
         return holdingId;
     }
 
-    static String getAccountProperty(HttpServletRequest req) throws ParameterException {
+    static String getAccountProperty(HttpServletRequest req, boolean isMandatory) throws ParameterException {
         String property = Convert.emptyToNull(req.getParameter("property"));
-        if (property == null) {
+        if (property == null && isMandatory) {
             throw new ParameterException(MISSING_PROPERTY);
         }
         return property;
@@ -594,7 +594,25 @@ final class ParameterParser {
                 throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
             }
         }
-        return null;
+        if (req.getContentType() == null || !req.getContentType().startsWith("multipart/form-data")) {
+            return null;
+        }
+        try {
+            Part part = req.getPart("messageFile");
+            if (part == null) {
+                return null;
+            }
+            FileData fileData = new FileData(part).invoke();
+            byte[] message = fileData.getData();
+            if (prunable) {
+                return new Appendix.PrunablePlainMessage(message);
+            } else {
+                return new Appendix.Message(message);
+            }
+        } catch (IOException | ServletException e) {
+            Logger.logDebugMessage("error in reading file data", e);
+            throw new ParameterException(INCORRECT_ARBITRARY_MESSAGE);
+        }
     }
 
     static Appendix getEncryptedMessage(HttpServletRequest req, Account recipient, boolean prunable) throws ParameterException {

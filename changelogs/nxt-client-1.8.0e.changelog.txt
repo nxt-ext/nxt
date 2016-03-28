@@ -27,6 +27,18 @@ command line, use the new start.sh script to start the client in desktop mode,
 and the corresponding stop.sh script to stop it. The start.sh and stop.sh
 scripts can be run from any directory.
 
+The jar installer package has been replaced with a self-extracting shell script
+package nxt-client-1.8.0e.sh, which Unix users can just run, or click on, in
+order to launch the installer. An advantage of using the installer instead of
+the zip package is that the installer will create the above mentioned menu
+shortcuts and desktop icons, and will also automatically remove old libraries
+from previous installations in the same directory.
+
+A known bug (of IzPack it seems) is that on Unix the installer fails to create
+desktop icons when installing in a not yet existing target directory. It will
+also fail to remove old menu shortcuts and desktop icons, so first running an
+uninstall of a previous installation is still advisable.
+
 Incompatible change:
 
 Note that when run in desktop mode on Unix, the ~/.nxt directory is now used to
@@ -57,7 +69,8 @@ than the interval configured for the monitor.
 
 The APIs for the Funding Monitor feature are StartFundingMonitor,
 GetFundingMonitor, and StopFundingMonitor. Detailed documentation for those is
-provided in the API javadoc files.
+provided in the API javadoc files. A user interface for setting and viewing
+currently running Funding Monitors is accessible from under the cogwheel menu.
 
 
 Client UI page or modal redirection. By adding page or modal parameters to the
@@ -65,6 +78,24 @@ http://localhost:7876/index.html URL, the client can be redirected to open a
 specific page or modal pop-up, with pre-populated parameter values.
 For usage example, see:
 https://bitbucket.org/JeanLucPicard/nxt/pull-requests/42/added-page-redirect-modal-popup-with
+
+The Marketplace has been enhanced by adding recent listings and recent
+purchases tables, showing the last 10 goods listed or purchased.
+
+Marketplace listings now can have images. Image files are uploaded as prunable
+unencrypted binary message attachments to the DGSListing transaction. A new
+messageFile file parameter has been added to the dgsListing API, to allow
+direct upload of files as multipart form data. This parameter is also supported
+by all createTransaction APIs which allow message attachments, but is not
+exposed on their /test API pages.
+
+Image attachments that have been pruned are retrieved automatically from
+archival nodes when the user views the page.
+
+A new downloadPrunableMessage API has been added, to allow downloading of
+prunable message attachments directly as binary data. An optional secretPhrase
+parameter is supported, to allow decryption and downloading of the encrypted
+part of the message instead of the plain text part.
 
 The nxt.apiSSLCiphers property can be used to select which SSL ciphers should
 be enabled for the API server when using SSL.
@@ -81,21 +112,26 @@ automatically, as well as any existing files under the classes and html
 directories, excluding html/ui/plugins.
 
 
-Server-side addOns:
+Server-side add-ons:
 
 It is now possible to trigger script execution, or really add any custom Java
 code to the server, by writing a class which implements the nxt.addons.AddOn
 interface, making sure it is on the classpath, and enabling it by adding its
-name to the nxt.addOns property. See the example addOns in the nxt.addons
-package. The AfterStart and BeforeShutdown addOns can be used to trigger
+name to the nxt.addOns property. See the example add-ons in the nxt.addons
+package. The AfterStart and BeforeShutdown add-ons can be used to trigger
 scripts to be run just after the server has started, and just before shutdown.
-Java source files for addons can be placed under addons/src to be compiled with
+Java source files for add-ons can be placed under addons/src to be compiled with
 the compile.sh script, and the resulting class files under addons/classes will
 be included on the classpath at runtime.
 
 This is an unsupported feature for developers only. While in the 1.x series
 the Java API is expected to be stable, it will undergo significant refactoring
-in 2.0. Keep any custom addOn code simple, and be prepared to have to change it
+in 2.0. Keep any custom add-on code simple, and be prepared to have to change it
 for 2.0 or discard it. It should also be obvious that such custom Java code can
 crash your node or have unexpected side effects.
+
+Malicious add-ons installed under the classes directory can easily get access
+to your secret phrase. For add-ons installed under addons/classes, this has been
+made more difficult, but they could still do other malicious acts. Therefore,
+do not install and run add-ons from untrusted sources.
 

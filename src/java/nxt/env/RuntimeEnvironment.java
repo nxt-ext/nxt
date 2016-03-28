@@ -34,6 +34,10 @@ public class RuntimeEnvironment {
         return osname.contains("nux") || osname.contains("nix") || osname.contains("aix") || osname.contains("bsd") || osname.contains("sunos");
     }
 
+    private static boolean isMacRuntime() {
+        return osname.contains("mac");
+    }
+
     private static boolean isWindowsService() {
         return "service".equalsIgnoreCase(System.getProperty(RUNTIME_MODE_ARG)) && isWindowsRuntime();
     }
@@ -82,6 +86,9 @@ public class RuntimeEnvironment {
             }
             if (isUnixRuntime()) {
                 return new UnixUserDirProvider();
+            }
+            if (isMacRuntime()) {
+                return new MacUserDirProvider();
             }
         }
         return new DefaultDirProvider();

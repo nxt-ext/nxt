@@ -134,8 +134,8 @@ public final class Shuffling {
     private static final DbKey.LongKeyFactory<Shuffling> shufflingDbKeyFactory = new DbKey.LongKeyFactory<Shuffling>("id") {
 
         @Override
-        public DbKey newKey(Shuffling transfer) {
-            return transfer.dbKey;
+        public DbKey newKey(Shuffling shuffling) {
+            return shuffling.dbKey;
         }
 
     };

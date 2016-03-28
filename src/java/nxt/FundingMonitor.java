@@ -19,6 +19,7 @@ package nxt;
 import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
+import nxt.util.Filter;
 import nxt.util.Listener;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -403,24 +404,19 @@ public final class FundingMonitor {
     }
 
     /**
-     * Get monitor
+     * Get monitors satisfying the supplied filter
      *
-     * @param   holdingType         Holding type
-     * @param   holdingId           Asset or currency identifier, ignored for NXT monitor
-     * @param   property            Account property
-     * @param   accountId           Account identifier
-     * @return                      Account monitor or null
+     * @param   filter              Monitor filter
+     * @return                      Monitor list
      */
-    public static FundingMonitor getMonitor(HoldingType holdingType, long holdingId, String property, long accountId) {
-        FundingMonitor result = null;
+    public static List<FundingMonitor> getMonitors(Filter<FundingMonitor> filter) {
+        List<FundingMonitor> result = new ArrayList<>();
         synchronized(monitors) {
-            for (FundingMonitor monitor : monitors) {
-                if (monitor.holdingType == holdingType && monitor.holdingId == holdingId &&
-                        monitor.property.equals(property) && monitor.accountId == accountId) {
-                    result = monitor;
-                    break;
+            monitors.forEach((monitor) -> {
+                if (filter.ok(monitor)) {
+                    result.add(monitor);
                 }
-            }
+            });
         }
         return result;
     }
@@ -625,8 +621,8 @@ public final class FundingMonitor {
             } else {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 monitoredAccount.height = Nxt.getBlockchain().getHeight();
-                Logger.logDebugMessage(String.format("NXT funding transaction %s for %s NXT submitted from %s to %s",
-                        Long.toUnsignedString(transaction.getId()), Long.toUnsignedString(monitoredAccount.amount),
+                Logger.logDebugMessage(String.format("NXT funding transaction %s for %f NXT submitted from %s to %s",
+                        transaction.getStringId(), (double)monitoredAccount.amount / Constants.ONE_NXT,
                         monitor.accountName, monitoredAccount.accountName));
             }
         }
@@ -662,8 +658,8 @@ public final class FundingMonitor {
             } else {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 monitoredAccount.height = Nxt.getBlockchain().getHeight();
-                Logger.logDebugMessage(String.format("ASSET funding transaction %s submitted for %s units from %s to %s",
-                        Long.toUnsignedString(transaction.getId()), Long.toUnsignedString(monitoredAccount.amount),
+                Logger.logDebugMessage(String.format("ASSET funding transaction %s submitted for %d units from %s to %s",
+                        transaction.getStringId(), monitoredAccount.amount,
                         monitor.accountName, monitoredAccount.accountName));
             }
         }
@@ -699,8 +695,8 @@ public final class FundingMonitor {
             } else {
                 Nxt.getTransactionProcessor().broadcast(transaction);
                 monitoredAccount.height = Nxt.getBlockchain().getHeight();
-                Logger.logDebugMessage(String.format("CURRENCY funding transaction %s submitted for %s units from %s to %s",
-                        Long.toUnsignedString(transaction.getId()), Long.toUnsignedString(monitoredAccount.amount),
+                Logger.logDebugMessage(String.format("CURRENCY funding transaction %s submitted for %d units from %s to %s",
+                        transaction.getStringId(), monitoredAccount.amount,
                         monitor.accountName, monitoredAccount.accountName));
             }
         }

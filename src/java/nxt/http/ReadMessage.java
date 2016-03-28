@@ -77,7 +77,7 @@ public final class ReadMessage extends APIServlet.APIRequestHandler {
             response.put("message", Convert.toString(prunableMessage.getMessage(), prunableMessage.isText()));
             response.put("messageIsPrunable", true);
         }
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         if (secretPhrase != null) {
             EncryptedData encryptedData = null;
             boolean isText = false;

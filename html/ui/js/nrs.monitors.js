@@ -46,7 +46,7 @@ var NRS = (function(NRS, $) {
         };
     };
 
-    NRS.jsondata.properties = function (response) {
+    NRS.jsondata.monitoredAccount = function (response) {
         try {
             var value = JSON.parse(response.value);
         } catch (e) {
@@ -55,13 +55,13 @@ var NRS = (function(NRS, $) {
         return {
             accountFormatted: NRS.getAccountLink(response, "recipient"),
             property: String(response.property).escapeHTML(),
-            amountFormatted: value.amount ? "<b>" + NRS.formatAmount(value.amount) : NRS.formatAmount(currentMonitor.amount),
-            thresholdFormatted: value.threshold ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
-            intervalFormatted: value.interval ? "<b>" + String(value.interval).escapeHTML() : String(currentMonitor.interval).escapeHTML(),
+            amountFormatted: (value && value.amount) ? "<b>" + NRS.formatAmount(value.amount) : NRS.formatAmount(currentMonitor.amount),
+            thresholdFormatted: (value && value.threshold) ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
+            intervalFormatted: (value && value.interval) ? "<b>" + String(value.interval).escapeHTML() : String(currentMonitor.interval).escapeHTML(),
             removeLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#remove_monitored_account_modal' " +
-                        "data-recipient='" + response.recipientRS + "' " +
-                        "data-property='" + response.property + "' " +
-                        "data-value='" + response.value + "'>" + $.t("remove") + "</a>"
+                        "data-recipient='" + String(response.recipientRS).escapeHTML() + "' " +
+                        "data-property='" + String(response.property).escapeHTML() + "' " +
+                        "data-value='" + NRS.normalizePropertyValue(response.value) + "'>" + $.t("remove") + "</a>"
         };
     };
 
@@ -78,6 +78,7 @@ var NRS = (function(NRS, $) {
             monitors: []
         });
         var params = {
+            "account": NRS.accountRS,
             "adminPassword": NRS.settings.admin_password,
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
@@ -155,7 +156,7 @@ var NRS = (function(NRS, $) {
             errorMessage: null,
             isLoading: true,
             isEmpty: false,
-            properties: []
+            monitoredAccount: []
         });
         var params = {
             "setter": currentMonitor.account,
@@ -177,15 +178,15 @@ var NRS = (function(NRS, $) {
                     NRS.hasMorePages = true;
                     response.properties.pop();
                 }
-                view.properties.length = 0;
+                view.monitoredAccount.length = 0;
                 response.properties.forEach(
                     function (propertiesJson) {
-                        view.properties.push(NRS.jsondata.properties(propertiesJson))
+                        view.monitoredAccount.push(NRS.jsondata.monitoredAccount(propertiesJson))
                     }
                 );
                 view.render({
                     isLoading: false,
-                    isEmpty: view.properties.length == 0,
+                    isEmpty: view.monitoredAccount.length == 0,
                     fundingAccountFormatted: NRS.getAccountLink(currentMonitor, "account"),
                     controlProperty: currentMonitor.property
                 });
@@ -199,7 +200,7 @@ var NRS = (function(NRS, $) {
         $("#add_monitored_account_amount").val(NRS.convertToNXT(currentMonitor.amount));
         $("#add_monitored_account_threshold").val(NRS.convertToNXT(currentMonitor.threshold));
         $("#add_monitored_account_interval").val(currentMonitor.interval);
-        $("#add_monitored_account_value").val("{}");
+        $("#add_monitored_account_value").val("");
     });
 
     $(".add_monitored_account_value").on('change', function() {
@@ -219,18 +220,19 @@ var NRS = (function(NRS, $) {
         if (currentMonitor.interval != interval) {
             value.interval = interval;
         }
-        $("#add_monitored_account_value").val(JSON.stringify(value));
+        if (jQuery.isEmptyObject(value)) {
+            value = "";
+        } else {
+            value = JSON.stringify(value);
+        }
+        $("#add_monitored_account_value").val(value);
     });
 
     $("#remove_monitored_account_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
-        $("#remove_monitored_account_recipient").val(String($invoker.data("recipient")).escapeHTML());
-        $("#remove_monitored_account_property").val(String($invoker.data("property")).escapeHTML());
-        var value = $invoker.data("value");
-        if (typeof(value) == "object") {
-            value = JSON.stringify(value);
-        }
-        $("#remove_monitored_account_value").val(String(value).escapeHTML());
+        $("#remove_monitored_account_recipient").val($invoker.data("recipient"));
+        $("#remove_monitored_account_property").val($invoker.data("property"));
+        $("#remove_monitored_account_value").val(NRS.normalizePropertyValue($invoker.data("value")));
     });
 
     return NRS;

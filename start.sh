@@ -9,9 +9,13 @@ if [ -e ~/.nxt/nxt.pid ]; then
     fi
 fi
 mkdir -p ~/.nxt/
-REALPATH=`realpath "$0"`
-DIR=`dirname "${REALPATH}"`
+DIR=`dirname "$0"`
 cd "${DIR}"
-nohup java -cp classes:lib/*:conf:addons/classes -Dnxt.runtime.mode=desktop nxt.Nxt > /dev/null 2>&1 &
+if [ -x jre/bin/java ]; then
+    JAVA=./jre/bin/java
+else
+    JAVA=java
+fi
+nohup ${JAVA} -cp classes:lib/*:conf:addons/classes  -Djava.security.manager -Djava.security.policy=nxtdesktop.policy -Dnxt.runtime.mode=desktop nxt.Nxt > /dev/null 2>&1 &
 echo $! > ~/.nxt/nxt.pid
 cd - > /dev/null

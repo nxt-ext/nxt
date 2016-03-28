@@ -175,6 +175,7 @@
   "change_group_name": "Change Group Name",
   "change_group_name_help": "Type a new group name.",
   "change_price": "Change Price",
+  "change_picture": "Change Picture",
   "change_qty": "Change QTY",
   "change_quantity": "Change Quantity",
   "change_theme": "Theme",
@@ -354,6 +355,7 @@
   "error_feature_not_available": "Feature not available.",
   "error_feedback_already_sent": "Feedback already sent",
   "error_file_too_big": "File size __size__ [bytes] bigger than __allowed__ [bytes]",
+  "error_image_too_big": "Image size __size__ [bytes] bigger than __allowed__ [bytes]",
   "error_find_account_id": "Could not find your account address.",
   "error_forging_blockchain_downloading": "The blockchain is busy downloading, you cannot forge during this time. Please try again when the blockchain is fully synced.",
   "error_forging_blockchain_rescanning": "The blockchain is currently being rescanned, you cannot forge during this time. Please try again in a minute.",
@@ -1640,5 +1642,12 @@
   "monitor_stopped": "Monitor Stopped",
   "funding_monitor_status": "Funding Monitor Status",
   "remove_monitored_account": "Remove Monitored Account",
-  "remove": "Remove"
+  "remove": "Remove",
+  "no_listings": "No Recent Listings",
+  "no_purchases": "No Recent Purchases",
+  "recent_listings": "Recent Listings",
+  "recent_purchases": "Recent Purchases",
+  "image": "Image",
+  "timestamp_listing": "Listing Date",
+  "timestamp_buy": "Purchase Date"
 }

@@ -174,9 +174,10 @@ public final class API {
             } else {
                 sslContextFactory = null;
             }
+            String localhost = "0.0.0.0".equals(host) || "127.0.0.1".equals(host) ? "localhost" : host;
             try {
-                welcomePageUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "/index.html", null, null);
-                serverRootUri = new URI(enableSSL ? "https" : "http", null, "localhost", enableSSL ? sslPort : port, "", null, null);
+                welcomePageUri = new URI(enableSSL ? "https" : "http", null, localhost, enableSSL ? sslPort : port, "/index.html", null, null);
+                serverRootUri = new URI(enableSSL ? "https" : "http", null, localhost, enableSSL ? sslPort : port, "", null, null);
             } catch (URISyntaxException e) {
                 Logger.logInfoMessage("Cannot resolve browser URI", e);
             }

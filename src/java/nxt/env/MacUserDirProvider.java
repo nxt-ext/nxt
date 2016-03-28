@@ -14,33 +14,6 @@
  *                                                                            *
  ******************************************************************************/
 
-/**
- * @depends {nrs.js}
- */
-var NRS = (function (NRS) {
+package nxt.env;
 
-    var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
-
-    NRS.isIndexedDBSupported = function() {
-        return window.indexedDB !== undefined;
-    };
-
-    NRS.isCoinExchangePageAvailable = function() {
-        return !isDesktopApplication; // JavaFX does not support CORS required by ShapeShift
-    };
-
-    NRS.isWebWalletLinkVisible = function() {
-        // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
-        return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
-    };
-
-    NRS.isPollGetState = function() {
-        return !isDesktopApplication; // When using JavaFX do not poll the server
-    };
-
-    NRS.isExportContactsAvailable = function() {
-        return !isDesktopApplication; // When using JavaFX you cannot export the contact list
-    };
-
-    return NRS;
-}(NRS || {}, jQuery));
+public class MacUserDirProvider extends UnixUserDirProvider {}
