@@ -37,6 +37,10 @@ var NRS = (function(NRS, $) {
         if (!NRS.isWebWalletLinkVisible()) {
             $("#web_wallet_li").remove();
         }
+        if (NRS.isOpenLinkInNewTabSupported()) {
+            $("#api_console_li").show();
+            $("#database_shell_li").show();
+        }
     });
 
     $("#refreshSearchIndex").on("click", function() {

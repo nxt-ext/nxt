@@ -1696,5 +1696,7 @@
   "unconfirmed_currency_balance": "Unconfirmed Currency Balance",
   "lease_scheduled": "Lease Scheduled",
   "lease_started": "Lease Started",
-  "lease_ended": "Lease Ended"
+  "lease_ended": "Lease Ended",
+  "api_console": "API Console",
+  "database_shell": "Database Shell"
 }
