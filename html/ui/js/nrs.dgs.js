@@ -833,7 +833,7 @@ var NRS = (function(NRS, $) {
 
 		var purchase = $invoker.data("purchase");
 
-        if (NRS.getUrlParameter("purchase")) {
+        if (NRS.getUrlParameter("purchase") && purchase == null) {
             purchase = NRS.getUrlParameter("purchase").escapeHTML();
         }
 
@@ -1030,7 +1030,7 @@ var NRS = (function(NRS, $) {
 			goods = $invoker.data("goods");
 		}
 
-        if (NRS.getUrlParameter("goods")) {
+        if (NRS.getUrlParameter("goods") && goods == null) {
             goods = NRS.getUrlParameter("goods").escapeHTML();
         }
 
@@ -1101,7 +1101,7 @@ var NRS = (function(NRS, $) {
 		var $invoker = $(e.relatedTarget);
 		var goods = $invoker.data("goods");
 
-		if (NRS.getUrlParameter("goods")) {
+		if (NRS.getUrlParameter("goods") && goods == null) {
             goods = NRS.getUrlParameter("goods").escapeHTML();
         }
 
