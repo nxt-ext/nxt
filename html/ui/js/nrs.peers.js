@@ -141,7 +141,7 @@ var NRS = (function(NRS, $) {
 		var message;
 		var type;
 		if (response.errorCode) {
-			message = response.errorDescription;
+			message = response.errorDescription.escapeHTML();
 			type = "danger";
 		} else {
 			message = $.t("success_blacklist_peer");

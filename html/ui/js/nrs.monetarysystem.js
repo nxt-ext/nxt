@@ -115,7 +115,7 @@ var NRS = (function (NRS, $, undefined) {
                     } else {
                         $("#MSnoCode").show();
                         $("#MScode").hide();
-                        $.growl(response.errorDescription, {
+                        $.growl(response.errorDescription.escapeHTML(), {
                             "type": "danger"
                         });
                     }
@@ -830,7 +830,7 @@ var NRS = (function (NRS, $, undefined) {
                 $("#transfer_currency_units_code").html(String(response.code).escapeHTML());
                 transferCurrencyModal.find(".error_message").hide();
             } else if (response.errorCode) {
-                transferCurrencyModal.find(".error_message").html(response.errorDescription);
+                transferCurrencyModal.find(".error_message").html(response.errorDescription.escapeHTML());
                 transferCurrencyModal.find(".error_message").show();
             }
         })

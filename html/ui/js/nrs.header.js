@@ -48,7 +48,7 @@ var NRS = (function(NRS, $) {
             adminPassword: NRS.settings.admin_password
         }, function (response) {
             if (response.errorCode) {
-                $.growl(response.errorDescription);
+                $.growl(response.errorDescription.escapeHTML());
             } else {
                 $.growl($.t("search_index_refreshed"));
             }

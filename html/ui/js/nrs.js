@@ -258,7 +258,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
-                $.growl($.t("server_connection_error") + " " + response.errorDescription);
+                $.growl($.t("server_connection_error") + " " + response.errorDescription.escapeHTML());
 			} else {
 				var firstTime = !("lastBlock" in NRS.state);
 				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);

@@ -491,7 +491,7 @@ var NRS = (function(NRS, $) {
                 "feeNQT": NRS.convertToNQT(1)
             }, function (response) {
                 if (response.errorCode) {
-                    NRS.logConsole("sendMoney response " + response.errorCode + " " + response.errorDescription);
+                    NRS.logConsole("sendMoney response " + response.errorCode + " " + response.errorDescription.escapeHTML());
                     NRS.showModalError(NRS.translateServerError(response), modal);
                     return;
                 }
@@ -588,8 +588,8 @@ var NRS = (function(NRS, $) {
             "feeNQT": NRS.convertToNQT(1)
         }, function (response) {
             if (response.errorCode) {
-                NRS.logConsole('sendMoney error ' + response.errorDescription);
-                NRS.showModalError(response.errorDescription, modal);
+                NRS.logConsole('sendMoney error ' + response.errorDescription.escapeHTML());
+                NRS.showModalError(response.errorDescription.escapeHTML(), modal);
                 return;
             }
             addDepositAddress(depositAddress, pair);
