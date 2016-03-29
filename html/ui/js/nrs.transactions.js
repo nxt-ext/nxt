@@ -785,6 +785,7 @@ var NRS = (function(NRS, $, undefined) {
                 }
             }
             NRS.dataLoaded(rows);
+			$("#account_ledger_message").text($.t("account_ledger_message", { blocks: NRS.ledgerTrimKeep }));
         });
 	};
 
