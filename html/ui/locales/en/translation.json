@@ -1687,5 +1687,9 @@
   "currency_undo_crowdfunding": "Undo Crowd Funding",
   "tagged_data_upload": "Data Upload",
   "tagged_data_extend": "Data Extend",
-  "account_ledger_message": "Only ledger entries created during the last __blocks__ blocks are displayed."
+  "account_ledger_message": "Only ledger entries created during the last __blocks__ blocks are displayed.",
+  "buy_currency_param": "Buy __currency__",
+  "sell_currency_param": "Sell __currency__",
+  "offers_to_buy_currency_param": "Offers to Buy __currency__",
+  "offers_to_sell_currency_param": "Offers to Sell __currency__"
 }

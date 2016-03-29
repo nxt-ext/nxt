@@ -75,10 +75,10 @@ var NRS = (function (NRS, $, undefined) {
         }
         NRS.pageNumber = 1;
         var currencyCode = $.trim($("#currency_search").find("input[name=q]").val());
-        $("#buy_currency_with_nxt").html("Exchange NXT for " + currencyCode);
-        $("#buy_currency_offers").html("Offers to Exchange NXT for " + currencyCode);
-        $("#sell_currency_with_nxt").html("Exchange " + currencyCode + " for NXT");
-        $("#sell_currency_offers").html("Offers to Exchange " + currencyCode + " for NXT");
+        $("#buy_currency_with_nxt").html($.t("buy_currency_param", { currency: currencyCode}));
+        $("#buy_currency_offers").html($.t("offers_to_buy_currency_param", { currency: currencyCode}));
+        $("#sell_currency_with_nxt").html($.t("sell_currency_param", { currency: currencyCode}));
+        $("#sell_currency_offers").html($.t("offers_to_sell_currency_param", { currency: currencyCode}));
         $(".currency_code").html(String(currencyCode).escapeHTML());
 
         var currencyId = 0;
