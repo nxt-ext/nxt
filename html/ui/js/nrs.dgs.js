@@ -1050,7 +1050,7 @@ var NRS = (function(NRS, $) {
 				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 20 height="100" width="100"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src +'" /></td></tr>';
 				output += "<tr><th><strong>" + $.t("date") + "</strong>:</th><td>" + NRS.formatTimestamp(response.timestamp) + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
-				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + " (" + '<a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + NRS.getAccountFormatted(response, "seller") + '\')" data-dismiss="modal">View Store</a>' + ")</td></tr>";
+				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + " (" + '<a href="#" data-goto-seller="' + response.sellerRS + '">View Store' + "</a>)</td></tr>";
 				if (response.delisted) {
 					output += "<tr><th><strong>" + $.t("status") + "</strong>:</th><td>" + $.t("no_longer_for_sale") + "</td></tr>";
 				} else {
@@ -1175,6 +1175,18 @@ var NRS = (function(NRS, $) {
 
 		NRS.goToGoods($(this).data("seller"), $(this).data("goto-goods"));
 	});
+
+    $("#dgs_purchase_modal, #dgs_product_modal").on("click", "a[data-goto-seller]", function(e) {
+    		e.preventDefault();
+
+    		var $visible_modal = $(".modal.in");
+
+    		if ($visible_modal.length) {
+                $visible_modal.modal("hide");
+    		}
+    		NRS.goToPage("dgs_search");
+    		NRS.dgs_search_seller($(this).data("goto-seller"))
+    	});
 
 	NRS.goToGoods = function(seller, goods) {
 		$(".dgs_search input[name=q]").val(seller);
