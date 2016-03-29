@@ -1691,5 +1691,10 @@
   "buy_currency_param": "Buy __currency__",
   "sell_currency_param": "Sell __currency__",
   "offers_to_buy_currency_param": "Offers to Buy __currency__",
-  "offers_to_sell_currency_param": "Offers to Sell __currency__"
+  "offers_to_sell_currency_param": "Offers to Sell __currency__",
+  "unconfirmed_asset_balance": "Unconfirmed Asset_Balance",
+  "unconfirmed_currency_balance": "Unconfirmed Currency Balance",
+  "lease_scheduled": "Lease Scheduled",
+  "lease_started": "Lease Started",
+  "lease_ended": "Lease Ended"
 }
