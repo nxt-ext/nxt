@@ -1176,7 +1176,7 @@ var NRS = (function(NRS, $) {
 		NRS.goToGoods($(this).data("seller"), $(this).data("goto-goods"));
 	});
 
-    $("#dgs_purchase_modal, #dgs_product_modal").on("click", "a[data-goto-seller]", function(e) {
+    $("#dgs_purchase_modal, #dgs_product_modal, #dgs_listings").on("click", "a[data-goto-seller]", function(e) {
     		e.preventDefault();
 
     		var $visible_modal = $(".modal.in");
@@ -1184,8 +1184,8 @@ var NRS = (function(NRS, $) {
     		if ($visible_modal.length) {
                 $visible_modal.modal("hide");
     		}
-    		NRS.goToPage("dgs_search");
-    		NRS.dgs_search_seller($(this).data("goto-seller"))
+    		NRS.goToPage("dgs_search", function() {});
+            NRS.dgs_search_seller($(this).data("goto-seller"));
     	});
 
 	NRS.goToGoods = function(seller, goods) {
@@ -1236,7 +1236,7 @@ var NRS = (function(NRS, $) {
 				var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
 				var account;
 				if (accountKey == "seller") {
-					account = '<a href="#" onclick="event.preventDefault();NRS.dgs_search_seller(\'' + item.sellerRS + '\')">' + item.sellerRS + '</a>';
+					account = '<a href="#" data-goto-seller="' + item.sellerRS + '">' + item.sellerRS + '</a>';
 				} else if (accountKey == "buyer") {
 					account = NRS.getAccountLink(item, accountKey)
 				}
