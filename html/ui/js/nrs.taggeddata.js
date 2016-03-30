@@ -282,7 +282,7 @@ var NRS = (function(NRS, $) {
 			"retrieve": "true"
 		}, function (response) {
 			if (response.errorCode) {
-                $("#tagged_data_content").val(response.errorDescription);
+                $("#tagged_data_content").val(response.errorDescription.escapeHTML());
 			} else {
                 $("#tagged_data_content").val(response.data);
 			}

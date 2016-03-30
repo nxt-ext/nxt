@@ -66,7 +66,7 @@ var NRS = (function(NRS, $) {
             $("#parse_hallmark_valid").val(response.valid);
 		} else {
 			$("#parse_hallmark_output").html($.t("error_invalid_hallmark", {
-				"error": response.errorDescription
+				"error": response.errorDescription.escapeHTML()
             })).addClass("callout-danger").removeClass("callout-info").show();
             $("#parse_hallmark_host").val("");
             $("#parse_hallmark_port").val("");
