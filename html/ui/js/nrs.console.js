@@ -19,6 +19,7 @@
  */
 var NRS = (function (NRS, $) {
     var level = 1;
+    var java;
 
     NRS.logConsole = function (msg, isDateIncluded, isDisplayTimeExact) {
         if (window.console) {
