@@ -37,7 +37,7 @@ mv ../nxt.map ../nxt.map.${VERSION}
 mkdir -p nxt/src/
 else
 FILES="${FILES} classes src COPYING.txt"
-FILES="${FILES} compile.sh javadoc.sh jar.sh package.sh"
+FILES="${FILES} compile.sh compile-nojfx.sh javadoc.sh jar.sh package.sh"
 FILES="${FILES} win-compile.sh win-javadoc.sh win-package.sh"
 echo javadoc
 ./win-javadoc.sh
