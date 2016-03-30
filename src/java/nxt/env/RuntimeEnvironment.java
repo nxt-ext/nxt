@@ -25,6 +25,28 @@ public class RuntimeEnvironment {
     public static final String DIRPROVIDER_ARG = "nxt.runtime.dirProvider";
 
     private static final String osname = System.getProperty("os.name").toLowerCase();
+    private static final boolean isHeadless;
+    private static final boolean hasJavaFX;
+    static {
+        boolean b;
+        try {
+            // Load by reflection to prevent exception in case java.awt does not exist
+            Class graphicsEnvironmentClass = Class.forName("java.awt.GraphicsEnvironment");
+            Method isHeadlessMethod = graphicsEnvironmentClass.getMethod("isHeadless");
+            b = (Boolean)isHeadlessMethod.invoke(null);
+        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            b = true;
+        }
+        isHeadless = b;
+        try {
+            Class.forName("javafx.application.Application");
+            b = true;
+        } catch (ClassNotFoundException e) {
+            System.out.println("javafx not supported");
+            b = false;
+        }
+        hasJavaFX = b;
+    }
 
     private static boolean isWindowsRuntime() {
         return osname.startsWith("windows");
@@ -43,20 +65,15 @@ public class RuntimeEnvironment {
     }
 
     private static boolean isHeadless() {
-        boolean isHeadless;
-        try {
-            // Load by reflection to prevent exception in case java.awt does not exist
-            Class graphicsEnvironmentClass = Class.forName("java.awt.GraphicsEnvironment");
-            Method isHeadlessMethod = graphicsEnvironmentClass.getMethod("isHeadless");
-            isHeadless = (Boolean)isHeadlessMethod.invoke(null);
-        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            isHeadless = true;
-        }
         return isHeadless;
     }
 
     private static boolean isDesktopEnabled() {
         return "desktop".equalsIgnoreCase(System.getProperty(RUNTIME_MODE_ARG)) && !isHeadless();
+    }
+
+    public static boolean isDesktopApplicationEnabled() {
+        return isDesktopEnabled() && hasJavaFX;
     }
 
     public static RuntimeMode getRuntimeMode() {
