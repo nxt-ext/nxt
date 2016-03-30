@@ -101,6 +101,7 @@ public class DesktopApplication extends Application {
         DesktopApplication.stage = stage;
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
         WebView browser = new WebView();
+        browser.setContextMenuEnabled(false);
         WebView invisible = new WebView();
 
         int height = (int) Math.min(primaryScreenBounds.getMaxY() - 100, 1000);
@@ -148,6 +149,7 @@ public class DesktopApplication extends Application {
             });
 
         webEngine.load(getUrl());
+
         Scene scene = new Scene(browser);
         String address = API.getServerRootUri().toString();
         stage.getIcons().add(new Image(address + "/img/nxt-icon-32x32.png"));
