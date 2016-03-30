@@ -232,8 +232,9 @@ var NRS = (function (NRS, $, undefined) {
         "es-US": "M/d/yyyy"
     };
 
-    var LANG = window.navigator.userLanguage || window.navigator.language;
+    var LANG = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
     var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
+    NRS.logConsole("Date Format Locale: " + LANG + ", Date Format: " + LOCALE_DATE_FORMAT);
 
     NRS.formatVolume = function (volume) {
 		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];

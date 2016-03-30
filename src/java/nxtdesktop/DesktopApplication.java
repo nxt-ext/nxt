@@ -51,6 +51,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -116,6 +117,9 @@ public class DesktopApplication extends Application {
                 (ov, oldState, newState) -> {
                     JSObject window = (JSObject)webEngine.executeScript("window");
                     window.setMember("java", this);
+                    Locale locale = Locale.getDefault();
+                    String language = locale.getLanguage().toLowerCase() + "-" + locale.getCountry().toUpperCase();
+                    window.setMember("javaFxLanguage", language);
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
                     if (newState == Worker.State.SUCCEEDED) {
