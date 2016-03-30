@@ -41,11 +41,11 @@ uninstall of a previous installation is still advisable.
 
 Incompatible change:
 
-Note that when run in desktop mode on Unix, the ~/.nxt directory is now used to
-store configuration files, logs, and the nxt_db blockchain database. This makes
-it simpler to upgrade to a new version, by deleting the content of the old nxt
-installation directory, as no user configuration files or database files are
-stored in it.
+Note that when run in desktop mode on Unix and Mac, the ~/.nxt directory is now 
+used to store configuration files, logs, and the nxt_db blockchain database. 
+This makes it simpler to upgrade to a new version, by deleting the content of 
+the old nxt installation directory, as no user configuration files or database 
+files are stored in it.
 
 The run.sh script continues to use command line mode, i.e. does not attempt to
 start the desktop wallet and desktop tray icon, and continues to use the nxt

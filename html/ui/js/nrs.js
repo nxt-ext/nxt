@@ -67,6 +67,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.isLeased = false;
 	NRS.needsAdminPassword = true;
     NRS.upnpExternalAddress = null;
+	NRS.ledgerTrimKeep = 0;
 
 	NRS.lastBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
@@ -257,13 +258,14 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
-                $.growl($.t("server_connection_error") + " " + response.errorDescription);
+                $.growl($.t("server_connection_error") + " " + response.errorDescription.escapeHTML());
 			} else {
 				var firstTime = !("lastBlock" in NRS.state);
 				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
 
 				NRS.state = response;
 				NRS.serverConnect = true;
+				NRS.ledgerTrimKeep = response.ledgerTrimKeep;
 				$("#sidebar_block_link").html(NRS.getBlockLink(NRS.state.numberOfBlocks - 1));
 				if (firstTime) {
 					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
