@@ -29,7 +29,7 @@ var NRS = (function (NRS) {
         return !isDesktopApplication; // JavaFX does not support CORS required by ShapeShift
     };
 
-    NRS.isWebWalletLinkVisible = function() {
+    NRS.isExternalLinkVisible = function() {
         // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
     };
@@ -40,10 +40,6 @@ var NRS = (function (NRS) {
 
     NRS.isExportContactsAvailable = function() {
         return !isDesktopApplication; // When using JavaFX you cannot export the contact list
-    };
-
-    NRS.isOpenLinkInNewTabSupported = function() {
-        return !isDesktopApplication; // When using JavaFX you cannot open a link in a new browser tab
     };
 
     return NRS;
