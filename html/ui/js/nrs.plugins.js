@@ -223,6 +223,16 @@ var NRS = (function(NRS, $, undefined) {
             });
         }
         $('#plugins_page_msg').html(msg);
+        var pluginsDisabledWarning = $('#plugins_disabled_warning');
+        if (NRS.disablePluginsDuringSession) {
+            pluginsDisabledWarning.html($.t('plugins_disabled_for_session_msg'));
+            pluginsDisabledWarning.show();
+        } else if (NRS.settings["enable_plugins"] == "0") {
+            pluginsDisabledWarning.html($.t('plugins_disabled_for_account_msg'));
+            pluginsDisabledWarning.show();
+        } else {
+            pluginsDisabledWarning.hide();
+        }
         NRS.dataLoaded();
     };
 
@@ -306,11 +316,7 @@ var NRS = (function(NRS, $, undefined) {
             offset: 20,
             offsetRight: 20
         };
-        if (NRS.disablePluginsDuringSession) {
-            $.growl($.t('plugins_disabled_for_session_msg'), growlOptions);
-        } else if (NRS.settings["enable_plugins"] == "0") {
-            $.growl($.t('plugins_disabled_for_account_msg'), growlOptions);
-        } else {
+        if (!NRS.disablePluginsDuringSession && !NRS.settings["enable_plugins"] == "0" && NRS.numRunningPlugins > 0) {
             var msg;
             if (NRS.numRunningPlugins == 1) {
                 msg = $.t('one_plugin_active_and_running_msg');

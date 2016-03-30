@@ -59,11 +59,19 @@
                         </span>
                     </a>
                 </li>
-                <li id="contacts_menu_li"><a href="#" class="goto-page" data-page="contacts"><i class="fa fa-user" data-toggle="tooltip" data-placement="bottom" title="CONTACTS" data-i18n="[title]contacts"></i></a></li>
-                <li id="exchange_menu_li"><a href="#" class="goto-page" data-page="exchange"><i class="fa fa-exchange" data-toggle="tooltip" data-placement="bottom" title="EXCHANGE" data-i18n="[title]exchange"></i></a></li>
-                <li class="dropdown">
+                <li id="contacts_menu_li" role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="CONTACTS" data-container="#header_right" data-i18n="[data-content]contacts">
+                    <a href="#" class="goto-page" data-page="contacts">
+                        <i class="fa fa-user"></i>
+                    </a>
+                </li>
+                <li id="exchange_menu_li" role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="EXCHANGE" data-container="#header_right" data-i18n="[data-content]exchange">
+                    <a href="#" class="goto-page" data-page="exchange">
+                        <i class="fa fa-exchange"></i>
+                    </a>
+                </li>
+                <li class="dropdown show_popover" role="presentation" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="SETTINGS" data-container="#header_right" data-i18n="[data-content]settings">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-cog" data-toggle="tooltip" data-placement="bottom" title="SETTINGS" data-i18n="[title]settings"></i>
+                        <i class="fa fa-cog"></i>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a role="menuitem" tabindex="-1" href="#" class="goto-page" data-page="blocks"><i class="fa fa-bars"></i><span data-i18n="blocks">Blocks</span></a></li>
@@ -80,11 +88,13 @@
                         <li><a href="#" data-toggle="modal" data-target="#transaction_json_modal"><i class="fa fa-asterisk"></i><span data-i18n="transaction_operations">Transaction Operations</span></a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a href="#" id="refreshSearchIndex"><i class="fa fa-search"></i><span data-i18n="refresh_search_index">Refresh Search Index</span></a></li>
+                        <li style="display: none" id="api_console_li"><a href="/test" target="_blank"><i class="fa fa-magic"></i><span data-i18n="api_console">API Console</span></a></li>
+                        <li style="display: none" id="database_shell_li"><a href="/dbshell" target="_blank"><i class="fa fa-database"></i><span data-i18n="database_shell">Database Shell</span></a></li>
                     </ul>
                 </li>
-                <li class="dropdown">
+                <li class="dropdown show_popover" role="presentation" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="HELP" data-container="#header_right" data-i18n="[data-content]help">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="bottom" title="HELP" data-i18n="[title]help"></i>
+                        <i class="fa fa-question-circle"></i>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a role="menuitem" tabindex="-1" href="#" class="goto-page" data-page="news"><i class="fa fa-book"></i><span data-i18n="news">News</span></a></li>
@@ -100,14 +110,14 @@
                         <li><a role="menuitem" tabindex="-1" href="https://nxtwiki.org/wiki/Plugins" target="_blank"><i class="fa fa-at"></i><span data-i18n="link_plugins_tutorial">Plugins Tutorial</span></a></li>
                     </ul>
                 </li>
-                <li class="dropdown" id="web_wallet_li">
+                <li class="dropdown show_popover" id="web_wallet_li" role="presentation" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="WEB WALLET" data-container="#header_right" data-i18n="[data-content]web_wallet">
                     <a href="#" class="dropdown-toggle"  data-toggle="dropdown" id="header_open_web_wallet">
-                        <i class="fa fa-sitemap" data-toggle="tooltip" data-placement="bottom" title="WEB WALLET" data-i18n="[title]web_wallet"></i>
+                        <i class="fa fa-sitemap"></i>
                     </a>
                 </li>
-                <li class="dropdown" id="logout_button_container">
+                <li class="dropdown show_popover" id="logout_button_container" role="presentation" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="LOGOUT" data-container="#header_right" data-i18n="[data-content]logout">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="logout_button">
-                        <i class="fa fa-power-off" data-toggle="tooltip" data-placement="bottom" title="LOGOUT" data-i18n="[title]logout"></i>
+                        <i class="fa fa-power-off"></i>
                     </a>
                     <ul class="dropdown-menu" role="menu">
                         <li><a role="menuitem" tabindex="-1" href="#" onclick="NRS.logout()" data-i18n="logout">Log Out</a></li>

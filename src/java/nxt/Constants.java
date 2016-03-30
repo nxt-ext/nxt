@@ -150,7 +150,7 @@ public final class Constants {
     public static final int BLOCK_18 = Integer.MAX_VALUE;
 
     public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_17;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 555000 : 623000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 650000 : 716000;
 
     public static final int[] MIN_VERSION = new int[] {1, 7};
 

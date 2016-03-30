@@ -42,5 +42,9 @@ var NRS = (function (NRS) {
         return !isDesktopApplication; // When using JavaFX you cannot export the contact list
     };
 
+    NRS.isOpenLinkInNewTabSupported = function() {
+        return !isDesktopApplication; // When using JavaFX you cannot open a link in a new browser tab
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

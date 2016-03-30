@@ -18,7 +18,7 @@
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
 	$("body").on("click", ".show_ledger_modal_action", function(event) {
 		event.preventDefault();
 		if (NRS.fetchingModalData) {
@@ -51,6 +51,8 @@ var NRS = (function(NRS, $, undefined) {
     		NRS.modalStack.push({ class: "show_ledger_modal_action", key: "entry", value: { entry: entry.ledgerId, change: change, balance: balance }});
             $("#ledger_info_modal_entry").html(entry.ledgerId);
             var entryDetails = $.extend({}, entry);
+            entryDetails.eventType = $.t(entryDetails.eventType.toLowerCase());
+            entryDetails.holdingType = $.t(entryDetails.holdingType.toLowerCase());
             if (entryDetails.timestamp) {
                 entryDetails.entryTime = NRS.formatTimestamp(entryDetails.timestamp);
             }

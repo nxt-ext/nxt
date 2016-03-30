@@ -20,12 +20,18 @@ import nxt.Constants;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class DumpPeers extends APIServlet.APIRequestHandler {
 
@@ -42,7 +48,17 @@ public final class DumpPeers extends APIServlet.APIRequestHandler {
         int weight = ParameterParser.getInt(req, "weight", 0, (int)Constants.MAX_BALANCE_NXT, false);
         boolean connect = "true".equalsIgnoreCase(req.getParameter("connect")) && API.checkPassword(req);
         if (connect) {
-            Peers.getAllPeers().parallelStream().unordered().forEach(Peers::connectPeer);
+            List<Callable<Object>> connects = new ArrayList<>();
+            Peers.getAllPeers().forEach(peer -> connects.add(() -> {
+                Peers.connectPeer(peer);
+                return null;
+            }));
+            ExecutorService service = Executors.newFixedThreadPool(10);
+            try {
+                service.invokeAll(connects);
+            } catch (InterruptedException e) {
+                Logger.logMessage(e.toString(), e);
+            }
         }
         Set<String> addresses = new HashSet<>();
         Peers.getAllPeers().forEach(peer -> {
