@@ -442,13 +442,11 @@ public final class FundingMonitor {
     public static List<MonitoredAccount> getMonitoredAccounts(FundingMonitor monitor) {
         List<MonitoredAccount> monitoredAccounts = new ArrayList<>();
         synchronized(monitors) {
-            accounts.values().forEach(monitorList -> {
-                monitorList.forEach(account -> {
-                    if (account.monitor.equals(monitor)) {
-                        monitoredAccounts.add(account);
-                    }
-                });
-            });
+            accounts.values().forEach(monitorList -> monitorList.forEach(account -> {
+                if (account.monitor.equals(monitor)) {
+                    monitoredAccounts.add(account);
+                }
+            }));
         }
         return monitoredAccounts;
     }
