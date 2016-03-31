@@ -902,7 +902,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     request.put("requestType", "getTransactions");
                     request.put("transactionIds", requestList);
-                    JSONObject response = peer.send(JSON.prepareRequest(request));
+                    JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);
                     if (response == null) {
                         return;
                     }
