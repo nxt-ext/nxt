@@ -1226,24 +1226,20 @@ var NRS = (function(NRS, $) {
 					name = name.substring(0, 45) + "...";
 				}
 				var picture = new Image();
-				picture.src = missingImage;
+				if (!item.hasImage) {
+                    picture.src = missingImage;
+                }
+                else {
+                    picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
+                }
+				var image = '<img style="max-height:100%;max-width:100%" src="' + picture.src + '"/>';
+				var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
 				var account;
-    				if (accountKey == "seller") {
-                        account = '<a href="#" data-goto-seller="' + item.sellerRS + '">' + item.sellerRS + '</a>';
-                        if (item.hasImage) {
-                            picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
-                        }
-                    } else if (accountKey == "buyer") {
-                        NRS.sendRequest("getDGSGood", { "goods":item.goods } , function(goodinfo) {
-                            if (goodinfo.hasImage) {
-                                picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + goodinfo.goods + "&retrieve=true";
-                            }
-                        },false);
-                        account = NRS.getAccountLink(item, accountKey)
-                    }
-
-                var image = '<img style="max-height:100%;max-width:100%" src="' + picture.src + '"/>';
-                var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
+				if (accountKey == "seller") {
+					account = '<a href="#" data-goto-seller="' + item.sellerRS + '">' + item.sellerRS + '</a>';
+				} else if (accountKey == "buyer") {
+					account = NRS.getAccountLink(item, accountKey)
+				}
 				view.data.push({
 					"timestamp": NRS.formatTimestamp(item.timestamp),
 					"good": good,
