@@ -785,10 +785,6 @@ public final class DigitalGoodsStore {
             return timestamp;
         }
 
-        public String getName() {
-            return Goods.getGoods(goodsId).getName();
-        }
-
         public EncryptedData getEncryptedGoods() {
             return encryptedGoods;
         }
