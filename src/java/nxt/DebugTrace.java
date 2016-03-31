@@ -52,7 +52,7 @@ public final class DebugTrace {
                 accountIds.clear();
                 break;
             }
-            accountIds.add(Convert.parseUnsignedLong(accountId));
+            accountIds.add(Convert.parseAccountId(accountId));
         }
         final DebugTrace debugTrace = addDebugTrace(accountIds, logName);
         Nxt.getBlockchainProcessor().addListener(block -> debugTrace.resetLog(), BlockchainProcessor.Event.RESCAN_BEGIN);
