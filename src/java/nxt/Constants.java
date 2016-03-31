@@ -147,7 +147,7 @@ public final class Constants {
     public static final int CHECKSUM_BLOCK_16 = isTestnet ? 450000 : 556000;
     public static final int SHUFFLING_BLOCK = isTestnet ? 483000 : 621000;
     public static final int CHECKSUM_BLOCK_17 = isTestnet ? 484000 : 622000;
-    public static final int BLOCK_18 = Integer.MAX_VALUE;
+    public static final int BLOCK_19 = Integer.MAX_VALUE;
 
     public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_17;
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 650000 : 716000;
