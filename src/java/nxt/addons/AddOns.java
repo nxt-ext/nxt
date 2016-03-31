@@ -36,6 +36,11 @@ public final class AddOns {
             }
         });
         addOns = Collections.unmodifiableList(addOnsList);
+        if (!addOns.isEmpty()) {
+            System.setProperty("java.security.policy", Nxt.isDesktopApplicationEnabled() ? "nxtdesktop.policy" : "nxt.policy");
+            Logger.logMessage("Setting security manager with policy " + System.getProperty("java.security.policy"));
+            System.setSecurityManager(new SecurityManager());
+        }
         addOns.forEach(addOn -> {
             Logger.logInfoMessage("Initializing " + addOn.getClass().getName());
             addOn.init();
