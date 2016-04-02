@@ -35,7 +35,7 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         int timestamp = ParameterParser.getTimestamp(req);
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
@@ -75,7 +75,7 @@ public final class GetExchanges extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean startDbTransaction() {
+    protected boolean startDbTransaction() {
         return true;
     }
 

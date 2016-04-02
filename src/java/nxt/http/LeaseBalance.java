@@ -34,7 +34,7 @@ public final class LeaseBalance extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         int period = ParameterParser.getInt(req, "period", Constants.LEASING_DELAY, 65535, true);
         Account account = ParameterParser.getSenderAccount(req);

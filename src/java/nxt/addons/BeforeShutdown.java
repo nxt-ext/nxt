@@ -24,10 +24,6 @@ public final class BeforeShutdown implements AddOn {
     final String beforeShutdownScript = Nxt.getStringProperty("nxt.beforeShutdownScript");
 
     @Override
-    public void init() {
-    }
-
-    @Override
     public void shutdown() {
         if (beforeShutdownScript != null) {
             try {

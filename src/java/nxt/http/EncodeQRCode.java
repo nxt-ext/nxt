@@ -86,7 +86,7 @@ public final class EncodeQRCode extends APIServlet.APIRequestHandler {
     }
     
     @Override
-    JSONStreamAware processRequest(HttpServletRequest request)
+    protected JSONStreamAware processRequest(HttpServletRequest request)
             throws NxtException {
         
         JSONObject response = new JSONObject();
@@ -125,17 +125,17 @@ public final class EncodeQRCode extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

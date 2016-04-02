@@ -36,7 +36,7 @@ public final class Decrypt extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         byte[] data = ParameterParser.getBytes(req, "data", true);
         byte[] sharedKey = ParameterParser.getBytes(req, "sharedKey", true);
@@ -57,12 +57,12 @@ public final class Decrypt extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

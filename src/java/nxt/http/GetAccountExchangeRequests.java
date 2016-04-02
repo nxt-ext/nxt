@@ -34,7 +34,7 @@ public final class GetAccountExchangeRequests extends APIServlet.APIRequestHandl
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long accountId = ParameterParser.getAccountId(req, true);
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", true);

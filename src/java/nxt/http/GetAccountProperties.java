@@ -35,7 +35,7 @@ public final class GetAccountProperties extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long recipientId = ParameterParser.getAccountId(req, "recipient", false);
         long setterId = ParameterParser.getAccountId(req, "setter", false);

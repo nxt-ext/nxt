@@ -33,7 +33,7 @@ public final class GetAllPhasingOnlyControls extends APIServlet.APIRequestHandle
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         JSONObject response = new JSONObject();

@@ -68,7 +68,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-final class JSONData {
+public final class JSONData {
 
     static JSONObject alias(Alias alias) {
         JSONObject json = new JSONObject();

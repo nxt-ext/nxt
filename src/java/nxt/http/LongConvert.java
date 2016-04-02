@@ -33,7 +33,7 @@ public final class LongConvert extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         String id = Convert.emptyToNull(req.getParameter("id"));
         if (id == null) {
             return JSON.emptyJSON;
@@ -59,12 +59,12 @@ public final class LongConvert extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

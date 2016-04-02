@@ -33,7 +33,7 @@ public class DividendPayment extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(final HttpServletRequest request)
+    protected JSONStreamAware processRequest(final HttpServletRequest request)
             throws NxtException
     {
         final int height = ParameterParser.getHeight(request);

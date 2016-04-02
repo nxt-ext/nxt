@@ -30,7 +30,7 @@ public final class GetDGSPurchase extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         return JSONData.purchase(ParameterParser.getPurchase(req));
     }
 

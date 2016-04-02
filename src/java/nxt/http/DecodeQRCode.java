@@ -71,7 +71,7 @@ public final class DecodeQRCode extends APIServlet.APIRequestHandler {
     }
     
     @Override
-    JSONStreamAware processRequest(HttpServletRequest request)
+    protected JSONStreamAware processRequest(HttpServletRequest request)
             throws NxtException {
    
         String qrCodeBase64 = Convert.nullToEmpty(request.getParameter("qrCodeBase64"));
@@ -107,17 +107,17 @@ public final class DecodeQRCode extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

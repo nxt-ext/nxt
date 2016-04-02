@@ -32,7 +32,7 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         byte[] publicKey = ParameterParser.getPublicKey(req);
         long accountId = Account.getId(publicKey);
@@ -44,12 +44,12 @@ public final class GetAccountId extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    final boolean allowRequiredBlockParameters() {
+    protected final boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    final boolean requireBlockchain() {
+    protected final boolean requireBlockchain() {
         return false;
     }
 

@@ -32,7 +32,7 @@ public final class GetOffer extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         JSONObject response = new JSONObject();
         CurrencyBuyOffer buyOffer = ParameterParser.getBuyOffer(req);
         CurrencySellOffer sellOffer = ParameterParser.getSellOffer(req);

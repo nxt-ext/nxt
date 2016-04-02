@@ -34,7 +34,7 @@ public final class GetDGSGoodsPurchases extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long goodsId = ParameterParser.getUnsignedLong(req, "goods", true);
         long buyerId = ParameterParser.getAccountId(req, "buyer", false);

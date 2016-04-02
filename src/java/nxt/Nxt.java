@@ -371,10 +371,10 @@ public final class Nxt {
                 TaggedData.init();
                 Peers.init();
                 Generator.init();
+                AddOns.init();
                 API.init();
                 Users.init();
                 DebugTrace.init();
-                AddOns.init();
                 int timeMultiplier = (Constants.isTestnet && Constants.isOffline) ? Math.max(Nxt.getIntProperty("nxt.timeMultiplier"), 1) : 1;
                 ThreadPool.start(timeMultiplier);
                 if (timeMultiplier > 1) {

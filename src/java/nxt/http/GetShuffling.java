@@ -30,7 +30,7 @@ public final class GetShuffling extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         boolean includeHoldingInfo = "true".equalsIgnoreCase(req.getParameter("includeHoldingInfo"));
         return JSONData.shuffling(ParameterParser.getShuffling(req), includeHoldingInfo);
     }
