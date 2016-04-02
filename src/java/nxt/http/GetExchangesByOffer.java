@@ -37,7 +37,7 @@ public final class GetExchangesByOffer extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         // can't use ParameterParser.getCurrencyBuyOffer because offer may have been already deleted
         String offerValue = Convert.emptyToNull(req.getParameter("offer"));
         if (offerValue == null) {

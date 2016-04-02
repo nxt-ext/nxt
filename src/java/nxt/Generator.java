@@ -188,7 +188,7 @@ public final class Generator implements Comparable<Generator> {
 
     public static List<Generator> getSortedForgers() {
         List<Generator> forgers = sortedForgers;
-        return forgers == null ? Collections.<Generator>emptyList() : forgers;
+        return forgers == null ? Collections.emptyList() : forgers;
     }
 
     public static long getNextHitTime(long lastBlockId, int curTime) {

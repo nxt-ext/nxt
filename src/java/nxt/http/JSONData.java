@@ -68,7 +68,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-final class JSONData {
+public final class JSONData {
 
     static JSONObject alias(Alias alias) {
         JSONObject json = new JSONObject();
@@ -88,6 +88,10 @@ final class JSONData {
     }
 
     static JSONObject accountBalance(Account account, boolean includeEffectiveBalance) {
+        return accountBalance(account, includeEffectiveBalance, Nxt.getBlockchain().getHeight());
+    }
+
+    static JSONObject accountBalance(Account account, boolean includeEffectiveBalance, int height) {
         JSONObject json = new JSONObject();
         if (account == null) {
             json.put("balanceNQT", "0");
@@ -102,8 +106,8 @@ final class JSONData {
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
             if (includeEffectiveBalance) {
-                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
-                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT(height));
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height)));
             }
         }
         return json;
@@ -711,7 +715,9 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("purchase", Long.toUnsignedString(purchase.getId()));
         json.put("goods", Long.toUnsignedString(purchase.getGoodsId()));
-        json.put("name", purchase.getName());
+        DigitalGoodsStore.Goods goods = DigitalGoodsStore.Goods.getGoods(purchase.getGoodsId());
+        json.put("name", goods.getName());
+        json.put("hasImage", goods.hasImage());
         putAccount(json, "seller", purchase.getSellerId());
         json.put("priceNQT", String.valueOf(purchase.getPriceNQT()));
         json.put("quantity", purchase.getQuantity());

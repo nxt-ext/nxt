@@ -35,7 +35,7 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         boolean active = "true".equalsIgnoreCase(req.getParameter("active"));
         String stateValue = Convert.emptyToNull(req.getParameter("state"));
@@ -93,7 +93,7 @@ public final class GetPeers extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

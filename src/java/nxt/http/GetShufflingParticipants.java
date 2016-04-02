@@ -34,7 +34,7 @@ public final class GetShufflingParticipants extends APIServlet.APIRequestHandler
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long shufflingId = ParameterParser.getUnsignedLong(req, "shuffling", true);
         JSONObject response = new JSONObject();
         JSONArray participantsJSONArray = new JSONArray();

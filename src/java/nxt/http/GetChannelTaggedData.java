@@ -35,7 +35,7 @@ public final class GetChannelTaggedData extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         String channel = Convert.emptyToNull(req.getParameter("channel"));
         if (channel == null) {
             return JSONResponses.missing("channel");

@@ -44,7 +44,7 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
     private static final Path PLUGINS_HOME = Paths.get("./html/ui/plugins");
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONObject response = new JSONObject();
         if (!Files.isReadable(PLUGINS_HOME)) {
@@ -63,7 +63,7 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

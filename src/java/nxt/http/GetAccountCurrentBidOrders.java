@@ -33,7 +33,7 @@ public final class GetAccountCurrentBidOrders extends APIServlet.APIRequestHandl
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         long accountId = ParameterParser.getAccountId(req, true);
         long assetId = ParameterParser.getUnsignedLong(req, "asset", false);

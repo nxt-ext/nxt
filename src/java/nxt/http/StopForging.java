@@ -32,7 +32,7 @@ public final class StopForging extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         JSONObject response = new JSONObject();
@@ -49,12 +49,12 @@ public final class StopForging extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

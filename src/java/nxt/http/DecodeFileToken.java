@@ -63,12 +63,12 @@ public final class DecodeFileToken extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

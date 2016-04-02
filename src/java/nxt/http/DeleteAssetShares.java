@@ -35,7 +35,7 @@ public final class DeleteAssetShares extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         Asset asset = ParameterParser.getAsset(req);
         long quantityQNT = ParameterParser.getQuantityQNT(req);

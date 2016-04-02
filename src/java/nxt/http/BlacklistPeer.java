@@ -37,7 +37,7 @@ public class BlacklistPeer extends APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest request)
+    protected JSONStreamAware processRequest(HttpServletRequest request)
             throws NxtException {
         JSONObject response = new JSONObject();
         
@@ -58,22 +58,22 @@ public class BlacklistPeer extends APIRequestHandler {
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean requirePassword() {
+    protected boolean requirePassword() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

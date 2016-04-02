@@ -35,7 +35,7 @@ public final class GetBlockId extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         int height;
         try {

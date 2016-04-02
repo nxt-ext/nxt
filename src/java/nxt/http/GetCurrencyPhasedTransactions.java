@@ -34,7 +34,7 @@ public class GetCurrencyPhasedTransactions extends APIServlet.APIRequestHandler 
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", true);
         long accountId = ParameterParser.getAccountId(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);

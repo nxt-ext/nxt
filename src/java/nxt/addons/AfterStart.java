@@ -36,9 +36,4 @@ public final class AfterStart implements AddOn {
         }
     }
 
-    @Override
-    public void shutdown() {
-
-    }
-
 }

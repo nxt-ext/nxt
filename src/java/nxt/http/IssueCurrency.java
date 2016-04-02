@@ -91,7 +91,7 @@ public final class IssueCurrency extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         String name = Convert.nullToEmpty(req.getParameter("name"));
         String code = Convert.nullToEmpty(req.getParameter("code"));
         String description = Convert.nullToEmpty(req.getParameter("description"));

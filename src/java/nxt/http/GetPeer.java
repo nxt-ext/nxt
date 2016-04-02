@@ -34,7 +34,7 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         String peerAddress = req.getParameter("peer");
         if (peerAddress == null) {
@@ -51,7 +51,7 @@ public final class GetPeer extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

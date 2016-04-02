@@ -236,7 +236,7 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
      * @throws  NxtException        Invalid request
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         //
         // Process the request parameters
         //

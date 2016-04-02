@@ -32,7 +32,7 @@ public final class GetDGSGoodsPurchaseCount extends APIServlet.APIRequestHandler
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long goodsId = ParameterParser.getUnsignedLong(req, "goods", true);
         final boolean withPublicFeedbacksOnly = "true".equalsIgnoreCase(req.getParameter("withPublicFeedbacksOnly"));

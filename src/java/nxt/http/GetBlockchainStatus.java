@@ -37,7 +37,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONObject processRequest(HttpServletRequest req) {
+    protected JSONObject processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         response.put("application", Nxt.APPLICATION);
         response.put("version", Nxt.VERSION);
@@ -66,7 +66,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

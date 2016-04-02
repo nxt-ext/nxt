@@ -36,7 +36,7 @@ public final class GetHoldingShufflings extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         long holdingId = 0;
         String holdingValue = Convert.emptyToNull(req.getParameter("holding"));

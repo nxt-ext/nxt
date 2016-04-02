@@ -33,7 +33,7 @@ public final class GetAllWaitingTransactions extends APIServlet.APIRequestHandle
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("transactions", jsonArray);
@@ -45,7 +45,7 @@ public final class GetAllWaitingTransactions extends APIServlet.APIRequestHandle
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

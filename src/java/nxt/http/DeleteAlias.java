@@ -36,7 +36,7 @@ public final class DeleteAlias extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(final HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(final HttpServletRequest req) throws NxtException {
         final Alias alias = ParameterParser.getAlias(req);
         final Account owner = ParameterParser.getSenderAccount(req);
 

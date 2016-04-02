@@ -212,3 +212,15 @@ QUnit.test("utf8", function (assert) {
     bytes2 = NRS.strToUTF8Arr(str);
     assert.deepEqual(bytes1, bytes2);
 });
+
+QUnit.test("versionCompare", function (assert) {
+    assert.equal(NRS.versionCompare("1.6.4", "1.7.5"), "-1", "after");
+    assert.equal(NRS.versionCompare("1.7.5", "1.6.4"), "1", "before");
+    assert.equal(NRS.versionCompare("1.6.4", "1.6.4"), "0", "same");
+    assert.equal(NRS.versionCompare("1.6.4e", "1.6.5e"), "-1", "after.e");
+    assert.equal(NRS.versionCompare("1.6.5e", "1.6.4e"), "1", "before.e");
+    assert.equal(NRS.versionCompare("1.6.4e", "1.6.4e"), "0", "same.e");
+    assert.equal(NRS.versionCompare("1.7.5", "1.8.0e"), "-1", "after.ga.vs.e");
+    assert.equal(NRS.versionCompare("1.7.5e", "1.8.0"), "-1", "after.e.vs.ga");
+    assert.equal(NRS.versionCompare("1.8.0e", "1.8.0"), "1", "same.e.before.ga");
+});

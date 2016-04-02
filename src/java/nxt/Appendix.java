@@ -1191,22 +1191,19 @@ public interface Appendix {
 
         private static final String appendixName = "Phasing";
 
-        private static final Fee PHASING_FEE = new Fee() {
-            @Override
-            public long getFee(TransactionImpl transaction, Appendix appendage) {
-                long fee = 0;
-                Phasing phasing = (Phasing)appendage;
-                if (!phasing.params.getVoteWeighting().isBalanceIndependent()) {
-                    fee += 20 * Constants.ONE_NXT;
-                } else {
-                    fee += Constants.ONE_NXT;
-                }
-                if (phasing.hashedSecret.length > 0) {
-                    fee += (1 + (phasing.hashedSecret.length - 1) / 32) * Constants.ONE_NXT;
-                }
-                fee += Constants.ONE_NXT * phasing.linkedFullHashes.length;
-                return fee;
+        private static final Fee PHASING_FEE = (transaction, appendage) -> {
+            long fee = 0;
+            Phasing phasing = (Phasing)appendage;
+            if (!phasing.params.getVoteWeighting().isBalanceIndependent()) {
+                fee += 20 * Constants.ONE_NXT;
+            } else {
+                fee += Constants.ONE_NXT;
             }
+            if (phasing.hashedSecret.length > 0) {
+                fee += (1 + (phasing.hashedSecret.length - 1) / 32) * Constants.ONE_NXT;
+            }
+            fee += Constants.ONE_NXT * phasing.linkedFullHashes.length;
+            return fee;
         };
 
         static Phasing parse(JSONObject attachmentData) {

@@ -45,7 +45,7 @@ public final class GetMintingTarget extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
         JSONObject json = new JSONObject();
         json.put("currency", Long.toUnsignedString(currency.getId()));

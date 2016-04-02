@@ -60,7 +60,7 @@ public final class GetLog extends APIServlet.APIRequestHandler {
      * @return                      API response
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         //
         // Get the number of log messages to return
         //
@@ -96,17 +96,17 @@ public final class GetLog extends APIServlet.APIRequestHandler {
      * @return                      TRUE if the admin password is required
      */
     @Override
-    boolean requirePassword() {
+    protected boolean requirePassword() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

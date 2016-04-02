@@ -232,8 +232,9 @@ var NRS = (function (NRS, $, undefined) {
         "es-US": "M/d/yyyy"
     };
 
-    var LANG = window.navigator.userLanguage || window.navigator.language;
+    var LANG = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
     var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
+    NRS.logConsole("Date Format Locale: " + LANG + ", Date Format: " + LOCALE_DATE_FORMAT);
 
     NRS.formatVolume = function (volume) {
 		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -1700,6 +1701,71 @@ var NRS = (function (NRS, $, undefined) {
             buf +=number.toString(32);
         }
         return buf;
+    };
+
+    NRS.versionCompare = function (v1, v2) {
+        if (v2 == undefined) {
+            return -1;
+        } else if (v1 == undefined) {
+            return -1;
+        }
+
+        //https://gist.github.com/TheDistantSea/8021359 (based on)
+        var v1last = v1.slice(-1);
+        var v2last = v2.slice(-1);
+
+        if (v1last == 'e') {
+            v1 = v1.substring(0, v1.length - 1);
+        } else {
+            v1last = '';
+        }
+
+        if (v2last == 'e') {
+            v2 = v2.substring(0, v2.length - 1);
+        } else {
+            v2last = '';
+        }
+
+        var v1parts = v1.split('.');
+        var v2parts = v2.split('.');
+
+        function isValidPart(x) {
+            return /^\d+$/.test(x);
+        }
+
+        if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
+            return NaN;
+        }
+
+        v1parts = v1parts.map(Number);
+        v2parts = v2parts.map(Number);
+
+        for (var i = 0; i < v1parts.length; ++i) {
+            if (v2parts.length == i) {
+                return 1;
+            }
+            if (v1parts[i] != v2parts[i]) {
+                if (v1parts[i] > v2parts[i]) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
+        }
+
+        if (v1parts.length != v2parts.length) {
+            return -1;
+        }
+
+        if (v1last && v2last) {
+            return 0;
+        } else if (v1last) {
+            return 1;
+        } else if (v2last) {
+            return -1;
+        } else {
+            return 0;
+        }
     };
 
     return NRS;

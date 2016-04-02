@@ -371,10 +371,10 @@ public final class Nxt {
                 TaggedData.init();
                 Peers.init();
                 Generator.init();
+                AddOns.init();
                 API.init();
                 Users.init();
                 DebugTrace.init();
-                AddOns.init();
                 int timeMultiplier = (Constants.isTestnet && Constants.isOffline) ? Math.max(Nxt.getIntProperty("nxt.timeMultiplier"), 1) : 1;
                 ThreadPool.start(timeMultiplier);
                 if (timeMultiplier > 1) {
@@ -394,6 +394,9 @@ public final class Nxt {
                     Logger.logMessage("Client UI is at " + API.getWelcomePageUri());
                 }
                 setServerStatus(ServerStatus.STARTED, API.getWelcomePageUri());
+                if (isDesktopApplicationEnabled()) {
+                    launchDesktopApplication();
+                }
                 if (Constants.isTestnet) {
                     Logger.logMessage("RUNNING ON TESTNET - DO NOT USE REAL ACCOUNTS!");
                 }
@@ -443,6 +446,8 @@ public final class Nxt {
                 "sun.arch.data.model",
                 "os.name",
                 "file.encoding",
+                "java.security.policy",
+                "java.security.manager",
                 RuntimeEnvironment.RUNTIME_MODE_ARG,
                 RuntimeEnvironment.DIRPROVIDER_ARG
         };
@@ -506,8 +511,16 @@ public final class Nxt {
         return dirProvider.getConfDir();
     }
 
-    public static void setServerStatus(ServerStatus status, URI wallet) {
+    private static void setServerStatus(ServerStatus status, URI wallet) {
         runtimeMode.setServerStatus(status, wallet, dirProvider.getLogFileDir());
+    }
+
+    public static boolean isDesktopApplicationEnabled() {
+        return RuntimeEnvironment.isDesktopApplicationEnabled() && Nxt.getBooleanProperty("nxt.launchDesktopApplication");
+    }
+
+    private static void launchDesktopApplication() {
+        runtimeMode.launchDesktopApplication();
     }
 
     private Nxt() {} // never

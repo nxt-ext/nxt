@@ -38,7 +38,7 @@ public final class GetExpectedAssetTransfers extends APIServlet.APIRequestHandle
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long assetId = ParameterParser.getUnsignedLong(req, "asset", false);
         long accountId = ParameterParser.getAccountId(req, "account", false);

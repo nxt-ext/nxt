@@ -35,7 +35,7 @@ public final class CancelBidOrder extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long orderId = ParameterParser.getUnsignedLong(req, "order", true);
         Account account = ParameterParser.getSenderAccount(req);
         Order.Bid orderData = Order.Bid.getBidOrder(orderId);

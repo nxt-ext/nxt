@@ -40,7 +40,7 @@ public final class IssueAsset extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String name = req.getParameter("name");
         String description = req.getParameter("description");

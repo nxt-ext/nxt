@@ -33,7 +33,7 @@ public final class GetAllBroadcastedTransactions extends APIServlet.APIRequestHa
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         JSONArray jsonArray = new JSONArray();
         response.put("transactions", jsonArray);
@@ -45,12 +45,12 @@ public final class GetAllBroadcastedTransactions extends APIServlet.APIRequestHa
     }
     
     @Override
-    boolean requirePassword() {
+    protected boolean requirePassword() {
         return true;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

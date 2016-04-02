@@ -1164,6 +1164,8 @@ class NxtDbVersion extends DbVersion {
             case 479:
                 apply("ALTER TABLE goods ADD COLUMN IF NOT EXISTS has_image BOOLEAN NOT NULL DEFAULT FALSE");
             case 480:
+                apply("ALTER TABLE purchase ADD COLUMN IF NOT EXISTS goods_is_text BOOLEAN NOT NULL DEFAULT TRUE");
+            case 481:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

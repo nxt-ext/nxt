@@ -51,15 +51,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DesktopApplication extends Application {
 
-    static volatile boolean isLaunched;
-    static volatile Stage stage;
-    static volatile WebEngine webEngine;
-    JSObject nrs;
+    private static volatile boolean isLaunched;
+    private static volatile Stage stage;
+    private static volatile WebEngine webEngine;
+    private JSObject nrs;
 
     public static void launch() {
         if (!isLaunched) {
@@ -101,6 +102,8 @@ public class DesktopApplication extends Application {
         DesktopApplication.stage = stage;
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
         WebView browser = new WebView();
+        browser.setContextMenuEnabled(false);
+        WebView invisible = new WebView();
 
         int height = (int) Math.min(primaryScreenBounds.getMaxY() - 100, 1000);
         int width = (int) Math.min(primaryScreenBounds.getMaxX() - 100, 1618);
@@ -114,6 +117,9 @@ public class DesktopApplication extends Application {
                 (ov, oldState, newState) -> {
                     JSObject window = (JSObject)webEngine.executeScript("window");
                     window.setMember("java", this);
+                    Locale locale = Locale.getDefault();
+                    String language = locale.getLanguage().toLowerCase() + "-" + locale.getCountry().toUpperCase();
+                    window.setMember("javaFxLanguage", language);
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
                     if (newState == Worker.State.SUCCEEDED) {
@@ -128,11 +134,26 @@ public class DesktopApplication extends Application {
                     }
                 });
 
+        // Invoked by the webEngine popup handler
+        // The invisible webView does not show the link, instead it opens a browser window
+        invisible.getEngine().locationProperty().addListener((observable, oldValue, newValue) -> {
+            popupHandlerURLChange(newValue);
+        });
+
+        // Invoked when changing the document.location property, when issuing a download request
         webEngine.locationProperty().addListener((observable, oldValue, newValue) -> {
             webViewURLChange(newValue);
         });
 
+        // Invoked when clicking a link to external site like Help or API console
+        webEngine.setCreatePopupHandler(
+            config -> {
+                Logger.logInfoMessage("popup request from webEngine");
+                return invisible.getEngine();
+            });
+
         webEngine.load(getUrl());
+
         Scene scene = new Scene(browser);
         String address = API.getServerRootUri().toString();
         stage.getIcons().add(new Image(address + "/img/nxt-icon-32x32.png"));
@@ -189,6 +210,17 @@ public class DesktopApplication extends Application {
         return url;
     }
 
+    private void popupHandlerURLChange(String newValue) {
+        Logger.logInfoMessage("popup request for " + newValue);
+        Platform.runLater(() -> {
+            try {
+                Desktop.getDesktop().browse(new URI(newValue));
+            } catch (Exception e) {
+                Logger.logInfoMessage("Cannot open " + newValue + " error " + e.getMessage());
+            }
+        });
+    }
+
     private void webViewURLChange(String newValue) {
         Logger.logInfoMessage("webview address changed to " + newValue);
         URL url;
@@ -210,10 +242,14 @@ public class DesktopApplication extends Application {
                 params.put(keyValuePair[0], keyValuePair[1]);
             }
         }
-        if (!"downloadTaggedData".equals(params.get("requestType"))) {
+        if ("downloadTaggedData".equals(params.get("requestType"))) {
+            download(params);
+        } else {
             Logger.logInfoMessage(String.format("requestType %s is not a download request", params.get("requestType")));
-            return;
         }
+    }
+
+    private void download(Map<String, String> params) {
         long transactionId = Convert.parseUnsignedLong(params.get("transaction"));
         TaggedData taggedData = TaggedData.getData(transactionId);
         boolean retrieve = "true".equals(params.get("retrieve"));
@@ -267,11 +303,11 @@ public class DesktopApplication extends Application {
         });
     }
 
-    public void growl(String msg) {
+    private void growl(String msg) {
         growl(msg, null);
     }
 
-    public void growl(String msg, Exception e) {
+    private void growl(String msg, Exception e) {
         if (e == null) {
             Logger.logInfoMessage(msg);
         } else {
