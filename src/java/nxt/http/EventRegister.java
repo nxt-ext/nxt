@@ -152,7 +152,7 @@ public class EventRegister extends APIServlet.APIRequestHandler {
      * @return                      API response
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response;
         //
         // Get 'add' and 'remove' parameters
@@ -258,7 +258,7 @@ public class EventRegister extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
@@ -268,7 +268,7 @@ public class EventRegister extends APIServlet.APIRequestHandler {
      * @return                      FALSE to disable the required block parameters
      */
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 }

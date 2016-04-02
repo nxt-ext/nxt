@@ -42,7 +42,7 @@ public class ApproveTransaction extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         String[] phasedTransactionValues = req.getParameterValues("transactionFullHash");
 
         if (phasedTransactionValues == null || phasedTransactionValues.length == 0) {

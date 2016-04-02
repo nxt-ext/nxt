@@ -37,7 +37,7 @@ public final class DGSFeedback extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         DigitalGoodsStore.Purchase purchase = ParameterParser.getPurchase(req);
 

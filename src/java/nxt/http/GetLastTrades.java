@@ -33,7 +33,7 @@ public final class GetLastTrades extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         long[] assetIds = ParameterParser.getUnsignedLongs(req, "assets");
         JSONArray tradesJSON = new JSONArray();
         List<Trade> trades = Trade.getLastTrades(assetIds);

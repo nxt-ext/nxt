@@ -1,0 +1,22 @@
+Add-ons can now register their own http API request handlers, allowing custom
+request types to be supported. Overriding existing client APIs is not allowed.
+See the example add-on nxt.addons.PopOffCounter.
+
+Added getSharedKey API, to allow calculating the one-time shared key used for
+encryption of messages. Parameters are the secret phrase for one of the
+accounts, the other account, and the nonce used in the message encryption.
+
+The readMessage API now supports decryption of encrypted message parts using
+the shared key, as provided by the above getSharedKey API, instead of the secret
+phrase. An optional retrieve parameter is also supported to request automatic
+retrieval of pruned message parts from archival nodes.
+
+A new decryptDGSPurchase API has been added, allowing decryption of marketplace
+purchases, using either the secret phrase of the buyer or seller, or the shared
+key from the getSharedKey API.
+
+The getBalance API now supports optional height parameter to retrieve account
+balance at previous heights, if still available.
+
+Minor bugfixes and UI improvements.
+

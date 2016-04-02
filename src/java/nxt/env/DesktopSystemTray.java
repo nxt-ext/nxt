@@ -49,7 +49,7 @@ public class DesktopSystemTray {
     private MenuItem openWalletInBrowser;
     private MenuItem viewLog;
     private SystemTrayDataProvider dataProvider;
-    private DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.MEDIUM, Locale.getDefault());
+    private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.MEDIUM, Locale.getDefault());
 
     void createAndShowGUI() {
         if (!SystemTray.isSupported()) {

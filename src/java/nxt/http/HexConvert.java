@@ -32,7 +32,7 @@ public final class HexConvert extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         String string = Convert.emptyToNull(req.getParameter("string"));
         if (string == null) {
             return JSON.emptyJSON;
@@ -52,12 +52,12 @@ public final class HexConvert extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

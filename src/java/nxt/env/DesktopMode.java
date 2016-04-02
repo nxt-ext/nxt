@@ -37,20 +37,16 @@ public class DesktopMode implements RuntimeMode {
     @Override
     public void setServerStatus(ServerStatus status, URI wallet, File logFileDir) {
         desktopSystemTray.setToolTip(new SystemTrayDataProvider(status.getMessage(), wallet, logFileDir));
-        if (status.isLaunchApplication()) {
-            try {
-                Class.forName("javafx.application.Application");
-            } catch (ClassNotFoundException e) {
-                Logger.logInfoMessage("javafx not supported, cannot launch desktop wallet");
-                return;
-            }
-            Logger.logInfoMessage("Launching desktop wallet");
-            try {
-                desktopApplication = Class.forName("nxtdesktop.DesktopApplication");
-                desktopApplication.getMethod("launch").invoke(null);
-            } catch (ReflectiveOperationException e) {
-                Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to launch", e);
-            }
+    }
+
+    @Override
+    public void launchDesktopApplication() {
+        Logger.logInfoMessage("Launching desktop wallet");
+        try {
+            desktopApplication = Class.forName("nxtdesktop.DesktopApplication");
+            desktopApplication.getMethod("launch").invoke(null);
+        } catch (ReflectiveOperationException e) {
+            Logger.logInfoMessage("nxtdesktop.DesktopApplication failed to launch", e);
         }
     }
 

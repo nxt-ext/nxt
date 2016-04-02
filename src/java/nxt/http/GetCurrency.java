@@ -35,7 +35,7 @@ public final class GetCurrency extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         boolean includeCounts = "true".equalsIgnoreCase(req.getParameter("includeCounts"));
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);
         Currency currency;

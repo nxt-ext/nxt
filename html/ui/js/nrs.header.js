@@ -34,12 +34,10 @@ var NRS = (function(NRS, $) {
         if (!NRS.isCoinExchangePageAvailable()) {
             $("#exchange_menu_li").remove();
         }
-        if (!NRS.isWebWalletLinkVisible()) {
+        if (!NRS.isExternalLinkVisible()) {
             $("#web_wallet_li").remove();
-        }
-        if (NRS.isOpenLinkInNewTabSupported()) {
-            $("#api_console_li").show();
-            $("#database_shell_li").show();
+            $("#api_console_li").hide();
+            $("#database_shell_li").hide();
         }
     });
 

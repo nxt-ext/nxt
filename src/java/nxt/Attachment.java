@@ -2884,7 +2884,7 @@ public interface Attachment extends Appendix {
 
         private static final byte[] emptyDataHash = Crypto.sha256().digest();
 
-        static ShufflingProcessing parse(JSONObject attachmentData) throws NxtException.NotValidException {
+        static ShufflingProcessing parse(JSONObject attachmentData) {
             if (!Appendix.hasAppendix(ShufflingTransaction.SHUFFLING_PROCESSING.getName(), attachmentData)) {
                 return null;
             }

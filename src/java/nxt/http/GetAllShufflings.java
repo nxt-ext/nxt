@@ -33,7 +33,7 @@ public final class GetAllShufflings extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
         boolean includeHoldingInfo = "true".equalsIgnoreCase(req.getParameter("includeHoldingInfo"));

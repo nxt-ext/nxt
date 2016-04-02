@@ -32,7 +32,7 @@ public final class GetDGSPurchaseCount extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long sellerId = ParameterParser.getAccountId(req, "seller", false);
         long buyerId = ParameterParser.getAccountId(req, "buyer", false);

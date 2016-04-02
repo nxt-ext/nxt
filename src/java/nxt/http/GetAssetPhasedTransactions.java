@@ -34,7 +34,7 @@ public class GetAssetPhasedTransactions extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         long assetId = ParameterParser.getUnsignedLong(req, "asset", true);
         long accountId = ParameterParser.getAccountId(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);

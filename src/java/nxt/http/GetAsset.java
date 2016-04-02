@@ -30,7 +30,7 @@ public final class GetAsset extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         boolean includeCounts = "true".equalsIgnoreCase(req.getParameter("includeCounts"));
         return JSONData.asset(ParameterParser.getAsset(req), includeCounts);
     }

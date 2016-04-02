@@ -17,9 +17,9 @@
 package nxt.http;
 
 import nxt.Account;
-import nxt.FundingMonitor;
 import nxt.Asset;
 import nxt.Currency;
+import nxt.FundingMonitor;
 import nxt.HoldingType;
 import nxt.NxtException;
 import nxt.crypto.Crypto;
@@ -28,9 +28,9 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.incorrect;
 import static nxt.http.JSONResponses.MONITOR_ALREADY_STARTED;
 import static nxt.http.JSONResponses.UNKNOWN_ACCOUNT;
+import static nxt.http.JSONResponses.incorrect;
 
 /**
  * Start a funding monitor
@@ -75,7 +75,7 @@ public final class StartFundingMonitor extends APIServlet.APIRequestHandler {
      * @throws  NxtException        Unable to process request
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         HoldingType holdingType = ParameterParser.getHoldingType(req);
         long holdingId = ParameterParser.getHoldingId(req, holdingType);
         String property = ParameterParser.getAccountProperty(req, true);
@@ -117,12 +117,12 @@ public final class StartFundingMonitor extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 }

@@ -1164,10 +1164,12 @@ class NxtDbVersion extends DbVersion {
             case 479:
                 apply("ALTER TABLE goods ADD COLUMN IF NOT EXISTS has_image BOOLEAN NOT NULL DEFAULT FALSE");
             case 480:
-                apply("CREATE TABLE IF NOT EXISTS account_fnxt (id BIGINT NOT NULL, balance VARBINARY NOT NULL, height INT NOT NULL)");
+                apply("ALTER TABLE purchase ADD COLUMN IF NOT EXISTS goods_is_text BOOLEAN NOT NULL DEFAULT TRUE");
             case 481:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fnxt_id_idx ON account_fnxt (id, height DESC)");
+                apply("CREATE TABLE IF NOT EXISTS account_fnxt (id BIGINT NOT NULL, balance VARBINARY NOT NULL, height INT NOT NULL)");
             case 482:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fnxt_id_idx ON account_fnxt (id, height DESC)");
+            case 483:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

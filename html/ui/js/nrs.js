@@ -187,9 +187,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showLockscreen();
 		NRS.setStateInterval(30);
 
-		if (!NRS.isTestNet) {
-			setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
-		}
+		setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
 
 		NRS.allowLoginViaEnter();
 		NRS.automaticallyCheckRecipient();

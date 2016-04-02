@@ -37,7 +37,7 @@ public final class SearchDGSGoods extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long sellerId = ParameterParser.getAccountId(req, "seller", false);
         String query = ParameterParser.getSearchQuery(req);
         int firstIndex = ParameterParser.getFirstIndex(req);

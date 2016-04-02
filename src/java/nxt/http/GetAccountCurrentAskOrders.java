@@ -34,7 +34,7 @@ public final class GetAccountCurrentAskOrders extends APIServlet.APIRequestHandl
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long accountId = ParameterParser.getAccountId(req, true);
         long assetId = ParameterParser.getUnsignedLong(req, "asset", false);

@@ -17,11 +17,13 @@
 package nxt.addons;
 
 import nxt.Nxt;
+import nxt.http.APIServlet;
 import nxt.util.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public final class AddOns {
 
@@ -36,6 +38,11 @@ public final class AddOns {
             }
         });
         addOns = Collections.unmodifiableList(addOnsList);
+        if (!addOns.isEmpty()) {
+            System.setProperty("java.security.policy", Nxt.isDesktopApplicationEnabled() ? "nxtdesktop.policy" : "nxt.policy");
+            Logger.logMessage("Setting security manager with policy " + System.getProperty("java.security.policy"));
+            System.setSecurityManager(new SecurityManager());
+        }
         addOns.forEach(addOn -> {
             Logger.logInfoMessage("Initializing " + addOn.getClass().getName());
             addOn.init();
@@ -49,6 +56,25 @@ public final class AddOns {
             Logger.logShutdownMessage("Shutting down " + addOn.getClass().getName());
             addOn.shutdown();
         });
+    }
+
+    public static void registerAPIRequestHandlers(Map<String,APIServlet.APIRequestHandler> map) {
+        for (AddOn addOn : addOns) {
+            APIServlet.APIRequestHandler requestHandler = addOn.getAPIRequestHandler();
+            if (requestHandler != null) {
+                String requestType = addOn.getAPIRequestType();
+                if (requestType == null) {
+                    Logger.logErrorMessage("Add-on " + addOn.getClass().getName() + " requestType not defined");
+                    continue;
+                }
+                if (map.get(requestType) != null) {
+                    Logger.logErrorMessage("Add-on " + addOn.getClass().getName() + " attempted to override requestType " + requestType + ", skipping");
+                    continue;
+                }
+                Logger.logMessage("Add-on " + addOn.getClass().getName() + " registered new API: " + requestType);
+                map.put(requestType, requestHandler);
+            }
+        }
     }
 
     private AddOns() {}

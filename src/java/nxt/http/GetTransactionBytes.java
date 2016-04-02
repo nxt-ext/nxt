@@ -37,7 +37,7 @@ public final class GetTransactionBytes extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         String transactionValue = req.getParameter("transaction");
         if (transactionValue == null) {
