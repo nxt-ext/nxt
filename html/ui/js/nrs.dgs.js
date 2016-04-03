@@ -76,8 +76,6 @@ var NRS = (function(NRS, $) {
 								html +=	"<span class='purchases' style='float:right;clear:right;'><strong>" + $.t("purchases", "Purchases") + "</strong>: " + NRS.format(good.numberOfPurchases) + "</span>";
 							}
 
-
-
 						html += '</div>';
 					html += "</td>";
 				html += "</tr>";
@@ -446,6 +444,14 @@ var NRS = (function(NRS, $) {
 			NRS.dataLoaded(content);
 		});
 	};
+
+    NRS.pages.recent_listings =function() {
+		NRS.dgs_listings("recent_listings_full","getDGSGoods+",true);
+	}
+
+	NRS.pages.recent_purchases =function() {
+		NRS.dgs_listings("recent_purchases_full","getDGSPurchases+",true);
+	}
 
 	NRS.incoming.completed_orders_dgs = function() {
 		NRS.loadPage("completed_orders_dgs");
@@ -1015,7 +1021,8 @@ var NRS = (function(NRS, $) {
 		var $invoker = $(e.relatedTarget);
 
 		var type = $modal.attr("id");
-      var goods;
+        var goods;
+
 		if (!$invoker.length) {
 			goods = _goodsToShow;
 			_goodsToShow = 0;
@@ -1025,7 +1032,7 @@ var NRS = (function(NRS, $) {
 
         if (NRS.getUrlParameter("goods") && goods == null) {
             goods = NRS.getUrlParameter("goods").escapeHTML();
-		}
+        }
 
 		$modal.find("input[name=goods]").val(goods);
 
@@ -1176,7 +1183,7 @@ var NRS = (function(NRS, $) {
 		NRS.goToGoods($(this).data("seller"), $(this).data("goto-goods"));
 	});
 
-    $("#dgs_purchase_modal, #dgs_product_modal, #dgs_listings").on("click", "a[data-goto-seller]", function(e) {
+	$("#dgs_purchase_modal, #dgs_product_modal, #dgs_recent_listings_full, #dgs_listings").on("click", "a[data-goto-seller]", function(e) {
     		e.preventDefault();
 
     		var $visible_modal = $(".modal.in");
@@ -1197,64 +1204,78 @@ var NRS = (function(NRS, $) {
 		});
 	};
 
-	NRS.dgs_listings = function (table, api) {
-		var listingsTable = $("#" + table + "_table");
-		listingsTable.find("tbody").empty();
-		listingsTable.parent().addClass("data-loading").removeClass("data-empty");
-		var view = NRS.simpleview.get(table, {
-			errorMessage: null,
-			isLoading: true,
-			isEmpty: false,
-			data: []
-		});
-		NRS.sendRequest(api, {
-			"firstIndex": 0,
-			"lastIndex": 9
-		}, function (response) {
-			var accountKey;
-			if (api == "getDGSGoods+") {
-				response = response.goods;
-				accountKey = "seller";
-			} else if (api == "getDGSPurchases+") {
-				response = response.purchases;
-				accountKey = "buyer";
-			}
-			for (var i = 0; i < response.length; i++) {
-				var item = response[i];
-				var name = item.name;
-                if (name.length > 45) {
-					name = name.substring(0, 45) + "...";
-				}
-				var picture = new Image();
-				if (!item.hasImage) {
-                    picture.src = missingImage;
-                }
-                else {
-                    picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
-                }
-				var image = '<img style="max-height:100%;max-width:100%" src="' + picture.src + '"/>';
-				var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
-				var account;
-				if (accountKey == "seller") {
-					account = '<a href="#" data-goto-seller="' + item.sellerRS + '">' + item.sellerRS + '</a>';
-				} else if (accountKey == "buyer") {
-					account = NRS.getAccountLink(item, accountKey)
-				}
-				view.data.push({
-					"timestamp": NRS.formatTimestamp(item.timestamp),
-					"good": good,
-					"price": NRS.formatAmount(item.priceNQT, NRS.decimals),
-					"account": account,
-					"image": image
-				})
-			}
-			view.render({
-				isLoading: false,
-				isEmpty: view.data.length == 0
-			});
-			NRS.pageLoaded();
-		});
-	};
+	NRS.dgs_listings = function (table, api, full) {
+    		var listingsTable = $("#" + table + "_table");
+    		listingsTable.find("tbody").empty();
+    		listingsTable.parent().addClass("data-loading").removeClass("data-empty");
+    		var params;
+    		if (full) {
+    			params = {
+    				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+    				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+    			};
+    		} else {
+    			params = {
+    				"firstIndex": 0,
+    				"lastIndex": 9
+    			};
+    		}
+    		var view = NRS.simpleview.get(table, {
+    			errorMessage: null,
+    			isLoading: true,
+    			isEmpty: false,
+    			data: []
+    		});
+    		NRS.sendRequest(api, params, function (response) {
+    			var accountKey;
+    			var length;
+    			if (api == "getDGSGoods+") {
+    				response = response.goods;
+    				accountKey = "seller";
+    			} else if (api == "getDGSPurchases+") {
+    				response = response.purchases;
+    				accountKey = "buyer";
+    			}
+    			if (response.length > NRS.itemsPerPage) {
+    				NRS.hasMorePages = true;
+    				response.pop();
+    			}
+    			for (var i = 0; i < response.length; i++) {
+    				NRS.hasMorePages = true;
+    				var item = response[i];
+    				var name = item.name;
+                    if (name.length > 45) {
+    					name = name.substring(0, 45) + "...";
+    				}
+    				var picture = new Image();
+    				if (!item.hasImage) {
+                        picture.src = missingImage;
+                    } else {
+                        picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
+                    }
+    				var image = '<img style="max-height:100%;max-width:100%" src="' + picture.src + '"/>';
+					var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
+    				var account;
+    				if (accountKey == "seller") {
+						account = '<a href="#" data-goto-seller="' + item.sellerRS + '">' + item.sellerRS + '</a>';
+    				} else if (accountKey == "buyer") {
+    					account = NRS.getAccountLink(item, accountKey)
+    				}
+    				view.data.push({
+    					"timestamp": NRS.formatTimestamp(item.timestamp),
+    					"good": good,
+    					"price": NRS.formatAmount(item.priceNQT, NRS.decimals),
+    					"account": account,
+    					"image": image
+    				})
+    			}
+    			view.render({
+    				isLoading: false,
+    				isEmpty: view.data.length == 0
+    			});
+    			NRS.pageLoaded();
+    		});
+    	};
 
 	return NRS;
 }(NRS || {}, jQuery));
