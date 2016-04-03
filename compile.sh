@@ -9,12 +9,20 @@ SP=src/java/
 /bin/rm -rf addons/classes
 /bin/mkdir -p addons/classes/
 
-javac -encoding utf8 -sourcepath "${SP}" -classpath "${CP}" -d classes/ src/java/nxt/*.java src/java/nxt/*/*.java  \
-src/java/nxt/*/*/*.java src/java/nxtdesktop/*.java || exit 1
+find src/java/ -name "*.java" > sources.tmp
+javac -encoding utf8 -sourcepath "${SP}" -classpath "${CP}" -d classes/ @sources.tmp || exit 1
+rm -f sources.tmp
 
 echo "nxt class files compiled successfully"
 
-ls addons/src/*.java > /dev/null 2>&1 || exit 0
-javac -encoding utf8 -sourcepath "${SP}" -classpath "${CP}" -d addons/classes addons/src/*.java || exit 1
+find addons/src/ -name "*.java" > addons.tmp
+if [ -s addons.tmp ]
+then
+    javac -encoding utf8 -sourcepath "${SP}" -classpath "${CP}" -d addons/classes @addons.tmp || exit 1
+    rm -f addons.tmp
+else
+    rm -f addons.tmp
+    exit 0
+fi
 
 echo "addon class files compiled successfully"
