@@ -30,7 +30,6 @@
  * @depends {crypto/3rdparty/cryptojs/aes.js}
  * @depends {crypto/3rdparty/cryptojs/sha256.js}
  * @depends {crypto/3rdparty/jssha256.js}
- * @depends {crypto/3rdparty/seedrandom.js}
  * @depends {util/converters.js}
  * @depends {util/extensions.js}
  * @depends {util/nxtaddress.js}
