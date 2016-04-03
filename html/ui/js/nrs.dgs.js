@@ -1250,15 +1250,14 @@ var NRS = (function(NRS, $) {
     				var picture = new Image();
     				if (!item.hasImage) {
                         picture.src = missingImage;
-                    }
-                    else {
+                    } else {
                         picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
                     }
     				var image = '<img style="max-height:100%;max-width:100%" src="' + picture.src + '"/>';
-    					var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
+					var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
     				var account;
     				if (accountKey == "seller") {
-    						account = '<a href="#" data-goto-seller="' + item.sellerRS + '">' + item.sellerRS + '</a>';
+						account = '<a href="#" data-goto-seller="' + item.sellerRS + '">' + item.sellerRS + '</a>';
     				} else if (accountKey == "buyer") {
     					account = NRS.getAccountLink(item, accountKey)
     				}
