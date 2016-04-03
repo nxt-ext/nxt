@@ -2,6 +2,13 @@ Add-ons can now register their own http API request handlers, allowing custom
 request types to be supported. Overriding existing client APIs is not allowed.
 See the example add-on nxt.addons.PopOffCounter.
 
+The add-on framework supporting custom APIs, in combination with the client-side
+plugin system, present an opportunity for developers to add functionality to
+the NRS without having to modify core code. Add-on developers should be aware
+that the Java API in 2.0 will undergo many changes, and add-ons code will have
+to be updated. And users are again reminded to only install and run add-ons
+from trusted sources.
+
 Added getSharedKey API, to allow calculating the one-time shared key used for
 encryption of messages. Parameters are the secret phrase for one of the
 accounts, the other account, and the nonce used in the message encryption.
@@ -17,6 +24,8 @@ getSharedKey API.
 
 The getBalance API now supports optional height parameter to retrieve account
 balance at previous heights, if still available.
+
+Added pagination to the recent marketplace listings and recent purchases pages.
 
 Minor bugfixes and UI improvements.
 
