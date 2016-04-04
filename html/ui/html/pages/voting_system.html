@@ -44,13 +44,12 @@
         </div>
         <div class="data-pagination"></div>
 
-        <div class="box box-primary">
-            <h3 class="box-title" data-i18n="recent_polls">Recent Polls</h3>
-            <div class="box-body no-padding" id="recent_polls">
-                <script type="text/x-handlebars-template">
-                    <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
-                        <table class="table table-striped" id="recent_polls_table">
-                            <thead>
+        <h3 class="box-title" data-i18n="recent_polls">Recent Polls</h3>
+        <div class="box-body no-padding" id="recent_polls">
+            <script type="text/x-handlebars-template">
+                <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                    <table class="table table-striped" id="recent_polls_table">
+                        <thead>
                             <tr>
                                 <th>{{i18n "title"}}</th>
                                 <th>{{i18n "description"}}</th>
@@ -58,28 +57,27 @@
                                 <th>{{i18n "start_date"}}</th>
                                 <th>{{i18n "blocks_left_no_param"}}</th>
                             </tr>
-                            </thead>
-                            <tbody>
+                        </thead>
+                        <tbody>
                             {{#each data}}
-                            <tr>
-                                <td style="vertical-align:middle;">{{{title}}}</td>
-                                <td style="vertical-align:middle;">{{{description}}}</td>
-                                <td style="vertical-align:middle;">{{{sender}}}</td>
-                                <td style="vertical-align:middle;">{{{timestamp}}}</td>
-                                <td style="vertical-align:middle;">{{{blocksleft}}}</td>
-                            </tr>
+                                <tr>
+                                    <td style="vertical-align:middle;">{{{title}}}</td>
+                                    <td style="vertical-align:middle;">{{{description}}}</td>
+                                    <td style="vertical-align:middle;">{{{sender}}}</td>
+                                    <td style="vertical-align:middle;">{{{timestamp}}}</td>
+                                    <td style="vertical-align:middle;">{{{blocksleft}}}</td>
+                                </tr>
                             {{/each}}
-                            </tbody>
-                        </table>
-                        <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32"/></div>
-                        <div class="data-empty-container">
-                            <p>
-                                <span>{{i18n "no_my_polls_found"}}</span>
-                            </p>
-                        </div>
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32"/></div>
+                    <div class="data-empty-container">
+                        <p>
+                            <span>{{i18n "no_my_polls_found"}}</span>
+                        </p>
                     </div>
-                </script>
-            </div>
+                </div>
+            </script>
         </div>
         <div class="box-footer"><button class="btn btn-primary goto-page" data-page="recent_polls"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
     </section>
@@ -298,13 +296,12 @@
 
 <div id="recent_polls_page" class="paginated page">
     <section id="polls_recent_polls_full" class="content">
-        <div class="box box-primary">
-            <h3 class="box-title" data-i18n="recent_polls">Recent Polls</h3>
-            <div class="box-body no-padding" id="recent_polls_full">
-                <script type="text/x-handlebars-template">
-                    <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
-                        <table class="table table-striped" id="recent_polls_full_table">
-                            <thead>
+        <h3 class="box-title" data-i18n="recent_polls">Recent Polls</h3>
+        <div class="box-body no-padding" id="recent_polls_full">
+            <script type="text/x-handlebars-template">
+                <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                    <table class="table table-striped" id="recent_polls_full_table">
+                        <thead>
                             <tr>
                                 <th>{{i18n "title"}}</th>
                                 <th>{{i18n "description"}}</th>
@@ -312,28 +309,27 @@
                                 <th>{{i18n "start_date"}}</th>
                                 <th>{{i18n "blocks_left_no_param"}}</th>
                             </tr>
-                            </thead>
-                            <tbody>
+                        </thead>
+                        <tbody>
                             {{#each data}}
-                            <tr>
-                                <td style="vertical-align:middle;">{{{title}}}</td>
-                                <td style="vertical-align:middle;">{{{description}}}</td>
-                                <td style="vertical-align:middle;">{{{sender}}}</td>
-                                <td style="vertical-align:middle;">{{{timestamp}}}</td>
-                                <td style="vertical-align:middle;">{{{blocksleft}}}</td>
-                            </tr>
+                                <tr>
+                                    <td style="vertical-align:middle;">{{{title}}}</td>
+                                    <td style="vertical-align:middle;">{{{description}}}</td>
+                                    <td style="vertical-align:middle;">{{{sender}}}</td>
+                                    <td style="vertical-align:middle;">{{{timestamp}}}</td>
+                                    <td style="vertical-align:middle;">{{{blocksleft}}}</td>
+                                </tr>
                             {{/each}}
-                            </tbody>
-                        </table>
-                        <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32"/></div>
-                        <div class="data-empty-container">
-                            <p>
-                                <span>{{i18n "no_my_polls_found"}}</span>
-                            </p>
-                        </div>
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32"/></div>
+                    <div class="data-empty-container">
+                        <p>
+                            <span>{{i18n "no_my_polls_found"}}</span>
+                        </p>
                     </div>
-                </script>
-            </div>
+                </div>
+            </script>
         </div>
         <div class="data-pagination"></div>
     </section>

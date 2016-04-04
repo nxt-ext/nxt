@@ -64,46 +64,44 @@
                 </div>
             </script>
         </div>
-        <div class="box box-primary">
-            <h3 class="box-title" data-i18n="recent_shufflings">Recent Shufflings</h3>
-            <div class="box-body no-padding" id="recent_shufflings">
-                <script type="text/x-handlebars-template">
-                    <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
-                        <table class="table table-striped">
-                            <thead>
+        <h3 class="box-title" data-i18n="recent_shufflings">Recent Shufflings</h3>
+        <div class="box-body no-padding" id="recent_shufflings">
+            <script type="text/x-handlebars-template">
+                <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{i18n "shuffling"}}</th>
+                                <th>{{i18n "stage"}}</th>
+                                <th>{{i18n "holding"}}</th>
+                                <th>{{i18n "amount"}}</th>
+                                <th>{{i18n "blocks_remaining"}}</th>
+                                <th>{{i18n "participants"}}</th>
+                                <th>{{i18n "issuer"}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each data}}
                                 <tr>
-                                    <th>{{i18n "shuffling"}}</th>
-                                    <th>{{i18n "stage"}}</th>
-                                    <th>{{i18n "holding"}}</th>
-                                    <th>{{i18n "amount"}}</th>
-                                    <th>{{i18n "blocks_remaining"}}</th>
-                                    <th>{{i18n "participants"}}</th>
-                                    <th>{{i18n "issuer"}}</th>
+                                    <td>{{{shufflingFormatted}}}</td>
+                                    <td>{{stageLabel}}</td>
+                                    <td>{{{holdingFormatted}}}</td>
+                                    <td>{{{amountFormatted}}}</td>
+                                    <td>{{blocks}}</td>
+                                    <td>{{participants}}</td>
+                                    <td>{{{issuerFormatted}}}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {{#each data}}
-                                    <tr>
-                                        <td>{{{shufflingFormatted}}}</td>
-                                        <td>{{stageLabel}}</td>
-                                        <td>{{{holdingFormatted}}}</td>
-                                        <td>{{{amountFormatted}}}</td>
-                                        <td>{{blocks}}</td>
-                                        <td>{{participants}}</td>
-                                        <td>{{{issuerFormatted}}}</td>
-                                    </tr>
-                                {{/each}}
-                            </tbody>
-                        </table>
-                        <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                        <div class="data-empty-container">
-                            <p>
-                                <span data-i18n="no_shufflings">There are no shufflings</span>.
-                            </p>
-                        </div>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container">
+                        <p>
+                            <span data-i18n="no_shufflings">There are no shufflings</span>.
+                        </p>
                     </div>
-                </script>
-            </div>
+                </div>
+            </script>
         </div>
         <div class="box-footer"><button class="btn btn-primary goto-page" data-page="recent_shufflings"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
     </section>
@@ -169,46 +167,44 @@
 
 <div id="recent_shufflings_page" class="paginated page">
     <section id="shufflings_recent_shufflings_full" class="content">
-        <div class="box box-primary">
-            <h3 class="box-title" data-i18n="recent_shufflings">Recent Shufflings</h3>
-            <div class="box-body no-padding" id="recent_shufflings_full">
-                <script type="text/x-handlebars-template">
-                    <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
-                        <table class="table table-striped">
-                            <thead>
+        <h3 class="box-title" data-i18n="recent_shufflings">Recent Shufflings</h3>
+        <div class="box-body no-padding" id="recent_shufflings_full">
+            <script type="text/x-handlebars-template">
+                <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{{i18n "shuffling"}}</th>
+                                <th>{{i18n "stage"}}</th>
+                                <th>{{i18n "holding"}}</th>
+                                <th>{{i18n "amount"}}</th>
+                                <th>{{i18n "blocks_remaining"}}</th>
+                                <th>{{i18n "participants"}}</th>
+                                <th>{{i18n "issuer"}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each data}}
                                 <tr>
-                                    <th>{{i18n "shuffling"}}</th>
-                                    <th>{{i18n "stage"}}</th>
-                                    <th>{{i18n "holding"}}</th>
-                                    <th>{{i18n "amount"}}</th>
-                                    <th>{{i18n "blocks_remaining"}}</th>
-                                    <th>{{i18n "participants"}}</th>
-                                    <th>{{i18n "issuer"}}</th>
+                                    <td>{{{shufflingFormatted}}}</td>
+                                    <td>{{stageLabel}}</td>
+                                    <td>{{{holdingFormatted}}}</td>
+                                    <td>{{{amountFormatted}}}</td>
+                                    <td>{{blocks}}</td>
+                                    <td>{{participants}}</td>
+                                    <td>{{{issuerFormatted}}}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {{#each data}}
-                                    <tr>
-                                        <td>{{{shufflingFormatted}}}</td>
-                                        <td>{{stageLabel}}</td>
-                                        <td>{{{holdingFormatted}}}</td>
-                                        <td>{{{amountFormatted}}}</td>
-                                        <td>{{blocks}}</td>
-                                        <td>{{participants}}</td>
-                                        <td>{{{issuerFormatted}}}</td>
-                                    </tr>
-                                {{/each}}
-                            </tbody>
-                        </table>
-                        <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                        <div class="data-empty-container">
-                            <p>
-                                <span data-i18n="no_shufflings">There are no shufflings</span>.
-                            </p>
-                        </div>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container">
+                        <p>
+                            <span data-i18n="no_shufflings">There are no shufflings</span>.
+                        </p>
                     </div>
-                </script>
-            </div>
+                </div>
+            </script>
         </div>
         <div class="data-pagination"></div>
     </section>
