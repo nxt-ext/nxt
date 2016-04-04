@@ -18,6 +18,17 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
+	var index = 0;
+	var bundles = [
+		{alias: "nrsVersion", status: "release", prefix: "nxt-client-", ext: "zip"},
+		{alias: "nrsBetaVersion", status: "beta", prefix: "nxt-client-", ext: "zip"},
+		{alias: "nrsVersionWin", status: "release", prefix: "nxt-client-", ext: "exe"},
+		{alias: "nrsBetaVersionWin", status: "beta", prefix: "nxt-client-", ext: "exe"},
+		{alias: "nrsVersionMac", status: "release", prefix: "nxt-installer-", ext: "dmg"},
+		{alias: "nrsBetaVersionMac", status: "beta", prefix: "nxt-installer-", ext: "dmg"},
+		{alias: "nrsVersionLinux", status: "release", prefix: "nxt-client-", ext: "sh"},
+		{alias: "nrsBetaVersionLinux", status: "beta", prefix: "nxt-client-", ext: "sh"}
+	];
 	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
@@ -28,21 +39,14 @@ var NRS = (function(NRS, $) {
 		}
 
         // Load all version aliases in parallel and call checkForNewVersion() at the end
-        async.parallel([
-            function(callback){
-                getVersionInfo("nrsVersion", callback);
-            },
-            function(callback){
-                getVersionInfo("nrsBetaVersion", callback);
-            },
-            function(callback){
-                getVersionInfo("nrsVersionWin", callback);
-            },
-            function(callback){
-                getVersionInfo("nrsBetaVersionWin", callback);
-            }
-        ],
-        function(err, results) {
+		index = 0;
+		var versionInfoCall = [];
+		for (var i=0; i<bundles.length; i++) {
+			versionInfoCall.push(function(callback) {
+				getVersionInfo(callback);
+			});
+		}
+        async.parallel(versionInfoCall, function(err, results) {
             if (err == null) {
                 NRS.logConsole("Version aliases: " + JSON.stringify(results));
             } else {
@@ -129,24 +133,26 @@ var NRS = (function(NRS, $) {
 		});
 	}
 
-	NRS.downloadClientUpdate = function(version, type) {
-		if (version == "release") {
-			if (type == "exe") {
-                NRS.downloadedVersion = NRS.nrsVersionWin;
-            } else {
-                NRS.downloadedVersion = NRS.nrsVersion;
-            }
-		} else {
-            if (type == "exe") {
-                NRS.downloadedVersion = NRS.nrsBetaVersionWin;
-            } else {
-                NRS.downloadedVersion = NRS.nrsBetaVersion;
-            }
+	NRS.downloadClientUpdate = function(status, ext) {
+		var bundle;
+		for (var i=0; i<bundles.length; i++) {
+			bundle = bundles[i];
+            if (bundle.status == status && bundle.ext == ext) {
+				NRS.downloadedVersion = NRS[bundle.alias];
+				break;
+			}
 		}
-
-        var filename = "nxt-client-" + NRS.downloadedVersion.versionNr + "." + type;
+        if (!NRS.downloadedVersion) {
+            NRS.logConsole("Cannot determine download version for alias " + bundle.alias);
+            return;
+        }
+        var filename = bundle.prefix + NRS.downloadedVersion.versionNr + "." + bundle.ext;
         var fileurl = "https://bitbucket.org/JeanLucPicard/nxt/downloads/" + filename;
-        $("#nrs_update_iframe").attr("src", fileurl);
+        if (window.java !== undefined) {
+            window.java.popupHandlerURLChange(fileurl);
+        } else {
+            $("#nrs_update_iframe").attr("src", fileurl);
+        }
         $("#nrs_update_explanation").hide();
         var updateDropZone = $("#nrs_update_drop_zone");
         updateDropZone.html($.t("drop_update_v2", { filename: filename }));
@@ -179,12 +185,20 @@ var NRS = (function(NRS, $) {
 	};
 	
     // Get latest version number and hash of version specified by the alias
-    function getVersionInfo(aliasName, callback) {
+    function getVersionInfo(callback) {
+		var aliasName = bundles[index].alias;
+		index ++;
         NRS.sendRequest("getAlias", {
             "aliasName": aliasName
         }, function (response) {
-            if (response.aliasURI && (response = response.aliasURI.split(" "))) {
-                NRS[aliasName] = { versionNr: response[0], hash: response[1] };
+            if (response.aliasURI) {
+                var token = response.aliasURI.trim().split(" ");
+                if (token.length != 2) {
+                    NRS.logConsole("Invalid token " + response.aliasURI + " for alias " + aliasName);
+                    callback(null, null);
+                    return;
+                }
+                NRS[aliasName] = { versionNr: token[0], hash: token[1] };
                 callback(null, NRS[aliasName]);
             } else {
                 callback(null, null);
