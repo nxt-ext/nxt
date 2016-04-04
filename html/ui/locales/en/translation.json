@@ -1698,5 +1698,8 @@
   "lease_started": "Lease Started",
   "lease_ended": "Lease Ended",
   "api_console": "API Console",
-  "database_shell": "Database Shell"
+  "database_shell": "Database Shell",
+  "issuer": "Issuer",
+  "recent_shufflings": "Recent Shufflings",
+  "recent_polls": "Recent Polls"
 }
