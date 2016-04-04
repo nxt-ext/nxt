@@ -50,6 +50,10 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
+	NRS.pages.recent_polls = function () {
+		NRS.recent_polls("recent_polls_full",true);
+	};
+
 	NRS.pages.polls = function() {
 		NRS.sendRequest("getPolls+", {
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
@@ -111,6 +115,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded();
 			}
 		});
+		NRS.recent_polls("recent_polls",false);
 	};
  
 	NRS.incoming.polls = function() {
@@ -1173,6 +1178,64 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoadFinished(followedPollsVotesCast, !refresh);
 			});
 		})
+	};
+
+	NRS.recent_polls = function (table,full) {
+		var recentPollsTable = $("#" + table + "_table");
+		recentPollsTable.find("tbody").empty();
+		recentPollsTable.parent().addClass("data-loading").removeClass("data-empty");
+		var params;
+		if (full) {
+			params = {
+				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+				"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+				"includeFinished": true
+			};
+		} else {
+			params = {
+				"firstIndex": 0,
+				"lastIndex": 9,
+				"includeFinished": true
+			};
+		}
+		var view = NRS.simpleview.get(table, {
+			errorMessage: null,
+			isLoading: true,
+			isEmpty: false,
+			data: []
+		});
+		NRS.sendRequest("getPolls", params, function (response) {
+			var polls = response.polls;
+			if (polls.length > NRS.itemsPerPage) {
+				NRS.hasMorePages = true;
+				polls.pop();
+			}
+			for (var i = 0; i < polls.length; i++) {
+				var poll = polls[i];
+				var description = poll.description;
+				if (description.length > 100) {
+					description = description.substring(0, 100) + "...";
+				}
+				var left;
+				if ((poll.finishHeight - NRS.lastBlockHeight) > 0) {
+					left = poll.finishHeight - NRS.lastBlockHeight;
+				} else {
+					left = 0;
+				}
+				view.data.push({
+					"title": NRS.getTransactionLink(poll.poll, poll.name),
+					"description": description,
+					"sender": NRS.getAccountLink(poll, "account"),
+					"timestamp": NRS.formatTimestamp(poll.timestamp),
+					"blocksleft": left
+				})
+			}
+			view.render({
+				isLoading: false,
+				isEmpty: view.data.length == 0
+			});
+			NRS.pageLoaded();
+		});
 	};
 
 	return NRS;
