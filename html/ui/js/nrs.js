@@ -175,7 +175,7 @@ var NRS = (function(NRS, $, undefined) {
 			setTimeout(function() {
 				NRS.checkAliasVersions();
 			}, 5000);
-		}, "init");
+		});
 
 		$("body").popover({
 			"selector": ".show_popover",
@@ -243,15 +243,14 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		stateIntervalSeconds = seconds;
 		stateInterval = setInterval(function() {
-			NRS.getState(null, "timer");
+			NRS.getState(null);
 			NRS.updateForgingStatus();
 		}, 1000 * seconds);
 	};
 
 	var _firstTimeAfterLoginRun = false;
 
-	NRS.getState = function(callback, msg) {
-		NRS.logConsole("getState event " + msg);
+	NRS.getState = function(callback) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
