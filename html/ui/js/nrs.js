@@ -250,7 +250,10 @@ var NRS = (function(NRS, $, undefined) {
 
 	var _firstTimeAfterLoginRun = false;
 
-	NRS.getState = function(callback) {
+	NRS.getState = function(callback, msg) {
+		if (msg) {
+			NRS.logConsole("getState event " + msg);
+		}
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
