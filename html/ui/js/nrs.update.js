@@ -26,11 +26,6 @@ var NRS = (function(NRS, $) {
 			$("#nrs_update_explanation_blockchain_sync").show();
 			return;
 		}
-		// if (NRS.isTestNet) {
-		// 	$("#nrs_update_explanation").find("span").hide();
-		// 	$("#nrs_update_explanation_testnet").show();
-		// 	return;
-		// }
 
         // Load all version aliases in parallel and call checkForNewVersion() at the end
         async.parallel([
