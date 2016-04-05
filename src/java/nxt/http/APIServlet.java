@@ -75,15 +75,15 @@ public final class APIServlet extends HttpServlet {
             this.fileParameter = fileParameter;
         }
 
-        protected final List<String> getParameters() {
+        public final List<String> getParameters() {
             return parameters;
         }
 
-        protected final Set<APITag> getAPITags() {
+        public final Set<APITag> getAPITags() {
             return apiTags;
         }
 
-        protected final String getFileParameter() {
+        public final String getFileParameter() {
             return fileParameter;
         }
 
