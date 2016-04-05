@@ -40,7 +40,7 @@ public final class ShufflingProcess extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Shuffling shuffling = ParameterParser.getShuffling(req);
         if (shuffling.getStage() != Shuffling.Stage.PROCESSING) {
             JSONObject response = new JSONObject();

@@ -16,42 +16,43 @@
 
 package nxt.http;
 
-import nxt.Poll;
-import nxt.db.DbIterator;
+import nxt.Account;
+import nxt.NxtException;
+import nxt.crypto.Crypto;
 import nxt.util.Convert;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class SearchPolls extends APIServlet.APIRequestHandler {
+public final class GetSharedKey extends APIServlet.APIRequestHandler {
 
-    static final SearchPolls instance = new SearchPolls();
+    static final GetSharedKey instance = new GetSharedKey();
 
-    private SearchPolls() {
-        super(new APITag[] {APITag.VS, APITag.SEARCH}, "query", "firstIndex", "lastIndex", "includeFinished");
+    private GetSharedKey() {
+        super(new APITag[] {APITag.MESSAGES}, "account", "secretPhrase", "nonce");
     }
 
     @Override
-    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        String query = Convert.nullToEmpty(req.getParameter("query"));
-        if (query.isEmpty()) {
-            return JSONResponses.missing("query");
-        }
-        int firstIndex = ParameterParser.getFirstIndex(req);
-        int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
-        JSONObject response = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        try (DbIterator<Poll> polls = Poll.searchPolls(query, includeFinished, firstIndex, lastIndex)) {
-            while (polls.hasNext()) {
-                jsonArray.add(JSONData.poll(polls.next()));
-            }
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
+        byte[] nonce = ParameterParser.getBytes(req, "nonce", true);
+        long accountId = ParameterParser.getAccountId(req, "account", true);
+        byte[] publicKey = Account.getPublicKey(accountId);
+        if (publicKey == null) {
+            return JSONResponses.INCORRECT_ACCOUNT;
         }
-        response.put("polls", jsonArray);
+        byte[] sharedKey = Crypto.getSharedKey(Crypto.getPrivateKey(secretPhrase), publicKey, nonce);
+        JSONObject response = new JSONObject();
+        response.put("sharedKey", Convert.toHexString(sharedKey));
         return response;
+
+    }
+
+    @Override
+    protected boolean allowRequiredBlockParameters() {
+        return false;
     }
 
 }

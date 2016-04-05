@@ -33,7 +33,7 @@ public final class GetAllOpenAskOrders extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         JSONObject response = new JSONObject();
         JSONArray ordersData = new JSONArray();

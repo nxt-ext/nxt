@@ -297,7 +297,7 @@ public final class API {
         }
     }
 
-    static void verifyPassword(HttpServletRequest req) throws ParameterException {
+    public static void verifyPassword(HttpServletRequest req) throws ParameterException {
         if (API.disableAdminPassword) {
             return;
         }
@@ -309,7 +309,7 @@ public final class API {
         }
     }
 
-    static boolean checkPassword(HttpServletRequest req) {
+    public static boolean checkPassword(HttpServletRequest req) {
         return (API.disableAdminPassword || (!API.adminPassword.isEmpty() && API.adminPassword.equals(req.getParameter("adminPassword"))));
     }
 

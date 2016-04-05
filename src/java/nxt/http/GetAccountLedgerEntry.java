@@ -181,7 +181,7 @@ public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
      * @throws  NxtException        Invalid request
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         //
         // Process the request parameters
         //
@@ -207,7 +207,7 @@ public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
      * @return                      FALSE to disable the required block parameters
      */
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 }

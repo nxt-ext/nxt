@@ -18,8 +18,8 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.FundingMonitor;
-import nxt.crypto.Crypto;
 import nxt.HoldingType;
+import nxt.crypto.Crypto;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -56,7 +56,7 @@ public class StopFundingMonitor extends APIServlet.APIRequestHandler {
      * @throws  ParameterException        Unable to process request
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         long accountId = ParameterParser.getAccountId(req, false);
         JSONObject response = new JSONObject();
@@ -86,12 +86,12 @@ public class StopFundingMonitor extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 }

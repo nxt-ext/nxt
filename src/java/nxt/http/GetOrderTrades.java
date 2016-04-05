@@ -35,7 +35,7 @@ public final class GetOrderTrades extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long askOrderId = ParameterParser.getUnsignedLong(req, "askOrder", false);
         long bidOrderId = ParameterParser.getUnsignedLong(req, "bidOrder", false);

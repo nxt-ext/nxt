@@ -33,7 +33,7 @@ public final class GetLastExchanges extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         long[] currencyIds = ParameterParser.getUnsignedLongs(req, "currencies");
         JSONArray exchangesJSON = new JSONArray();
         List<Exchange> exchanges = Exchange.getLastExchanges(currencyIds);

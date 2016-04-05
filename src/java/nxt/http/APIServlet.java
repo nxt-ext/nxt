@@ -19,6 +19,7 @@ package nxt.http;
 import nxt.Db;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.addons.AddOns;
 import nxt.util.JSON;
 import nxt.util.Logger;
 import org.json.simple.JSONObject;
@@ -49,17 +50,17 @@ import static nxt.http.JSONResponses.REQUIRED_LAST_BLOCK_NOT_FOUND;
 
 public final class APIServlet extends HttpServlet {
 
-    abstract static class APIRequestHandler {
+    public abstract static class APIRequestHandler {
 
         private final List<String> parameters;
         private final String fileParameter;
         private final Set<APITag> apiTags;
 
-        APIRequestHandler(APITag[] apiTags, String... parameters) {
+        protected APIRequestHandler(APITag[] apiTags, String... parameters) {
             this(null, apiTags, parameters);
         }
 
-        APIRequestHandler(String fileParameter, APITag[] apiTags, String... origParameters) {
+        protected APIRequestHandler(String fileParameter, APITag[] apiTags, String... origParameters) {
             List<String> parameters = new ArrayList<>();
             Collections.addAll(parameters, origParameters);
             if ((requirePassword() || parameters.contains("lastIndex")) && ! API.disableAdminPassword) {
@@ -74,41 +75,41 @@ public final class APIServlet extends HttpServlet {
             this.fileParameter = fileParameter;
         }
 
-        final List<String> getParameters() {
+        public final List<String> getParameters() {
             return parameters;
         }
 
-        final Set<APITag> getAPITags() {
+        public final Set<APITag> getAPITags() {
             return apiTags;
         }
 
-        final String getFileParameter() {
+        public final String getFileParameter() {
             return fileParameter;
         }
 
-        abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
+        protected abstract JSONStreamAware processRequest(HttpServletRequest request) throws NxtException;
 
-        JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
+        protected JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
             return processRequest(request);
         }
 
-        boolean requirePost() {
+        protected boolean requirePost() {
             return false;
         }
 
-        boolean startDbTransaction() {
+        protected boolean startDbTransaction() {
             return false;
         }
 
-        boolean requirePassword() {
+        protected boolean requirePassword() {
             return false;
         }
 
-        boolean allowRequiredBlockParameters() {
+        protected boolean allowRequiredBlockParameters() {
             return true;
         }
 
-        boolean requireBlockchain() {
+        protected boolean requireBlockchain() {
             return true;
         }
 
@@ -374,6 +375,9 @@ public final class APIServlet extends HttpServlet {
         map.put("stopFundingMonitor", StopFundingMonitor.instance);
         map.put("getFundingMonitor", GetFundingMonitor.instance);
         map.put("downloadPrunableMessage", DownloadPrunableMessage.instance);
+        map.put("getSharedKey", GetSharedKey.instance);
+
+        AddOns.registerAPIRequestHandlers(map);
 
         API.disabledAPIs.forEach(api -> {
             APIRequestHandler handler = map.remove(api);
@@ -401,6 +405,10 @@ public final class APIServlet extends HttpServlet {
 
         apiRequestHandlers = Collections.unmodifiableMap(map);
         disabledRequestHandlers = disabledMap.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(disabledMap);
+    }
+
+    public static APIRequestHandler getAPIRequestHandler(String requestType) {
+        return apiRequestHandlers.get(requestType);
     }
 
     static void initClass() {}

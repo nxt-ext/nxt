@@ -17,11 +17,14 @@
 package nxt.addons;
 
 import nxt.Nxt;
+import nxt.http.APIServlet;
+import nxt.http.APITag;
 import nxt.util.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public final class AddOns {
 
@@ -54,6 +57,30 @@ public final class AddOns {
             Logger.logShutdownMessage("Shutting down " + addOn.getClass().getName());
             addOn.shutdown();
         });
+    }
+
+    public static void registerAPIRequestHandlers(Map<String,APIServlet.APIRequestHandler> map) {
+        for (AddOn addOn : addOns) {
+            APIServlet.APIRequestHandler requestHandler = addOn.getAPIRequestHandler();
+            if (requestHandler != null) {
+                if (!requestHandler.getAPITags().contains(APITag.ADDONS)) {
+                    Logger.logErrorMessage("Add-on " + addOn.getClass().getName()
+                            + " attempted to register request handler which is not tagged as APITag.ADDONS, skipping");
+                    continue;
+                }
+                String requestType = addOn.getAPIRequestType();
+                if (requestType == null) {
+                    Logger.logErrorMessage("Add-on " + addOn.getClass().getName() + " requestType not defined");
+                    continue;
+                }
+                if (map.get(requestType) != null) {
+                    Logger.logErrorMessage("Add-on " + addOn.getClass().getName() + " attempted to override requestType " + requestType + ", skipping");
+                    continue;
+                }
+                Logger.logMessage("Add-on " + addOn.getClass().getName() + " registered new API: " + requestType);
+                map.put(requestType, requestHandler);
+            }
+        }
     }
 
     private AddOns() {}

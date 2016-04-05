@@ -32,7 +32,7 @@ public final class GetCurrencyAccountCount extends APIServlet.APIRequestHandler 
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", true);
         int height = ParameterParser.getHeight(req);

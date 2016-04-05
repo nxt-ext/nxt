@@ -170,7 +170,6 @@ var NRS = (function (NRS) {
     };
 
     NRS.setStrItem = function (key, data) {
-        NRS.logConsole("NRS.setStrItem: key " + key + " data " + data);
         localStorage.setItem(key, data);
     };
 
@@ -180,12 +179,10 @@ var NRS = (function (NRS) {
 
     NRS.setJSONItem = function (key, data) {
         var jsonData = JSON.stringify(data);
-        NRS.logConsole("NRS.setJSONItem: key " + key + " data " + jsonData);
         localStorage.setItem(key, jsonData);
     };
 
     NRS.removeItem = function (key) {
-        NRS.logConsole("NRS.removeItem: key " + key);
         localStorage.removeItem(key);
     };
 

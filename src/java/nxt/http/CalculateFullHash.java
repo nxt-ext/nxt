@@ -37,7 +37,7 @@ public final class CalculateFullHash extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String unsignedBytesString = Convert.emptyToNull(req.getParameter("unsignedTransactionBytes"));
         String signatureHashString = Convert.emptyToNull(req.getParameter("signatureHash"));
@@ -60,12 +60,12 @@ public final class CalculateFullHash extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

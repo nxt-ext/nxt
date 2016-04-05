@@ -66,7 +66,7 @@ public final class GetInboundPeers extends APIServlet.APIRequestHandler {
      * @return                      API response or null
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         boolean includePeerInfo = "true".equalsIgnoreCase(req.getParameter("includePeerInfo"));
         List<Peer> peers = Peers.getInboundPeers();
         JSONArray peersJSON = new JSONArray();
@@ -81,7 +81,7 @@ public final class GetInboundPeers extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

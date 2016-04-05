@@ -38,7 +38,7 @@ public final class GetExpectedExchangeRequests extends APIServlet.APIRequestHand
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long accountId = ParameterParser.getAccountId(req, "account", false);
         long currencyId = ParameterParser.getUnsignedLong(req, "currency", false);

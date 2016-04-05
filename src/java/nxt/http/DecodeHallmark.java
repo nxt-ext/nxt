@@ -33,7 +33,7 @@ public final class DecodeHallmark extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         String hallmarkValue = req.getParameter("hallmark");
         if (hallmarkValue == null) {
@@ -52,7 +52,7 @@ public final class DecodeHallmark extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

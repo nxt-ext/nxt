@@ -31,7 +31,7 @@ public final class RequeueUnconfirmedTransactions extends APIServlet.APIRequestH
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         try {
             Nxt.getTransactionProcessor().requeueAllUnconfirmedTransactions();
@@ -43,22 +43,22 @@ public final class RequeueUnconfirmedTransactions extends APIServlet.APIRequestH
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean requirePassword() {
+    protected boolean requirePassword() {
         return true;
     }
 
     @Override
-    final boolean allowRequiredBlockParameters() {
+    protected final boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

@@ -30,7 +30,6 @@
  * @depends {crypto/3rdparty/cryptojs/aes.js}
  * @depends {crypto/3rdparty/cryptojs/sha256.js}
  * @depends {crypto/3rdparty/jssha256.js}
- * @depends {crypto/3rdparty/seedrandom.js}
  * @depends {util/converters.js}
  * @depends {util/extensions.js}
  * @depends {util/nxtaddress.js}
@@ -176,7 +175,7 @@ var NRS = (function(NRS, $, undefined) {
 			setTimeout(function() {
 				NRS.checkAliasVersions();
 			}, 5000);
-		}, "init");
+		});
 
 		$("body").popover({
 			"selector": ".show_popover",
@@ -244,7 +243,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		stateIntervalSeconds = seconds;
 		stateInterval = setInterval(function() {
-			NRS.getState(null, "timer");
+			NRS.getState(null);
 			NRS.updateForgingStatus();
 		}, 1000 * seconds);
 	};
@@ -252,7 +251,9 @@ var NRS = (function(NRS, $, undefined) {
 	var _firstTimeAfterLoginRun = false;
 
 	NRS.getState = function(callback, msg) {
-		NRS.logConsole("getState event " + msg);
+		if (msg) {
+			NRS.logConsole("getState event " + msg);
+		}
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;

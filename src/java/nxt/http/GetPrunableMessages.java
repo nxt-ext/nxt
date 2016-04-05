@@ -36,7 +36,7 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long accountId = ParameterParser.getAccountId(req, true);
         String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         int firstIndex = ParameterParser.getFirstIndex(req);

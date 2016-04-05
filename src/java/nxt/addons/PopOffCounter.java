@@ -14,44 +14,46 @@
  *                                                                            *
  ******************************************************************************/
 
-package nxt.http;
+package nxt.addons;
 
-import nxt.Poll;
-import nxt.db.DbIterator;
-import nxt.util.Convert;
-import org.json.simple.JSONArray;
+import nxt.BlockchainProcessor;
+import nxt.Nxt;
+import nxt.NxtException;
+import nxt.http.APIServlet;
+import nxt.http.APITag;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class SearchPolls extends APIServlet.APIRequestHandler {
+public final class PopOffCounter implements AddOn {
 
-    static final SearchPolls instance = new SearchPolls();
+    private volatile int numberOfPopOffs = 0;
 
-    private SearchPolls() {
-        super(new APITag[] {APITag.VS, APITag.SEARCH}, "query", "firstIndex", "lastIndex", "includeFinished");
+    @Override
+    public void init() {
+        Nxt.getBlockchainProcessor().addListener(block -> numberOfPopOffs += 1, BlockchainProcessor.Event.BLOCK_POPPED);
     }
 
     @Override
-    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        String query = Convert.nullToEmpty(req.getParameter("query"));
-        if (query.isEmpty()) {
-            return JSONResponses.missing("query");
-        }
-        int firstIndex = ParameterParser.getFirstIndex(req);
-        int lastIndex = ParameterParser.getLastIndex(req);
-        boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
-
-        JSONObject response = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        try (DbIterator<Poll> polls = Poll.searchPolls(query, includeFinished, firstIndex, lastIndex)) {
-            while (polls.hasNext()) {
-                jsonArray.add(JSONData.poll(polls.next()));
+    public APIServlet.APIRequestHandler getAPIRequestHandler() {
+        return new APIServlet.APIRequestHandler(new APITag[]{APITag.ADDONS, APITag.BLOCKS}) {
+            @Override
+            protected JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
+                JSONObject response = new JSONObject();
+                response.put("numberOfPopOffs", numberOfPopOffs);
+                return response;
             }
-        }
-        response.put("polls", jsonArray);
-        return response;
+            @Override
+            protected boolean allowRequiredBlockParameters() {
+                return false;
+            }
+        };
+    }
+
+    @Override
+    public String getAPIRequestType() {
+        return "getNumberOfPopOffs";
     }
 
 }

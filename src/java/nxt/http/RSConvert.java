@@ -34,7 +34,7 @@ public final class RSConvert extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         String accountValue = Convert.emptyToNull(req.getParameter("account"));
         if (accountValue == null) {
             return MISSING_ACCOUNT;
@@ -53,12 +53,12 @@ public final class RSConvert extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

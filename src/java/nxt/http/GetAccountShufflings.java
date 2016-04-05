@@ -33,7 +33,7 @@ public final class GetAccountShufflings extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         long accountId = ParameterParser.getAccountId(req, "account", true);
         boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));

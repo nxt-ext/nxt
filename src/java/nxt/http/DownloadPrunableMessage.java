@@ -41,7 +41,7 @@ public final class DownloadPrunableMessage extends APIServlet.APIRequestHandler 
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
         long transactionId = ParameterParser.getUnsignedLong(request, "transaction", true);
         boolean retrieve = "true".equalsIgnoreCase(request.getParameter("retrieve"));
         PrunableMessage prunableMessage = PrunableMessage.getPrunableMessage(transactionId);
@@ -91,7 +91,7 @@ public final class DownloadPrunableMessage extends APIServlet.APIRequestHandler 
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
         throw new UnsupportedOperationException();
     }
 }

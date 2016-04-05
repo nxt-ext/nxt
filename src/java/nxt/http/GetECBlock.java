@@ -35,7 +35,7 @@ public final class GetECBlock extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         int timestamp = ParameterParser.getTimestamp(req);
         if (timestamp == 0) {
             timestamp = Nxt.getEpochTime();

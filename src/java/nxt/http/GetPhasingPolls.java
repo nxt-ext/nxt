@@ -32,7 +32,7 @@ public final class GetPhasingPolls extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         long[] transactionIds = ParameterParser.getUnsignedLongs(req, "transaction");
         boolean countVotes = "true".equalsIgnoreCase(req.getParameter("countVotes"));
         JSONObject response = new JSONObject();
