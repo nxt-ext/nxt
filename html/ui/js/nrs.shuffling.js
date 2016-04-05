@@ -88,7 +88,7 @@ var NRS = (function(NRS, $) {
                     if (!isShufflerActive) {
                         return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
                             "data-target='#m_shuffler_start_modal' " +
-                            "data-shuffling='" + response.shuffling + "'" +
+                            "data-shuffling='" + response.shuffling + "' " +
                             "data-shufflingfullhash='" + response.shufflingFullHash + "'>" + $.t("join") + "</a>";
                     }
                     return "<span>" + $.t("already_joined") + "</span>";
@@ -429,23 +429,17 @@ var NRS = (function(NRS, $) {
                     isEmpty: false,
                     data: []
                 });
-                var params;
+                var params = {
+                    "account": NRS.account,
+                    "finishedOnly": "true",
+                    "includeHoldingInfo": "true"                     
+                };
                 if (full) {
-                    params = {
-                        "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-                        "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-                        "account": NRS.account,
-                        "finishedOnly": "true",
-                        "includeHoldingInfo": "true"
-                    };
+                    params["firstIndex"] = NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage;
+                    params["lastIndex"] = NRS.pageNumber * NRS.itemsPerPage;
                 } else {
-                    params = {
-                        "firstIndex": 0,
-                        "lastIndex": 9,
-                        "account": NRS.account,
-                        "finishedOnly": "true",
-                        "includeHoldingInfo": "true"
-                    };
+                    params["firstIndex"] = 0;
+                    params["lastIndex"] = 9;
                 }
                 NRS.sendRequest("getAllShufflings", params,
                     function (response) {
