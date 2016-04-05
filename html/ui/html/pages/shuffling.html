@@ -64,8 +64,8 @@
                 </div>
             </script>
         </div>
-        <h3 class="box-title" data-i18n="recent_shufflings">Recent Shufflings</h3>
-        <div class="box-body no-padding" id="recent_shufflings">
+        <h3 class="box-title" data-i18n="finished_shufflings">Finished Shufflings</h3>
+        <div class="box-body no-padding" id="finished_shufflings">
             <script type="text/x-handlebars-template">
                 <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
                     <table class="table table-striped">
@@ -75,7 +75,6 @@
                                 <th>{{i18n "stage"}}</th>
                                 <th>{{i18n "holding"}}</th>
                                 <th>{{i18n "amount"}}</th>
-                                <th>{{i18n "blocks_remaining"}}</th>
                                 <th>{{i18n "participants"}}</th>
                                 <th>{{i18n "issuer"}}</th>
                             </tr>
@@ -87,7 +86,6 @@
                                     <td>{{stageLabel}}</td>
                                     <td>{{{holdingFormatted}}}</td>
                                     <td>{{{amountFormatted}}}</td>
-                                    <td>{{blocks}}</td>
                                     <td>{{participants}}</td>
                                     <td>{{{issuerFormatted}}}</td>
                                 </tr>
@@ -103,7 +101,7 @@
                 </div>
             </script>
         </div>
-        <div class="box-footer"><button class="btn btn-primary goto-page" data-page="recent_shufflings"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
+        <div class="box-footer"><button class="btn btn-primary goto-page" data-page="finished_shufflings"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
     </section>
 </div>
 
@@ -165,10 +163,10 @@
     </script>
 </div>
 
-<div id="recent_shufflings_page" class="paginated page">
-    <section id="shufflings_recent_shufflings_full" class="content">
-        <h3 class="box-title" data-i18n="recent_shufflings">Recent Shufflings</h3>
-        <div class="box-body no-padding" id="recent_shufflings_full">
+<div id="finished_shufflings_page" class="paginated page">
+    <section id="shufflings_finished_shufflings_full" class="content">
+        <h3 class="box-title" data-i18n="finished_shufflings">Finished Shufflings</h3>
+        <div class="box-body no-padding" id="finished_shufflings_full">
             <script type="text/x-handlebars-template">
                 <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
                     <table class="table table-striped">
@@ -178,7 +176,6 @@
                                 <th>{{i18n "stage"}}</th>
                                 <th>{{i18n "holding"}}</th>
                                 <th>{{i18n "amount"}}</th>
-                                <th>{{i18n "blocks_remaining"}}</th>
                                 <th>{{i18n "participants"}}</th>
                                 <th>{{i18n "issuer"}}</th>
                             </tr>
@@ -190,7 +187,6 @@
                                     <td>{{stageLabel}}</td>
                                     <td>{{{holdingFormatted}}}</td>
                                     <td>{{{amountFormatted}}}</td>
-                                    <td>{{blocks}}</td>
                                     <td>{{participants}}</td>
                                     <td>{{{issuerFormatted}}}</td>
                                 </tr>

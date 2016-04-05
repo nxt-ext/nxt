@@ -50,8 +50,8 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	}
 
-	NRS.pages.recent_polls = function () {
-		NRS.recent_polls("recent_polls_full",true);
+	NRS.pages.finished_polls = function () {
+		NRS.finished_polls("finished_polls_full",true);
 	};
 
 	NRS.pages.polls = function() {
@@ -115,7 +115,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded();
 			}
 		});
-		NRS.recent_polls("recent_polls",false);
+		NRS.finished_polls("finished_polls",false);
 	};
  
 	NRS.incoming.polls = function() {
@@ -1180,10 +1180,10 @@ var NRS = (function(NRS, $, undefined) {
 		})
 	};
 
-	NRS.recent_polls = function (table,full) {
-		var recentPollsTable = $("#" + table + "_table");
-		recentPollsTable.find("tbody").empty();
-		recentPollsTable.parent().addClass("data-loading").removeClass("data-empty");
+	NRS.finished_polls = function (table,full) {
+		var finishedPollsTable = $("#" + table + "_table");
+		finishedPollsTable.find("tbody").empty();
+		finishedPollsTable.parent().addClass("data-loading").removeClass("data-empty");
 		var params;
 		if (full) {
 			params = {
@@ -1195,7 +1195,7 @@ var NRS = (function(NRS, $, undefined) {
 			params = {
 				"firstIndex": 0,
 				"lastIndex": 9,
-				"includeFinished": true
+				"finishedOnly": true
 			};
 		}
 		var view = NRS.simpleview.get(table, {
@@ -1227,7 +1227,6 @@ var NRS = (function(NRS, $, undefined) {
 					"description": description,
 					"sender": NRS.getAccountLink(poll, "account"),
 					"timestamp": NRS.formatTimestamp(poll.timestamp),
-					"blocksleft": left
 				})
 			}
 			view.render({

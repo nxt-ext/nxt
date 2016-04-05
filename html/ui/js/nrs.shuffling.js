@@ -218,12 +218,12 @@ var NRS = (function(NRS, $) {
         )
     }
 
-    NRS.pages.recent_shufflings = function() {
-        NRS.recent_shufflings("recent_shufflings_full", true);
+    NRS.pages.finished_shufflings = function() {
+        NRS.finished_shufflings("finished_shufflings_full", true);
     };
     
     NRS.pages.active_shufflings = function () {
-        NRS.recent_shufflings("recent_shufflings",false);
+        NRS.finished_shufflings("finished_shufflings",false);
         async.waterfall([
             function(callback) {
                 getShufflers(callback);
@@ -413,10 +413,10 @@ var NRS = (function(NRS, $) {
         NRS.loadPage(NRS.currentPage);
     };
 
-    NRS.recent_shufflings = function (table,full) {
-        var recentShufflingsTable = $("#" + table + "_table");
-        recentShufflingsTable.find("tbody").empty();
-        recentShufflingsTable.parent().addClass("data-loading").removeClass("data-empty");
+    NRS.finished_shufflings = function (table,full) {
+        var finishedShufflingsTable = $("#" + table + "_table");
+        finishedShufflingsTable.find("tbody").empty();
+        finishedShufflingsTable.parent().addClass("data-loading").removeClass("data-empty");
         async.waterfall([
             function(callback) {
                 getShufflers(callback);
@@ -435,7 +435,7 @@ var NRS = (function(NRS, $) {
                         "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
                         "lastIndex": NRS.pageNumber * NRS.itemsPerPage,
                         "account": NRS.account,
-                        "includeFinished": "true",
+                        "finishedOnly": "true",
                         "includeHoldingInfo": "true"
                     };
                 } else {
@@ -443,7 +443,7 @@ var NRS = (function(NRS, $) {
                         "firstIndex": 0,
                         "lastIndex": 9,
                         "account": NRS.account,
-                        "includeFinished": "true",
+                        "finishedOnly": "true",
                         "includeHoldingInfo": "true"
                     };
                 }
