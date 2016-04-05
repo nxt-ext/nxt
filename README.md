@@ -42,7 +42,6 @@ in such a way that no trusted third parties are required anymore.
 
   - if necessary with: `./compile.sh`
   - you need jdk-8 as well
-  - on platforms without JavaFX: `./compile-nojfx.sh`
 
 ----
 ## Improve it! ##
