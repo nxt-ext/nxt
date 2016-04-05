@@ -1184,19 +1184,15 @@ var NRS = (function(NRS, $, undefined) {
 		var finishedPollsTable = $("#" + table + "_table");
 		finishedPollsTable.find("tbody").empty();
 		finishedPollsTable.parent().addClass("data-loading").removeClass("data-empty");
-		var params;
+		var params = {
+			"finishedOnly": "true"
+		};
 		if (full) {
-			params = {
-				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-				"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
-				"includeFinished": true
-			};
+			params["firstIndex"] = NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage;
+			params["lastIndex"] = NRS.pageNumber * NRS.itemsPerPage;
 		} else {
-			params = {
-				"firstIndex": 0,
-				"lastIndex": 9,
-				"finishedOnly": true
-			};
+			params["firstIndex"] = 0;
+			params["lastIndex"] = 9;
 		}
 		var view = NRS.simpleview.get(table, {
 			errorMessage: null,
@@ -1216,17 +1212,11 @@ var NRS = (function(NRS, $, undefined) {
 				if (description.length > 100) {
 					description = description.substring(0, 100) + "...";
 				}
-				var left;
-				if ((poll.finishHeight - NRS.lastBlockHeight) > 0) {
-					left = poll.finishHeight - NRS.lastBlockHeight;
-				} else {
-					left = 0;
-				}
 				view.data.push({
 					"title": NRS.getTransactionLink(poll.poll, poll.name),
 					"description": description,
 					"sender": NRS.getAccountLink(poll, "account"),
-					"timestamp": NRS.formatTimestamp(poll.timestamp),
+					"timestamp": NRS.formatTimestamp(poll.timestamp)
 				})
 			}
 			view.render({
