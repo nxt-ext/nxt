@@ -447,11 +447,11 @@ var NRS = (function(NRS, $) {
 
     NRS.pages.recent_listings =function() {
 		NRS.dgs_listings("recent_listings_full","getDGSGoods+",true);
-	}
+	};
 
 	NRS.pages.recent_purchases =function() {
 		NRS.dgs_listings("recent_purchases_full","getDGSPurchases+",true);
-	}
+	};
 
 	NRS.incoming.completed_orders_dgs = function() {
 		NRS.loadPage("completed_orders_dgs");
@@ -1228,7 +1228,6 @@ var NRS = (function(NRS, $) {
     		});
     		NRS.sendRequest(api, params, function (response) {
     			var accountKey;
-    			var length;
     			if (api == "getDGSGoods+") {
     				response = response.goods;
     				accountKey = "seller";
@@ -1241,7 +1240,6 @@ var NRS = (function(NRS, $) {
     				response.pop();
     			}
     			for (var i = 0; i < response.length; i++) {
-    				NRS.hasMorePages = true;
     				var item = response[i];
     				var name = item.name;
                     if (name.length > 45) {

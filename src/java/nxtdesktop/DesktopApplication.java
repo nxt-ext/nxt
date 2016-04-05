@@ -210,7 +210,9 @@ public class DesktopApplication extends Application {
         return url;
     }
 
-    private void popupHandlerURLChange(String newValue) {
+    // Invoked from JavaScript
+    @SuppressWarnings("WeakerAccess")
+    public void popupHandlerURLChange(String newValue) {
         Logger.logInfoMessage("popup request for " + newValue);
         Platform.runLater(() -> {
             try {

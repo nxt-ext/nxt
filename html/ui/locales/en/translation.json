@@ -1701,5 +1701,7 @@
   "database_shell": "Database Shell",
   "issuer": "Issuer",
   "recent_shufflings": "Recent Shufflings",
-  "recent_polls": "Recent Polls"
+  "recent_polls": "Recent Polls",
+  "download_nrs_mac_installer": "Mac installer",
+  "download_nrs_linux_installer": "Linux installer"
 }
