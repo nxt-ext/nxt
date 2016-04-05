@@ -18,6 +18,7 @@ package nxt.addons;
 
 import nxt.Nxt;
 import nxt.http.APIServlet;
+import nxt.http.APITag;
 import nxt.util.Logger;
 
 import java.util.ArrayList;
@@ -62,6 +63,11 @@ public final class AddOns {
         for (AddOn addOn : addOns) {
             APIServlet.APIRequestHandler requestHandler = addOn.getAPIRequestHandler();
             if (requestHandler != null) {
+                if (!requestHandler.getAPITags().contains(APITag.ADDONS)) {
+                    Logger.logErrorMessage("Add-on " + addOn.getClass().getName()
+                            + " attempted to register request handler which is not tagged as APITag.ADDONS, skipping");
+                    continue;
+                }
                 String requestType = addOn.getAPIRequestType();
                 if (requestType == null) {
                     Logger.logErrorMessage("Add-on " + addOn.getClass().getName() + " requestType not defined");

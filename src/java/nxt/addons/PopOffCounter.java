@@ -37,7 +37,7 @@ public final class PopOffCounter implements AddOn {
 
     @Override
     public APIServlet.APIRequestHandler getAPIRequestHandler() {
-        return new APIServlet.APIRequestHandler(new APITag[]{APITag.BLOCKS}) {
+        return new APIServlet.APIRequestHandler(new APITag[]{APITag.ADDONS, APITag.BLOCKS}) {
             @Override
             protected JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
                 JSONObject response = new JSONObject();
