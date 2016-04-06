@@ -104,7 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
 								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>" + $.t('vote_btn_short') + "</a> ";
 								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a> ";
-								rows += "<a href='#' class='view_button btn btn-xs btn-default' data-view='" + poll.transaction + "'>" + $.t('view') + "</a></nobr></td>"
+								rows += "<a href='#' class='view_button btn btn-xs btn-default' data-view='" + poll.transaction + "'>" + $.t('view') + "</a></nobr></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -783,6 +783,9 @@ var NRS = (function(NRS, $, undefined) {
 			});
 			NRS.loadFollowedPollsSidebar(callback);
 		});
+		if (NRS.getUrlParameter("poll") && requestedPoll == "") {
+			requestedPoll = NRS.getUrlParameter("poll").escapeHTML();
+		}
 		if (requestedPoll != "") {
 		    NRS.sendRequest("getPoll", {
                 "poll": requestedPoll
@@ -943,7 +946,7 @@ var NRS = (function(NRS, $, undefined) {
 			followedPollsPage.addClass("no_polls");
 			return;
 		}
-
+		requestedPoll = "";
 		var rows = "";
 		followedPollsPage.removeClass("no_polls");
 		NRS.positionFollowedPollsSidebar();
@@ -1189,7 +1192,7 @@ var NRS = (function(NRS, $, undefined) {
 		})
 	};
 
-	body.on("click", ".view_button[data-view]", function(e) {
+	body.on("click", ".view_button[data-view]", function() {
 	    requestedPoll = $(this).data("view");
 	    NRS.goToPage("followed_polls");
     });
