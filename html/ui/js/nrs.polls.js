@@ -102,7 +102,8 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
 								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>" + $.t('vote_btn_short') + "</a> ";
-								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></nobr></td>";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a> ";
+								rows += "<a href='#' class='view_button btn btn-xs btn-default' data-view='" + poll.transaction + "'>" + $.t('view') + "</a></nobr></td>"
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -1180,6 +1181,31 @@ var NRS = (function(NRS, $, undefined) {
 		})
 	};
 
+	body.on("click", ".view_button[data-view]", function(e) {
+        var pollId = $(this).data("view");
+        NRS.sendRequest("getPoll", {
+            "poll": pollId
+        }, function(response) {
+            $("ul.sidebar-menu li.sm_treeview_submenu").removeClass("active");
+            NRS.currentPage = "followed_polls";
+            NRS.currentSubPage = "";
+            NRS.pageNumber = 1;
+            NRS.showPageNumbers = false;
+            $("#polls_page").hide();
+            $("#followed_polls_page").show();
+            NRS.followedPolls = [];
+            NRS.followedPollIds = [];
+            NRS.storageSelect("polls", null, function (error, polls) {
+                $.each(polls, function (index, poll) {
+                    NRS.cachePoll(poll);
+            });
+            NRS.loadFollowedPollsSidebar();
+            NRS.loadPoll(response);
+            $(".content.content-stretch:visible").width($(".page:visible").width());
+            });
+        });
+    });
+
 	NRS.finished_polls = function (table,full) {
 		var finishedPollsTable = $("#" + table + "_table");
 		finishedPollsTable.find("tbody").empty();
@@ -1212,11 +1238,13 @@ var NRS = (function(NRS, $, undefined) {
 				if (description.length > 100) {
 					description = description.substring(0, 100) + "...";
 				}
+				var actions = '<a class="view_button btn btn-xs btn-default" href="#" data-view="' + poll.poll + '">' + $.t('view') + '</a>';
 				view.data.push({
 					"title": NRS.getTransactionLink(poll.poll, poll.name),
 					"description": description,
 					"sender": NRS.getAccountLink(poll, "account"),
-					"timestamp": NRS.formatTimestamp(poll.timestamp)
+					"timestamp": NRS.formatTimestamp(poll.timestamp),
+					"actions": actions
 				})
 			}
 			view.render({
