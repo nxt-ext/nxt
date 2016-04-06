@@ -20,6 +20,7 @@
 var NRS = (function(NRS, $, undefined) {
 	
 	var _voteCache = {};
+	var requestedPoll = "";
 
 	function _setFollowButtonStates() {
 		NRS.storageSelect("polls", null, function (error, polls) {
@@ -782,6 +783,13 @@ var NRS = (function(NRS, $, undefined) {
 			});
 			NRS.loadFollowedPollsSidebar(callback);
 		});
+		if (requestedPoll != "") {
+		    NRS.sendRequest("getPoll", {
+                "poll": requestedPoll
+            }, function(response) {
+                NRS.loadPoll(response);
+            });
+	    }
 	};
 
 	NRS.cachePoll = function(poll) {
@@ -927,7 +935,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.loadFollowedPollsSidebar = function(callback) {
 		var followedPollsPage = $("#followed_polls_page");
 		var followedPollsSidebarContent = $("#followed_polls_sidebar_content");
-        if (!NRS.followedPolls.length) {
+        if (!NRS.followedPolls.length && requestedPoll == "") {
 			NRS.pageLoaded(callback);
 			followedPollsSidebarContent.empty();
 			$("#no_poll_selected, #loading_poll_data, #no_poll_search_results, #poll_details").hide();
@@ -1182,28 +1190,8 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	body.on("click", ".view_button[data-view]", function(e) {
-        var pollId = $(this).data("view");
-        NRS.sendRequest("getPoll", {
-            "poll": pollId
-        }, function(response) {
-            $("ul.sidebar-menu li.sm_treeview_submenu").removeClass("active");
-            NRS.currentPage = "followed_polls";
-            NRS.currentSubPage = "";
-            NRS.pageNumber = 1;
-            NRS.showPageNumbers = false;
-            $("#polls_page").hide();
-            $("#followed_polls_page").show();
-            NRS.followedPolls = [];
-            NRS.followedPollIds = [];
-            NRS.storageSelect("polls", null, function (error, polls) {
-                $.each(polls, function (index, poll) {
-                    NRS.cachePoll(poll);
-            });
-            NRS.loadFollowedPollsSidebar();
-            NRS.loadPoll(response);
-            $(".content.content-stretch:visible").width($(".page:visible").width());
-            });
-        });
+	    requestedPoll = $(this).data("view");
+	    NRS.goToPage("followed_polls");
     });
 
 	NRS.finished_polls = function (table,full) {
