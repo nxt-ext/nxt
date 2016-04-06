@@ -1700,5 +1700,6 @@
   "api_console": "API Console",
   "database_shell": "Database Shell",
   "download_nrs_mac_installer": "Mac installer",
-  "download_nrs_linux_installer": "Linux installer"
+  "download_nrs_linux_installer": "Linux installer",
+  "product_picture": "Product Picture"
 }
