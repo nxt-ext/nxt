@@ -271,7 +271,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url = NRS.server + "/nxt?requestType=" + requestType;
+        var url = NRS.server + "/nxt-proxy?requestType=" + requestType;
 
         if (type == "GET") {
             if (typeof data == "string") {

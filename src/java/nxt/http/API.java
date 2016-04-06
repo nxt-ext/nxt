@@ -135,7 +135,11 @@ public final class API {
             // Create the HTTP connector
             //
             if (!enableSSL || port != sslPort) {
-                connector = new ServerConnector(apiServer);
+                HttpConfiguration configuration = new HttpConfiguration();
+                configuration.setSendDateHeader(false);
+                configuration.setSendServerVersion(false);
+
+                connector = new ServerConnector(apiServer, new HttpConnectionFactory(configuration));
                 connector.setPort(port);
                 connector.setHost(host);
                 connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
@@ -217,6 +221,10 @@ public final class API {
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
 
+            servletHolder = apiHandler.addServlet(APIProxyServlet.class, "/nxt-proxy");
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
+                    null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
+
             GzipHandler gzipHandler = new GzipHandler();
             if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
                 gzipHandler.setExcludedPaths("/nxt");
@@ -256,6 +264,7 @@ public final class API {
                         }
                     }
                     APIServlet.initClass();
+                    APIProxyServlet.initClass();
                     APITestServlet.initClass();
                     apiServer.start();
                     if (sslContextFactory != null) {
