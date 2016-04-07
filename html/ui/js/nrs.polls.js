@@ -21,7 +21,7 @@ var NRS = (function(NRS, $, undefined) {
 	
 	var _voteCache = {};
 	var requestedPoll = "";
-	var viewingPoll = "";
+	var viewingPollBookmark = "";
 
 	function _setFollowButtonStates() {
 		NRS.storageSelect("polls", null, function (error, polls) {
@@ -999,7 +999,7 @@ var NRS = (function(NRS, $, undefined) {
 				$("#followed_polls_bookmark_poll").hide();
 			} else {
 				$("#followed_polls_bookmark_poll").show();
-				viewingPoll = requestedPoll;
+				viewingPollBookmark = requestedPoll;
 			}
 		}
 		requestedPoll = "";
@@ -1209,7 +1209,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	$("#followed_polls_bookmark_poll").on("click", function () {
 		var $btn = $(this);
-		NRS.sendRequest("getPoll", {"poll": viewingPoll}, function(response) {
+		NRS.sendRequest("getPoll", {"poll": viewingPollBookmark}, function(response) {
 			NRS.saveFollowedPolls(new Array(response), NRS.forms.addFollowedPollsComplete);
 			$btn.hide();
 		});
