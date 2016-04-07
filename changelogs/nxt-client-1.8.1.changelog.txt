@@ -1,13 +1,11 @@
-Add-ons can now register their own http API request handlers, allowing custom
-request types to be supported. Overriding existing client APIs is not allowed.
-See the example add-on nxt.addons.PopOffCounter.
+This is the first stable release in the 1.8 series. Please also read the 1.8.0e
+changelog for all new features and changes since 1.7.5. This release does not
+require a hard fork and upgrading to it is optional. It will not do a rescan
+either, but once upgraded to 1.8.1, going back to older version requires
+downloading the blockchain again or restoring the nxt_db folder from backup.
 
-The add-on framework supporting custom APIs, in combination with the client-side
-plugin system, present an opportunity for developers to add functionality to
-the NRS without having to modify core code. Add-on developers should be aware
-that the Java API in 2.0 will undergo many changes, and add-ons code will have
-to be updated. And users are again reminded to only install and run add-ons
-from trusted sources.
+
+API enhancements:
 
 Added getSharedKey API, to allow calculating the one-time shared key used for
 encryption of messages. Parameters are the secret phrase for one of the
@@ -22,10 +20,38 @@ The getDGSPurchase API now supports decryption of the purchased goods, using
 either the secret phrase of the buyer or seller, or the shared key from the
 getSharedKey API.
 
-The getBalance API now supports optional height parameter to retrieve account
+The getBalance API now supports an optional height parameter to retrieve account
 balance at previous heights, if still available.
+
+The getPolls and getAllShufflings APIs now support an optional finishedOnly
+parameter, to retrieve only polls or shufflings that have already completed.
+
+
+Add-on framework improvements:
+
+Add-ons can now register their own http API request handlers, allowing custom
+request types to be supported. Overriding existing client APIs is not allowed.
+See the example add-on nxt.addons.PopOffCounter. Such APIs must be tagged with
+APITag.ADDONS and will appear under "Add-ons" on the API test page.
+
+The add-on framework supporting custom APIs, in combination with the client-side
+plugin system, present an opportunity for developers to add functionality to
+the NRS without having to modify core code. Add-on developers should be aware
+that the Java API in 2.0 will undergo many changes, and add-ons code will have
+to be updated. And users are again reminded to only install and run add-ons
+from trusted sources.
+
+
+UI improvements:
 
 Added pagination to the recent marketplace listings and recent purchases pages.
 
-Minor bugfixes and UI improvements.
+Added finished polls and finished shufflings tables under the active polls and
+active shufflings respectively, with pagination. A "view" action for polls now
+makes it easy to view the results of an active or finished poll.
+
+Added full-size image display in a new modal, when clicking on an image in the
+marketplace listings or purchase modal.
+
+Other minor bugfixes and improvements.
 
