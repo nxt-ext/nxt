@@ -1698,5 +1698,11 @@
   "lease_started": "Lease Started",
   "lease_ended": "Lease Ended",
   "api_console": "API Console",
-  "database_shell": "Database Shell"
+  "database_shell": "Database Shell",
+  "issuer": "Issuer",
+  "finished_shufflings": "Finished Shufflings",
+  "finished_polls": "Finished Polls",
+  "download_nrs_mac_installer": "Mac installer",
+  "download_nrs_linux_installer": "Linux installer",
+  "product_picture": "Product Picture"
 }

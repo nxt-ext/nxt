@@ -123,10 +123,9 @@ want to use the Java API directly instead of going through the http interface.
 Compiling:
 
 The source is included in the src subdirectory. To compile it on unix, just run
-the enclosed compile.sh script, or compile-nojfx.sh if your system does not have
-JavaFX. This will compile all java classes and put them under the classes
-subdirectory, which is already in the classpath used by the run.sh startup
-script. The compiled class files can optionally be packaged in a nxt.jar file
-using the enclosed jar.sh script, and then nxt.jar should be included in the
-classpath instead of the classes subdirectory.
+the enclosed compile.sh script. This will compile all java classes and put them
+under the classes subdirectory, which is already in the classpath used by the
+run.sh startup script. The compiled class files can optionally be packaged in a
+nxt.jar file using the enclosed jar.sh script, and then nxt.jar should be
+included in the classpath instead of the classes subdirectory.
 

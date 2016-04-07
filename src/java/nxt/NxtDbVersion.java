@@ -266,7 +266,7 @@ class NxtDbVersion extends DbVersion {
                         + "goods_id BIGINT NOT NULL, "
                         + "seller_id BIGINT NOT NULL, quantity INT NOT NULL, "
                         + "price BIGINT NOT NULL, deadline INT NOT NULL, note VARBINARY, nonce BINARY(32), "
-                        + "timestamp INT NOT NULL, pending BOOLEAN NOT NULL, goods VARBINARY, goods_nonce BINARY(32), "
+                        + "timestamp INT NOT NULL, pending BOOLEAN NOT NULL, goods VARBINARY, goods_nonce BINARY(32), goods_is_text BOOLEAN NOT NULL DEFAULT TRUE, "
                         + "refund_note VARBINARY, refund_nonce BINARY(32), has_feedback_notes BOOLEAN NOT NULL DEFAULT FALSE, "
                         + "has_public_feedbacks BOOLEAN NOT NULL DEFAULT FALSE, discount BIGINT NOT NULL, refund BIGINT NOT NULL, "
                         + "height INT NOT NULL, latest BOOLEAN NOT NULL DEFAULT TRUE)");
@@ -1166,10 +1166,12 @@ class NxtDbVersion extends DbVersion {
             case 480:
                 apply("ALTER TABLE purchase ADD COLUMN IF NOT EXISTS goods_is_text BOOLEAN NOT NULL DEFAULT TRUE");
             case 481:
-                apply("CREATE TABLE IF NOT EXISTS account_fnxt (id BIGINT NOT NULL, balance VARBINARY NOT NULL, height INT NOT NULL)");
+                apply("CREATE INDEX IF NOT EXISTS shuffling_blocks_remaining_height_idx ON shuffling (blocks_remaining, height DESC)");
             case 482:
-                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fnxt_id_idx ON account_fnxt (id, height DESC)");
+                apply("CREATE TABLE IF NOT EXISTS account_fnxt (id BIGINT NOT NULL, balance VARBINARY NOT NULL, height INT NOT NULL)");
             case 483:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fnxt_id_idx ON account_fnxt (id, height DESC)");
+            case 484:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

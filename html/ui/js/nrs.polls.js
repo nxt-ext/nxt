@@ -20,6 +20,7 @@
 var NRS = (function(NRS, $, undefined) {
 	
 	var _voteCache = {};
+	var requestedPoll = "";
 
 	function _setFollowButtonStates() {
 		NRS.storageSelect("polls", null, function (error, polls) {
@@ -49,6 +50,10 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		});
 	}
+
+	NRS.pages.finished_polls = function () {
+		NRS.finished_polls("finished_polls_full",true);
+	};
 
 	NRS.pages.polls = function() {
 		NRS.sendRequest("getPolls+", {
@@ -98,7 +103,8 @@ var NRS = (function(NRS, $, undefined) {
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
 								rows += "<td style='text-align:center;'><nobr><a href='#' class='vote_button btn btn-xs btn-default' data-poll='" + poll.transaction +"'>" + $.t('vote_btn_short') + "</a> ";
-								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a></nobr></td>";
+								rows += "<a href='#' class='follow_button btn btn-xs btn-default' data-follow='" + poll.transaction + "'>" + $.t('vote_follow_btn_short') + "</a> ";
+								rows += "<a href='#' class='view_button btn btn-xs btn-default' data-view='" + poll.transaction + "'>" + $.t('view') + "</a></nobr></td>";
 								rows += "</tr>";
 							}
 							NRS.dataLoaded(rows);
@@ -111,6 +117,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoaded();
 			}
 		});
+		NRS.finished_polls("finished_polls",false);
 	};
  
 	NRS.incoming.polls = function() {
@@ -776,6 +783,16 @@ var NRS = (function(NRS, $, undefined) {
 			});
 			NRS.loadFollowedPollsSidebar(callback);
 		});
+		if (NRS.getUrlParameter("poll") && requestedPoll == "") {
+			requestedPoll = NRS.getUrlParameter("poll").escapeHTML();
+		}
+		if (requestedPoll != "") {
+		    NRS.sendRequest("getPoll", {
+                "poll": requestedPoll
+            }, function(response) {
+                NRS.loadPoll(response);
+            });
+	    }
 	};
 
 	NRS.cachePoll = function(poll) {
@@ -921,7 +938,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.loadFollowedPollsSidebar = function(callback) {
 		var followedPollsPage = $("#followed_polls_page");
 		var followedPollsSidebarContent = $("#followed_polls_sidebar_content");
-        if (!NRS.followedPolls.length) {
+        if (!NRS.followedPolls.length && requestedPoll == "") {
 			NRS.pageLoaded(callback);
 			followedPollsSidebarContent.empty();
 			$("#no_poll_selected, #loading_poll_data, #no_poll_search_results, #poll_details").hide();
@@ -929,7 +946,7 @@ var NRS = (function(NRS, $, undefined) {
 			followedPollsPage.addClass("no_polls");
 			return;
 		}
-
+		requestedPoll = "";
 		var rows = "";
 		followedPollsPage.removeClass("no_polls");
 		NRS.positionFollowedPollsSidebar();
@@ -1173,6 +1190,60 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.dataLoadFinished(followedPollsVotesCast, !refresh);
 			});
 		})
+	};
+
+	body.on("click", ".view_button[data-view]", function() {
+	    requestedPoll = $(this).data("view");
+	    NRS.goToPage("followed_polls");
+    });
+
+	NRS.finished_polls = function (table,full) {
+		var finishedPollsTable = $("#" + table + "_table");
+		finishedPollsTable.find("tbody").empty();
+		finishedPollsTable.parent().addClass("data-loading").removeClass("data-empty");
+		var params = {
+			"finishedOnly": "true"
+		};
+		if (full) {
+			params["firstIndex"] = NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage;
+			params["lastIndex"] = NRS.pageNumber * NRS.itemsPerPage;
+		} else {
+			params["firstIndex"] = 0;
+			params["lastIndex"] = 9;
+		}
+		var view = NRS.simpleview.get(table, {
+			errorMessage: null,
+			isLoading: true,
+			isEmpty: false,
+			data: []
+		});
+		NRS.sendRequest("getPolls", params, function (response) {
+			var polls = response.polls;
+			if (polls.length > NRS.itemsPerPage) {
+				NRS.hasMorePages = true;
+				polls.pop();
+			}
+			for (var i = 0; i < polls.length; i++) {
+				var poll = polls[i];
+				var description = poll.description;
+				if (description.length > 100) {
+					description = description.substring(0, 100) + "...";
+				}
+				var actions = '<a class="view_button btn btn-xs btn-default" href="#" data-view="' + poll.poll + '">' + $.t('view') + '</a>';
+				view.data.push({
+					"title": NRS.getTransactionLink(poll.poll, poll.name),
+					"description": description,
+					"sender": NRS.getAccountLink(poll, "account"),
+					"timestamp": NRS.formatTimestamp(poll.timestamp),
+					"actions": actions
+				})
+			}
+			view.render({
+				isLoading: false,
+				isEmpty: view.data.length == 0
+			});
+			NRS.pageLoaded();
+		});
 	};
 
 	return NRS;
