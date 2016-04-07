@@ -299,6 +299,7 @@ var NRS = (function(NRS, $, undefined) {
         }
 
         $.each(NRS.plugins, function(pluginId, pluginDict) {
+            NRS.logConsole("Iterating over plugins");
             if ((NRS.settings["enable_plugins"] == "0" || NRS.disablePluginsDuringSession) && pluginDict['launch_status'] == NRS.constants.PL_PAUSED) {
                 pluginDict['launch_status'] = NRS.constants.PL_DEACTIVATED;
                 pluginDict['launch_status_msg'] = $.t('plugin_deactivated', 'Deactivated');
