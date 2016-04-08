@@ -160,7 +160,7 @@ public final class Nxt {
                         System.out.printf("Creating dir %s\n", confDir);
                         Files.createDirectory(confDir);
                     }
-                    Path propPath = Paths.get(confDir.toString(), propertiesFile);
+                    Path propPath = Paths.get(confDir.toString()).resolve(Paths.get(propertiesFile));
                     if (Files.isReadable(propPath)) {
                         System.out.printf("Loading %s from dir %s\n", propertiesFile, confDir);
                         properties.load(Files.newInputStream(propPath));
