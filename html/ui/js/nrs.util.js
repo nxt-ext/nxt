@@ -252,6 +252,9 @@ var NRS = (function (NRS, $, undefined) {
 			volume = Math.floor(volume / 10);
 		} while (volume > 0);
 		for (i = 0; i < digits.length; i++) {
+			if (i > 0 && i % 3 == 0) {
+				formattedVolume = "'" + formattedVolume;
+			}
 			formattedVolume = digits[i] + formattedVolume;
 		}
 		return formattedVolume + " " + size;
@@ -266,6 +269,9 @@ var NRS = (function (NRS, $, undefined) {
 			weight = Math.floor(weight / 10);
 		} while (weight > 0);
 		for (i = 0; i < digits.length; i++) {
+			if (i > 0 && i % 3 == 0) {
+				formattedWeight = "'" + formattedWeight;
+			}
 			formattedWeight = digits[i] + formattedWeight;
 		}
 		return formattedWeight.escapeHTML();
@@ -542,6 +548,9 @@ var NRS = (function (NRS, $, undefined) {
 		var formattedAmount = "";
 
 		for (var i = 0; i < digits.length; i++) {
+			if (i > 0 && i % 3 == 0) {
+				formattedAmount = "'" + formattedAmount;
+			}
 			formattedAmount = digits[i] + formattedAmount;
         }
 
