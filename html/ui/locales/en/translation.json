@@ -1704,5 +1704,6 @@
   "finished_polls": "Finished Polls",
   "download_nrs_mac_installer": "Mac installer",
   "download_nrs_linux_installer": "Linux installer",
-  "product_picture": "Product Picture"
+  "product_picture": "Product Picture",
+  "bookmark_this_poll": "Bookmark This Poll"
 }
