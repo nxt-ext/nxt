@@ -21,6 +21,7 @@ var NRS = (function(NRS, $, undefined) {
 	
 	var _voteCache = {};
 	var requestedPoll = "";
+	var viewingPollBookmark = "";
 
 	function _setFollowButtonStates() {
 		NRS.storageSelect("polls", null, function (error, polls) {
@@ -946,7 +947,7 @@ var NRS = (function(NRS, $, undefined) {
 			followedPollsPage.addClass("no_polls");
 			return;
 		}
-		requestedPoll = "";
+
 		var rows = "";
 		followedPollsPage.removeClass("no_polls");
 		NRS.positionFollowedPollsSidebar();
@@ -991,7 +992,17 @@ var NRS = (function(NRS, $, undefined) {
 			followedPollsSidebar.find("a[data-poll=" + active + "]").addClass("active");
 		}
 		$("#followed_polls_sidebar_search").hide();
-
+		if(requestedPoll != "") {
+			var pollLink = $("#followed_polls_sidebar").find("a[data-poll=" + requestedPoll + "]");
+			if (pollLink.length) {
+				pollLink.click();
+				$("#followed_polls_bookmark_poll").hide();
+			} else {
+				$("#followed_polls_bookmark_poll").show();
+				viewingPollBookmark = requestedPoll;
+			}
+		}
+		requestedPoll = "";
 		NRS.pageLoaded(callback);
 	};
 
@@ -1032,7 +1043,6 @@ var NRS = (function(NRS, $, undefined) {
 		e.preventDefault();
 		var pollId = NRS.selectedContext.data("poll");
 		var option = $(this).data("option");
-
 		NRS.closeContextMenu();
 		if (option == "remove_from_bookmarks") {
 			NRS.storageDelete("polls", [{
@@ -1194,8 +1204,16 @@ var NRS = (function(NRS, $, undefined) {
 
 	body.on("click", ".view_button[data-view]", function() {
 	    requestedPoll = $(this).data("view");
-	    NRS.goToPage("followed_polls");
+		NRS.goToPage("followed_polls");
     });
+
+	$("#followed_polls_bookmark_poll").on("click", function () {
+		var $btn = $(this);
+		NRS.sendRequest("getPoll", {"poll": viewingPollBookmark}, function(response) {
+			NRS.saveFollowedPolls(new Array(response), NRS.forms.addFollowedPollsComplete);
+			$btn.hide();
+		});
+	});
 
 	NRS.finished_polls = function (table,full) {
 		var finishedPollsTable = $("#" + table + "_table");
