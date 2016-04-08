@@ -24,8 +24,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-
 public final class SignTransaction extends APIServlet.APIRequestHandler {
 
     static final SignTransaction instance = new SignTransaction();
@@ -35,7 +33,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
         String transactionJSON = Convert.emptyToNull(req.getParameter("unsignedTransactionJSON"));
         String transactionBytes = Convert.emptyToNull(req.getParameter("unsignedTransactionBytes"));
@@ -43,11 +41,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
 
         Transaction.Builder builder = ParameterParser.parseTransaction(transactionJSON, transactionBytes, prunableAttachmentJSON);
 
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        }
-
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         boolean validate = !"false".equalsIgnoreCase(req.getParameter("validate"));
 
         JSONObject response = new JSONObject();
@@ -71,7 +65,7 @@ public final class SignTransaction extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

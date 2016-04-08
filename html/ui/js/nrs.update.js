@@ -17,7 +17,18 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $, undefined) {
+var NRS = (function(NRS, $) {
+	var index = 0;
+	var bundles = [
+		{alias: "nrsVersion", status: "release", prefix: "nxt-client-", ext: "zip"},
+		{alias: "nrsBetaVersion", status: "beta", prefix: "nxt-client-", ext: "zip"},
+		{alias: "nrsVersionWin", status: "release", prefix: "nxt-client-", ext: "exe"},
+		{alias: "nrsBetaVersionWin", status: "beta", prefix: "nxt-client-", ext: "exe"},
+		{alias: "nrsVersionMac", status: "release", prefix: "nxt-installer-", ext: "dmg"},
+		{alias: "nrsBetaVersionMac", status: "beta", prefix: "nxt-installer-", ext: "dmg"},
+		{alias: "nrsVersionLinux", status: "release", prefix: "nxt-client-", ext: "sh"},
+		{alias: "nrsBetaVersionLinux", status: "beta", prefix: "nxt-client-", ext: "sh"}
+	];
 	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
@@ -26,38 +37,26 @@ var NRS = (function(NRS, $, undefined) {
 			$("#nrs_update_explanation_blockchain_sync").show();
 			return;
 		}
-		if (NRS.isTestNet) {
-			$("#nrs_update_explanation").find("span").hide();
-			$("#nrs_update_explanation_testnet").show();
-			return;
-		}
 
-        // Load all version aliases in parallel and call NRS.checkForNewVersion() at the end
-        async.parallel([
-            function(callback){
-                getVersionInfo("nrsVersion", callback);
-            },
-            function(callback){
-                getVersionInfo("nrsBetaVersion", callback);
-            },
-            function(callback){
-                getVersionInfo("nrsVersionWin", callback);
-            },
-            function(callback){
-                getVersionInfo("nrsBetaVersionWin", callback);
-            }
-        ],
-        function(err, results) {
+        // Load all version aliases in parallel and call checkForNewVersion() at the end
+		index = 0;
+		var versionInfoCall = [];
+		for (var i=0; i<bundles.length; i++) {
+			versionInfoCall.push(function(callback) {
+				getVersionInfo(callback);
+			});
+		}
+        async.parallel(versionInfoCall, function(err, results) {
             if (err == null) {
                 NRS.logConsole("Version aliases: " + JSON.stringify(results));
             } else {
                 NRS.logConsole("Version aliases lookup error " + err);
             }
-            NRS.checkForNewVersion();
+			checkForNewVersion();
         });
 	};
 
-	NRS.checkForNewVersion = function() {
+	function checkForNewVersion() {
         var installVersusNormal, installVersusBeta;
         if (NRS.nrsVersion && NRS.nrsVersion.versionNr) {
 			installVersusNormal = NRS.versionCompare(NRS.state.version, NRS.nrsVersion.versionNr);
@@ -87,9 +86,9 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.isOutdated = false;
 			$("#nrs_update_explanation_up_to_date").show();
 		}
-	};
+	}
 
-	NRS.verifyClientUpdate = function(e) {
+	function verifyClientUpdate(e) {
 		e.stopPropagation();
 		e.preventDefault();
 		var files = null;
@@ -132,26 +131,28 @@ var NRS = (function(NRS, $, undefined) {
 		worker.postMessage({
 			file: files[0]
 		});
-	};
+	}
 
-	NRS.downloadClientUpdate = function(version, type) {
-		if (version == "release") {
-			if (type == "exe") {
-                NRS.downloadedVersion = NRS.nrsVersionWin;
-            } else {
-                NRS.downloadedVersion = NRS.nrsVersion;
-            }
-		} else {
-            if (type == "exe") {
-                NRS.downloadedVersion = NRS.nrsBetaVersionWin;
-            } else {
-                NRS.downloadedVersion = NRS.nrsBetaVersion;
-            }
+	NRS.downloadClientUpdate = function(status, ext) {
+		var bundle;
+		for (var i=0; i<bundles.length; i++) {
+			bundle = bundles[i];
+            if (bundle.status == status && bundle.ext == ext) {
+				NRS.downloadedVersion = NRS[bundle.alias];
+				break;
+			}
 		}
-
-        var filename = "nxt-client-" + NRS.downloadedVersion.versionNr + "." + type;
+        if (!NRS.downloadedVersion) {
+            NRS.logConsole("Cannot determine download version for alias " + bundle.alias);
+            return;
+        }
+        var filename = bundle.prefix + NRS.downloadedVersion.versionNr + "." + bundle.ext;
         var fileurl = "https://bitbucket.org/JeanLucPicard/nxt/downloads/" + filename;
-        $("#nrs_update_iframe").attr("src", fileurl);
+        if (window.java !== undefined) {
+            window.java.popupHandlerURLChange(fileurl);
+        } else {
+            $("#nrs_update_iframe").attr("src", fileurl);
+        }
         $("#nrs_update_explanation").hide();
         var updateDropZone = $("#nrs_update_drop_zone");
         updateDropZone.html($.t("drop_update_v2", { filename: filename }));
@@ -168,7 +169,7 @@ var NRS = (function(NRS, $, undefined) {
         });
 
         body.on("drop.nrs", function(e) {
-            NRS.verifyClientUpdate(e);
+            verifyClientUpdate(e);
         });
 
         updateDropZone.on("click", function(e) {
@@ -177,85 +178,30 @@ var NRS = (function(NRS, $, undefined) {
         });
 
         $("#nrs_update_file_select").on("change", function(e) {
-            NRS.verifyClientUpdate(e);
+            verifyClientUpdate(e);
         });
 
 		return false;
 	};
-
-    NRS.versionCompare = function(v1, v2) {
-   		if (v2 == undefined) {
-   			return -1;
-   		} else if (v1 == undefined) {
-   			return -1;
-   		}
-
-   		//https://gist.github.com/TheDistantSea/8021359 (based on)
-   		var v1last = v1.slice(-1);
-   		var v2last = v2.slice(-1);
-
-   		if (v1last == 'e') {
-   			v1 = v1.substring(0, v1.length - 1);
-   		} else {
-   			v1last = '';
-   		}
-
-   		if (v2last == 'e') {
-   			v2 = v2.substring(0, v2.length - 1);
-   		} else {
-   			v2last = '';
-   		}
-
-   		var v1parts = v1.split('.');
-   		var v2parts = v2.split('.');
-
-   		function isValidPart(x) {
-   			return /^\d+$/.test(x);
-   		}
-
-   		if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
-   			return NaN;
-   		}
-
-   		v1parts = v1parts.map(Number);
-   		v2parts = v2parts.map(Number);
-
-   		for (var i = 0; i < v1parts.length; ++i) {
-   			if (v2parts.length == i) {
-   				return 1;
-   			}
-               if (v1parts[i] != v2parts[i]) {
-                   if (v1parts[i] > v2parts[i]) {
-                       return 1;
-                   } else {
-                       return -1;
-                   }
-               }
-   		}
-
-   		if (v1parts.length != v2parts.length) {
-   			return -1;
-   		}
-
-   		if (v1last && v2last) {
-   			return 0;
-   		} else if (v1last) {
-   			return 1;
-   		} else if (v2last) {
-   			return -1;
-   		} else {
-   			return 0;
-   		}
-   	};
-
+	
     // Get latest version number and hash of version specified by the alias
-    function getVersionInfo(aliasName, callback) {
+    function getVersionInfo(callback) {
+		var aliasName = bundles[index].alias;
+		index ++;
         NRS.sendRequest("getAlias", {
             "aliasName": aliasName
         }, function (response) {
-            if (response.aliasURI && (response = response.aliasURI.split(" "))) {
-                NRS[aliasName] = { versionNr: response[0], hash: response[1] };
+            if (response.aliasURI) {
+                var token = response.aliasURI.trim().split(" ");
+                if (token.length != 2) {
+                    NRS.logConsole("Invalid token " + response.aliasURI + " for alias " + aliasName);
+                    callback(null, null);
+                    return;
+                }
+                NRS[aliasName] = { versionNr: token[0], hash: token[1] };
                 callback(null, NRS[aliasName]);
+            } else {
+                callback(null, null);
             }
         });
     }

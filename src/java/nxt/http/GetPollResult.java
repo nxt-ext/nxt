@@ -37,7 +37,7 @@ public class GetPollResult extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Poll poll = ParameterParser.getPoll(req);
         List<Poll.OptionResult> pollResults;
         VoteWeighting voteWeighting;

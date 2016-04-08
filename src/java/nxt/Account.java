@@ -51,7 +51,7 @@ public final class Account {
 
     public enum Event {
         BALANCE, UNCONFIRMED_BALANCE, ASSET_BALANCE, UNCONFIRMED_ASSET_BALANCE, CURRENCY_BALANCE, UNCONFIRMED_CURRENCY_BALANCE,
-        LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED
+        LEASE_SCHEDULED, LEASE_STARTED, LEASE_ENDED, SET_PROPERTY, DELETE_PROPERTY
     }
 
     public enum ControlType {
@@ -681,6 +681,8 @@ public final class Account {
 
     private static final Listeners<AccountLease,Event> leaseListeners = new Listeners<>();
 
+    private static final Listeners<AccountProperty,Event> propertyListeners = new Listeners<>();
+
     public static boolean addListener(Listener<Account> listener, Event eventType) {
         return listeners.addListener(listener, eventType);
     }
@@ -711,6 +713,14 @@ public final class Account {
 
     public static boolean removeLeaseListener(Listener<AccountLease> listener, Event eventType) {
         return leaseListeners.removeListener(listener, eventType);
+    }
+
+    public static boolean addPropertyListener(Listener<AccountProperty> listener, Event eventType) {
+        return propertyListeners.addListener(listener, eventType);
+    }
+
+    public static boolean removePropertyListener(Listener<AccountProperty> listener, Event eventType) {
+        return propertyListeners.removeListener(listener, eventType);
     }
 
     public static int getCount() {
@@ -1206,11 +1216,16 @@ public final class Account {
             }
             return (balanceNQT - receivedInLastBlock) / Constants.ONE_NXT;
         }
-        long effectiveBalanceNQT = getLessorsGuaranteedBalanceNQT(height);
-        if (activeLesseeId == 0) {
-            effectiveBalanceNQT += getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height);
+        Nxt.getBlockchain().readLock();
+        try {
+            long effectiveBalanceNQT = getLessorsGuaranteedBalanceNQT(height);
+            if (activeLesseeId == 0) {
+                effectiveBalanceNQT += getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height);
+            }
+            return (height > Constants.SHUFFLING_BLOCK && effectiveBalanceNQT < Constants.MIN_FORGING_BALANCE_NQT) ? 0 : effectiveBalanceNQT / Constants.ONE_NXT;
+        } finally {
+            Nxt.getBlockchain().readUnlock();
         }
-        return (height > Constants.SHUFFLING_BLOCK && effectiveBalanceNQT < Constants.MIN_FORGING_BALANCE_NQT) ? 0 : effectiveBalanceNQT / Constants.ONE_NXT;
     }
 
     private long getLessorsGuaranteedBalanceNQT(int height) {
@@ -1226,14 +1241,15 @@ public final class Account {
             lessorIds[i] = lessors.get(i).getId();
             balances[i] = lessors.get(i).getBalanceNQT();
         }
+        int blockchainHeight = Nxt.getBlockchain().getHeight();
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT account_id, SUM (additions) AS additions "
                      + "FROM account_guaranteed_balance, TABLE (id BIGINT=?) T WHERE account_id = T.id AND height > ? "
-                     + (height < Nxt.getBlockchain().getHeight() ? " AND height <= ? " : "")
+                     + (height < blockchainHeight ? " AND height <= ? " : "")
                      + " GROUP BY account_id ORDER BY account_id")) {
             pstmt.setObject(1, lessorIds);
             pstmt.setInt(2, height - Constants.GUARANTEED_BALANCE_CONFIRMATIONS);
-            if (height < Nxt.getBlockchain().getHeight()) {
+            if (height < blockchainHeight) {
                 pstmt.setInt(3, height);
             }
             long total = 0;
@@ -1271,25 +1287,30 @@ public final class Account {
     }
 
     public long getGuaranteedBalanceNQT(final int numberOfConfirmations, final int currentHeight) {
-        int height = currentHeight - numberOfConfirmations;
-        if (height + Constants.GUARANTEED_BALANCE_CONFIRMATIONS < Nxt.getBlockchainProcessor().getMinRollbackHeight()
-                || height > Nxt.getBlockchain().getHeight()) {
-            throw new IllegalArgumentException("Height " + height + " not available for guaranteed balance calculation");
-        }
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
-                     + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ? AND height <= ?")) {
-            pstmt.setLong(1, this.id);
-            pstmt.setInt(2, height);
-            pstmt.setInt(3, currentHeight);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (!rs.next()) {
-                    return balanceNQT;
-                }
-                return Math.max(Math.subtractExact(balanceNQT, rs.getLong("additions")), 0);
+        Nxt.getBlockchain().readLock();
+        try {
+            int height = currentHeight - numberOfConfirmations;
+            if (height + Constants.GUARANTEED_BALANCE_CONFIRMATIONS < Nxt.getBlockchainProcessor().getMinRollbackHeight()
+                    || height > Nxt.getBlockchain().getHeight()) {
+                throw new IllegalArgumentException("Height " + height + " not available for guaranteed balance calculation");
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
+            try (Connection con = Db.db.getConnection();
+                 PreparedStatement pstmt = con.prepareStatement("SELECT SUM (additions) AS additions "
+                         + "FROM account_guaranteed_balance WHERE account_id = ? AND height > ? AND height <= ?")) {
+                pstmt.setLong(1, this.id);
+                pstmt.setInt(2, height);
+                pstmt.setInt(3, currentHeight);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (!rs.next()) {
+                        return balanceNQT;
+                    }
+                    return Math.max(Math.subtractExact(balanceNQT, rs.getLong("additions")), 0);
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e.toString(), e);
+            }
+        } finally {
+            Nxt.getBlockchain().readUnlock();
         }
     }
 
@@ -1422,6 +1443,8 @@ public final class Account {
             accountProperty.value = value;
         }
         accountPropertyTable.insert(accountProperty);
+        listeners.notify(this, Event.SET_PROPERTY);
+        propertyListeners.notify(accountProperty, Event.SET_PROPERTY);
     }
 
     void deleteProperty(long propertyId) {
@@ -1433,6 +1456,8 @@ public final class Account {
             throw new RuntimeException("Property " + Long.toUnsignedString(propertyId) + " cannot be deleted by " + Long.toUnsignedString(this.id));
         }
         accountPropertyTable.delete(accountProperty);
+        listeners.notify(this, Event.DELETE_PROPERTY);
+        propertyListeners.notify(accountProperty, Event.DELETE_PROPERTY);
     }
 
     static boolean setOrVerify(long accountId, byte[] key) {

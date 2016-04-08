@@ -147,9 +147,10 @@ public final class Constants {
     public static final int CHECKSUM_BLOCK_16 = isTestnet ? 450000 : 556000;
     public static final int SHUFFLING_BLOCK = isTestnet ? 483000 : 621000;
     public static final int CHECKSUM_BLOCK_17 = isTestnet ? 484000 : 622000;
+    public static final int CHECKSUM_BLOCK_18 = isTestnet ? 664000 : 729700;
 
-    public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_17;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 555000 : 623000;
+    public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_18;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 665000 : 730000;
 
     public static final int[] MIN_VERSION = new int[] {1, 7};
 

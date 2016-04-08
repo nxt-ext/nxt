@@ -133,7 +133,7 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
                                             long amountNQT, Attachment attachment) throws NxtException {
         String deadlineValue = req.getParameter("deadline");
         String referencedTransactionFullHash = Convert.emptyToNull(req.getParameter("referencedTransactionFullHash"));
-        String secretPhrase = Convert.emptyToNull(req.getParameter("secretPhrase"));
+        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         String publicKeyValue = Convert.emptyToNull(req.getParameter("publicKey"));
         boolean broadcast = !"false".equalsIgnoreCase(req.getParameter("broadcast")) && secretPhrase != null;
         Appendix.EncryptedMessage encryptedMessage = null;
@@ -244,12 +244,12 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
     @Override
-    final boolean allowRequiredBlockParameters() {
+    protected final boolean allowRequiredBlockParameters() {
         return false;
     }
 

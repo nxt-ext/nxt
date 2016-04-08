@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 VERSION=$1
 if [ -x ${VERSION} ];
 then
@@ -14,8 +14,8 @@ FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
-FILES="${FILES} mint.bat mint.sh run.bat run.sh mac-run.sh run-tor.sh run-desktop.sh compact.sh compact.bat sign.sh"
-FILES="${FILES} NXT_Wallet.url Dockerfile"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh start.sh stop.sh compact.sh compact.bat sign.sh"
+FILES="${FILES} nxt.policy nxtdesktop.policy NXT_Wallet.url Dockerfile"
 
 unix2dos *.bat
 echo compile
@@ -23,12 +23,14 @@ echo compile
 rm -rf html/doc/*
 rm -rf nxt
 rm -rf ${PACKAGE}.jar
+rm -rf ${PACKAGE}.sh
 rm -rf ${PACKAGE}.exe
 rm -rf ${PACKAGE}.zip
 mkdir -p nxt/
 mkdir -p nxt/logs
+mkdir -p nxt/addons/src
 
-if [ "${OBFUSCATE}" == "obfuscate" ]; 
+if [ "${OBFUSCATE}" = "obfuscate" ]; 
 then
 echo obfuscate
 /opt/proguard/bin/proguard.sh @nxt.pro
@@ -67,10 +69,13 @@ zip -q -X -r ${PACKAGE}.zip nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.lo
 rm -rf nxt
 
 echo creating full changelog
-echo -e "${PACKAGE}:\n" > changelog-full.txt
+echo "${PACKAGE}:" > changelog-full.txt
+echo >> changelog-full.txt
 cat changelogs/${CHANGELOG} >> changelog-full.txt
-echo -e "\n--------------------------------------------------------------------------------" >> changelog-full.txt
+echo >> changelog-full.txt
+echo "--------------------------------------------------------------------------------" >> changelog-full.txt
 cat changelogs/changelog.txt >> changelog-full.txt
+unix2dos changelog-full.txt
 
 #echo signing zip package
 #../jarsigner.sh ${PACKAGE}.zip
@@ -78,44 +83,64 @@ cat changelogs/changelog.txt >> changelog-full.txt
 echo signing jar package
 ../jarsigner.sh ${PACKAGE}.jar
 
+echo creating sh package
+echo "#!/bin/sh\nexec java -jar \"\${0}\"\n\n" > ${PACKAGE}.sh
+cat ${PACKAGE}.jar >> ${PACKAGE}.sh
+chmod a+rx ${PACKAGE}.sh
+rm -f ${PACKAGE}.jar
+
 echo creating change log ${CHANGELOG}
-echo -e "Release $1\n" > ${CHANGELOG}
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.zip\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
+echo "Release $1" > ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.zip" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "sha256:" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
 sha256sum ${PACKAGE}.zip >> ${CHANGELOG}
 
-echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
-sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.sh" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "sha256:" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+sha256sum ${PACKAGE}.sh >> ${CHANGELOG}
 
-echo -e "\nhttps://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
-#echo -e "sha256:\n" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+#echo "sha256:" >> ${CHANGELOG}
 #sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-installer-${VERSION}.dmg\n" >> ${CHANGELOG}
+echo "https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-installer-${VERSION}.dmg" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
 
-echo -e "The exe, dmg, and jar packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
+echo "The exe, dmg, and sh packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
 
-if [ "${OBFUSCATE}" == "obfuscate" ];
+if [ "${OBFUSCATE}" = "obfuscate" ];
 then
-echo -e "\n\nThis is an experimental release for testing only. Source code is not provided." >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "This is an experimental release for testing only. Source code is not provided." >> ${CHANGELOG}
 fi
-echo -e "\n\nChange log:\n" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo >> ${CHANGELOG}
+echo "Change log:" >> ${CHANGELOG}
+echo >> ${CHANGELOG}
 
 cat changelogs/${CHANGELOG} >> ${CHANGELOG}
 echo >> ${CHANGELOG}
 
 gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.zip
-gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.jar
+gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.sh
 #gpg --detach-sign --armour --sign-with 0x811D6940E1E4240C ${PACKAGE}.exe
 
 gpg --clearsign --sign-with 0x811D6940E1E4240C ${CHANGELOG}
 rm -f ${CHANGELOG}
 gpgv ${PACKAGE}.zip.asc ${PACKAGE}.zip
-gpgv ${PACKAGE}.jar.asc ${PACKAGE}.jar
+gpgv ${PACKAGE}.sh.asc ${PACKAGE}.sh
 #gpgv ${PACKAGE}.exe.asc ${PACKAGE}.exe
 gpgv ${CHANGELOG}.asc
 sha256sum -c ${CHANGELOG}.asc
 #jarsigner -verify ${PACKAGE}.zip
-jarsigner -verify ${PACKAGE}.jar
+jarsigner -verify ${PACKAGE}.sh
 
 

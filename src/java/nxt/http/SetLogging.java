@@ -94,7 +94,7 @@ public class SetLogging extends APIServlet.APIRequestHandler {
      * @return                      API response
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONStreamAware response = null;
         //
         // Get the log level
@@ -142,22 +142,22 @@ public class SetLogging extends APIServlet.APIRequestHandler {
      * @return                      TRUE if the admin password is required
      */
     @Override
-    boolean requirePassword() {
+    protected boolean requirePassword() {
         return true;
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

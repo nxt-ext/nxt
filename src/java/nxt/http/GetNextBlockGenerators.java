@@ -36,7 +36,7 @@ public final class GetNextBlockGenerators extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
 
         /* implement later, if needed
         Block curBlock;

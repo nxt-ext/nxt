@@ -446,6 +446,22 @@ public final class JSONResponses {
         }
     }
 
+    public static final JSONStreamAware MONITOR_ALREADY_STARTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Account monitor already started");
+        MONITOR_ALREADY_STARTED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware MONITOR_NOT_STARTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Account monitor not started");
+        MONITOR_NOT_STARTED = JSON.prepare(response);
+    }
+
     private JSONResponses() {} // never
 
 }

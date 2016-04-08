@@ -40,7 +40,7 @@ public final class VerifyTaggedData extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
         Transaction transaction = Nxt.getBlockchain().getTransaction(transactionId);

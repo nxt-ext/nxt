@@ -34,7 +34,7 @@ public final class GetDGSExpiredPurchases extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long sellerId = ParameterParser.getAccountId(req, "seller", true);
         int firstIndex = ParameterParser.getFirstIndex(req);

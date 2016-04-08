@@ -39,7 +39,7 @@ public final class CastVote extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Poll poll = ParameterParser.getPoll(req);
         if (poll.isFinished()) {
             return POLL_FINISHED;

@@ -31,7 +31,7 @@ public final class FullHashToId extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         long longId = Convert.fullHashToId(Convert.parseHexString(req.getParameter("fullHash")));
         response.put("longId", String.valueOf(longId));
@@ -40,12 +40,12 @@ public final class FullHashToId extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

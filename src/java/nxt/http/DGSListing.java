@@ -17,10 +17,15 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.Appendix;
 import nxt.Attachment;
 import nxt.Constants;
 import nxt.NxtException;
 import nxt.util.Convert;
+import nxt.util.JSON;
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MediaType;
+import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,12 +40,12 @@ public final class DGSListing extends CreateTransaction {
     static final DGSListing instance = new DGSListing();
 
     private DGSListing() {
-        super(new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
+        super("messageFile", new APITag[] {APITag.DGS, APITag.CREATE_TRANSACTION},
                 "name", "description", "tags", "quantity", "priceNQT");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         String name = Convert.emptyToNull(req.getParameter("name"));
         String description = Convert.nullToEmpty(req.getParameter("description"));
@@ -64,10 +69,40 @@ public final class DGSListing extends CreateTransaction {
             return INCORRECT_DGS_LISTING_TAGS;
         }
 
+        Appendix.PrunablePlainMessage prunablePlainMessage = (Appendix.PrunablePlainMessage)ParameterParser.getPlainMessage(req, true);
+        if (prunablePlainMessage != null) {
+            if (prunablePlainMessage.isText()) {
+                return MESSAGE_NOT_BINARY;
+            }
+            byte[] image = prunablePlainMessage.getMessage();
+            Tika tika = new Tika();
+            String mediaTypeName = tika.detect(image);
+            MediaType mediaType = MediaType.parse(mediaTypeName);
+            if (mediaType == null || !mediaType.getType().equals("image")) {
+                return MESSAGE_NOT_IMAGE;
+            }
+        }
+
         Account account = ParameterParser.getSenderAccount(req);
         Attachment attachment = new Attachment.DigitalGoodsListing(name, description, tags, quantity, priceNQT);
         return createTransaction(req, account, attachment);
 
+    }
+
+    private static final JSONStreamAware MESSAGE_NOT_BINARY;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 8);
+        response.put("errorDescription", "Only binary message attachments accepted as DGS listing images");
+        MESSAGE_NOT_BINARY = JSON.prepare(response);
+    }
+
+    private static final JSONStreamAware MESSAGE_NOT_IMAGE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 9);
+        response.put("errorDescription", "Message attachment is not an image");
+        MESSAGE_NOT_IMAGE = JSON.prepare(response);
     }
 
 }

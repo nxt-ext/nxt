@@ -17,6 +17,7 @@
 package nxt.http;
 
 
+import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Poll;
 import nxt.db.DbIterator;
@@ -32,13 +33,14 @@ public class GetPolls extends APIServlet.APIRequestHandler {
     static final GetPolls instance = new GetPolls();
 
     private GetPolls() {
-        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "account", "firstIndex", "lastIndex", "timestamp", "includeFinished");
+        super(new APITag[]{APITag.ACCOUNTS, APITag.VS}, "account", "firstIndex", "lastIndex", "timestamp", "includeFinished", "finishedOnly");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long accountId = ParameterParser.getAccountId(req, "account", false);
         boolean includeFinished = "true".equalsIgnoreCase(req.getParameter("includeFinished"));
+        boolean finishedOnly = "true".equalsIgnoreCase(req.getParameter("finishedOnly"));
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         final int timestamp = ParameterParser.getTimestamp(req);
@@ -47,15 +49,16 @@ public class GetPolls extends APIServlet.APIRequestHandler {
         DbIterator<Poll> polls = null;
         try {
             if (accountId == 0) {
-                if (includeFinished) {
+                if (finishedOnly) {
+                    polls = Poll.getPollsFinishingAtOrBefore(Nxt.getBlockchain().getHeight(), firstIndex, lastIndex);
+                } else if (includeFinished) {
                     polls = Poll.getAllPolls(firstIndex, lastIndex);
                 } else {
                     polls = Poll.getActivePolls(firstIndex, lastIndex);
                 }
             } else {
-                polls = Poll.getPollsByAccount(accountId, includeFinished, firstIndex, lastIndex);
+                polls = Poll.getPollsByAccount(accountId, includeFinished, finishedOnly, firstIndex, lastIndex);
             }
-
             while (polls.hasNext()) {
                 Poll poll = polls.next();
                 if (poll.getTimestamp() < timestamp) {

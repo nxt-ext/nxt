@@ -269,7 +269,8 @@ var NRS = (function(NRS, $) {
                 "<td>" + NRS.formatAmount(block.totalFeeNQT) + "</td>" +
                 "<td>" + NRS.formatAmount(block.numberOfTransactions) + "</td>" +
                 "<td>" + NRS.getAccountLink(block, "generator") + "</td>" +
-                "<td>" + NRS.formatVolume(block.payloadLength) + "</td><td>" + Math.round(block.baseTarget / 153722867 * 100).pad(4) + " %</td>" +
+                "<td>" + NRS.formatVolume(block.payloadLength) + "</td>" +
+				"<td>" + NRS.baseTargetPercent(block).pad(4) + " %</td>" +
             "</tr>";
 		}
 

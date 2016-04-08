@@ -16,6 +16,7 @@
 
 package nxt.http;
 
+import nxt.AccountLedger;
 import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
@@ -36,7 +37,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONObject processRequest(HttpServletRequest req) {
+    protected JSONObject processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         response.put("application", Nxt.APPLICATION);
         response.put("version", Nxt.VERSION);
@@ -57,6 +58,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
         response.put("maxPrunableLifetime", Constants.MAX_PRUNABLE_LIFETIME);
         response.put("includeExpiredPrunable", Constants.INCLUDE_EXPIRED_PRUNABLE);
         response.put("correctInvalidFees", Constants.correctInvalidFees);
+        response.put("ledgerTrimKeep", AccountLedger.trimKeep);
         JSONArray servicesArray = new JSONArray();
         Peers.getServices().forEach(service -> servicesArray.add(service.name()));
         response.put("services", servicesArray);
@@ -64,7 +66,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

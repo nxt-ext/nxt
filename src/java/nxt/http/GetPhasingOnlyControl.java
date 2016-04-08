@@ -53,7 +53,7 @@ public final class GetPhasingOnlyControl extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         long accountId = ParameterParser.getAccountId(req, true);
         PhasingOnly phasingOnly = PhasingOnly.get(accountId);
         return phasingOnly == null ? JSON.emptyJSON : JSONData.phasingOnly(phasingOnly);

@@ -31,30 +31,15 @@ var NRS = (function(NRS, $) {
             type: NRS.addEllipsis(String(response.type).escapeHTML(), 20),
             channel: NRS.addEllipsis(String(response.channel).escapeHTML(), 20),
             filename: NRS.addEllipsis(String(response.filename).escapeHTML(), 20),
-            dataFormatted: NRS.getTaggedDataLink(response.data, response.transaction, response.isText)
+            dataFormatted: NRS.getTaggedDataLink(response.transaction, response.isText)
         };
     };
 
-    NRS.getTaggedDataLink = function(data, transaction, isText) {
-		var error = undefined;
-		if (!data) {
-			NRS.sendRequest("getTaggedData", {
-				"transaction": transaction,
-				"retrieve": "true"
-			}, function (response) {
-				if (response.errorCode) {
-					error = "<span>" + response.errorDescription + "</span>"
-				}
-			}, false)
-		}
-		if (error) {
-			return error;
-		}
+    NRS.getTaggedDataLink = function(transaction, isText) {
         if (isText) {
             return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
                 "data-target='#tagged_data_view_modal' " +
-                "data-transaction='" + String(transaction).escapeHTML() + "' " +
-                "data-data='" + String(data).escapeHTML() + "'>" + $.t("view") + "</a>";
+                "data-transaction='" + String(transaction).escapeHTML() + "'>" + $.t("view") + "</a>";
         } else {
 			return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + String(transaction).escapeHTML() +
                 "&retrieve=true' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
@@ -129,7 +114,6 @@ var NRS = (function(NRS, $) {
 		$(".tagged_data_search_pageheader_addon_account").show();
 		NRS.sendRequest("getAccountTaggedData+", {
 			"account": account,
-			"includeData": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -153,8 +137,7 @@ var NRS = (function(NRS, $) {
 		$(".tagged_data_search_pageheader_addon_fulltext").show();
 		NRS.sendRequest("searchTaggedData+", {
 			"query": query,
-            "includeData": true,
-			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+            "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
 			NRS.tagged_data_show_results(response);
@@ -177,7 +160,6 @@ var NRS = (function(NRS, $) {
 		$(".tagged_data_search_pageheader_addon_tag").show();
 		NRS.sendRequest("searchTaggedData+", {
 			"tag": tag,
-            "includeData": true,
 			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 			"lastIndex": NRS.pageNumber * NRS.itemsPerPage
 		}, function(response) {
@@ -204,7 +186,6 @@ var NRS = (function(NRS, $) {
 		$("#tagged_data_reset").hide();
 		$("#tagged_data_search_results").hide();
         NRS.sendRequest("getAllTaggedData+", {
-            "includeData": true,
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         }, function (response) {
@@ -295,9 +276,18 @@ var NRS = (function(NRS, $) {
 
     $("#tagged_data_view_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
-        var data = $invoker.data("data");
-        $("#tagged_data_content").val(data);
-        $("#tagged_data_download").attr("href", "/nxt?requestType=downloadTaggedData&transaction=" + $invoker.data("transaction") + "&retrieve=true");
+        var transaction = $invoker.data("transaction");
+        NRS.sendRequest("getTaggedData", {
+			"transaction": transaction,
+			"retrieve": "true"
+		}, function (response) {
+			if (response.errorCode) {
+                $("#tagged_data_content").val(response.errorDescription.escapeHTML());
+			} else {
+                $("#tagged_data_content").val(response.data);
+			}
+		}, false);
+		$("#tagged_data_download").attr("href", "/nxt?requestType=downloadTaggedData&transaction=" + transaction + "&retrieve=true");
     });
 
     $("#extend_data_modal").on("show.bs.modal", function (e) {

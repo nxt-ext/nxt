@@ -22,8 +22,6 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
-
 
 public final class StartForging extends APIServlet.APIRequestHandler {
 
@@ -34,13 +32,9 @@ public final class StartForging extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        String secretPhrase = req.getParameter("secretPhrase");
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        }
-
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         Generator generator = Generator.startForging(secretPhrase);
 
         JSONObject response = new JSONObject();
@@ -51,12 +45,12 @@ public final class StartForging extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

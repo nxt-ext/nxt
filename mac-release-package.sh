@@ -8,7 +8,7 @@ fi
 PACKAGE=nxt-client-${VERSION}
 echo PACKAGE="${PACKAGE}"
 CHANGELOG=nxt-client-${VERSION}.changelog.txt
-OBFUSCATE=$2	
+OBFUSCATE=$2
 MACVERSION=$3
 if [ -x ${MACVERSION} ];
 then
@@ -20,8 +20,8 @@ FILES="changelogs conf html lib resource contrib"
 FILES="${FILES} nxt.exe nxtservice.exe"
 FILES="${FILES} 3RD-PARTY-LICENSES.txt AUTHORS.txt DEVELOPER-AGREEMENT.txt LICENSE.txt"
 FILES="${FILES} DEVELOPERS-GUIDE.md OPERATORS-GUIDE.md README.md README.txt USERS-GUIDE.md"
-FILES="${FILES} mint.bat mint.sh run.bat run.sh mac-run.sh run-tor.sh run-desktop.sh compact.sh compact.bat sign.sh"
-FILES="${FILES} NXT_Wallet.url Dockerfile"
+FILES="${FILES} mint.bat mint.sh run.bat run.sh run-tor.sh run-desktop.sh start.sh stop.sh compact.sh compact.bat sign.sh"
+FILES="${FILES} nxt.policy nxtdesktop.policy NXT_Wallet.url Dockerfile"
 
 echo compile
 ./compile.sh
@@ -32,8 +32,9 @@ rm -rf ${PACKAGE}.exe
 rm -rf ${PACKAGE}.zip
 mkdir -p nxt/
 mkdir -p nxt/logs
+mkdir -p nxt/addons/src
 
-if [ "${OBFUSCATE}" == "obfuscate" ]; 
+if [ "${OBFUSCATE}" = "obfuscate" ]; 
 then
 echo obfuscate
 ~/proguard/proguard5.2.1/bin/proguard.sh @nxt.pro

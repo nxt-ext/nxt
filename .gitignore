@@ -1,3 +1,4 @@
+.lock
 /.idea/
 /.idea/dictionaries
 /html/ui/.idea
@@ -31,3 +32,5 @@ deploy.sh
 /nxtservice.exe
 /bundles
 *.patch
+/addons/classes/
+/addons/src/*.java

@@ -1,16 +1,40 @@
 Running the Nxt software:
 
-Dependencies: Java 8 or later needs to be installed first. Only the Oracle JVM
-has been tested and supported.
+Dependencies: Java 8 or later needs to be installed first. Oracle JVM gives
+better performance and has been more tested, but OpenJDK is also supported.
 
-There is no installation needed. Unpack the nxt-client.zip package and open a
-shell in the resulting nxt directory. Execute the run.sh script if using Linux,
-or run.bat if using Windows. This will start a java server process, which will
-begin logging its activities to the console. The initialization takes a few
-seconds. When it is ready, you should see the message "Nxt server 1.0.0 started
-successfully". Open a browser, without stopping the java process, and go to
-http://localhost:7876 , where the Nxt UI should now be available. To stop the
-application, type Ctrl-C inside the console window.
+
+Using the installer:
+
+An IzPack based installation package is provided. Click on the corresponding
+jar/exe/dmg package, or run "java -jar nxt-client.jar" to start the
+installer. See https://bitbucket.org/JeanLucPicard/nxt/issues/283 for more
+details about the IzPack installer. After installation, use the shortcuts or
+desktop icons to start the Nxt server.
+
+
+Using the nxt-client.zip package:
+
+Unpack the nxt-client.zip package and open a shell in the resulting nxt
+directory. Execute the run.sh or start.sh script if using Linux or BSD, run.bat
+if using Windows, or run.command if using Mac.
+
+On Unix, the run.sh script must be run from within the installation directory,
+and uses this directory to search for configuration files, store logs, and for
+the nxt_db blockchain database. The start.sh script can be run from any
+directory, it starts the java process in the background and uses ~/.nxt for
+configuration files, logs, and the nxt_db database. Unlike run.sh, start.sh
+uses desktop mode, creating a desktop tray icon and opening the JavaFX UI if
+supported.
+
+The initialization takes a few seconds. When it is ready, you should see the
+message "Nxt server 1.x.x started successfully" in the console log. If run in
+desktop mode, a JavaFX window will open automatically. Otherwise, open a
+browser, without stopping the java process, and go to http://localhost:7876 ,
+where the Nxt UI should now be available.
+
+To stop the application, type Ctrl-C inside the console window, or use the
+stop.sh script if started with start.sh.
 
 Warning: It is better to use only latin characters and no spaces in the path
 to the Nxt installation directory, as the use of special characters may result
@@ -48,11 +72,12 @@ Technical details:
 
 The Nxt software is a client-server application. It consists of a java server
 process, the one started by the run.sh script, and a javascript user interface
-run in a browser. To run a node, forge, update the blockchain, interact with
-peers, only the java process needs to be running, so you could logout and close
-the browser but keep the java process running. If you want to keep forging, make
-sure you do not click on "stop forging" when logging out. You can also just
-close the browser without logging out.
+run in a browser. A JavaFX UI is also available and starts automatically on
+supported configurations. To run a node, forge, update the blockchain, interact
+with peers, only the java process needs to be running, so you could logout and
+close the browser but keep the java process running. If you want to keep
+forging, make sure you do not click on "stop forging" when logging out. You can
+also just close the browser without logging out.
 
 The java process communicates with peers on port 7874 tcp by default. If you are
 behind a router or a firewall and want to have your node accept incoming peer
@@ -97,10 +122,10 @@ want to use the Java API directly instead of going through the http interface.
 
 Compiling:
 
-The source is included in the src subdirectory. To compile it on linux, just
-run the enclosed compile.sh script. This will compile all java classes and
-put them under the classes subdirectory, which is already in the classpath
-used by the run.sh startup script. The compiled class files can optionally be
-packaged in a nxt.jar file using the enclosed jar.sh script, and then nxt.jar
-should be included in the classpath instead of the classes subdirectory.
+The source is included in the src subdirectory. To compile it on unix, just run
+the enclosed compile.sh script. This will compile all java classes and put them
+under the classes subdirectory, which is already in the classpath used by the
+run.sh startup script. The compiled class files can optionally be packaged in a
+nxt.jar file using the enclosed jar.sh script, and then nxt.jar should be
+included in the classpath instead of the classes subdirectory.
 

@@ -27,7 +27,6 @@ import java.io.IOException;
 
 import static nxt.http.JSONResponses.INCORRECT_FILE;
 import static nxt.http.JSONResponses.INCORRECT_TOKEN;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 
 
 public final class GenerateFileToken extends APIServlet.APIRequestHandler {
@@ -39,11 +38,8 @@ public final class GenerateFileToken extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-        String secretPhrase = req.getParameter("secretPhrase");
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        }
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         byte[] data;
         try {
             Part part = req.getPart("file");
@@ -66,17 +62,17 @@ public final class GenerateFileToken extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

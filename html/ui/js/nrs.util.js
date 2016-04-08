@@ -232,8 +232,11 @@ var NRS = (function (NRS, $, undefined) {
         "es-US": "M/d/yyyy"
     };
 
-    var LANG = window.navigator.userLanguage || window.navigator.language;
+    var LANG = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
     var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
+    if (NRS.logConsole) {
+        NRS.logConsole("Date Format Locale: " + LANG + ", Date Format: " + LOCALE_DATE_FORMAT);
+    }
 
     NRS.formatVolume = function (volume) {
 		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -681,6 +684,10 @@ var NRS = (function (NRS, $, undefined) {
 			return date.toLocaleString();
 		}
 	};
+
+    NRS.baseTargetPercent = function(block) {
+        return Math.round(block.baseTarget / 153722867 * 100)
+    };
 
     NRS.isPrivateIP = function (ip) {
 		if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
@@ -1214,40 +1221,6 @@ var NRS = (function (NRS, $, undefined) {
 		});
 	};
 
-    NRS.setCookie = function (name, value, days) {
-		var expires;
-		if (days) {
-			var date = new Date();
-			date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-		} else {
-			expires = "";
-		}
-        //noinspection JSDeprecatedSymbols
-		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/";
-	};
-
-    NRS.getCookie = function (name) {
-        //noinspection JSDeprecatedSymbols
-		var nameEQ = escape(name) + "=";
-		var ca = document.cookie.split(';');
-		for (var i = 0; i < ca.length; i++) {
-			var c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1, c.length);
-		}
-            if (c.indexOf(nameEQ) === 0) {
-                //noinspection JSDeprecatedSymbols
-                return unescape(c.substring(nameEQ.length, c.length));
-            }
-        }
-		return null;
-	};
-
-    NRS.deleteCookie = function (name) {
-		NRS.setCookie(name, "", -1);
-	};
-
     NRS.translateServerError = function (response) {
         var match;
 		if (!response.errorDescription) {
@@ -1569,13 +1542,16 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.getUrlParameter = function (sParam) {
-		var sPageURL = window.location.search.substring(1);
-		var sURLVariables = sPageURL.split('&');
-        for (var i = 0; i < sURLVariables.length; i++) {
-			var sParameterName = sURLVariables[i].split('=');
-            if (sParameterName[0] == sParam) {
-				return sParameterName[1];
+    NRS.getUrlParameter = function (param) {
+		var url = window.location.search.substring(1);
+		var urlParams = url.split('&');
+        for (var i = 0; i < urlParams.length; i++) {
+			var paramKeyValue = urlParams[i].split('=');
+            if (paramKeyValue.length != 2) {
+                continue;
+            }
+            if (paramKeyValue[0] == param) {
+				return paramKeyValue[1];
 			}
 		}
 		return false;
@@ -1607,7 +1583,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.phasingControlObjectToPhasingParams = function(controlObj) {
-        var phasingParams = {}
+        var phasingParams = {};
 
         phasingParams.phasingVotingModel = controlObj.votingModel;
         phasingParams.phasingQuorum = controlObj.quorum;
@@ -1727,6 +1703,71 @@ var NRS = (function (NRS, $, undefined) {
             buf +=number.toString(32);
         }
         return buf;
+    };
+
+    NRS.versionCompare = function (v1, v2) {
+        if (v2 == undefined) {
+            return -1;
+        } else if (v1 == undefined) {
+            return -1;
+        }
+
+        //https://gist.github.com/TheDistantSea/8021359 (based on)
+        var v1last = v1.slice(-1);
+        var v2last = v2.slice(-1);
+
+        if (v1last == 'e') {
+            v1 = v1.substring(0, v1.length - 1);
+        } else {
+            v1last = '';
+        }
+
+        if (v2last == 'e') {
+            v2 = v2.substring(0, v2.length - 1);
+        } else {
+            v2last = '';
+        }
+
+        var v1parts = v1.split('.');
+        var v2parts = v2.split('.');
+
+        function isValidPart(x) {
+            return /^\d+$/.test(x);
+        }
+
+        if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
+            return NaN;
+        }
+
+        v1parts = v1parts.map(Number);
+        v2parts = v2parts.map(Number);
+
+        for (var i = 0; i < v1parts.length; ++i) {
+            if (v2parts.length == i) {
+                return 1;
+            }
+            if (v1parts[i] != v2parts[i]) {
+                if (v1parts[i] > v2parts[i]) {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            }
+        }
+
+        if (v1parts.length != v2parts.length) {
+            return -1;
+        }
+
+        if (v1last && v2last) {
+            return 0;
+        } else if (v1last) {
+            return 1;
+        } else if (v2last) {
+            return -1;
+        } else {
+            return 0;
+        }
     };
 
     return NRS;

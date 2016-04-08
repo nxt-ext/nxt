@@ -134,8 +134,8 @@ public final class Shuffling {
     private static final DbKey.LongKeyFactory<Shuffling> shufflingDbKeyFactory = new DbKey.LongKeyFactory<Shuffling>("id") {
 
         @Override
-        public DbKey newKey(Shuffling transfer) {
-            return transfer.dbKey;
+        public DbKey newKey(Shuffling shuffling) {
+            return shuffling.dbKey;
         }
 
     };
@@ -200,6 +200,10 @@ public final class Shuffling {
 
     public static DbIterator<Shuffling> getActiveShufflings(int from, int to) {
         return shufflingTable.getManyBy(new DbClause.NotNullClause("blocks_remaining"), from, to, " ORDER BY blocks_remaining, height DESC ");
+    }
+
+    public static DbIterator<Shuffling> getFinishedShufflings(int from, int to) {
+        return shufflingTable.getManyBy(new DbClause.NullClause("blocks_remaining"), from, to, " ORDER BY height DESC ");
     }
 
     public static Shuffling getShuffling(long shufflingId) {

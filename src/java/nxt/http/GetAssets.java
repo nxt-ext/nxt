@@ -34,7 +34,7 @@ public final class GetAssets extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         long[] assetIds = ParameterParser.getUnsignedLongs(req, "assets");
         boolean includeCounts = "true".equalsIgnoreCase(req.getParameter("includeCounts"));
         JSONObject response = new JSONObject();

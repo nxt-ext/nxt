@@ -39,7 +39,7 @@ public final class GetTaggedDataExtendTransactions extends APIServlet.APIRequest
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long taggedDataId = ParameterParser.getUnsignedLong(req, "transaction", true);
         List<Long> extendTransactions = TaggedData.getExtendTransactionIds(taggedDataId);
         JSONObject response = new JSONObject();

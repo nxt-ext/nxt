@@ -35,7 +35,7 @@ public final class TransferCurrency extends CreateTransaction {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
 
         long recipient = ParameterParser.getAccountId(req, "recipient", true);
 

@@ -52,7 +52,7 @@ public final class DebugTrace {
                 accountIds.clear();
                 break;
             }
-            accountIds.add(Convert.parseUnsignedLong(accountId));
+            accountIds.add(Convert.parseAccountId(accountId));
         }
         final DebugTrace debugTrace = addDebugTrace(accountIds, logName);
         Nxt.getBlockchainProcessor().addListener(block -> debugTrace.resetLog(), BlockchainProcessor.Event.RESCAN_BEGIN);
@@ -356,11 +356,10 @@ public final class DebugTrace {
                     Account.AccountCurrency accountCurrency = accountCurrencies.next();
                     accountId = accountCurrency.getAccountId();
                     units = accountCurrency.getUnits();
+                } else {
+                    return;
                 }
             }
-        }
-        if (accountId == 0 || units == 0) {
-            return;
         }
         Map<String,String> map = getValues(accountId, false);
         map.put("currency", Long.toUnsignedString(currency.getId()));

@@ -25,7 +25,10 @@ public class CommandLineMode implements RuntimeMode {
     public void init() {}
 
     @Override
-    public void setServerStatus(String status, URI wallet, File logFileDir) {}
+    public void setServerStatus(ServerStatus status, URI wallet, File logFileDir) {}
+
+    @Override
+    public void launchDesktopApplication() {}
 
     @Override
     public void shutdown() {}

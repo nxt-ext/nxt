@@ -35,6 +35,7 @@ import nxt.CurrencyType;
 import nxt.DigitalGoodsStore;
 import nxt.Exchange;
 import nxt.ExchangeRequest;
+import nxt.FundingMonitor;
 import nxt.Generator;
 import nxt.HoldingType;
 import nxt.MonetarySystem;
@@ -67,7 +68,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-final class JSONData {
+public final class JSONData {
 
     static JSONObject alias(Alias alias) {
         JSONObject json = new JSONObject();
@@ -87,6 +88,10 @@ final class JSONData {
     }
 
     static JSONObject accountBalance(Account account, boolean includeEffectiveBalance) {
+        return accountBalance(account, includeEffectiveBalance, Nxt.getBlockchain().getHeight());
+    }
+
+    static JSONObject accountBalance(Account account, boolean includeEffectiveBalance, int height) {
         JSONObject json = new JSONObject();
         if (account == null) {
             json.put("balanceNQT", "0");
@@ -101,8 +106,8 @@ final class JSONData {
             json.put("unconfirmedBalanceNQT", String.valueOf(account.getUnconfirmedBalanceNQT()));
             json.put("forgedBalanceNQT", String.valueOf(account.getForgedBalanceNQT()));
             if (includeEffectiveBalance) {
-                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT());
-                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT()));
+                json.put("effectiveBalanceNXT", account.getEffectiveBalanceNXT(height));
+                json.put("guaranteedBalanceNQT", String.valueOf(account.getGuaranteedBalanceNQT(Constants.GUARANTEED_BALANCE_CONFIRMATIONS, height)));
             }
         }
         return json;
@@ -469,6 +474,7 @@ final class JSONData {
         json.put("parsedTags", tagsJSON);
         json.put("delisted", goods.isDelisted());
         json.put("timestamp", goods.getTimestamp());
+        json.put("hasImage", goods.hasImage());
         if (includeCounts) {
             json.put("numberOfPurchases", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), false, true));
             json.put("numberOfPublicFeedbacks", DigitalGoodsStore.Purchase.getGoodsPurchaseCount(goods.getId(), true, true));
@@ -709,7 +715,9 @@ final class JSONData {
         JSONObject json = new JSONObject();
         json.put("purchase", Long.toUnsignedString(purchase.getId()));
         json.put("goods", Long.toUnsignedString(purchase.getGoodsId()));
-        json.put("name", purchase.getName());
+        DigitalGoodsStore.Goods goods = DigitalGoodsStore.Goods.getGoods(purchase.getGoodsId());
+        json.put("name", goods.getName());
+        json.put("hasImage", goods.hasImage());
         putAccount(json, "seller", purchase.getSellerId());
         json.put("priceNQT", String.valueOf(purchase.getPriceNQT()));
         json.put("quantity", purchase.getQuantity());
@@ -996,6 +1004,35 @@ final class JSONData {
         response.put("hitTime", generator.getHitTime());
         response.put("remaining", Math.max(deadline - elapsedTime, 0));
         return response;
+    }
+
+    static JSONObject accountMonitor(FundingMonitor monitor, boolean includeMonitoredAccounts) {
+        JSONObject json = new JSONObject();
+        json.put("holdingType", monitor.getHoldingType().getCode());
+        json.put("account", Long.toUnsignedString(monitor.getAccountId()));
+        json.put("accountRS", monitor.getAccountName());
+        json.put("holding", Long.toUnsignedString(monitor.getHoldingId()));
+        json.put("property", monitor.getProperty());
+        json.put("amount", String.valueOf(monitor.getAmount()));
+        json.put("threshold", String.valueOf(monitor.getThreshold()));
+        json.put("interval", monitor.getInterval());
+        if (includeMonitoredAccounts) {
+            JSONArray jsonAccounts = new JSONArray();
+            List<FundingMonitor.MonitoredAccount> accountList = FundingMonitor.getMonitoredAccounts(monitor);
+            accountList.forEach(account -> jsonAccounts.add(JSONData.monitoredAccount(account)));
+            json.put("monitoredAccounts", jsonAccounts);
+        }
+        return json;
+    }
+
+    static JSONObject monitoredAccount(FundingMonitor.MonitoredAccount account) {
+        JSONObject json = new JSONObject();
+        json.put("account", Long.toUnsignedString(account.getAccountId()));
+        json.put("accountRS", account.getAccountName());
+        json.put("amount", String.valueOf(account.getAmount()));
+        json.put("threshold", String.valueOf(account.getThreshold()));
+        json.put("interval", account.getInterval());
+        return json;
     }
 
     static JSONObject prunableMessage(PrunableMessage prunableMessage, long readerAccountId, String secretPhrase) {

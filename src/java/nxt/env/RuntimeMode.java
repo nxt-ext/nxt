@@ -21,11 +21,11 @@ import java.net.URI;
 
 public interface RuntimeMode {
 
-    String RUNTIME_MODE_ARG = "nxt.runtime.mode";
-
     void init();
 
-    void setServerStatus(String status, URI wallet, File logFileDir);
+    void setServerStatus(ServerStatus status, URI wallet, File logFileDir);
+
+    void launchDesktopApplication();
 
     void shutdown();
 }

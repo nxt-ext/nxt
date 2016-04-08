@@ -131,7 +131,7 @@ public class EventWait extends APIServlet.APIRequestHandler {
      * @return                      API response or null
      */
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = null;
         //
         // Get the timeout value
@@ -168,7 +168,7 @@ public class EventWait extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
@@ -178,7 +178,7 @@ public class EventWait extends APIServlet.APIRequestHandler {
      * @return                      FALSE to disable the required block parameters
      */
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

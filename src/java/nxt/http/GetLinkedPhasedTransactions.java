@@ -34,7 +34,7 @@ public class GetLinkedPhasedTransactions extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         byte[] linkedFullHash = ParameterParser.getBytes(req, "linkedFullHash", true);
 
         JSONArray json = new JSONArray();

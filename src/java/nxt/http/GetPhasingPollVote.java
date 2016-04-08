@@ -31,7 +31,7 @@ public class GetPhasingPollVote extends APIServlet.APIRequestHandler  {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
         long accountId = ParameterParser.getAccountId(req, true);
 

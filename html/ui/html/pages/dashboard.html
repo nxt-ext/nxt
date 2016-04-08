@@ -146,7 +146,16 @@
                             <div class="data-empty-container"><p data-i18n="no_transactions_yet">No transactions yet.</p></div>
                         </div>
                     </div>
-                    <div class="box-footer" id="dashboard_transactions_footer" style="display: none"><button class="btn btn-primary goto-page" data-page="transactions"><i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span></button></div>
+                    <div class="box-footer">
+                        <span id="dashboard_transactions_footer" style="display: none">
+                            <button class="btn btn-primary goto-page" data-page="transactions">
+                                <i class="fa fa-caret-right"></i> <span data-i18n="view_more">View More</span>
+                            </button>
+                        </span>
+                        <button class="btn btn-primary goto-page" data-page="ledger">
+                            <i class="fa fa-caret-right"></i> <span data-i18n="account_ledger">Account Ledger</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -16,6 +16,8 @@
 
 package nxt.http;
 
+import nxt.Account;
+import nxt.Nxt;
 import nxt.NxtException;
 import org.json.simple.JSONStreamAware;
 
@@ -26,13 +28,19 @@ public final class GetBalance extends APIServlet.APIRequestHandler {
     static final GetBalance instance = new GetBalance();
 
     private GetBalance() {
-        super(new APITag[] {APITag.ACCOUNTS}, "account", "includeEffectiveBalance");
+        super(new APITag[] {APITag.ACCOUNTS}, "account", "includeEffectiveBalance", "height");
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         boolean includeEffectiveBalance = "true".equalsIgnoreCase(req.getParameter("includeEffectiveBalance"));
-        return JSONData.accountBalance(ParameterParser.getAccount(req), includeEffectiveBalance);
+        long accountId = ParameterParser.getAccountId(req, true);
+        int height = ParameterParser.getHeight(req);
+        if (height < 0) {
+            height = Nxt.getBlockchain().getHeight();
+        }
+        Account account = Account.getAccount(accountId, height);
+        return JSONData.accountBalance(account, includeEffectiveBalance, height);
     }
 
 }

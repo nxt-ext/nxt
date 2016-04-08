@@ -118,6 +118,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     90, 15, -6, -42, -105, -103, 83, -17, -112, 51, -53, 110, 98, -54, -4, 2,
                     30, -69, 25, 91, 52, 126, -40, -91, -23, 118, -121, 70, 116, 60, -49, -86
             };
+    private static final byte[] CHECKSUM_18 = Constants.isTestnet ?
+            new byte[] {
+                    98, 53, 16, 32, 124, -49, 117, -11, 50, -122, 110, 5, -47, -11, -36, -48,
+                    -12, 10, -68, -105, 125, -61, -61, -62, -98, -64, -20, -110, 96, 20, 116, -52
+            }
+            :
+            new byte[] {
+                    28, -67, 28, 87, -21, 91, -74, 115, -37, 67, 74, -32, -92, 53, -58, 62,
+                    -60, 54, 58, -94, 9, 5, 26, -103, -19, 47, 78, 117, -49, 42, -14, 109
+            };
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -902,7 +912,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     request.put("requestType", "getTransactions");
                     request.put("transactionIds", requestList);
-                    JSONObject response = peer.send(JSON.prepareRequest(request));
+                    JSONObject response = peer.send(JSON.prepareRequest(request), 10 * 1024 * 1024);
                     if (response == null) {
                         return;
                     }
@@ -958,6 +968,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getHeight() == Constants.CHECKSUM_BLOCK_17
                 && ! verifyChecksum(CHECKSUM_17, Constants.CHECKSUM_BLOCK_16, Constants.CHECKSUM_BLOCK_17)) {
             popOffTo(Constants.CHECKSUM_BLOCK_16);
+        }
+        if (block.getHeight() == Constants.CHECKSUM_BLOCK_18
+                && ! verifyChecksum(CHECKSUM_18, Constants.CHECKSUM_BLOCK_17, Constants.CHECKSUM_BLOCK_18)) {
+            popOffTo(Constants.CHECKSUM_BLOCK_17);
         }
     };
 
@@ -1419,7 +1433,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             throw new BlockNotAcceptedException("Duplicate block or invalid id", block);
         }
         if (!block.verifyGenerationSignature() && !Generator.allowsFakeForging(block.getGeneratorPublicKey())) {
-            throw new BlockNotAcceptedException("Generation signature verification failed", block);
+            Account generatorAccount = Account.getAccount(block.getGeneratorId());
+            long generatorBalance = generatorAccount == null ? 0 : generatorAccount.getEffectiveBalanceNXT();
+            throw new BlockNotAcceptedException("Generation signature verification failed, effective balance " + generatorBalance, block);
         }
         if (!block.verifyBlockSignature()) {
             throw new BlockNotAcceptedException("Block signature verification failed", block);
@@ -1664,10 +1680,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (block.getId() == Genesis.GENESIS_BLOCK_ID) {
             throw new RuntimeException("Cannot pop off genesis block");
         }
-        BlockImpl previousBlock = blockchain.getBlock(block.getPreviousBlockId());
+        BlockImpl previousBlock = BlockDb.deleteBlocksFrom(block.getId());
         previousBlock.loadTransactions();
         blockchain.setLastBlock(previousBlock);
-        BlockDb.deleteBlocksFrom(block.getId());
         blockListeners.notify(block, Event.BLOCK_POPPED);
         return previousBlock;
     }
@@ -1677,7 +1692,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         try {
             try {
                 scheduleScan(0, false);
-                BlockDb.deleteBlocksFrom(BlockDb.findBlockIdAtHeight(height));
+                BlockImpl lastBLock = BlockDb.deleteBlocksFrom(BlockDb.findBlockIdAtHeight(height));
+                blockchain.setLastBlock(lastBLock);
                 Logger.logDebugMessage("Deleted blocks starting from height %s", height);
             } finally {
                 scan(0, false);
@@ -2012,8 +2028,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                                     break;
                                 }
                             }
-                            BlockDb.deleteBlocksFrom(currentBlockId);
-                            BlockImpl lastBlock = BlockDb.findLastBlock();
+                            BlockImpl lastBlock = BlockDb.deleteBlocksFrom(currentBlockId);
                             blockchain.setLastBlock(lastBlock);
                             popOffTo(lastBlock);
                             break;

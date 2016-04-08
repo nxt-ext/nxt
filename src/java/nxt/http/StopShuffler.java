@@ -34,7 +34,7 @@ public final class StopShuffler extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
         String secretPhrase = ParameterParser.getSecretPhrase(req, false);
         byte[] shufflingFullHash = ParameterParser.getBytes(req, "shufflingFullHash", false);
         long accountId = ParameterParser.getAccountId(req, false);
@@ -51,24 +51,28 @@ public final class StopShuffler extends APIServlet.APIRequestHandler {
             response.put("stoppedShuffler", shuffler != null);
         } else {
             API.verifyPassword(req);
-            if (accountId != 0 && shufflingFullHash.length == 0) {
+            if (accountId != 0 && shufflingFullHash.length != 0) {
                 Shuffler shuffler = Shuffler.stopShuffler(accountId, shufflingFullHash);
                 response.put("stoppedShuffler", shuffler != null);
-            } else {
+            } else if (accountId == 0 && shufflingFullHash.length == 0) {
                 Shuffler.stopAllShufflers();
                 response.put("stoppedAllShufflers", true);
+            } else if (accountId != 0) {
+                return JSONResponses.missing("shufflingFullHash");
+            } else if (shufflingFullHash.length != 0) {
+                return JSONResponses.missing("account");
             }
         }
         return response;
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 

@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.Constants;
 import nxt.peer.Hallmark;
+import nxt.util.Convert;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -28,7 +29,6 @@ import static nxt.http.JSONResponses.INCORRECT_HOST;
 import static nxt.http.JSONResponses.INCORRECT_WEIGHT;
 import static nxt.http.JSONResponses.MISSING_DATE;
 import static nxt.http.JSONResponses.MISSING_HOST;
-import static nxt.http.JSONResponses.MISSING_SECRET_PHRASE;
 import static nxt.http.JSONResponses.MISSING_WEIGHT;
 
 
@@ -41,15 +41,13 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        String secretPhrase = req.getParameter("secretPhrase");
-        String host = req.getParameter("host");
-        String weightValue = req.getParameter("weight");
-        String dateValue = req.getParameter("date");
-        if (secretPhrase == null) {
-            return MISSING_SECRET_PHRASE;
-        } else if (host == null) {
+        String secretPhrase = ParameterParser.getSecretPhrase(req, true);
+        String host = Convert.emptyToNull(req.getParameter("host"));
+        String weightValue = Convert.emptyToNull(req.getParameter("weight"));
+        String dateValue = Convert.emptyToNull(req.getParameter("date"));
+        if (host == null) {
             return MISSING_HOST;
         } else if (weightValue == null) {
             return MISSING_WEIGHT;
@@ -86,17 +84,17 @@ public final class MarkHost extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    boolean requirePost() {
+    protected boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

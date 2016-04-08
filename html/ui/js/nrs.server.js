@@ -106,7 +106,9 @@ var NRS = (function (NRS, $, undefined) {
                 ["controlMinBalanceNXT", "controlMinBalance"],
                 ["controlMaxFeesNXT", "controlMaxFees"],
                 ["minBalanceNXT", "minBalance"],
-                ["shufflingAmountNXT", "amount"]
+                ["shufflingAmountNXT", "amount"],
+                ["monitorAmountNXT", "amount"],
+                ["monitorThresholdNXT", "threshold"]
             ];
 
             for (i = 0; i < nxtFields.length; i++) {
@@ -326,7 +328,7 @@ var NRS = (function (NRS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        if (requestType == "uploadTaggedData") {
+        if (NRS.isFileUploadRequest(requestType)) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
@@ -337,7 +339,8 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 formData.append(key, data[key]);
             }
-            var file = $('#upload_file')[0].files[0];
+            var config = NRS.getFileUploadConfig(requestType);
+            var file = $(config.selector)[0].files[0];
             if (!file) {
                 callback({
                     "errorCode": 3,
@@ -345,17 +348,18 @@ var NRS = (function (NRS, $, undefined) {
                 }, data);
                 return;
             }
-            if (file.size > NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+            if (file.size > config.maxSize) {
+                var description = config.errorDescription;
                 callback({
                     "errorCode": 3,
-                    "errorDescription": $.t("error_file_too_big", {
+                    "errorDescription": $.t(description, {
                         "size": file.size,
                         "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
                     })
                 }, data);
                 return;
             }
-            formData.append("file", file); // file data
+            formData.append(config.requestParam, file); // file data;
             type = "POST";
         } else {
             // JQuery defaults

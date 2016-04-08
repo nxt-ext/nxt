@@ -31,7 +31,7 @@ public final class Shutdown extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) {
+    protected JSONStreamAware processRequest(HttpServletRequest req) {
         JSONObject response = new JSONObject();
         boolean scan = "true".equalsIgnoreCase(req.getParameter("scan"));
         if (scan) {
@@ -46,22 +46,22 @@ public final class Shutdown extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    final boolean requirePost() {
+    protected final boolean requirePost() {
         return true;
     }
 
     @Override
-    boolean requirePassword() {
+    protected boolean requirePassword() {
         return true;
     }
 
     @Override
-    boolean allowRequiredBlockParameters() {
+    protected boolean allowRequiredBlockParameters() {
         return false;
     }
 
     @Override
-    boolean requireBlockchain() {
+    protected boolean requireBlockchain() {
         return false;
     }
 

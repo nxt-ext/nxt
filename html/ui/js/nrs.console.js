@@ -19,6 +19,7 @@
  */
 var NRS = (function (NRS, $) {
     var level = 1;
+    var java;
 
     NRS.logConsole = function (msg, isDateIncluded, isDisplayTimeExact) {
         if (window.console) {
@@ -31,7 +32,12 @@ var NRS = (function (NRS, $) {
                 if (isDisplayTimeExact) {
                     postfix = " (" + NRS.timeExact() + ")";
                 }
-                console.log(prefix + msg + postfix);
+                var line = prefix + msg + postfix;
+                if (java) {
+                    java.log(line);
+                } else {
+                    console.log(line);
+                }
             } catch (e) {
                 // IE11 when running in compatibility mode
             }

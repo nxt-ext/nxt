@@ -32,7 +32,7 @@ public final class CanDeleteCurrency extends APIServlet.APIRequestHandler {
     }
 
     @Override
-    JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+    protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         Currency currency = ParameterParser.getCurrency(req);
         long accountId = ParameterParser.getAccountId(req, true);
         JSONObject response = new JSONObject();
