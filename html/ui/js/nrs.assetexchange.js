@@ -645,12 +645,13 @@ var NRS = (function (NRS, $, undefined) {
         if (orders.length) {
             $("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("(" + orders.length + (orders.length == 50 ? "+" : "") + ")");
             var rows = "";
+            var sum = new BigInteger(String("0"));
             for (var i = 0; i < orders.length; i++) {
                 var order = orders[i];
                 order.priceNQT = new BigInteger(order.priceNQT);
                 order.quantityQNT = new BigInteger(order.quantityQNT);
                 order.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(order.quantityQNT, order.priceNQT));
-
+                sum = sum.add(order.totalNQT);
                 if (i == 0 && !refresh) {
                     $("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
                 }
@@ -661,7 +662,8 @@ var NRS = (function (NRS, $, undefined) {
                     "<td>" + NRS.getAccountLink(order, "account", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                     "<td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
                     "<td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td>" +
-                    "<td>" + NRS.formatAmount(order.totalNQT) +
+                    "<td>" + NRS.formatAmount(order.totalNQT) + "</td>" +
+                    "<td>" + NRS.formatAmount(sum) + "</td>" +
                 "</tr>";
             }
             $("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
