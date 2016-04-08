@@ -19,12 +19,12 @@ QUnit.test("convertToNXT", function (assert) {
 });
 
 QUnit.test("format", function (assert) {
-    assert.equal(NRS.format("12345"), "12&#39;345", "escaped");
-    assert.equal(NRS.format("12345", true), "12'345", "not.escaped");
-    assert.equal(NRS.format("-12345", false), "-12&#39;345", "neg");
-    assert.equal(NRS.format("-12345", true), "-12'345", "neg.not.escaped");
-    assert.equal(NRS.format("-12345.67", true), "-12'345'.67", "decimal.not.good"); // bug ?
-    assert.equal(NRS.format({ amount: 1234, negative: '-', mantissa: ".567"}, true), "-1'234.567", "object");
+    assert.equal(NRS.format("12345"), "12345", "escaped");
+    assert.equal(NRS.format("12345", true), "12345", "not.escaped");
+    assert.equal(NRS.format("-12345", false), "-12345", "neg");
+    assert.equal(NRS.format("-12345", true), "-12345", "neg.not.escaped");
+    assert.equal(NRS.format("-12345.67", true), "-12345.67", "decimal.not.good"); // bug ?
+    assert.equal(NRS.format({ amount: 1234, negative: '-', mantissa: ".567"}, true), "-1234.567", "object");
 });
 
 QUnit.test("formatAmount", function (assert) {
@@ -35,14 +35,14 @@ QUnit.test("formatAmount", function (assert) {
     assert.equal(NRS.formatAmount(12.345, false, false), "12.345", "number");
     assert.equal(NRS.formatAmount(12.345, true, false), "12.35", "number.rounding");
     assert.equal(NRS.formatAmount(12.343, true, false), "12.34", "number.rounding");
-    assert.equal(NRS.formatAmount("123456700000", false, true), "1'234.567", "1000separator");
-    assert.equal(NRS.formatAmount("123456700000000", true, true), "1'234'567", "nxt.rounding");
-    assert.equal(NRS.formatAmount("123456780000000", true, false), "1&#39;234&#39;567.8", "thousands.separator.escaped");
+    assert.equal(NRS.formatAmount("123456700000", false, true), "1234.567", "1000separator");
+    assert.equal(NRS.formatAmount("123456700000000", true, true), "1234567", "nxt.rounding");
+    assert.equal(NRS.formatAmount("123456780000000", true, false), "1234567.8", "thousands.separator.escaped");
 });
 
 QUnit.test("formatVolume", function (assert) {
     assert.equal(NRS.formatVolume(1), "1 B", "byte");
-    assert.equal(NRS.formatVolume(1000), "1'000 B", "thousand");
+    assert.equal(NRS.formatVolume(1000), "1000 B", "thousand");
     assert.equal(NRS.formatVolume(1024), "1 KB", "kilo");
     assert.equal(NRS.formatVolume(1000000), "977 KB", "million");
     assert.equal(NRS.formatVolume(1024*1024), "1 MB", "million");
@@ -51,8 +51,8 @@ QUnit.test("formatVolume", function (assert) {
 
 QUnit.test("formatWeight", function (assert) {
     assert.equal(NRS.formatWeight(1), "1", "byte");
-    assert.equal(NRS.formatWeight(1000), "1&#39;000", "thousand");
-    assert.equal(NRS.formatWeight(12345), "12&#39;345", "number");
+    assert.equal(NRS.formatWeight(1000), "1000", "thousand");
+    assert.equal(NRS.formatWeight(12345), "12345", "number");
 });
 
 QUnit.test("calculateOrderPricePerWholeQNT", function (assert) {
@@ -66,9 +66,9 @@ QUnit.test("calculateOrderPricePerWholeQNT", function (assert) {
 QUnit.test("formatOrderPricePerWholeQNT", function (assert) {
     assert.equal(NRS.formatOrderPricePerWholeQNT(100000000, 0), "1", "no.decimals.one");
     assert.equal(NRS.formatOrderPricePerWholeQNT(1, 4), "0.0001", "fraction");
-    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 8), "-123'400'000'000".escapeHTML(), "eight.decimals");
-    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 4), "-12'340'000".escapeHTML(), "four.decimals");
-    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 0), "-1'234".escapeHTML(), "no.decimals");
+    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 8), "-123400000000".escapeHTML(), "eight.decimals");
+    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 4), "-12340000".escapeHTML(), "four.decimals");
+    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 0), "-1234".escapeHTML(), "no.decimals");
 });
 
 QUnit.test("calculatePricePerWholeQNT", function (assert) {
@@ -143,15 +143,15 @@ QUnit.test("convertToQNT", function (assert) {
 
 QUnit.test("formatQuantity", function (assert) {
     assert.equal(NRS.formatQuantity(1, 0), "1", "one");
-    assert.equal(NRS.formatQuantity(10000000, 3, true), "10'000", "thousand");
+    assert.equal(NRS.formatQuantity(10000000, 3, true), "10000", "thousand");
     assert.equal(NRS.formatQuantity(1234, 2, true), "12.34", "thousand");
-    assert.equal(NRS.formatQuantity(123456, 2, true), "1'234.56", "thousand");
-    assert.equal(NRS.formatQuantity(1234567, 2, true), "12'345.67", "thousand");
+    assert.equal(NRS.formatQuantity(123456, 2, true), "1234.56", "thousand");
+    assert.equal(NRS.formatQuantity(1234567, 2, true), "12345.67", "thousand");
 });
 
 QUnit.test("formatAmount", function (assert) {
     assert.equal(NRS.formatAmount(1), "1", "one");
-    assert.equal(NRS.formatAmount(10000000, false, true), "10'000'000", "million");
+    assert.equal(NRS.formatAmount(10000000, false, true), "10000000", "million");
     assert.equal(NRS.formatAmount(12.34, true), "12.34", "thousand");
     assert.equal(NRS.formatAmount(12.345, true), "12.35", "thousand");
 });
