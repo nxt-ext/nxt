@@ -65,8 +65,10 @@ public final class APIProxyServlet extends ProxyServlet {
 
         StringBuilder uri = new StringBuilder();
         if (Constants.isOffline) {
+            //test only
             //uri.append("http://198.46.193.111:6876/nxt");
             uri.append("https://174.140.168.136:6877/nxt");
+            //uri.append("http://nrs.scripterron.org:6876/nxt");
         } else {
             Peer servingPeer = APIProxy.getInstance().getServingPeer();
             boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
@@ -93,10 +95,12 @@ public final class APIProxyServlet extends ProxyServlet {
     }
 
     private boolean isForwardable(HttpServletRequest req) {
-        String requestType = req.getParameter("requestType");
-        if (NOT_FORWARDED_REQUESTS.contains(requestType)) {
-            return false;
-        }
+        //getParameter will read the request input stream which is later needed by the jetty proxy
+        //either filter by request type in javascript, or provide the request type in some other way (e.g. in header)
+//        String requestType = req.getParameter("requestType");
+//        if (NOT_FORWARDED_REQUESTS.contains(requestType)) {
+//            return false;
+//        }
         return true;
     }
 
