@@ -1205,10 +1205,7 @@ var NRS = (function(NRS, $) {
 	};
 
     $("#dgs_show_picture_modal").on("show.bs.modal", function(e) {
-            var $modal = $(this);
     		var $invoker = $(e.relatedTarget);
-
-    		var type = $modal.attr("id");
             var goods;
 
     		if (!$invoker.length) {
@@ -1242,12 +1239,14 @@ var NRS = (function(NRS, $) {
     		if (full) {
     			params = {
     				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-    				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+    				"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+					"completed": true
     			};
     		} else {
     			params = {
     				"firstIndex": 0,
-    				"lastIndex": 9
+    				"lastIndex": 9,
+					"completed": true
     			};
     		}
     		var view = NRS.simpleview.get(table, {
