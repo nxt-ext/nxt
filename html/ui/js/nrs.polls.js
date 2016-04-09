@@ -828,6 +828,9 @@ var NRS = (function(NRS, $, undefined) {
 				"error": $.t("error_poll_id_invalid")
 			};
 		} else {
+			if (data.id == viewingPollBookmark) {
+				$("#followed_polls_bookmark_poll").hide();
+			}
 			NRS.sendRequest("getPoll", {
 				"poll": data.id
 			}, function(response) {
