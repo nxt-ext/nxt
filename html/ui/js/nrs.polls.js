@@ -992,17 +992,6 @@ var NRS = (function(NRS, $, undefined) {
 			followedPollsSidebar.find("a[data-poll=" + active + "]").addClass("active");
 		}
 		$("#followed_polls_sidebar_search").hide();
-		if(requestedPoll != "") {
-			var pollLink = $("#followed_polls_sidebar").find("a[data-poll=" + requestedPoll + "]");
-			if (pollLink.length) {
-				pollLink.click();
-				$("#followed_polls_bookmark_poll").hide();
-			} else {
-				$("#followed_polls_bookmark_poll").show();
-				viewingPollBookmark = requestedPoll;
-			}
-		}
-		requestedPoll = "";
 		NRS.pageLoaded(callback);
 	};
 
@@ -1062,7 +1051,14 @@ var NRS = (function(NRS, $, undefined) {
 		var pollId = poll.poll;
 		NRS.currentPoll = poll;
 		NRS.currentSubPage = pollId;
-
+		var pollLink = $("#followed_polls_sidebar").find("a[data-poll=" + pollId + "]");
+		if (pollLink.length) {
+			$("#followed_polls_bookmark_poll").hide();
+		} else {
+			$("#followed_polls_bookmark_poll").show();
+			viewingPollBookmark = pollId;
+		}
+		requestedPoll = "";
 		if (!refresh) {
             var followedPollsSidebar = $("#followed_polls_sidebar");
             followedPollsSidebar.find("a.active").removeClass("active");
