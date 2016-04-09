@@ -68,7 +68,7 @@ public class APIProxy {
     }
 
     private boolean isOpenAPIPeer(Peer peer) {
-        //return peer.providesService(Peer.Service.API) || peer.providesService(Peer.Service.API_SSL);
-        return peer.providesService(Peer.Service.API);
+        return peer.providesService(Peer.Service.API) || peer.providesService(Peer.Service.API_SSL);
+        //return peer.providesService(Peer.Service.API);
     }
 }

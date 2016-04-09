@@ -1,10 +1,13 @@
 package nxt.http;
 
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.peer.Peer;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.proxy.ProxyServlet;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -30,8 +33,8 @@ public final class APIProxyServlet extends ProxyServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (true || enableAPIProxy && isForwardable(request)
-                && Nxt.getBlockchainProcessor().isDownloading()) {
+        if (enableAPIProxy && isForwardable(request)
+                && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isOffline)) {
             super.service(request, response);
         } else {
             APIServlet apiServlet = new APIServlet();
@@ -45,16 +48,28 @@ public final class APIProxyServlet extends ProxyServlet {
     }
 
     @Override
-    protected String rewriteTarget(HttpServletRequest clientRequest) {
-        Peer servingPeer = APIProxy.getInstance().getServingPeer();
+    protected HttpClient newHttpClient() {
+        SslContextFactory sslContextFactory = new SslContextFactory();
+        
+        sslContextFactory.addExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
+                "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
+                "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
+        sslContextFactory.addExcludeProtocols("SSLv3");
+        sslContextFactory.setTrustAll(true);
 
+        return new HttpClient(sslContextFactory);
+    }
+
+    @Override
+    protected String rewriteTarget(HttpServletRequest clientRequest) {
 
         StringBuilder uri = new StringBuilder();
-        if (true) {
-            uri.append("http://198.46.193.111:6876/nxt");
+        if (Constants.isOffline) {
+            //uri.append("http://198.46.193.111:6876/nxt");
+            uri.append("https://174.140.168.136:6877/nxt");
         } else {
-
-            boolean useHttps = false; //servingPeer.providesService(Peer.Service.API_SSL);
+            Peer servingPeer = APIProxy.getInstance().getServingPeer();
+            boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
             if (useHttps) {
                 uri.append("https://");
             } else {
