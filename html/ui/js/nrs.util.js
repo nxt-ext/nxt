@@ -543,9 +543,6 @@ var NRS = (function (NRS, $, undefined) {
 		var formattedAmount = "";
 
 		for (var i = 0; i < digits.length; i++) {
-			if (i > 0 && i % 3 == 0) {
-				formattedAmount = "'" + formattedAmount;
-			}
 			formattedAmount = digits[i] + formattedAmount;
         }
 
@@ -555,7 +552,7 @@ var NRS = (function (NRS, $, undefined) {
 			output = output.escapeHTML();
 		}
 
-		return output;
+        return Number(output).toLocaleString();
 	};
 
     NRS.formatQuantity = function (quantity, decimals, no_escaping) {
