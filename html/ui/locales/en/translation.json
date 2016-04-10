@@ -1705,5 +1705,6 @@
   "download_nrs_mac_installer": "Mac installer",
   "download_nrs_linux_installer": "Linux installer",
   "product_picture": "Product Picture",
-  "bookmark_this_poll": "Bookmark This Poll"
+  "bookmark_this_poll": "Bookmark This Poll",
+  "contacts_file_not_found": "Contacts File __file__ not found in folder __folder__, please create this file and try again"
 }
