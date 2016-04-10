@@ -19,8 +19,12 @@
  */
 var NRS = (function (NRS) {
 
+    function isIndexedDBSupported() {
+        return NRS.databaseSupport;
+    }
+
     NRS.storageSelect = function (table, query, callback) {
-        if (NRS.databaseSupport) {
+        if (isIndexedDBSupported()) {
             NRS.database.select(table, query, callback);
             return;
         }
@@ -51,7 +55,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.storageInsert = function(table, key, data, callback, isAutoIncrement) {
-        if (NRS.databaseSupport) {
+        if (isIndexedDBSupported()) {
             return NRS.database.insert(table, data, callback);
         }
         var items = NRS.getAccountJSONItem(table);
@@ -102,7 +106,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.storageUpdate = function (table, data, query, callback) {
-        if (NRS.databaseSupport) {
+        if (isIndexedDBSupported()) {
             return NRS.database.update(table, data, query, callback);
         }
         var items = NRS.getAccountJSONItem(table);
@@ -136,7 +140,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.storageDelete = function (table, query, callback) {
-        if (NRS.databaseSupport) {
+        if (isIndexedDBSupported()) {
             return NRS.database.delete(table, query, callback);
         }
         var items = NRS.getAccountJSONItem(table);
