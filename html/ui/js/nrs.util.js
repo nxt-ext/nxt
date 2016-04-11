@@ -1033,9 +1033,11 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.formatStyledAmount = function (strAmount, round) {
-        var amount = NRS.formatAmount(strAmount, round).split(".");
+        var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
+        var decimal = LOCALE_DATE_FORMATS[lang].decimal || '.';
+        var amount = NRS.formatAmount(strAmount, round).split(decimal);
 		if (amount.length == 2) {
-            return amount[0] + "<span style='font-size:12px'>." + amount[1] + "</span>";
+            return amount[0] + "<span style='font-size:12px'>" + decimal + amount[1] + "</span>";
 		} else {
             return amount[0];
 		}
