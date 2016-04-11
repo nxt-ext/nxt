@@ -544,6 +544,9 @@ var NRS = (function (NRS, $, undefined) {
 		var formattedMantissa = "";
 
         var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
+        if (lang.length == 2) {
+            lang = lang + "-" + lang.toUpperCase();
+        }
         var decimal = LOCALE_DATE_FORMATS[lang].decimal || '.';
         var seperator = LOCALE_DATE_FORMATS[lang].section || "'";
         formattedMantissa = params.mantissa.replace(".", decimal);
@@ -631,7 +634,10 @@ var NRS = (function (NRS, $, undefined) {
     NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
         if (!LOCALE_DATE_FORMAT) {
             var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
-            LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[lang][dateFormat] || 'dd/MM/yyyy';
+            if (lang.length == 2) {
+                lang = lang + "-" + lang.toUpperCase();
+            }
+            LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[lang].dateFormat || 'dd/MM/yyyy';
             if (NRS.logConsole) {
                 NRS.logConsole("Date Format Locale: " + lang + ", Date Format: " + LOCALE_DATE_FORMAT);
             }
@@ -1034,6 +1040,9 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.formatStyledAmount = function (strAmount, round) {
         var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
+        if (lang.length == 2) {
+            lang = lang + "-" + lang.toUpperCase();
+        }
         var decimal = LOCALE_DATE_FORMATS[lang].decimal || '.';
         var amount = NRS.formatAmount(strAmount, round).split(decimal);
 		if (amount.length == 2) {
