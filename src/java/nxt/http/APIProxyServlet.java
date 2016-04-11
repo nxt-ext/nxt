@@ -1,46 +1,86 @@
+/******************************************************************************
+ * Copyright © 2013-2016 The Nxt Core Developers.                             *
+ *                                                                            *
+ * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
+ * the top-level directory of this distribution for the individual copyright  *
+ * holder information and the developer policies on copyright and licensing.  *
+ *                                                                            *
+ * Unless otherwise agreed in a custom licensing agreement, no part of the    *
+ * Nxt software, including this file, may be copied, modified, propagated,    *
+ * or distributed except according to the terms contained in the LICENSE.txt  *
+ * file.                                                                      *
+ *                                                                            *
+ * Removal or modification of this copyright notice is prohibited.            *
+ *                                                                            *
+ ******************************************************************************/
+
 package nxt.http;
 
 import nxt.Constants;
-import nxt.Nxt;
 import nxt.peer.Peer;
+import nxt.util.Convert;
+import nxt.util.JSON;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.proxy.ProxyServlet;
+import org.eclipse.jetty.proxy.AsyncMiddleManServlet;
+import org.eclipse.jetty.util.MultiMap;
+import org.eclipse.jetty.util.UrlEncoded;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class APIProxyServlet extends ProxyServlet {
-    private static final boolean enableAPIProxy = Nxt.getBooleanProperty("nxt.enableAPIProxy");
+public final class APIProxyServlet extends AsyncMiddleManServlet {
+
 
     private final static Set<String> NOT_FORWARDED_REQUESTS;
+    private final static Set<APITag> NOT_FORWARDED_TAGS;
     static {
-        Set<String> notForwarded = new HashSet<>();
-        notForwarded.add("broadcastTransaction");
+        Set<String> requests = new HashSet<>();
+        requests.add("getConstants");
+        requests.add("getPlugins");
+        requests.add("getTime");
+        requests.add("getBlockchainStatus");
+        NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
-        NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(notForwarded);
+        Set<APITag> tags = new HashSet<>();
+        tags.add(APITag.UTILS);
+        tags.add(APITag.DEBUG);
+        tags.add(APITag.NETWORK);
+        NOT_FORWARDED_TAGS = Collections.unmodifiableSet(tags);
     }
+
+    private APIServlet apiServlet;
 
     static void initClass() {}
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (enableAPIProxy && isForwardable(request)
-                && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isOffline)) {
-            super.service(request, response);
-        } else {
-            APIServlet apiServlet = new APIServlet();
-            apiServlet.service(request, response);
+        try {
+            if (apiServlet == null) {
+                apiServlet = new APIServlet();
+            }
+            if (APIProxy.isActivated() && isForwardable(request)) {
+                super.service(request, response);
+            } else {
+                apiServlet.service(request, response);
+            }
+        } catch (ParameterException e) {
+            try (Writer writer = response.getWriter()) {
+                JSON.writeJSONString(e.getErrorResponse(), writer);
+            }
         }
     }
+
+
 
     @Override
     protected void addProxyHeaders(HttpServletRequest clientRequest, Request proxyRequest) {
@@ -94,13 +134,44 @@ public final class APIProxyServlet extends ProxyServlet {
         return rewrittenURI.toString();
     }
 
-    private boolean isForwardable(HttpServletRequest req) {
-        //getParameter will read the request input stream which is later needed by the jetty proxy
-        //either filter by request type in javascript, or provide the request type in some other way (e.g. in header)
-//        String requestType = req.getParameter("requestType");
-//        if (NOT_FORWARDED_REQUESTS.contains(requestType)) {
-//            return false;
-//        }
+    private boolean isForwardable(HttpServletRequest req) throws ParameterException {
+        MultiMap<String> parameters = new MultiMap<>();
+        String queryString = req.getQueryString();
+        String requestType = null;
+
+        if (queryString != null) {
+            UrlEncoded.decodeUtf8To(queryString, parameters);
+            requestType = parameters.getString("requestType");
+        }
+
+        if (Convert.emptyToNull(requestType) == null) {
+            throw new ParameterException(JSONResponses.PROXY_MISSING_REQUEST_TYPE);
+        }
+
+        APIServlet.APIRequestHandler apiRequestHandler = apiServlet.apiRequestHandlers.get(requestType);
+        if (apiRequestHandler == null) {
+            if (apiServlet.disabledRequestHandlers.containsKey(requestType)) {
+                throw new ParameterException(JSONResponses.ERROR_DISABLED);
+            } else {
+                throw new ParameterException(JSONResponses.ERROR_INCORRECT_REQUEST);
+            }
+        }
+
+        if (!apiRequestHandler.requireBlockchain()) {
+            return false;
+        }
+
+        if (NOT_FORWARDED_REQUESTS.contains(requestType)) {
+            return false;
+        }
+
+        //Set intersection with pure Java
+        HashSet<APITag> requestTags = new HashSet<>(apiRequestHandler.getAPITags());
+        requestTags.retainAll(NOT_FORWARDED_TAGS);
+        if (!requestTags.isEmpty()) {
+            return false;
+        }
+
         return true;
     }
 
@@ -109,7 +180,7 @@ public final class APIProxyServlet extends ProxyServlet {
         return new APIProxyResponseListener(request, response);
     }
 
-    protected class APIProxyResponseListener extends ProxyServlet.ProxyResponseListener {
+    protected class APIProxyResponseListener extends AsyncMiddleManServlet.ProxyResponseListener {
 
         protected APIProxyResponseListener(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);

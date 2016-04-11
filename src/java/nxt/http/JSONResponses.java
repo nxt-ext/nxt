@@ -367,6 +367,14 @@ public final class JSONResponses {
         PRUNED_TRANSACTION = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware PROXY_MISSING_REQUEST_TYPE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 17);
+        response.put("errorDescription", "Proxy servlet needs requestType parameter in the URL query");
+        PROXY_MISSING_REQUEST_TYPE = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
