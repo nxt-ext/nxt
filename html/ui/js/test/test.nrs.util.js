@@ -158,12 +158,12 @@ QUnit.test("formatAmount", function (assert) {
 
 QUnit.test("formatTimestamp", function (assert) {
     var date;
-    date = new Date("1/1/1970");
+    date = new Date(0);
     assert.equal(NRS.formatTimestamp(0, true, true), date.toLocaleDateString(), "start.date");
-    date = new Date("1/1/1970 2:00:00");
-    assert.equal(NRS.formatTimestamp(0, false, true), date.toLocaleDateString() + " " + date.toLocaleTimeString(), "start.date.time");
-    date = new Date("2/14/2009 1:31:30");
-    assert.equal(NRS.formatTimestamp(1234567890000, false, true), date.toLocaleDateString() + " " + date.toLocaleTimeString(), "start.date");
+    date = new Date(0);
+    assert.equal(NRS.formatTimestamp(0, false, true), date.toLocaleDateString() + " " + "1:00:00 AM", "start.date.time");
+    date = new Date("2/14/2009 12:31:30");
+    assert.equal(NRS.formatTimestamp(1234567890000, false, true), date.toLocaleDateString() + " " + date.toLocaleTimeString() + " AM", "start.date");
 });
 
 QUnit.test("getAccountLink", function (assert) {

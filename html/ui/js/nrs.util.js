@@ -664,7 +664,6 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.logConsole("Date Format Locale: " + LOCALE_DATA_FORMAT + ", Date Format: " + LOCALE_DATA_DATE);
             }
         }
-        console.log("Date Format Locale: " + LOCALE_DATA_FORMAT + ", Date Format: " + LOCALE_DATA_DATE);
         var date;
 		if (typeof timestamp == "object") {
             date = timestamp;
