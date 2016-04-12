@@ -232,14 +232,21 @@ var NRS = (function (NRS, $, undefined) {
         "en-SG": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
         "ug-CN": {dateFormat: "yyyy-M-d", decimal: ",", section: " "},
         "sr-Cyrl-BA": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "es-US": {dateFormat: "M/d/yyyy", decimal: ".", section: ","}
+        "es-US": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
+        "de": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
+        "fr": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
+        "fi": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
+        "cs": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
+        "bg": {dateFormat: "dd.M.yyyy", decimal: ",", section: " "},
+        "nl": {dateFormat: "d-M-yyyy", decimal: ",", section: "."},
+        "pl": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
+        "es": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
+        "en": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
+        "ar": {dateFormat: "dd-MM-yyyy", decimal: "٫", section: "٬"}
     };
 
     NRS.getLocale = function () {
         var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
-        if (lang.length == 2) {
-            lang = lang + "-" + lang.toUpperCase();
-        }
         if (LOCALE_DATA[lang]) {
             LOCALE_DATA_DATE = LOCALE_DATA[lang].dateFormat;
             LOCALE_DATA_DECIMAL = LOCALE_DATA[lang].decimal;
