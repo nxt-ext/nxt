@@ -66,9 +66,9 @@ QUnit.test("calculateOrderPricePerWholeQNT", function (assert) {
 QUnit.test("formatOrderPricePerWholeQNT", function (assert) {
     assert.equal(NRS.formatOrderPricePerWholeQNT(100000000, 0), "1", "no.decimals.one");
     assert.equal(NRS.formatOrderPricePerWholeQNT(1, 4), "0.0001", "fraction");
-    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 8), "-123'400'000'000".escapeHTML(), "eight.decimals");
-    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 4), "-12'340'000".escapeHTML(), "four.decimals");
-    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 0), "-1'234".escapeHTML(), "no.decimals");
+    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 8), Number("-123400000000".escapeHTML()).toLocaleString(), "eight.decimals");
+    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 4), Number("-12340000".escapeHTML()).toLocaleString(), "four.decimals");
+    assert.equal(NRS.formatOrderPricePerWholeQNT(-123400000000, 0), Number("-1234".escapeHTML()).toLocaleString(), "no.decimals");
 });
 
 QUnit.test("calculatePricePerWholeQNT", function (assert) {
@@ -143,23 +143,27 @@ QUnit.test("convertToQNT", function (assert) {
 
 QUnit.test("formatQuantity", function (assert) {
     assert.equal(NRS.formatQuantity(1, 0), "1", "one");
-    assert.equal(NRS.formatQuantity(10000000, 3, true), "10'000", "thousand");
-    assert.equal(NRS.formatQuantity(1234, 2, true), "12.34", "thousand");
-    assert.equal(NRS.formatQuantity(123456, 2, true), "1'234.56", "thousand");
-    assert.equal(NRS.formatQuantity(1234567, 2, true), "12'345.67", "thousand");
+    assert.equal(NRS.formatQuantity(10000000, 3, true), Number("10000").toLocaleString(), "thousand");
+    assert.equal(NRS.formatQuantity(1234, 2, true), Number("12.34").toLocaleString(), "thousand");
+    assert.equal(NRS.formatQuantity(123456, 2, true), Number("1234.56").toLocaleString(), "thousand");
+    assert.equal(NRS.formatQuantity(1234567, 2, true), Number("12345.67").toLocaleString(), "thousand");
 });
 
 QUnit.test("formatAmount", function (assert) {
     assert.equal(NRS.formatAmount(1), "1", "one");
-    assert.equal(NRS.formatAmount(10000000, false, true), "10'000'000", "million");
-    assert.equal(NRS.formatAmount(12.34, true), "12.34", "thousand");
-    assert.equal(NRS.formatAmount(12.345, true), "12.35", "thousand");
+    assert.equal(NRS.formatAmount(10000000, false, true), Number("10000000").toLocaleString(), "million");
+    assert.equal(NRS.formatAmount(12.34, true), Number("12.34").toLocaleString(), "thousand");
+    assert.equal(NRS.formatAmount(12.345, true), Number("12.35").toLocaleString(), "thousand");
 });
 
 QUnit.test("formatTimestamp", function (assert) {
-    assert.equal(NRS.formatTimestamp(0, true, true), "1/1/1970", "start.date");
-    assert.equal(NRS.formatTimestamp(0, false, true), "1/1/1970 2:00:00 AM", "start.date.time");
-    assert.equal(NRS.formatTimestamp(1234567890000, false, true), "2/14/2009 1:31:30 AM", "start.date");
+    var date;
+    date = new Date("1/1/1970");
+    assert.equal(NRS.formatTimestamp(0, true, true), date.toLocaleDateString(), "start.date");
+    date = new Date("1/1/1970 2:00:00");
+    assert.equal(NRS.formatTimestamp(0, false, true), date.toLocaleDateString() + " " + date.toLocaleTimeString(), "start.date.time");
+    date = new Date("2/14/2009 1:31:30");
+    assert.equal(NRS.formatTimestamp(1234567890000, false, true), date.toLocaleDateString() + " " + date.toLocaleTimeString(), "start.date");
 });
 
 QUnit.test("getAccountLink", function (assert) {

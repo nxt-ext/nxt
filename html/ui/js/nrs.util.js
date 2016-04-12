@@ -22,6 +22,7 @@ var NRS = (function (NRS, $, undefined) {
     var LOCALE_DATA_DATE;
     var LOCALE_DATA_DECIMAL;
     var LOCALE_DATA_SEPARATOR;
+    var LOCALE_DATA_FORMAT;
     var LOCALE_DATA = {
         "ar-SA": {dateFormat: "dd/MM/yy", decimal: "٫", section: "٬"},
         "bg-BG": {dateFormat: "dd.M.yyyy", decimal: ",", section: " "},
@@ -248,15 +249,17 @@ var NRS = (function (NRS, $, undefined) {
     NRS.getLocale = function () {
         var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
         if (LOCALE_DATA[lang]) {
+            LOCALE_DATA_FORMAT = lang;
             LOCALE_DATA_DATE = LOCALE_DATA[lang].dateFormat;
             LOCALE_DATA_DECIMAL = LOCALE_DATA[lang].decimal;
             LOCALE_DATA_SEPARATOR = LOCALE_DATA[lang].section;
         } else {
+            LOCALE_DATA_FORMAT = "en-US";
             LOCALE_DATA_DATE = "dd/MM/yyyy";
             LOCALE_DATA_DECIMAL = ".";
             LOCALE_DATA_SEPARATOR = "'";
         }
-    }
+    };
 
     NRS.formatVolume = function (volume) {
 		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -573,9 +576,8 @@ var NRS = (function (NRS, $, undefined) {
 
 		var digits = amount.split("").reverse();
 		var formattedAmount = "";
-		var formattedMantissa = "";
         NRS.getLocale();
-        formattedMantissa = params.mantissa.replace(".", LOCALE_DATA_DECIMAL);
+        var formattedMantissa = params.mantissa.replace(".", LOCALE_DATA_DECIMAL);
 		for (var i = 0; i < digits.length; i++) {
 		    if (i > 0 && i % 3 == 0) {
                 formattedAmount = LOCALE_DATA_SEPARATOR + formattedAmount;
@@ -659,9 +661,10 @@ var NRS = (function (NRS, $, undefined) {
         if (!LOCALE_DATA_DATE) {
             NRS.getLocale();
             if (NRS.logConsole) {
-                NRS.logConsole("Date Format Locale: " + lang + ", Date Format: " + LOCALE_DATA_DATE);
+                NRS.logConsole("Date Format Locale: " + LOCALE_DATA_FORMAT + ", Date Format: " + LOCALE_DATA_DATE);
             }
         }
+        console.log("Date Format Locale: " + LOCALE_DATA_FORMAT + ", Date Format: " + LOCALE_DATA_DATE);
         var date;
 		if (typeof timestamp == "object") {
             date = timestamp;
@@ -712,7 +715,6 @@ var NRS = (function (NRS, $, undefined) {
                     res += " " + (originalHours >= 12 ? "PM" : "AM");
 				}
 			}
-
 			return res;
 		} else {
 			return date.toLocaleString();
