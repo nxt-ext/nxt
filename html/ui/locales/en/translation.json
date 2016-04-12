@@ -1714,5 +1714,9 @@
   "nr_account_leases": "# Account Leases",
   "nr_active_account_leases": "# Active Account Leases",
   "nr_shufflings": "# Shufflings",
-  "nr_active_shufflings": "# Active Shufflings"
+  "nr_active_shufflings": "# Active Shufflings",
+  "finish_in": "Finish In",
+  "quorum": "Quorum",
+  "transaction1": "Transaction",
+  "whitelist": "Whitelist"
 }
