@@ -19,8 +19,10 @@
  */
 var NRS = (function (NRS, $, undefined) {
 
-    var LOCALE_DATE_FORMAT;
-    var LOCALE_DATE_FORMATS = {
+    var LOCALE_DATA_DATE;
+    var LOCALE_DATA_DECIMAL;
+    var LOCALE_DATA_SEPARATOR;
+    var LOCALE_DATA = {
         "ar-SA": {dateFormat: "dd/MM/yy", decimal: "٫", section: "٬"},
         "bg-BG": {dateFormat: "dd.M.yyyy", decimal: ",", section: " "},
         "ca-ES": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
@@ -232,6 +234,22 @@ var NRS = (function (NRS, $, undefined) {
         "sr-Cyrl-BA": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
         "es-US": {dateFormat: "M/d/yyyy", decimal: ".", section: ","}
     };
+
+    NRS.getLocale = function () {
+        var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
+        if (lang.length == 2) {
+            lang = lang + "-" + lang.toUpperCase();
+        }
+        if (LOCALE_DATA[lang]) {
+            LOCALE_DATA_DATE = LOCALE_DATA[lang].dateFormat;
+            LOCALE_DATA_DECIMAL = LOCALE_DATA[lang].decimal;
+            LOCALE_DATA_SEPARATOR = LOCALE_DATA[lang].section;
+        } else {
+            LOCALE_DATA_DATE = "dd/MM/yyyy";
+            LOCALE_DATA_DECIMAL = ".";
+            LOCALE_DATA_SEPARATOR = "'";
+        }
+    }
 
     NRS.formatVolume = function (volume) {
 		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -542,24 +560,11 @@ var NRS = (function (NRS, $, undefined) {
 		var digits = amount.split("").reverse();
 		var formattedAmount = "";
 		var formattedMantissa = "";
-        var decimal = "";
-        var seperator = "";
-        var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
-        if (lang.length == 2) {
-            lang = lang + "-" + lang.toUpperCase();
-        }
-        if (LOCALE_DATE_FORMATS[lang]) {
-            decimal = LOCALE_DATE_FORMATS[lang].decimal || '.';
-            seperator = LOCALE_DATE_FORMATS[lang].section || "'";
-        } else {
-            decimal = '.';
-            seperator = "'";
-        }
-        formattedMantissa = params.mantissa.replace(".", decimal);
-
+        NRS.getLocale();
+        formattedMantissa = params.mantissa.replace(".", LOCALE_DATA_DECIMAL);
 		for (var i = 0; i < digits.length; i++) {
 		    if (i > 0 && i % 3 == 0) {
-                formattedAmount = seperator + formattedAmount;
+                formattedAmount = LOCALE_DATA_SEPARATOR + formattedAmount;
             }
 			formattedAmount = digits[i] + formattedAmount;
         }
@@ -638,18 +643,10 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
-        if (!LOCALE_DATE_FORMAT) {
-            var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
-            if (lang.length == 2) {
-                lang = lang + "-" + lang.toUpperCase();
-            }
-            if (LOCALE_DATE_FORMATS[lang]) {
-                LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[lang].dateFormat;
-            } else {
-                LOCALE_DATE_FORMAT = 'dd/MM/yyyy';
-            }
+        if (!LOCALE_DATA_DATE) {
+            NRS.getLocale();
             if (NRS.logConsole) {
-                NRS.logConsole("Date Format Locale: " + lang + ", Date Format: " + LOCALE_DATE_FORMAT);
+                NRS.logConsole("Date Format Locale: " + lang + ", Date Format: " + LOCALE_DATA_DATE);
             }
         }
         var date;
@@ -669,7 +666,7 @@ var NRS = (function (NRS, $, undefined) {
 			var yyyy = date.getFullYear();
             var yy = String(yyyy).substring(2);
 
-            var res = LOCALE_DATE_FORMAT
+            var res = LOCALE_DATA_DATE
                 .replace(/dd/g, dd)
                 .replace(/d/g, d)
                 .replace(/MM/g, MM)
@@ -1049,19 +1046,10 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.formatStyledAmount = function (strAmount, round) {
-        var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
-        if (lang.length == 2) {
-            lang = lang + "-" + lang.toUpperCase();
-        }
-        var decimals = ".";
-        if (LOCALE_DATE_FORMATS[lang]) {
-            decimal = LOCALE_DATE_FORMATS[lang].decimal;
-        } else {
-            decimal = '.';
-        }
-        var amount = NRS.formatAmount(strAmount, round).split(decimal);
+        NRS.getLocale();
+        var amount = NRS.formatAmount(strAmount, round).split(LOCALE_DATA_DECIMAL);
 		if (amount.length == 2) {
-            return amount[0] + "<span style='font-size:12px'>" + decimal + amount[1] + "</span>";
+            return amount[0] + "<span style='font-size:12px'>" + LOCALE_DATA_DECIMAL + amount[1] + "</span>";
 		} else {
             return amount[0];
 		}
