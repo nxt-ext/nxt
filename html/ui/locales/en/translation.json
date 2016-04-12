@@ -1718,5 +1718,14 @@
   "finish_in": "Finish In",
   "quorum": "Quorum",
   "transaction1": "Transaction",
+  "transaction2": "Transaction",
+  "transaction3": "Transaction",
+  "transaction4": "Transaction",
+  "transaction5": "Transaction",
+  "transaction6": "Transaction",
+  "transaction7": "Transaction",
+  "transaction8": "Transaction",
+  "transaction9": "Transaction",
+  "transaction10": "Transaction",
   "whitelist": "Whitelist"
 }
