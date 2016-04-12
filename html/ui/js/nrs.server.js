@@ -61,7 +61,7 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.sendRequest = function (requestType, data, callback, isAsync) {
+    NRS.sendRequest = function (requestType, data, callback, isAsync, noProxy) {
         if (requestType == undefined) {
             NRS.logConsole("Undefined request type");
             return;
@@ -236,14 +236,14 @@ var NRS = (function (NRS, $, undefined) {
                 });
             } else {
                 //ok, accountId matches..continue with the real request.
-                NRS.processAjaxRequest(requestType, data, callback, isAsync);
+                NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
             }
         } else {
-            NRS.processAjaxRequest(requestType, data, callback, isAsync);
+            NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
         }
     };
 
-    NRS.processAjaxRequest = function (requestType, data, callback, isAsync) {
+    NRS.processAjaxRequest = function (requestType, data, callback, isAsync, noProxy) {
         var extra = null;
         if (data["_extra"]) {
             extra = data["_extra"];
@@ -271,7 +271,11 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url = NRS.server + "/nxt-proxy?requestType=" + requestType;
+        var url = NRS.server + "/nxt";
+        if (!noProxy) {
+            url += "-proxy";
+        }
+        url += "?requestType=" + requestType;
 
         if (type == "GET") {
             if (typeof data == "string") {

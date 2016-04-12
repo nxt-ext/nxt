@@ -1705,5 +1705,7 @@
   "download_nrs_mac_installer": "Mac installer",
   "download_nrs_linux_installer": "Linux installer",
   "product_picture": "Product Picture",
-  "bookmark_this_poll": "Bookmark This Poll"
+  "bookmark_this_poll": "Bookmark This Poll",
+  "status_blockchain_downloading_proxy": "The blockchain is currently downloading. You are exploring NXT through the peer __peer__.",
+  "proxy_info_link": "Understand the risks"
 }

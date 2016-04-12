@@ -64,10 +64,6 @@ public class APIProxy {
         return peer;
     }
 
-    public String getCurrentPeerHost() {
-        return currentPeerHost;
-    }
-
     public static boolean isActivated() {
         return enableAPIProxy && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isOffline);
     }

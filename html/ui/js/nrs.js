@@ -847,10 +847,10 @@ NRS.addPagination = function () {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
                                 "account_id": String(NRS.accountRS).escapeHTML(),
                                 "public_key": String(NRS.publicKey).escapeHTML()
-                            }) + "<br/><br/>" + $.t("status_blockchain_downloading") +
+                            }) + "<br/><br/>" + NRS.blockchainDownloadingMessage() +
                             "<br/><br/>" + NRS.getFundAccountLink()).show();
 						} else {
-							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading")).show();
+							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
 						}
 					} else if (NRS.state && NRS.state.isScanning) {
 						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
@@ -878,7 +878,7 @@ NRS.addPagination = function () {
 				}
 
 				if (NRS.downloadingBlockchain) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_blockchain_downloading")).show();
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
 				} else if (NRS.state && NRS.state.isScanning) {
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
 				} else if (!NRS.accountInfo.publicKey) {

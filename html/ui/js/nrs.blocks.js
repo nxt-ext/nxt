@@ -35,7 +35,7 @@ var NRS = (function(NRS, $) {
 					callback(response);
 				}
 			}
-		}, true);
+		}, true, true);
 	};
 
 	NRS.handleInitialBlocks = function(response) {
@@ -321,6 +321,15 @@ var NRS = (function(NRS, $) {
 			blocksAverageAmount.html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
 		}
 		NRS.dataLoaded(rows);
+	};
+
+	NRS.blockchainDownloadingMessage = function() {
+		if (NRS.state.apiProxy) {
+			return $.t("status_blockchain_downloading_proxy", { peer: NRS.state.apiProxy}) +
+				" <a>" + $.t("proxy_info_link") + "</a>";
+		} else {
+			return $.t("status_blockchain_downloading");
+		}
 	};
 
 	$("#blocks_page_type").find(".btn").click(function(e) {
