@@ -874,8 +874,8 @@ var NRS = (function(NRS, $, undefined) {
 			"lastIndex": 20
 		};
 		NRS.sendRequest("getVoterPhasedTransactions", params, function(response) {
+			var $badge = $('#dashboard_link').find('.sm_treeview_submenu a[data-page="approval_requests_account"] span.badge');
 			if (response.transactions && response.transactions.length) {
-				var $badge = $('#dashboard_link').find('.sm_treeview_submenu a[data-page="approval_requests_account"] span.badge');
 				if (response.transactions.length == 0) {
 					$badge.hide();
 				} else {
@@ -888,6 +888,8 @@ var NRS = (function(NRS, $, undefined) {
 					$badge.text(length);
 					$badge.show();
 				}
+			} else {
+				$badge.hide();
 			}
 		});
 		if (NRS.currentPage == 'approval_requests_account') {
