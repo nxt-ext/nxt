@@ -549,8 +549,15 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.format = function (params, no_escaping) {
         var amount;
+        var mantissa;
 		if (typeof params != "object") {
             amount = String(params);
+            if (amount.indexOf(".") !== -1) {
+                mantissa = amount.substr(amount.indexOf("."));
+                amount = amount.replace(mantissa, "");
+            } else {
+                mantissa = "";
+            }
             var negative = amount.charAt(0) == "-" ? "-" : "";
             if (negative) {
                 amount = amount.substring(1);
@@ -558,7 +565,7 @@ var NRS = (function (NRS, $, undefined) {
             params = {
                 "amount": amount,
                 "negative": negative,
-                "mantissa": ""
+                "mantissa": mantissa
             };
         }
 
@@ -581,7 +588,6 @@ var NRS = (function (NRS, $, undefined) {
 		if (!no_escaping) {
 			output = output.escapeHTML();
 		}
-
         return output;
 	};
 

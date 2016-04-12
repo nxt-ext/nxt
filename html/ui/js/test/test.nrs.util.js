@@ -19,12 +19,12 @@ QUnit.test("convertToNXT", function (assert) {
 });
 
 QUnit.test("format", function (assert) {
-    assert.equal(NRS.format("12345"), "12&#39;345", "escaped");
-    assert.equal(NRS.format("12345", true), "12'345", "not.escaped");
-    assert.equal(NRS.format("-12345", false), "-12&#39;345", "neg");
-    assert.equal(NRS.format("-12345", true), "-12'345", "neg.not.escaped");
-    assert.equal(NRS.format("-12345.67", true), "-12'345'.67", "decimal.not.good"); // bug ?
-    assert.equal(NRS.format({ amount: 1234, negative: '-', mantissa: ".567"}, true), "-1'234.567", "object");
+    assert.equal(NRS.format("12345"), Number("12345").toLocaleString(), "escaped");
+    assert.equal(NRS.format("12345", true), Number(12345).toLocaleString(), "not.escaped");
+    assert.equal(NRS.format("-12345", false), Number(-12345).toLocaleString(), "neg");
+    assert.equal(NRS.format("-12345", true), Number("-12345").toLocaleString(), "neg.not.escaped");
+    assert.equal(NRS.format("-12345.67", true), Number("-12345.67").toLocaleString(), "decimal.not.good"); // bug ?
+    assert.equal(NRS.format({ amount: 1234, negative: '-', mantissa: ".567"}, true), Number(-1234.567).toLocaleString(), "object");
 });
 
 QUnit.test("formatAmount", function (assert) {
@@ -35,9 +35,9 @@ QUnit.test("formatAmount", function (assert) {
     assert.equal(NRS.formatAmount(12.345, false, false), "12.345", "number");
     assert.equal(NRS.formatAmount(12.345, true, false), "12.35", "number.rounding");
     assert.equal(NRS.formatAmount(12.343, true, false), "12.34", "number.rounding");
-    assert.equal(NRS.formatAmount("123456700000", false, true), "1'234.567", "1000separator");
-    assert.equal(NRS.formatAmount("123456700000000", true, true), "1'234'567", "nxt.rounding");
-    assert.equal(NRS.formatAmount("123456780000000", true, false), "1&#39;234&#39;567.8", "thousands.separator.escaped");
+    assert.equal(NRS.formatAmount("123456700000", false, true), Number("1234.567").toLocaleString(), "1000separator");
+    assert.equal(NRS.formatAmount("123456700000000", true, true), Number("1234567").toLocaleString(), "nxt.rounding");
+    assert.equal(NRS.formatAmount("123456780000000", true, false), Number("1234567.8").toLocaleString(), "thousands.separator.escaped");
 });
 
 QUnit.test("formatVolume", function (assert) {
