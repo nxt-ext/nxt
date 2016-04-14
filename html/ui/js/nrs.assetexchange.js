@@ -643,11 +643,44 @@ var NRS = (function (NRS, $, undefined) {
 
     function processOrders(orders, type, refresh) {
         if (orders.length) {
+            var order;
+            // Get the maximum amount of decimals from the orders for each column
+            checkSum = new BigInteger(String("0"));
+            var check;
+            var maxPriceLength = 0;
+            var maxQuantityLength = 0;
+            var maxTotalLength = 0;
+            var maxSumLength = 0;
+            for (var h = 0; h < orders.length; h++) {
+                order = orders[h];
+                var checkPrice = new BigInteger(order.priceNQT);
+                var checkQuantity = new BigInteger(order.quantityQNT);
+                var checkTotalNQT = new BigInteger(NRS.calculateOrderTotalNQT(checkQuantity, checkPrice));
+                var checkSum = checkSum.add(checkTotalNQT);
+                console.log("DECIMAL: " + NRS.LOCALE_DATA_DECIMAL);
+                check = NRS.formatOrderPricePerWholeQNT(checkPrice, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
+                if (check[1] && check[1].length > maxPriceLength) {
+                    maxPriceLength = check[1].length;
+                }
+                check = NRS.formatQuantity(checkQuantity, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
+                if (check[1] && check[1].length > maxQuantityLength) {
+                    maxQuantityLength = check[1].length;
+                }
+                check = NRS.formatAmount(checkTotalNQT).split(NRS.LOCALE_DATA_DECIMAL);
+                if (check[1] && check[1].length > maxTotalLength) {
+                    maxTotalLength = check[1].length;
+                }
+                check = NRS.formatAmount(checkSum).split(NRS.LOCALE_DATA_DECIMAL);
+                if (check[1] && check[1].length > maxSumLength) {
+                    maxSumLength = check[1].length;
+                }
+            }
+            //Populate Buy/Sell
             $("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("(" + orders.length + (orders.length == 50 ? "+" : "") + ")");
             var rows = "";
-            var sum = new BigInteger(String("0"));
+            sum = new BigInteger(String("0"));
             for (var i = 0; i < orders.length; i++) {
-                var order = orders[i];
+                order = orders[i];
                 order.priceNQT = new BigInteger(order.priceNQT);
                 order.quantityQNT = new BigInteger(order.quantityQNT);
                 order.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(order.quantityQNT, order.priceNQT));
@@ -660,10 +693,10 @@ var NRS = (function (NRS, $, undefined) {
                 rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
                     "<td>" + NRS.getTransactionLink(order.order, statusIcon, true) + "</td>" +
                     "<td>" + NRS.getAccountLink(order, "account", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals,"", NRS.currentAsset.decimals) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals, 8 - NRS.currentAsset.decimals) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatAmount(order.totalNQT,"","",8) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatAmount(sum,"","",8) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals,"", maxQuantityLength) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals, maxPriceLength) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatAmount(order.totalNQT,"","",maxTotalLength) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatAmount(sum,"","",maxSumLength) + "</td>" +
                 "</tr>";
             }
             $("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
@@ -739,19 +772,41 @@ var NRS = (function (NRS, $, undefined) {
             var exchangeTradeHistoryTable = $("#asset_exchange_trade_history_table");
             if (response.trades && response.trades.length) {
                 var trades = response.trades;
-
+                var trade;
+                // Get the maximum amount of decimals from the orders for each column
+                var maxPriceLength = 0;
+                var maxQuantityLength = 0;
+                var maxTotalLength = 0;
+                for (var h = 0; h < trades.length; h++) {
+                    trade = trades[h];
+                    var checkPrice = new BigInteger(trade.priceNQT);
+                    var checkQuantity = new BigInteger(trade.quantityQNT);
+                    var checkTotalNQT = new BigInteger(NRS.calculateOrderTotalNQT(checkQuantity, checkPrice));
+                    check = NRS.formatOrderPricePerWholeQNT(checkPrice, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
+                    if (check[1] && check[1].length > maxPriceLength) {
+                        maxPriceLength = check[1].length;
+                    }
+                    check = NRS.formatQuantity(checkQuantity, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
+                    if (check[1] && check[1].length > maxQuantityLength) {
+                        maxQuantityLength = check[1].length;
+                    }
+                    check = NRS.formatAmount(checkTotalNQT).split(NRS.LOCALE_DATA_DECIMAL);
+                    if (check[1] && check[1].length > maxTotalLength) {
+                        maxTotalLength = check[1].length;
+                    }
+                }
+                // Populate Trade History
                 var rows = "";
-
                 for (var i = 0; i < trades.length; i++) {
-                    var trade = trades[i];
+                    trade = trades[i];
                     trade.priceNQT = new BigInteger(trade.priceNQT);
                     trade.quantityQNT = new BigInteger(trade.quantityQNT);
                     trade.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trade.priceNQT, trade.quantityQNT));
                     rows += "<tr>" +
                         "<td>" + NRS.getTransactionLink(trade.bidOrder, NRS.formatTimestamp(trade.timestamp)) + "</td>" +
                         "<td>" + $.t(trade.tradeType) + "</td>" +
-                        "<td style='text-align:right;'>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals,"", NRS.currentAsset.decimals) + "</td>" +
-                        "<td style='text-align:right;' class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals, 8 - NRS.currentAsset.decimals) + "</td>" +
+                        "<td style='text-align:right;'>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals,"", maxQuantityLength) + "</td>" +
+                        "<td style='text-align:right;' class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals, maxPriceLength) + "</td>" +
                         "<td style='text-align:right;color:";
                         if (trade.buyer == NRS.account && trade.buyer != trade.seller) {
                             rows += "red";
@@ -760,7 +815,7 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             rows += "black";
                         }
-                        rows += "'>" + NRS.formatAmount(trade.totalNQT,"","",8) + "</td>" +
+                        rows += "'>" + NRS.formatAmount(trade.totalNQT,"","",maxTotalLength) + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "buyer", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "seller", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                     "</tr>";
