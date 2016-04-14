@@ -660,10 +660,10 @@ var NRS = (function (NRS, $, undefined) {
                 rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
                     "<td>" + NRS.getTransactionLink(order.order, statusIcon, true) + "</td>" +
                     "<td>" + NRS.getAccountLink(order, "account", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
-                    "<td>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
-                    "<td>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals) + "</td>" +
-                    "<td>" + NRS.formatAmount(order.totalNQT) + "</td>" +
-                    "<td>" + NRS.formatAmount(sum) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals,"", NRS.currentAsset.decimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals, 8 - NRS.currentAsset.decimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatAmount(order.totalNQT,"","",8) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatAmount(sum,"","",8) + "</td>" +
                 "</tr>";
             }
             $("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
@@ -750,9 +750,9 @@ var NRS = (function (NRS, $, undefined) {
                     rows += "<tr>" +
                         "<td>" + NRS.getTransactionLink(trade.bidOrder, NRS.formatTimestamp(trade.timestamp)) + "</td>" +
                         "<td>" + $.t(trade.tradeType) + "</td>" +
-                        "<td>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals) + "</td>" +
-                        "<td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals) + "</td>" +
-                        "<td style='color:";
+                        "<td style='text-align:right;'>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals,"", NRS.currentAsset.decimals) + "</td>" +
+                        "<td style='text-align:right;' class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals, 8 - NRS.currentAsset.decimals) + "</td>" +
+                        "<td style='text-align:right;color:";
                         if (trade.buyer == NRS.account && trade.buyer != trade.seller) {
                             rows += "red";
                         } else if (trade.seller == NRS.account && trade.buyer != trade.seller) {
@@ -760,7 +760,7 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             rows += "black";
                         }
-                        rows += "'>" + NRS.formatAmount(trade.totalNQT) + "</td>" +
+                        rows += "'>" + NRS.formatAmount(trade.totalNQT,"","",8) + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "buyer", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "seller", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                     "</tr>";
