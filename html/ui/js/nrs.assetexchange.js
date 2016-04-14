@@ -657,7 +657,6 @@ var NRS = (function (NRS, $, undefined) {
                 var checkQuantity = new BigInteger(order.quantityQNT);
                 var checkTotalNQT = new BigInteger(NRS.calculateOrderTotalNQT(checkQuantity, checkPrice));
                 var checkSum = checkSum.add(checkTotalNQT);
-                console.log("DECIMAL: " + NRS.LOCALE_DATA_DECIMAL);
                 check = NRS.formatOrderPricePerWholeQNT(checkPrice, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
                 if (check[1] && check[1].length > maxPriceLength) {
                     maxPriceLength = check[1].length;
