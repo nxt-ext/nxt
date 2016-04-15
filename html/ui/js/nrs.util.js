@@ -586,7 +586,9 @@ var NRS = (function (NRS, $, undefined) {
                 for (var h = 0; h < decimalsToAdd; h++) {
                     formattedMantissa += "0";
                 }
-                formattedMantissa = NRS.LOCALE_DATA_DECIMAL + formattedMantissa;
+                if (decimalsToAdd != 0) {
+                    formattedMantissa = NRS.LOCALE_DATA_DECIMAL + formattedMantissa;
+                }
             }
         }
 		for (var i = 0; i < digits.length; i++) {

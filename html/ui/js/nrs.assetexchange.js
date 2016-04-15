@@ -641,43 +641,46 @@ var NRS = (function (NRS, $, undefined) {
         NRS.getAssetTradeHistory(assetId, refresh);
     };
 
+    NRS.getNumberOfDecimals = function(records) {
+        var maxPriceLength = 0;
+        var maxQuantityLength = 0;
+        var maxTotalLength = 0;
+        var maxSumLength = 0;
+        var check = "";
+        var checkSum = new BigInteger(String("0"));
+        for (var i = 0; i < records.length; i++) {
+            var record = records[i];
+            var checkPrice = new BigInteger(record.priceNQT);
+            var checkQuantity = new BigInteger(record.quantityQNT);
+            var checkTotal = new BigInteger(NRS.calculateOrderTotalNQT(checkQuantity,checkPrice));
+            checkSum = checkSum.add(checkTotal);
+            check = NRS.formatOrderPricePerWholeQNT(checkPrice, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
+            if (check[1] && check[1].length > maxPriceLength) {
+                maxPriceLength = check[1].length;
+            }
+            check = NRS.formatQuantity(checkQuantity, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
+            if (check[1] && check[1].length > maxQuantityLength) {
+                maxQuantityLength = check[1].length;
+            }
+            check = NRS.formatAmount(checkTotal).split(NRS.LOCALE_DATA_DECIMAL);
+            if (check[1] && check[1].length > maxTotalLength) {
+                maxTotalLength = check[1].length;
+            }
+            check = NRS.formatAmount(checkSum).split(NRS.LOCALE_DATA_DECIMAL);
+            if (check[1] && check[1].length > maxSumLength) {
+                maxSumLength = check[1].length;
+            }
+        }
+        return maxQuantityLength + "-" + maxPriceLength + "-" + maxTotalLength + "-" + maxSumLength;
+    };
+
     function processOrders(orders, type, refresh) {
         if (orders.length) {
             var order;
-            // Get the maximum amount of decimals from the orders for each column
-            checkSum = new BigInteger(String("0"));
-            var check;
-            var maxPriceLength = 0;
-            var maxQuantityLength = 0;
-            var maxTotalLength = 0;
-            var maxSumLength = 0;
-            for (var h = 0; h < orders.length; h++) {
-                order = orders[h];
-                var checkPrice = new BigInteger(order.priceNQT);
-                var checkQuantity = new BigInteger(order.quantityQNT);
-                var checkTotalNQT = new BigInteger(NRS.calculateOrderTotalNQT(checkQuantity, checkPrice));
-                var checkSum = checkSum.add(checkTotalNQT);
-                check = NRS.formatOrderPricePerWholeQNT(checkPrice, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
-                if (check[1] && check[1].length > maxPriceLength) {
-                    maxPriceLength = check[1].length;
-                }
-                check = NRS.formatQuantity(checkQuantity, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
-                if (check[1] && check[1].length > maxQuantityLength) {
-                    maxQuantityLength = check[1].length;
-                }
-                check = NRS.formatAmount(checkTotalNQT).split(NRS.LOCALE_DATA_DECIMAL);
-                if (check[1] && check[1].length > maxTotalLength) {
-                    maxTotalLength = check[1].length;
-                }
-                check = NRS.formatAmount(checkSum).split(NRS.LOCALE_DATA_DECIMAL);
-                if (check[1] && check[1].length > maxSumLength) {
-                    maxSumLength = check[1].length;
-                }
-            }
-            //Populate Buy/Sell
             $("#" + (type == "ask" ? "sell" : "buy") + "_orders_count").html("(" + orders.length + (orders.length == 50 ? "+" : "") + ")");
             var rows = "";
-            sum = new BigInteger(String("0"));
+            decimals = NRS.getNumberOfDecimals(orders).split("-");
+            var sum = new BigInteger(String("0"));
             for (var i = 0; i < orders.length; i++) {
                 order = orders[i];
                 order.priceNQT = new BigInteger(order.priceNQT);
@@ -692,10 +695,10 @@ var NRS = (function (NRS, $, undefined) {
                 rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
                     "<td>" + NRS.getTransactionLink(order.order, statusIcon, true) + "</td>" +
                     "<td>" + NRS.getAccountLink(order, "account", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals,"", maxQuantityLength) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals, maxPriceLength) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatAmount(order.totalNQT,"","",maxTotalLength) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatAmount(sum,"","",maxSumLength) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatQuantity(order.quantityQNT, NRS.currentAsset.decimals,"", decimals[0]) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals, decimals[1]) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatAmount(order.totalNQT,"","",decimals[2]) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatAmount(sum,"","",decimals[3]) + "</td>" +
                 "</tr>";
             }
             $("#asset_exchange_" + type + "_orders_table tbody").empty().append(rows);
@@ -772,29 +775,7 @@ var NRS = (function (NRS, $, undefined) {
             if (response.trades && response.trades.length) {
                 var trades = response.trades;
                 var trade;
-                // Get the maximum amount of decimals from the orders for each column
-                var maxPriceLength = 0;
-                var maxQuantityLength = 0;
-                var maxTotalLength = 0;
-                for (var h = 0; h < trades.length; h++) {
-                    trade = trades[h];
-                    var checkPrice = new BigInteger(trade.priceNQT);
-                    var checkQuantity = new BigInteger(trade.quantityQNT);
-                    var checkTotalNQT = new BigInteger(NRS.calculateOrderTotalNQT(checkQuantity, checkPrice));
-                    check = NRS.formatOrderPricePerWholeQNT(checkPrice, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
-                    if (check[1] && check[1].length > maxPriceLength) {
-                        maxPriceLength = check[1].length;
-                    }
-                    check = NRS.formatQuantity(checkQuantity, NRS.currentAsset.decimals).split(NRS.LOCALE_DATA_DECIMAL);
-                    if (check[1] && check[1].length > maxQuantityLength) {
-                        maxQuantityLength = check[1].length;
-                    }
-                    check = NRS.formatAmount(checkTotalNQT).split(NRS.LOCALE_DATA_DECIMAL);
-                    if (check[1] && check[1].length > maxTotalLength) {
-                        maxTotalLength = check[1].length;
-                    }
-                }
-                // Populate Trade History
+                decimals = NRS.getNumberOfDecimals(trades).split("-");
                 var rows = "";
                 for (var i = 0; i < trades.length; i++) {
                     trade = trades[i];
@@ -804,8 +785,8 @@ var NRS = (function (NRS, $, undefined) {
                     rows += "<tr>" +
                         "<td>" + NRS.getTransactionLink(trade.bidOrder, NRS.formatTimestamp(trade.timestamp)) + "</td>" +
                         "<td>" + $.t(trade.tradeType) + "</td>" +
-                        "<td style='text-align:right;'>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals,"", maxQuantityLength) + "</td>" +
-                        "<td style='text-align:right;' class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals, maxPriceLength) + "</td>" +
+                        "<td style='text-align:right;'>" + NRS.formatQuantity(trade.quantityQNT, NRS.currentAsset.decimals,"", decimals[0]) + "</td>" +
+                        "<td style='text-align:right;' class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, NRS.currentAsset.decimals, decimals[1]) + "</td>" +
                         "<td style='text-align:right;color:";
                         if (trade.buyer == NRS.account && trade.buyer != trade.seller) {
                             rows += "red";
@@ -814,7 +795,7 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             rows += "black";
                         }
-                        rows += "'>" + NRS.formatAmount(trade.totalNQT,"","",maxTotalLength) + "</td>" +
+                        rows += "'>" + NRS.formatAmount(trade.totalNQT,"","",decimals[2]) + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "buyer", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "seller", NRS.currentAsset.accountRS, "Asset Issuer") + "</td>" +
                     "</tr>";
@@ -1399,7 +1380,7 @@ var NRS = (function (NRS, $, undefined) {
                     var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
 
                     rows += "<tr><td>" + NRS.getTransactionLink(transfers[i].assetTransfer) + "</td>" +
-                        "<td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "red") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
+                        "<td><a href='#' data-goto-asset='" + String(transfers[i].asset).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td><td style='color:" + (type == "receive" ? "green" : "#e8e8e8") + "'>" + NRS.formatQuantity(transfers[i].quantityQNT, transfers[i].decimals) + "</td>" +
                         "<td>" + NRS.getAccountLink(transfers[i], "recipient") + "</td>" +
                         "<td>" + NRS.getAccountLink(transfers[i], "sender") + "</td>" +
                     "</tr>";
