@@ -72,7 +72,7 @@ var NRS = (function(NRS, $) {
         var shufflerStage = "";
         if (response.stage == 4) {
             if (response.participantCount != response.registrantCount) {
-                shufflerStage = $.t("not_started");
+                shufflerStage = $.t("expired");
             } else {
                 shufflerStage = $.t("failed");
             }

@@ -1727,5 +1727,6 @@
   "transaction8": "Transaction",
   "transaction9": "Transaction",
   "transaction10": "Transaction",
-  "whitelist": "Whitelist"
+  "whitelist": "Whitelist",
+  "expired": "Expired"
 }
