@@ -228,3 +228,13 @@ QUnit.test("versionCompare", function (assert) {
     assert.equal(NRS.versionCompare("1.7.5e", "1.8.0"), "-1", "after.e.vs.ga");
     assert.equal(NRS.versionCompare("1.8.0e", "1.8.0"), "1", "same.e.before.ga");
 });
+
+QUnit.test("numberOfDecimals", function (assert) {
+    NRS.getLocale();
+    var rows = [{price: "1.23"}, {price: "1.234"}];
+    assert.equal(NRS.getNumberOfDecimals(rows, "price"), 3, "no.callback");
+    rows = [{price: "123000000"}, {price: "123400000"}];
+    assert.equal(NRS.getNumberOfDecimals(rows, "price", function(val) {
+        return NRS.formatAmount(val);
+    }), 3, "with.callback");
+});

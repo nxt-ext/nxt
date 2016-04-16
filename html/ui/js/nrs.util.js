@@ -652,6 +652,22 @@ var NRS = (function (NRS, $, undefined) {
             "mantissa": mantissa
         }, no_escaping, decimals);
     };
+    
+    NRS.getNumberOfDecimals = function(rows, key, callback) {
+        var decimals = 0;
+        for (var i=0; i<rows.length; i++) {
+            var val = rows[i][key];
+            if (callback) {
+                val = callback(val);
+            }
+            var tokens = val.split(LOCALE_DATA_DECIMAL);
+            if (tokens.length != 2) {
+                continue;
+            }
+            decimals = Math.max(decimals, tokens[1].length);
+        }
+        return decimals;
+    };
 
     NRS.fromEpochTime = function (epochTime) {
         if (!NRS.constants || NRS.constants.EPOCH_BEGINNING == 0) {
