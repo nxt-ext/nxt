@@ -235,6 +235,6 @@ QUnit.test("numberOfDecimals", function (assert) {
     assert.equal(NRS.getNumberOfDecimals(rows, "price"), 3, "no.callback");
     rows = [{price: "123000000"}, {price: "123400000"}];
     assert.equal(NRS.getNumberOfDecimals(rows, "price", function(val) {
-        return NRS.formatAmount(val);
+        return NRS.formatAmount(val.price);
     }), 3, "with.callback");
 });
