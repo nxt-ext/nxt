@@ -20,7 +20,7 @@
 
 var NRS = (function (NRS, $, undefined) {
     var LOCALE_DATA_DATE;
-    NRS.LOCALE_DATA_DECIMAL;
+    var LOCALE_DATA_DECIMAL;
     var LOCALE_DATA_SEPARATOR;
     var LOCALE_DATA_FORMAT;
     var LOCALE_DATA = {
@@ -251,12 +251,12 @@ var NRS = (function (NRS, $, undefined) {
         if (LOCALE_DATA[lang]) {
             LOCALE_DATA_FORMAT = lang;
             LOCALE_DATA_DATE = LOCALE_DATA[lang].dateFormat;
-            NRS.LOCALE_DATA_DECIMAL = LOCALE_DATA[lang].decimal;
+            LOCALE_DATA_DECIMAL = LOCALE_DATA[lang].decimal;
             LOCALE_DATA_SEPARATOR = LOCALE_DATA[lang].section;
         } else {
             LOCALE_DATA_FORMAT = "en-US";
             LOCALE_DATA_DATE = "dd/MM/yyyy";
-            NRS.LOCALE_DATA_DECIMAL = ".";
+            LOCALE_DATA_DECIMAL = ".";
             LOCALE_DATA_SEPARATOR = "'";
         }
     };
@@ -575,7 +575,7 @@ var NRS = (function (NRS, $, undefined) {
 		var digits = amount.split("").reverse();
 		var formattedAmount = "";
         NRS.getLocale();
-        var formattedMantissa = params.mantissa.replace(".", NRS.LOCALE_DATA_DECIMAL);
+        var formattedMantissa = params.mantissa.replace(".", LOCALE_DATA_DECIMAL);
         if (decimalsToAdd) {
             var mantissaLen = formattedMantissa.length;
             if (mantissaLen != 0) {
@@ -587,7 +587,7 @@ var NRS = (function (NRS, $, undefined) {
                     formattedMantissa += "0";
                 }
                 if (decimalsToAdd != 0) {
-                    formattedMantissa = NRS.LOCALE_DATA_DECIMAL + formattedMantissa;
+                    formattedMantissa = LOCALE_DATA_DECIMAL + formattedMantissa;
                 }
             }
         }
@@ -658,7 +658,7 @@ var NRS = (function (NRS, $, undefined) {
         for (var i=0; i<rows.length; i++) {
             var val = rows[i][key];
             if (callback) {
-                val = callback(val);
+                val = callback(rows[i]);
             }
             var tokens = val.split(LOCALE_DATA_DECIMAL);
             if (tokens.length != 2) {
@@ -1090,9 +1090,9 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.formatStyledAmount = function (strAmount, round) {
         NRS.getLocale();
-        var amount = NRS.formatAmount(strAmount, round).split(NRS.LOCALE_DATA_DECIMAL);
+        var amount = NRS.formatAmount(strAmount, round).split(LOCALE_DATA_DECIMAL);
 		if (amount.length == 2) {
-            return amount[0] + "<span style='font-size:12px'>" + NRS.LOCALE_DATA_DECIMAL + amount[1] + "</span>";
+            return amount[0] + "<span style='font-size:12px'>" + LOCALE_DATA_DECIMAL + amount[1] + "</span>";
 		} else {
             return amount[0];
 		}
