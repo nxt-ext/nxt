@@ -825,8 +825,7 @@ var NRS = (function(NRS, $) {
 		$("#dgs_product_picture_example").attr("src", missingImage);
 	});
 
-	$('body').on("click", ".dgs_show_picture_modal_action_purchase, .dgs_show_picture_modal_action_product", function (e) {
-		e.preventDefault();
+	$("#dgs_show_picture_modal").on("click", ".dgs_show_picture_modal_action_purchase, .dgs_show_picture_modal_action_product", function () {
 		_goodsToShow = $(this).data("data-goods");
 		if ($(this).hasClass("dgs_show_picture_modal_action_product")) {
 			$("#dgs_product_modal").modal();
