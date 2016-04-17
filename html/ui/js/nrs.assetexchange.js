@@ -666,9 +666,6 @@ var NRS = (function (NRS, $, undefined) {
                 if (i == 0 && !refresh) {
                     $("#" + (type == "ask" ? "buy" : "sell") + "_asset_price").val(NRS.calculateOrderPricePerWholeQNT(order.priceNQT, NRS.currentAsset.decimals));
                 }
-                NRS.formatAmount(sum,"","",getDecimalsFromSum(orders, function(val){
-                    console.log("TEST: " + val);
-                }));
                 var statusIcon = NRS.getTransactionStatusIcon(order);
                 var className = (order.account == NRS.account ? "your-order" : "");
                 rows += "<tr class='" + className + "' data-transaction='" + String(order.order).escapeHTML() + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
