@@ -843,7 +843,7 @@ var NRS = (function (NRS, $, undefined) {
         var backLink = $(".back-link");
         if (NRS.modalStack.length > 0) {
             var backModalInfo = NRS.modalStack[NRS.modalStack.length - 1];
-            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action");
+            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action dgs_show_picture_modal_action_purchase dgs_show_picture_modal_action_product");
             backLink.addClass(backModalInfo.class);
             backLink.data(backModalInfo.key, backModalInfo.value);
             backLink.data("back", "true");

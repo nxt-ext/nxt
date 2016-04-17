@@ -825,6 +825,16 @@ var NRS = (function(NRS, $) {
 		$("#dgs_product_picture_example").attr("src", missingImage);
 	});
 
+	$('body').on("click", ".dgs_show_picture_modal_action_purchase, .dgs_show_picture_modal_action_product", function (e) {
+		e.preventDefault();
+		_goodsToShow = $(this).data("data-goods");
+		if ($(this).hasClass("dgs_show_picture_modal_action_product")) {
+			$("#dgs_product_modal").modal();
+		} else if ($(this).hasClass("dgs_show_picture_modal_action_purchase")) {
+			$("#dgs_purchase_modal").modal();
+		}
+	});
+
 	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_feedback_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal, #dgs_view_refund_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
@@ -1016,7 +1026,7 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
-	$("#dgs_product_modal, #dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_picture_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
+	$("#dgs_product_modal, #dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
 
@@ -1062,6 +1072,11 @@ var NRS = (function(NRS, $) {
 					output += "<tr><th><strong>" + $.t("status") + "</strong>:</th><td>" + $.t("no_longer_for_sale") + "</td></tr>";
 				} else {
 					output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
+				}
+				if (type == "dgs_purchase_modal") {
+					NRS.modalStack.push({class: "dgs_show_picture_modal_action_purchase", key: "data-goods", value: goods});
+				} else if (type == "dgs_product_modal") {
+					NRS.modalStack.push({class: "dgs_show_picture_modal_action_product", key: "data-goods", value: goods});
 				}
 
 				if (type == "dgs_purchase_modal" || type == "dgs_product_modal") {
@@ -1184,16 +1199,16 @@ var NRS = (function(NRS, $) {
 	});
 
 	$("#dgs_purchase_modal, #dgs_product_modal, #dgs_recent_listings_full, #dgs_listings").on("click", "a[data-goto-seller]", function(e) {
-    		e.preventDefault();
+		e.preventDefault();
 
-    		var $visible_modal = $(".modal.in");
+		var $visible_modal = $(".modal.in");
 
-    		if ($visible_modal.length) {
-                $visible_modal.modal("hide");
-    		}
-    		NRS.goToPage("dgs_search", function() {});
-            NRS.dgs_search_seller($(this).data("goto-seller"));
-    	});
+		if ($visible_modal.length) {
+			$visible_modal.modal("hide");
+		}
+		NRS.goToPage("dgs_search", function() {});
+		NRS.dgs_search_seller($(this).data("goto-seller"));
+	});
 
 	NRS.goToGoods = function(seller, goods) {
 		$(".dgs_search input[name=q]").val(seller);
@@ -1205,30 +1220,32 @@ var NRS = (function(NRS, $) {
 	};
 
     $("#dgs_show_picture_modal").on("show.bs.modal", function(e) {
-    		var $invoker = $(e.relatedTarget);
-            var goods;
+		var $invoker = $(e.relatedTarget);
+		var goods;
 
-    		if (!$invoker.length) {
-    			goods = _goodsToShow;
-    			_goodsToShow = 0;
-    		} else {
-    			goods = $invoker.data("goods");
-    		}
+		if (!$invoker.length) {
+			goods = _goodsToShow;
+			_goodsToShow = 0;
+		} else {
+			goods = $invoker.data("goods");
+		}
 
-            if (NRS.getUrlParameter("goods") && goods == null) {
-                goods = NRS.getUrlParameter("goods").escapeHTML();
-            }
-            NRS.sendRequest("getDGSGood+", {
-                "goods": goods
-            }, function(response) {
-                var image;
-                if (!response.hasImage) {
-                    image = missingImage;
-                } else {
-                    image = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
-                }
-    		    $("#dgs_product_picture_modal").attr("src", image);
-    		});
+		if (NRS.getUrlParameter("goods") && goods == null) {
+			goods = NRS.getUrlParameter("goods").escapeHTML();
+		}
+		NRS.setBackLink();
+		$("#dgs_show_picture_back_link").attr("data-goods", goods);
+		NRS.sendRequest("getDGSGood+", {
+			"goods": goods
+		}, function(response) {
+			var image;
+			if (!response.hasImage) {
+				image = missingImage;
+			} else {
+				image = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
+			}
+			$("#dgs_product_picture_modal").attr("src", image);
+		});
     });
 
 	NRS.dgs_listings = function (table, api, full) {
