@@ -1402,7 +1402,7 @@ NRS.addPagination = function () {
 				});
 			}
 
-            if (NRS.baseTargetPercent(NRS.blocks[0]) > 1000 && !NRS.isTestNet) {
+            if (NRS.blocks && NRS.blocks.length > 0 && NRS.baseTargetPercent(NRS.blocks[0]) > 1000 && !NRS.isTestNet) {
                 $.growl($.t("fork_warning_base_target"), {
                     "type": "danger"
                 });
