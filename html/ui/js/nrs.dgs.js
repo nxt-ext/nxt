@@ -1234,7 +1234,6 @@ var NRS = (function(NRS, $) {
 			goods = NRS.getUrlParameter("goods").escapeHTML();
 		}
 		NRS.setBackLink();
-		$("#dgs_show_picture_back_link").attr("data-goods", goods);
 		NRS.sendRequest("getDGSGood+", {
 			"goods": goods
 		}, function(response) {
