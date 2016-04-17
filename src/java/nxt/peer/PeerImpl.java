@@ -709,6 +709,9 @@ final class PeerImpl implements Peer {
     }
 
     boolean analyzeHallmark(final String hallmarkString) {
+        if (Constants.isLightClient) {
+            return true;
+        }
 
         if (hallmarkString == null && this.hallmark == null) {
             return true;

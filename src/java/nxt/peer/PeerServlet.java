@@ -17,6 +17,7 @@
 package nxt.peer;
 
 import nxt.BlockchainProcessor;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.CountingInputReader;
 import nxt.util.CountingOutputWriter;
@@ -109,6 +110,13 @@ public final class PeerServlet extends WebSocketServlet {
         JSONObject response = new JSONObject();
         response.put("error", Errors.DOWNLOADING);
         DOWNLOADING = JSON.prepare(response);
+    }
+
+    private static final JSONStreamAware LITE_CLIENT;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", Errors.LITE_CLIENT);
+        LITE_CLIENT = JSON.prepare(response);
     }
 
     private static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
@@ -271,8 +279,13 @@ public final class PeerServlet extends WebSocketServlet {
                 Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
             }
             peer.setLastInboundRequest(Nxt.getEpochTime());
-            if (peerRequestHandler.rejectWhileDownloading() && blockchainProcessor.isDownloading()) {
-                return DOWNLOADING;
+            if (peerRequestHandler.rejectWhileDownloading()) {
+                if (blockchainProcessor.isDownloading()) {
+                    return DOWNLOADING;
+                }
+                if (Constants.isLightClient) {
+                    return LITE_CLIENT;
+                }
             }
             return peerRequestHandler.processRequest(request, peer);
         } catch (RuntimeException|ParseException|IOException e) {

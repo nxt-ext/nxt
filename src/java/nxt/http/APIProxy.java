@@ -65,7 +65,7 @@ public class APIProxy {
     }
 
     public static boolean isActivated() {
-        return enableAPIProxy && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isOffline);
+        return enableAPIProxy && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isLightClient || Constants.isOffline);
     }
 
     public void blacklistHost(String host) {
