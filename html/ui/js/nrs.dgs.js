@@ -1244,6 +1244,7 @@ var NRS = (function(NRS, $) {
 				image = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
 			}
 			$("#dgs_product_picture_modal").attr("src", image);
+			$("#dgs_product_picture_modal_goods_name").html(response.name);
 		});
     });
 
