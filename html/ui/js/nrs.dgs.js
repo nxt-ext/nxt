@@ -98,7 +98,7 @@ var NRS = (function(NRS, $) {
 			status = $.t("complete");
 		}
 
-		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "' " + (purchase.unconfirmed ? "class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			(showBuyer ? "<strong>" + $.t("buyer") + "</strong>: <span>" + NRS.getAccountLink(purchase, "buyer") + "</span><br>" :
 			"<strong>" + $.t("seller") + "</strong>: <span>" + NRS.getAccountLink(purchase, "seller") + "</span><br>") +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(purchase.goods).escapeHTML() + "'>" + String(purchase.goods).escapeHTML() + "</a>" +
@@ -818,7 +818,8 @@ var NRS = (function(NRS, $) {
 		$("#dgs_product_picture_example").attr("src", missingImage);
 	});
 
-	$("#dgs_show_picture_modal").on("click", ".dgs_show_picture_modal_action_purchase, .dgs_show_picture_modal_action_product", function () {
+	var dgsShowPictureModal = $("#dgs_show_picture_modal");
+    dgsShowPictureModal.on("click", ".dgs_show_picture_modal_action_purchase, .dgs_show_picture_modal_action_product", function () {
 		_goodsToShow = $(this).data("data-goods");
 		if ($(this).hasClass("dgs_show_picture_modal_action_product")) {
 			$("#dgs_product_modal").modal();
@@ -836,7 +837,7 @@ var NRS = (function(NRS, $) {
 		var purchase = $invoker.data("purchase");
 
         if (NRS.getUrlParameter("purchase") && purchase == null) {
-            purchase = NRS.getUrlParameter("purchase").escapeHTML();
+            purchase = String(NRS.getUrlParameter("purchase")).escapeHTML();
         }
 
 		$modal.find("input[name=purchase]").val(purchase);
@@ -1028,7 +1029,7 @@ var NRS = (function(NRS, $) {
 		}
 
         if (NRS.getUrlParameter("goods") && goods == null) {
-            goods = NRS.getUrlParameter("goods").escapeHTML();
+            goods = String(NRS.getUrlParameter("goods")).escapeHTML();
         }
 
 		$modal.find("input[name=goods]").val(goods);
@@ -1098,7 +1099,7 @@ var NRS = (function(NRS, $) {
 		var goods = $invoker.data("goods");
 
 		if (NRS.getUrlParameter("goods") && goods == null) {
-            goods = NRS.getUrlParameter("goods").escapeHTML();
+            goods = String(NRS.getUrlParameter("goods")).escapeHTML();
         }
 
 		$modal.find(".modal_content table").empty();
@@ -1200,7 +1201,7 @@ var NRS = (function(NRS, $) {
 		});
 	};
 
-    $("#dgs_show_picture_modal").on("show.bs.modal", function(e) {
+    dgsShowPictureModal.on("show.bs.modal", function(e) {
 		var $invoker = $(e.relatedTarget);
 		var goods;
 
@@ -1212,7 +1213,7 @@ var NRS = (function(NRS, $) {
 		}
 
 		if (NRS.getUrlParameter("goods") && goods == null) {
-			goods = NRS.getUrlParameter("goods").escapeHTML();
+			goods = String(NRS.getUrlParameter("goods")).escapeHTML();
 		}
 		NRS.setBackLink();
 		NRS.sendRequest("getDGSGood+", {
@@ -1225,7 +1226,7 @@ var NRS = (function(NRS, $) {
 				image = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
 			}
 			$("#dgs_product_picture_modal").attr("src", image);
-			$("#dgs_product_picture_modal_goods_name").html(response.name.escapeHTML());
+			$("#dgs_product_picture_modal_goods_name").html(String(response.name).escapeHTML());
 		});
     });
 
@@ -1240,7 +1241,7 @@ var NRS = (function(NRS, $) {
             image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
         }
         return image;
-    }
+    };
 
 	NRS.dgs_listings = function (table, api, full) {
     		var listingsTable = $("#" + table + "_table");
@@ -1281,7 +1282,7 @@ var NRS = (function(NRS, $) {
     			}
     			for (var i = 0; i < response.length; i++) {
     				var item = response[i];
-    				var name = item.name.escapeHTML();
+    				var name = String(item.name).escapeHTML();
     				var image = NRS.dgs_get_picture(item);
                     if (name.length > 45) {
     					name = name.substring(0, 45) + "...";
