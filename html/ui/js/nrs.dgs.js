@@ -1243,7 +1243,7 @@ var NRS = (function(NRS, $) {
 				image = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
 			}
 			$("#dgs_product_picture_modal").attr("src", image);
-			$("#dgs_product_picture_modal_goods_name").html(response.name);
+			$("#dgs_product_picture_modal_goods_name").html(response.name.escapeHTML());
 		});
     });
 
@@ -1286,7 +1286,7 @@ var NRS = (function(NRS, $) {
     			}
     			for (var i = 0; i < response.length; i++) {
     				var item = response[i];
-    				var name = item.name;
+    				var name = item.name.escapeHTML();
                     if (name.length > 45) {
     					name = name.substring(0, 45) + "...";
     				}
