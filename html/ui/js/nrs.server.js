@@ -341,14 +341,14 @@ var NRS = (function (NRS, $, undefined) {
             }
             var config = NRS.getFileUploadConfig(requestType);
             var file = $(config.selector)[0].files[0];
-            if (!file) {
+            if (!file && requestType == "uploadTaggedData" ) {
                 callback({
                     "errorCode": 3,
                     "errorDescription": $.t("error_no_file_chosen")
                 }, data);
                 return;
             }
-            if (file.size > config.maxSize) {
+            if (file && file.size > config.maxSize) {
                 var description = config.errorDescription;
                 callback({
                     "errorCode": 3,
@@ -359,7 +359,9 @@ var NRS = (function (NRS, $, undefined) {
                 }, data);
                 return;
             }
-            formData.append(config.requestParam, file); // file data;
+            if (file) {
+                formData.append(config.requestParam, file); // file data;
+            }
             type = "POST";
         } else {
             // JQuery defaults

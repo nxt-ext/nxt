@@ -495,7 +495,7 @@ var NRS = (function (NRS, $, undefined) {
                         for (i = 0; i < transaction.attachment.transactionFullHashes.length; i++) {
                             var transactionBytes = converters.hexStringToByteArray(transaction.attachment.transactionFullHashes[i]);
                             var transactionId = converters.byteArrayToBigInteger(transactionBytes, 0).toString().escapeHTML();
-                            data[$.t("transaction") + (i + 1) + "_formatted_html"] =
+                            data["transaction" + (i + 1) + "_formatted_html"] =
                                 NRS.getTransactionLink(transactionId);
                         }
 

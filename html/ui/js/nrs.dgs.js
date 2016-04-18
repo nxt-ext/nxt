@@ -29,19 +29,12 @@ var NRS = (function(NRS, $) {
 	NRS.getMarketplaceItemHTML = function(good) {
 		var html = "";
 		var id = 'good_'+ String(good.goods).escapeHTML();
-        var picture = new Image();
-
-		if (!good.hasImage) {
-            picture.src = missingImage;
-        } else {
-            picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
-        }
-
+        var image = NRS.dgs_get_picture(good);
 		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
 			html += "<table width='100%'>";
 				html += "<tr>";
 					html += "<td rowspan =20 style='vertical-align:top;width:100px;height:100px;'>";
-						html += '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + good.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
+						html += image;
 					html += "</td>";
 					html += "<td style='width:10px'>&nbsp;</td>";
 					html += "<td>";
@@ -105,7 +98,7 @@ var NRS = (function(NRS, $) {
 			status = $.t("complete");
 		}
 
-		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "'" + (purchase.unconfirmed ? " class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
+		return "<div data-purchase='" + String(purchase.purchase).escapeHTML() + "' " + (purchase.unconfirmed ? "class='tentative'" : "") + "><div style='float:right;color: #999999;background:white;padding:5px;border:1px solid #ccc;border-radius:3px'>" +
 			(showBuyer ? "<strong>" + $.t("buyer") + "</strong>: <span>" + NRS.getAccountLink(purchase, "buyer") + "</span><br>" :
 			"<strong>" + $.t("seller") + "</strong>: <span>" + NRS.getAccountLink(purchase, "seller") + "</span><br>") +
 			"<strong>" + $.t("product_id") + "</strong>: &nbsp;<a href='#'' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(purchase.goods).escapeHTML() + "'>" + String(purchase.goods).escapeHTML() + "</a>" +
@@ -825,6 +818,16 @@ var NRS = (function(NRS, $) {
 		$("#dgs_product_picture_example").attr("src", missingImage);
 	});
 
+	var dgsShowPictureModal = $("#dgs_show_picture_modal");
+    dgsShowPictureModal.on("click", ".dgs_show_picture_modal_action_purchase, .dgs_show_picture_modal_action_product", function () {
+		_goodsToShow = $(this).data("data-goods");
+		if ($(this).hasClass("dgs_show_picture_modal_action_product")) {
+			$("#dgs_product_modal").modal();
+		} else if ($(this).hasClass("dgs_show_picture_modal_action_purchase")) {
+			$("#dgs_purchase_modal").modal();
+		}
+	});
+
 	$("#dgs_refund_modal, #dgs_delivery_modal, #dgs_feedback_modal, #dgs_view_purchase_modal, #dgs_view_delivery_modal, #dgs_view_refund_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
@@ -834,7 +837,7 @@ var NRS = (function(NRS, $) {
 		var purchase = $invoker.data("purchase");
 
         if (NRS.getUrlParameter("purchase") && purchase == null) {
-            purchase = NRS.getUrlParameter("purchase").escapeHTML();
+            purchase = String(NRS.getUrlParameter("purchase")).escapeHTML();
         }
 
 		$modal.find("input[name=purchase]").val(purchase);
@@ -858,13 +861,8 @@ var NRS = (function(NRS, $) {
 						});
 					} else {
 						var output = "<table>";
-						var picture = new Image();
-						if (!good.hasImage) {
-						    picture.src = missingImage;
-						} else {
-							picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
-						}
-						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 20 height="100" width="100"><a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + good.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src +'" /></a></td></tr>';
+						var image = NRS.dgs_get_picture(good);
+						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 20 height="100" width="100">' + image + '</td></tr>';
 						output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 						output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 						if (good.delisted) {
@@ -1016,7 +1014,7 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
-	$("#dgs_product_modal, #dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_picture_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
+	$("#dgs_product_modal, #dgs_delisting_modal, #dgs_quantity_change_modal, #dgs_price_change_modal, #dgs_purchase_modal").on("show.bs.modal", function(e) {
 		var $modal = $(this);
 		var $invoker = $(e.relatedTarget);
 
@@ -1031,7 +1029,7 @@ var NRS = (function(NRS, $) {
 		}
 
         if (NRS.getUrlParameter("goods") && goods == null) {
-            goods = NRS.getUrlParameter("goods").escapeHTML();
+            goods = String(NRS.getUrlParameter("goods")).escapeHTML();
         }
 
 		$modal.find("input[name=goods]").val(goods);
@@ -1047,14 +1045,8 @@ var NRS = (function(NRS, $) {
 			} else {
 
 				var output = "<table>";
-				var picture = new Image();
-                if (!response.hasImage) {
-                    picture.src = missingImage;
-                }
-                else {
-					picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
-                }
-				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 20 height="100" width="100"><a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + response.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src +'" /></a></td></tr>';
+				var image = NRS.dgs_get_picture(response);
+				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 20 height="100" width="100">' + image + '</td></tr>';
 				output += "<tr><th><strong>" + $.t("date") + "</strong>:</th><td>" + NRS.formatTimestamp(response.timestamp) + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + " (" + '<a href="#" data-goto-seller="' + response.sellerRS + '">View Store' + "</a>)</td></tr>";
@@ -1062,6 +1054,11 @@ var NRS = (function(NRS, $) {
 					output += "<tr><th><strong>" + $.t("status") + "</strong>:</th><td>" + $.t("no_longer_for_sale") + "</td></tr>";
 				} else {
 					output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
+				}
+				if (type == "dgs_purchase_modal") {
+					NRS.modalStack.push({class: "dgs_show_picture_modal_action_purchase", key: "data-goods", value: goods});
+				} else if (type == "dgs_product_modal") {
+					NRS.modalStack.push({class: "dgs_show_picture_modal_action_product", key: "data-goods", value: goods});
 				}
 
 				if (type == "dgs_purchase_modal" || type == "dgs_product_modal") {
@@ -1102,7 +1099,7 @@ var NRS = (function(NRS, $) {
 		var goods = $invoker.data("goods");
 
 		if (NRS.getUrlParameter("goods") && goods == null) {
-            goods = NRS.getUrlParameter("goods").escapeHTML();
+            goods = String(NRS.getUrlParameter("goods")).escapeHTML();
         }
 
 		$modal.find(".modal_content table").empty();
@@ -1184,16 +1181,16 @@ var NRS = (function(NRS, $) {
 	});
 
 	$("#dgs_purchase_modal, #dgs_product_modal, #dgs_recent_listings_full, #dgs_listings").on("click", "a[data-goto-seller]", function(e) {
-    		e.preventDefault();
+		e.preventDefault();
 
-    		var $visible_modal = $(".modal.in");
+		var $visible_modal = $(".modal.in");
 
-    		if ($visible_modal.length) {
-                $visible_modal.modal("hide");
-    		}
-    		NRS.goToPage("dgs_search", function() {});
-            NRS.dgs_search_seller($(this).data("goto-seller"));
-    	});
+		if ($visible_modal.length) {
+			$visible_modal.modal("hide");
+		}
+		NRS.goToPage("dgs_search", function() {});
+		NRS.dgs_search_seller($(this).data("goto-seller"));
+	});
 
 	NRS.goToGoods = function(seller, goods) {
 		$(".dgs_search input[name=q]").val(seller);
@@ -1204,35 +1201,47 @@ var NRS = (function(NRS, $) {
 		});
 	};
 
-    $("#dgs_show_picture_modal").on("show.bs.modal", function(e) {
-            var $modal = $(this);
-    		var $invoker = $(e.relatedTarget);
+    dgsShowPictureModal.on("show.bs.modal", function(e) {
+		var $invoker = $(e.relatedTarget);
+		var goods;
 
-    		var type = $modal.attr("id");
-            var goods;
+		if (!$invoker.length) {
+			goods = _goodsToShow;
+			_goodsToShow = 0;
+		} else {
+			goods = $invoker.data("goods");
+		}
 
-    		if (!$invoker.length) {
-    			goods = _goodsToShow;
-    			_goodsToShow = 0;
-    		} else {
-    			goods = $invoker.data("goods");
-    		}
-
-            if (NRS.getUrlParameter("goods") && goods == null) {
-                goods = NRS.getUrlParameter("goods").escapeHTML();
-            }
-            NRS.sendRequest("getDGSGood+", {
-                "goods": goods
-            }, function(response) {
-                var image;
-                if (!response.hasImage) {
-                    image = missingImage;
-                } else {
-                    image = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
-                }
-    		    $("#dgs_product_picture_modal").attr("src", image);
-    		});
+		if (NRS.getUrlParameter("goods") && goods == null) {
+			goods = String(NRS.getUrlParameter("goods")).escapeHTML();
+		}
+		NRS.setBackLink();
+		NRS.sendRequest("getDGSGood+", {
+			"goods": goods
+		}, function(response) {
+			var image;
+			if (!response.hasImage) {
+				image = missingImage;
+			} else {
+				image = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
+			}
+			$("#dgs_product_picture_modal").attr("src", image);
+			$("#dgs_product_picture_modal_goods_name").html(String(response.name).escapeHTML());
+		});
     });
+
+    NRS.dgs_get_picture = function(input) {
+        var picture = new Image();
+        var image = "";
+        if (!input.hasImage) {
+            picture.src = missingImage;
+            image = '<img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/>';
+        } else {
+            picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + input.goods + "&retrieve=true";
+            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
+        }
+        return image;
+    };
 
 	NRS.dgs_listings = function (table, api, full) {
     		var listingsTable = $("#" + table + "_table");
@@ -1242,12 +1251,14 @@ var NRS = (function(NRS, $) {
     		if (full) {
     			params = {
     				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-    				"lastIndex": NRS.pageNumber * NRS.itemsPerPage
+    				"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+					"completed": true
     			};
     		} else {
     			params = {
     				"firstIndex": 0,
-    				"lastIndex": 9
+    				"lastIndex": 9,
+					"completed": true
     			};
     		}
     		var view = NRS.simpleview.get(table, {
@@ -1271,17 +1282,11 @@ var NRS = (function(NRS, $) {
     			}
     			for (var i = 0; i < response.length; i++) {
     				var item = response[i];
-    				var name = item.name;
+    				var name = String(item.name).escapeHTML();
+    				var image = NRS.dgs_get_picture(item);
                     if (name.length > 45) {
     					name = name.substring(0, 45) + "...";
     				}
-    				var picture = new Image();
-    				if (!item.hasImage) {
-                        picture.src = missingImage;
-                    } else {
-                        picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
-                    }
-    				var image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + item.goods + '"><img style="max-height:100%;max-width:100%" src="' + picture.src + '"/></a>';
 					var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
     				var account;
     				if (accountKey == "seller") {

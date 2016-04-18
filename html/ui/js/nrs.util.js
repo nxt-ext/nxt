@@ -19,6 +19,7 @@
  */
 var NRS = (function (NRS, $, undefined) {
 
+    var LOCALE_DATE_FORMAT;
     var LOCALE_DATE_FORMATS = {
         "ar-SA": "dd/MM/yy",
         "bg-BG": "dd.M.yyyy",
@@ -231,12 +232,6 @@ var NRS = (function (NRS, $, undefined) {
         "sr-Cyrl-BA": "d.M.yyyy",
         "es-US": "M/d/yyyy"
     };
-
-    var LANG = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
-    var LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[LANG] || 'dd/MM/yyyy';
-    if (NRS.logConsole) {
-        NRS.logConsole("Date Format Locale: " + LANG + ", Date Format: " + LOCALE_DATE_FORMAT);
-    }
 
     NRS.formatVolume = function (volume) {
 		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -628,6 +623,13 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
+        if (!LOCALE_DATE_FORMAT) {
+            var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
+            LOCALE_DATE_FORMAT = LOCALE_DATE_FORMATS[lang] || 'dd/MM/yyyy';
+            if (NRS.logConsole) {
+                NRS.logConsole("Date Format Locale: " + lang + ", Date Format: " + LOCALE_DATE_FORMAT);
+            }
+        }
         var date;
 		if (typeof timestamp == "object") {
             date = timestamp;
@@ -841,7 +843,7 @@ var NRS = (function (NRS, $, undefined) {
         var backLink = $(".back-link");
         if (NRS.modalStack.length > 0) {
             var backModalInfo = NRS.modalStack[NRS.modalStack.length - 1];
-            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action");
+            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action dgs_show_picture_modal_action_purchase dgs_show_picture_modal_action_product");
             backLink.addClass(backModalInfo.class);
             backLink.data(backModalInfo.key, backModalInfo.value);
             backLink.data("back", "true");

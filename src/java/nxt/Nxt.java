@@ -50,7 +50,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.8.1";
+    public static final String VERSION = "1.8.2";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -160,7 +160,7 @@ public final class Nxt {
                         System.out.printf("Creating dir %s\n", confDir);
                         Files.createDirectory(confDir);
                     }
-                    Path propPath = Paths.get(confDir.toString(), propertiesFile);
+                    Path propPath = Paths.get(confDir.toString()).resolve(Paths.get(propertiesFile));
                     if (Files.isReadable(propPath)) {
                         System.out.printf("Loading %s from dir %s\n", propertiesFile, confDir);
                         properties.load(Files.newInputStream(propPath));
