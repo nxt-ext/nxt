@@ -31,7 +31,7 @@ var NRS = (function(NRS, $) {
 		var id = 'good_'+ String(good.goods).escapeHTML();
         var image = NRS.dgs_get_picture(good);
 		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
-			html += "<table width='100%'>";
+			html += "<table width='100%' style='table-layout:fixed;'>";
 				html += "<tr>";
 					html += "<td rowspan =20 style='vertical-align:top;width:100px;height:100px;'>";
 						html += image;
@@ -1235,10 +1235,10 @@ var NRS = (function(NRS, $) {
         var image = "";
         if (!input.hasImage) {
             picture.src = missingImage;
-            image = '<img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/>';
+            image = '<img style="max-height:100%;max-width:100%;" id="dgs_product_picture" src="'+ picture.src + '"/>';
         } else {
             picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + input.goods + "&retrieve=true";
-            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
+            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%;" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
         }
         return image;
     };
