@@ -29,19 +29,12 @@ var NRS = (function(NRS, $) {
 	NRS.getMarketplaceItemHTML = function(good) {
 		var html = "";
 		var id = 'good_'+ String(good.goods).escapeHTML();
-        var picture = new Image();
-
-		if (!good.hasImage) {
-            picture.src = missingImage;
-        } else {
-            picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
-        }
-
+        var image = NRS.dgs_get_picture(good);
 		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
 			html += "<table width='100%'>";
 				html += "<tr>";
 					html += "<td rowspan =20 style='vertical-align:top;width:100px;height:100px;'>";
-						html += '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + good.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
+						html += image;
 					html += "</td>";
 					html += "<td style='width:10px'>&nbsp;</td>";
 					html += "<td>";
@@ -867,13 +860,8 @@ var NRS = (function(NRS, $) {
 						});
 					} else {
 						var output = "<table>";
-						var picture = new Image();
-						if (!good.hasImage) {
-						    picture.src = missingImage;
-						} else {
-							picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + good.goods + "&retrieve=true";
-						}
-						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 20 height="100" width="100"><a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + good.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src +'" /></a></td></tr>';
+						var image = NRS.dgs_get_picture(good);
+						output += "<tr><th style='width:85px;'><strong>" + $.t("product") + "</strong>:</th><td>" + String(good.name).escapeHTML() + '</td><td rowspan = 20 height="100" width="100">' + image + '</td></tr>';
 						output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 						output += "<tr><th><strong>" + $.t("quantity") + "</strong>:</th><td>" + NRS.format(response.quantity) + "</td></tr>";
 						if (good.delisted) {
@@ -1056,14 +1044,8 @@ var NRS = (function(NRS, $) {
 			} else {
 
 				var output = "<table>";
-				var picture = new Image();
-                if (!response.hasImage) {
-                    picture.src = missingImage;
-                }
-                else {
-					picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + response.goods + "&retrieve=true";
-                }
-				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 20 height="100" width="100"><a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + response.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src +'" /></a></td></tr>';
+				var image = NRS.dgs_get_picture(response);
+				output += "<tr><th style='width:85px'><strong>" + $.t("product") + "</strong>:</th><td>" + String(response.name).escapeHTML() + '<td rowspan = 20 height="100" width="100">' + image + '</td></tr>';
 				output += "<tr><th><strong>" + $.t("date") + "</strong>:</th><td>" + NRS.formatTimestamp(response.timestamp) + "</td></tr>";
 				output += "<tr><th><strong>" + $.t("price") + "</strong>:</th><td>" + NRS.formatAmount(response.priceNQT) + " NXT</td></tr>";
 				output += "<tr><th><strong>" + $.t("seller") + "</strong>:</th><td>" + NRS.getAccountLink(response, "seller") + " (" + '<a href="#" data-goto-seller="' + response.sellerRS + '">View Store' + "</a>)</td></tr>";
@@ -1247,6 +1229,19 @@ var NRS = (function(NRS, $) {
 		});
     });
 
+    NRS.dgs_get_picture = function(input) {
+        var picture = new Image();
+        var image = "";
+        if (!input.hasImage) {
+            picture.src = missingImage;
+            image = '<img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/>';
+        } else {
+            picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + input.goods + "&retrieve=true";
+            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
+        }
+        return image;
+    }
+
 	NRS.dgs_listings = function (table, api, full) {
     		var listingsTable = $("#" + table + "_table");
     		listingsTable.find("tbody").empty();
@@ -1287,16 +1282,10 @@ var NRS = (function(NRS, $) {
     			for (var i = 0; i < response.length; i++) {
     				var item = response[i];
     				var name = item.name.escapeHTML();
+    				var image = NRS.dgs_get_picture(item);
                     if (name.length > 45) {
     					name = name.substring(0, 45) + "...";
     				}
-    				var picture = new Image();
-    				if (!item.hasImage) {
-                        picture.src = missingImage;
-                    } else {
-                        picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + item.goods + "&retrieve=true";
-                    }
-    				var image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + item.goods + '"><img style="max-height:100%;max-width:100%" src="' + picture.src + '"/></a>';
 					var good = '<a href="#" data-goods="' + item.goods + '" data-toggle="modal" data-target="#dgs_purchase_modal">' + name + '</a>';
     				var account;
     				if (accountKey == "seller") {
