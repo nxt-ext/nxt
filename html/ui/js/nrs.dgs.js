@@ -1235,10 +1235,10 @@ var NRS = (function(NRS, $) {
         var image = "";
         if (!input.hasImage) {
             picture.src = missingImage;
-            image = '<img style="max-height:100px;max-width:100px!important" id="dgs_product_picture" src="'+ picture.src + '"/>';
+            image = '<img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/>';
         } else {
             picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + input.goods + "&retrieve=true";
-            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100px;max-width:100px!important" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
+            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
         }
         return image;
     };
