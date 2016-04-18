@@ -1,3 +1,21 @@
+nxt-client-1.8.2:
+
+This is a bugfix release. All users running 1.8.0e or 1.8.1 should upgrade.
+
+Added html escaping of product names for marketplace recent listings.
+
+Fixed marketplace listing for items without image.
+
+Only show completed purchases in recent purchases.
+
+Implemented import contacts for the desktop wallet UI.
+
+Other minor UI improvements and bugfixes.
+
+Allow absolute paths for keystore file location in nxt.keyStorePath property.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.8.1:
 
 This is the first stable release in the 1.8 series. Please also read the 1.8.0e
