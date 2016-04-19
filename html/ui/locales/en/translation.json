@@ -356,7 +356,7 @@
   "error_feedback_already_sent": "Feedback already sent",
   "error_file_too_big": "File size __size__ [bytes] bigger than __allowed__ [bytes]",
   "error_image_too_big": "Image size __size__ [bytes] bigger than __allowed__ [bytes]",
-  "error_find_account_id": "Could not find your account address.",
+  "error_find_account_id": "Could not find your account address __accountRS__",
   "error_forging_blockchain_downloading": "The blockchain is busy downloading, you cannot forge during this time. Please try again when the blockchain is fully synced.",
   "error_forging_blockchain_rescanning": "The blockchain is currently being rescanned, you cannot forge during this time. Please try again in a minute.",
   "error_forging_effective_balance": "Your effective balance is zero, you cannot forge. (Effective balance is your balance after 1440 block confirmations).",

@@ -220,16 +220,17 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.listAccounts();
 	};
 
-	NRS.login = function(passLogin, password, callback) {
-		if (passLogin){
+	// id can be either account id or passphrase
+	NRS.login = function(isPassphraseLogin, id, callback) {
+		if (isPassphraseLogin){
 			var loginCheckPasswordLength = $("#login_check_password_length");
-            if (!password.length) {
+            if (!id.length) {
 				$.growl($.t("error_passphrase_required_login"), {
 					"type": "danger",
 					"offset": 10
 				});
 				return;
-			} else if (!NRS.isTestNet && password.length < 12 && loginCheckPasswordLength.val() == 1) {
+			} else if (!NRS.isTestNet && id.length < 12 && loginCheckPasswordLength.val() == 1) {
 				loginCheckPasswordLength.val(0);
 				var loginError = $("#login_error");
                 loginError.find(".callout").html($.t("error_passphrase_login_length"));
@@ -254,31 +255,31 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.state = response;
 			var accountRequest;
 			var requestVariable;
-			if (passLogin) {
+			if (isPassphraseLogin) {
 				accountRequest = "getAccountId";
-				requestVariable = {secretPhrase: password};
+				requestVariable = {secretPhrase: id};
 			} else {
 				accountRequest = "getAccount";
-				requestVariable = {account: password};
+				requestVariable = {account: id};
 			}
 
 			//this is done locally..
-			NRS.sendRequest(accountRequest, requestVariable, function(response) {
+			NRS.sendRequest(accountRequest, requestVariable, function(response, data) {
 				if (!response.errorCode) {
 					NRS.account = String(response.account).escapeHTML();
 					NRS.accountRS = String(response.accountRS).escapeHTML();
-					if (passLogin) {
-                        NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(password));
+					if (isPassphraseLogin) {
+                        NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(id));
                     } else {
                         NRS.publicKey = String(response.publicKey).escapeHTML();
                     }
 				}
-				if (!passLogin && response.errorCode == 5) {
+				if (!isPassphraseLogin && response.errorCode == 5) {
 					NRS.account = String(response.account).escapeHTML();
 					NRS.accountRS = String(response.accountRS).escapeHTML();
 				}
 				if (!NRS.account) {
-					$.growl($.t("error_find_account_id"), {
+					$.growl($.t("error_find_account_id", { accountRS: (data && data.account ? String(data.account).escapeHTML() : "") }), {
 						"type": "danger",
 						"offset": 10
 					});
@@ -294,7 +295,7 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.sendRequest("getAccountPublicKey", {
 					"account": NRS.account
 				}, function(response) {
-					if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(password) && passLogin) {
+					if (response && response.publicKey && response.publicKey != NRS.generatePublicKey(id) && isPassphraseLogin) {
 						$.growl($.t("error_account_taken"), {
 							"type": "danger",
 							"offset": 10
@@ -303,10 +304,10 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					var rememberPassword = $("#remember_password");
-                    if (rememberPassword.is(":checked") && passLogin) {
+                    if (rememberPassword.is(":checked") && isPassphraseLogin) {
 						NRS.rememberPassword = true;
 						rememberPassword.prop("checked", false);
-						NRS.setPassword(password);
+						NRS.setPassword(id);
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
 					}
@@ -322,9 +323,9 @@ var NRS = (function(NRS, $, undefined) {
 
 					var passwordNotice = "";
 
-					if (password.length < 35 && passLogin) {
+					if (id.length < 35 && isPassphraseLogin) {
 						passwordNotice = $.t("error_passphrase_length_secure");
-					} else if (passLogin && password.length < 50 && (!password.match(/[A-Z]/) || !password.match(/[0-9]/))) {
+					} else if (isPassphraseLogin && id.length < 50 && (!id.match(/[A-Z]/) || !id.match(/[0-9]/))) {
 						passwordNotice = $.t("error_passphrase_strength_secure");
 					}
 
@@ -340,11 +341,11 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.isLeased = false;
 						}
 						NRS.updateForgingTooltip($.t("forging_unknown_tooltip"));
-						NRS.updateForgingStatus(passLogin ? password : null);
-						if (NRS.isLocalHost && passLogin) {
+						NRS.updateForgingStatus(isPassphraseLogin ? id : null);
+						if (NRS.isLocalHost && isPassphraseLogin) {
 							var forgingIndicator = $("#forging_indicator");
 							NRS.sendRequest("startForging", {
-								"secretPhrase": password
+								"secretPhrase": id
 							}, function (response) {
 								if ("deadline" in response) {
 									forgingIndicator.addClass("forging");
