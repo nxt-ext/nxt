@@ -433,7 +433,7 @@ var NRS = (function(NRS, $) {
 								NRS.selectedContext.data("context", "messages_sidebar_update_context");
 							}
 						}, 50);
-					});
+					}, true);
 				}
 			});
 		});
@@ -443,21 +443,35 @@ var NRS = (function(NRS, $) {
     importContactsButtonField.css({'display':'none'});
 	importContactsButtonField.on("change", function(button_event) {
 		button_event.preventDefault();
-		var importContactsButtonField = $("#import_contacts_button_field");
-        var file = importContactsButtonField[0].files[0];
-		var reader = new FileReader();
-		reader.onload = function (read_event) {
-			var imported_contacts = JSON.parse(read_event.target.result);
-			NRS.importContacts(imported_contacts);
-		};
-		reader.readAsText(file);
-		var button = importContactsButtonField;
-		button.replaceWith(button.clone(true) ); // Recreate button to clean it
+            var importContactsButtonField = $("#import_contacts_button_field");
+            var file = importContactsButtonField[0].files[0];
+            var reader = new FileReader();
+            reader.onload = function (read_event) {
+                var imported_contacts = JSON.parse(read_event.target.result);
+                NRS.importContacts(imported_contacts);
+            };
+            reader.readAsText(file);
+            var button = importContactsButtonField;
+            button.replaceWith(button.clone(true) ); // Recreate button to clean it
 		return false;
 	});
 
 	$("#import_contacts_button").on("click", function() {
-		$("#import_contacts_button_field").click();
+		if (window.FileReader) {
+            $("#import_contacts_button_field").click();
+        } else if (window.java) {
+            var result = java.readContactsFile();
+            var contacts = JSON.parse(result);
+            if (contacts.error) {
+                if (contacts.type == 1) {
+                    $.growl($.t(contacts.error, { file: contacts.file, folder: contacts.folder }));
+                } else {
+                    $.growl(contacts.error);
+                }
+            } else {
+                NRS.importContacts(contacts);
+            }
+        }
 	});
 
 	return NRS;

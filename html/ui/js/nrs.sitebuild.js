@@ -22,9 +22,13 @@ var NRS = (function(NRS, $) {
     var _modalUIElements = null;
 
     NRS.loadLockscreenHTML = function(path) {
-    	jQuery.ajaxSetup({ async: false });
-    	$.get(path, '', function (data) { $("body").prepend(data); });
-    	jQuery.ajaxSetup({ async: true });
+        if (!NRS.getUrlParameter("account")) {
+            jQuery.ajaxSetup({async: false});
+            $.get(path, '', function (data) {
+                $("body").prepend(data);
+            });
+            jQuery.ajaxSetup({async: true});
+        }
     };
 
     NRS.loadHeaderHTML = function(path) {
@@ -195,6 +199,21 @@ var NRS = (function(NRS, $) {
         menuHTML += '<span class="sm_sub_header"><span style="display:inline-block;width:20px;">&nbsp;</span> ';
         menuHTML += options["titleHTML"] + ' </span></li>';
         parentMenu.append(menuHTML);
+    };
+
+    NRS.getUrlParameter = function (param) {
+		var url = window.location.search.substring(1);
+		var urlParams = url.split('&');
+        for (var i = 0; i < urlParams.length; i++) {
+			var paramKeyValue = urlParams[i].split('=');
+            if (paramKeyValue.length != 2) {
+                continue;
+            }
+            if (paramKeyValue[0] == param) {
+				return paramKeyValue[1];
+			}
+		}
+		return false;
     };
 
     return NRS;

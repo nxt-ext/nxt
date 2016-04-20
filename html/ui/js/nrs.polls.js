@@ -1242,7 +1242,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			for (var i = 0; i < polls.length; i++) {
 				var poll = polls[i];
-				var description = poll.description;
+				var description = poll.description.escapeHTML();
 				if (description.length > 100) {
 					description = description.substring(0, 100) + "...";
 				}
