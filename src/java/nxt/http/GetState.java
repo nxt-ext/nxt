@@ -103,7 +103,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         if (externalAddress != null) {
             response.put("upnpExternalAddress", externalAddress.getHostAddress());
         }
-        response.put("isLiteClient", Constants.isLightClient);
+        response.put("isLightClient", Constants.isLightClient);
         return response;
     }
 
