@@ -375,6 +375,22 @@ public final class JSONResponses {
         PROXY_MISSING_REQUEST_TYPE = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware PROXY_SECRET_PHRASE_DETECTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 18);
+        response.put("errorDescription", "Proxied requests contains secretPhrase parameter");
+        PROXY_SECRET_PHRASE_DETECTED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PROXY_ADMIN_PASSWORD_DETECTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 18);
+        response.put("errorDescription", "Proxied requests contains adminPassword parameter");
+        PROXY_ADMIN_PASSWORD_DETECTED = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

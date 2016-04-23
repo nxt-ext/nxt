@@ -28,22 +28,23 @@ import org.eclipse.jetty.proxy.AsyncMiddleManServlet;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 public final class APIProxyServlet extends AsyncMiddleManServlet {
+    private static final Set<String> NOT_FORWARDED_REQUESTS;
+    private static final Set<APITag> NOT_FORWARDED_TAGS;
+    private static final String PROXY_REQUEST_ERROR = APIProxyServlet.class.getName() + ".proxyRequestError";
 
-
-    private final static Set<String> NOT_FORWARDED_REQUESTS;
-    private final static Set<APITag> NOT_FORWARDED_TAGS;
     static {
         Set<String> requests = new HashSet<>();
         requests.add("getConstants");
@@ -174,6 +175,14 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             return false;
         }
 
+        if (parameters.containsKey("secretPhrase")) {
+            throw new ParameterException(JSONResponses.PROXY_SECRET_PHRASE_DETECTED);
+        }
+
+        if (parameters.containsKey("adminPassword")) {
+            throw new ParameterException(JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
+        }
+
         return true;
     }
 
@@ -193,6 +202,111 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             super.onFailure(response, failure);
             Logger.logErrorMessage("proxy failed", failure);
             APIProxy.getInstance().blacklistHost(response.getRequest().getHost());
+        }
+    }
+
+    @Override
+    protected ContentTransformer newClientRequestContentTransformer(HttpServletRequest clientRequest,
+                                                                    Request proxyRequest) {
+        String contentType = clientRequest.getContentType();
+        if (contentType != null && contentType.contains("multipart")) {
+            return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
+        } else {
+            return new PasswordFilteringContentTransformer(clientRequest);
+        }
+
+    }
+
+    @Override
+    protected ContentTransformer newServerResponseContentTransformer(HttpServletRequest clientRequest,
+                                                                     HttpServletResponse proxyResponse,
+                                                                     Response serverResponse) {
+        return new ErrorMessageContentTransformer(clientRequest);
+    }
+
+    private static class PasswordFinder {
+        private final byte[] token;
+        private int state;
+
+        private PasswordFinder(String tokenStr) {
+            token = tokenStr.getBytes();
+        }
+
+        private boolean process(ByteBuffer buffer) {
+            while (buffer.hasRemaining()) {
+                int current = buffer.get() & 0xFF;
+                if (state < token.length) {
+                    if (current != token[state]) {
+                        state = 0;
+                        continue;
+                    }
+
+                    ++state;
+                    if (state == token.length)
+                        return true;
+                }
+            }
+            return state == token.length;
+        }
+    }
+
+    private static class PasswordFilteringContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
+        private final HttpServletRequest clientRequest;
+        private final PasswordFinder secretPhraseFinder = new PasswordFinder("secretPhrase=");
+        private final PasswordFinder adminPasswordFinder = new PasswordFinder("adminPassword=");
+        private boolean isPasswordDetected = false;
+
+        public PasswordFilteringContentTransformer(HttpServletRequest clientRequest) {
+            this.clientRequest = clientRequest;
+        }
+
+        @Override
+        public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
+            if (!isPasswordDetected) {
+                int position = input.position();
+                while (input.hasRemaining()) {
+                    boolean secretPhaseFound = secretPhraseFinder.process(input);
+                    boolean adminPasswordFound = false;
+                    if (!secretPhaseFound) {
+                        input.position(position);
+                        adminPasswordFound = adminPasswordFinder.process(input);
+                    }
+                    if (secretPhaseFound || adminPasswordFound) {
+                        isPasswordDetected = true;
+                        clientRequest.setAttribute(PROXY_REQUEST_ERROR,
+                                secretPhaseFound ? JSONResponses.PROXY_SECRET_PHRASE_DETECTED :
+                                        JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
+                    }
+                }
+                input.position(position);
+
+                if (!isPasswordDetected) {
+                    output.add(input);
+                }
+            }
+        }
+    }
+
+    private static class ErrorMessageContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
+
+        private final HttpServletRequest clientRequest;
+
+        private ErrorMessageContentTransformer(HttpServletRequest clientRequest) {
+            this.clientRequest = clientRequest;
+        }
+
+        @Override
+        public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
+            Object attributeObj = clientRequest.getAttribute(PROXY_REQUEST_ERROR);
+            if (attributeObj != null) {
+                if (finished) {
+                    StringWriter sw = new StringWriter();
+                    JSON.writeJSONString((JSONStreamAware) attributeObj, sw);
+                    output.add(ByteBuffer.wrap(sw.getBuffer().toString().getBytes()));
+                }
+            } else {
+                output.add(input);
+            }
         }
     }
 }
