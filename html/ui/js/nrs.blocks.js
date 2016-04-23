@@ -327,7 +327,7 @@ var NRS = (function(NRS, $) {
 		if (NRS.state.apiProxy) {
 			return $.t(NRS.state.isLightClient ? "status_light_client_proxy" : "status_blockchain_downloading_proxy",
 					{ peer: NRS.state.apiProxy}) +
-				" <a>" + $.t("proxy_info_link") + "</a>";
+				" <a href='#'>" + $.t("proxy_info_link") + "</a>";
 		} else {
 			return $.t("status_blockchain_downloading");
 		}

@@ -135,7 +135,7 @@ var ATS = (function(ATS, $, undefined) {
     };
 
     ATS.submitForm = function(form, fileParameter) {
-        var url = '/nxt';
+        var url = '/nxt-proxy';
         var params = {};
         for (var i = 0; i < form.elements.length; i++) {
             if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {
@@ -193,6 +193,8 @@ var ATS = (function(ATS, $, undefined) {
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
             processData = true;
         }
+        url += "?requestType=" + params["requestType"];
+        
         $.ajax({
             url: url,
             type: 'POST',
