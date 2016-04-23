@@ -87,6 +87,9 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.appPlatform = "";
 	NRS.assetTableKeys = [];
 
+	NRS.lastProxyBlock = 0;
+	NRS.lastProxyBlockHeight = 0;
+
 	var stateInterval;
 	var stateIntervalSeconds = 30;
 	var isScanning = false;
@@ -116,6 +119,9 @@ var NRS = (function(NRS, $, undefined) {
 				}
 				if (key == "upnpExternalAddress") {
                     NRS.upnpExternalAddress = response[key];
+				}
+				if (key == "version") {
+					NRS.appVersion = response[key];
 				}
 			}
 
@@ -249,6 +255,68 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	var _firstTimeAfterLoginRun = false;
+	var _prevLastProxyBlock = "0";
+
+	NRS.getLastBlock = function() {
+		return NRS.state.isLightClient ? NRS.lastProxyBlock : NRS.state.lastBlock;
+	};
+
+	NRS.handleBlockchainStatus = function(response, callback) {
+		var firstTime = !("lastBlock" in NRS.state);
+		var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
+		if (response.isLightClient) {
+			previousLastBlock = _prevLastProxyBlock;
+		}
+		
+		NRS.state = response;
+		var lastBlock = NRS.getLastBlock();
+		var height = response.isLightClient ? NRS.lastProxyBlockHeight : NRS.state.numberOfBlocks - 1;
+
+		NRS.serverConnect = true;
+		NRS.ledgerTrimKeep = response.ledgerTrimKeep;
+		$("#sidebar_block_link").html(NRS.getBlockLink(height));
+		if (firstTime) {
+			$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
+			NRS.getBlock(lastBlock, NRS.handleInitialBlocks);
+		} else if (NRS.state.isScanning) {
+			//do nothing but reset NRS.state so that when isScanning is done, everything is reset.
+			isScanning = true;
+		} else if (isScanning) {
+			//rescan is done, now we must reset everything...
+			isScanning = false;
+			NRS.blocks = [];
+			NRS.tempBlocks = [];
+			NRS.getBlock(lastBlock, NRS.handleInitialBlocks);
+			if (NRS.account) {
+				NRS.getInitialTransactions();
+				NRS.getAccountInfo();
+			}
+		} else if (previousLastBlock != lastBlock) {
+			NRS.tempBlocks = [];
+			if (NRS.account) {
+				NRS.getAccountInfo();
+			}
+			NRS.getBlock(lastBlock, NRS.handleNewBlocks);
+			if (NRS.account) {
+				NRS.getNewTransactions();
+				NRS.updateApprovalRequests();
+			}
+		} else {
+			if (NRS.account) {
+				NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
+					NRS.handleIncomingTransactions(unconfirmedTransactions, false);
+				});
+			}
+		}
+		if (NRS.account && !_firstTimeAfterLoginRun) {
+			//Executed ~30 secs after login, can be used for tasks needing this condition state
+			_firstTimeAfterLoginRun = true;
+		}
+
+		if (callback) {
+			callback();
+		}
+	};
 
 	NRS.getState = function(callback, msg) {
 		if (msg) {
@@ -259,54 +327,24 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.serverConnect = false;
                 $.growl($.t("server_connection_error") + " " + response.errorDescription.escapeHTML());
 			} else {
-				var firstTime = !("lastBlock" in NRS.state);
-				var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
-
-				NRS.state = response;
-				NRS.serverConnect = true;
-				NRS.ledgerTrimKeep = response.ledgerTrimKeep;
-				$("#sidebar_block_link").html(NRS.getBlockLink(NRS.state.numberOfBlocks - 1));
-				if (firstTime) {
-					$("#nrs_version").html(NRS.state.version).removeClass("loading_dots");
-					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
-				} else if (NRS.state.isScanning) {
-					//do nothing but reset NRS.state so that when isScanning is done, everything is reset.
-					isScanning = true;
-				} else if (isScanning) {
-					//rescan is done, now we must reset everything...
-					isScanning = false;
-					NRS.blocks = [];
-					NRS.tempBlocks = [];
-					NRS.getBlock(NRS.state.lastBlock, NRS.handleInitialBlocks);
-					if (NRS.account) {
-						NRS.getInitialTransactions();
-						NRS.getAccountInfo();
-					}
-				} else if (previousLastBlock != NRS.state.lastBlock) {
-					NRS.tempBlocks = [];
-					if (NRS.account) {
-						NRS.getAccountInfo();
-					}
-					NRS.getBlock(NRS.state.lastBlock, NRS.handleNewBlocks);
-					if (NRS.account) {
-						NRS.getNewTransactions();
-						NRS.updateApprovalRequests();
-					}
+				if (response.isLightClient) {
+					NRS.sendRequest("getBlocks", {
+						"firstIndex": 0, "lastIndex": 0
+					}, function(proxyBlocksResponse) {
+						if (proxyBlocksResponse.errorCode) {
+							NRS.serverConnect = false;
+							$.growl($.t("server_connection_error") + " " + proxyBlocksResponse.errorDescription.escapeHTML());
+						} else {
+							_prevLastProxyBlock = NRS.lastProxyBlock;
+							NRS.lastProxyBlock = proxyBlocksResponse.blocks[0].block;
+							NRS.lastProxyBlockHeight = proxyBlocksResponse.blocks[0].height;
+							NRS.handleBlockchainStatus(response, callback);
+						}
+					}, false);
 				} else {
-					if (NRS.account) {
-						NRS.getUnconfirmedTransactions(function(unconfirmedTransactions) {
-							NRS.handleIncomingTransactions(unconfirmedTransactions, false);
-						});
-					}
-				}
-				if (NRS.account && !_firstTimeAfterLoginRun) {
-					//Executed ~30 secs after login, can be used for tasks needing this condition state
-					_firstTimeAfterLoginRun = true;
+					NRS.handleBlockchainStatus(response, callback);
 				}
 
-				if (callback) {
-					callback();
-				}
 			}
 			/* Checks if the client is connected to active peers */
 			NRS.checkConnected();

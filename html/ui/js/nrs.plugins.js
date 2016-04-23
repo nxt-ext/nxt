@@ -149,7 +149,7 @@ var NRS = (function(NRS, $, undefined) {
 		var plugin = NRS.plugins[pluginId];
 		var pluginNRSVersion = plugin.manifest["nrsVersion"];
 		var pvList = pluginNRSVersion.split('.');
-		var currentNRSVersion = NRS.state.version.replace(/[a-zA-Z]/g,'');
+		var currentNRSVersion = NRS.appVersion.replace(/[a-zA-Z]/g,'');
 		var cvList = currentNRSVersion.split('.');
         var versionCompare = NRS.versionCompare(pluginNRSVersion, currentNRSVersion);
 		if (versionCompare == 0) {

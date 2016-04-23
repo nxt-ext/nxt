@@ -20,6 +20,7 @@ import nxt.Constants;
 import nxt.peer.Peer;
 import nxt.util.Convert;
 import nxt.util.JSON;
+import nxt.util.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -190,6 +191,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         @Override
         public void onFailure(Response response, Throwable failure) {
             super.onFailure(response, failure);
+            Logger.logErrorMessage("proxy failed", failure);
             APIProxy.getInstance().blacklistHost(response.getRequest().getHost());
         }
     }

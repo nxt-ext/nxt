@@ -35,7 +35,7 @@ var NRS = (function(NRS, $) {
 					callback(response);
 				}
 			}
-		}, true, true);
+		}, true, !NRS.state.isLightClient);
 	};
 
 	NRS.handleInitialBlocks = function(response) {
@@ -82,7 +82,7 @@ var NRS = (function(NRS, $) {
 	NRS.handleNewBlocks = function(response) {
 		if (NRS.downloadingBlockchain) {
 			//new round started...
-			if (NRS.tempBlocks.length == 0 && NRS.state.lastBlock != response.block) {
+			if (NRS.tempBlocks.length == 0 && NRS.getLastBlock() != response.block) {
 				return;
 			}
 		}
