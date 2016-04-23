@@ -1485,7 +1485,7 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
         $.ajax({
-            url: NRS.server + "/nxt?requestType=broadcastTransaction",
+            url: NRS.server + "/nxt-proxy?requestType=broadcastTransaction",
             crossDomain: true,
             dataType: "json",
             type: "POST",

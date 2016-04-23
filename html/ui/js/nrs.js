@@ -123,6 +123,13 @@ var NRS = (function(NRS, $, undefined) {
 				if (key == "version") {
 					NRS.appVersion = response[key];
 				}
+				if (key == "isLightClient") {
+					NRS.isLocalHost = !response[key];
+					NRS.logProperty("NRS.isLocalHost");
+					if (!NRS.isLocalHost) {
+						$(".remote_warning").show();
+					}
+				}
 			}
 
 			if (!isTestnet) {
@@ -922,6 +929,8 @@ NRS.addPagination = function () {
 				} else if (!NRS.accountInfo.publicKey) {
                     var warning = NRS.publicKey != 'undefined' ? $.t("public_key_not_announced_warning", { "public_key": NRS.publicKey }) : $.t("no_public_key_warning");
 					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(warning + " " + $.t("public_key_actions")).show();
+				} else if (NRS.state.isLightClient) {
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
 				} else {
 					$("#dashboard_message").hide();
 				}
