@@ -23,6 +23,7 @@ import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
 import nxt.env.ServerStatus;
 import nxt.http.API;
+import nxt.http.APIProxy;
 import nxt.peer.Peers;
 import nxt.user.Users;
 import nxt.util.Convert;
@@ -370,6 +371,7 @@ public final class Nxt {
                 PrunableMessage.init();
                 TaggedData.init();
                 Peers.init();
+                APIProxy.init();
                 Generator.init();
                 AddOns.init();
                 API.init();

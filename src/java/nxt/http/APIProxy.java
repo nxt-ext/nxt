@@ -20,8 +20,12 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
+import nxt.util.Logger;
+import nxt.util.ThreadPool;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +33,7 @@ public class APIProxy {
     private static APIProxy instance = new APIProxy();
 
     public static final boolean enableAPIProxy = Nxt.getBooleanProperty("nxt.enableAPIProxy");
+    public static final int blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod") / 1000;
 
     private String currentPeerHost;
 
@@ -36,9 +41,28 @@ public class APIProxy {
 
     private ConcurrentHashMap<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
 
+    private static final Runnable peerUnBlacklistingThread = () -> {
+        int curTime = Nxt.getEpochTime();
+        instance.blacklistedPeers.entrySet().removeIf((entry) -> {
+            if (entry.getValue() < curTime) {
+                Logger.logDebugMessage("Unblacklisting API peer " + entry.getKey());
+                return true;
+            }
+            return false;
+        });
+    };
+
+    static{
+        if (!Constants.isOffline) {
+            ThreadPool.scheduleThread("APIProxyPeerUnBlacklisting", peerUnBlacklistingThread, blacklistingPeriod);
+        }
+    }
+
     private APIProxy() {
         randomGenerator = new Random();
     }
+
+    public static void init() {}
 
     public static APIProxy getInstance() {
         return instance;
@@ -64,6 +88,14 @@ public class APIProxy {
         return peer;
     }
 
+    public boolean setServingPeer(Peer peer) {
+        if (peer != null && peer.getState() == Peer.State.CONNECTED && isOpenAPIPeer(peer)) {
+            currentPeerHost = peer.getHost();
+            return true;
+        }
+        return false;
+    }
+
     public static boolean isActivated() {
         return enableAPIProxy && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isLightClient || Constants.isOffline);
     }
@@ -72,7 +104,7 @@ public class APIProxy {
         if (host.equals(currentPeerHost)) {
             currentPeerHost = null;
         }
-        blacklistedPeers.put(host, Nxt.getEpochTime() + 10*60);
+        blacklistedPeers.put(host, Nxt.getEpochTime() + blacklistingPeriod);
     }
 
     private Peer getRandomAPIPeer() {
@@ -86,7 +118,7 @@ public class APIProxy {
         return peers.get(index);
     }
 
-    private boolean isOpenAPIPeer(Peer peer) {
+    public static boolean isOpenAPIPeer(Peer peer) {
         return peer.providesService(Peer.Service.API) || peer.providesService(Peer.Service.API_SSL);
         //return peer.providesService(Peer.Service.API);
     }

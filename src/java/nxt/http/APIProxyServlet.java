@@ -46,7 +46,6 @@ import java.util.Set;
 public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<String> NOT_FORWARDED_REQUESTS;
     private static final Set<APITag> NOT_FORWARDED_TAGS;
-    private static final String PROXY_REQUEST_ERROR = APIProxyServlet.class.getName() + ".proxyRequestError";
 
     static {
         Set<String> requests = new HashSet<>();
@@ -66,7 +65,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
     private APIServlet apiServlet;
 
-    static void initClass() {}
+    static void initClass() {
+        APIProxy.getInstance();
+    }
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -85,8 +86,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             }
         }
     }
-
-
 
     @Override
     protected void addProxyHeaders(HttpServletRequest clientRequest, Request proxyRequest) {

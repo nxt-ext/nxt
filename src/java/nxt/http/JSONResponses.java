@@ -391,6 +391,22 @@ public final class JSONResponses {
         PROXY_ADMIN_PASSWORD_DETECTED = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware PEER_NOT_CONNECTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Peer not connected");
+        PEER_NOT_CONNECTED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PEER_NOT_OPEN_API;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Peer is not providing open API");
+        PEER_NOT_OPEN_API = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);
