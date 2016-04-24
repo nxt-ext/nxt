@@ -24,6 +24,7 @@ import nxt.util.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.proxy.AsyncMiddleManServlet;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
@@ -34,11 +35,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<String> NOT_FORWARDED_REQUESTS;
@@ -110,8 +113,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         if (Constants.isOffline) {
             //test only
             //uri.append("http://198.46.193.111:6876/nxt");
-            uri.append("https://174.140.168.136:6877/nxt");
+            //uri.append("https://174.140.168.136:6877/nxt");
             //uri.append("http://nrs.scripterron.org:6876/nxt");
+            uri.append("http://petko.ddns.net:6876/nxt");
         } else {
             Peer servingPeer = APIProxy.getInstance().getServingPeer();
             boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
@@ -135,6 +139,23 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         }
         URI rewrittenURI = URI.create(uri.toString()).normalize();
         return rewrittenURI.toString();
+    }
+
+    @Override
+    protected void onClientRequestFailure(HttpServletRequest clientRequest, Request proxyRequest,
+                                          HttpServletResponse proxyResponse, Throwable failure) {
+        if (failure instanceof PasswordDetectedException) {
+            PasswordDetectedException passwordDetectedException = (PasswordDetectedException) failure;
+            try (Writer writer = proxyResponse.getWriter()) {
+                JSON.writeJSONString(passwordDetectedException.errorResponse, writer);
+                sendProxyResponseError(clientRequest, proxyResponse, HttpStatus.OK_200);
+            } catch (IOException e) {
+                e.addSuppressed(failure);
+                super.onClientRequestFailure(clientRequest, proxyRequest, proxyResponse, e);
+            }
+        } else {
+            super.onClientRequestFailure(clientRequest, proxyRequest, proxyResponse, failure);
+        }
     }
 
     private boolean isForwardable(HttpServletRequest req) throws ParameterException {
@@ -217,11 +238,12 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
     }
 
-    @Override
-    protected ContentTransformer newServerResponseContentTransformer(HttpServletRequest clientRequest,
-                                                                     HttpServletResponse proxyResponse,
-                                                                     Response serverResponse) {
-        return new ErrorMessageContentTransformer(clientRequest);
+    private static class PasswordDetectedException extends RuntimeException {
+        private final JSONStreamAware errorResponse;
+
+        private PasswordDetectedException(JSONStreamAware errorResponse) {
+            this.errorResponse = errorResponse;
+        }
     }
 
     private static class PasswordFinder {
@@ -273,9 +295,10 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                     }
                     if (secretPhaseFound || adminPasswordFound) {
                         isPasswordDetected = true;
-                        clientRequest.setAttribute(PROXY_REQUEST_ERROR,
-                                secretPhaseFound ? JSONResponses.PROXY_SECRET_PHRASE_DETECTED :
-                                        JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
+                        JSONStreamAware error = secretPhaseFound ? JSONResponses.PROXY_SECRET_PHRASE_DETECTED :
+                                JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED;
+
+                        throw new PasswordDetectedException(error);
                     }
                 }
                 input.position(position);
@@ -283,29 +306,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 if (!isPasswordDetected) {
                     output.add(input);
                 }
-            }
-        }
-    }
-
-    private static class ErrorMessageContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
-
-        private final HttpServletRequest clientRequest;
-
-        private ErrorMessageContentTransformer(HttpServletRequest clientRequest) {
-            this.clientRequest = clientRequest;
-        }
-
-        @Override
-        public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
-            Object attributeObj = clientRequest.getAttribute(PROXY_REQUEST_ERROR);
-            if (attributeObj != null) {
-                if (finished) {
-                    StringWriter sw = new StringWriter();
-                    JSON.writeJSONString((JSONStreamAware) attributeObj, sw);
-                    output.add(ByteBuffer.wrap(sw.getBuffer().toString().getBytes()));
-                }
-            } else {
-                output.add(input);
             }
         }
     }
