@@ -300,9 +300,9 @@ var NRS = (function (NRS, $, undefined) {
 		return formattedWeight.escapeHTML();
 	};
 
-    NRS.formatOrderPricePerWholeQNT = function (price, decimals, decimalsToAdd) {
+    NRS.formatOrderPricePerWholeQNT = function (price, decimals, zeroPad) {
 		price = NRS.calculateOrderPricePerWholeQNT(price, decimals, true);
-		return NRS.format(price,"",decimalsToAdd);
+		return NRS.format(price, false, zeroPad);
 	};
 
     NRS.calculateOrderPricePerWholeQNT = function (price, decimals, returnAsObject) {
@@ -549,7 +549,8 @@ var NRS = (function (NRS, $, undefined) {
 		return qnt.replace(/^0+/, "");
 	};
 
-    NRS.format = function (params, no_escaping, decimalsToAdd) {
+    var zeros = "00000000";
+    NRS.format = function (params, no_escaping, zeroPad) {
         var amount;
         var mantissa;
 		if (typeof params != "object") {
@@ -576,17 +577,13 @@ var NRS = (function (NRS, $, undefined) {
 		var formattedAmount = "";
         NRS.getLocale();
         var formattedMantissa = params.mantissa.replace(".", LOCALE_DATA_DECIMAL);
-        if (decimalsToAdd) {
+        if (zeroPad) {
             var mantissaLen = formattedMantissa.length;
-            if (mantissaLen != 0) {
-                for (var g = 0; g < decimalsToAdd - mantissaLen + 1; g++) {
-                    formattedMantissa += "0";
-                }
+            if (mantissaLen > 0) {
+                formattedMantissa += zeros.substr(0, zeroPad - mantissaLen + 1);
             } else {
-                for (var h = 0; h < decimalsToAdd; h++) {
-                    formattedMantissa += "0";
-                }
-                if (decimalsToAdd != 0) {
+                formattedMantissa += zeros.substr(0, zeroPad);
+                if (zeroPad != 0) {
                     formattedMantissa = LOCALE_DATA_DECIMAL + formattedMantissa;
                 }
             }
@@ -606,11 +603,11 @@ var NRS = (function (NRS, $, undefined) {
         return output;
 	};
 
-    NRS.formatQuantity = function (quantity, decimals, no_escaping, decimalsToAdd) {
-		return NRS.format(NRS.convertToQNTf(quantity, decimals, true), no_escaping, decimalsToAdd);
+    NRS.formatQuantity = function (quantity, decimals, no_escaping, zeroPad) {
+		return NRS.format(NRS.convertToQNTf(quantity, decimals, true), no_escaping, zeroPad);
 	};
 
-    NRS.formatAmount = function (amount, round, no_escaping, decimals) {
+    NRS.formatAmount = function (amount, round, no_escaping, zeroPad) {
         if (typeof amount == "undefined") {
             return "0";
         } else if (typeof amount == "string") {
@@ -650,7 +647,7 @@ var NRS = (function (NRS, $, undefined) {
             "negative": negative,
             "amount": amount,
             "mantissa": mantissa
-        }, no_escaping, decimals);
+        }, no_escaping, zeroPad);
     };
     
     NRS.getNumberOfDecimals = function(rows, key, callback) {

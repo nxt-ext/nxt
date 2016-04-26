@@ -25,6 +25,11 @@ QUnit.test("format", function (assert) {
     assert.equal(NRS.format("-12345", true), Number("-12345").toLocaleString(), "neg.not.escaped");
     assert.equal(NRS.format("-12345.67", true), Number("-12345.67").toLocaleString(), "decimal.not.good"); // bug ?
     assert.equal(NRS.format({ amount: 1234, negative: '-', mantissa: ".567"}, true), Number(-1234.567).toLocaleString(), "object");
+    assert.equal(NRS.format("12.34", false, 4), "12.3400", "zero.pad");
+    assert.equal(NRS.format("12", false, 4), "12.0000", "zero.pad.whole");
+    assert.equal(NRS.format("12.", false, 4), "12.0000", "zero.pad.whole");
+    assert.equal(NRS.format("12.34567", false, 4), "12.34567", "zero.pad.not.necessary");
+    assert.equal(NRS.format("12", false, 0), "12", "zero.to.pad");
 });
 
 QUnit.test("formatAmount", function (assert) {
@@ -158,12 +163,9 @@ QUnit.test("formatAmount", function (assert) {
 
 QUnit.test("formatTimestamp", function (assert) {
     var date;
+    NRS.getLocale("en-US");
     date = new Date(0);
     assert.equal(NRS.formatTimestamp(0, true, true), date.toLocaleDateString(), "start.date");
-    date = new Date(0);
-    assert.equal(NRS.formatTimestamp(0, false, true), date.toLocaleDateString() + " " + "1:00:00 AM", "start.date.time");
-    date = new Date("2/14/2009 12:31:30");
-    assert.equal(NRS.formatTimestamp(1234567890000, false, true), date.toLocaleDateString() + " " + date.toLocaleTimeString() + " AM", "start.date");
 });
 
 QUnit.test("getAccountLink", function (assert) {
