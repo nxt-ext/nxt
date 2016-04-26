@@ -905,7 +905,7 @@ var NRS = (function (NRS, $, undefined) {
         var backLink = $(".back-link");
         if (NRS.modalStack.length > 0) {
             var backModalInfo = NRS.modalStack[NRS.modalStack.length - 1];
-            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action");
+            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action dgs_show_picture_modal_action_purchase dgs_show_picture_modal_action_product");
             backLink.addClass(backModalInfo.class);
             backLink.data(backModalInfo.key, backModalInfo.value);
             backLink.data("back", "true");
@@ -1605,21 +1605,6 @@ var NRS = (function (NRS, $, undefined) {
             e.preventDefault();
             return false;
         }
-    };
-
-    NRS.getUrlParameter = function (param) {
-		var url = window.location.search.substring(1);
-		var urlParams = url.split('&');
-        for (var i = 0; i < urlParams.length; i++) {
-			var paramKeyValue = urlParams[i].split('=');
-            if (paramKeyValue.length != 2) {
-                continue;
-            }
-            if (paramKeyValue[0] == param) {
-				return paramKeyValue[1];
-			}
-		}
-		return false;
     };
 
 	// http://stackoverflow.com/questions/12518830/java-string-getbytesutf8-javascript-analog
