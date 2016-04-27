@@ -61,4 +61,8 @@ public class JavaScriptBridge {
             return JSON.toJSONString(response);
         }
     }
+
+    public String getAdminPassword() {
+        return API.adminPassword;
+    }
 }
