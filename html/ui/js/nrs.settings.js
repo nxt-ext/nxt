@@ -630,6 +630,13 @@ var NRS = (function(NRS, $) {
 		NRS.applySettings(key);
 	};
 
+	NRS.getAdminPassword = function() {
+		if (window.java) {
+			return window.java.getAdminPassword();
+		}
+		return NRS.settings.admin_password;
+	};
+
 	$("#settings_box select, #welcome_panel select[name='language'], #settings_admin_password").on("change", function(e) {
 		e.preventDefault();
         NRS.updateSettings($(this).attr("name"), $(this).val());
