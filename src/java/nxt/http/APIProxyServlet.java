@@ -54,6 +54,10 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         requests.add("getTime");
         requests.add("getBlockchainStatus");
         requests.add("getState");
+        requests.add("getForging");
+        requests.add("startForging");
+        requests.add("stopForging");
+
         NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
         Set<APITag> tags = new HashSet<>();

@@ -1757,5 +1757,18 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
+    NRS.escapeObjectStrings = function (obj) {
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                var val = obj[key];
+                if (typeof val === 'string') {
+                    obj[key] = String(val).escapeHTML();
+                } else if (typeof val === 'object') {
+                    NRS.escapeObjectStrings(obj[key]);
+                }
+            }
+        }
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

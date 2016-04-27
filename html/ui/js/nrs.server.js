@@ -388,6 +388,7 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
+            NRS.escapeObjectStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -412,6 +413,7 @@ var NRS = (function (NRS, $, undefined) {
                     NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
                 }
             } else {
+
                 if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
                     response.errorDescription = NRS.translateServerError(response);
                     delete response.fullHash;
