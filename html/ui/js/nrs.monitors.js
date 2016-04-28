@@ -79,7 +79,7 @@ var NRS = (function(NRS, $) {
         });
         var params = {
             "account": NRS.accountRS,
-            "adminPassword": NRS.settings.admin_password,
+            "adminPassword": NRS.getAdminPassword(),
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         };
@@ -127,8 +127,8 @@ var NRS = (function(NRS, $) {
         if (property) {
             $("#stop_monitor_property").val(property);
         }
-        if (NRS.settings.admin_password) {
-            $("#stop_monitor_admin_password").val(NRS.settings.admin_password);
+        if (NRS.getAdminPassword()) {
+            $("#stop_monitor_admin_password").val(NRS.getAdminPassword());
         }
     });
 

@@ -216,7 +216,7 @@ var NRS = (function(NRS, $) {
     };
 
     function getShufflers(callback) {
-        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.settings.admin_password, "includeParticipantState": true},
+        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.getAdminPassword(), "includeParticipantState": true},
             function (shufflers) {
                 if (isErrorResponse(shufflers)) {
                     $.growl($.t("cannot_check_shufflers_status") + " " + shufflers.errorDescription.escapeHTML());

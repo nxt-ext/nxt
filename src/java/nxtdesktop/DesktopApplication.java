@@ -28,24 +28,16 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import netscape.javascript.JSObject;
-import nxt.Block;
-import nxt.BlockchainProcessor;
-import nxt.Nxt;
-import nxt.TaggedData;
-import nxt.Transaction;
-import nxt.TransactionProcessor;
+import nxt.*;
 import nxt.http.API;
 import nxt.util.Convert;
-import nxt.util.JSON;
 import nxt.util.Logger;
 import nxt.util.TrustAllSSLProvider;
-import org.json.simple.JSONObject;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -119,7 +111,7 @@ public class DesktopApplication extends Application {
         loadWorker.stateProperty().addListener(
                 (ov, oldState, newState) -> {
                     JSObject window = (JSObject)webEngine.executeScript("window");
-                    window.setMember("java", this);
+                    window.setMember("java", new JavaScriptBridge());
                     Locale locale = Locale.getDefault();
                     String language = locale.getLanguage().toLowerCase() + "-" + locale.getCountry().toUpperCase();
                     window.setMember("javaFxLanguage", language);
@@ -289,50 +281,6 @@ public class DesktopApplication extends Application {
 
     public void stop() {
         System.out.println("DesktopApplication stopped"); // Should never happen
-    }
-
-    public void log(String message) {
-        Logger.logInfoMessage(message);
-    }
-
-    // Invoked from JavaScript
-    @SuppressWarnings("unused")
-    public void openBrowser(String account) {
-        final String url = API.getWelcomePageUri().toString() + "?account=" + account;
-        Platform.runLater(() -> {
-            try {
-                Desktop.getDesktop().browse(new URI(url));
-            } catch (Exception e) {
-                Logger.logInfoMessage("Cannot open " + API.getWelcomePageUri().toString() + " error " + e.getMessage());
-            }
-        });
-    }
-
-    // Invoked from JavaScript
-    @SuppressWarnings("unused")
-    public String readContactsFile() {
-        String fileName = "contacts.json";
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(Paths.get(Nxt.getUserHomeDir(), fileName));
-        } catch (IOException e) {
-            Logger.logInfoMessage("Cannot read file " + fileName + " error " + e.getMessage());
-            JSONObject response = new JSONObject();
-            response.put("error", "contacts_file_not_found");
-            response.put("file", fileName);
-            response.put("folder", Nxt.getUserHomeDir());
-            response.put("type", "1");
-            return JSON.toJSONString(response);
-        }
-        try {
-            return new String(bytes, "utf8");
-        } catch (UnsupportedEncodingException e) {
-            Logger.logInfoMessage("Cannot parse file " + fileName + " content error " + e.getMessage());
-            JSONObject response = new JSONObject();
-            response.put("error", "unsupported_encoding");
-            response.put("type", "2");
-            return JSON.toJSONString(response);
-        }
     }
 
     private void growl(String msg) {
