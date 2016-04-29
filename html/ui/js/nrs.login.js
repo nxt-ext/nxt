@@ -186,10 +186,12 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.switchAccount = function(account) {
 		NRS.setDecryptionPassword("");
 		NRS.setPassword("");
-		$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
-		NRS.login(false, account, function() {
-			$.growl($.t("switched_to_account", { account: account }))
-		}, true);
+		$("#remember_password").prop("checked", false);
+        $("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
+        NRS.goToPage("dashboard");
+        NRS.login(false, account, function() {
+            $.growl($.t("switched_to_account", { account: account }))
+        }, true);
 	};
 	
 	$("#loginButtons").on('click',function(e) {
@@ -376,18 +378,16 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.checkIfOnAFork();
 					}
 					NRS.logConsole("User Agent: " + String(navigator.userAgent));
-					if (!isAccountSwitch) {
-						if (navigator.userAgent.indexOf('Safari') != -1 &&
-							navigator.userAgent.indexOf('Chrome') == -1 &&
-							navigator.userAgent.indexOf('JavaFX') == -1) {
-							// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
-							NRS.createDatabase("NRS_USER_DB");
-							$.growl($.t("nrs_safari_no_account_based_db"), {
-								"type": "danger"
-							});
-						} else {
-							NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
-						}
+					if (navigator.userAgent.indexOf('Safari') != -1 &&
+						navigator.userAgent.indexOf('Chrome') == -1 &&
+						navigator.userAgent.indexOf('JavaFX') == -1) {
+						// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+						NRS.createDatabase("NRS_USER_DB");
+						$.growl($.t("nrs_safari_no_account_based_db"), {
+							"type": "danger"
+						});
+					} else {
+						NRS.createDatabase("NRS_USER_DB_" + String(NRS.account));
 					}
 					if (callback) {
 						callback();
