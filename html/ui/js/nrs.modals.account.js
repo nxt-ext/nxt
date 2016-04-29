@@ -22,8 +22,9 @@ var NRS = (function(NRS, $) {
 	NRS.userInfoModal = {
 		"user": 0
 	};
-	
-	$("body").on("click", ".show_account_modal_action, a[data-user].user_info", function(e) {
+
+	var body = $("body");
+    body.on("click", ".show_account_modal_action, a[data-user].user_info", function(e) {
 		e.preventDefault();
 		var account = $(this).data("user");
         if ($(this).data("back") == "true") {
@@ -95,8 +96,7 @@ var NRS = (function(NRS, $) {
 		}
 		var switchAccount = $("#user_info_switch_account");
         if (NRS.accountRS != account.accountRS) {
-			var click = "NRS.switchAccount(&quot;" + account.accountRS + "&quot;);";
-			switchAccount.html("<a class='btn btn-info btn-xs' onclick='" + click + "'>" + $.t("switch_account") + "</a>");
+			switchAccount.html("<a class='btn btn-info btn-xs' data-account='" + account.accountRS + "'>" + $.t("switch_account") + "</a>");
 			switchAccount.show();
 		} else {
 			switchAccount.hide();
@@ -107,6 +107,12 @@ var NRS = (function(NRS, $) {
             userInfoModal.modal("show");
         }
 	};
+
+	body.on("click", "a[data-account]", function() {
+		var account = $(this).data("account");
+		NRS.closeModal($("#user_info_modal"));
+		NRS.switchAccount(account);
+	});
 
 	var userInfoModal = $("#user_info_modal");
     userInfoModal.on("hidden.bs.modal", function() {

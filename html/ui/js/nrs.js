@@ -826,7 +826,7 @@ NRS.addPagination = function () {
 		});
 	};
 
-	NRS.getAccountInfo = function(firstRun, callback) {
+	NRS.getAccountInfo = function(firstRun, callback, isAccountSwitch) {
 		NRS.sendRequest("getAccount", {
 			"account": NRS.account,
 			"includeAssets": true,
@@ -888,8 +888,9 @@ NRS.addPagination = function () {
 					$("#dashboard_message").hide();
 				}
 
-				//only show if happened within last week
-				var showAssetDifference = (!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7));
+				// only show if happened within last week and not during account switch
+				var showAssetDifference = !isAccountSwitch &&
+					((!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7)));
 
 				NRS.storageSelect("data", [{
 					"id": "asset_balances"
