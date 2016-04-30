@@ -29,7 +29,7 @@ String.prototype.escapeHTML = function() {
 };
 
 String.prototype.unescapeHTML = function() {
-	return String(this).replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace('&quot;', '"').replace('&#39;', "'").replace('&#x2F;', "/");
+	return String(this).replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 };
 
 String.prototype.nl2br = function() {
