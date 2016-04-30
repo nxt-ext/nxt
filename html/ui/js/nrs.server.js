@@ -304,7 +304,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
+        if ((!NRS.isLocalHost || data.doNotSign || NRS.state.apiProxy) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
             } else {
