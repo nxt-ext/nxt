@@ -175,9 +175,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             throw new ParameterException(JSONResponses.PROXY_MISSING_REQUEST_TYPE);
         }
 
-        APIServlet.APIRequestHandler apiRequestHandler = apiServlet.apiRequestHandlers.get(requestType);
+        APIServlet.APIRequestHandler apiRequestHandler = APIServlet.apiRequestHandlers.get(requestType);
         if (apiRequestHandler == null) {
-            if (apiServlet.disabledRequestHandlers.containsKey(requestType)) {
+            if (APIServlet.disabledRequestHandlers.containsKey(requestType)) {
                 throw new ParameterException(JSONResponses.ERROR_DISABLED);
             } else {
                 throw new ParameterException(JSONResponses.ERROR_INCORRECT_REQUEST);
