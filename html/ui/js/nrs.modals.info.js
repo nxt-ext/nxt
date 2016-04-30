@@ -44,7 +44,7 @@ var NRS = (function(NRS, $) {
 					} else if (key == "time") {
 						el.html(NRS.formatTimestamp(state[key]));
 					} else {
-						el.html(String(state[key]).escapeHTML());
+						el.html(NRS.escapeRespStr(state[key]));
 					}
 				}
 			}

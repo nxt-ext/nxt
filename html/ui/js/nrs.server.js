@@ -388,7 +388,7 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
-            NRS.escapeObjectStrings(response);
+            NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -1498,6 +1498,7 @@ var NRS = (function (NRS, $, undefined) {
                 "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment)
             }
         }).done(function (response) {
+            NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }

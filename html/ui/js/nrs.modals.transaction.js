@@ -100,7 +100,7 @@ var NRS = (function (NRS, $, undefined) {
                 "</tr></thead><tbody>";
             for (var i = 0; i < phasingParams.phasingWhitelist.length; i++) {
                 var account = NRS.convertNumericToRSAccountFormat(phasingParams.phasingWhitelist[i]);
-                rows += "<tr><td><a href='#' data-user='" + String(account).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td></tr>";
+                rows += "<tr><td><a href='#' data-user='" + NRS.escapeRespStr(account) + "' class='show_account_modal_action'>" + NRS.getAccountTitle(account) + "</a></td></tr>";
             }
             rows += "</tbody></table>";
         } else {
@@ -154,7 +154,7 @@ var NRS = (function (NRS, $, undefined) {
                 transactionDetails.height_formatted_html = NRS.getBlockLink(transactionDetails.height);
                 delete transactionDetails.height;
             }
-            $("#transaction_info_modal_transaction").html(String(transaction.transaction).escapeHTML());
+            $("#transaction_info_modal_transaction").html(NRS.escapeRespStr(transaction.transaction));
 
             $("#transaction_info_tab_link").tab("show");
 
@@ -258,7 +258,7 @@ var NRS = (function (NRS, $, undefined) {
                                 } else {
                                     message = String(transaction.attachment.message);
                                 }
-                                $output.html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + String(message).escapeHTML().nl2br() + "</div>");
+                                $output.html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + NRS.escapeRespStr(message).nl2br() + "</div>");
                             }
 
                             if (transaction.attachment.encryptedMessage || (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender)) {
@@ -440,14 +440,14 @@ var NRS = (function (NRS, $, undefined) {
                                     } else if (transaction.recipient == NRS.account) {
                                         message = $.t("alias_sale_direct_offer", {
                                             "nxt": NRS.formatAmount(transaction.attachment.priceNQT)
-                                        }) + " <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
+                                        }) + " <a href='#' data-alias='" + NRS.escapeRespStr(transaction.attachment.alias) + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
                                     } else if (typeof transaction.recipient == "undefined") {
                                         message = $.t("alias_sale_indirect_offer", {
                                             "nxt": NRS.formatAmount(transaction.attachment.priceNQT)
-                                        }) + " <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
+                                        }) + " <a href='#' data-alias='" + NRS.escapeRespStr(transaction.attachment.alias) + "' data-toggle='modal' data-target='#buy_alias_modal'>" + $.t("buy_it_q") + "</a>";
                                     } else if (transaction.senderRS == NRS.accountRS) {
                                         if (transaction.attachment.priceNQT != "0") {
-                                            message = $.t("your_alias_sale_offer") + " <a href='#' data-alias='" + String(transaction.attachment.alias).escapeHTML() + "' data-toggle='modal' data-target='#cancel_alias_sale_modal'>" + $.t("cancel_sale_q") + "</a>";
+                                            message = $.t("your_alias_sale_offer") + " <a href='#' data-alias='" + NRS.escapeRespStr(transaction.attachment.alias) + "' data-toggle='modal' data-target='#cancel_alias_sale_modal'>" + $.t("cancel_sale_q") + "</a>";
                                         }
                                     } else {
                                         message = $.t("error_alias_sale_different_account");
@@ -541,7 +541,7 @@ var NRS = (function (NRS, $, undefined) {
                                 "description": transaction.attachment.description
                             };
                             data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
-                            $("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
+                            $("#transaction_info_callout").html("<a href='#' data-goto-asset='" + NRS.escapeRespStr(transaction.transaction) + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
                             infoTable.find("tbody").append(NRS.createInfoTable(data));
                             infoTable.show();
@@ -809,13 +809,13 @@ var NRS = (function (NRS, $, undefined) {
                                             callout = $.t("incorrect_purchase");
                                         }
                                     } else {
-                                        callout = String(purchase.errorDescription).escapeHTML();
+                                        callout = NRS.escapeRespStr(purchase.errorDescription);
                                     }
                                 } else {
                                     if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
                                         if (purchase.pending) {
                                             if (NRS.account == transaction.recipient) {
-                                                callout = "<a href='#' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + String(transaction.transaction).escapeHTML() + "'>" + $.t("deliver_goods_q") + "</a>";
+                                                callout = "<a href='#' data-toggle='modal' data-target='#dgs_delivery_modal' data-purchase='" + NRS.escapeRespStr(transaction.transaction) + "'>" + $.t("deliver_goods_q") + "</a>";
                                             } else {
                                                 callout = $.t("waiting_on_seller");
                                             }
@@ -890,7 +890,7 @@ var NRS = (function (NRS, $, undefined) {
                                     if (purchase.refundNQT) {
                                         callout = $.t("purchase_refunded");
                                     } else if (!purchase.feedbackNote) {
-                                        callout = $.t("goods_received") + " <a href='#' data-toggle='modal' data-target='#dgs_feedback_modal' data-purchase='" + String(transaction.attachment.purchase).escapeHTML() + "'>" + $.t("give_feedback_q") + "</a>";
+                                        callout = $.t("goods_received") + " <a href='#' data-toggle='modal' data-target='#dgs_feedback_modal' data-purchase='" + NRS.escapeRespStr(transaction.attachment.purchase) + "'>" + $.t("give_feedback_q") + "</a>";
                                     }
                                 } else if (NRS.account == purchase.seller && purchase.refundNQT) {
                                     callout = $.t("purchase_refunded");
@@ -937,7 +937,7 @@ var NRS = (function (NRS, $, undefined) {
                                             }
                                         } else {
                                             if (!purchase.refundNQT) {
-                                                callout = "<a href='#' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + String(transaction.attachment.purchase).escapeHTML() + "'>" + $.t("refund_this_purchase_q") + "</a>";
+                                                callout = "<a href='#' data-toggle='modal' data-target='#dgs_refund_modal' data-purchase='" + NRS.escapeRespStr(transaction.attachment.purchase) + "'>" + $.t("refund_this_purchase_q") + "</a>";
                                             } else {
                                                 callout = $.t("purchase_refunded");
                                             }
@@ -1158,13 +1158,13 @@ var NRS = (function (NRS, $, undefined) {
                     var infoCallout = $("#transaction_info_callout");
                     infoCallout.html("");
                     if (currency != null && NRS.isExchangeable(currency.type)) {
-                        infoCallout.append("<a href='#' data-goto-currency='" + String(currency.code).escapeHTML() + "'>" + $.t('exchange_booth') + "</a><br/>");
+                        infoCallout.append("<a href='#' data-goto-currency='" + NRS.escapeRespStr(currency.code) + "'>" + $.t('exchange_booth') + "</a><br/>");
                     }
                     if (currency != null && NRS.isReservable(currency.type)) {
-                        infoCallout.append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-name='" + String(currency.name).escapeHTML() + "' data-code='" + String(currency.code).escapeHTML() + "' data-ressupply='" + String(currency.reserveSupply).escapeHTML() + "' data-initialsupply='" + String(currency.initialSupply).escapeHTML() + "' data-decimals='" + String(currency.decimals).escapeHTML() + "' data-minreserve='" + String(currency.minReservePerUnitNQT).escapeHTML() + "' data-issueheight='" + String(currency.issuanceHeight).escapeHTML() + "'>View Founders</a><br/>");
+                        infoCallout.append("<a href='#' data-toggle='modal' data-target='#currency_founders_modal' data-currency='" + NRS.escapeRespStr(currency.currency) + "' data-name='" + NRS.escapeRespStr(currency.name) + "' data-code='" + NRS.escapeRespStr(currency.code) + "' data-ressupply='" + NRS.escapeRespStr(currency.reserveSupply) + "' data-initialsupply='" + NRS.escapeRespStr(currency.initialSupply) + "' data-decimals='" + NRS.escapeRespStr(currency.decimals) + "' data-minreserve='" + NRS.escapeRespStr(currency.minReservePerUnitNQT) + "' data-issueheight='" + NRS.escapeRespStr(currency.issuanceHeight) + "'>View Founders</a><br/>");
                     }
                     if (currency != null) {
-                        infoCallout.append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + String(currency.code).escapeHTML() + "'  data-i18n='Currency Distribution'>Currency Distribution</a>");
+                        infoCallout.append("<a href='#' data-toggle='modal' data-target='#currency_distribution_modal' data-code='" + NRS.escapeRespStr(currency.code) + "'  data-i18n='Currency Distribution'>Currency Distribution</a>");
                     }
                     infoCallout.show();
 
@@ -1322,7 +1322,7 @@ var NRS = (function (NRS, $, undefined) {
                             message = String(transaction.attachment.message);
                         }
 
-                        $("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
+                        $("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + NRS.escapeRespStr(message).nl2br() + "</div></div>");
                     }
 
                     if (transaction.attachment.encryptedMessage || (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender)) {

@@ -79,7 +79,7 @@ var NRS = (function (NRS, $, undefined) {
         $("#buy_currency_offers").html($.t("offers_to_buy_currency_param", { currency: currencyCode}));
         $("#sell_currency_with_nxt").html($.t("sell_currency_param", { currency: currencyCode}));
         $("#sell_currency_offers").html($.t("offers_to_sell_currency_param", { currency: currencyCode}));
-        $(".currency_code").html(String(currencyCode).escapeHTML());
+        $(".currency_code").html(NRS.escapeRespStr(currencyCode));
 
         var currencyId = 0;
         async.waterfall([
@@ -93,11 +93,11 @@ var NRS = (function (NRS, $, undefined) {
                         $("#currency_account").html(NRS.getAccountLink(response, "account"));
                         currencyId = response.currency;
                         $("#currency_id").html(NRS.getTransactionLink(currencyId));
-                        $("#currency_name").html(String(response.name).escapeHTML());
-                        $("#currency_code").html(String(response.code).escapeHTML());
+                        $("#currency_name").html(NRS.escapeRespStr(response.name));
+                        $("#currency_code").html(NRS.escapeRespStr(response.code));
                         $("#currency_current_supply").html(NRS.convertToQNTf(response.currentSupply, response.decimals).escapeHTML());
                         $("#currency_max_supply").html(NRS.convertToQNTf(response.maxSupply, response.decimals).escapeHTML());
-                        $("#currency_decimals").html(String(response.decimals).escapeHTML());
+                        $("#currency_decimals").html(NRS.escapeRespStr(response.decimals));
                         $("#currency_description").html(String(response.description).autoLink());
                         var buyCurrencyButton = $("#buy_currency_button");
                         buyCurrencyButton.data("currency", currencyId);
@@ -108,14 +108,14 @@ var NRS = (function (NRS, $, undefined) {
                         if (!refresh) {
                             var msLinksCallout = $("#ms_links_callout");
                             msLinksCallout.html("");
-                            msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("transfer") + "</a>");
+                            msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + NRS.escapeRespStr(response.currency) + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("transfer") + "</a>");
                             msLinksCallout.append(" | ");
-                            msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(response.currency).escapeHTML() + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("offer") + "</a>");
+                            msLinksCallout.append("<a href='#' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + NRS.escapeRespStr(response.currency) + "' data-code='" + response.code + "' data-decimals='" + response.decimals + "'>" + $.t("offer") + "</a>");
                         }
                     } else {
                         $("#MSnoCode").show();
                         $("#MScode").hide();
-                        $.growl(response.errorDescription.escapeHTML(), {
+                        $.growl(NRS.escapeRespStr(response.errorDescription), {
                             "type": "danger"
                         });
                     }
@@ -184,12 +184,12 @@ var NRS = (function (NRS, $, undefined) {
         var rows = "";
         for (var i = 0; i < response.currencies.length; i++) {
             var currency = response.currencies[i];
-            var name = String(currency.name).escapeHTML();
-            var currencyId = String(currency.currency).escapeHTML();
-            var code = String(currency.code).escapeHTML();
+            var name = NRS.escapeRespStr(currency.name);
+            var currencyId = NRS.escapeRespStr(currency.currency);
+            var code = NRS.escapeRespStr(currency.code);
             var resSupply = NRS.convertToQNTf(currency.reserveSupply, currency.decimals);
-            var decimals = String(currency.decimals).escapeHTML();
-            var minReserve = String(currency.minReservePerUnitNQT).escapeHTML();
+            var decimals = NRS.escapeRespStr(currency.decimals);
+            var minReserve = NRS.escapeRespStr(currency.minReservePerUnitNQT);
             var typeIcons = NRS.getTypeIcons(currency.type);
             rows += "<tr>" +
             "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
@@ -696,10 +696,10 @@ var NRS = (function (NRS, $, undefined) {
                     var rows = "";
                     for (var i = 0; i < response.accountCurrencies.length; i++) {
                         var currency = response.accountCurrencies[i];
-                        var currencyId = String(currency.currency).escapeHTML();
-                        var code = String(currency.code).escapeHTML();
-                        var name = String(currency.name).escapeHTML();
-                        var decimals = String(currency.decimals).escapeHTML();
+                        var currencyId = NRS.escapeRespStr(currency.currency);
+                        var code = NRS.escapeRespStr(currency.code);
+                        var name = NRS.escapeRespStr(currency.name);
+                        var decimals = NRS.escapeRespStr(currency.decimals);
                         var typeIcons = NRS.getTypeIcons(currency.type);
                         var isOfferEnabled = NRS.isExchangeable(currency.type) && (!NRS.isControllable(currency.type) || NRS.account == currency.issuerAccount);
                         //noinspection HtmlUnknownAttribute,BadExpressionStatementJS
@@ -710,8 +710,8 @@ var NRS = (function (NRS, $, undefined) {
                         "<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
                         "<td>" +
                         "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> " +
-                        "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
-                        "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (isOfferEnabled ? "" : "disabled") + " >" + $.t("offer") + "</a> " +
+                        "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + NRS.escapeRespStr(currency.currency) + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
+                        "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + NRS.escapeRespStr(currency.currency) + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (isOfferEnabled ? "" : "disabled") + " >" + $.t("offer") + "</a> " +
                         "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type) ? "" : "disabled") + " >" + $.t("claim") + "</a> " +
                         "</td>" +
                         "</tr>";
@@ -827,10 +827,10 @@ var NRS = (function (NRS, $, undefined) {
                 $("#transfer_currency_currency").val(response.currency);
                 $("#transfer_currency_decimals").val(response.decimals);
                 NRS.updateAvailableCurrency(response.currency);
-                $("#transfer_currency_units_code").html(String(response.code).escapeHTML());
+                $("#transfer_currency_units_code").html(NRS.escapeRespStr(response.code));
                 transferCurrencyModal.find(".error_message").hide();
             } else if (response.errorCode) {
-                transferCurrencyModal.find(".error_message").html(response.errorDescription.escapeHTML());
+                transferCurrencyModal.find(".error_message").html(NRS.escapeRespStr(response.errorDescription));
                 transferCurrencyModal.find(".error_message").show();
             }
         })
@@ -936,7 +936,7 @@ var NRS = (function (NRS, $, undefined) {
                     var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
                     rows += "<tr>" +
                     "<td>" + NRS.getTransactionLink(transfers[i].transfer, transfers[i].currency) + "</td>" +
-                    "<td><a href='#' data-goto-currency='" + String(transfers[i].code).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td>" +
+                    "<td><a href='#' data-goto-currency='" + NRS.escapeRespStr(transfers[i].code) + "'>" + NRS.escapeRespStr(transfers[i].name) + "</a></td>" +
                     "<td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td>" +
                     "<td style='" + (type == "receive" ? "color:green" : "color:red") + "'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals) + "</td>" +
                     "<td>" + NRS.getAccountLink(transfers[i], "recipient") + "</td>" +

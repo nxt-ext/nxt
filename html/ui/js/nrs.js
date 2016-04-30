@@ -332,7 +332,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
-                $.growl($.t("server_connection_error") + " " + response.errorDescription.escapeHTML());
+                $.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(response.errorDescription));
 			} else {
 				if (response.isLightClient) {
 					NRS.sendRequest("getBlocks", {
@@ -340,7 +340,7 @@ var NRS = (function(NRS, $, undefined) {
 					}, function(proxyBlocksResponse) {
 						if (proxyBlocksResponse.errorCode) {
 							NRS.serverConnect = false;
-							$.growl($.t("server_connection_error") + " " + proxyBlocksResponse.errorDescription.escapeHTML());
+							$.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(proxyBlocksResponse.errorDescription));
 						} else {
 							_prevLastProxyBlock = NRS.lastProxyBlock;
 							NRS.lastProxyBlock = proxyBlocksResponse.blocks[0].block;
@@ -890,8 +890,8 @@ NRS.addPagination = function () {
 					if (NRS.downloadingBlockchain) {
 						if (NRS.newlyCreatedAccount) {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-                                "account_id": String(NRS.accountRS).escapeHTML(),
-                                "public_key": String(NRS.publicKey).escapeHTML()
+                                "account_id": NRS.escapeRespStr(NRS.accountRS),
+                                "public_key": NRS.escapeRespStr(NRS.publicKey)
                             }) + "<br/><br/>" + NRS.blockchainDownloadingMessage() +
                             "<br/><br/>" + NRS.getFundAccountLink()).show();
 						} else {
@@ -902,17 +902,17 @@ NRS.addPagination = function () {
 					} else {
                         if (NRS.publicKey == "") {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk_v2", {
-                                "account_id": String(NRS.accountRS).escapeHTML()
+                                "account_id": NRS.escapeRespStr(NRS.accountRS)
                             })).show();
                         } else {
                             $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-                                "account_id": String(NRS.accountRS).escapeHTML(),
-                                "public_key": String(NRS.publicKey).escapeHTML()
+                                "account_id": NRS.escapeRespStr(NRS.accountRS),
+                                "public_key": NRS.escapeRespStr(NRS.publicKey)
                             }) + "<br/><br/>" + NRS.getFundAccountLink()).show();
                         }
 					}
 				} else {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.accountInfo.errorDescription.escapeHTML() : $.t("error_unknown")).show();
+					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.escapeRespStr(NRS.accountInfo.errorDescription) : $.t("error_unknown")).show();
 				}
 			} else {
 				if (NRS.accountRS && NRS.accountInfo.accountRS != NRS.accountRS) {
@@ -1110,7 +1110,7 @@ NRS.addPagination = function () {
 				NRS.updateAccountControlStatus();
 
 				if (response.name) {
-					$("#account_name").html(NRS.addEllipsis(response.name.escapeHTML(), 10)).removeAttr("data-i18n");
+					$("#account_name").html(NRS.addEllipsis(NRS.escapeRespStr(response.name), 10)).removeAttr("data-i18n");
 				}
 			}
 
@@ -1130,8 +1130,8 @@ NRS.addPagination = function () {
 		var nextLesseeStatus = "";
 		if (NRS.accountInfo.nextLeasingHeightFrom < NRS.constants.MAX_INT_JAVA) {
 			nextLesseeStatus = $.t("next_lessee_status", {
-				"start": String(NRS.accountInfo.nextLeasingHeightFrom).escapeHTML(),
-				"end": String(NRS.accountInfo.nextLeasingHeightTo).escapeHTML(),
+				"start": NRS.escapeRespStr(NRS.accountInfo.nextLeasingHeightFrom),
+				"end": NRS.escapeRespStr(NRS.accountInfo.nextLeasingHeightTo),
 				"account": String(NRS.convertNumericToRSAccountFormat(NRS.accountInfo.nextLessee)).escapeHTML()
 			})
 		}
@@ -1140,17 +1140,17 @@ NRS.addPagination = function () {
 			accountLeasingLabel = $.t("leased_out");
 			accountLeasingStatus = $.t("balance_is_leased_out", {
 				"blocks": String(NRS.accountInfo.currentLeasingHeightTo - NRS.lastBlockHeight).escapeHTML(),
-				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
-				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
+				"end": NRS.escapeRespStr(NRS.accountInfo.currentLeasingHeightTo),
+				"account": NRS.escapeRespStr(NRS.accountInfo.currentLesseeRS)
 			});
 			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else if (NRS.lastBlockHeight < NRS.accountInfo.currentLeasingHeightTo) {
 			accountLeasingLabel = $.t("leased_soon");
 			accountLeasingStatus = $.t("balance_will_be_leased_out", {
 				"blocks": String(NRS.accountInfo.currentLeasingHeightFrom - NRS.lastBlockHeight).escapeHTML(),
-				"start": String(NRS.accountInfo.currentLeasingHeightFrom).escapeHTML(),
-				"end": String(NRS.accountInfo.currentLeasingHeightTo).escapeHTML(),
-				"account": String(NRS.accountInfo.currentLesseeRS).escapeHTML()
+				"start": NRS.escapeRespStr(NRS.accountInfo.currentLeasingHeightFrom),
+				"end": NRS.escapeRespStr(NRS.accountInfo.currentLeasingHeightTo),
+				"account": NRS.escapeRespStr(NRS.accountInfo.currentLesseeRS)
 			});
 			$("#lease_balance_message").html($.t("balance_leased_out_help"));
 		} else {
@@ -1194,7 +1194,7 @@ NRS.addPagination = function () {
 				}
 				rows += "<tr>" +
 					"<td>" + NRS.getAccountLink({ lessorRS: lessor }, "lessor") + "</td>" +
-					"<td>" + String(lessorInfo.effectiveBalanceNXT).escapeHTML() + "</td>" +
+					"<td>" + NRS.escapeRespStr(lessorInfo.effectiveBalanceNXT) + "</td>" +
 					"<td><label>" + String(blocksLeft).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + blocksLeftTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
 					"<td><label>" + String(nextLessee).escapeHTML() + " <i class='fa fa-question-circle show_popover' data-toggle='tooltip' title='" + nextTooltip + "' data-placement='right' style='color:#4CAA6E'></i></label></td>" +
 				"</tr>";
@@ -1338,13 +1338,13 @@ NRS.addPagination = function () {
 						if (quantity != "0") {
 							if (parseInt(quantity) == 1) {
 								$.growl($.t("you_received_assets", {
-									"name": String(asset.name).escapeHTML()
+									"name": NRS.escapeRespStr(asset.name)
 								}), {
 									"type": "success"
 								});
 							} else {
 								$.growl($.t("you_received_assets_plural", {
-									"name": String(asset.name).escapeHTML(),
+									"name": NRS.escapeRespStr(asset.name),
 									"count": quantity
 								}), {
 									"type": "success"
@@ -1358,13 +1358,13 @@ NRS.addPagination = function () {
 						if (quantity != "0") {
 							if (parseInt(quantity) == 1) {
 								$.growl($.t("you_sold_assets", {
-									"name": String(asset.name).escapeHTML()
+									"name": NRS.escapeRespStr(asset.name)
 								}), {
 									"type": "success"
 								});
 							} else {
 								$.growl($.t("you_sold_assets_plural", {
-									"name": String(asset.name).escapeHTML(),
+									"name": NRS.escapeRespStr(asset.name),
 									"count": quantity
 								}), {
 									"type": "success"

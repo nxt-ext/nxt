@@ -168,7 +168,7 @@ var NRS = (function (NRS, $) {
 				if (options.title) {
 					var translatedTitle = NRS.getTranslatedFieldName(options.title).toLowerCase();
 					if (!translatedTitle) {
-						translatedTitle = String(options.title).escapeHTML().toLowerCase();
+						translatedTitle = NRS.escapeRespStr(options.title).toLowerCase();
 					}
 
 					return $.t("error_could_not_decrypt_var", {
@@ -352,8 +352,8 @@ var NRS = (function (NRS, $) {
 
 		var nrFields = Object.keys(fields).length;
 
-		var formEl = (options.formEl ? String(options.formEl).escapeHTML() : "#transaction_info_output_bottom");
-		var outputEl = (options.outputEl ? String(options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
+		var formEl = (options.formEl ? NRS.escapeRespStr(options.formEl) : "#transaction_info_output_bottom");
+		var outputEl = (options.outputEl ? NRS.escapeRespStr(options.outputEl) : "#transaction_info_output_bottom");
 
 		var output = "";
 
@@ -369,7 +369,7 @@ var NRS = (function (NRS, $) {
 				}
 
 				if (key in decryptedTransaction) {
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + NRS.escapeRespStr(title) + "</label>" : "") + "<div>" + NRS.escapeRespStr(decryptedTransaction[key]).nl2br() + "</div></div>";
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -421,7 +421,7 @@ var NRS = (function (NRS, $) {
 							if (title) {
 								var translatedTitle = NRS.getTranslatedFieldName(title).toLowerCase();
 								if (!translatedTitle) {
-									translatedTitle = String(title).escapeHTML().toLowerCase();
+									translatedTitle = NRS.escapeRespStr(title).toLowerCase();
 								}
 
 								data = $.t("error_could_not_decrypt_var", {
@@ -433,7 +433,7 @@ var NRS = (function (NRS, $) {
 						}
 					}
 
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + NRS.escapeRespStr(title) + "</label>" : "") + "<div>" + NRS.escapeRespStr(data).nl2br() + "</div></div>";
 				}
 			});
 		}
@@ -551,13 +551,13 @@ var NRS = (function (NRS, $) {
 					decryptedFields[key] = data;
 				} catch (err) {
 					decryptionError = true;
-					var message = String(err.message ? err.message : err);
+					var message = err.message ? err.message : err;
 
-					$form.find(".callout").html(message.escapeHTML());
+					$form.find(".callout").html(NRS.escapeRespStr(message));
 					return false;
 				}
 
-				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).autoLink().nl2br() + "</div></div>";
+				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + NRS.escapeRespStr(title) + "</label>" : "") + "<div>" + String(data).autoLink().nl2br() + "</div></div>";
 			}
 		});
 
@@ -576,7 +576,7 @@ var NRS = (function (NRS, $) {
 
 		NRS.removeDecryptionForm();
 
-		var outputEl = (_encryptedNote.options.outputEl ? String(_encryptedNote.options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
+		var outputEl = (_encryptedNote.options.outputEl ? NRS.escapeRespStr(_encryptedNote.options.outputEl) : "#transaction_info_output_bottom");
 
 		$(outputEl).append(output).show();
 

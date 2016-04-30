@@ -75,7 +75,7 @@ var NRS = (function(NRS, $) {
 				}
 			}
 			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(NRS.blocks[0].timestamp));
-			$(".nrs_current_block").empty().append(String(NRS.blocks[0].height).escapeHTML());
+			$(".nrs_current_block").empty().append(NRS.escapeRespStr(NRS.blocks[0].height));
 		}
 	};
 
@@ -174,7 +174,7 @@ var NRS = (function(NRS, $) {
 
 		block = NRS.blocks[0];
 		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
-		$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
+		$(".nrs_current_block").empty().append(NRS.escapeRespStr(block.height));
 
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
 		$("#dashboard_table").find("tr.confirmed td.confirmations").each(function() {
@@ -263,7 +263,7 @@ var NRS = (function(NRS, $) {
 			totalFees = totalFees.add(new BigInteger(block.totalFeeNQT));
 			totalTransactions += block.numberOfTransactions;
 			rows += "<tr>" +
-                "<td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td>" +
+                "<td><a href='#' data-block='" + NRS.escapeRespStr(block.height) + "' data-blockid='" + NRS.escapeRespStr(block.block) + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + NRS.escapeRespStr(block.height) + "</a></td>" +
                 "<td>" + NRS.formatTimestamp(block.timestamp) + "</td>" +
                 "<td>" + NRS.formatAmount(block.totalAmountNQT) + "</td>" +
                 "<td>" + NRS.formatAmount(block.totalFeeNQT) + "</td>" +

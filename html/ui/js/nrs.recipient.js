@@ -171,7 +171,7 @@ var NRS = (function(NRS, $) {
 					} else {
 						callback({
 							"type": "danger",
-							"message": $.t("recipient_problem") + " " + String(response.errorDescription).escapeHTML(),
+							"message": $.t("recipient_problem") + " " + NRS.escapeRespStr(response.errorDescription),
 							"account": null
 						});
 					}
@@ -231,14 +231,14 @@ var NRS = (function(NRS, $) {
 			} else {
 				if (address.guess.length == 1) {
 					callout.removeClass(classes).addClass("callout-danger").html($.t("recipient_malformed_suggestion", {
-						"recipient": "<span class='malformed_address' data-address='" + String(address.guess[0]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[0], account) + "</span>"
+						"recipient": "<span class='malformed_address' data-address='" + NRS.escapeRespStr(address.guess[0]) + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[0], account) + "</span>"
 					})).show();
 				} else if (address.guess.length > 1) {
 					var html = $.t("recipient_malformed_suggestion", {
 						"count": address.guess.length
 					}) + "<ul>";
 					for (var i = 0; i < address.guess.length; i++) {
-						html += "<li><span class='malformed_address' data-address='" + String(address.guess[i]).escapeHTML() + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[i], account) + "</span></li>";
+						html += "<li><span class='malformed_address' data-address='" + NRS.escapeRespStr(address.guess[i]) + "' onclick='NRS.correctAddressMistake(this);'>" + address.format_guess(address.guess[i], account) + "</span></li>";
 					}
 
 					callout.removeClass(classes).addClass("callout-danger").html(html).show();
@@ -344,24 +344,24 @@ var NRS = (function(NRS, $) {
 							}
 
 							callout.removeClass(classes).addClass("callout-" + response.type).html($.t("alias_account_link", {
-								"account_id": String(match[1]).escapeHTML()
+								"account_id": NRS.escapeRespStr(match[1])
 							}) + " " + response.message.escapeHTML() + " " + $.t("alias_last_adjusted", {
 								"timestamp": NRS.formatTimestamp(timestamp)
 							})).show();
 
 							if (response.type == "info" || response.type == "warning") {
-								accountInputField.val(String(match[1]).escapeHTML());
+								accountInputField.val(NRS.escapeRespStr(match[1]));
 							}
 						});
 					} else {
 						callout.removeClass(classes).addClass("callout-danger").html($.t("alias_account_no_link") + (!alias ? $.t("error_uri_empty") : $.t("uri_is", {
-							"uri": String(alias).escapeHTML()
+							"uri": NRS.escapeRespStr(alias)
 						}))).show();
 					}
 				} else if (response.aliasName) {
 					callout.removeClass(classes).addClass("callout-danger").html($.t("error_alias_empty_uri")).show();
 				} else {
-					callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? $.t("error") + ": " + String(response.errorDescription).escapeHTML() : $.t("error_alias")).show();
+					callout.removeClass(classes).addClass("callout-danger").html(response.errorDescription ? $.t("error") + ": " + NRS.escapeRespStr(response.errorDescription) : $.t("error_alias")).show();
 				}
 			}
 		});

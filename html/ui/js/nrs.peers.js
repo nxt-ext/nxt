@@ -82,24 +82,24 @@ var NRS = (function(NRS, $) {
 					rows += "<tr>";
 					rows += "<td>";
 					rows += (peer.state == 1 ? "<i class='fa fa-check-circle' style='color:#5cb85c' title='Connected'></i>" : "<i class='fa fa-times-circle' style='color:#f0ad4e' title='Disconnected'></i>");
-					rows += "&nbsp;&nbsp;" + (peer.announcedAddress ? String(peer.announcedAddress).escapeHTML() : "No name") + "</td>";
+					rows += "&nbsp;&nbsp;" + (peer.announcedAddress ? NRS.escapeRespStr(peer.announcedAddress) : "No name") + "</td>";
 					rows += "<td" + (peer.weight > 0 ? " style='font-weight:bold'" : "") + ">" + NRS.formatWeight(peer.weight) + "</td>";
 					rows += "<td>" + NRS.formatVolume(peer.downloadedVolume) + "</td>";
 					rows += "<td>" + NRS.formatVolume(peer.uploadedVolume) + "</td>";
 					rows += "<td><span class='label label-" + (NRS.versionCompare(peer.version, versionToCompare) >= 0 ? "success" : "danger") + "'>";
-					rows += (peer.application && peer.version ? String(peer.application).escapeHTML() + " " + String(peer.version).escapeHTML() : "?") + "</label></td>";
-					rows += "<td>" + (peer.platform ? String(peer.platform).escapeHTML() : "?") + "</td>";
+					rows += (peer.application && peer.version ? NRS.escapeRespStr(peer.application) + " " + NRS.escapeRespStr(peer.version) : "?") + "</label></td>";
+					rows += "<td>" + (peer.platform ? NRS.escapeRespStr(peer.platform) : "?") + "</td>";
 					rows += "<td>" + getPeerServicesLabel(peer.services) + "</td>";
 					rows += "<td style='text-align:right;'>";
 					rows += "<a class='btn btn-xs btn-default' href='#' ";
 					if (NRS.needsAdminPassword) {
-						rows += "data-toggle='modal' data-target='#connect_peer_modal' data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>";
+						rows += "data-toggle='modal' data-target='#connect_peer_modal' data-peer='" + NRS.escapeRespStr(peer.announcedAddress) + "'>";
 					} else {
-						rows += "onClick='NRS.connectPeer(\"" + String(peer.announcedAddress).escapeHTML() + "\");'>";
+						rows += "onClick='NRS.connectPeer(\"" + NRS.escapeRespStr(peer.announcedAddress) + "\");'>";
 					}
 					rows += $.t("connect") + "</a>";
 					rows += "<a class='btn btn-xs btn-default' href='#' ";
-					rows += "data-toggle='modal' data-target='#blacklist_peer_modal' data-peer='" + String(peer.announcedAddress).escapeHTML() + "'>" + $.t("blacklist") + "</a>";
+					rows += "data-toggle='modal' data-target='#blacklist_peer_modal' data-peer='" + NRS.escapeRespStr(peer.announcedAddress) + "'>" + $.t("blacklist") + "</a>";
 					rows += "</td>";
 					rows += "</tr>";
 				}

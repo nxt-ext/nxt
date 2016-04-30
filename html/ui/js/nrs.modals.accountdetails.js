@@ -27,15 +27,15 @@ var NRS = (function(NRS, $, undefined) {
         var accountBalanceWarning = $("#account_balance_warning");
         if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode != 5) {
 			$("#account_balance_table").hide();
-			accountBalanceWarning.html(String(NRS.accountInfo.errorDescription).escapeHTML()).show();
+			accountBalanceWarning.html(NRS.escapeRespStr(NRS.accountInfo.errorDescription)).show();
 		} else {
 			accountBalanceWarning.hide();
             var accountBalancePublicKey = $("#account_balance_public_key");
             if (NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
 				$("#account_balance_balance, #account_balance_unconfirmed_balance, #account_balance_effective_balance, #account_balance_guaranteed_balance, #account_balance_forged_balance").html("0 NXT");
-				accountBalancePublicKey.html(String(NRS.publicKey).escapeHTML());
+				accountBalancePublicKey.html(NRS.escapeRespStr(NRS.publicKey));
 				$("#account_balance_account_rs").html(NRS.getAccountLink(NRS, "account", undefined, undefined, true));
-				$("#account_balance_account").html(String(NRS.account).escapeHTML());
+				$("#account_balance_account").html(NRS.escapeRespStr(NRS.account));
 			} else {
 				$("#account_balance_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.balanceNQT)) + " NXT");
 				$("#account_balance_unconfirmed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.unconfirmedBalanceNQT)) + " NXT");
@@ -43,9 +43,9 @@ var NRS = (function(NRS, $, undefined) {
 				$("#account_balance_guaranteed_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.guaranteedBalanceNQT)) + " NXT");
 				$("#account_balance_forged_balance").html(NRS.formatAmount(new BigInteger(NRS.accountInfo.forgedBalanceNQT)) + " NXT");
 
-				accountBalancePublicKey.html(String(NRS.accountInfo.publicKey).escapeHTML());
+				accountBalancePublicKey.html(NRS.escapeRespStr(NRS.accountInfo.publicKey));
 				$("#account_balance_account_rs").html(NRS.getAccountLink(NRS.accountInfo, "account", undefined, undefined, true));
-				$("#account_balance_account").html(String(NRS.account).escapeHTML());
+				$("#account_balance_account").html(NRS.escapeRespStr(NRS.account));
 
 				if (!NRS.accountInfo.publicKey) {
 					accountBalancePublicKey.html("/");
