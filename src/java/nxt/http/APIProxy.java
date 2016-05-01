@@ -20,6 +20,7 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
+import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
@@ -34,6 +35,7 @@ public class APIProxy {
 
     public static final boolean enableAPIProxy = Nxt.getBooleanProperty("nxt.enableAPIProxy");
     public static final int blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod") / 1000;
+    public static final String forcedServerURL = Nxt.getStringProperty("nxt.forceAPIProxyServerURL", "");
 
     private String currentPeerHost;
 
@@ -97,7 +99,7 @@ public class APIProxy {
     }
 
     public static boolean isActivated() {
-        return enableAPIProxy && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isLightClient || Constants.isOffline);
+        return enableAPIProxy && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isLightClient);
     }
 
     public void blacklistHost(String host) {

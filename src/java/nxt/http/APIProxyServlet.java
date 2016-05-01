@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Constants;
 import nxt.peer.Peer;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -113,12 +112,8 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     protected String rewriteTarget(HttpServletRequest clientRequest) {
 
         StringBuilder uri = new StringBuilder();
-        if (Constants.isOffline) {
-            //test only
-            //uri.append("http://198.46.193.111:6876/nxt");
-            //uri.append("https://174.140.168.136:6877/nxt");
-            //uri.append("http://nrs.scripterron.org:6876/nxt");
-            uri.append("http://petko.ddns.net:6876/nxt");
+        if (!APIProxy.forcedServerURL.isEmpty()) {
+            uri.append(APIProxy.forcedServerURL);
         } else {
             Peer servingPeer = APIProxy.getInstance().getServingPeer();
             boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
