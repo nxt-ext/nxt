@@ -787,10 +787,11 @@ NRS.addPagination = function () {
 		});
 	}
 
-	NRS.createDatabase = function(dbName) {
+	NRS.createDatabase = function (dbName, asyncCallback) {
 		if (!NRS.isIndexedDBSupported()) {
 			NRS.logConsole("IndexedDB not supported by the rendering engine, using localStorage instead");
 			NRS.initLocalStorage();
+            asyncCallback(null);
 			return;
 		}
 		var schema = createSchema();
@@ -806,6 +807,7 @@ NRS.addPagination = function () {
                     NRS.logConsole("Error opening database " + error);
                     NRS.initLocalStorage();
                 }
+                asyncCallback(null);
             });
             NRS.logConsole("Opening database " + NRS.database);
 		} catch (e) {
