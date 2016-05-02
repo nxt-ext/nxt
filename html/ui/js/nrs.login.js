@@ -524,6 +524,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#center").show();
+		$("#dummyCheckbox").hide();
 	};
 
 	NRS.unlock = function() {

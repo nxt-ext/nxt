@@ -16,7 +16,7 @@
 
 <div id="lockscreen">
     <div id="old_browser_warning" style="display:none;margin-left:auto;margin-right:auto;margin-top:200px;background:white;color:black;padding:20px;width:300px;" data-i18n="old_browser_warning">You are using an old browser which this application does not support.</div>
-    
+
     <table id="center" style="display:none;width:100%;height:100%;">
         <tr><td style="text-align:center;vertical-align:middle">
             <div style="text-align: center;"><img src="/img/nxt_logo.png" alt="Nxt" width="320" height="319" style="margin-bottom:40px;" /></div>
@@ -218,5 +218,9 @@
             </div>
         </td>
         </tr>
-    </table>           
+    </table>
+    <!-- this dummy checkbox corrects rendering problem of checkboxes when using desktop application on Linux -->
+    <div id="dummyCheckbox">
+        <input type="checkbox" disabled>
+    </div>
 </div>
