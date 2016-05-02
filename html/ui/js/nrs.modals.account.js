@@ -96,7 +96,7 @@ var NRS = (function(NRS, $) {
 		}
 		var switchAccount = $("#user_info_switch_account");
         if (NRS.accountRS != account.accountRS) {
-			switchAccount.html("<a class='btn btn-info btn-xs' data-account='" + account.accountRS + "'>" + $.t("switch_account") + "</a>");
+			switchAccount.html("<a class='btn btn-info btn-xs switch-account' data-account='" + account.accountRS + "'>" + $.t("switch_account") + "</a>");
 			switchAccount.show();
 		} else {
 			switchAccount.hide();
@@ -108,7 +108,7 @@ var NRS = (function(NRS, $) {
         }
 	};
 
-	body.on("click", "a[data-account]", function() {
+	body.on("click", ".switch-account", function() {
 		var account = $(this).data("account");
 		NRS.closeModal($("#user_info_modal"));
 		NRS.switchAccount(account);
