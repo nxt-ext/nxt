@@ -524,7 +524,9 @@ var NRS = (function(NRS, $, undefined) {
 		}
 
 		$("#center").show();
-		$("#dummyCheckbox").hide();
+		if (!NRS.isShowDummyCheckbox) {
+			$("#dummyCheckbox").hide();
+		}
 	};
 
 	NRS.unlock = function() {
