@@ -24,6 +24,10 @@ var NRS = (function(NRS, $) {
 	NRS.pages.messages = function(callback) {
 		_messages = {};
 
+        $("#inline_message_form").hide();
+        $("#message_details").empty();
+        $("#no_message_selected").show();
+
 		$(".content.content-stretch:visible").width($(".page:visible").width());
 
 		NRS.sendRequest("getBlockchainTransactions+", {
