@@ -452,7 +452,7 @@ var NRS = (function(NRS, $) {
 		$langSelBoxes.val(NRS.settings['language']);
 	};
 
-	NRS.getSettings = function() {
+	NRS.getSettings = function(isAccountSpecific) {
 		if (!NRS.account) {
 			NRS.settings = NRS.defaultSettings;
 			if (NRS.getStrItem("language")) {
@@ -465,7 +465,7 @@ var NRS = (function(NRS, $) {
 			NRS.applySettings();
 		} else {
             async.waterfall([
-                function (callback) {
+                function(callback) {
 					NRS.storageSelect("data", [{
 						"id": "settings"
 					}], function (error, result) {
@@ -494,7 +494,7 @@ var NRS = (function(NRS, $) {
 						callback(null);
 					});
                 },
-                function() {
+                function(callback) {
                     for (var schema in NRS.defaultColors) {
 						if (!NRS.defaultColors.hasOwnProperty(schema)) {
 							continue;
@@ -504,8 +504,15 @@ var NRS = (function(NRS, $) {
                             NRS.updateStyle(schema, color);
                         }
                     }
+                    callback(null);
+                },
+                function(callback) {
+                    if (isAccountSpecific) {
+                        NRS.loadPlugins();
+                    }
+                    callback(null);
                 }
-            ], function (err, result) {});
+            ], function(err, result) {});
 
 		}
 	};
