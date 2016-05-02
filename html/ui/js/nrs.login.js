@@ -188,7 +188,12 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.setPassword("");
 		$("#remember_password").prop("checked", false);
         $("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
-        NRS.goToPage("dashboard");
+		NRS.activePlugins = false;
+		NRS.numRunningPlugins = 0;
+		$.each(NRS.plugins, function(pluginId) {
+			NRS.determinePluginLaunchStatus(pluginId);
+		});
+		NRS.goToPage("dashboard");
         NRS.login(false, account, function() {
             $.growl($.t("switched_to_account", { account: account }))
         }, true);
