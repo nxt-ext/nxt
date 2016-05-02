@@ -314,9 +314,7 @@ var NRS = (function(NRS, $, undefined) {
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
 					}
-					var disableAllPlugins = $("#disable_all_plugins");
-					NRS.disablePluginsDuringSession = !(disableAllPlugins.length == 1 && !(disableAllPlugins.is(":checked")));
-
+					NRS.disablePluginsDuringSession = $("#disable_all_plugins").is(":checked");
 					$("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
 					$("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-default btn-xs"));
 					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
