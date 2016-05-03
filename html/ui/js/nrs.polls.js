@@ -18,10 +18,17 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	
-	var _voteCache = {};
-	var requestedPoll = "";
-	var viewingPollBookmark = "";
+
+	NRS.resetPollsState = function () {
+		var _voteCache = {};
+		var requestedPoll = "";
+		var viewingPollBookmark = "";
+		return {_voteCache: _voteCache, requestedPoll: requestedPoll, viewingPollBookmark: viewingPollBookmark};
+	};
+	var __ret = NRS.resetPollsState();
+	var _voteCache = __ret._voteCache;
+	var requestedPoll = __ret.requestedPoll;
+	var viewingPollBookmark = __ret.viewingPollBookmark;
 
 	function _setFollowButtonStates() {
 		NRS.storageSelect("polls", null, function (error, polls) {

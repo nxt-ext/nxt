@@ -18,15 +18,18 @@
  * @depends {nrs.js}
  */
 var NRS = (function (NRS, $, undefined) {
-    NRS.assets = [];
-    NRS.assetIds = [];
-    NRS.closedGroups = [];
-    NRS.assetSearch = false;
-    NRS.lastIssuerCheck = false;
-    NRS.viewingAsset = false; //viewing non-bookmarked asset
-    NRS.currentAsset = {};
-    NRS.assetTradeHistoryType = "everyone";
-    var currentAssetID = 0;
+    NRS.resetAssetExchangeState = function () {
+        NRS.assets = [];
+        NRS.assetIds = [];
+        NRS.closedGroups = [];
+        NRS.assetSearch = false;
+        NRS.lastIssuerCheck = false;
+        NRS.viewingAsset = false; //viewing non-bookmarked asset
+        NRS.currentAsset = {};
+        NRS.assetTradeHistoryType = "everyone";
+        return 0;
+    };
+    var currentAssetID = NRS.resetAssetExchangeState();
 
     NRS.pages.asset_exchange = function (callback) {
         $(".content.content-stretch:visible").width($(".page:visible").width());
