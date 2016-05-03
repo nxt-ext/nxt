@@ -1076,6 +1076,8 @@ NRS.addPagination = function () {
 
 				if (response.name) {
 					$("#account_name").html(NRS.addEllipsis(response.name.escapeHTML(), 10)).removeAttr("data-i18n");
+				} else {
+					$("#account_name").html($.t("set_account_info"));
 				}
 			}
 
