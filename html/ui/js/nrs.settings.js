@@ -32,7 +32,7 @@ var NRS = (function(NRS, $) {
 		"24_hour_format": "1",
 		"remember_passphrase": "0",
 		"language": "en",
-		"number_format": "en-US",
+		"regional_format": "en-US",
 		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default",
@@ -453,14 +453,14 @@ var NRS = (function(NRS, $) {
 		$langSelBoxes.val(NRS.settings['language']);
 	};
 
-	NRS.createNumberFormatSelect = function() {
+	NRS.createRegionalFormatSelect = function() {
 		// Build language select box for settings page, login
-		var $numberFormatSelBoxes = $('select[name="number_format"]');
-		$numberFormatSelBoxes.empty();
+		var $regionalFormatSelBoxes = $('select[name="regional_format"]');
+		$regionalFormatSelBoxes.empty();
 		$.each(NRS.LOCALE_DATA, function(format) {
-			$numberFormatSelBoxes.append('<option value="' + format + '">' + format + '</option>');
+			$regionalFormatSelBoxes.append('<option value="' + format + '">' + format + '</option>');
 		});
-		$numberFormatSelBoxes.val(NRS.settings['number_format']);
+		$regionalFormatSelBoxes.val(NRS.settings['regional_format']);
 	};
 
 	NRS.getSettings = function(isAccountSpecific) {
@@ -473,7 +473,7 @@ var NRS = (function(NRS, $) {
 				NRS.settings["themeChoice"] = NRS.getStrItem("themeChoice");
 			}
 			NRS.createLangSelect();
-			NRS.createNumberFormatSelect();
+			NRS.createRegionalFormatSelect();
 			NRS.applySettings();
 		} else {
             async.waterfall([
@@ -521,6 +521,8 @@ var NRS = (function(NRS, $) {
                 function(callback) {
                     if (isAccountSpecific) {
                         NRS.loadPlugins();
+						NRS.getAccountInfo();
+						NRS.getInitialTransactions();
                     }
                     callback(null);
                 }

@@ -1730,5 +1730,5 @@
   "whitelist": "Whitelist",
   "expired": "Expired",
   "switched_to_account": "Switched to account __account__",
-  "number_format": "Number Format"
+  "regional_format": "Regional Format"
 }
