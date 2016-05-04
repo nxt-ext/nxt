@@ -194,6 +194,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
 		NRS.resetAssetExchangeState();
 		NRS.resetPollsState();
+		NRS.resetMessagesState();
 		NRS.forgingStatus = NRS.constants.UNKNOWN;
 		NRS.isAccountForging = false;
 		NRS.selectedContext = null;

@@ -18,26 +18,20 @@
  * @depends {nrs.js}
  */
 var NRS = (function (NRS, $) {
+	var _password;
+	var _decryptionPassword;
+	var _decryptedTransactions;
+	var _encryptedNote;
+	var _sharedKeys;
+
 	NRS.resetEncryptionState = function () {
-		var _password = null;
-		var _decryptionPassword = null;
-		var _decryptedTransactions = {};
-		var _encryptedNote = null;
-		var _sharedKeys = {};
-		return {
-			_password: _password,
-			_decryptionPassword: _decryptionPassword,
-			_decryptedTransactions: _decryptedTransactions,
-			_encryptedNote: _encryptedNote,
-			_sharedKeys: _sharedKeys
-		};
+		_password = null;
+		_decryptionPassword = null;
+		_decryptedTransactions = {};
+		_encryptedNote = null;
+		_sharedKeys = {};
 	};
-	var __ret = NRS.resetEncryptionState();
-	var _password = __ret._password;
-	var _decryptionPassword = __ret._decryptionPassword;
-	var _decryptedTransactions = __ret._decryptedTransactions;
-	var _encryptedNote = __ret._encryptedNote;
-	var _sharedKeys = __ret._sharedKeys;
+	NRS.resetEncryptionState();
 
 	NRS.generatePublicKey = function(secretPhrase) {
 		if (!secretPhrase) {
