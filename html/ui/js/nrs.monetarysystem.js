@@ -250,7 +250,7 @@ var NRS = (function (NRS, $, undefined) {
                 return NRS.convertToQNTf(val.limit, decimals);
             });
             var rateNQTDecimals = NRS.getNumberOfDecimals(offers, "rateNQT", function(val) {
-                return NRS.calculateOrderPricePerWholeQNT(val.rateNQT, decimals);
+                return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
             });
             for (i = 0; i < offers.length; i++) {
                 var offer = offers[i];
@@ -261,9 +261,9 @@ var NRS = (function (NRS, $, undefined) {
                 rows += "<tr>" +
                     "<td>" + NRS.getTransactionLink(offer.offer, NRS.getTransactionStatusIcon(offer), true) + "</td>" +
                     "<td>" + NRS.getAccountLink(offer, "account") + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.format(NRS.convertToQNTf(offer.supply, decimals), false, supplyDecimals) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.format(NRS.convertToQNTf(offer.limit, decimals), false, limitDecimals) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.format(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals), false, rateNQTDecimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatQuantity(offer.supply, decimals, false, supplyDecimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatQuantity(offer.limit, decimals, false, limitDecimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(rateNQT, decimals, rateNQTDecimals) + "</td>" +
                     "</tr>";
             }
             offersTable.find("tbody").empty().append(rows);
@@ -409,12 +409,11 @@ var NRS = (function (NRS, $, undefined) {
                         return NRS.convertToQNTf(val.units, decimals);
                     });
                     var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(val) {
-                        return NRS.calculateOrderPricePerWholeQNT(val.rateNQT, decimals);
+                        return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
                     });
                     var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(val) {
                         return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.units, val.rateNQT));
                     });
-                    console.log("DECIMALS: " + unitsDecimals + " - " + rateNQTDecimals + " - " + totalNQTDecimals);
                     for (var i = 0; i < response.exchanges.length; i++) {
                         var exchange = response.exchanges[i];
                         rows += "<tr>" +
@@ -422,7 +421,7 @@ var NRS = (function (NRS, $, undefined) {
                         "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
                         "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
                         "<td style='text-align:right;'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false ,unitsDecimals) + "</td>" +
-                        "<td style='text-align:right;'>" + NRS.format(NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals), false, rateNQTDecimals) + "</td>" +
+                        "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals, rateNQTDecimals) + "</td>" +
                         "<td style='text-align:right;'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT), false, false, totalNQTDecimals) + "</td>" +
                         "</tr>";
                     }
@@ -448,10 +447,10 @@ var NRS = (function (NRS, $, undefined) {
                     var rows = "";
                     var decimals = parseInt($("#currency_decimals").text(), 10);
                     var unitsDecimals = NRS.getNumberOfDecimals(response.exchanges, "units", function(val) {
-                        return NRS.convertToQNTf(val.units, decimals);
+                        return NRS.formatQuantity(val.units, decimals);
                     });
                     var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(val) {
-                        return NRS.calculateOrderPricePerWholeQNT(val.rateNQT, decimals);
+                        return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
                     });
                     var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(val) {
                         return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.units, val.rateNQT));
@@ -463,7 +462,7 @@ var NRS = (function (NRS, $, undefined) {
                         "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
                         "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
                         "<td style='text-align:right;'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false ,unitsDecimals) + "</td>" +
-                        "<td style='text-align:right;'>" + NRS.format(NRS.calculateOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals), false, rateNQTDecimals) + "</td>" +
+                        "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals, rateNQTDecimals) + "</td>" +
                         "<td style='text-align:right;'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT), false, false, totalNQTDecimals) + "</td>" +
                         "</tr>";
                     }
@@ -486,15 +485,14 @@ var NRS = (function (NRS, $, undefined) {
             var rows = "";
             var decimals = parseInt($("#currency_decimals").text(), 10);
             var unitsDecimals = NRS.getNumberOfDecimals(exchangeRequests, "units", function(val) {
-                return NRS.convertToQNTf(val.units, decimals);
+                return NRS.formatQuantity(val.units, decimals);
             });
             var rateNQTDecimals = NRS.getNumberOfDecimals(exchangeRequests, "rateNQT", function(val) {
-                return NRS.calculateOrderPricePerWholeQNT(val.rateNQT, decimals);
+                return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
             });
             var totalNQTDecimals = NRS.getNumberOfDecimals(exchangeRequests, "totalNQT", function(val) {
                 return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.units, val.rateNQT));
             });
-            console.log("DECIMALS: " + unitsDecimals + " - " + rateNQTDecimals + " - " + totalNQTDecimals);
             for (i = 0; i < exchangeRequests.length; i++) {
                 var exchangeRequest = exchangeRequests[i];
                 var type = exchangeRequest.subtype == 5 ? "buy" : "sell";
@@ -502,8 +500,8 @@ var NRS = (function (NRS, $, undefined) {
                     "<td>" + NRS.getTransactionLink(exchangeRequest.transaction, NRS.getTransactionStatusIcon(exchangeRequest), true) + "</td>" +
                     "<td>" + NRS.getBlockLink(exchangeRequest.height) + "</td>" +
                     "<td>" + type + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.format(NRS.convertToQNTf(exchangeRequest.units, decimals), false, unitsDecimals) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.format(NRS.calculateOrderPricePerWholeQNT(exchangeRequest.rateNQT, decimals), false, rateNQTDecimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatQuantity(exchangeRequest.units, decimals, false, unitsDecimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(exchangeRequest.rateNQT, decimals, rateNQTDecimals) + "</td>" +
                     "<td style='text-align:right;'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchangeRequest.units, exchangeRequest.rateNQT), false, totalNQTDecimals) + "</td>" +
                     "</tr>";
             }
