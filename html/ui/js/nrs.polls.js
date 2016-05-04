@@ -18,10 +18,16 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	
-	var _voteCache = {};
-	var requestedPoll = "";
-	var viewingPollBookmark = "";
+	var _voteCache;
+	var requestedPoll;
+	var viewingPollBookmark;
+
+	NRS.resetPollsState = function () {
+		_voteCache = {};
+		requestedPoll = "";
+		viewingPollBookmark = "";
+	};
+	NRS.resetPollsState();
 
 	function _setFollowButtonStates() {
 		NRS.storageSelect("polls", null, function (error, polls) {

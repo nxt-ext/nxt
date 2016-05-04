@@ -1237,7 +1237,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.sendRequest("getShufflers", {
                     "shufflingFullHash": transaction.fullHash,
                     "account": NRS.accountRS,
-                    "adminPassword": NRS.settings.admin_password
+                    "adminPassword": NRS.getAdminPassword()
                 }, function (response) {
                     if (response.shufflers && response.shufflers.length > 0) {
                         var shuffler = response.shufflers[0];

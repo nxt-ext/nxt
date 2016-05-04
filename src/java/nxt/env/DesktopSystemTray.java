@@ -69,6 +69,10 @@ public class DesktopSystemTray {
         }
         MenuItem showDesktopApplication = new MenuItem("Show Desktop Application");
         MenuItem refreshDesktopApplication = new MenuItem("Refresh Wallet");
+        if (!Nxt.isDesktopApplicationEnabled()) {
+            showDesktopApplication.setEnabled(false);
+            refreshDesktopApplication.setEnabled(false);
+        }
         viewLog = new MenuItem("View Log File");
         if (!Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
             viewLog.setEnabled(false);

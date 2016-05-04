@@ -175,8 +175,8 @@ var NRS = (function(NRS, $) {
 		if (!NRS.needsAdminPassword) {
 			$("#" + action + "_peer_admin_password_wrapper").hide();
 		} else {
-			if (NRS.settings.admin_password != "") {
-				$("#" + action + "_peer_admin_password").val(NRS.settings.admin_password);
+			if (NRS.getAdminPassword() != "") {
+				$("#" + action + "_peer_admin_password").val(NRS.getAdminPassword());
 			}
 		}
 	}

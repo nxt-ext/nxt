@@ -135,14 +135,14 @@ var NRS = (function(NRS, $) {
         } else if (NRS.state.isScanning) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_blockchain_rescanning");
-        } else if (NRS.needsAdminPassword && NRS.settings.admin_password == "" && (!secretPhrase || !NRS.isLocalHost)) {
+        } else if (NRS.needsAdminPassword && NRS.getAdminPassword() == "" && (!secretPhrase || !NRS.isLocalHost)) {
             // do not change forging status
         } else {
             var params = {};
-            if (NRS.needsAdminPassword && NRS.settings.admin_password != "") {
-                params["adminPassword"] = NRS.settings.admin_password;
+            if (NRS.needsAdminPassword && NRS.getAdminPassword() != "") {
+                params["adminPassword"] = NRS.getAdminPassword();
             }
-            if (secretPhrase && NRS.needsAdminPassword && NRS.settings.admin_password == "") {
+            if (secretPhrase && NRS.needsAdminPassword && NRS.getAdminPassword() == "") {
                 params["secretPhrase"] = secretPhrase;
             }
             NRS.sendRequest("getForging", params, function (response) {

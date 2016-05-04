@@ -145,6 +145,10 @@ var NRS = (function(NRS, $) {
         }
     }
 
+    NRS.initSidebarMenu = function() {
+        $("#sidebar_menu").html("");
+    };
+
     NRS.addSimpleSidebarMenuItem = function(options) {
         if (!NRS.isApiEnabled(options.depends)) {
             return;
