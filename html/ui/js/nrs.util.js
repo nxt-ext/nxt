@@ -23,7 +23,7 @@ var NRS = (function (NRS, $, undefined) {
     var LOCALE_DATA_DECIMAL;
     var LOCALE_DATA_SEPARATOR;
     var LOCALE_DATA_FORMAT;
-    var LOCALE_DATA = {
+    NRS.LOCALE_DATA = {
         "ar-SA": {dateFormat: "dd/MM/yy", decimal: "٫", section: "٬"},
         "bg-BG": {dateFormat: "dd.M.yyyy", decimal: ",", section: " "},
         "ca-ES": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
@@ -233,32 +233,21 @@ var NRS = (function (NRS, $, undefined) {
         "en-SG": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
         "ug-CN": {dateFormat: "yyyy-M-d", decimal: ",", section: " "},
         "sr-Cyrl-BA": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "es-US": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "de": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "fr": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "fi": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "cs": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "bg": {dateFormat: "dd.M.yyyy", decimal: ",", section: " "},
-        "nl": {dateFormat: "d-M-yyyy", decimal: ",", section: "."},
-        "pl": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
-        "es": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "en": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "ar": {dateFormat: "dd-MM-yyyy", decimal: "٫", section: "٬"}
+        "es-US": {dateFormat: "M/d/yyyy", decimal: ".", section: ","}
     };
 
     NRS.getLocale = function () {
-        var lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
-        if (LOCALE_DATA[lang]) {
-            LOCALE_DATA_FORMAT = lang;
-            LOCALE_DATA_DATE = LOCALE_DATA[lang].dateFormat;
-            LOCALE_DATA_DECIMAL = LOCALE_DATA[lang].decimal;
-            LOCALE_DATA_SEPARATOR = LOCALE_DATA[lang].section;
+        if (NRS.settings['number_format']) {
+            LOCALE_DATA_FORMAT = NRS.settings['number_format'];
         } else {
+            console.log("HERE");
             LOCALE_DATA_FORMAT = "en-US";
-            LOCALE_DATA_DATE = "dd/MM/yyyy";
-            LOCALE_DATA_DECIMAL = ".";
-            LOCALE_DATA_SEPARATOR = "'";
         }
+        console.log("LOCALE: " + LOCALE_DATA_FORMAT);
+        LOCALE_DATA_DATE = NRS.LOCALE_DATA[LOCALE_DATA_FORMAT].dateFormat;
+        LOCALE_DATA_DECIMAL = NRS.LOCALE_DATA[LOCALE_DATA_FORMAT].decimal;
+        LOCALE_DATA_SEPARATOR = NRS.LOCALE_DATA[LOCALE_DATA_FORMAT].section;
+        //console.log("LOCALE FORMAT: " + LOCALE_DATA_DATE + " Separator: " + LOCALE_DATA_SEPARATOR + " Decimal: " + LOCALE_DATA_DECIMAL);
     };
 
     NRS.formatVolume = function (volume) {

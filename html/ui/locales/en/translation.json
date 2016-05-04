@@ -1729,5 +1729,6 @@
   "transaction10": "Transaction",
   "whitelist": "Whitelist",
   "expired": "Expired",
-  "switched_to_account": "Switched to account __account__"
+  "switched_to_account": "Switched to account __account__",
+  "number_format": "Number Format"
 }
