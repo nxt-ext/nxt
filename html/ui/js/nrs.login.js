@@ -463,8 +463,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						accountIdDropdown.hide();
 					}
-
-					NRS.getInitialTransactions();
+					
 					NRS.updateApprovalRequests();
 				});
 			});
