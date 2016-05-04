@@ -557,7 +557,7 @@ NRS.addPagination = function () {
 			"id": "closed_groups"
 		}], function(error, result) {
 			if (result && result.length) {
-				NRS.closedGroups = result[0].contents.split("#");
+				NRS.setClosedGroups(result[0].contents.split("#"));
 			} else {
 				NRS.storageInsert("data", "id", {
 					id: "closed_groups",
