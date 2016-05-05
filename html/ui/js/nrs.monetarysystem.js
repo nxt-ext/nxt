@@ -502,7 +502,7 @@ var NRS = (function (NRS, $, undefined) {
                     "<td>" + type + "</td>" +
                     "<td style='text-align:right;'>" + NRS.formatQuantity(exchangeRequest.units, decimals, false, unitsDecimals) + "</td>" +
                     "<td style='text-align:right;'>" + NRS.formatOrderPricePerWholeQNT(exchangeRequest.rateNQT, decimals, rateNQTDecimals) + "</td>" +
-                    "<td style='text-align:right;'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchangeRequest.units, exchangeRequest.rateNQT), false, totalNQTDecimals) + "</td>" +
+                    "<td style='text-align:right;'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchangeRequest.units, exchangeRequest.rateNQT), false, false, totalNQTDecimals) + "</td>" +
                     "</tr>";
             }
             requestTable.find("tbody").empty().append(rows);
