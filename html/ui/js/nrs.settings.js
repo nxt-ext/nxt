@@ -32,6 +32,7 @@ var NRS = (function(NRS, $) {
 		"24_hour_format": "1",
 		"remember_passphrase": "0",
 		"language": "en",
+		"regional_format": "default",
 		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default",
@@ -452,6 +453,18 @@ var NRS = (function(NRS, $) {
 		$langSelBoxes.val(NRS.settings['language']);
 	};
 
+	NRS.createRegionalFormatSelect = function() {
+		// Build language select box for settings page, login
+		var $regionalFormatSelBoxes = $('select[name="regional_format"]');
+		$regionalFormatSelBoxes.empty();
+		$regionalFormatSelBoxes.append("<option value='default'>" + $.t("use_browser_default") + "</option>");
+		var localeKeys = NRS.getLocaleList();
+        for (var i=0; i < localeKeys.length; i++) {
+			$regionalFormatSelBoxes.append("<option value='" + localeKeys[i] + "'>" + NRS.getLocaleName(localeKeys[i]) + "</option>");
+		}
+		$regionalFormatSelBoxes.val(NRS.settings["regional_format"]);
+	};
+
 	NRS.getSettings = function(isAccountSpecific) {
 		if (!NRS.account) {
 			NRS.settings = NRS.defaultSettings;
@@ -462,6 +475,7 @@ var NRS = (function(NRS, $) {
 				NRS.settings["themeChoice"] = NRS.getStrItem("themeChoice");
 			}
 			NRS.createLangSelect();
+			NRS.createRegionalFormatSelect();
 			NRS.applySettings();
 		} else {
             async.waterfall([
@@ -509,6 +523,8 @@ var NRS = (function(NRS, $) {
                 function(callback) {
                     if (isAccountSpecific) {
                         NRS.loadPlugins();
+						NRS.getAccountInfo();
+						NRS.getInitialTransactions();
                     }
                     callback(null);
                 }

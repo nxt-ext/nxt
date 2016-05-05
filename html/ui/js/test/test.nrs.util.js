@@ -162,9 +162,7 @@ QUnit.test("formatAmount", function (assert) {
 });
 
 QUnit.test("formatTimestamp", function (assert) {
-    var date;
-    NRS.getLocale("en-US");
-    date = new Date(0);
+    var date = new Date(0);
     assert.equal(NRS.formatTimestamp(0, true, true), date.toLocaleDateString(), "start.date");
 });
 
