@@ -32,7 +32,7 @@ var NRS = (function(NRS, $) {
 		"24_hour_format": "1",
 		"remember_passphrase": "0",
 		"language": "en",
-		"regional_format": "en-US",
+		"regional_format": "default",
 		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default",
@@ -457,10 +457,12 @@ var NRS = (function(NRS, $) {
 		// Build language select box for settings page, login
 		var $regionalFormatSelBoxes = $('select[name="regional_format"]');
 		$regionalFormatSelBoxes.empty();
-		$.each(NRS.LOCALE_DATA, function(format) {
-			$regionalFormatSelBoxes.append('<option value="' + format + '">' + format + '</option>');
-		});
-		$regionalFormatSelBoxes.val(NRS.settings['regional_format']);
+		$regionalFormatSelBoxes.append("<option value='default'>" + $.t("use_browser_default") + "</option>");
+		var localeKeys = NRS.getLocaleList();
+        for (var i=0; i < localeKeys.length; i++) {
+			$regionalFormatSelBoxes.append("<option value='" + localeKeys[i] + "'>" + NRS.getLocaleName(localeKeys[i]) + "</option>");
+		}
+		$regionalFormatSelBoxes.val(NRS.settings["regional_format"]);
 	};
 
 	NRS.getSettings = function(isAccountSpecific) {

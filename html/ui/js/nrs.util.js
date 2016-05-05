@@ -19,237 +19,6 @@
  */
 
 var NRS = (function (NRS, $, undefined) {
-    var LOCALE_DATA_DATE;
-    var LOCALE_DATA_DECIMAL;
-    var LOCALE_DATA_SEPARATOR;
-    var LOCALE_DATA_FORMAT;
-    NRS.LOCALE_DATA = {
-        "af-ZA": {dateFormat: "yyyy/MM/dd", decimal: ".", section: ","},
-        "am-ET": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "ar-AE": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-BH": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-DZ": {dateFormat: "dd-MM-yyyy", decimal: "٫", section: "٬"},
-        "ar-EG": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-IQ": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-JO": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-KW": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-LB": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-LY": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-MA": {dateFormat: "dd-MM-yyyy", decimal: "٫", section: "٬"},
-        "arn-CL": {dateFormat: "dd-MM-yyyy", decimal: ",", section: " "},
-        "ar-OM": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-QA": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-SA": {dateFormat: "dd/MM/yy", decimal: "٫", section: "٬"},
-        "ar-SY": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "ar-TN": {dateFormat: "dd-MM-yyyy", decimal: "٫", section: "٬"},
-        "ar-YE": {dateFormat: "dd/MM/yyyy", decimal: "٫", section: "٬"},
-        "as-IN": {dateFormat: "dd-MM-yyyy", decimal: ",", section: " "},
-        "az-Cyrl-AZ": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "az-Latn-AZ": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "ba-RU": {dateFormat: "dd.MM.yy", decimal: ",", section: " "},
-        "be-BY": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "bg-BG": {dateFormat: "dd.M.yyyy", decimal: ",", section: " "},
-        "bn-BD": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "bn-IN": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "bo-CN": {dateFormat: "yyyy/M/d", decimal: ",", section: " "},
-        "br-FR": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "bs-Cyrl-BA": {dateFormat: "d.M.yyyy", decimal: ".", section: ","},
-        "bs-Latn-BA": {dateFormat: "d.M.yyyy", decimal: ".", section: ","},
-        "ca-ES": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "co-FR": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "cs-CZ": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "cy-GB": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "da-DK": {dateFormat: "dd-MM-yyyy", decimal: ",", section: "."},
-        "de-AT": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "de-CH": {dateFormat: "dd.MM.yyyy", decimal: ".", section: "'"},
-        "de-DE": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "de-LI": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "de-LU": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "dsb-DE": {dateFormat: "d. M. yyyy", decimal: ",", section: " "},
-        "dv-MV": {dateFormat: "dd/MM/yy", decimal: ",", section: " "},
-        "el-GR": {dateFormat: "d/M/yyyy", decimal: ",", section: "."},
-        "en-029": {dateFormat: "MM/dd/yyyy", decimal: ".", section: ","},
-        "en-AU": {dateFormat: "d/MM/yyyy", decimal: ".", section: ","},
-        "en-BZ": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "en-CA": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "en-GB": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "en-IE": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "en-IN": {dateFormat: "dd-MM-yyyy", decimal: ".", section: ","},
-        "en-JM": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "en-MY": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "en-NZ": {dateFormat: "d/MM/yyyy", decimal: ".", section: ","},
-        "en-PH": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "en-SG": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "en-TT": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "en-US": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "en-ZA": {dateFormat: "yyyy/MM/dd", decimal: ",", section: " "},
-        "en-ZW": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "es-AR": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-BO": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-CL": {dateFormat: "dd-MM-yyyy", decimal: ",", section: "."},
-        "es-CO": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-CR": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-DO": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-EC": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-ES": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-GT": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-HN": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-MX": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "es-NI": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-PA": {dateFormat: "MM/dd/yyyy", decimal: ",", section: "."},
-        "es-PE": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-PR": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-PY": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-SV": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-US": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "es-UY": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "es-VE": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "et-EE": {dateFormat: "d.MM.yyyy", decimal: ",", section: " "},
-        "eu-ES": {dateFormat: "yyyy/MM/dd", decimal: ".", section: ","},
-        "fa-IR": {dateFormat: "MM/dd/yyyy", decimal: "٫", section: "٬"},
-        "fi-FI": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "fil-PH": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "fo-FO": {dateFormat: "dd-MM-yyyy", decimal: ".", section: ","},
-        "fr-BE": {dateFormat: "d/MM/yyyy", decimal: ",", section: " "},
-        "fr-CA": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
-        "fr-CH": {dateFormat: "dd.MM.yyyy", decimal: ".", section: " "},
-        "fr-FR": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "fr-LU": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "fr-MC": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "fy-NL": {dateFormat: "d-M-yyyy", decimal: ",", section: " "},
-        "ga-IE": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "gd-GB": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "gl-ES": {dateFormat: "dd/MM/yy", decimal: ".", section: ","},
-        "gsw-FR": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "gu-IN": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "ha-Latn-NG": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "he-IL": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "hi-IN": {dateFormat: "dd-MM-yyyy", decimal: ".", section: ","},
-        "hr-BA": {dateFormat: "d.M.yyyy.", decimal: ",", section: "."},
-        "hr-HR": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "hsb-DE": {dateFormat: "d. M. yyyy", decimal: ",", section: " "},
-        "hu-HU": {dateFormat: "yyyy. MM. dd.", decimal: ",", section: " "},
-        "hy-AM": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "id-ID": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "ig-NG": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "ii-CN": {dateFormat: "yyyy/M/d", decimal: ",", section: " "},
-        "is-IS": {dateFormat: "d.M.yyyy", decimal: ".", section: ","},
-        "it-CH": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "it-IT": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "iu-Cans-CA": {dateFormat: "d/M/yyyy", decimal: ",", section: " "},
-        "iu-Latn-CA": {dateFormat: "d/MM/yyyy", decimal: ",", section: " "},
-        "ja-JP": {dateFormat: "yyyy/MM/dd", decimal: ".", section: ","},
-        "ka-GE": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "kk-KZ": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "kl-GL": {dateFormat: "dd-MM-yyyy", decimal: ",", section: " "},
-        "km-KH": {dateFormat: "yyyy-MM-dd", decimal: ".", section: ","},
-        "kn-IN": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "kok-IN": {dateFormat: "dd-MM-yyyy", decimal: ",", section: " "},
-        "ko-KR": {dateFormat: "yyyy-MM-dd", decimal: ".", section: ","},
-        "ky-KG": {dateFormat: "dd.MM.yy", decimal: ".", section: ","},
-        "lb-LU": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "lo-LA": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "lt-LT": {dateFormat: "yyyy.MM.dd", decimal: ",", section: " "},
-        "lv-LV": {dateFormat: "yyyy.MM.dd.", decimal: ",", section: " "},
-        "mi-NZ": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "mk-MK": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "ml-IN": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "mn-MN": {dateFormat: "yy.MM.dd", decimal: ".", section: ","},
-        "mn-Mong-CN": {dateFormat: "yyyy/M/d", decimal: ".", section: ","},
-        "moh-CA": {dateFormat: "M/d/yyyy", decimal: ",", section: " "},
-        "mr-IN": {dateFormat: "dd-MM-yyyy", decimal: ".", section: ","},
-        "ms-BN": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "ms-MY": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "mt-MT": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "nb-NO": {dateFormat: "dd.MM.yyyy", decimal: ",", section: " "},
-        "ne-NP": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "nl-BE": {dateFormat: "d/MM/yyyy", decimal: ",", section: "."},
-        "nl-NL": {dateFormat: "d-M-yyyy", decimal: ",", section: "."},
-        "nn-NO": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "nso-ZA": {dateFormat: "yyyy/MM/dd", decimal: ",", section: " "},
-        "oc-FR": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "or-IN": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "pa-IN": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "pl-PL": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
-        "prs-AF": {dateFormat: "dd/MM/yy", decimal: ",", section: " "},
-        "ps-AF": {dateFormat: "dd/MM/yy", decimal: ".", section: ","},
-        "pt-BR": {dateFormat: "d/M/yyyy", decimal: ",", section: "."},
-        "pt-PT": {dateFormat: "dd-MM-yyyy", decimal: ",", section: " "},
-        "qut-GT": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "quz-BO": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "quz-EC": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "quz-PE": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "rm-CH": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "ro-RO": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "ru-RU": {dateFormat: "dd.MM.yyyy", decimal: ",", section: " "},
-        "rw-RW": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "sah-RU": {dateFormat: "MM.dd.yyyy", decimal: ",", section: " "},
-        "sa-IN": {dateFormat: "dd-MM-yyyy", decimal: ",", section: " "},
-        "se-FI": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "se-NO": {dateFormat: "dd.MM.yyyy", decimal: ",", section: " "},
-        "se-SE": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
-        "si-LK": {dateFormat: "yyyy-MM-dd", decimal: ".", section: ","},
-        "sk-SK": {dateFormat: "d. M. yyyy", decimal: ",", section: " "},
-        "sl-SI": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sma-NO": {dateFormat: "dd.MM.yyyy", decimal: ",", section: " "},
-        "sma-SE": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
-        "smj-NO": {dateFormat: "dd.MM.yyyy", decimal: ",", section: " "},
-        "smj-SE": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
-        "smn-FI": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "sms-FI": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "sq-AL": {dateFormat: "yyyy-MM-dd", decimal: ".", section: ","},
-        "sr-Cyrl-BA": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sr-Cyrl-CS": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sr-Cyrl-ME": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sr-Cyrl-RS": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sr-Latn-BA": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sr-Latn-CS": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sr-Latn-ME": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sr-Latn-RS": {dateFormat: "d.M.yyyy", decimal: ",", section: "."},
-        "sv-FI": {dateFormat: "d.M.yyyy", decimal: ",", section: " "},
-        "sv-SE": {dateFormat: "yyyy-MM-dd", decimal: ",", section: " "},
-        "sw-KE": {dateFormat: "M/d/yyyy", decimal: ".", section: ","},
-        "syr-SY": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "ta-IN": {dateFormat: "dd-MM-yyyy", decimal: ".", section: ","},
-        "te-IN": {dateFormat: "dd-MM-yy", decimal: ".", section: ","},
-        "tg-Cyrl-TJ": {dateFormat: "dd.MM.yy", decimal: ".", section: ","},
-        "th-TH": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "tk-TM": {dateFormat: "dd.MM.yy", decimal: ",", section: " "},
-        "tn-ZA": {dateFormat: "yyyy/MM/dd", decimal: ",", section: " "},
-        "tr-TR": {dateFormat: "dd.MM.yyyy", decimal: ",", section: "."},
-        "tt-RU": {dateFormat: "dd.MM.yyyy", decimal: ",", section: " "},
-        "tzm-Latn-DZ": {dateFormat: "dd-MM-yyyy", decimal: ",", section: " "},
-        "ug-CN": {dateFormat: "yyyy-M-d", decimal: ",", section: " "},
-        "uk-UA": {dateFormat: "dd.MM.yyyy", decimal: ",", section: " "},
-        "ur-PK": {dateFormat: "dd/MM/yyyy", decimal: ".", section: ","},
-        "uz-Cyrl-UZ": {dateFormat: "dd.MM.yyyy", decimal: ".", section: ","},
-        "uz-Latn-UZ": {dateFormat: "dd/MM yyyy", decimal: ".", section: ","},
-        "vi-VN": {dateFormat: "dd/MM/yyyy", decimal: ",", section: "."},
-        "wo-SN": {dateFormat: "dd/MM/yyyy", decimal: ",", section: " "},
-        "xh-ZA": {dateFormat: "yyyy/MM/dd", decimal: ",", section: " "},
-        "yo-NG": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "zh-CN": {dateFormat: "yyyy/M/d", decimal: ".", section: ","},
-        "zh-HK": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "zh-MO": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "zh-SG": {dateFormat: "d/M/yyyy", decimal: ".", section: ","},
-        "zh-TW": {dateFormat: "yyyy/M/d", decimal: ".", section: ","},
-        "zu-ZA": {dateFormat: "yyyy/MM/dd", decimal: ".", section: ","}
-    };
-
-    NRS.getLocale = function () {
-        if (NRS.settings['regional_format']) {
-            LOCALE_DATA_FORMAT = NRS.settings['regional_format'];
-        } else {
-            console.log("HERE");
-            LOCALE_DATA_FORMAT = "en-US";
-        }
-        //console.log("LOCALE: " + LOCALE_DATA_FORMAT);
-        LOCALE_DATA_DATE = NRS.LOCALE_DATA[LOCALE_DATA_FORMAT].dateFormat;
-        LOCALE_DATA_DECIMAL = NRS.LOCALE_DATA[LOCALE_DATA_FORMAT].decimal;
-        LOCALE_DATA_SEPARATOR = NRS.LOCALE_DATA[LOCALE_DATA_FORMAT].section;
-        //console.log("LOCALE FORMAT: " + LOCALE_DATA_DATE + " Separator: " + LOCALE_DATA_SEPARATOR + " Decimal: " + LOCALE_DATA_DECIMAL);
-    };
-
     NRS.formatVolume = function (volume) {
 		var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
 		if (volume == 0) return '0 B';
@@ -564,8 +333,8 @@ var NRS = (function (NRS, $, undefined) {
         amount = String(params.amount);
 		var digits = amount.split("").reverse();
 		var formattedAmount = "";
-        NRS.getLocale();
-        var formattedMantissa = params.mantissa.replace(".", LOCALE_DATA_DECIMAL);
+        var locale = NRS.getLocale();
+        var formattedMantissa = params.mantissa.replace(".", locale.decimal);
         if (zeroPad) {
             var mantissaLen = formattedMantissa.length;
             if (mantissaLen > 0) {
@@ -573,13 +342,13 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 formattedMantissa += zeros.substr(0, zeroPad);
                 if (zeroPad != 0) {
-                    formattedMantissa = LOCALE_DATA_DECIMAL + formattedMantissa;
+                    formattedMantissa = locale.decimal + formattedMantissa;
                 }
             }
         }
 		for (var i = 0; i < digits.length; i++) {
 		    if (i > 0 && i % 3 == 0) {
-                formattedAmount = LOCALE_DATA_SEPARATOR + formattedAmount;
+                formattedAmount = locale.section + formattedAmount;
             }
 			formattedAmount = digits[i] + formattedAmount;
         }
@@ -640,13 +409,14 @@ var NRS = (function (NRS, $, undefined) {
     };
     
     NRS.getNumberOfDecimals = function(rows, key, callback) {
+        var locale = NRS.getLocale();
         var decimals = 0;
         for (var i=0; i<rows.length; i++) {
             var val = rows[i][key];
             if (callback) {
                 val = callback(rows[i]);
             }
-            var tokens = val.split(LOCALE_DATA_DECIMAL);
+            var tokens = val.split(locale.decimal);
             if (tokens.length != 2) {
                 continue;
             }
@@ -673,12 +443,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.formatTimestamp = function (timestamp, date_only, isAbsoluteTime) {
-        if (!LOCALE_DATA_DATE) {
-            NRS.getLocale();
-            if (NRS.logConsole) {
-                NRS.logConsole("Date Format Locale: " + LOCALE_DATA_FORMAT + ", Date Format: " + LOCALE_DATA_DATE);
-            }
-        }
+        var locale = NRS.getLocale();
         var date;
 		if (typeof timestamp == "object") {
             date = timestamp;
@@ -696,7 +461,7 @@ var NRS = (function (NRS, $, undefined) {
 			var yyyy = date.getFullYear();
             var yy = String(yyyy).substring(2);
 
-            var res = LOCALE_DATA_DATE
+            var res = locale.dateFormat
                 .replace(/dd/g, dd)
                 .replace(/d/g, d)
                 .replace(/MM/g, MM)
@@ -1075,10 +840,10 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.formatStyledAmount = function (strAmount, round) {
-        NRS.getLocale();
-        var amount = NRS.formatAmount(strAmount, round).split(LOCALE_DATA_DECIMAL);
+        var locale = NRS.getLocale();
+        var amount = NRS.formatAmount(strAmount, round).split(locale.decimal);
 		if (amount.length == 2) {
-            return amount[0] + "<span style='font-size:12px'>" + LOCALE_DATA_DECIMAL + amount[1] + "</span>";
+            return amount[0] + "<span style='font-size:12px'>" + locale.decimal + amount[1] + "</span>";
 		} else {
             return amount[0];
 		}
