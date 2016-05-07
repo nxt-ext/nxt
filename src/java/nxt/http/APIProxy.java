@@ -20,13 +20,10 @@ import nxt.Constants;
 import nxt.Nxt;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -54,8 +51,8 @@ public class APIProxy {
         });
     };
 
-    static{
-        if (!Constants.isOffline) {
+    static {
+        if (!Constants.isOffline && enableAPIProxy) {
             ThreadPool.scheduleThread("APIProxyPeerUnBlacklisting", peerUnBlacklistingThread, blacklistingPeriod);
         }
     }
@@ -99,7 +96,7 @@ public class APIProxy {
     }
 
     public static boolean isActivated() {
-        return enableAPIProxy && (Nxt.getBlockchainProcessor().isDownloading() || Constants.isLightClient);
+        return enableAPIProxy && (Constants.isLightClient || Nxt.getBlockchainProcessor().isDownloading());
     }
 
     public void blacklistHost(String host) {
@@ -110,7 +107,7 @@ public class APIProxy {
     }
 
     private Peer getRandomAPIPeer() {
-        List<Peer> peers = Peers.getPeers(peer -> !blacklistedPeers.contains(peer.getHost())
+        List<Peer> peers = Peers.getPeers(peer -> !blacklistedPeers.containsKey(peer.getHost())
                 && peer.getState() == Peer.State.CONNECTED && isOpenAPIPeer(peer));
 
         if (peers.isEmpty()) {

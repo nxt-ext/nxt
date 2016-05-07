@@ -48,14 +48,17 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
     static {
         Set<String> requests = new HashSet<>();
-        requests.add("getConstants");
-        requests.add("getPlugins");
-        requests.add("getTime");
         requests.add("getBlockchainStatus");
         requests.add("getState");
         requests.add("getForging");
         requests.add("startForging");
         requests.add("stopForging");
+        requests.add("getFundingMonitor");
+        requests.add("startFundingMonitor");
+        requests.add("stopFundingMonitor");
+        requests.add("getShufflers");
+        requests.add("startShuffler");
+        requests.add("stopShuffler");
 
         NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
@@ -69,7 +72,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     private APIServlet apiServlet;
 
     static void initClass() {
-        APIProxy.getInstance();
+        APIProxy.init();
     }
 
     @Override
@@ -187,10 +190,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             return false;
         }
 
-        //Set intersection with pure Java
-        HashSet<APITag> requestTags = new HashSet<>(apiRequestHandler.getAPITags());
-        requestTags.retainAll(NOT_FORWARDED_TAGS);
-        if (!requestTags.isEmpty()) {
+        if (!Collections.disjoint(apiRequestHandler.getAPITags(), NOT_FORWARDED_TAGS)) {
             return false;
         }
 
