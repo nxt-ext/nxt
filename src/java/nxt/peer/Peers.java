@@ -260,11 +260,11 @@ public final class Peers {
         if (!Constants.ENABLE_PRUNING && Constants.INCLUDE_EXPIRED_PRUNABLE) {
             servicesList.add(Peer.Service.PRUNABLE);
         }
-        if (API.openAPIPort > 0) {
+        if (API.openAPIPort > 0 && !Constants.isLightClient) {
             json.put("apiPort", API.openAPIPort);
             servicesList.add(Peer.Service.API);
         }
-        if (API.openAPISSLPort > 0) {
+        if (API.openAPISSLPort > 0 && !Constants.isLightClient) {
             json.put("apiSSLPort", API.openAPISSLPort);
             servicesList.add(Peer.Service.API_SSL);
         }
