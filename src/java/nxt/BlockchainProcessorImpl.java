@@ -183,7 +183,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 // Download blocks until we are up-to-date
                 //
                 while (true) {
-                    if (!getMoreBlocks || Constants.isLightClient) {
+                    if (!getMoreBlocks) {
                         return;
                     }
                     int chainHeight = blockchain.getHeight();
@@ -1032,7 +1032,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, false);
 
-        ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
+        if (!Constants.isLightClient) {
+            ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
+        }
 
     }
 
