@@ -1729,7 +1729,9 @@
   "transaction10": "Transaction",
   "whitelist": "Whitelist",
   "expired": "Expired",
-  "bookmark_this_poll": "Bookmark This Poll",
+  "switched_to_account": "Switched to account __account__",
+  "regional_format": "Regional Format",
+  "use_browser_default": "Use Browser Default",
   "status_blockchain_downloading_proxy": "The blockchain is currently downloading. You are exploring NXT through the peer __peer__.",
   "status_light_client_proxy": "Running as light client. You are exploring NXT through the peer __peer__.",
   "proxy_info_link": "Understand the risks"

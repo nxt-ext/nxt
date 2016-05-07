@@ -42,5 +42,9 @@ var NRS = (function (NRS) {
         return !isDesktopApplication; // When using JavaFX you cannot export the contact list
     };
 
+    NRS.isShowDummyCheckbox = function() {
+        return isDesktopApplication && navigator.userAgent.indexOf("Linux") >= 0; // Correct rendering problem of checkboxes on Linux
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

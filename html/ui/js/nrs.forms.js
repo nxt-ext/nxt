@@ -18,8 +18,6 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
-	NRS.confirmedFormWarning = false;
-
 	NRS.forms = {};
 
 	$(".modal form input").keydown(function(e) {
