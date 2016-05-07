@@ -153,6 +153,8 @@ public final class API {
             final SslContextFactory sslContextFactory;
             if (enableSSL) {
                 HttpConfiguration https_config = new HttpConfiguration();
+                https_config.setSendDateHeader(false);
+                https_config.setSendServerVersion(false);
                 https_config.setSecureScheme("https");
                 https_config.setSecurePort(sslPort);
                 https_config.addCustomizer(new SecureRequestCustomizer());
