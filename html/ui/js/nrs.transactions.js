@@ -490,7 +490,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-    NRS.getTransactionRowHTML = function(t, actions) {
+    NRS.getTransactionRowHTML = function(t, actions, amountDecimals, feeDecimals) {
 		var transactionType = $.t(NRS.transactionTypes[t.type]['subTypes'][t.subtype]['i18nKeyTitle']);
 
 		if (t.type == 1 && t.subtype == 6 && t.attachment.priceNQT == "0") {
@@ -529,10 +529,10 @@ var NRS = (function(NRS, $, undefined) {
 		html += NRS.getTransactionIconHTML(t.type, t.subtype) + '&nbsp; ';
 		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
 		html += '</td>';
+		html += "<td style='vertical-align:middle;text-align:right;" + (t.type == 0 && receiving ? " color:#006400;" : (!receiving && t.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(t.amount, false, false, amountDecimals) + "</td>";
 		html += "<td style='width:5px;padding-right:0;vertical-align:middle;'>";
 		html += (t.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>";
-		html += "<td style='vertical-align:middle;" + (t.type == 0 && receiving ? " color:#006400;" : (!receiving && t.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(t.amount) + "</td>";
-		html += "<td style='vertical-align:middle;text-align:center;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(t.fee) + "</td>";
+		html += "<td style='vertical-align:middle;text-align:right;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(t.fee, false, false, feeDecimals) + "</td>";
 		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
 		html += "<td class='td_transaction_phasing' style='min-width:100px;vertical-align:middle;text-align:center;'></td>";
@@ -554,7 +554,7 @@ var NRS = (function(NRS, $, undefined) {
 		return html;
 	};
 
-    NRS.getLedgerEntryRow = function(entry) {
+    NRS.getLedgerEntryRow = function(entry, changeDecimals, balanceDecimals) {
         var linkClass;
         var dataToken;
         if (entry.isTransactionEvent) {
@@ -576,21 +576,21 @@ var NRS = (function(NRS, $, undefined) {
             NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
                 balanceType = "asset";
                 balanceEntity = response.name;
-                change = NRS.formatQuantity(change, response.decimals);
-                balance = NRS.formatQuantity(balance, response.decimals);
+                change = NRS.formatQuantity(change, response.decimals, false, changeDecimals);
+                balance = NRS.formatQuantity(balance, response.decimals, false, balanceDecimals);
                 holdingIcon = "<i class='fa fa-signal'></i> ";
             }, false);
         } else if (/CURRENCY_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getCurrency", {"currency": entry.holding}, function (response) {
                 balanceType = "currency";
                 balanceEntity = response.name;
-                change = NRS.formatQuantity(change, response.decimals);
-                balance = NRS.formatQuantity(balance, response.decimals);
+                change = NRS.formatQuantity(change, response.decimals, false, changeDecimals);
+                balance = NRS.formatQuantity(balance, response.decimals, false, balanceDecimals);
                 holdingIcon =  "<i class='fa fa-bank'></i> ";
             }, false);
         } else {
-            change = NRS.formatAmount(change);
-            balance = NRS.formatAmount(balance);
+            change = NRS.formatAmount(change, false, false, changeDecimals);
+            balance = NRS.formatAmount(balance, false, false, balanceDecimals);
         }
         var sign = "";
         if (entry.change > 0) {
@@ -616,8 +616,8 @@ var NRS = (function(NRS, $, undefined) {
         html += " <i class='fa fa-info'></i></a>";
 		html += '</td>';
 		if (balanceType == "nxt") {
-            html += "<td style='vertical-align:middle;'>" + sign + change + "</td>";
-            html += "<td style='vertical-align:middle;'>" + balance + "</td>";
+            html += "<td style='vertical-align:middle;' class='numeric'>" + change + " " + sign + "</td>";
+            html += "<td style='vertical-align:middle;' class='numeric'>" + balance + "</td>";
             html += "<td></td>";
             html += "<td></td>";
             html += "<td></td>";
@@ -625,8 +625,8 @@ var NRS = (function(NRS, $, undefined) {
             html += "<td></td>";
             html += "<td></td>";
             html += "<td>" + holdingIcon + balanceEntity + "</td>";
-            html += "<td style='vertical-align:middle;'>" + sign + change + "</td>";
-            html += "<td style='vertical-align:middle;'>" + balance + "</td>";
+            html += "<td style='vertical-align:middle;' class='numeric'>" + change + " " + sign + "</td>";
+            html += "<td style='vertical-align:middle;' class='numeric'>" + balance + "</td>";
         }
 		return html;
 	};
@@ -737,7 +737,6 @@ var NRS = (function(NRS, $, undefined) {
             "firstIndex": 0,
             "lastIndex": 9
         };
-
         var unconfirmedTransactions = NRS.unconfirmedTransactions;
         if (unconfirmedTransactions) {
             for (var i = 0; i < unconfirmedTransactions.length; i++) {
@@ -747,10 +746,16 @@ var NRS = (function(NRS, $, undefined) {
 
         NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
             if (response.transactions && response.transactions.length) {
+				var amountDecimals = NRS.getNumberOfDecimals(response.transactions, "amountNQT", function(val) {
+					return NRS.formatAmount(val.amountNQT);
+				});
+				var feeDecimals = NRS.getNumberOfDecimals(response.transactions, "fee", function(val) {
+					return NRS.formatAmount(val.fee);
+				});
                 for (var i = 0; i < response.transactions.length; i++) {
                     var transaction = response.transactions[i];
                     transaction.confirmed = true;
-                    rows += NRS.getTransactionRowHTML(transaction);
+                    rows += NRS.getTransactionRowHTML(transaction, false, amountDecimals, feeDecimals);
                 }
 
                 NRS.dataLoaded(rows);
@@ -779,9 +784,17 @@ var NRS = (function(NRS, $, undefined) {
                     NRS.hasMorePages = true;
                     response.entries.pop();
                 }
+				console.log(response);
+				var changeDecimals = NRS.getNumberOfDecimals(response.entries, "change", function(val) {
+					return NRS.formatAmount(val.change);
+				});
+				var balanceDecimals = NRS.getNumberOfDecimals(response.entries, "balance", function(val) {
+					return NRS.formatAmount(val.balance);
+				});
+
                 for (var i = 0; i < response.entries.length; i++) {
                     var entry = response.entries[i];
-                    rows += NRS.getLedgerEntryRow(entry);
+                    rows += NRS.getLedgerEntryRow(entry, changeDecimals, balanceDecimals);
                 }
             }
             NRS.dataLoaded(rows);
@@ -850,13 +863,18 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.hasMorePages = true;
 					response.transactions.pop();
 				}
-
+				var amountDecimals = NRS.getNumberOfDecimals(response.transactions, "amountNQT", function(val) {
+					return NRS.formatAmount(val.amountNQT);
+				});
+				var feeDecimals = NRS.getNumberOfDecimals(response.transactions, "fee", function(val) {
+					return NRS.formatAmount(val.fee);
+				});
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
 
 					transaction.confirmed = true;
 
-					rows += NRS.getTransactionRowHTML(transaction);
+					rows += NRS.getTransactionRowHTML(transaction, false, amountDecimals, feeDecimals);
 				}
 
 				NRS.dataLoaded(rows);
