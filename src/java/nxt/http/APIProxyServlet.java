@@ -227,7 +227,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     @Override
     protected ContentTransformer newClientRequestContentTransformer(HttpServletRequest clientRequest,
                                                                     Request proxyRequest) {
+
         String contentType = clientRequest.getContentType();
+        Logger.logDebugMessage(System.identityHashCode(clientRequest) + " newClientRequestContentTransformer " + contentType);
         if (contentType != null && contentType.contains("multipart")) {
             return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
         } else {
@@ -271,20 +273,23 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     }
 
     private static class PasswordFilteringContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
-        private final HttpServletRequest clientRequest;
+        private final int clientRequestId;
         private final PasswordFinder secretPhraseFinder = new PasswordFinder("secretPhrase=");
         private final PasswordFinder adminPasswordFinder = new PasswordFinder("adminPassword=");
         private boolean isPasswordDetected = false;
 
         public PasswordFilteringContentTransformer(HttpServletRequest clientRequest) {
-            this.clientRequest = clientRequest;
+            this.clientRequestId = System.identityHashCode(clientRequest);
         }
 
         @Override
         public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
+            Logger.logDebugMessage(clientRequestId + " PasswordFilteringContentTransformer.transform " + isPasswordDetected + " " + input.position());
             if (!isPasswordDetected) {
+                boolean positionChanged = false;
                 int position = input.position();
                 while (input.hasRemaining()) {
+                    positionChanged = true;
                     boolean secretPhaseFound = secretPhraseFinder.process(input);
                     boolean adminPasswordFound = false;
                     if (!secretPhaseFound) {
@@ -299,7 +304,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                         throw new PasswordDetectedException(error);
                     }
                 }
-                input.position(position);
+                if (positionChanged) {
+                    input.position(position);
+                }
 
                 if (!isPasswordDetected) {
                     output.add(input);
