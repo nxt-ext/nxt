@@ -821,7 +821,6 @@ var NRS = (function(NRS, $, undefined) {
 					}
 					return change;
 				});
-				console.log(response.entries);
                 for (var i = 0; i < response.entries.length; i++) {
                     var entry = response.entries[i];
                     rows += NRS.getLedgerEntryRow(entry, decimalParams);

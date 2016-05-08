@@ -163,6 +163,12 @@ var NRS = (function(NRS, $) {
             var infoModalTransactionsTable = $("#user_info_modal_transactions_table");
 			if (response.transactions && response.transactions.length) {
 				var rows = "";
+				var amountDecimals = NRS.getNumberOfDecimals(response.transactions, "amountNQT", function(val) {
+					return NRS.formatAmount(val.amountNQT);
+				});
+				var feeDecimals = NRS.getNumberOfDecimals(response.transactions, "fee", function(val) {
+					return NRS.formatAmount(val.fee);
+				});
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
                     var transactionType = getTransactionType(transaction);
@@ -177,14 +183,13 @@ var NRS = (function(NRS, $) {
 						transaction.amount = new BigInteger(transaction.amountNQT);
 						transaction.fee = new BigInteger(transaction.feeNQT);
 					}
-
 					var account = (receiving ? "sender" : "recipient");
 					rows += "<tr>" +
 						"<td>" + NRS.getTransactionLink(transaction.transaction, NRS.formatTimestamp(transaction.timestamp)) + "</td>" +
 						"<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "&nbsp" + transactionType + "</td>" +
+						"<td class='numeric'  " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount, false, false, amountDecimals) + "</td>" +
 						"<td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>" +
-						"<td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td>" +
-						"<td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td>" +
+						"<td class='numeric' " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee, false, false, feeDecimals) + "</td>" +
 						"<td>" + NRS.getAccountLink(transaction, account) + "</td>" +
 					"</tr>";
 				}
@@ -338,7 +343,6 @@ var NRS = (function(NRS, $) {
 				var assets = {};
 				var nrAssets = 0;
 				var ignoredAssets = 0; // Optimization to reduce number of getAsset calls
-
 				for (var i = 0; i < response.assetBalances.length; i++) {
 					if (response.assetBalances[i].balanceQNT == "0") {
 						ignoredAssets++;
@@ -354,11 +358,11 @@ var NRS = (function(NRS, $) {
 							"balanceQNT": response.assetBalances[i].balanceQNT
 						}
 					}, function(asset, input) {
+						asset.decimals = asset.decimals;
 						asset.asset = input.asset;
 						asset.balanceQNT = input["_extra"].balanceQNT;
 						assets[asset.asset] = asset;
 						nrAssets++;
-
                         // This will work since eventually the condition below or in the previous
                         // if statement would be met
 						//noinspection JSReferencingMutableVariableFromClosure
@@ -451,11 +455,17 @@ var NRS = (function(NRS, $) {
 				}
 			}
 		});
-
+		var quantityDecimals = NRS.getNumberOfDecimals(assetArray, "balanceQNT", function(val) {
+			return NRS.formatQuantity(val.balanceQNT, val.decimals);
+		});
+		var totalDecimals = NRS.getNumberOfDecimals(assetArray, "quantityQNT", function(val) {
+			return NRS.formatQuantity(val.quantityQNT, val.decimals);
+		});
+		console.log("HERE: " + quantityDecimals + " - " + totalDecimals);
 		for (var i = 0; i < assetArray.length; i++) {
 			var asset = assetArray[i];
 			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
-			rows += "<tr" + (asset.issued ? " class='asset_owner'" : "") + "><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'" + (asset.issued ? " style='font-weight:bold'" : "") + ">" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
+			rows += "<tr" + (asset.issued ? " class='asset_owner'" : "") + "><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'" + (asset.issued ? " style='font-weight:bold'" : "") + ">" + String(asset.name).escapeHTML() + "</a></td><td class='quantity numeric'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals, false, quantityDecimals) + "</td><td class='numeric'>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals, false, totalDecimals) + "</td><td>" + percentageAsset + "%</td></tr>";
 		}
 
         var infoModalAssetsTable = $("#user_info_modal_assets_table");
