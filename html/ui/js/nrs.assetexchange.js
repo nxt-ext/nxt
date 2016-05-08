@@ -1461,6 +1461,8 @@ var NRS = (function (NRS, $, undefined) {
                     asset.asset = input.asset;
                     asset.balanceQNT = new BigInteger(input["_extra"].balanceQNT);
                     asset.quantityQNT = new BigInteger(asset.quantityQNT);
+                    asset.ask_orders = result.ask_orders[asset.asset];
+                    asset.bid_orders = result.bid_orders[asset.asset];
 
                     result.assets[count.assets] = asset;
                     count.assets++;
@@ -1490,29 +1492,38 @@ var NRS = (function (NRS, $, undefined) {
                 return 0;
             }
         });
-
+        var quantityDecimals = NRS.getNumberOfDecimals(result.assets, "balanceQNT", function(val) {
+            return NRS.formatQuantity(val.balanceQNT, val.decimals);
+        });
+        var totalDecimals = NRS.getNumberOfDecimals(result.assets, "quantityQNT", function(val) {
+            return NRS.formatQuantity(val.quantityQNT, val.decimals);
+        });
+        var askDecimals = NRS.getNumberOfDecimals(result.assets, "ask", function(val) {
+            return NRS.formatOrderPricePerWholeQNT(val.ask_orders, val.decimals);
+        });
+        var bidDecimals = NRS.getNumberOfDecimals(result.assets, "bid", function(val) {
+            return NRS.formatOrderPricePerWholeQNT(val.bid_orders, val.decimals);
+        });
+        var valueDecimals = NRS.getNumberOfDecimals(result.assets, "total", function(val) {
+            return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.balanceQNT, val.bid_orders), false, false, val.decimals);
+        });
         for (var i = 0; i < result.assets.length; i++) {
             var asset = result.assets[i];
             var lowestAskOrder = result.ask_orders[asset.asset];
             var highestBidOrder = result.bid_orders[asset.asset];
             var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
-            var total;
-            if (highestBidOrder != -1) {
-                total = new BigInteger(NRS.calculateOrderTotalNQT(asset.balanceQNT, highestBidOrder, asset.decimals));
-            } else {
-                total = 0;
-            }
+
             if (highestBidOrder != -1) {
                 var totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(asset.balanceQNT, highestBidOrder));
             }
             rows += "<tr data-asset='" + String(asset.asset).escapeHTML() + "'>" +
                 "<td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'>" + String(asset.name).escapeHTML() + "</a></td>" +
-                "<td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td>" +
-                "<td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td>" +
+                "<td class='quantity numeric'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals, false, quantityDecimals) + "</td>" +
+                "<td class='numeric'>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals, false, totalDecimals) + "</td>" +
                 "<td>" + percentageAsset + "%</td>" +
-                "<td>" + (lowestAskOrder != -1 ? NRS.formatOrderPricePerWholeQNT(lowestAskOrder, asset.decimals) : "/") + "</td>" +
-                "<td>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(highestBidOrder, asset.decimals) : "/") + "</td>" +
-                "<td>" + (highestBidOrder != -1 ? NRS.formatAmount(totalNQT) : "/") + "</td>" +
+                "<td class='numeric'>" + (lowestAskOrder != -1 ? NRS.formatOrderPricePerWholeQNT(lowestAskOrder, asset.decimals, askDecimals) : "/") + "</td>" +
+                "<td class='numeric'>" + (highestBidOrder != -1 ? NRS.formatOrderPricePerWholeQNT(highestBidOrder, asset.decimals, bidDecimals) : "/") + "</td>" +
+                "<td class='numeric'>" + (highestBidOrder != -1 ? NRS.formatAmount(totalNQT, false, false, valueDecimals) : "/") + "</td>" +
                 "<td>" +
                     "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "' data-action='transfer_asset'>" + $.t("transfer") + "</a>" +
                     "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_asset_modal' data-asset='" + String(asset.asset).escapeHTML() + "' data-name='" + String(asset.name).escapeHTML() + "' data-decimals='" + String(asset.decimals).escapeHTML() + "' data-action='delete_shares'>" + $.t("delete_shares") + "</a>" +
