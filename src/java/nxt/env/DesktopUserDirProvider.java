@@ -40,7 +40,7 @@ abstract class DesktopUserDirProvider implements DirProvider {
             logFileDir = new File(getUserHomeDir(), "logs");
             return;
         }
-        Path logFilePattern = Paths.get(getUserHomeDir(), loggingProperties.getProperty(LOG_FILE_PATTERN));
+        Path logFilePattern = Paths.get(getUserHomeDir()).resolve(Paths.get(loggingProperties.getProperty(LOG_FILE_PATTERN)));
         loggingProperties.setProperty(LOG_FILE_PATTERN, logFilePattern.toString());
 
         Path logDirPath = logFilePattern.getParent();
@@ -63,7 +63,7 @@ abstract class DesktopUserDirProvider implements DirProvider {
 
     @Override
     public String getDbDir(String dbDir) {
-        return Paths.get(getUserHomeDir(), dbDir).toString();
+        return Paths.get(getUserHomeDir()).resolve(Paths.get(dbDir)).toString();
     }
 
     @Override

@@ -3532,3 +3532,7 @@ body > .header .navbar {
       }
   
 }/* @media min-width: 550px */
+
+.numeric {
+  text-align: right;
+}

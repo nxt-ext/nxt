@@ -286,6 +286,7 @@ var NRS = (function(NRS, $, undefined) {
     };
 
     NRS.loadPlugins = function() {
+        NRS.logConsole("Loading Plugins");
         var sidebarId = 'sidebar_plugins';
         if ($('#' + sidebarId).length == 0) {
             var options = {
@@ -331,6 +332,7 @@ var NRS = (function(NRS, $, undefined) {
 
         NRS.loadPageHTMLTemplates();
         NRS.loadModalHTMLTemplates();
+        NRS.logConsole("Plugins loaded");
     };
 
     NRS.getPluginRowHTML = function(pluginId) {
