@@ -18,8 +18,9 @@
  * @depends {nrs.js}
  * @depends {nrs.modals.js}
  */
-var NRS = (function(NRS, $, undefined) {
-	$("#nrs_modal").on("show.bs.modal", function(e) {
+var NRS = (function(NRS, $) {
+	var nrsModal = $("#nrs_modal");
+    nrsModal.on("show.bs.modal", function() {
 		if (NRS.fetchingModalData) {
 			return;
 		}
@@ -27,9 +28,13 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.fetchingModalData = true;
 
 		NRS.sendRequest("getState", {
-			"includeCounts": true
+			"includeCounts": true,
+            "adminPassword": NRS.getAdminPassword()
 		}, function(state) {
 			for (var key in state) {
+				if (!state.hasOwnProperty(key)) {
+					continue;
+				}
 				var el = $("#nrs_node_state_" + key);
 				if (el.length) {
 					if (key.indexOf("number") != -1) {
@@ -51,7 +56,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	});
 
-	$("#nrs_modal").on("hide.bs.modal", function(e) {
+	nrsModal.on("hide.bs.modal", function() {
 		$("body").off("dragover.nrs, drop.nrs");
 
 		$("#nrs_update_drop_zone, #nrs_update_result, #nrs_update_hashes, #nrs_update_hash_progress").hide();
@@ -62,7 +67,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(".nrs_modal_content").hide();
 	});
 
-	$("#nrs_modal ul.nav li").click(function(e) {
+	nrsModal.find("ul.nav li").click(function(e) {
 		e.preventDefault();
 
 		var tab = $(this).data("tab");

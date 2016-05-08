@@ -182,9 +182,11 @@ var ATS = (function(ATS, $, undefined) {
                 formData.append(key, params[key]);
             }
             var file = uploadField[0].files[0];
-            formData.append(fileParameter, file);
-            if (file && !formData["filename"]) {
-                formData.append("filename", file.name);
+            if (file) {
+                formData.append(fileParameter, file);
+                if (!formData["filename"]) {
+                    formData.append("filename", file.name);
+                }
             }
         } else {
             // JQuery defaults

@@ -18,10 +18,16 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $, undefined) {
-	
-	var _voteCache = {};
-	var requestedPoll = "";
-	var viewingPollBookmark = "";
+	var _voteCache;
+	var requestedPoll;
+	var viewingPollBookmark;
+
+	NRS.resetPollsState = function () {
+		_voteCache = {};
+		requestedPoll = "";
+		viewingPollBookmark = "";
+	};
+	NRS.resetPollsState();
 
 	function _setFollowButtonStates() {
 		NRS.storageSelect("polls", null, function (error, polls) {
@@ -828,6 +834,9 @@ var NRS = (function(NRS, $, undefined) {
 				"error": $.t("error_poll_id_invalid")
 			};
 		} else {
+			if (data.id == viewingPollBookmark) {
+				$("#followed_polls_bookmark_poll").hide();
+			}
 			NRS.sendRequest("getPoll", {
 				"poll": data.id
 			}, function(response) {
@@ -992,17 +1001,6 @@ var NRS = (function(NRS, $, undefined) {
 			followedPollsSidebar.find("a[data-poll=" + active + "]").addClass("active");
 		}
 		$("#followed_polls_sidebar_search").hide();
-		if(requestedPoll != "") {
-			var pollLink = $("#followed_polls_sidebar").find("a[data-poll=" + requestedPoll + "]");
-			if (pollLink.length) {
-				pollLink.click();
-				$("#followed_polls_bookmark_poll").hide();
-			} else {
-				$("#followed_polls_bookmark_poll").show();
-				viewingPollBookmark = requestedPoll;
-			}
-		}
-		requestedPoll = "";
 		NRS.pageLoaded(callback);
 	};
 
@@ -1062,7 +1060,14 @@ var NRS = (function(NRS, $, undefined) {
 		var pollId = poll.poll;
 		NRS.currentPoll = poll;
 		NRS.currentSubPage = pollId;
-
+		var pollLink = $("#followed_polls_sidebar").find("a[data-poll=" + pollId + "]");
+		if (pollLink.length) {
+			$("#followed_polls_bookmark_poll").hide();
+		} else {
+			$("#followed_polls_bookmark_poll").show();
+			viewingPollBookmark = pollId;
+		}
+		requestedPoll = "";
 		if (!refresh) {
             var followedPollsSidebar = $("#followed_polls_sidebar");
             followedPollsSidebar.find("a.active").removeClass("active");
@@ -1243,7 +1248,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			for (var i = 0; i < polls.length; i++) {
 				var poll = polls[i];
-				var description = poll.description;
+				var description = poll.description.escapeHTML();
 				if (description.length > 100) {
 					description = description.substring(0, 100) + "...";
 				}

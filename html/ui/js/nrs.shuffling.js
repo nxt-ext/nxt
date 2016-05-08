@@ -69,6 +69,16 @@ var NRS = (function(NRS, $) {
 
         var shufflerIndicatorFormatted = "";
         var startShufflerLinkFormatted = "";
+        var shufflerStage = "";
+        if (response.stage == 4) {
+            if (response.participantCount != response.registrantCount) {
+                shufflerStage = $.t("expired");
+            } else {
+                shufflerStage = $.t("failed");
+            }
+        } else {
+            shufflerStage = $.t(NRS.getShufflingStage(response.stage).toLowerCase())
+        }
         if (response.stage < 4) {
             shufflerIndicatorFormatted = "<i class='fa fa-circle' style='color:" + shufflerColor + ";'></i>";
             if (!isShufflerActive) {
@@ -94,7 +104,7 @@ var NRS = (function(NRS, $) {
                     return "<span>" + $.t("already_joined") + "</span>";
                 })(),
             shufflingFormatted: NRS.getTransactionLink(response.shuffling),
-            stageLabel: $.t(NRS.getShufflingStage(response.stage).toLowerCase()),
+            stageLabel: shufflerStage,
             shufflerStatus: shufflerStatus,
             shufflerIndicatorFormatted: shufflerIndicatorFormatted,
             startShufflerLinkFormatted: startShufflerLinkFormatted,
@@ -206,7 +216,7 @@ var NRS = (function(NRS, $) {
     };
 
     function getShufflers(callback) {
-        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.settings.admin_password, "includeParticipantState": true},
+        NRS.sendRequest("getShufflers", {"account": NRS.account, "adminPassword": NRS.getAdminPassword(), "includeParticipantState": true},
             function (shufflers) {
                 if (isErrorResponse(shufflers)) {
                     $.growl($.t("cannot_check_shufflers_status") + " " + shufflers.errorDescription.escapeHTML());

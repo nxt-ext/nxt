@@ -20,9 +20,18 @@
 var NRS = (function (NRS, $) {
 	var _password;
 	var _decryptionPassword;
-	var _decryptedTransactions = {};
-	var _encryptedNote = null;
-	var _sharedKeys = {};
+	var _decryptedTransactions;
+	var _encryptedNote;
+	var _sharedKeys;
+
+	NRS.resetEncryptionState = function () {
+		_password = null;
+		_decryptionPassword = null;
+		_decryptedTransactions = {};
+		_encryptedNote = null;
+		_sharedKeys = {};
+	};
+	NRS.resetEncryptionState();
 
 	NRS.generatePublicKey = function(secretPhrase) {
 		if (!secretPhrase) {

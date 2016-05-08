@@ -495,7 +495,7 @@ var NRS = (function (NRS, $, undefined) {
                         for (i = 0; i < transaction.attachment.transactionFullHashes.length; i++) {
                             var transactionBytes = converters.hexStringToByteArray(transaction.attachment.transactionFullHashes[i]);
                             var transactionId = converters.byteArrayToBigInteger(transactionBytes, 0).toString().escapeHTML();
-                            data[$.t("transaction") + (i + 1) + "_formatted_html"] =
+                            data["transaction" + (i + 1) + "_formatted_html"] =
                                 NRS.getTransactionLink(transactionId);
                         }
 
@@ -1237,7 +1237,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.sendRequest("getShufflers", {
                     "shufflingFullHash": transaction.fullHash,
                     "account": NRS.accountRS,
-                    "adminPassword": NRS.settings.admin_password
+                    "adminPassword": NRS.getAdminPassword()
                 }, function (response) {
                     if (response.shufflers && response.shufflers.length > 0) {
                         var shuffler = response.shufflers[0];

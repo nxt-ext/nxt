@@ -43,7 +43,7 @@ var NRS = (function(NRS, $) {
 
     $("#refreshSearchIndex").on("click", function() {
         NRS.sendRequest("luceneReindex", {
-            adminPassword: NRS.settings.admin_password
+            adminPassword: NRS.getAdminPassword()
         }, function (response) {
             if (response.errorCode) {
                 $.growl(response.errorDescription.escapeHTML());
