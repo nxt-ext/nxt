@@ -420,7 +420,7 @@ var NRS = (function (NRS, $, undefined) {
                         "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                         "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
                         "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
-                        "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false ,quantityDecimals) + "</td>" +
+                        "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false, quantityDecimals) + "</td>" +
                         "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals, rateNQTDecimals) + "</td>" +
                         "<td class='numeric'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT), false, false, totalNQTDecimals) + "</td>" +
                         "</tr>";
@@ -461,7 +461,7 @@ var NRS = (function (NRS, $, undefined) {
                         "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
                         "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
                         "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
-                        "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false ,quantityDecimals) + "</td>" +
+                        "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false, quantityDecimals) + "</td>" +
                         "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals, rateNQTDecimals) + "</td>" +
                         "<td class='numeric'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT), false, false, totalNQTDecimals) + "</td>" +
                         "</tr>";
@@ -952,8 +952,8 @@ var NRS = (function (NRS, $, undefined) {
                     "<td>" + NRS.getTransactionLink(exchange.currency, exchange.code) + "</td>" +
                     "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
                     "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
-                    "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals,false,quantityDecimals) + "</td>" +
-                    "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals,rateNQTDecimals) + "</td>" +
+                    "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false, quantityDecimals) + "</td>" +
+                    "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals, rateNQTDecimals) + "</td>" +
                     "<td class='numeric'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT, exchange.decimals),false,false,totalNQTDecimals) + "</td>" +
                     "</tr>";
                 }
@@ -988,7 +988,7 @@ var NRS = (function (NRS, $, undefined) {
                     "<td>" + NRS.getTransactionLink(transfers[i].transfer, transfers[i].currency) + "</td>" +
                     "<td><a href='#' data-goto-currency='" + String(transfers[i].code).escapeHTML() + "'>" + String(transfers[i].name).escapeHTML() + "</a></td>" +
                     "<td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td>" +
-                    "<td style='" + (type == "receive" ? "color:green" : "color:red") + "' class='numeric'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals,false,quantityDecimals) + "</td>" +
+                    "<td style='" + (type == "receive" ? "color:green" : "color:red") + "' class='numeric'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals, false, quantityDecimals) + "</td>" +
                     "<td>" + NRS.getAccountLink(transfers[i], "recipient") + "</td>" +
                     "<td>" + NRS.getAccountLink(transfers[i], "sender") + "</td>" +
                     "</tr>";
