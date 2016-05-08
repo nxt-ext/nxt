@@ -317,6 +317,9 @@ var NRS = (function(NRS, $) {
 			"includeCurrencyInfo": true
 		}, function(response) {
 			var rows = "";
+			var unitsDecimals = NRS.getNumberOfDecimals(response.accountCurrencies, "unconfirmedUnits", function(val) {
+				return NRS.formatQuantity(val.unconfirmedUnits, val.decimals);
+			});
 			if (response.accountCurrencies && response.accountCurrencies.length) {
 				for (var i = 0; i < response.accountCurrencies.length; i++) {
 					var currency = response.accountCurrencies[i];
@@ -324,7 +327,7 @@ var NRS = (function(NRS, $) {
 					rows += "<tr>" +
 						"<td>" + NRS.getTransactionLink(String(currency.currency).escapeHTML(), code) + "</td>" +
 						"<td>" + currency.name + "</td>" +
-						"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
+						"<td class='numeric'>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals, false, unitsDecimals) + "</td>" +
 					"</tr>";
 				}
 			}
@@ -385,6 +388,15 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
 			var rows = "";
+			var quantityDecimals = NRS.getNumberOfDecimals(response.trades, "quantityQNT", function(val) {
+				return NRS.formatQuantity(val.quantityQNT, val.decimals);
+			});
+			var priceDecimals = NRS.getNumberOfDecimals(response.trades, "priceNQT", function(val) {
+				return NRS.formatOrderPricePerWholeQNT(val.priceNQT, val.decimals);
+			});
+			var amountDecimals = NRS.getNumberOfDecimals(response.trades, "totalNQT", function(val) {
+				return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.quantityQNT, val.priceNQT));
+			});
 			if (response.trades && response.trades.length) {
 				var trades = response.trades;
 				for (var i = 0; i < trades.length; i++) {
@@ -392,7 +404,7 @@ var NRS = (function(NRS, $) {
 					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
 					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
 					var type = (trades[i].buyerRS == NRS.userInfoModal.user ? "buy" : "sell");
-					rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td style='color:" + (type == "buy" ? "green" : "red") + "'>" + $.t(type) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals) + "</td><td style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td></tr>";
+					rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td style='color:" + (type == "buy" ? "green" : "red") + "'>" + $.t(type) + "</td><td class='numeric'>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals, false, quantityDecimals) + "</td><td class='asset_price numeric'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals, priceDecimals) + "</td><td class='numeric' style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT, false, false, amountDecimals) + "</td></tr>";
 				}
 			}
             var infoModalTradeHistoryTable = $("#user_info_modal_trade_history_table");
@@ -461,7 +473,6 @@ var NRS = (function(NRS, $) {
 		var totalDecimals = NRS.getNumberOfDecimals(assetArray, "quantityQNT", function(val) {
 			return NRS.formatQuantity(val.quantityQNT, val.decimals);
 		});
-		console.log("HERE: " + quantityDecimals + " - " + totalDecimals);
 		for (var i = 0; i < assetArray.length; i++) {
 			var asset = assetArray[i];
 			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
