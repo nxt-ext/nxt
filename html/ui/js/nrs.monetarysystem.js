@@ -182,6 +182,14 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getCurrencyRows = function (response) {
         var rows = "";
+        var currentSupplyDecimals = NRS.getNumberOfDecimals(response.currencies, "currentSupply", function(val) {
+            console.log(NRS.formatQuantity(val.currentSupply, val.decimals));
+            return NRS.formatQuantity(val.currentSupply, val.decimals);
+        });
+        var maxSupplyDecimals = NRS.getNumberOfDecimals(response.currencies, "maxSupply", function(val) {
+            return NRS.formatQuantity(val.maxSupply, val.decimals);
+        });
+        console.log(maxSupplyDecimals);
         for (var i = 0; i < response.currencies.length; i++) {
             var currency = response.currencies[i];
             var name = String(currency.name).escapeHTML();
@@ -195,8 +203,8 @@ var NRS = (function (NRS, $, undefined) {
             "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
             "<td>" + name + "</td>" +
             "<td>" + typeIcons + "</td>" +
-            "<td>" + NRS.formatQuantity(currency.currentSupply, currency.decimals) + "</td>" +
-            "<td>" + NRS.formatQuantity(currency.maxSupply, currency.decimals) + "</td>" +
+            "<td class = 'numeric'>" + NRS.formatQuantity(currency.currentSupply, currency.decimals, false, currentSupplyDecimals) + "</td>" +
+            "<td class = 'numeric'>" + NRS.formatQuantity(currency.maxSupply, currency.decimals, false, maxSupplyDecimals) + "</td>" +
             "<td>";
             //noinspection BadExpressionStatementJS
             rows += "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> ";
@@ -732,6 +740,9 @@ var NRS = (function (NRS, $, undefined) {
                         response.accountCurrencies.pop();
                     }
                     var rows = "";
+                    var unitsDecimals = NRS.getNumberOfDecimals(response.accountCurrencies, "unconfirmedUnits", function(val) {
+                        return NRS.formatQuantity(val.unconfirmedUnits, val.decimals);
+                    });
                     for (var i = 0; i < response.accountCurrencies.length; i++) {
                         var currency = response.accountCurrencies[i];
                         var currencyId = String(currency.currency).escapeHTML();
@@ -745,7 +756,7 @@ var NRS = (function (NRS, $, undefined) {
                         "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
                         "<td>" + currency.name + "</td>" +
                         "<td>" + typeIcons + "</td>" +
-                        "<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
+                        "<td class = 'numeric'>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals, false, unitsDecimals) + "</td>" +
                         "<td>" +
                         "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> " +
                         "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + String(currency.currency).escapeHTML() + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
