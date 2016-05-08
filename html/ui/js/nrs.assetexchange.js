@@ -1290,7 +1290,13 @@ var NRS = (function (NRS, $, undefined) {
                     trade.quantityQNT = new BigInteger(trade.quantityQNT);
                     trade.totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trade.priceNQT, trade.quantityQNT));
                     var type = (trade.buyerRS == NRS.accountRS ? "buy" : "sell");
-                    rows += "<tr><td><a href='#' data-goto-asset='" + NRS.escapeRespStr(trade.asset) + "'>" + NRS.escapeRespStr(trade.name) + "</a></td><td>" + NRS.formatTimestamp(trade.timestamp) + "</td><td>" + $.t(trade.tradeType) + "</td><td class='numeric'>" + NRS.formatQuantity(trade.quantityQNT, trade.decimals, false, quantityDecimals) + "</td><td class='asset_price numeric'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, trade.decimals, priceDecimals) + "</td><td style='" + (type == "buy" ? "color:red" : "color:green") + "'  class='numeric'>" + NRS.formatAmount(trade.totalNQT,false,false,amountDecimals) + "</td>" +
+                    rows += "<tr>" +
+                        "<td><a href='#' data-goto-asset='" + NRS.escapeRespStr(trade.asset) + "'>" + NRS.escapeRespStr(trade.name) + "</a></td>" +
+                        "<td>" + NRS.formatTimestamp(trade.timestamp) + "</td>" +
+                        "<td>" + $.t(trade.tradeType) + "</td>" +
+                        "<td class='numeric'>" + NRS.formatQuantity(trade.quantityQNT, trade.decimals, false, quantityDecimals) + "</td>" +
+                        "<td class='asset_price numeric'>" + NRS.formatOrderPricePerWholeQNT(trade.priceNQT, trade.decimals, priceDecimals) + "</td>" +
+                        "<td style='" + (type == "buy" ? "color:red" : "color:green") + "' class='numeric'>" + NRS.formatAmount(trade.totalNQT, false, false, amountDecimals) + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "buyer") + "</td>" +
                         "<td>" + NRS.getAccountLink(trade, "seller") + "</td>" +
                     "</tr>";
@@ -1324,8 +1330,11 @@ var NRS = (function (NRS, $, undefined) {
                     var transfer = transfers[i];
                     transfer.quantityQNT = new BigInteger(transfer.quantityQNT);
                     var type = (transfer.recipientRS == NRS.accountRS ? "receive" : "send");
-                    rows += "<tr><td>" + NRS.getTransactionLink(transfer.assetTransfer) + "</td>" +
-                        "<td><a href='#' data-goto-asset='" + NRS.escapeRespStr(transfer.asset) + "'>" + NRS.escapeRespStr(transfer.name) + "</a></td><td>" + NRS.formatTimestamp(transfer.timestamp) + "</td><td style='" + (type == "receive" ? "color:green" : "color:red") + "'  class='numeric'>" + NRS.formatQuantity(transfer.quantityQNT, transfer.decimals,false,quantityDecimals) + "</td>" +
+                    rows += "<tr>" +
+                        "<td>" + NRS.getTransactionLink(transfer.assetTransfer) + "</td>" +
+                        "<td><a href='#' data-goto-asset='" + NRS.escapeRespStr(transfer.asset) + "'>" + NRS.escapeRespStr(transfer.name) + "</a></td>" +
+                        "<td>" + NRS.formatTimestamp(transfer.timestamp) + "</td>" +
+                        "<td style='" + (type == "receive" ? "color:green" : "color:red") + "' class='numeric'>" + NRS.formatQuantity(transfer.quantityQNT, transfer.decimals, false, quantityDecimals) + "</td>" +
                         "<td>" + NRS.getAccountLink(transfer, "recipient") + "</td>" +
                         "<td>" + NRS.getAccountLink(transfer, "sender") + "</td>" +
                     "</tr>";
@@ -1357,8 +1366,11 @@ var NRS = (function (NRS, $, undefined) {
                 var rows = "";
                 for (var i = 0; i < deletes.length; i++) {
                     deletes[i].quantityQNT = new BigInteger(deletes[i].quantityQNT);
-                    rows += "<tr><td>" + NRS.getTransactionLink(deletes[i].assetDelete) + "</td>" +
-                        "<td><a href='#' data-goto-asset='" + NRS.escapeRespStr(deletes[i].asset) + "'>" + NRS.escapeRespStr(deletes[i].name) + "</a></td><td>" + NRS.formatTimestamp(deletes[i].timestamp) + "</td><td class='numeric'>" + NRS.formatQuantity(deletes[i].quantityQNT, deletes[i].decimals,false, quantityDecimals) + "</td>" +
+                    rows += "<tr>" +
+                        "<td>" + NRS.getTransactionLink(deletes[i].assetDelete) + "</td>" +
+                        "<td><a href='#' data-goto-asset='" + NRS.escapeRespStr(deletes[i].asset) + "'>" + NRS.escapeRespStr(deletes[i].name) + "</a></td>" +
+                        "<td>" + NRS.formatTimestamp(deletes[i].timestamp) + "</td>" +
+                        "<td class='numeric'>" + NRS.formatQuantity(deletes[i].quantityQNT, deletes[i].decimals, false, quantityDecimals) + "</td>" +
                     "</tr>";
                 }
                 NRS.dataLoaded(rows);
