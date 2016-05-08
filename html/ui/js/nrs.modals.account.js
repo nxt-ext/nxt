@@ -296,13 +296,19 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
 			var rows = "";
+			var quantityDecimals = NRS.getNumberOfDecimals(response.goods, "quantity", function(val) {
+				return NRS.format(val.quantity);
+			});
+			var priceDecimals = NRS.getNumberOfDecimals(response.goods, "priceNQT", function(val) {
+				return NRS.formatAmount(val.priceNQT);
+			});
 			if (response.goods && response.goods.length) {
 				for (var i = 0; i < response.goods.length; i++) {
 					var good = response.goods[i];
 					if (good.name.length > 150) {
 						good.name = good.name.substring(0, 150) + "...";
 					}
-					rows += "<tr><td><a href='#' data-goto-goods='" + String(good.goods).escapeHTML() + "' data-seller='" + String(NRS.userInfoModal.user).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td>" + NRS.format(good.quantity) + "</td></tr>";
+					rows += "<tr><td><a href='#' data-goto-goods='" + String(good.goods).escapeHTML() + "' data-seller='" + String(NRS.userInfoModal.user).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='numeric'>" + NRS.formatAmount(good.priceNQT, false, false, priceDecimals) + " NXT</td><td class='numeric'>" + NRS.format(good.quantity, false, quantityDecimals) + "</td></tr>";
 				}
 			}
             var infoModalMarketplaceTable = $("#user_info_modal_marketplace_table");
