@@ -205,11 +205,22 @@ var NRS = (function(NRS, $) {
             "lastIndex": 100
         }, function (response) {
             var infoModalLedgerTable = $("#user_info_modal_ledger_table");
+			
             if (response.entries && response.entries.length) {
                 var rows = "";
+				var decimalParams = {
+					"changeDecimals": 0,
+					"balanceDecimals": 0
+				};
+				decimalParams.changeDecimals = NRS.getNumberOfDecimals(response.entries, "change", function(val) {
+					return NRS.formatAmount(val.change);
+				});
+				decimalParams.balanceDecimals = NRS.getNumberOfDecimals(response.entries, "balance", function(val) {
+					return NRS.formatAmount(val.balance);
+				});
                 for (var i = 0; i < response.entries.length; i++) {
                     var entry = response.entries[i];
-                    rows += NRS.getLedgerEntryRow(entry);
+                    rows += NRS.getLedgerEntryRow(entry, decimalParams);
                 }
                 infoModalLedgerTable.find("tbody").empty().append(rows);
                 NRS.dataLoadFinished(infoModalLedgerTable);
