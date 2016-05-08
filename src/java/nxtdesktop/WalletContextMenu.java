@@ -1,7 +1,6 @@
 package nxtdesktop;
 
 import com.sun.javafx.scene.control.skin.ContextMenuContent;
-import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -13,8 +12,9 @@ import javafx.stage.Window;
 import java.util.Iterator;
 
 /**
- * Enables only the cut/copy/paste context menu for edit fields and disables the link and window context menus
- *
+ * Show only the standard cut/copy/paste context menu for edit fields and labels
+ * Hide the link and window context menus
+ * <p>
  * Inspired by http://stackoverflow.com/questions/27047447/customized-context-menu-on-javafx-webview-webengine
  * Hopefully, in Java 9 there will be a more standard way to implement this.
  */
@@ -24,7 +24,6 @@ class WalletContextMenu implements EventHandler<ContextMenuEvent> {
     public void handle(ContextMenuEvent event) {
         @SuppressWarnings("deprecation")
         final Iterator<Window> windows = Window.impl_getWindows(); // May not work in Java 9
-
         while (windows.hasNext()) {
             // access the context menu window
             final Window window = windows.next();
@@ -37,11 +36,9 @@ class WalletContextMenu implements EventHandler<ContextMenuEvent> {
                             Node bridge = popup.lookup(".context-menu");
                             ContextMenuContent cmc = (ContextMenuContent) ((Parent) bridge).getChildrenUnmodifiable().get(0);
                             VBox itemsContainer = cmc.getItemsContainer();
-                            ObservableList<Node> children = itemsContainer.getChildren();
-                            if (children.size() == 3) {
-                                Node n = children.get(0);
-                                ContextMenuContent.MenuItemContainer item=(ContextMenuContent.MenuItemContainer)n;
-                                if (item.getItem().getText().equals("Cut")) {
+                            for (Node node : itemsContainer.getChildren()) {
+                                ContextMenuContent.MenuItemContainer item = (ContextMenuContent.MenuItemContainer)node;
+                                if (item.getItem().getText().equals("Copy")) {
                                     return;
                                 }
                             }
