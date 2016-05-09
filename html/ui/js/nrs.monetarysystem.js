@@ -367,7 +367,7 @@ var NRS = (function (NRS, $, undefined) {
                     amountPerUnitNQT = new BigInteger(response.founders[i].amountPerUnitNQT).multiply(new BigInteger("" + Math.pow(10, decimals)));
                     var percentage = NRS.calculatePercentage(amountPerUnitNQT, minReservePerUnitNQT);
                     rows += "<tr>" +
-                    "<td>" + NRS.getAccountLink(account, "account")+ "</td>" +
+                    "<td>" + NRS.getAccountLink(response.founders[i], "account")+ "</td>" +
                     "<td>" + NRS.convertToNXT(amountPerUnitNQT) + "</td>" +
                     "<td>" + NRS.convertToNXT(amountPerUnitNQT.multiply(new BigInteger(NRS.convertToQNTf(resSupply, decimals)))) + "</td>" +
                     "<td>" + NRS.formatQuantity(resSupply.subtract(initialSupply).multiply(amountPerUnitNQT).divide(totalAmountReserved), decimals) + "</td>" +
