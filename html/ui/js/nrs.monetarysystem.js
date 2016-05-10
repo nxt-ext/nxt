@@ -182,14 +182,12 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getCurrencyRows = function (response) {
         var rows = "";
-        var currentSupplyDecimals = NRS.getNumberOfDecimals(response.currencies, "currentSupply", function(val) {
-            console.log(NRS.formatQuantity(val.currentSupply, val.decimals));
-            return NRS.formatQuantity(val.currentSupply, val.decimals);
+        var currentSupplyDecimals = NRS.getNumberOfDecimals(response.currencies, "currentSupply", function(currency) {
+            return NRS.formatQuantity(currency.currentSupply, currency.decimals);
         });
-        var maxSupplyDecimals = NRS.getNumberOfDecimals(response.currencies, "maxSupply", function(val) {
-            return NRS.formatQuantity(val.maxSupply, val.decimals);
+        var maxSupplyDecimals = NRS.getNumberOfDecimals(response.currencies, "maxSupply", function(currency) {
+            return NRS.formatQuantity(currency.maxSupply, currency.decimals);
         });
-        console.log(maxSupplyDecimals);
         for (var i = 0; i < response.currencies.length; i++) {
             var currency = response.currencies[i];
             var name = String(currency.name).escapeHTML();
@@ -251,14 +249,14 @@ var NRS = (function (NRS, $, undefined) {
         if (offers && offers.length) {
             var rows = "";
             var decimals = parseInt($("#currency_decimals").text(), 10);
-            var supplyDecimals = NRS.getNumberOfDecimals(offers, "supply", function(val) {
-                return NRS.convertToQNTf(val.supply, decimals);
+            var supplyDecimals = NRS.getNumberOfDecimals(offers, "supply", function(offer) {
+                return NRS.convertToQNTf(offer.supply, decimals);
             });
-            var limitDecimals = NRS.getNumberOfDecimals(offers, "limit", function(val) {
-                return NRS.convertToQNTf(val.limit, decimals);
+            var limitDecimals = NRS.getNumberOfDecimals(offers, "limit", function(offer) {
+                return NRS.convertToQNTf(offer.limit, decimals);
             });
-            var rateNQTDecimals = NRS.getNumberOfDecimals(offers, "rateNQT", function(val) {
-                return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
+            var rateNQTDecimals = NRS.getNumberOfDecimals(offers, "rateNQT", function(offer) {
+                return NRS.formatOrderPricePerWholeQNT(offer.rateNQT, decimals);
             });
             for (i = 0; i < offers.length; i++) {
                 var offer = offers[i];
@@ -413,14 +411,14 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     var rows = "";
                     var decimals = parseInt($("#currency_decimals").text(), 10);
-                    var quantityDecimals = NRS.getNumberOfDecimals(response.exchanges, "units", function(val) {
-                        return NRS.convertToQNTf(val.units, decimals);
+                    var quantityDecimals = NRS.getNumberOfDecimals(response.exchanges, "units", function(exchange) {
+                        return NRS.convertToQNTf(exchange.units, decimals);
                     });
-                    var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(val) {
-                        return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
+                    var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(exchange) {
+                        return NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, decimals);
                     });
-                    var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(val) {
-                        return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.units, val.rateNQT));
+                    var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(exchange) {
+                        return NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT));
                     });
                     for (var i = 0; i < response.exchanges.length; i++) {
                         var exchange = response.exchanges[i];
@@ -454,14 +452,14 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     var rows = "";
                     var decimals = parseInt($("#currency_decimals").text(), 10);
-                    var quantityDecimals = NRS.getNumberOfDecimals(response.exchanges, "units", function(val) {
-                        return NRS.formatQuantity(val.units, decimals);
+                    var quantityDecimals = NRS.getNumberOfDecimals(response.exchanges, "units", function(exchange) {
+                        return NRS.formatQuantity(exchange.units, decimals);
                     });
-                    var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(val) {
-                        return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
+                    var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(exchange) {
+                        return NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, decimals);
                     });
-                    var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(val) {
-                        return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.units, val.rateNQT));
+                    var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(exchange) {
+                        return NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT));
                     });
                     for (var i = 0; i < response.exchanges.length; i++) {
                         var exchange = response.exchanges[i];
@@ -492,14 +490,14 @@ var NRS = (function (NRS, $, undefined) {
             }
             var rows = "";
             var decimals = parseInt($("#currency_decimals").text(), 10);
-            var quantityDecimals = NRS.getNumberOfDecimals(exchangeRequests, "units", function(val) {
-                return NRS.formatQuantity(val.units, decimals);
+            var quantityDecimals = NRS.getNumberOfDecimals(exchangeRequests, "units", function(exchangeRequest) {
+                return NRS.formatQuantity(exchangeRequest.units, decimals);
             });
-            var rateNQTDecimals = NRS.getNumberOfDecimals(exchangeRequests, "rateNQT", function(val) {
-                return NRS.formatOrderPricePerWholeQNT(val.rateNQT, decimals);
+            var rateNQTDecimals = NRS.getNumberOfDecimals(exchangeRequests, "rateNQT", function(exchangeRequest) {
+                return NRS.formatOrderPricePerWholeQNT(exchangeRequest.rateNQT, decimals);
             });
-            var totalNQTDecimals = NRS.getNumberOfDecimals(exchangeRequests, "totalNQT", function(val) {
-                return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.units, val.rateNQT));
+            var totalNQTDecimals = NRS.getNumberOfDecimals(exchangeRequests, "totalNQT", function(exchangeRequest) {
+                return NRS.formatAmount(NRS.calculateOrderTotalNQT(exchangeRequest.units, exchangeRequest.rateNQT));
             });
             for (i = 0; i < exchangeRequests.length; i++) {
                 var exchangeRequest = exchangeRequests[i];
@@ -740,8 +738,8 @@ var NRS = (function (NRS, $, undefined) {
                         response.accountCurrencies.pop();
                     }
                     var rows = "";
-                    var unitsDecimals = NRS.getNumberOfDecimals(response.accountCurrencies, "unconfirmedUnits", function(val) {
-                        return NRS.formatQuantity(val.unconfirmedUnits, val.decimals);
+                    var unitsDecimals = NRS.getNumberOfDecimals(response.accountCurrencies, "unconfirmedUnits", function(accountCurrency) {
+                        return NRS.formatQuantity(accountCurrency.unconfirmedUnits, accountCurrency.decimals);
                     });
                     for (var i = 0; i < response.accountCurrencies.length; i++) {
                         var currency = response.accountCurrencies[i];
@@ -944,14 +942,14 @@ var NRS = (function (NRS, $, undefined) {
                     NRS.hasMorePages = true;
                     response.exchanges.pop();
                 }
-                var quantityDecimals = NRS.getNumberOfDecimals(response.exchanges, "units", function(val) {
-                    return NRS.formatQuantity(val.units, val.decimals);
+                var quantityDecimals = NRS.getNumberOfDecimals(response.exchanges, "units", function(exchange) {
+                    return NRS.formatQuantity(exchange.units, exchange.decimals);
                 });
-                var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(val) {
-                    return NRS.formatOrderPricePerWholeQNT(val.rateNQT, val.decimals);
+                var rateNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "rateNQT", function(exchange) {
+                    return NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals);
                 });
-                var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(val) {
-                    return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.units, val.rateNQT));
+                var totalNQTDecimals = NRS.getNumberOfDecimals(response.exchanges, "totalNQT", function(exchange) {
+                    return NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT));
                 });
                 var rows = "";
                 for (var i = 0; i < response.exchanges.length; i++) {
@@ -988,8 +986,8 @@ var NRS = (function (NRS, $, undefined) {
                     response.transfers.pop();
                 }
                 var transfers = response.transfers;
-                var quantityDecimals = NRS.getNumberOfDecimals(transfers, "units", function(val) {
-                    return NRS.formatQuantity(val.units, val.decimals);
+                var quantityDecimals = NRS.getNumberOfDecimals(transfers, "units", function(transfer) {
+                    return NRS.formatQuantity(transfer.units, transfer.decimals);
                 });
                 var rows = "";
                 for (var i = 0; i < transfers.length; i++) {
