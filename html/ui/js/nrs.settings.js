@@ -523,8 +523,10 @@ var NRS = (function(NRS, $) {
                 function(callback) {
                     if (isAccountSpecific) {
                         NRS.loadPlugins();
-						NRS.getAccountInfo();
-						NRS.getInitialTransactions();
+						if(!NRS.getUrlParameter("page") || NRS.getUrlParameter("page") == "dashboard") {
+							NRS.getAccountInfo();
+							NRS.getInitialTransactions();
+						}
                     }
                     callback(null);
                 }
