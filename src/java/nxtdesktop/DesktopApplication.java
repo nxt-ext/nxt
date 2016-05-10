@@ -97,7 +97,7 @@ public class DesktopApplication extends Application {
         DesktopApplication.stage = stage;
         Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
         WebView browser = new WebView();
-        browser.setContextMenuEnabled(false);
+        browser.setOnContextMenuRequested(new WalletContextMenu());
         WebView invisible = new WebView();
 
         int height = (int) Math.min(primaryScreenBounds.getMaxY() - 100, 1000);
