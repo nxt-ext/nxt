@@ -31,10 +31,10 @@ import java.util.Map;
 
 final class DistributionListener implements Listener<Block> {
 
-    private static final int DISTRIBUTION_START = 630000;
-    private static final int DISTRIBUTION_END = DISTRIBUTION_START + 30 * 1440; // run for 30 days
+    private static final int DISTRIBUTION_START = 640000;
+    private static final int DISTRIBUTION_END = DISTRIBUTION_START + 90 * 1440; // run for 90 days
     private static final int DISTRIBUTION_FREQUENCY = 720; // run processing every 720 blocks
-    private static final int DISTRIBUTION_STEP = 20; // take snapshots every 20 blocks
+    private static final int DISTRIBUTION_STEP = 60; // take snapshots every 60 blocks
     private static final long FNXT_ASSET_ID = Long.parseUnsignedLong("111111111111111111");
     private static final long FNXT_ISSUER_ID = Long.parseUnsignedLong("22222222222222222");
     private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf(10000L * (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_STEP);
@@ -77,7 +77,7 @@ final class DistributionListener implements Listener<Block> {
         Logger.logDebugMessage("Running FNXT balance update at height " + currentHeight);
         Map<Long, BigInteger> accountBalanceTotals = new HashMap<>();
         for (int height = currentHeight - DISTRIBUTION_FREQUENCY + DISTRIBUTION_STEP; height <= currentHeight; height += DISTRIBUTION_STEP) {
-            //Logger.logDebugMessage("Calculating balances at height " + height);
+            Logger.logDebugMessage("Calculating balances at height " + height);
             try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmt = con.prepareStatement("SELECT id, balance FROM account WHERE (id, height) IN "
                          + "(SELECT (id, MAX(height)) FROM account WHERE height <= ? GROUP BY id) AND balance > 0")) {
