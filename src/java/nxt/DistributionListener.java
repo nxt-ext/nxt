@@ -35,21 +35,21 @@ final class DistributionListener implements Listener<Block> {
     private static final int DISTRIBUTION_END = DISTRIBUTION_START + 90 * 1440; // run for 90 days
     private static final int DISTRIBUTION_FREQUENCY = 720; // run processing every 720 blocks
     private static final int DISTRIBUTION_STEP = 60; // take snapshots every 60 blocks
-    private static final long FNXT_ASSET_ID = Long.parseUnsignedLong("111111111111111111");
-    private static final long FNXT_ISSUER_ID = Long.parseUnsignedLong("22222222222222222");
+    private static final long FXT_ASSET_ID = Long.parseUnsignedLong("111111111111111111");
+    private static final long FXT_ISSUER_ID = Long.parseUnsignedLong("22222222222222222");
     private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf(10000L * (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_STEP);
 
-    private static final DerivedDbTable accountFNXTTable = new DerivedDbTable("account_fnxt") {
+    private static final DerivedDbTable accountFXTTable = new DerivedDbTable("account_fxt") {
         @Override
         public void trim(int height) {
             try (Connection con = db.getConnection()) {
                 if (height > DISTRIBUTION_END) {
                     try (Statement stmt = con.createStatement()) {
-                        stmt.executeUpdate("TRUNCATE TABLE account_fnxt");
+                        stmt.executeUpdate("TRUNCATE TABLE account_fxt");
                     }
                 } else {
-                    try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_fnxt WHERE (id, height) NOT IN "
-                            + "(SELECT (id, MAX(height)) FROM account_fnxt WHERE height < ? GROUP BY id) AND height < ? AND height >= 0")) {
+                    try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_fxt WHERE (id, height) NOT IN "
+                            + "(SELECT (id, MAX(height)) FROM account_fxt WHERE height < ? GROUP BY id) AND height < ? AND height >= 0")) {
                         pstmt.setInt(1, height);
                         pstmt.setInt(2, height);
                         pstmt.executeUpdate();
@@ -74,7 +74,7 @@ final class DistributionListener implements Listener<Block> {
         if (currentHeight <= DISTRIBUTION_START || currentHeight > DISTRIBUTION_END || (currentHeight - DISTRIBUTION_START) % DISTRIBUTION_FREQUENCY != 0) {
             return;
         }
-        Logger.logDebugMessage("Running FNXT balance update at height " + currentHeight);
+        Logger.logDebugMessage("Running FXT balance update at height " + currentHeight);
         Map<Long, BigInteger> accountBalanceTotals = new HashMap<>();
         for (int height = currentHeight - DISTRIBUTION_FREQUENCY + DISTRIBUTION_STEP; height <= currentHeight; height += DISTRIBUTION_STEP) {
             Logger.logDebugMessage("Calculating balances at height " + height);
@@ -102,8 +102,8 @@ final class DistributionListener implements Listener<Block> {
         }
         Db.db.clearCache();
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmtSelect = con.prepareStatement("SELECT balance FROM account_fnxt WHERE id = ? ORDER BY height DESC LIMIT 1");
-             PreparedStatement pstmtInsert = con.prepareStatement("INSERT INTO account_fnxt (id, balance, height) values (?, ?, ?)")) {
+             PreparedStatement pstmtSelect = con.prepareStatement("SELECT balance FROM account_fxt WHERE id = ? ORDER BY height DESC LIMIT 1");
+             PreparedStatement pstmtInsert = con.prepareStatement("INSERT INTO account_fxt (id, balance, height) values (?, ?, ?)")) {
             for (Map.Entry<Long, BigInteger> entry : accountBalanceTotals.entrySet()) {
                 long accountId = entry.getKey();
                 BigInteger balanceTotal = entry.getValue();
@@ -120,24 +120,24 @@ final class DistributionListener implements Listener<Block> {
             }
             Db.db.commitTransaction();
             if (currentHeight == DISTRIBUTION_END) {
-                Logger.logDebugMessage("Running FNXT distribution at height " + currentHeight);
+                Logger.logDebugMessage("Running FXT distribution at height " + currentHeight);
                 long totalDistributed = 0;
                 int count = 0;
                 try (Statement stmt = con.createStatement();
-                     ResultSet rs = stmt.executeQuery("SELECT id, balance FROM account_fnxt WHERE (id, height) IN "
-                             + "(SELECT (id, MAX(height)) FROM account_fnxt WHERE height <= " + currentHeight + " GROUP BY id)")) {
+                     ResultSet rs = stmt.executeQuery("SELECT id, balance FROM account_fxt WHERE (id, height) IN "
+                             + "(SELECT (id, MAX(height)) FROM account_fxt WHERE height <= " + currentHeight + " GROUP BY id)")) {
                     while (rs.next()) {
                         long accountId = rs.getLong("id");
                         // 1 NXT held for the full period should give 1 asset unit, i.e. 10000 QNT assuming 4 decimals
                         long quantity = new BigInteger(rs.getBytes("balance")).divide(BALANCE_DIVIDER).longValueExact();
-                        Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FNXT_DISTRIBUTION, block.getId(),
-                                FNXT_ASSET_ID, quantity);
+                        Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                                FXT_ASSET_ID, quantity);
                         totalDistributed += quantity;
                         count += 1;
                     }
                 /*
-                Account.getAccount(FNXT_ISSUER_ID).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FNXT_DISTRIBUTION, block.getId(),
-                    FNXT_ASSET_ID, -totalDistributed);
+                Account.getAccount(FXT_ISSUER_ID).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                    FXT_ASSET_ID, -totalDistributed);
                 */
                 }
                 Logger.logDebugMessage("Distributed " + totalDistributed + " QNT to " + count + " accounts");
