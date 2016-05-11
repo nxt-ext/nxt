@@ -506,7 +506,8 @@ var NRS = (function(NRS, $, undefined) {
 			t.amount = new BigInteger(t.amountNQT);
 			t.fee = new BigInteger(t.feeNQT);
 		}
-
+		var sign = (t.type == 0 && receiving ? 1 : (!receiving && t.amount > 0 ? -1 : 0));
+		var color = (sign == 1 ? "color:#006400;" : (sign == -1 ? "color:red;" : ""));
 		var hasMessage = false;
 
 		if (t.attachment) {
@@ -528,9 +529,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += NRS.getTransactionIconHTML(t.type, t.subtype) + '&nbsp; ';
 		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
 		html += '</td>';
-		html += "<td style='vertical-align:middle;text-align:right;" + (t.type == 0 && receiving ? " color:#006400;" : (!receiving && t.amount > 0 ? " color:red;" : "")) + "'>" + NRS.formatAmount(t.amount, false, false, decimalParams.amountDecimals) + "</td>";
-		html += "<td style='width:5px;padding-right:0;vertical-align:middle;'>";
-		html += (t.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>";
+        html += "<td style='vertical-align:middle;text-align:right;" + color + "'>" + (sign < 0 ? "-" : "") + NRS.formatAmount(t.amount, false, false, decimalParams.amountDecimals) + "</td>";
 		html += "<td style='vertical-align:middle;text-align:right;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(t.fee, false, false, decimalParams.feeDecimals) + "</td>";
 		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
@@ -745,15 +744,12 @@ var NRS = (function(NRS, $, undefined) {
 
         NRS.sendRequest("getBlockchainTransactions+", params, function(response) {
             if (response.transactions && response.transactions.length) {
-				var decimalParams = {
-					"amountDecimals": 0,
-					"feeDecimals": 0
-				};
-				decimalParams.amountDecimals = NRS.getNumberOfDecimals(response.transactions, "amountNQT", function(val) {
-					return NRS.formatAmount(val.amountNQT);
+				var decimalParams = {};
+				decimalParams.amountDecimals = NRS.getNumberOfDecimals(response.transactions, "amountNQT", function(transaction) {
+					return NRS.formatAmount(transaction.amountNQT);
 				});
-				decimalParams.feeDecimals = NRS.getNumberOfDecimals(response.transactions, "fee", function(val) {
-					return NRS.formatAmount(val.fee);
+				decimalParams.feeDecimals = NRS.getNumberOfDecimals(response.transactions, "fee", function(transaction) {
+					return NRS.formatAmount(transaction.fee);
 				});
                 for (var i = 0; i < response.transactions.length; i++) {
                     var transaction = response.transactions[i];
