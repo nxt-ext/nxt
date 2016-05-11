@@ -1443,7 +1443,11 @@ var NRS = (function (NRS, $, undefined) {
                 isText.push(0);
             }
             sha256.update(converters.byteArrayToWordArrayEx(isText));
-            utfBytes = NRS.getUtf8Bytes(data.message);
+            if (data.filebytes) {
+                utfBytes = new Int8Array(data.filebytes);
+            } else {
+                utfBytes = NRS.getUtf8Bytes(data.message);
+            }
             sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
             hashWords = sha256.finalize();
             calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
