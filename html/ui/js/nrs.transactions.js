@@ -591,16 +591,16 @@ var NRS = (function(NRS, $, undefined) {
             NRS.sendRequest("getAsset", {"asset": entry.holding}, function (response) {
                 balanceType = "asset";
                 balanceEntity = response.name;
-                change = NRS.formatQuantity(change, response.decimals, false, decimalParams.changeDecimals);
-                balance = NRS.formatQuantity(balance, response.decimals, false, decimalParams.balanceDecimals);
+                change = NRS.formatQuantity(change, response.decimals, false, decimalParams.holdingChangeDecimals);
+                balance = NRS.formatQuantity(balance, response.decimals, false, decimalParams.holdingBalanceDecimals);
                 holdingIcon = "<i class='fa fa-signal'></i> ";
             }, false);
         } else if (/CURRENCY_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getCurrency", {"currency": entry.holding}, function (response) {
                 balanceType = "currency";
                 balanceEntity = response.name;
-                change = NRS.formatQuantity(change, response.decimals, false, decimalParams.changeDecimals);
-                balance = NRS.formatQuantity(balance, response.decimals, false, decimalParams.balanceDecimals);
+                change = NRS.formatQuantity(change, response.decimals, false, decimalParams.holdingChangeDecimals);
+                balance = NRS.formatQuantity(balance, response.decimals, false, decimalParams.holdingBalanceDecimals);
                 holdingIcon =  "<i class='fa fa-bank'></i> ";
             }, false);
         } else {
@@ -786,10 +786,44 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.loadPage("dashboard");
 	};
 
-	NRS.pages.ledger = function() {
+	var isHoldingEntry = function (entry){
+		return /ASSET_BALANCE/i.test(entry.holdingType) || /CURRENCY_BALANCE/i.test(entry.holdingType);
+	};
+
+    NRS.getLedgerNumberOfDecimals = function (entries){
+		var decimalParams = {};
+		decimalParams.changeDecimals = NRS.getNumberOfDecimals(entries, "change", function(entry) {
+			if (isHoldingEntry(entry)) {
+				return "";
+			}
+			return NRS.formatAmount(entry.change);
+		});
+		decimalParams.holdingChangeDecimals = NRS.getNumberOfDecimals(entries, "change", function(entry) {
+			if (isHoldingEntry(entry.holdingType)) {
+				return NRS.formatQuantity(entry.change, entry.holdingInfo.decimals);
+			}
+			return "";
+		});
+		decimalParams.balanceDecimals = NRS.getNumberOfDecimals(entries, "balance", function(entry) {
+			if (isHoldingEntry(entry.holdingType)) {
+				return "";
+			}
+			return NRS.formatAmount(entry.balance);
+		});
+		decimalParams.holdingBalanceDecimals = NRS.getNumberOfDecimals(entries, "balance", function(entry) {
+			if (isHoldingEntry(entry.holdingType)) {
+				return NRS.formatQuantity(entry.balance, entry.holdingInfo.decimals);
+			}
+			return "";
+		});
+		return decimalParams;
+	};
+	
+    NRS.pages.ledger = function() {
 		var rows = "";
         var params = {
             "account": NRS.account,
+            "includeHoldingInfo": true,
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
         };
@@ -800,40 +834,7 @@ var NRS = (function(NRS, $, undefined) {
                     NRS.hasMorePages = true;
                     response.entries.pop();
                 }
-				var decimalParams = {
-					"changeDecimals": 0,
-					"balanceDecimals": 0
-				};
-				decimalParams.changeDecimals = NRS.getNumberOfDecimals(response.entries, "change", function(val) {
-					var change;
-					if (/ASSET_BALANCE/i.test(val.holdingType)) {
-						NRS.sendRequest("getAsset", {"asset": val.holding}, function (response) {
-							change = NRS.formatQuantity(val.change,response.decimals);
-						}, false);
-					} else if (/CURRENCY_BALANCE/i.test(val.holdingType)) {
-						NRS.sendRequest("getCurrency", {"currency": val.holding}, function (response) {
-							change = NRS.formatQuantity(val.change,response.decimals);
-						}, false);
-					} else {
-						change = NRS.formatAmount(val.change);
-					}
-					return change;
-				});
-				decimalParams.balanceDecimals = NRS.getNumberOfDecimals(response.entries, "balance", function(val) {
-					var change;
-					if (/ASSET_BALANCE/i.test(val.holdingType)) {
-						NRS.sendRequest("getAsset", {"asset": val.holding}, function (response) {
-							change = NRS.formatQuantity(val.balance,response.decimals);
-						}, false);
-					} else if (/CURRENCY_BALANCE/i.test(val.holdingType)) {
-						NRS.sendRequest("getCurrency", {"currency": val.holding}, function (response) {
-							change = NRS.formatQuantity(val.balance,response.decimals);
-						}, false);
-					} else {
-						change = NRS.formatAmount(val.balance);
-					}
-					return change;
-				});
+				var decimalParams = NRS.getLedgerNumberOfDecimals(response.entries);
                 for (var i = 0; i < response.entries.length; i++) {
                     var entry = response.entries[i];
                     rows += NRS.getLedgerEntryRow(entry, decimalParams);
