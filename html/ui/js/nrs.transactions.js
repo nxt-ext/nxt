@@ -501,13 +501,30 @@ var NRS = (function(NRS, $, undefined) {
 			}
 		}
 
-		var receiving = t.recipient == NRS.account;
-		if (t.amountNQT) {
-			t.amount = new BigInteger(t.amountNQT);
-			t.fee = new BigInteger(t.feeNQT);
+		var balanceChange = "";
+		var sign = 0;
+		var receiving = t.recipient == NRS.account && !(t.sender == NRS.account);
+		if (receiving) {
+			if (t.amountNQT != "0") {
+				balanceChange = new BigInteger(t.amountNQT);
+				sign = 1;
+			}
+		} else {
+            var amount;
+			if (t.sender != t.recipient) {
+				amount = new BigInteger(t.amountNQT);
+				amount = amount.negate();
+			} else {
+				amount = new BigInteger("0");
+			}
+            balanceChange = amount.subtract(new BigInteger(t.feeNQT));
+            sign = -1;
 		}
-		var sign = (t.type == 0 && receiving ? 1 : (!receiving && t.amount > 0 ? -1 : 0));
-		var color = (sign == 1 ? "color:#006400;" : (sign == -1 ? "color:red;" : ""));
+		var formattedAmount = "";
+		if (balanceChange != "") {
+			formattedAmount = NRS.formatAmount(balanceChange, false, false, decimalParams.amountDecimals);
+		}
+		var color = (sign == 1 ? "color:green;" : (sign == -1 ? "color:red;" : ""));
 		var hasMessage = false;
 
 		if (t.attachment) {
@@ -529,15 +546,15 @@ var NRS = (function(NRS, $, undefined) {
 		html += NRS.getTransactionIconHTML(t.type, t.subtype) + '&nbsp; ';
 		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
 		html += '</td>';
-        html += "<td style='vertical-align:middle;text-align:right;" + color + "'>" + (sign < 0 ? "-" : "") + NRS.formatAmount(t.amount, false, false, decimalParams.amountDecimals) + "</td>";
-		html += "<td style='vertical-align:middle;text-align:right;" + (!receiving ? " color:red;" : "") + "'>" + NRS.formatAmount(t.fee, false, false, decimalParams.feeDecimals) + "</td>";
+        html += "<td style='vertical-align:middle;text-align:right;" + color + "'>" + formattedAmount + "</td>";
 		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
 		html += "<td class='td_transaction_phasing' style='min-width:100px;vertical-align:middle;text-align:center;'></td>";
+		html += "<td style='vertical-align:middle;text-align:center;'>" + NRS.getBlockLink(t.height, null, true) + "</td>";
 		html += "<td class='confirmations' style='vertical-align:middle;text-align:center;font-size:12px;'>";
 		html += "<span class='show_popover' data-content='" + (t.confirmed ? NRS.formatAmount(t.confirmations) + " " + $.t("confirmations") : $.t("unconfirmed_transaction")) + "' ";
 		html += "data-container='body' data-placement='left'>";
-		html += (!t.confirmed ? "-" : (t.confirmations > 1440 ? "1440+" : NRS.formatAmount(t.confirmations))) + "</span></td>";
+		html += (!t.confirmed ? "-" : (t.confirmations > 1440 ? (NRS.formatAmount('144000000000') + "+") : NRS.formatAmount(t.confirmations))) + "</span></td>";
 		if (actions && actions.length != undefined) {
 			html += '<td class="td_transaction_actions" style="vertical-align:middle;text-align:right;">';
 			if (actions.indexOf('approve') > -1) {
