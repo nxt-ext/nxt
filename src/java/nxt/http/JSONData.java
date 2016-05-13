@@ -17,6 +17,7 @@
 package nxt.http;
 
 import nxt.Account;
+import nxt.AccountLedger;
 import nxt.AccountLedger.LedgerEntry;
 import nxt.AccountRestrictions;
 import nxt.Alias;
@@ -1166,7 +1167,7 @@ public final class JSONData {
         }
     }
 
-    static void ledgerEntry(JSONObject json, LedgerEntry entry, boolean includeTransactions) {
+    static void ledgerEntry(JSONObject json, LedgerEntry entry, boolean includeTransactions, boolean includeHoldingInfo) {
         putAccount(json, "account", entry.getAccountId());
         json.put("ledgerId", Long.toUnsignedString(entry.getLedgerId()));
         json.put("block", Long.toUnsignedString(entry.getBlockId()));
@@ -1177,10 +1178,26 @@ public final class JSONData {
         json.put("isTransactionEvent", entry.getEvent().isTransaction());
         json.put("change", String.valueOf(entry.getChange()));
         json.put("balance", String.valueOf(entry.getBalance()));
-        if (entry.getHolding() != null) {
-            json.put("holdingType", entry.getHolding().name());
+        AccountLedger.LedgerHolding ledgerHolding = entry.getHolding();
+        if (ledgerHolding != null) {
+            json.put("holdingType", ledgerHolding.name());
             if (entry.getHoldingId() != null) {
                 json.put("holding", Long.toUnsignedString(entry.getHoldingId()));
+            }
+            if (includeHoldingInfo) {
+                JSONObject holdingJson = null;
+                if (ledgerHolding == AccountLedger.LedgerHolding.ASSET_BALANCE
+                        || ledgerHolding == AccountLedger.LedgerHolding.UNCONFIRMED_ASSET_BALANCE) {
+                    holdingJson = new JSONObject();
+                    putAssetInfo(holdingJson, entry.getHoldingId());
+                } else if (ledgerHolding == AccountLedger.LedgerHolding.CURRENCY_BALANCE
+                        || ledgerHolding == AccountLedger.LedgerHolding.UNCONFIRMED_CURRENCY_BALANCE) {
+                    holdingJson = new JSONObject();
+                    putCurrencyInfo(holdingJson, entry.getHoldingId());
+                }
+                if (holdingJson != null) {
+                    json.put("holdingInfo", holdingJson);
+                }
             }
         }
         if (includeTransactions && entry.getEvent().isTransaction()) {

@@ -47,6 +47,10 @@ import javax.servlet.http.HttpServletRequest;
  *       <td>includeTransaction</td>
  *       <td>Specify TRUE to include the transaction associated with the ledger entry.  The default is FALSE.</td>
  *     </tr>
+ *     <tr>
+ *       <td>includeHoldingInfo</td>
+ *       <td>Specify TRUE to include the corresponding asset or currency info (name, decimals) with each ledger entry.  The default is FALSE.</td>
+ *     </tr>
  *   </tbody>
  * </table>
  * <br>
@@ -170,7 +174,7 @@ public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
      * Create the GetAccountLedgerEntry instance
      */
     private GetAccountLedgerEntry() {
-        super(new APITag[] {APITag.ACCOUNTS}, "ledgerId", "includeTransaction");
+        super(new APITag[] {APITag.ACCOUNTS}, "ledgerId", "includeTransaction", "includeHoldingInfo");
     }
 
     /**
@@ -187,6 +191,8 @@ public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
         //
         long ledgerId = ParameterParser.getUnsignedLong(req, "ledgerId", true);
         boolean includeTransaction = "true".equalsIgnoreCase(req.getParameter("includeTransaction"));
+        boolean includeHoldingInfo = "true".equalsIgnoreCase(req.getParameter("includeHoldingInfo"));
+
         //
         // Get the ledger entry
         //
@@ -197,7 +203,7 @@ public class GetAccountLedgerEntry extends APIServlet.APIRequestHandler {
         // Return the response
         //
         JSONObject response = new JSONObject();
-        JSONData.ledgerEntry(response, ledgerEntry, includeTransaction);
+        JSONData.ledgerEntry(response, ledgerEntry, includeTransaction, includeHoldingInfo);
         return response;
     }
 
