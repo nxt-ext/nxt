@@ -90,6 +90,10 @@ import java.util.List;
  *       <td>Specify TRUE to include the transaction associated with a ledger entry.  The default is FALSE.</td>
  *     </tr>
  *     <tr>
+ *       <td>includeHoldingInfo</td>
+ *       <td>Specify TRUE to include the corresponding asset or currency info (name, decimals) with each ledger entry.  The default is FALSE.</td>
+ *     </tr>
+ *     <tr>
  *       <td>firstIndex</td>
  *       <td>Return matching entries starting from this index, inclusive, default is 0. Sort is always most recent first.
  *       </td>
@@ -225,7 +229,7 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
      */
     private GetAccountLedger() {
         super(new APITag[] {APITag.ACCOUNTS}, "account", "firstIndex", "lastIndex",
-                "eventType", "event", "holdingType", "holding", "includeTransactions");
+                "eventType", "event", "holdingType", "holding", "includeTransactions", "includeHoldingInfo");
     }
 
     /**
@@ -266,6 +270,8 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
             }
         }
         boolean includeTransactions = "true".equalsIgnoreCase(req.getParameter("includeTransactions"));
+        boolean includeHoldingInfo = "true".equalsIgnoreCase(req.getParameter("includeHoldingInfo"));
+
         //
         // Get the ledger entries
         //
@@ -277,7 +283,7 @@ public class GetAccountLedger extends APIServlet.APIRequestHandler {
         JSONArray responseEntries = new JSONArray();
         ledgerEntries.forEach((entry) -> {
             JSONObject responseEntry = new JSONObject();
-            JSONData.ledgerEntry(responseEntry, entry, includeTransactions);
+            JSONData.ledgerEntry(responseEntry, entry, includeTransactions, includeHoldingInfo);
             responseEntries.add(responseEntry);
         });
         JSONObject response = new JSONObject();
