@@ -1732,5 +1732,8 @@
   "switched_to_account": "Switched to account __account__",
   "regional_format": "Regional Format",
   "use_browser_default": "Use Browser Default",
-  "balance_change": "Balance Change"
+  "balance_change": "Balance Change",
+  "exchange_buy": "Exchange Buy",
+  "exchange_sell": "Exchange Sell",
+  "trade": "Trade"
 }
