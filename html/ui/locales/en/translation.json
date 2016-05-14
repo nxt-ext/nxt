@@ -1733,5 +1733,9 @@
   "regional_format": "Regional Format",
   "use_browser_default": "Use Browser Default",
   "missing_asset_param": "Parameter 'asset' was not specified",
-  "invalid_asset_param": "The value of parameter 'asset' __asset__ is invalid, specify an existing asset id"
+  "invalid_asset_param": "The value of parameter 'asset' __asset__ is invalid, specify an existing asset id",
+  "balance_change": "Balance Change",
+  "exchange_buy": "Exchange Buy",
+  "exchange_sell": "Exchange Sell",
+  "trade": "Trade"
 }
