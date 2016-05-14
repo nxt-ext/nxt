@@ -1731,5 +1731,7 @@
   "expired": "Expired",
   "switched_to_account": "Switched to account __account__",
   "regional_format": "Regional Format",
-  "use_browser_default": "Use Browser Default"
+  "use_browser_default": "Use Browser Default",
+  "missing_asset_param": "Parameter 'asset' was not specified",
+  "invalid_asset_param": "The value of parameter 'asset' __asset__ is invalid, specify an existing asset id"
 }

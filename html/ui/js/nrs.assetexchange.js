@@ -49,6 +49,33 @@ var NRS = (function (NRS, $, undefined) {
         return currentAsset;
     };
 
+    function loadAssetFromURL() {
+        var page = NRS.getUrlParameter("page"); 
+        var asset = NRS.getUrlParameter("asset");
+        if (!page || page != "asset_exchange") {
+            return;
+        }
+        if (!asset) {
+            $.growl($.t("missing_asset_param"), {
+                "type": "danger"
+            });
+            return;
+        }
+        page = page.escapeHTML();
+        asset = asset.escapeHTML();
+        NRS.sendRequest("getAsset", {
+            "asset": asset
+        }, function(response) {
+            if (response.errorCode) {
+                $.growl($.t("invalid_asset_param", { asset: asset }), {
+                    "type": "danger"
+                });
+            } else {
+                NRS.loadAsset(response, false);
+            }
+        });
+    }
+    
     NRS.pages.asset_exchange = function (callback) {
         $(".content.content-stretch:visible").width($(".page:visible").width());
         assets = [];
@@ -98,19 +125,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.loadAssetExchangeSidebar(callback);
             }
         });
-        if (NRS.getUrlParameter("page") && NRS.getUrlParameter("page") == "asset_exchange" && NRS.getUrlParameter("asset")) {
-            NRS.sendRequest("getAsset", {
-                "asset": String(NRS.getUrlParameter("asset")).escapeHTML()
-            }, function (response) {
-                if (response.errorCode) {
-                    $.growl($.t("invalid asset") + " " + String(NRS.getUrlParameter("asset")).escapeHTML(), {
-                        "type": "danger"
-                    });
-                } else {
-                    NRS.loadAsset(response, false);
-                }
-            });
-        }
+        loadAssetFromURL();
     };
 
     NRS.cacheAsset = function (asset) {
