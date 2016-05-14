@@ -113,7 +113,9 @@ public final class Generator implements Comparable<Generator> {
     };
 
     static {
-        ThreadPool.scheduleThread("GenerateBlocks", generateBlocksThread, 500, TimeUnit.MILLISECONDS);
+        if (!Constants.isLightClient) {
+            ThreadPool.scheduleThread("GenerateBlocks", generateBlocksThread, 500, TimeUnit.MILLISECONDS);
+        }
     }
 
     static void init() {}
