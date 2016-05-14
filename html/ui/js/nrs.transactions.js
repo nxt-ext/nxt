@@ -608,10 +608,12 @@ var NRS = (function(NRS, $, undefined) {
             balance = NRS.formatAmount(balance, false, false, decimalParams.balanceDecimals);
         }
         var sign = "";
+		var color = "";
         if (entry.change > 0) {
-            sign = "<i class='fa fa-plus-circle' style='color:#65C62E'></i> ";
-        } else if (entry.change < 0) {
-            sign = "<i class='fa fa-minus-circle' style='color:#E04434'></i> ";
+			color = "color:green;";
+		} else if (entry.change < 0) {
+			color = "color:red;";
+			sign = "-";
         }
         var eventType = String(entry.eventType).escapeHTML();
         if (eventType.indexOf("ASSET") == 0 || eventType.indexOf("CURRENCY") == 0) {
@@ -631,7 +633,7 @@ var NRS = (function(NRS, $, undefined) {
         html += " <i class='fa fa-info'></i></a>";
 		html += '</td>';
 		if (balanceType == "nxt") {
-            html += "<td style='vertical-align:middle;' class='numeric'>" + change + " " + sign + "</td>";
+            html += "<td style='vertical-align:middle;" + color + "' class='numeric'>" + sign + change + "</td>";
             html += "<td style='vertical-align:middle;' class='numeric'>" + balance + "</td>";
             html += "<td></td>";
             html += "<td></td>";
@@ -640,7 +642,7 @@ var NRS = (function(NRS, $, undefined) {
             html += "<td></td>";
             html += "<td></td>";
             html += "<td>" + holdingIcon + balanceEntity + "</td>";
-            html += "<td style='vertical-align:middle;' class='numeric'>" + change + " " + sign + "</td>";
+            html += "<td style='vertical-align:middle;" + color + "' class='numeric'>" + sign + change + "</td>";
             html += "<td style='vertical-align:middle;' class='numeric'>" + balance + "</td>";
         }
 		return html;
@@ -818,7 +820,7 @@ var NRS = (function(NRS, $, undefined) {
 		});
 		return decimalParams;
 	};
-	
+
     NRS.pages.ledger = function() {
 		var rows = "";
         var params = {
