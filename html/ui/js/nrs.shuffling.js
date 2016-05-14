@@ -266,8 +266,13 @@ var NRS = (function(NRS, $) {
                             response.shufflings.pop();
                         }
                         view.shufflings.length = 0;
-                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(val) {
-                            return NRS.formatAmount(val.amount);
+                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
+                            switch (response.holdingType) {
+                                case 0: return NRS.formatAmount(shuffling.amount);
+                                case 1:
+                                case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
+                                default: return "";
+                            }
                         });
                         response.shufflings.forEach(
                             function (shufflingJson) {
@@ -321,8 +326,13 @@ var NRS = (function(NRS, $) {
                             response.shufflings.pop();
                         }
                         view.shufflings.length = 0;
-                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(val) {
-                            return NRS.formatAmount(val.amount);
+                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
+                            switch (response.holdingType) {
+                                case 0: return NRS.formatAmount(shuffling.amount);
+                                case 1:
+                                case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
+                                default: return "";
+                            }
                         });
                         response.shufflings.forEach(
                             function (shufflingJson) {
@@ -472,8 +482,13 @@ var NRS = (function(NRS, $) {
                             response.shufflings.pop();
                         }
                         view.data.length = 0;
-                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(val) {
-                            return NRS.formatAmount(val.amount);
+                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
+                            switch (response.holdingType) {
+                                case 0: return NRS.formatAmount(shuffling.amount);
+                                case 1:
+                                case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
+                                default: return "";
+                            }
                         });
                         response.shufflings.forEach(
                             function (shufflingJson) {
