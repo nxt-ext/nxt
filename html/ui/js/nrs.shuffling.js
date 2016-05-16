@@ -267,7 +267,7 @@ var NRS = (function(NRS, $) {
                         }
                         view.shufflings.length = 0;
                         var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
-                            switch (response.holdingType) {
+                            switch (shuffling.holdingType) {
                                 case 0: return NRS.formatAmount(shuffling.amount);
                                 case 1:
                                 case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
@@ -327,7 +327,7 @@ var NRS = (function(NRS, $) {
                         }
                         view.shufflings.length = 0;
                         var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
-                            switch (response.holdingType) {
+                            switch (shuffling.holdingType) {
                                 case 0: return NRS.formatAmount(shuffling.amount);
                                 case 1:
                                 case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
@@ -483,7 +483,7 @@ var NRS = (function(NRS, $) {
                         }
                         view.data.length = 0;
                         var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
-                            switch (response.holdingType) {
+                            switch (shuffling.holdingType) {
                                 case 0: return NRS.formatAmount(shuffling.amount);
                                 case 1:
                                 case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
