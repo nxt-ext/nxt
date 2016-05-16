@@ -1737,5 +1737,6 @@
   "balance_change": "Balance Change",
   "exchange_buy": "Exchange Buy",
   "exchange_sell": "Exchange Sell",
-  "trade": "Trade"
+  "trade": "Trade",
+  "max_nxt_decimals": "Maximum NXT decimal positions"
 }

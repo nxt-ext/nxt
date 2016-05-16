@@ -400,6 +400,19 @@ var NRS = (function (NRS, $, undefined) {
                 mantissa = "";
             }
         }
+        if (NRS.settings) {
+            var offset = 0;
+            if (mantissa != "" && mantissa.substring(0, 1) == ".") {
+                offset ++;
+            }
+            var maxLength = parseInt(NRS.settings.max_nxt_decimals) + offset;
+            if (mantissa.length > maxLength) {
+                mantissa = mantissa.substring(0, maxLength);
+                if (mantissa.length == 1 && mantissa.substring(0, 1) == ".") {
+                    mantissa = "";
+                }
+            }
+        }
 
         return NRS.format({
             "negative": negative,
