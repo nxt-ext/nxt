@@ -421,6 +421,12 @@ var NRS = (function (NRS, $, undefined) {
         }, no_escaping, zeroPad);
     };
     
+    NRS.getTransactionsAmountDecimals = function(transactions) {
+   		return NRS.getNumberOfDecimals(transactions, "amountNQT", function (transaction) {
+   			return NRS.formatAmount(transaction.amountNQT);
+   		});
+   	};
+    
     NRS.getNumberOfDecimals = function(rows, key, callback) {
         var locale = NRS.getLocale();
         var decimals = 0;
