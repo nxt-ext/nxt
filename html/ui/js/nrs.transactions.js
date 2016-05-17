@@ -801,19 +801,19 @@ var NRS = (function(NRS, $, undefined) {
 			return NRS.formatAmount(entry.change);
 		});
 		decimalParams.holdingChangeDecimals = NRS.getNumberOfDecimals(entries, "change", function(entry) {
-			if (isHoldingEntry(entry.holdingType)) {
+			if (isHoldingEntry(entry)) {
 				return NRS.formatQuantity(entry.change, entry.holdingInfo.decimals);
 			}
 			return "";
 		});
 		decimalParams.balanceDecimals = NRS.getNumberOfDecimals(entries, "balance", function(entry) {
-			if (isHoldingEntry(entry.holdingType)) {
+			if (isHoldingEntry(entry)) {
 				return "";
 			}
 			return NRS.formatAmount(entry.balance);
 		});
 		decimalParams.holdingBalanceDecimals = NRS.getNumberOfDecimals(entries, "balance", function(entry) {
-			if (isHoldingEntry(entry.holdingType)) {
+			if (isHoldingEntry(entry)) {
 				return NRS.formatQuantity(entry.balance, entry.holdingInfo.decimals);
 			}
 			return "";
