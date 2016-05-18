@@ -15,7 +15,7 @@ based. The default browser locale language is used by default. A new
 "Regional Format" client side setting provides the ability to override the
 default.
 
-Numric formatting is now implemented for most table columns which display NXT
+Numeric formatting is now implemented for most table columns which display NXT
 amounts or holding amounts. The number of decimals positions in each cell is
 calculated according to the largest number of decimals required and zeros are
 padded to the right.
