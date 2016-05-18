@@ -1,5 +1,11 @@
 nxt-client-1.8.3:
 
+API changes:
+
+includeHoldingInfo parameter added to the GetAccountLedgerEntry and
+GetAccountLedgerEntry APIs.
+
+
 UI improvements:
 
 Account switch no longer reloads the wallet.
@@ -32,3 +38,5 @@ text is now enabled. Right click menu on the asset exchange left pane is
 enabled.
 
 Setting admin password is no longer required when using the desktop wallet.
+
+
