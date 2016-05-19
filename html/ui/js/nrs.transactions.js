@@ -504,20 +504,25 @@ var NRS = (function(NRS, $, undefined) {
 		var balanceChange = "";
 		var sign = 0;
 		var receiving = t.recipient == NRS.account && !(t.sender == NRS.account);
+		var feeButton = "";
 		if (receiving) {
 			if (t.amountNQT != "0") {
 				balanceChange = new BigInteger(t.amountNQT);
 				sign = 1;
 			}
 		} else {
-            var amount;
 			if (t.sender != t.recipient) {
-				amount = new BigInteger(t.amountNQT);
-				amount = amount.negate();
+				balanceChange = new BigInteger(t.amountNQT);
+				balanceChange = balanceChange.negate();
 			} else {
-				amount = new BigInteger("0");
+				balanceChange = new BigInteger("0");
 			}
-            balanceChange = amount.subtract(new BigInteger(t.feeNQT));
+			if (t.amountNQT != "0") {
+				var fee = NRS.formatAmount(t.feeNQT);
+				feeButton = "<button type='button' class='btn btn-xs' style='margin-right:8px;color:black'><i class='fa fa-credit-card' aria-hidden='true'></i>&nbsp" + fee + "</button>";
+			} else {
+				balanceChange = balanceChange.subtract(new BigInteger(t.feeNQT));
+			}
             sign = -1;
 		}
 		var formattedAmount = "";
@@ -546,7 +551,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += NRS.getTransactionIconHTML(t.type, t.subtype) + '&nbsp; ';
 		html += '<span style="font-size:11px;display:inline-block;margin-top:5px;">' + transactionType + '</span>';
 		html += '</td>';
-        html += "<td style='vertical-align:middle;text-align:right;" + color + "'>" + formattedAmount + "</td>";
+        html += "<td style='vertical-align:middle;text-align:right;" + color + "'>" + feeButton + formattedAmount + "</td>";
 		html += "<td style='vertical-align:middle;'>" + ((NRS.getAccountLink(t, "sender") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "sender")) + " ";
 		html += "<i class='fa fa-arrow-circle-right' style='color:#777;'></i> " + ((NRS.getAccountLink(t, "recipient") == "/" && t.type == 2) ? "Asset Exchange" : NRS.getAccountLink(t, "recipient")) + "</td>";
 		html += "<td class='td_transaction_phasing' style='min-width:100px;vertical-align:middle;text-align:center;'></td>";
