@@ -991,7 +991,6 @@
   "success_stop_forging":"Forging is gestopt.",
   "success_transfer_alias":"De overdracht van uw alias is geslaagd!",
   "success_valid_token":"Het token is geldig en behoort tot het account __account_link__. Het werd geproduceerd op __timestamp__.",
-  "success_asset_group_add":"Succesvol toegevoegde asset groep.",
   "supply":"Huidig Aanbod",
   "tag":"Label",
   "tags":"Labels",

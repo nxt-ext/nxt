@@ -991,7 +991,6 @@
   "success_stop_forging":"鋳造を停止しました。",
   "success_transfer_alias":"エイリアスが転送されました。",
   "success_valid_token":"このトークンは有効です。アカウント__account_link__ のもので、__timestamp__ に生成されました。",
-  "success_asset_group_add":"アセットグループの追加に成功しました。",
   "supply":"現在の供給量",
   "tag":"タグ",
   "tags":"タグ",

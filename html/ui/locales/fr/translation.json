@@ -991,7 +991,6 @@
   "success_stop_forging":"Le forgeage a été arrêté.",
   "success_transfer_alias":"Votre alias a été transféré avec succès !",
   "success_valid_token":"Le jeton est valide et appartient au compte __account_link__. Il a été généré le __timestamp__.",
-  "success_asset_group_add":"Le groupe d'actifs a été créé.",
   "supply":"Emission disponible",
   "tag":"Mot-clé",
   "tags":"Mots-clés",

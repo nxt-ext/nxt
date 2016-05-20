@@ -991,7 +991,6 @@
   "success_stop_forging":"Forgiatura è stata arrestata con successo.",
   "success_transfer_alias":"Il tuo alias è stato trasferito con successo!",
   "success_valid_token":"Il token è valido e appartiene al conto __account_link__. È stato generato il __timestamp__.",
-  "success_asset_group_add":"Gruppo asset aggiunto con successo.",
   "supply":"Disponibilità Corrente",
   "tag":"Tag",
   "tags":"Tag",
