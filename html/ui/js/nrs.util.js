@@ -422,9 +422,14 @@ var NRS = (function (NRS, $, undefined) {
     };
     
     NRS.getTransactionsAmountDecimals = function(transactions) {
-   		return NRS.getNumberOfDecimals(transactions, "amountNQT", function (transaction) {
+        var decimals = {};
+   		decimals.amount = NRS.getNumberOfDecimals(transactions, "amountNQT", function (transaction) {
    			return NRS.formatAmount(transaction.amountNQT);
    		});
+   		decimals.fee = NRS.getNumberOfDecimals(transactions, "feeNQT", function (transaction) {
+   			return NRS.formatAmount(transaction.feeNQT);
+   		});
+        return decimals;
    	};
     
     NRS.getNumberOfDecimals = function(rows, key, callback) {

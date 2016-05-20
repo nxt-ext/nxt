@@ -1065,11 +1065,11 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.hasMorePages = true;
                         response.transactions.pop();
                     }
-                    var amountDecimals = NRS.getTransactionsAmountDecimals(response.transactions);
+                    var decimals = NRS.getTransactionsAmountDecimals(response.transactions);
                     for (var i = 0; i < response.transactions.length; i++) {
                         var t = response.transactions[i];
                         t.confirmed = true;
-                        rows += NRS.getTransactionRowHTML(t, ['approve'], amountDecimals);
+                        rows += NRS.getTransactionRowHTML(t, ['approve'], decimals);
                     }
                 } else {
                     $('#ar_currency_no_entries').html($.t('no_current_approval_requests', 'No current approval requests'));
