@@ -488,9 +488,18 @@ var NRS = (function(NRS, $) {
 					NRS.hasMorePages = true;
 					response.goods.pop();
 				}
+				var quantityDecimals = NRS.getNumberOfDecimals(response.goods, "quantity", function(val) {
+					return NRS.format(val.quantity);
+				});
+				var priceDecimals = NRS.getNumberOfDecimals(response.goods, "priceNQT", function(val) {
+					return NRS.formatAmount(val.priceNQT);
+				});
 				for (var i = 0; i < response.goods.length; i++) {
                		var good = response.goods[i];
-               		rows += "<tr class='' data-goods='" + NRS.escapeRespStr(good.goods) + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + NRS.escapeRespStr(good.name) + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + $.t("delete") + "</a></td></tr>";
+               		rows += "<tr class='' data-goods='" + NRS.escapeRespStr(good.goods) + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + NRS.escapeRespStr(good.name) + "</a></td>";
+					rows += "<td class='quantity numeric'>" + NRS.format(good.quantity, false, quantityDecimals) + "</td>";
+					rows += "<td class='price numeric'>" + NRS.formatAmount(good.priceNQT, false, false, priceDecimals) + " NXT</td>";
+					rows += "<td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + NRS.escapeRespStr(good.goods) + "'>" + $.t("delete") + "</a></td></tr>";
 				}
 			}
 			NRS.dataLoaded(rows);
@@ -1280,6 +1289,9 @@ var NRS = (function(NRS, $) {
     				NRS.hasMorePages = true;
     				response.pop();
     			}
+				var priceDecimals = NRS.getNumberOfDecimals(response, "priceNQT", function(val) {
+					return NRS.formatAmount(val.priceNQT);
+				});
     			for (var i = 0; i < response.length; i++) {
     				var item = response[i];
     				var name = NRS.escapeRespStr(item.name);
@@ -1297,7 +1309,7 @@ var NRS = (function(NRS, $) {
     				view.data.push({
     					"timestamp": NRS.formatTimestamp(item.timestamp),
     					"good": good,
-    					"price": NRS.formatAmount(item.priceNQT, NRS.decimals),
+    					"price": NRS.formatAmount(item.priceNQT, NRS.decimals, false, priceDecimals),
     					"account": account,
     					"image": image
     				})

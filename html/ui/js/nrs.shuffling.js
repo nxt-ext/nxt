@@ -28,7 +28,7 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata = NRS.jsondata||{};
 
-    NRS.jsondata.shuffling = function (response, shufflers) {
+    NRS.jsondata.shuffling = function (response, shufflers, amountDecimals) {
         var isShufflerActive = false;
         var recipient;
         var state;
@@ -114,9 +114,9 @@ var NRS = (function(NRS, $) {
             issuerFormatted: NRS.getAccountLink(response, "issuer"),
             amountFormatted: (function () {
                 switch (response.holdingType) {
-                    case 0: return NRS.formatAmount(response.amount);
+                    case 0: return NRS.formatAmount(response.amount, false, false, amountDecimals);
                     case 1:
-                    case 2: return NRS.formatQuantity(response.amount, response.holdingInfo.decimals);
+                    case 2: return NRS.formatQuantity(response.amount, response.holdingInfo.decimals, false, amountDecimals);
                 }
             })(),
             holdingFormatted: (function () {
@@ -266,9 +266,17 @@ var NRS = (function(NRS, $) {
                             response.shufflings.pop();
                         }
                         view.shufflings.length = 0;
+                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
+                            switch (shuffling.holdingType) {
+                                case 0: return NRS.formatAmount(shuffling.amount);
+                                case 1:
+                                case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
+                                default: return "";
+                            }
+                        });
                         response.shufflings.forEach(
                             function (shufflingJson) {
-                                view.shufflings.push(NRS.jsondata.shuffling(shufflingJson, shufflers))
+                                view.shufflings.push(NRS.jsondata.shuffling(shufflingJson, shufflers, amountDecimals))
                             }
                         );
                         view.render({
@@ -318,9 +326,17 @@ var NRS = (function(NRS, $) {
                             response.shufflings.pop();
                         }
                         view.shufflings.length = 0;
+                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
+                            switch (shuffling.holdingType) {
+                                case 0: return NRS.formatAmount(shuffling.amount);
+                                case 1:
+                                case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
+                                default: return "";
+                            }
+                        });
                         response.shufflings.forEach(
                             function (shufflingJson) {
-                                view.shufflings.push( NRS.jsondata.shuffling(shufflingJson, shufflers) );
+                                view.shufflings.push( NRS.jsondata.shuffling(shufflingJson, shufflers, amountDecimals) );
                             }
                         );
                         view.render({
@@ -466,9 +482,17 @@ var NRS = (function(NRS, $) {
                             response.shufflings.pop();
                         }
                         view.data.length = 0;
+                        var amountDecimals = NRS.getNumberOfDecimals(response.shufflings, "amount", function(shuffling) {
+                            switch (shuffling.holdingType) {
+                                case 0: return NRS.formatAmount(shuffling.amount);
+                                case 1:
+                                case 2: return NRS.formatQuantity(shuffling.amount, shuffling.holdingInfo.decimals);
+                                default: return "";
+                            }
+                        });
                         response.shufflings.forEach(
                             function (shufflingJson) {
-                                view.data.push(NRS.jsondata.shuffling(shufflingJson, shufflers))
+                                view.data.push(NRS.jsondata.shuffling(shufflingJson, shufflers, amountDecimals))
                             }
                         );
                         view.render({

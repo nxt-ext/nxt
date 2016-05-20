@@ -1481,6 +1481,7 @@ NRS.addPagination = function () {
         NRS.logProperty("navigator.maxTouchPoints");
         NRS.logProperty("navigator.languages");
         NRS.logProperty("navigator.language");
+        NRS.logProperty("navigator.userLanguage");
         NRS.logProperty("navigator.cookieEnabled");
         NRS.logProperty("navigator.onLine");
         NRS.logProperty("NRS.isTestNet");

@@ -41,7 +41,8 @@ var NRS = (function(NRS, $) {
         "exchange_api_key": "773ecd081abd54e760a45b3551bbd4d725cf788590619e3f4bdeb81d01994d1dcad8a1d35771f669cfa47742af38e2207e297bc0eeeaea733853c2235548fba3",
         "exchange_coin0": "BTC",
         "exchange_coin1": "LTC",
-        "exchange_coin2": "ETH"
+        "exchange_coin2": "ETH",
+		"max_nxt_decimals": "2"
 	};
 
 	NRS.defaultColors = {
