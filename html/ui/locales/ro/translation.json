@@ -992,7 +992,7 @@
   "success_stop_forging":"Forjarea oprită cu succes.",
   "success_transfer_alias":"Aliasul tău a fost transferat cu succes!",
   "success_valid_token":"Token-ul este valabil şi aparţine contului __account_link__. Acesta a fost generat la __timestamp__.",
-  "sucess_asset_group_add":"Activă Grup adăugată cu succes.",
+  "success_asset_group_add":"Activă Grup adăugată cu succes.",
   "supply":"Emisie Actuală",
   "tag":"Tag",
   "tags":"Tags",

@@ -991,7 +991,7 @@
   "success_stop_forging":"Коването спря успешно.",
   "success_transfer_alias":"Вашият псевдоним е прехвърлен успешно!",
   "success_valid_token":"Маркерът е валиден и принадлежи към сметка __account_link__. Бил е генериран на __timestamp__.",
-  "sucess_asset_group_add":"Успешно е добавена група за активи.",
+  "success_asset_group_add":"Успешно е добавена група за активи.",
   "supply":"Текуща доставка",
   "tag":"Етикет",
   "tags":"Етикети",

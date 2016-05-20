@@ -992,7 +992,7 @@
   "success_stop_forging":"Taonta on pysäytetty.",
   "success_transfer_alias":"Alias siirretty onnistuneesti!",
   "success_valid_token":"Tunnus on kelvollinen ja kuuluu tilin __account_link__. Se luotiin __timestamp__.",
-  "sucess_asset_group_add":"",
+  "success_asset_group_add":"",
   "supply":"",
   "tag":"",
   "tags":"Tagit",
