@@ -994,7 +994,6 @@
   "success_stop_forging": "Forging stopped successfully.",
   "success_transfer_alias": "Your alias has been transferred successfully!",
   "success_valid_token": "The token is valid and belongs to account __account_link__. It was generated on __timestamp__.",
-  "sucess_asset_group_add": "Successfully added asset group.",
   "supply": "Current Supply",
   "tag": "Tag",
   "tags": "Tags",
@@ -1731,5 +1730,12 @@
   "expired": "Expired",
   "switched_to_account": "Switched to account __account__",
   "regional_format": "Regional Format",
-  "use_browser_default": "Use Browser Default"
+  "use_browser_default": "Use Browser Default",
+  "missing_asset_param": "Parameter 'asset' was not specified",
+  "invalid_asset_param": "The value of parameter 'asset' __asset__ is invalid, specify an existing asset id",
+  "balance_change": "Balance Change",
+  "exchange_buy": "Exchange Buy",
+  "exchange_sell": "Exchange Sell",
+  "trade": "Trade",
+  "max_nxt_decimals": "Maximum NXT decimal positions"
 }

@@ -32,10 +32,29 @@ var NRS = (function (NRS) {
         } else {
             lang = window.javaFxLanguage || window.navigator.userLanguage || window.navigator.language;
             if (!LOCALE_DATA[lang]) {
-                if (!currentLocale.lang) {
-                    NRS.logConsole("Cannot find locale definitions for language " + lang + " default to en-US");
+                if (lang && lang.length == 2) {
+                    // Attempt to expand the Chrome two letter language to country specific locale
+                    if (window.navigator.languages) {
+                        var tokens = String(window.navigator.languages).split(",");
+                        for (var i=0; i<tokens.length; i++) {
+                            var separator = tokens[i].indexOf("-");
+                            if (separator == -1) {
+                                continue;
+                            }
+                            if (tokens[i].substring(0, separator) == lang) {
+                                NRS.logConsole("Language " + lang + " resolved to locale " + tokens[i]);
+                                lang = tokens[i];
+                                break;
+                            }
+                        }
+                    }
                 }
-                lang = "en-US";
+                if (!LOCALE_DATA[lang]) {
+                    if (!currentLocale.lang) {
+                        NRS.logConsole("Cannot find locale definitions for language " + lang + " default to en-US");
+                    }
+                    lang = "en-US";
+                }
             }
         }
         if (!currentLocale.lang || currentLocale.lang != lang) {

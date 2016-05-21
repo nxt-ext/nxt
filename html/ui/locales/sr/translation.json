@@ -992,7 +992,6 @@
   "success_stop_forging":"Нисте започели са ковањем.",
   "success_transfer_alias":"Ваш алиас је успешно премештен!",
   "success_valid_token":"Токен је валидан и припада налогу __аccount_link__. Генерисан је у __timestamp__.",
-  "sucess_asset_group_add":"",
   "supply":"",
   "tag":"",
   "tags":"Ознаке",

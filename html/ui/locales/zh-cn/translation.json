@@ -991,7 +991,6 @@
   "success_stop_forging":"锻造已停止。",
   "success_transfer_alias":"您的别名已成功转移 ！",
   "success_valid_token":"令牌是有效的，属于帐户 __account_link__。它生成于 __timestamp__ 。",
-  "sucess_asset_group_add":"成功添加资产组。",
   "supply":"目前供应量",
   "tag":"标签",
   "tags":"标签",

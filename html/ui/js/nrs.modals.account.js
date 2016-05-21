@@ -163,6 +163,12 @@ var NRS = (function(NRS, $) {
             var infoModalTransactionsTable = $("#user_info_modal_transactions_table");
 			if (response.transactions && response.transactions.length) {
 				var rows = "";
+				var amountDecimals = NRS.getNumberOfDecimals(response.transactions, "amountNQT", function(val) {
+					return NRS.formatAmount(val.amountNQT);
+				});
+				var feeDecimals = NRS.getNumberOfDecimals(response.transactions, "fee", function(val) {
+					return NRS.formatAmount(val.fee);
+				});
 				for (var i = 0; i < response.transactions.length; i++) {
 					var transaction = response.transactions[i];
                     var transactionType = getTransactionType(transaction);
@@ -177,14 +183,13 @@ var NRS = (function(NRS, $) {
 						transaction.amount = new BigInteger(transaction.amountNQT);
 						transaction.fee = new BigInteger(transaction.feeNQT);
 					}
-
 					var account = (receiving ? "sender" : "recipient");
 					rows += "<tr>" +
 						"<td>" + NRS.getTransactionLink(transaction.transaction, NRS.formatTimestamp(transaction.timestamp)) + "</td>" +
 						"<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "&nbsp" + transactionType + "</td>" +
+						"<td class='numeric'  " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount, false, false, amountDecimals) + "</td>" +
 						"<td style='width:5px;padding-right:0;'>" + (transaction.type == 0 ? (receiving ? "<i class='fa fa-plus-circle' style='color:#65C62E'></i>" : "<i class='fa fa-minus-circle' style='color:#E04434'></i>") : "") + "</td>" +
-						"<td " + (transaction.type == 0 && receiving ? " style='color:#006400;'" : (!receiving && transaction.amount > 0 ? " style='color:red'" : "")) + ">" + NRS.formatAmount(transaction.amount) + "</td>" +
-						"<td " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee) + "</td>" +
+						"<td class='numeric' " + (!receiving ? " style='color:red'" : "") + ">" + NRS.formatAmount(transaction.fee, false, false, feeDecimals) + "</td>" +
 						"<td>" + NRS.getAccountLink(transaction, account) + "</td>" +
 					"</tr>";
 				}
@@ -201,15 +206,17 @@ var NRS = (function(NRS, $) {
     NRS.userInfoModal.ledger = function() {
         NRS.sendRequest("getAccountLedger", {
             "account": NRS.userInfoModal.user,
+            "includeHoldingInfo": true,
             "firstIndex": 0,
             "lastIndex": 100
         }, function (response) {
             var infoModalLedgerTable = $("#user_info_modal_ledger_table");
             if (response.entries && response.entries.length) {
                 var rows = "";
-                for (var i = 0; i < response.entries.length; i++) {
+				var decimalParams = NRS.getLedgerNumberOfDecimals(response.entries);
+				for (var i = 0; i < response.entries.length; i++) {
                     var entry = response.entries[i];
-                    rows += NRS.getLedgerEntryRow(entry);
+                    rows += NRS.getLedgerEntryRow(entry, decimalParams);
                 }
                 infoModalLedgerTable.find("tbody").empty().append(rows);
                 NRS.dataLoadFinished(infoModalLedgerTable);
@@ -256,13 +263,19 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
 			var rows = "";
+			var quantityDecimals = NRS.getNumberOfDecimals(response.goods, "quantity", function(val) {
+				return NRS.format(val.quantity);
+			});
+			var priceDecimals = NRS.getNumberOfDecimals(response.goods, "priceNQT", function(val) {
+				return NRS.formatAmount(val.priceNQT);
+			});
 			if (response.goods && response.goods.length) {
 				for (var i = 0; i < response.goods.length; i++) {
 					var good = response.goods[i];
 					if (good.name.length > 150) {
 						good.name = good.name.substring(0, 150) + "...";
 					}
-					rows += "<tr><td><a href='#' data-goto-goods='" + String(good.goods).escapeHTML() + "' data-seller='" + String(NRS.userInfoModal.user).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td>" + NRS.format(good.quantity) + "</td></tr>";
+					rows += "<tr><td><a href='#' data-goto-goods='" + String(good.goods).escapeHTML() + "' data-seller='" + String(NRS.userInfoModal.user).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='numeric'>" + NRS.formatAmount(good.priceNQT, false, false, priceDecimals) + " NXT</td><td class='numeric'>" + NRS.format(good.quantity, false, quantityDecimals) + "</td></tr>";
 				}
 			}
             var infoModalMarketplaceTable = $("#user_info_modal_marketplace_table");
@@ -277,6 +290,9 @@ var NRS = (function(NRS, $) {
 			"includeCurrencyInfo": true
 		}, function(response) {
 			var rows = "";
+			var unitsDecimals = NRS.getNumberOfDecimals(response.accountCurrencies, "unconfirmedUnits", function(val) {
+				return NRS.formatQuantity(val.unconfirmedUnits, val.decimals);
+			});
 			if (response.accountCurrencies && response.accountCurrencies.length) {
 				for (var i = 0; i < response.accountCurrencies.length; i++) {
 					var currency = response.accountCurrencies[i];
@@ -284,7 +300,7 @@ var NRS = (function(NRS, $) {
 					rows += "<tr>" +
 						"<td>" + NRS.getTransactionLink(String(currency.currency).escapeHTML(), code) + "</td>" +
 						"<td>" + currency.name + "</td>" +
-						"<td>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals) + "</td>" +
+						"<td class='numeric'>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals, false, unitsDecimals) + "</td>" +
 					"</tr>";
 				}
 			}
@@ -303,7 +319,6 @@ var NRS = (function(NRS, $) {
 				var assets = {};
 				var nrAssets = 0;
 				var ignoredAssets = 0; // Optimization to reduce number of getAsset calls
-
 				for (var i = 0; i < response.assetBalances.length; i++) {
 					if (response.assetBalances[i].balanceQNT == "0") {
 						ignoredAssets++;
@@ -323,7 +338,6 @@ var NRS = (function(NRS, $) {
 						asset.balanceQNT = input["_extra"].balanceQNT;
 						assets[asset.asset] = asset;
 						nrAssets++;
-
                         // This will work since eventually the condition below or in the previous
                         // if statement would be met
 						//noinspection JSReferencingMutableVariableFromClosure
@@ -346,6 +360,15 @@ var NRS = (function(NRS, $) {
 			"lastIndex": 100
 		}, function(response) {
 			var rows = "";
+			var quantityDecimals = NRS.getNumberOfDecimals(response.trades, "quantityQNT", function(val) {
+				return NRS.formatQuantity(val.quantityQNT, val.decimals);
+			});
+			var priceDecimals = NRS.getNumberOfDecimals(response.trades, "priceNQT", function(val) {
+				return NRS.formatOrderPricePerWholeQNT(val.priceNQT, val.decimals);
+			});
+			var amountDecimals = NRS.getNumberOfDecimals(response.trades, "totalNQT", function(val) {
+				return NRS.formatAmount(NRS.calculateOrderTotalNQT(val.quantityQNT, val.priceNQT));
+			});
 			if (response.trades && response.trades.length) {
 				var trades = response.trades;
 				for (var i = 0; i < trades.length; i++) {
@@ -353,7 +376,7 @@ var NRS = (function(NRS, $) {
 					trades[i].quantityQNT = new BigInteger(trades[i].quantityQNT);
 					trades[i].totalNQT = new BigInteger(NRS.calculateOrderTotalNQT(trades[i].priceNQT, trades[i].quantityQNT));
 					var type = (trades[i].buyerRS == NRS.userInfoModal.user ? "buy" : "sell");
-					rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td style='color:" + (type == "buy" ? "green" : "red") + "'>" + $.t(type) + "</td><td>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals) + "</td><td class='asset_price'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals) + "</td><td style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT) + "</td></tr>";
+					rows += "<tr><td><a href='#' data-goto-asset='" + String(trades[i].asset).escapeHTML() + "'>" + String(trades[i].name).escapeHTML() + "</a></td><td>" + NRS.formatTimestamp(trades[i].timestamp) + "</td><td style='color:" + (type == "buy" ? "green" : "red") + "'>" + $.t(type) + "</td><td class='numeric'>" + NRS.formatQuantity(trades[i].quantityQNT, trades[i].decimals, false, quantityDecimals) + "</td><td class='asset_price numeric'>" + NRS.formatOrderPricePerWholeQNT(trades[i].priceNQT, trades[i].decimals, priceDecimals) + "</td><td class='numeric' style='color:" + (type == "buy" ? "red" : "green") + "'>" + NRS.formatAmount(trades[i].totalNQT, false, false, amountDecimals) + "</td></tr>";
 				}
 			}
             var infoModalTradeHistoryTable = $("#user_info_modal_trade_history_table");
@@ -416,11 +439,16 @@ var NRS = (function(NRS, $) {
 				}
 			}
 		});
-
+		var quantityDecimals = NRS.getNumberOfDecimals(assetArray, "balanceQNT", function(val) {
+			return NRS.formatQuantity(val.balanceQNT, val.decimals);
+		});
+		var totalDecimals = NRS.getNumberOfDecimals(assetArray, "quantityQNT", function(val) {
+			return NRS.formatQuantity(val.quantityQNT, val.decimals);
+		});
 		for (var i = 0; i < assetArray.length; i++) {
 			var asset = assetArray[i];
 			var percentageAsset = NRS.calculatePercentage(asset.balanceQNT, asset.quantityQNT);
-			rows += "<tr" + (asset.issued ? " class='asset_owner'" : "") + "><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'" + (asset.issued ? " style='font-weight:bold'" : "") + ">" + String(asset.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals) + "</td><td>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
+			rows += "<tr" + (asset.issued ? " class='asset_owner'" : "") + "><td><a href='#' data-goto-asset='" + String(asset.asset).escapeHTML() + "'" + (asset.issued ? " style='font-weight:bold'" : "") + ">" + String(asset.name).escapeHTML() + "</a></td><td class='quantity numeric'>" + NRS.formatQuantity(asset.balanceQNT, asset.decimals, false, quantityDecimals) + "</td><td class='numeric'>" + NRS.formatQuantity(asset.quantityQNT, asset.decimals, false, totalDecimals) + "</td><td>" + percentageAsset + "%</td></tr>";
 		}
 
         var infoModalAssetsTable = $("#user_info_modal_assets_table");

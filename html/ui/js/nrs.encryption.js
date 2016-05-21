@@ -260,7 +260,7 @@ var NRS = (function (NRS, $) {
 
 			var publicKey = converters.hexStringToByteArray(NRS.getPublicKey(account, true));
 
-			var sharedKey = getSharedKey(privateKey, publicKey);
+			var sharedKey = getSharedSecret(privateKey, publicKey);
 
 			var sharedKeys = Object.keys(_sharedKeys);
 
@@ -702,7 +702,7 @@ var NRS = (function (NRS, $) {
 		var text = converters.byteArrayToWordArray(plaintext);
 		var sharedKey;
 		if (!options.sharedKey) {
-			sharedKey = getSharedKey(options.privateKey, options.publicKey);
+			sharedKey = getSharedSecret(options.privateKey, options.publicKey);
 		} else {
 			sharedKey = options.sharedKey.slice(0); //clone
 		}
@@ -744,16 +744,20 @@ var NRS = (function (NRS, $) {
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
 		var sharedKey;
 		if (!options.sharedKey) {
-			sharedKey = getSharedKey(options.privateKey, options.publicKey);
+			sharedKey = getSharedSecret(options.privateKey, options.publicKey);
 		} else {
 			sharedKey = options.sharedKey.slice(0); //clone
 		}
 
-		for (var i = 0; i < 32; i++) {
-			sharedKey[i] ^= options.nonce[i];
+		var key;
+		if (options.nonce) {
+			for (var i = 0; i < 32; i++) {
+				sharedKey[i] ^= options.nonce[i];
+			}
+			key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
+		} else {
+			key = converters.byteArrayToWordArray(sharedKey);
 		}
-
-		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 
 		var encrypted = CryptoJS.lib.CipherParams.create({
 			ciphertext: ciphertext,
@@ -777,7 +781,7 @@ var NRS = (function (NRS, $) {
 		}
 
 		if (!options.sharedKey) {
-			options.sharedKey = getSharedKey(options.privateKey, options.publicKey);
+			options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
 		}
 
 		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
@@ -800,9 +804,13 @@ var NRS = (function (NRS, $) {
 		};
 	}
 
+	NRS.decryptDataRoof = function(data, options) {
+		return decryptData(data, options);
+	};
+	
 	function decryptData(data, options) {
 		if (!options.sharedKey) {
-			options.sharedKey = getSharedKey(options.privateKey, options.publicKey);
+			options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
 		}
 
 		var compressedPlaintext = aesDecrypt(data, options);
@@ -810,9 +818,17 @@ var NRS = (function (NRS, $) {
 		return converters.byteArrayToString(pako.inflate(binData));
 	}
 
-	function getSharedKey(key1, key2) {
+	function getSharedSecret(key1, key2) {
 		return converters.shortArrayToByteArray(curve25519_(converters.byteArrayToShortArray(key1), converters.byteArrayToShortArray(key2), null));
 	}
+
+	NRS.getSharedKey = function (privateKey, publicKey, nonce) {
+		var sharedSecret = getSharedSecret(privateKey, publicKey);
+		for (var i=0; i<32; i++) {
+			sharedSecret[i] ^= nonce[i];
+		}
+		return simpleHash(sharedSecret);
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));

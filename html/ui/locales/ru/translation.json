@@ -991,7 +991,6 @@
   "success_stop_forging":"Форжинг был остановлен.",
   "success_transfer_alias":"Ваш альяс успешно перенесен!",
   "success_valid_token":"Токен действителен и принадлежит учетной записи __account_link__. Он был создан  __timestamp__.",
-  "sucess_asset_group_add":"Группа активов успешно добавлена.",
   "supply":"Текущее предложение",
   "tag":"Тэг",
   "tags":"Теги",
