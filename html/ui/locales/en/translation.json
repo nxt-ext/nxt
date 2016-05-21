@@ -994,7 +994,6 @@
   "success_stop_forging": "Forging stopped successfully.",
   "success_transfer_alias": "Your alias has been transferred successfully!",
   "success_valid_token": "The token is valid and belongs to account __account_link__. It was generated on __timestamp__.",
-  "sucess_asset_group_add": "Successfully added asset group.",
   "supply": "Current Supply",
   "tag": "Tag",
   "tags": "Tags",

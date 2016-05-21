@@ -992,7 +992,6 @@
   "success_stop_forging":"Forja aturada amb èxit.",
   "success_transfer_alias":"L'Àlies ha estat transferit amb èxit!",
   "success_valid_token":"L'identificador és vàlida i pertany al compte __account_link__. S'ha generat a les __timestamp__.",
-  "sucess_asset_group_add":"Grup actiu afegit correctament.",
   "supply":"Subministrament Actual",
   "tag":"Etiqueta",
   "tags":"Etiquetes",

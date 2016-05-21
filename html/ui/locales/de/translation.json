@@ -992,7 +992,6 @@
   "success_stop_forging":"Blockgenerierung wurde beendet.",
   "success_transfer_alias":"Ihr Alias wurde erfolgreich übertragen!",
   "success_valid_token":"Das Token ist gültig und gehört zum Konto __account_link__. Es wurde am __timestamp__ generiert.",
-  "sucess_asset_group_add":"Asset-Gruppe erfolgreich hinzugefügt.",
   "supply":"Aktuelles Angebot",
   "tag":"Tag",
   "tags":"Tags",

@@ -1273,7 +1273,7 @@ var NRS = (function (NRS, $, undefined) {
                         "type": "success"
                     });
                 } else {
-                    $.growl($.t("sucess_asset_group_add"), {
+                    $.growl($.t("success_asset_group_add"), {
                         "type": "success"
                     });
                 }

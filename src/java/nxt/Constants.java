@@ -151,7 +151,7 @@ public final class Constants {
     public static final int CHECKSUM_BLOCK_18 = isTestnet ? 664000 : 729700;
 
     public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_18;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 665000 : 730000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 728000 : 791000;
 
     public static final int[] MIN_VERSION = new int[] {1, 7};
 

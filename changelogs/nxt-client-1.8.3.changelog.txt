@@ -1,8 +1,8 @@
-nxt-client-1.8.3:
+This release contains a number of improvements and bugfixes.
 
 API changes:
 
-includeHoldingInfo parameter added to the GetAccountLedgerEntry and
+Optional includeHoldingInfo parameter added to the GetAccountLedgerEntry and
 GetAccountLedgerEntry APIs.
 
 
@@ -24,9 +24,9 @@ Amounts specified in NXT are limited to the number of decimal positions
 specified by the "Maximum NXT decimal positions" client setting. The default 
 behavior is to display two digits after the decimal position.
 
-For transaction tables, displayed in the dashboard and other pages. The amount 
-and fee columns were merged into a single "Balance Change" column. Height column
-was added as a link to the block in which the transaction is included. 
+UI improvements for transaction tables, displayed in the dashboard and other
+pages. Height column was added as a link to the block in which the transaction
+is included.
 
 Starting the wallet on a specific asset page is now supported.
 
@@ -37,6 +37,10 @@ Right click functionality for copy/cut/paste of input fields and copy of label
 text is now enabled. Right click menu on the asset exchange left pane is
 enabled.
 
-Setting admin password is no longer required when using the desktop wallet.
+Entering admin password in the UI settings is no longer required when using the
+desktop wallet.
 
+
+Upgraded jetty to version 9.3.9, make sure to delete old lib folder first if
+updating manually.
 

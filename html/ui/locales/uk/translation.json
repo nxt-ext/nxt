@@ -991,7 +991,6 @@
   "success_stop_forging":"Форжинг зупинено.",
   "success_transfer_alias":"Ваш альяс успішно перенесений!",
   "success_valid_token":"Токен дійсний і належить рахунку __account_link__. Він був створений __timestamp__.",
-  "sucess_asset_group_add":"Група активів успішно додана.",
   "supply":"Поточна пропозиція",
   "tag":"Тег",
   "tags":"Мітки",
