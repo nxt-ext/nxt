@@ -299,7 +299,7 @@ public final class Peers {
         minNumberOfKnownPeers = Nxt.getIntProperty("nxt.minNumberOfKnownPeers");
         connectTimeout = Nxt.getIntProperty("nxt.connectTimeout");
         readTimeout = Nxt.getIntProperty("nxt.readTimeout");
-        enableHallmarkProtection = Nxt.getBooleanProperty("nxt.enableHallmarkProtection");
+        enableHallmarkProtection = Nxt.getBooleanProperty("nxt.enableHallmarkProtection") && !Constants.isLightClient;
         pushThreshold = Nxt.getIntProperty("nxt.pushThreshold");
         pullThreshold = Nxt.getIntProperty("nxt.pullThreshold");
         useWebSockets = Nxt.getBooleanProperty("nxt.useWebSockets");
