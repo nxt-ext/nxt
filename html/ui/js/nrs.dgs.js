@@ -31,7 +31,7 @@ var NRS = (function(NRS, $) {
 		var id = 'good_'+ String(good.goods).escapeHTML();
         var image = NRS.dgs_get_picture(good);
 		html += '<div id="' + id +'" style="border:1px solid #ccc;padding:12px;margin-top:12px;margin-bottom:12px;">';
-			html += "<table width='100%'>";
+			html += "<table width='100%' style='table-layout:fixed;'>";
 				html += "<tr>";
 					html += "<td rowspan =20 style='vertical-align:top;width:100px;height:100px;'>";
 						html += image;
@@ -488,9 +488,18 @@ var NRS = (function(NRS, $) {
 					NRS.hasMorePages = true;
 					response.goods.pop();
 				}
+				var quantityDecimals = NRS.getNumberOfDecimals(response.goods, "quantity", function(val) {
+					return NRS.format(val.quantity);
+				});
+				var priceDecimals = NRS.getNumberOfDecimals(response.goods, "priceNQT", function(val) {
+					return NRS.formatAmount(val.priceNQT);
+				});
 				for (var i = 0; i < response.goods.length; i++) {
                		var good = response.goods[i];
-               		rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td><td class='quantity'>" + NRS.format(good.quantity) + "</td><td class='price'>" + NRS.formatAmount(good.priceNQT) + " NXT</td><td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
+               		rows += "<tr class='' data-goods='" + String(good.goods).escapeHTML() + "'><td><a href='#' data-toggle='modal' data-target='#dgs_product_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + String(good.name).escapeHTML() + "</a></td>";
+					rows += "<td class='quantity numeric'>" + NRS.format(good.quantity, false, quantityDecimals) + "</td>";
+					rows += "<td class='price numeric'>" + NRS.formatAmount(good.priceNQT, false, false, priceDecimals) + " NXT</td>";
+					rows += "<td style='white-space:nowrap'><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_price_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_price") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_quantity_change_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("change_qty") + "</a> <a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#dgs_delisting_modal' data-goods='" + String(good.goods).escapeHTML() + "'>" + $.t("delete") + "</a></td></tr>";
 				}
 			}
 			NRS.dataLoaded(rows);
@@ -1235,10 +1244,10 @@ var NRS = (function(NRS, $) {
         var image = "";
         if (!input.hasImage) {
             picture.src = missingImage;
-            image = '<img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/>';
+            image = '<img style="max-height:100%;max-width:100%;" id="dgs_product_picture" src="'+ picture.src + '"/>';
         } else {
             picture.src = "/nxt?requestType=downloadPrunableMessage&transaction=" + input.goods + "&retrieve=true";
-            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
+            image = '<a href="#" data-toggle="modal" data-target="#dgs_show_picture_modal" data-goods="' + input.goods + '"><img style="max-height:100%;max-width:100%;" id="dgs_product_picture" src="'+ picture.src + '"/></a>';
         }
         return image;
     };
@@ -1280,6 +1289,9 @@ var NRS = (function(NRS, $) {
     				NRS.hasMorePages = true;
     				response.pop();
     			}
+				var priceDecimals = NRS.getNumberOfDecimals(response, "priceNQT", function(val) {
+					return NRS.formatAmount(val.priceNQT);
+				});
     			for (var i = 0; i < response.length; i++) {
     				var item = response[i];
     				var name = String(item.name).escapeHTML();
@@ -1297,7 +1309,7 @@ var NRS = (function(NRS, $) {
     				view.data.push({
     					"timestamp": NRS.formatTimestamp(item.timestamp),
     					"good": good,
-    					"price": NRS.formatAmount(item.priceNQT, NRS.decimals),
+    					"price": NRS.formatAmount(item.priceNQT, NRS.decimals, false, priceDecimals),
     					"account": account,
     					"image": image
     				})

@@ -1642,7 +1642,7 @@
         var detectedLng;
         var whitelist = o.lngWhitelist || [];
         var userLngChoices = [];
-    
+
         // get from qs
         var qsParm = [];
         if (typeof window !== 'undefined') {
@@ -1686,11 +1686,13 @@
                 userLngChoices.push(navigator.language);
             }
         }
-    
+
         (function() {
             for (var i=0;i<userLngChoices.length;i++) {
                 var lng = userLngChoices[i];
-    
+                if (lng == null) {
+                    lng = "";
+                }
                 if (lng.indexOf('-') > -1) {
                     var parts = lng.split('-');
                     lng = o.lowerCaseLng ?

@@ -29,7 +29,7 @@ var NRS = (function(NRS, $) {
 
 		NRS.sendRequest("getState", {
 			"includeCounts": true,
-            "adminPassword": NRS.settings.admin_password
+            "adminPassword": NRS.getAdminPassword()
 		}, function(state) {
 			for (var key in state) {
 				if (!state.hasOwnProperty(key)) {

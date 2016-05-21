@@ -32,6 +32,7 @@ var NRS = (function(NRS, $) {
 		"24_hour_format": "1",
 		"remember_passphrase": "0",
 		"language": "en",
+		"regional_format": "default",
 		"enable_plugins": "0",
 		"items_page": "15",
 		"themeChoice": "default",
@@ -40,7 +41,8 @@ var NRS = (function(NRS, $) {
         "exchange_api_key": "773ecd081abd54e760a45b3551bbd4d725cf788590619e3f4bdeb81d01994d1dcad8a1d35771f669cfa47742af38e2207e297bc0eeeaea733853c2235548fba3",
         "exchange_coin0": "BTC",
         "exchange_coin1": "LTC",
-        "exchange_coin2": "ETH"
+        "exchange_coin2": "ETH",
+		"max_nxt_decimals": "2"
 	};
 
 	NRS.defaultColors = {
@@ -452,7 +454,19 @@ var NRS = (function(NRS, $) {
 		$langSelBoxes.val(NRS.settings['language']);
 	};
 
-	NRS.getSettings = function() {
+	NRS.createRegionalFormatSelect = function() {
+		// Build language select box for settings page, login
+		var $regionalFormatSelBoxes = $('select[name="regional_format"]');
+		$regionalFormatSelBoxes.empty();
+		$regionalFormatSelBoxes.append("<option value='default'>" + $.t("use_browser_default") + "</option>");
+		var localeKeys = NRS.getLocaleList();
+        for (var i=0; i < localeKeys.length; i++) {
+			$regionalFormatSelBoxes.append("<option value='" + localeKeys[i] + "'>" + NRS.getLocaleName(localeKeys[i]) + "</option>");
+		}
+		$regionalFormatSelBoxes.val(NRS.settings["regional_format"]);
+	};
+
+	NRS.getSettings = function(isAccountSpecific) {
 		if (!NRS.account) {
 			NRS.settings = NRS.defaultSettings;
 			if (NRS.getStrItem("language")) {
@@ -462,10 +476,11 @@ var NRS = (function(NRS, $) {
 				NRS.settings["themeChoice"] = NRS.getStrItem("themeChoice");
 			}
 			NRS.createLangSelect();
+			NRS.createRegionalFormatSelect();
 			NRS.applySettings();
 		} else {
             async.waterfall([
-                function (callback) {
+                function(callback) {
 					NRS.storageSelect("data", [{
 						"id": "settings"
 					}], function (error, result) {
@@ -494,7 +509,7 @@ var NRS = (function(NRS, $) {
 						callback(null);
 					});
                 },
-                function() {
+                function(callback) {
                     for (var schema in NRS.defaultColors) {
 						if (!NRS.defaultColors.hasOwnProperty(schema)) {
 							continue;
@@ -504,8 +519,19 @@ var NRS = (function(NRS, $) {
                             NRS.updateStyle(schema, color);
                         }
                     }
+                    callback(null);
+                },
+                function(callback) {
+                    if (isAccountSpecific) {
+                        NRS.loadPlugins();
+						if(!NRS.getUrlParameter("page") || NRS.getUrlParameter("page") == "dashboard") {
+							NRS.getAccountInfo();
+							NRS.getInitialTransactions();
+						}
+                    }
+                    callback(null);
                 }
-            ], function (err, result) {});
+            ], function(err, result) {});
 
 		}
 	};
@@ -628,6 +654,13 @@ var NRS = (function(NRS, $) {
 			id: "settings"
 		}]);
 		NRS.applySettings(key);
+	};
+
+	NRS.getAdminPassword = function() {
+		if (window.java) {
+			return window.java.getAdminPassword();
+		}
+		return NRS.settings.admin_password;
 	};
 
 	$("#settings_box select, #welcome_panel select[name='language'], #settings_admin_password").on("change", function(e) {

@@ -91,7 +91,7 @@ var NRS = (function(NRS, $, undefined) {
 	var stateIntervalSeconds = 30;
 	var isScanning = false;
 
-	NRS.init = function() {
+    NRS.init = function() {
 		NRS.sendRequest("getState", {
 			"includeCounts": "false"
 		}, function (response) {
@@ -169,7 +169,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.getStrItem("remember_passphrase")) {
 			$("#remember_password").prop("checked", true);
 		}
-		NRS.getSettings();
+		NRS.getSettings(false);
 
 		NRS.getState(function() {
 			setTimeout(function() {
@@ -557,7 +557,7 @@ NRS.addPagination = function () {
 			"id": "closed_groups"
 		}], function(error, result) {
 			if (result && result.length) {
-				NRS.closedGroups = result[0].contents.split("#");
+				NRS.setClosedGroups(result[0].contents.split("#"));
 			} else {
 				NRS.storageInsert("data", "id", {
 					id: "closed_groups",
@@ -566,7 +566,7 @@ NRS.addPagination = function () {
 			}
 		});
 		NRS.loadContacts();
-		NRS.getSettings();
+		NRS.getSettings(true);
 		NRS.updateNotifications();
 		NRS.setUnconfirmedNotifications();
 		NRS.setPhasingNotifications();
@@ -720,7 +720,7 @@ NRS.addPagination = function () {
 		}
 	};
 
-	NRS.createDatabase = function(dbName) {
+	function createSchema(){
 		var schema = {};
 
 		schema["contacts"] = {
@@ -763,43 +763,51 @@ NRS.addPagination = function () {
 			},
 			contents: "TEXT"
 		};
+		return schema;
+	}
 
-		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
-		NRS.pollsTableKeys = ["account", "accountRS", "poll", "description", "name", "finishHeight"];
+	function initUserDb(){
+		NRS.logConsole("Database is open");
+		NRS.database.select("data", [{
+			"id": "settings"
+		}], function(error, result) {
+			if (result && result.length > 0) {
+				NRS.logConsole("Settings already exist");
+				NRS.databaseFirstStart = false;
+				NRS.initUserDBSuccess();
+			} else {
+				NRS.logConsole("Settings not found");
+				NRS.databaseFirstStart = true;
+				if (NRS.legacyDatabaseWithData) {
+					NRS.initUserDBWithLegacyData();
+				} else {
+					NRS.initUserDBSuccess();
+				}
+			}
+		});
+	}
 
+	NRS.createDatabase = function (dbName) {
 		if (!NRS.isIndexedDBSupported()) {
 			NRS.logConsole("IndexedDB not supported by the rendering engine, using localStorage instead");
 			NRS.initLocalStorage();
 			return;
 		}
+		var schema = createSchema();
+		NRS.assetTableKeys = ["account", "accountRS", "asset", "description", "name", "position", "decimals", "quantityQNT", "groupName"];
+		NRS.pollsTableKeys = ["account", "accountRS", "poll", "description", "name", "finishHeight"];
 		try {
 			NRS.logConsole("Opening database " + dbName);
-			NRS.database = new WebDB(dbName, schema, NRS.constants.DB_VERSION, 4, function(error) {
-				if (!error) {
-					NRS.logConsole("Database is open");
-					NRS.database.select("data", [{
-						"id": "settings"
-					}], function(error, result) {
-						if (result && result.length > 0) {
-							NRS.logConsole("Settings already exist");
-							NRS.databaseFirstStart = false;
-							NRS.initUserDBSuccess();
-						} else {
-							NRS.logConsole("Settings not found");
-							NRS.databaseFirstStart = true;
-							if (NRS.legacyDatabaseWithData) {
-								NRS.initUserDBWithLegacyData();
-							} else {
-								NRS.initUserDBSuccess();
-							}
-						}
-					});
-				} else {
-					NRS.logConsole("Error opening database " + error);
-					NRS.initLocalStorage();
-				}
-			});
-			NRS.logConsole("Opening database " + NRS.database);
+            NRS.database = new WebDB(dbName, schema, NRS.constants.DB_VERSION, 4, function(error, db) {
+                if (!error) {
+                    NRS.indexedDB = db;
+                    initUserDb();
+                } else {
+                    NRS.logConsole("Error opening database " + error);
+                    NRS.initLocalStorage();
+                }
+            });
+            NRS.logConsole("Opening database " + NRS.database);
 		} catch (e) {
 			NRS.logConsole("Exception opening database " + e.message);
 			NRS.initLocalStorage();
@@ -826,7 +834,7 @@ NRS.addPagination = function () {
 		});
 	};
 
-	NRS.getAccountInfo = function(firstRun, callback) {
+	NRS.getAccountInfo = function(firstRun, callback, isAccountSwitch) {
 		NRS.sendRequest("getAccount", {
 			"account": NRS.account,
 			"includeAssets": true,
@@ -888,40 +896,44 @@ NRS.addPagination = function () {
 					$("#dashboard_message").hide();
 				}
 
-				//only show if happened within last week
-				var showAssetDifference = (!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7));
+				// only show if happened within last week and not during account switch
+				var showAssetDifference = !isAccountSwitch &&
+					((!NRS.downloadingBlockchain || (NRS.blocks && NRS.blocks[0] && NRS.state && NRS.state.time - NRS.blocks[0].timestamp < 60 * 60 * 24 * 7)));
 
-				NRS.storageSelect("data", [{
-					"id": "asset_balances"
-				}], function(error, asset_balance) {
-					if (asset_balance && asset_balance.length) {
-						var previous_balances = asset_balance[0].contents;
-						if (!NRS.accountInfo.assetBalances) {
-							NRS.accountInfo.assetBalances = [];
-						}
-						var current_balances = JSON.stringify(NRS.accountInfo.assetBalances);
-						if (previous_balances != current_balances) {
-							if (previous_balances != "undefined" && typeof previous_balances != "undefined") {
-								previous_balances = JSON.parse(previous_balances);
-							} else {
-								previous_balances = [];
-							}
-							NRS.storageUpdate("data", {
-								contents: current_balances
-							}, [{
-								id: "asset_balances"
-							}]);
-							if (showAssetDifference) {
-								NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
-							}
-						}
-					} else {
-						NRS.storageInsert("data", "id", {
-							id: "asset_balances",
-							contents: JSON.stringify(NRS.accountInfo.assetBalances)
-						});
-					}
-				});
+                // When switching account this query returns error
+                if (!isAccountSwitch) {
+                    NRS.storageSelect("data", [{
+                        "id": "asset_balances"
+                    }], function (error, asset_balance) {
+                        if (asset_balance && asset_balance.length) {
+                            var previous_balances = asset_balance[0].contents;
+                            if (!NRS.accountInfo.assetBalances) {
+                                NRS.accountInfo.assetBalances = [];
+                            }
+                            var current_balances = JSON.stringify(NRS.accountInfo.assetBalances);
+                            if (previous_balances != current_balances) {
+                                if (previous_balances != "undefined" && typeof previous_balances != "undefined") {
+                                    previous_balances = JSON.parse(previous_balances);
+                                } else {
+                                    previous_balances = [];
+                                }
+                                NRS.storageUpdate("data", {
+                                    contents: current_balances
+                                }, [{
+                                    id: "asset_balances"
+                                }]);
+                                if (showAssetDifference) {
+                                    NRS.checkAssetDifferences(NRS.accountInfo.assetBalances, previous_balances);
+                                }
+                            }
+                        } else {
+                            NRS.storageInsert("data", "id", {
+                                id: "asset_balances",
+                                contents: JSON.stringify(NRS.accountInfo.assetBalances)
+                            });
+                        }
+                    });
+                }
 
 				$("#account_balance, #account_balance_sidebar").html(NRS.formatStyledAmount(response.unconfirmedBalanceNQT));
 				$("#account_forged_balance").html(NRS.formatStyledAmount(response.forgedBalanceNQT));
@@ -1063,7 +1075,9 @@ NRS.addPagination = function () {
 				NRS.updateAccountControlStatus();
 
 				if (response.name) {
-					$("#account_name").html(NRS.addEllipsis(response.name.escapeHTML(), 10)).removeAttr("data-i18n");
+					$("#account_name").html(NRS.addEllipsis(response.name.escapeHTML(), 17)).removeAttr("data-i18n");
+				} else {
+					$("#account_name").html($.t("set_account_info"));
 				}
 			}
 
@@ -1420,6 +1434,7 @@ NRS.addPagination = function () {
         NRS.logProperty("navigator.maxTouchPoints");
         NRS.logProperty("navigator.languages");
         NRS.logProperty("navigator.language");
+        NRS.logProperty("navigator.userLanguage");
         NRS.logProperty("navigator.cookieEnabled");
         NRS.logProperty("navigator.onLine");
         NRS.logProperty("NRS.isTestNet");
