@@ -400,6 +400,19 @@ var NRS = (function (NRS, $, undefined) {
                 mantissa = "";
             }
         }
+        if (NRS.settings) {
+            var offset = 0;
+            if (mantissa != "" && mantissa.substring(0, 1) == ".") {
+                offset ++;
+            }
+            var maxLength = parseInt(NRS.settings.max_nxt_decimals) + offset;
+            if (mantissa.length > maxLength) {
+                mantissa = mantissa.substring(0, maxLength);
+                if (mantissa.length == 1 && mantissa.substring(0, 1) == ".") {
+                    mantissa = "";
+                }
+            }
+        }
 
         return NRS.format({
             "negative": negative,
@@ -407,6 +420,17 @@ var NRS = (function (NRS, $, undefined) {
             "mantissa": mantissa
         }, no_escaping, zeroPad);
     };
+    
+    NRS.getTransactionsAmountDecimals = function(transactions) {
+        var decimals = {};
+   		decimals.amount = NRS.getNumberOfDecimals(transactions, "amountNQT", function (transaction) {
+   			return NRS.formatAmount(transaction.amountNQT);
+   		});
+   		decimals.fee = NRS.getNumberOfDecimals(transactions, "feeNQT", function (transaction) {
+   			return NRS.formatAmount(transaction.feeNQT);
+   		});
+        return decimals;
+   	};
     
     NRS.getNumberOfDecimals = function(rows, key, callback) {
         var locale = NRS.getLocale();

@@ -991,7 +991,6 @@
   "success_stop_forging":"Forjamento foi interrompido.",
   "success_transfer_alias":"O seu pseudônimo foi transferido com sucesso!",
   "success_valid_token":"O token é válido e pertence a conta __account_link__. Foi gerado em __timestamp__.",
-  "sucess_asset_group_add":"O grupo de ativos adicionado com sucesso.",
   "supply":"Fornecimento Atual",
   "tag":"Etiqueta",
   "tags":"Etiquetas",
