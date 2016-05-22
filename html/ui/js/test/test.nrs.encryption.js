@@ -35,25 +35,25 @@ QUnit.test("encryptDecryptNote", function (assert) {
     assert.equal(decryptedNote.message, "MyMessage", "decrypted");
 });
 
-QUnit.test("encryptDecryptNote", function (assert) {
+QUnit.test("encryptDecryptData", function (assert) {
     var senderPassphrase = "rshw9abtpsa2";
     var senderPublicKeyHex = NRS.getPublicKey(converters.stringToHexString(senderPassphrase));
     var senderPrivateKeyHex = NRS.getPrivateKey(senderPassphrase);
     var receiverPassphrase = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
     var receiverPublicKeyHex = NRS.getPublicKey(converters.stringToHexString(receiverPassphrase));
     var receiverPrivateKeyHex = NRS.getPrivateKey(receiverPassphrase);
-    var encryptedNote = NRS.encryptDataRoof(converters.stringToByteArray("MyMessage"), {
+    var encryptedData = NRS.encryptDataRoof(converters.stringToByteArray("MyMessage"), {
         privateKey: converters.hexStringToByteArray(senderPrivateKeyHex),
         publicKey: converters.hexStringToByteArray(receiverPublicKeyHex)
     });
-    assert.equal(encryptedNote.data.length, 48, "message.length");
-    assert.equal(encryptedNote.nonce.length, 32, "nonce.length");
-    var decryptedNote = NRS.decryptDataRoof(encryptedNote.data, {
-        nonce: encryptedNote.nonce,
+    assert.equal(encryptedData.data.length, 48, "message.length");
+    assert.equal(encryptedData.nonce.length, 32, "nonce.length");
+    var decryptedData = NRS.decryptDataRoof(encryptedData.data, {
+        nonce: encryptedData.nonce,
         privateKey: converters.hexStringToByteArray(receiverPrivateKeyHex),
         publicKey: converters.hexStringToByteArray(senderPublicKeyHex)
     });
-    assert.equal(decryptedNote.decrypted, "MyMessage", "decrypted");
+    assert.equal(decryptedData.decrypted, "MyMessage", "decrypted");
 });
 
 // Based on testnet transaction 17867212180997536482
