@@ -225,7 +225,7 @@ var NRS = (function (NRS, $) {
 			options.nonce = converters.hexStringToByteArray(options.nonce);
 
 			return {
-				message: decryptData(converters.hexStringToByteArray(message), options)
+				message: decryptData(converters.hexStringToByteArray(message), options).decrypted
             };
 		} catch (err) {
 			if (err.errorCode && err.errorCode < 3) {
@@ -825,7 +825,7 @@ var NRS = (function (NRS, $) {
 
 		var compressedPlaintext = aesDecrypt(data, options);
 		var binData = new Uint8Array(compressedPlaintext);
-		return converters.byteArrayToString(pako.inflate(binData));
+		return { decrypted: converters.byteArrayToString(pako.inflate(binData)) };
 	}
 
 	function getSharedSecret(key1, key2) {
