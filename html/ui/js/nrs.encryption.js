@@ -706,30 +706,23 @@ var NRS = (function (NRS, $) {
 		} else {
 			sharedKey = options.sharedKey.slice(0); //clone
 		}
-
 		for (var i = 0; i < 32; i++) {
 			sharedKey[i] ^= options.nonce[i];
 		}
-
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 
-		var tmp = new Uint8Array(16);
-
+		var ivBytes = new Uint8Array(16);
 		if (window.crypto) {
-			window.crypto.getRandomValues(tmp);
+			window.crypto.getRandomValues(ivBytes);
 		} else {
-			window.msCrypto.getRandomValues(tmp);
+			window.msCrypto.getRandomValues(ivBytes);
 		}
-
-		var iv = converters.byteArrayToWordArray(tmp);
 		var encrypted = CryptoJS.AES.encrypt(text, key, {
-			iv: iv
+			iv: converters.byteArrayToWordArray(ivBytes)
 		});
 
 		var ivOut = converters.wordArrayToByteArray(encrypted.iv);
-
 		var ciphertextOut = converters.wordArrayToByteArray(encrypted.ciphertext);
-
 		return ivOut.concat(ciphertextOut);
 	}
 
@@ -771,6 +764,10 @@ var NRS = (function (NRS, $) {
 
 		return converters.wordArrayToByteArray(decrypted);
 	}
+
+    NRS.encryptDataRoof = function(data, options) {
+   		return encryptData(data, options);
+   	};
 
 	function encryptData(plaintext, options) {
 		if (!window.crypto && !window.msCrypto) {
@@ -822,12 +819,16 @@ var NRS = (function (NRS, $) {
 		return converters.shortArrayToByteArray(curve25519_(converters.byteArrayToShortArray(key1), converters.byteArrayToShortArray(key2), null));
 	}
 
-	NRS.getSharedKey = function (privateKey, publicKey, nonce) {
+    NRS.sharedSecretToSharedKey = function (sharedSecret, nonce) {
+        for (var i = 0; i < 32; i++) {
+            sharedSecret[i] ^= nonce[i];
+        }
+        return simpleHash(sharedSecret);
+    };
+
+    NRS.getSharedKey = function (privateKey, publicKey, nonce) {
 		var sharedSecret = getSharedSecret(privateKey, publicKey);
-		for (var i=0; i<32; i++) {
-			sharedSecret[i] ^= nonce[i];
-		}
-		return simpleHash(sharedSecret);
+        return NRS.sharedSecretToSharedKey(sharedSecret, nonce);
 	};
 
 	return NRS;

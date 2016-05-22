@@ -262,7 +262,10 @@ var NRS = (function (NRS, $, undefined) {
                             }
 
                             if (transaction.attachment.encryptedMessage || (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender)) {
-                                $output.append("<div id='transaction_info_decryption_form'></div><div id='transaction_info_decryption_output' style='display:none;padding-bottom:10px;'></div>");
+                                $output.append("" +
+                                    "<div id='transaction_info_decryption_form'></div>" +
+                                    "<div id='transaction_info_decryption_output' style='display:none;padding-bottom:10px;'></div>"
+                                );
 
                                 if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
                                     var fieldsToDecrypt = {};
