@@ -54,6 +54,7 @@ QUnit.test("encryptDecryptData", function (assert) {
         publicKey: converters.hexStringToByteArray(senderPublicKeyHex)
     });
     assert.equal(decryptedData.decrypted, "MyMessage", "decrypted");
+    assert.equal(decryptedData.sharedKey.length, 64, "sharedKey");
 });
 
 // Based on testnet transaction 17867212180997536482
@@ -70,5 +71,6 @@ QUnit.test("getSharedKey", function (assert) {
     var encryptedMessage = "8adee4dee3e3311a631a29553140d177932cf0743c05846d897b24545d6839cbf368fc0b0eec628bfd69e95d006e3eb8";
     var decryptedMessage = NRS.decryptDataRoof(converters.hexStringToByteArray(encryptedMessage), options);
     assert.equal(decryptedMessage.decrypted, "hello world");
+    assert.equal(decryptedMessage.sharedKey, converters.byteArrayToHexString(sharedKeyBytes));
 });
 

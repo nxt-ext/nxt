@@ -775,7 +775,9 @@ var NRS = (function (NRS, $) {
 			iv: iv
 		});
 
-		return converters.wordArrayToByteArray(decrypted);
+		return { 
+            decrypted: converters.wordArrayToByteArray(decrypted), 
+            sharedKey: sharedKey };
 	}
 
     NRS.encryptDataRoof = function(data, options) {
@@ -823,9 +825,10 @@ var NRS = (function (NRS, $) {
 			options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
 		}
 
-		var compressedPlaintext = aesDecrypt(data, options);
+		var result = aesDecrypt(data, options);
+		var compressedPlaintext = result.decrypted;
 		var binData = new Uint8Array(compressedPlaintext);
-		return { decrypted: converters.byteArrayToString(pako.inflate(binData)) };
+		return { decrypted: converters.byteArrayToString(pako.inflate(binData)), sharedKey:  converters.byteArrayToHexString(result.sharedKey) };
 	}
 
 	function getSharedSecret(key1, key2) {
