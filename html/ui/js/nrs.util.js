@@ -118,8 +118,7 @@ var NRS = (function (NRS, $, undefined) {
 
 		var result = a.div(b).times(new Big("100")).toFixed(2);
 		Big.RM = 1;
-
-		return result.toString();
+		return NRS.format(result.toString());
 	};
 
     NRS.convertToNXT = function (amount, returnAsObject) {
