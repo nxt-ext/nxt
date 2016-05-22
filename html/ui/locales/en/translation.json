@@ -1737,5 +1737,6 @@
   "exchange_buy": "Exchange Buy",
   "exchange_sell": "Exchange Sell",
   "trade": "Trade",
-  "max_nxt_decimals": "Maximum NXT decimal positions"
+  "max_nxt_decimals": "Maximum NXT decimal positions",
+  "shared_key": "Shared Key"
 }

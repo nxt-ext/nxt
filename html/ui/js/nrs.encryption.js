@@ -221,12 +221,8 @@ var NRS = (function (NRS, $) {
 					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
 				}
 			}
-
 			options.nonce = converters.hexStringToByteArray(options.nonce);
-
-			return {
-				message: decryptData(converters.hexStringToByteArray(message), options).decrypted
-            };
+			return decryptData(converters.hexStringToByteArray(message), options);
 		} catch (err) {
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
@@ -356,35 +352,24 @@ var NRS = (function (NRS, $) {
 
 	NRS.tryToDecrypt = function(transaction, fields, account, options) {
 		var showDecryptionForm = false;
-
 		if (!options) {
 			options = {};
 		}
-
 		var nrFields = Object.keys(fields).length;
-
 		var formEl = (options.formEl ? String(options.formEl).escapeHTML() : "#transaction_info_output_bottom");
 		var outputEl = (options.outputEl ? String(options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
-
 		var output = "";
-
 		var identifier = (options.identifier ? transaction[options.identifier] : transaction.transaction);
 
 		//check in cache first..
 		if (_decryptedTransactions && _decryptedTransactions[identifier]) {
 			var decryptedTransaction = _decryptedTransactions[identifier];
-
 			$.each(fields, function(key, title) {
 				if (typeof title != "string") {
 					title = title.title;
 				}
-
 				if (key in decryptedTransaction) {
-					var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
-                    var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
-					var message = String(decryptedTransaction[key]).escapeHTML().nl2br();
-					var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
-					output += "<div style='" + outputStyle + "'>" + label + "<div>" + message + "</div></div>";
+                    output += formatMessageArea(title, nrFields, decryptedTransaction[key], options);
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -447,12 +432,7 @@ var NRS = (function (NRS, $) {
 							}
 						}
 					}
-
-					var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
-					var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
-                    var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
-					var message = String(data.message).escapeHTML().nl2br();
-                    output += "<div style='" + outputStyle + "'>" + label + "<div>" + message + "</div></div>";
+                    output += formatMessageArea(title, nrFields, data, options);
 				}
 			});
 		}
@@ -494,16 +474,23 @@ var NRS = (function (NRS, $) {
 		NRS.decryptNoteFormSubmit();
 	});
 
-	NRS.decryptNoteFormSubmit = function() {
-		var $form = $("#decrypt_note_form_container");
+    var formatMessageArea = function (title, nrFields, data, options) {
+        var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
+        var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
+        var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
+        var msg = String(data.message).autoLink().nl2br();
+        var sharedKeyField = "<br><div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div>";
+        return "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div>" + sharedKeyField + "</div>";
+    };
 
+    NRS.decryptNoteFormSubmit = function() {
+		var $form = $("#decrypt_note_form_container");
 		if (!_encryptedNote) {
 			$form.find(".callout").html($.t("error_encrypted_note_not_found")).show();
 			return;
 		}
 
 		var password = $form.find("input[name=secretPhrase]").val();
-
 		if (!password) {
 			if (NRS.rememberPassword) {
 				password = _password;
@@ -522,9 +509,7 @@ var NRS = (function (NRS, $) {
 		}
 
 		var rememberPassword = $form.find("input[name=rememberPassword]").is(":checked");
-
 		var otherAccount = _encryptedNote.account;
-
 		var output = "";
 		var decryptionError = false;
 		var decryptedFields = {};
@@ -532,11 +517,9 @@ var NRS = (function (NRS, $) {
 
 		$.each(_encryptedNote.fields, function(key, title) {
 			var data = {};
-
 			var encrypted = "";
 			var nonce = "";
 			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
-
 			if (key == "encryptedMessage" || key == "encryptToSelfMessage") {
 			    if (key == "encryptToSelfMessage") {
 					otherAccount=accountId;
@@ -560,50 +543,35 @@ var NRS = (function (NRS, $) {
 				if (typeof title != "string") {
 					title = title.title;
 				}
-
 				try {
 					data = NRS.decryptNote(encrypted, {
 						"nonce": nonce,
 						"account": otherAccount
 					}, password);
-
-					decryptedFields[key] = data.message;
+					decryptedFields[key] = data;
 				} catch (err) {
 					decryptionError = true;
 					var message = String(err.message ? err.message : err);
-
 					$form.find(".callout").html(message.escapeHTML());
 					return false;
 				}
-				var outputStyle = (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "");
-				var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
-                var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
-				var msg = String(data.message).autoLink().nl2br();
-                output += "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div></div>";
+                output += formatMessageArea(title, nrFields, data, _encryptedNote.options);
 			}
 		});
-
 		if (decryptionError) {
 			return;
 		}
-
 		_decryptedTransactions[_encryptedNote.identifier] = decryptedFields;
 
-		//only save 150 decryptions maximum in cache...
+		//only save 150 decrypted messages in cache...
 		var decryptionKeys = Object.keys(_decryptedTransactions);
-
 		if (decryptionKeys.length > 150) {
 			delete _decryptedTransactions[decryptionKeys[0]];
 		}
-
 		NRS.removeDecryptionForm();
-
 		var outputEl = (_encryptedNote.options.outputEl ? String(_encryptedNote.options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
-
 		$(outputEl).append(output).show();
-
 		_encryptedNote = null;
-
 		if (rememberPassword) {
 			_decryptionPassword = password;
 		}
@@ -627,14 +595,11 @@ var NRS = (function (NRS, $) {
 
 		var success = 0;
 		var error = 0;
-
 		for (var i = 0; i < messages.length; i++) {
 			var message = messages[i];
-
 			if (message.attachment.encryptedMessage && !_decryptedTransactions[message.transaction]) {
 				try {
 					var otherUser = (message.sender == NRS.account ? message.recipient : message.sender);
-
 					var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
 						"nonce": message.attachment.encryptedMessage.nonce,
 						"account": otherUser
@@ -643,7 +608,6 @@ var NRS = (function (NRS, $) {
 					_decryptedTransactions[message.transaction] = {
 						"encryptedMessage": decoded.message
 					};
-
 					success++;
 				} catch (err) {
 					_decryptedTransactions[message.transaction] = {
@@ -673,14 +637,14 @@ var NRS = (function (NRS, $) {
 	}
 
 	function areByteArraysEqual(bytes1, bytes2) {
-		if (bytes1.length !== bytes2.length)
-			return false;
-
+		if (bytes1.length !== bytes2.length) {
+            return false;
+        }
 		for (var i = 0; i < bytes1.length; ++i) {
-			if (bytes1[i] !== bytes2[i])
-				return false;
+			if (bytes1[i] !== bytes2[i]) {
+                return false;
+            }
 		}
-
 		return true;
 	}
 
@@ -699,7 +663,6 @@ var NRS = (function (NRS, $) {
 			temp2 = temp1.add(new BigInteger(byteArray[i].toString(10), 10));
 			value = temp2;
 		}
-
 		return value;
 	}
 
@@ -797,9 +760,7 @@ var NRS = (function (NRS, $) {
 		}
 
 		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
-
 		options.nonce = new Uint8Array(32);
-
 		if (window.crypto) {
 			//noinspection JSUnresolvedFunction
 			window.crypto.getRandomValues(options.nonce);
@@ -809,7 +770,6 @@ var NRS = (function (NRS, $) {
 		}
 
 		var data = aesEncrypt(compressedPlaintext, options);
-
 		return {
 			"nonce": options.nonce,
 			"data": data
@@ -828,7 +788,7 @@ var NRS = (function (NRS, $) {
 		var result = aesDecrypt(data, options);
 		var compressedPlaintext = result.decrypted;
 		var binData = new Uint8Array(compressedPlaintext);
-		return { decrypted: converters.byteArrayToString(pako.inflate(binData)), sharedKey:  converters.byteArrayToHexString(result.sharedKey) };
+		return { message: converters.byteArrayToString(pako.inflate(binData)), sharedKey:  converters.byteArrayToHexString(result.sharedKey) };
 	}
 
 	function getSharedSecret(key1, key2) {
