@@ -525,7 +525,11 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.baseTargetPercent = function(block) {
-        return Math.round(block.baseTarget / 153722867 * 100)
+        if (block) {
+            return Math.round(block.baseTarget / 153722867 * 100)
+        } else {
+            return 0;
+        }
     };
 
     NRS.isPrivateIP = function (ip) {
