@@ -32,7 +32,7 @@ QUnit.test("encryptDecryptNote", function (assert) {
         nonce: encryptedNote.nonce,
         publicKey: converters.hexStringToByteArray(senderPublicKeyHex)
     }, receiverPrivateKey);
-    assert.equal(decryptedNote, "MyMessage", "decrypted");
+    assert.equal(decryptedNote.message, "MyMessage", "decrypted");
 });
 
 QUnit.test("encryptDecryptNote", function (assert) {

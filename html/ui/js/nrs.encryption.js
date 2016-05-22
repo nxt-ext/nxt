@@ -224,7 +224,9 @@ var NRS = (function (NRS, $) {
 
 			options.nonce = converters.hexStringToByteArray(options.nonce);
 
-			return decryptData(converters.hexStringToByteArray(message), options);
+			return {
+				message: decryptData(converters.hexStringToByteArray(message), options)
+            };
 		} catch (err) {
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
@@ -346,7 +348,7 @@ var NRS = (function (NRS, $) {
 				});
 			}
 
-			return decoded;
+			return decoded.message;
 		} catch (err) {
 			throw err;
 		}
@@ -378,7 +380,11 @@ var NRS = (function (NRS, $) {
 				}
 
 				if (key in decryptedTransaction) {
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+					var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
+                    var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
+					var message = String(decryptedTransaction[key]).escapeHTML().nl2br();
+					var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
+					output += "<div style='" + outputStyle + "'>" + label + "<div>" + message + "</div></div>";
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -390,7 +396,7 @@ var NRS = (function (NRS, $) {
 
 		if (!output) {
 			$.each(fields, function(key, title) {
-				var data = "";
+				var data = {};
 
 				var encrypted = "";
 				var nonce = "";
@@ -433,16 +439,20 @@ var NRS = (function (NRS, $) {
 									translatedTitle = String(title).escapeHTML().toLowerCase();
 								}
 
-								data = $.t("error_could_not_decrypt_var", {
+								data.message = $.t("error_could_not_decrypt_var", {
 									"var": translatedTitle
 								}).capitalize();
 							} else {
-								data = $.t("error_could_not_decrypt");
+								data.message = $.t("error_could_not_decrypt");
 							}
 						}
 					}
 
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+					var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
+					var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
+                    var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
+					var message = String(data.message).escapeHTML().nl2br();
+                    output += "<div style='" + outputStyle + "'>" + label + "<div>" + message + "</div></div>";
 				}
 			});
 		}
@@ -521,7 +531,7 @@ var NRS = (function (NRS, $) {
 		var nrFields = Object.keys(_encryptedNote.fields).length;
 
 		$.each(_encryptedNote.fields, function(key, title) {
-			var data = "";
+			var data = {};
 
 			var encrypted = "";
 			var nonce = "";
@@ -557,7 +567,7 @@ var NRS = (function (NRS, $) {
 						"account": otherAccount
 					}, password);
 
-					decryptedFields[key] = data;
+					decryptedFields[key] = data.message;
 				} catch (err) {
 					decryptionError = true;
 					var message = String(err.message ? err.message : err);
@@ -565,8 +575,11 @@ var NRS = (function (NRS, $) {
 					$form.find(".callout").html(message.escapeHTML());
 					return false;
 				}
-
-				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).autoLink().nl2br() + "</div></div>";
+				var outputStyle = (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "");
+				var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
+                var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
+				var msg = String(data.message).autoLink().nl2br();
+                output += "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div></div>";
 			}
 		});
 
@@ -628,7 +641,7 @@ var NRS = (function (NRS, $) {
 					}, password);
 
 					_decryptedTransactions[message.transaction] = {
-						"encryptedMessage": decoded
+						"encryptedMessage": decoded.message
 					};
 
 					success++;
