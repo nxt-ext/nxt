@@ -23,6 +23,8 @@ import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.http.API;
+import nxt.http.APIEnum;
+import nxt.http.APISet;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
@@ -267,6 +269,24 @@ public final class Peers {
         if (API.openAPISSLPort > 0 && !Constants.isLightClient) {
             json.put("apiSSLPort", API.openAPISSLPort);
             servicesList.add(Peer.Service.API_SSL);
+        }
+
+        if ((API.openAPIPort > 0 || API.openAPISSLPort > 0) && !Constants.isLightClient) {
+            APISet disabledAPISet = new APISet();
+            API.disabledAPIs.forEach(apiName -> {
+                APIEnum api = APIEnum.fromName(apiName);
+                if (api != null) {
+                    disabledAPISet.add(api);
+                }
+            });
+            API.disabledAPITags.forEach(apiTag -> {
+                for (APIEnum api : APIEnum.values()) {
+                    if (api.getHandler().getAPITags().contains(apiTag)) {
+                        disabledAPISet.add(api);
+                    }
+                }
+            });
+            json.put("disabledAPIs", disabledAPISet.toBase64String());
         }
         long services = 0;
         for (Peer.Service service : servicesList) {

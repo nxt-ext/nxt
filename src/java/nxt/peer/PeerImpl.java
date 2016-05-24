@@ -21,6 +21,7 @@ import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.http.APISet;
 import nxt.util.Convert;
 import nxt.util.CountingInputReader;
 import nxt.util.CountingInputStream;
@@ -69,6 +70,7 @@ final class PeerImpl implements Peer {
     private volatile String application;
     private volatile int apiPort;
     private volatile int apiSSLPort;
+    private volatile APISet disabledAPIs;
     private volatile String version;
     private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
@@ -249,6 +251,16 @@ final class PeerImpl implements Peer {
             } catch (RuntimeException e) {
                 throw new IllegalArgumentException("Invalid peer apiSSLPort " + apiSSLPortValue);
             }
+        }
+    }
+
+    public APISet getDisabledAPIs() {
+        return disabledAPIs;
+    }
+
+    void setDisabledAPIs(Object apiSetBase64) {
+        if (apiSetBase64 instanceof String) {
+            disabledAPIs = APISet.fromBase64String((String) apiSetBase64);
         }
     }
 
@@ -620,6 +632,7 @@ final class PeerImpl implements Peer {
                 setApplication((String)response.get("application"));
                 setApiPort(response.get("apiPort"));
                 setApiSSLPort(response.get("apiSSLPort"));
+                setDisabledAPIs(response.get("disabledAPIs"));
                 lastUpdated = lastConnectAttempt;
                 setVersion((String) response.get("version"));
                 setPlatform((String) response.get("platform"));
