@@ -18,6 +18,7 @@
         <listener classname="RegistryUninstallerListener" stage="uninstall" >
             <os family="windows"/>
         </listener>
+        <listener classname="nxt.installer.InstallListener" stage="install"/>
     </listeners>
 
     <natives>
@@ -102,6 +103,7 @@
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
         <panel classname="TargetPanel"/>
+        <panel classname="nxt.installer.ConfigPanel"/>
         <panel classname="ShortcutPanel" condition="!izpack.macinstall"/>
         <panel classname="InstallPanel"/>
         <panel classname="SimpleFinishPanel"/>
