@@ -221,7 +221,9 @@ var NRS = (function (NRS, $) {
 					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
 				}
 			}
-			options.nonce = converters.hexStringToByteArray(options.nonce);
+			if (options.nonce) {
+				options.nonce = converters.hexStringToByteArray(options.nonce);
+			}
 			return decryptData(converters.hexStringToByteArray(message), options);
 		} catch (err) {
 			if (err.errorCode && err.errorCode < 3) {
@@ -473,11 +475,14 @@ var NRS = (function (NRS, $) {
 	});
 
     var formatMessageArea = function (title, nrFields, data, options) {
-        var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
-        var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
-        var label = (title ? "<label" + labelStyle + "><i class='fa fa-unlock'></i> " + String(title).escapeHTML() + "</label>" : "");
-        var msg = String(data.message).autoLink().nl2br();
-        var sharedKeyField = "<br><div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div>";
+		var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
+		var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
+		var label = (title ? "<label" + labelStyle + "><i class='fa fa-unlock'></i> " + String(title).escapeHTML() + "</label>" : "");
+		var msg = String(data.message).autoLink().nl2br();
+		var sharedKeyField = "";
+		if (data.sharedKey) {
+			sharedKeyField = "<div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div><br>";
+		}
         return "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div>" + sharedKeyField + "</div>";
     };
 
@@ -489,19 +494,22 @@ var NRS = (function (NRS, $) {
 		}
 
 		var password = $form.find("input[name=secretPhrase]").val();
+		var sharedKey = $form.find("input[name=sharedKey]").val();
+		var useSharedKey = false;
 		if (!password) {
 			if (NRS.rememberPassword) {
 				password = _password;
 			} else if (_decryptionPassword) {
 				password = _decryptionPassword;
-			} else {
-				$form.find(".callout").html($.t("error_passphrase_required")).show();
+			} else if (!sharedKey) {
+				$form.find(".callout").html($.t("error_passphrase_or_shared_key_required")).show();
 				return;
 			}
+			useSharedKey = true;
 		}
 
 		var accountId = NRS.getAccountId(password);
-		if (accountId != NRS.account) {
+		if (accountId != NRS.account && !useSharedKey) {
 			$form.find(".callout").html($.t("error_incorrect_passphrase")).show();
 			return;
 		}
@@ -542,16 +550,25 @@ var NRS = (function (NRS, $) {
 					title = title.title;
 				}
 				try {
-					data = NRS.decryptNote(encrypted, {
-						"nonce": nonce,
-						"account": otherAccount
-					}, password);
+					var options = {};
+					if (useSharedKey) {
+						options.sharedKey = converters.hexStringToByteArray(sharedKey);
+					} else {
+						options.nonce = nonce;
+						options.account = otherAccount;
+                    }
+                    data = NRS.decryptNote(encrypted, options, password);
 					decryptedFields[key] = data;
 				} catch (err) {
-					decryptionError = true;
-					var message = String(err.message ? err.message : err);
-					$form.find(".callout").html(message.escapeHTML());
-					return false;
+					if (useSharedKey) {
+						data = { message: $.t("error_could_not_decrypt_message") };
+						decryptedFields[key] = data;
+					} else {
+						decryptionError = true;
+						var message = String(err.message ? err.message : err);
+						$form.find(".callout").html(message.escapeHTML());
+						return false;
+					}
 				}
                 output += formatMessageArea(title, nrFields, data, _encryptedNote.options);
 			}
@@ -575,12 +592,16 @@ var NRS = (function (NRS, $) {
 		}
 	};
 
-	NRS.decryptAllMessages = function(messages, password) {
+	NRS.decryptAllMessages = function(messages, password, sharedKey) {
+		var useSharedKey = false;
 		if (!password) {
-			throw {
-				"message": $.t("error_passphrase_required"),
-				"errorCode": 1
-			};
+			if (!sharedKey) {
+				throw {
+					"message": $.t("error_passphrase_required"),
+					"errorCode": 1
+				};
+			}
+			useSharedKey = true;
 		} else {
 			var accountId = NRS.getAccountId(password);
 			if (accountId != NRS.account) {
@@ -598,10 +619,14 @@ var NRS = (function (NRS, $) {
 			if (message.attachment.encryptedMessage && !_decryptedTransactions[message.transaction]) {
 				try {
 					var otherUser = (message.sender == NRS.account ? message.recipient : message.sender);
-					var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
-						"nonce": message.attachment.encryptedMessage.nonce,
-						"account": otherUser
-					}, password);
+					var options = {};
+					if (useSharedKey) {
+						options.sharedKey = converters.hexStringToByteArray(sharedKey);
+					} else {
+						options.nonce = message.attachment.encryptedMessage.nonce;
+						options.account = otherUser;
+                    }
+                    var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, options, password);
 
 					_decryptedTransactions[message.transaction] = {
 						"message": decoded.message,
@@ -609,9 +634,11 @@ var NRS = (function (NRS, $) {
 					};
 					success++;
 				} catch (err) {
-					_decryptedTransactions[message.transaction] = {
-						"message": $.t("error_decryption_unknown")
-					};
+					if (!useSharedKey) {
+						_decryptedTransactions[message.transaction] = {
+							"message": $.t("error_decryption_unknown")
+						};
+					}
 					error++;
 				}
 			}
@@ -739,7 +766,8 @@ var NRS = (function (NRS, $) {
 
 		return { 
             decrypted: converters.wordArrayToByteArray(decrypted), 
-            sharedKey: sharedKey };
+            sharedKey: converters.wordArrayToByteArray(key)
+		};
 	}
 
     NRS.encryptDataRoof = function(data, options) {
@@ -787,7 +815,7 @@ var NRS = (function (NRS, $) {
 		var result = aesDecrypt(data, options);
 		var compressedPlaintext = result.decrypted;
 		var binData = new Uint8Array(compressedPlaintext);
-		return { message: converters.byteArrayToString(pako.inflate(binData)), sharedKey:  converters.byteArrayToHexString(result.sharedKey) };
+		return { message: converters.byteArrayToString(pako.inflate(binData)), sharedKey: converters.byteArrayToHexString(result.sharedKey) };
 	}
 
 	function getSharedSecret(key1, key2) {

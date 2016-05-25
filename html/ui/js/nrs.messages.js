@@ -406,7 +406,7 @@ var NRS = (function(NRS, $) {
 					}
 				}
 			}
-			success = NRS.decryptAllMessages(messagesToDecrypt, data.secretPhrase);
+			success = NRS.decryptAllMessages(messagesToDecrypt, data.secretPhrase, data.sharedKey);
 		} catch (err) {
 			if (err.errorCode && err.errorCode <= 2) {
 				return {

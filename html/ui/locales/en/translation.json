@@ -1739,5 +1739,7 @@
   "trade": "Trade",
   "max_nxt_decimals": "Maximum NXT decimal positions",
   "shared_key": "Shared Key",
-  "shared_key_info": "3rd party accounts can decrypt this message using this shared key"
+  "shared_key_info": "3rd party accounts can decrypt this message using this shared key",
+  "error_passphrase_or_shared_key_required": "Please enter a passphrase or a shared key.",
+  "passphrase_or_shared_key_required_to_decrypt_data": "Your passphrase or a shared key is required to decrypt this data."
 }
