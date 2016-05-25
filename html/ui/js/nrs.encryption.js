@@ -331,20 +331,18 @@ var NRS = (function (NRS, $) {
 
 	NRS.tryToDecryptMessage = function(message) {
 		if (_decryptedTransactions && _decryptedTransactions[message.transaction]) {
-			return _decryptedTransactions[message.transaction].encryptedMessage;
+			return _decryptedTransactions[message.transaction];
 		}
-
 		try {
 			if (!message.attachment.encryptedMessage.data) {
-				return $.t("message_empty");
+				return { message: $.t("message_empty") };
 			} else {
 				var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
 					"nonce": message.attachment.encryptedMessage.nonce,
 					"account": (message.recipient == NRS.account ? message.sender : message.recipient)
 				});
 			}
-
-			return decoded.message;
+			return decoded;
 		} catch (err) {
 			throw err;
 		}
@@ -477,7 +475,7 @@ var NRS = (function (NRS, $) {
     var formatMessageArea = function (title, nrFields, data, options) {
         var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
         var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
-        var label = (title ? "<label" + labelStyle + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "");
+        var label = (title ? "<label" + labelStyle + "><i class='fa fa-unlock'></i> " + String(title).escapeHTML() + "</label>" : "");
         var msg = String(data.message).autoLink().nl2br();
         var sharedKeyField = "<br><div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div>";
         return "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div>" + sharedKeyField + "</div>";
@@ -606,12 +604,13 @@ var NRS = (function (NRS, $) {
 					}, password);
 
 					_decryptedTransactions[message.transaction] = {
-						"encryptedMessage": decoded.message
+						"message": decoded.message,
+						"sharedKey": decoded.sharedKey
 					};
 					success++;
 				} catch (err) {
 					_decryptedTransactions[message.transaction] = {
-						"encryptedMessage": $.t("error_decryption_unknown")
+						"message": $.t("error_decryption_unknown")
 					};
 					error++;
 				}

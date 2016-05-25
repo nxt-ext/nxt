@@ -167,58 +167,58 @@ var NRS = (function(NRS, $) {
 		var messages = _messages[otherUser];
 		if (messages) {
 			for (var i = 0; i < messages.length; i++) {
-				var decoded = false;
+				var decoded = {};
 				var extra = "";
 				var type = "";
 				if (!messages[i].attachment) {
-					decoded = $.t("message_empty");
+					decoded.message = $.t("message_empty");
 				} else if (messages[i].attachment.encryptedMessage) {
 					try {
-						decoded = NRS.tryToDecryptMessage(messages[i]);
+                        $.extend(decoded, NRS.tryToDecryptMessage(messages[i]));
 						extra = "decrypted";
 					} catch (err) {
 						if (err.errorCode && err.errorCode == 1) {
-							decoded = $.t("error_decryption_passphrase_required");
+                            decoded.message = $.t("error_decryption_passphrase_required");
 							extra = "to_decrypt";
 						} else {
-							decoded = $.t("error_decryption_unknown");
+                            decoded.message = $.t("error_decryption_unknown");
 						}
 					}
 				} else if (messages[i].attachment.message) {
 					if (!messages[i].attachment["version.Message"] && !messages[i].attachment["version.PrunablePlainMessage"]) {
 						try {
-							decoded = converters.hexStringToString(messages[i].attachment.message);
+                            decoded.message = converters.hexStringToString(messages[i].attachment.message);
 						} catch (err) {
 							//legacy
 							if (messages[i].attachment.message.indexOf("feff") === 0) {
-								decoded = NRS.convertFromHex16(messages[i].attachment.message);
+                                decoded.message = NRS.convertFromHex16(messages[i].attachment.message);
 							} else {
-								decoded = NRS.convertFromHex8(messages[i].attachment.message);
+                                decoded.message = NRS.convertFromHex8(messages[i].attachment.message);
 							}
 						}
 					} else {
-						decoded = String(messages[i].attachment.message);
+                        decoded.message = String(messages[i].attachment.message);
 					}
 				} else if (messages[i].attachment.messageHash || messages[i].attachment.encryptedMessageHash) {
-					decoded = $.t("message_pruned");
+                    decoded.message = $.t("message_pruned");
 				} else {
-					decoded = $.t("message_empty");
+                    decoded.message = $.t("message_empty");
 				}
-				if (decoded !== false) {
-					if (!decoded) {
-						decoded = $.t("message_empty");
+				if (!$.isEmptyObject(decoded)) {
+					if (!decoded.message) {
+                        decoded.message = $.t("message_empty");
 					}
-					decoded = String(decoded).escapeHTML().nl2br();
+					decoded.message = String(decoded.message).escapeHTML().nl2br();
 					if (extra == "to_decrypt") {
-						decoded = "<i class='fa fa-warning'></i> " + decoded;
+						decoded.message = "<i class='fa fa-warning'></i> " + decoded.message;
 					} else if (extra == "decrypted") {
 						if (type == "payment") {
-							decoded = "<strong>+" + NRS.formatAmount(messages[i].amountNQT) + " NXT</strong><br />" + decoded;
+							decoded.message = "<strong>+" + NRS.formatAmount(messages[i].amountNQT) + " NXT</strong><br />" + decoded.message;
 						}
-						decoded = "<i class='fa fa-lock'></i> " + decoded;
+						decoded.message = "<i class='fa fa-unlock'></i> " + decoded.message;
 					}
 				} else {
-					decoded = "<i class='fa fa-warning'></i> " + $.t("error_could_not_decrypt_message");
+					decoded.message = "<i class='fa fa-warning'></i> " + $.t("error_could_not_decrypt_message");
 					extra = "decryption_failed";
 				}
 				var day = NRS.formatTimestamp(messages[i].timestamp, true);
@@ -226,7 +226,14 @@ var NRS = (function(NRS, $) {
 					output += "<dt><strong>" + day + "</strong></dt>";
 					last_day = day;
 				}
-				output += "<dd class='" + (messages[i].recipient == NRS.account ? "from" : "to") + (extra ? " " + extra : "") + "'><p>" + decoded + "</p></dd>";
+				var messageClass = (messages[i].recipient == NRS.account ? "from" : "to") + (extra ? " " + extra : "");
+                var inverseIcon = messages[i].recipient == NRS.account ? "" : " fa-inverse";
+				var sharedKeyTag = "";
+				if (decoded.sharedKey) {
+					sharedKeyTag = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#shared_key_modal' " +
+					                    "data-sharedkey='" + decoded.sharedKey + "'><i class='fa fa-key" + inverseIcon + "'></i></a>";
+				}
+                output += "<dd class='" + messageClass + "'><p>" + decoded.message + sharedKeyTag + "</p></dd>";
 			}
 		}
 		output += "</dl>";
@@ -429,6 +436,11 @@ var NRS = (function(NRS, $) {
 			"stop": true
 		};
 	};
+
+    $("#shared_key_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        $("#shared_key_text").val($invoker.data("sharedkey"));
+    });
 
 	return NRS;
 }(NRS || {}, jQuery));
