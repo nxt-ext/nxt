@@ -737,6 +737,11 @@ var NRS = (function (NRS, $) {
 
 		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
+		
+		// shared key is use for two different purposes here
+		// (1) if nonce exists, shared key represents the shared secret between the private and public keys
+		// (2) if nonce does not exists, shared key is the specific key needed for decryption already xored
+		// with the nonce and hashed
 		var sharedKey;
 		if (!options.sharedKey) {
 			sharedKey = getSharedSecret(options.privateKey, options.publicKey);
