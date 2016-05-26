@@ -227,10 +227,10 @@ var NRS = (function(NRS, $) {
 					last_day = day;
 				}
 				var messageClass = (messages[i].recipient == NRS.account ? "from" : "to") + (extra ? " " + extra : "");
-                var inverseIcon = messages[i].recipient == NRS.account ? "" : " fa-inverse";
 				var sharedKeyTag = "";
-				if (decoded.sharedKey) {
-					sharedKeyTag = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#shared_key_modal' " +
+                if (decoded.sharedKey) {
+                    var inverseIcon = messages[i].recipient == NRS.account ? "" : " fa-inverse";
+                    sharedKeyTag = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#shared_key_modal' " +
 					                    "data-sharedkey='" + decoded.sharedKey + "'><i class='fa fa-key" + inverseIcon + "'></i></a>";
 				}
                 output += "<dd class='" + messageClass + "'><p>" + decoded.message + sharedKeyTag + "</p></dd>";
