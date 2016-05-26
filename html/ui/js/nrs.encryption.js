@@ -382,7 +382,6 @@ var NRS = (function (NRS, $) {
 		if (!output) {
 			$.each(fields, function(key, title) {
 				var data = {};
-
 				var encrypted = "";
 				var nonce = "";
 				var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
@@ -447,7 +446,6 @@ var NRS = (function (NRS, $) {
 			};
 
 			$("#decrypt_note_form_container").detach().appendTo(formEl);
-
 			$("#decrypt_note_form_container, " + formEl).show();
 		} else {
 			NRS.removeDecryptionForm();
