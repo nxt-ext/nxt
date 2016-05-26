@@ -444,7 +444,12 @@ var NRS = (function (NRS, $) {
 				"options": options,
 				"identifier": identifier
 			};
-
+			if (_encryptedNote.account) {
+				$("#decrypt_note_secret_phrase_div").show();
+			} else {
+				$("#decrypt_note_form_password").val("");
+				$("#decrypt_note_secret_phrase_div").hide();
+			}
 			$("#decrypt_note_form_container").detach().appendTo(formEl);
 			$("#decrypt_note_form_container, " + formEl).show();
 		} else {
@@ -455,19 +460,18 @@ var NRS = (function (NRS, $) {
 
 	NRS.removeDecryptionForm = function($modal) {
 		var noteFormContainer = $("#decrypt_note_form_container");
-        if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && noteFormContainer.length)) {
+		if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && noteFormContainer.length)) {
 			noteFormContainer.find("input").val("");
-			noteFormContainer.find(".callout").html($.t("passphrase_required_to_decrypt_data"));
 			noteFormContainer.hide().detach().appendTo("body");
 		}
 	};
 
-	var noteFormContainer = $("#decrypt_note_form_container");
-	noteFormContainer.find("button.btn-primary").click(function() {
+	var decryptNoteFormContainer = $("#decrypt_note_form_container");
+	decryptNoteFormContainer.find("button.btn-primary").click(function() {
 		NRS.decryptNoteFormSubmit();
 	});
 
-	noteFormContainer.on("submit", function(e) {
+	decryptNoteFormContainer.on("submit", function(e) {
 		e.preventDefault();
 		NRS.decryptNoteFormSubmit();
 	});

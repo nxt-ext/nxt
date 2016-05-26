@@ -91,12 +91,16 @@
 
 <div id="decrypt_note_form_container" style="display:none;">
     <form role="form" style="background:#f6f6f6;margin-bottom:10px;padding:10px;border:1px solid #999;border-radius:5px;" autocomplete="off">
-        <div class="callout callout-danger error_message" style="background:#fbe7e7" data-i18n="passphrase_or_shared_key_required_to_decrypt_data">Your passphrase or a shared key is required to decrypt this data.</div>
-        <div class="form-group secret_phrase">
-            <label for="decrypt_note_form_password" data-i18n="phrase">PASSPHRASE</label>
-            <input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
+        <div id="decrypt_note_secret_phrase_div">
+            <div class="form-group secret_phrase">
+                <label for="decrypt_note_form_password" data-i18n="phrase">PASSPHRASE</label>
+                <input type="password" name="secretPhrase" id="decrypt_note_form_password" class="form-control" placeholder="" tabindex="8">
+            </div>
+            <div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password"/>
+                &nbsp
+                <label for="decrypt_note_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label>
+            </div>
         </div>
-        <div style="margin-bottom:10px"><input type="checkbox" name="rememberPassword" id="decrypt_note_remember_password" /> <label for="decrypt_note_remember_password" style="font-weight:normal;" data-i18n="remember_decryption_passphrase">Remember passphrase for decryption</label></div>
         <div class="form-group">
             <label for="decrypt_note_form_shared_key" data-i18n="shared_key">Shared Key</label>
             <input name="sharedKey" id="decrypt_note_form_shared_key" class="form-control" tabindex="9">

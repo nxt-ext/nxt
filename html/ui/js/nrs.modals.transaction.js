@@ -266,25 +266,18 @@ var NRS = (function (NRS, $, undefined) {
                                     "<div id='transaction_info_decryption_form'></div>" +
                                     "<div id='transaction_info_decryption_output' style='display:none;padding-bottom:10px;'></div>"
                                 );
-
-                                if (NRS.account == transaction.recipient || NRS.account == transaction.sender) {
-                                    var fieldsToDecrypt = {};
-
-                                    if (transaction.attachment.encryptedMessage) {
-                                        fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
-                                    }
-                                    if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
-                                        fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
-                                    }
-
-                                    NRS.tryToDecrypt(transaction, fieldsToDecrypt, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
-                                        "noPadding": true,
-                                        "formEl": "#transaction_info_decryption_form",
-                                        "outputEl": "#transaction_info_decryption_output"
-                                    });
-                                } else {
-                                    $output.append("<div style='padding-bottom:10px'>" + $.t("encrypted_message_no_permission") + "</div>");
+                                var fieldsToDecrypt = {};
+                                if (transaction.attachment.encryptedMessage) {
+                                    fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
                                 }
+                                if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
+                                    fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
+                                }
+                                NRS.tryToDecrypt(transaction, fieldsToDecrypt, NRS.getAccountForDecryption(transaction), {
+                                    "noPadding": true,
+                                    "formEl": "#transaction_info_decryption_form",
+                                    "outputEl": "#transaction_info_decryption_output"
+                                });
                             }
                         } else {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
@@ -872,16 +865,12 @@ var NRS = (function (NRS, $, undefined) {
                                 data["seller"] = NRS.getAccountFormatted(purchase, "seller");
 
                                 if (transaction.attachment.goodsData) {
-                                    if (NRS.account == purchase.seller || NRS.account == purchase.buyer) {
-                                        NRS.tryToDecrypt(transaction, {
-                                            "goodsData": {
-                                                "title": $.t("data"),
-                                                "nonce": "goodsNonce"
-                                            }
-                                        }, (purchase.buyer == NRS.account ? purchase.seller : purchase.buyer));
-                                    } else {
-                                        data["data"] = $.t("encrypted_goods_data_no_permission");
-                                    }
+                                    NRS.tryToDecrypt(transaction, {
+                                        "goodsData": {
+                                            "title": $.t("data"),
+                                            "nonce": "goodsNonce"
+                                        }
+                                    }, NRS.getAccountForDecryption(purchase, "buyer", "seller"));
                                 }
 
                                 infoTable.find("tbody").append(NRS.createInfoTable(data));
@@ -1332,24 +1321,17 @@ var NRS = (function (NRS, $, undefined) {
                         if (transaction.attachment.message) {
                             $("#transaction_info_output_bottom").append("<div style='height:5px'></div>");
                         }
-
-                        if (NRS.account == transaction.sender || NRS.account == transaction.recipient) {
-                            var fieldsToDecrypt = {};
-
-                            if (transaction.attachment.encryptedMessage) {
-                                fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
-                            }
-                            if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
-                                fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
-                            }
-
-                            NRS.tryToDecrypt(transaction, fieldsToDecrypt, (transaction.recipient == NRS.account ? transaction.sender : transaction.recipient), {
-                                "formEl": "#transaction_info_output_bottom",
-                                "outputEl": "#transaction_info_output_bottom"
-                            });
-                        } else {
-                            $("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-lock'></i> " + $.t("encrypted_message") + "</label><div>" + $.t("encrypted_message_no_permission") + "</div></div>");
+                        var fieldsToDecrypt = {};
+                        if (transaction.attachment.encryptedMessage) {
+                            fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
                         }
+                        if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
+                            fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
+                        }
+                        NRS.tryToDecrypt(transaction, fieldsToDecrypt, NRS.getAccountForDecryption(transaction), {
+                            "formEl": "#transaction_info_output_bottom",
+                            "outputEl": "#transaction_info_output_bottom"
+                        });
                     }
 
                     $("#transaction_info_output_bottom").show();
