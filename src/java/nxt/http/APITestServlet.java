@@ -277,13 +277,22 @@ public class APITestServlet extends HttpServlet {
         for (String parameter : parameters) {
             buf.append("<tr class='api-call-input-tr'>\n");
             buf.append("<td>").append(parameter).append(":</td>\n");
-            buf.append("<td><input type='").append(isPassword(parameter) ? "password" : "text").append("' ");
+            if (isTextArea(parameter)) {
+                buf.append("<td><textarea ");
+            } else {
+                buf.append("<td><input type='").append(isPassword(parameter) ? "password" : "text").append("' ");
+            }
             buf.append("name='").append(parameter).append("' ");
             String value = Convert.emptyToNull(req.getParameter(parameter));
             if (value != null) {
                 buf.append("value='").append(value.replace("'", "&quot;")).append("' ");
             }
-            buf.append("style='width:100%;min-width:200px;'/></td>\n");
+            buf.append("style='width:100%;min-width:200px;'");
+            if (isTextArea(parameter)) {
+                buf.append("></textarea></td>\n");
+            } else {
+                buf.append("/></td>\n");
+            }
             buf.append("</tr>\n");
         }
         buf.append("<tr>\n");
@@ -311,6 +320,10 @@ public class APITestServlet extends HttpServlet {
 
     private static boolean isPassword(String parameter) {
         return "secretPhrase".equals(parameter) || "adminPassword".equals(parameter) || "recipientSecretPhrase".equals(parameter);
+    }
+
+    private static boolean isTextArea(String parameter) {
+        return "website".equals(parameter);
     }
 
     private static void appendWikiLink(String className, StringBuilder buf) {
