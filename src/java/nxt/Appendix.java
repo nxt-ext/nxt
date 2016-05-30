@@ -130,7 +130,7 @@ public interface Appendix {
         }
 
         boolean verifyVersion(byte transactionVersion) {
-            return transactionVersion == 0 ? version == 0 : version > 0;
+            return transactionVersion == 0 ? version == 0 : (Nxt.getBlockchain().getHeight() < Constants.BLOCK_19 ? version > 0 : version == 1);
         }
 
         @Override
@@ -550,6 +550,14 @@ public interface Appendix {
             if ((getVersion() != 2 && !isCompressed) || (getVersion() == 2 && isCompressed)) {
                 throw new NxtException.NotValidException("Version mismatch - version " + getVersion() + ", isCompressed " + isCompressed);
             }
+        }
+
+        @Override
+        final boolean verifyVersion(byte transactionVersion) {
+            if (Nxt.getBlockchain().getHeight() < Constants.BLOCK_19) {
+                return super.verifyVersion(transactionVersion);
+            }
+            return transactionVersion == 0 ? getVersion() == 0 : (getVersion() == 1 || getVersion() == 2);
         }
 
         @Override
@@ -1318,6 +1326,7 @@ public interface Appendix {
         @Override
         void validate(Transaction transaction) throws NxtException.ValidationException {
             params.validate();
+            params.checkApprovable();
             int currentHeight = Nxt.getBlockchain().getHeight();
             if (params.getVoteWeighting().getVotingModel() == VoteWeighting.VotingModel.TRANSACTION) {
                 if (linkedFullHashes.length == 0 || linkedFullHashes.length > Constants.MAX_PHASING_LINKED_TRANSACTIONS) {
@@ -1380,7 +1389,11 @@ public interface Appendix {
 
         @Override
         void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
-            params.getVoteWeighting().validate();
+            if (Nxt.getBlockchain().getHeight() < Constants.BLOCK_19) {
+                params.getVoteWeighting().validate();
+            } else {
+                params.checkApprovable();
+            }
         }
 
         @Override

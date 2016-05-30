@@ -116,7 +116,7 @@ public interface Attachment extends Appendix {
 
         @Override
         final boolean verifyVersion(byte transactionVersion) {
-            return true;
+            return Nxt.getBlockchain().getHeight() < Constants.BLOCK_19 || getVersion() == 0;
         }
 
     }
