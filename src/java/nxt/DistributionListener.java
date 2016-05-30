@@ -146,16 +146,16 @@ public final class DistributionListener implements Listener<Block> {
                         long accountId = rs.getLong("id");
                         // 1 NXT held for the full period should give 1 asset unit, i.e. 10000 QNT assuming 4 decimals
                         long quantity = new BigInteger(rs.getBytes("balance")).divide(BALANCE_DIVIDER).longValueExact();
-                        Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                        Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
                                 FXT_ASSET_ID, quantity);
                         totalDistributed += quantity;
                         count += 1;
                     }
                     Account issuerAccount = Account.getAccount(FXT_ISSUER_ID);
-                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
                             FXT_ASSET_ID, -totalDistributed);
                     long excessFxtQuantity = Asset.getAsset(FXT_ASSET_ID).getInitialQuantityQNT() - totalDistributed;
-                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
                             FXT_ASSET_ID, -excessFxtQuantity);
                     Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
                     Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
