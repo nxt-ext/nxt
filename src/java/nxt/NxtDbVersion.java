@@ -1172,6 +1172,9 @@ class NxtDbVersion extends DbVersion {
             case 483:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fxt_id_idx ON account_fxt (id, height DESC)");
             case 484:
+                BlockchainProcessorImpl.getInstance().scheduleScan(DistributionListener.DISTRIBUTION_START - 1, false);
+                apply(null);
+            case 485:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

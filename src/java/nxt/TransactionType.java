@@ -2210,7 +2210,7 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
-                if (Nxt.getBlockchain().getHeight() > Constants.BLOCK_19) {
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
                     Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
                     if (prunablePlainMessage != null) {
                         byte[] image = prunablePlainMessage.getMessage();
@@ -3117,7 +3117,7 @@ public abstract class TransactionType {
                                 + " upload hash: " + Convert.toHexString(taggedDataUpload.getHash()));
                     }
                 }
-                if (Nxt.getBlockchain().getHeight() > Constants.BLOCK_19) {
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
                     TaggedData taggedData = TaggedData.getData(attachment.getTaggedDataId());
                     if (taggedData != null && taggedData.getTransactionTimestamp() > Nxt.getEpochTime() + 6 * Constants.MIN_PRUNABLE_LIFETIME) {
                         throw new NxtException.NotCurrentlyValidException("Data already extended, timestamp is " + taggedData.getTransactionTimestamp());

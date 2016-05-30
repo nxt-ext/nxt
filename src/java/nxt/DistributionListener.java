@@ -17,6 +17,7 @@
 package nxt;
 
 import nxt.db.DerivedDbTable;
+import nxt.util.Convert;
 import nxt.util.Listener;
 import nxt.util.Logger;
 
@@ -31,12 +32,12 @@ import java.util.Map;
 
 final class DistributionListener implements Listener<Block> {
 
-    private static final int DISTRIBUTION_START = 640000;
-    private static final int DISTRIBUTION_END = DISTRIBUTION_START + 90 * 1440; // run for 90 days
+    private static final int DISTRIBUTION_END = Constants.FXT_BLOCK;
+    static final int DISTRIBUTION_START = DISTRIBUTION_END - 90 * 1440; // run for 90 days
     private static final int DISTRIBUTION_FREQUENCY = 720; // run processing every 720 blocks
     private static final int DISTRIBUTION_STEP = 60; // take snapshots every 60 blocks
-    private static final long FXT_ASSET_ID = Long.parseUnsignedLong("111111111111111111");
-    private static final long FXT_ISSUER_ID = Long.parseUnsignedLong("22222222222222222");
+    private static final long FXT_ASSET_ID = Long.parseUnsignedLong(Constants.isTestnet ? "2532340154632699620" : "111111111111111111");
+    private static final long FXT_ISSUER_ID = Convert.parseAccountId(Constants.isTestnet ? "NXT-46RQ-NXAE-RAQG-87D97" : "0");
     private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf(10000L * (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_STEP);
 
     private static final DerivedDbTable accountFXTTable = new DerivedDbTable("account_fxt") {
@@ -135,10 +136,8 @@ final class DistributionListener implements Listener<Block> {
                         totalDistributed += quantity;
                         count += 1;
                     }
-                /*
-                Account.getAccount(FXT_ISSUER_ID).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
-                    FXT_ASSET_ID, -totalDistributed);
-                */
+                    Account.getAccount(FXT_ISSUER_ID).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                            FXT_ASSET_ID, -totalDistributed);
                 }
                 Logger.logDebugMessage("Distributed " + totalDistributed + " QNT to " + count + " accounts");
                 Db.db.commitTransaction();
