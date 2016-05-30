@@ -1175,6 +1175,9 @@ class NxtDbVersion extends DbVersion {
                 BlockchainProcessorImpl.getInstance().scheduleScan(DistributionListener.DISTRIBUTION_START - 1, false);
                 apply(null);
             case 485:
+                BlockDb.deleteBlocksFromHeight(Constants.FXT_BLOCK);
+                apply(null);
+            case 486:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate

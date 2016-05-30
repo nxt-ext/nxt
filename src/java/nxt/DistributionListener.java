@@ -30,7 +30,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-final class DistributionListener implements Listener<Block> {
+public final class DistributionListener implements Listener<Block> {
 
     private static final int DISTRIBUTION_END = Constants.FXT_BLOCK;
     static final int DISTRIBUTION_START = DISTRIBUTION_END - 90 * 1440; // run for 90 days
@@ -66,6 +66,21 @@ final class DistributionListener implements Listener<Block> {
 
     static {
         Nxt.getBlockchainProcessor().addListener(new DistributionListener(), BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
+    }
+
+    public static long getFxtQuantity(long accountId) {
+        try (Connection con = Db.db.getConnection();
+             PreparedStatement pstmtSelect = con.prepareStatement("SELECT balance FROM account_fxt WHERE id = ? ORDER BY height DESC LIMIT 1")) {
+            pstmtSelect.setLong(1, accountId);
+            try (ResultSet rs = pstmtSelect.executeQuery()) {
+                if (!rs.next()) {
+                    return 0;
+                }
+                return new BigInteger(rs.getBytes("balance")).divide(BALANCE_DIVIDER).longValueExact();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e.toString(), e);
+        }
     }
 
     @Override
@@ -136,8 +151,14 @@ final class DistributionListener implements Listener<Block> {
                         totalDistributed += quantity;
                         count += 1;
                     }
-                    Account.getAccount(FXT_ISSUER_ID).addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                    Account issuerAccount = Account.getAccount(FXT_ISSUER_ID);
+                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
                             FXT_ASSET_ID, -totalDistributed);
+                    long excessFxtQuantity = Asset.getAsset(FXT_ASSET_ID).getInitialQuantityQNT() - totalDistributed;
+                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(AccountLedger.LedgerEvent.FXT_DISTRIBUTION, block.getId(),
+                            FXT_ASSET_ID, -excessFxtQuantity);
+                    Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
+                    Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
                 }
                 Logger.logDebugMessage("Distributed " + totalDistributed + " QNT to " + count + " accounts");
                 Db.db.commitTransaction();
