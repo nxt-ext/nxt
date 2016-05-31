@@ -31,8 +31,49 @@ public class APISet {
         return true;
     }
 
+    public void intersect(APISet other) {
+        internal.and(other.internal);
+    }
+
     public boolean containsName(String name) {
         APIEnum api = APIEnum.fromName(name);
         return api != null && internal.get(api.ordinal());
+    }
+/*
+    public APISet not() {
+        BitSet result = (BitSet) internal.clone();
+        result.flip(0, APIEnum.values().length);
+        return new APISet(result);
+    }
+
+    public APISet and(APISet other) {
+        BitSet result = (BitSet) internal.clone();
+        result.and(other.internal);
+        return new APISet(result);
+    }
+
+    public APISet andNot(APISet other) {
+        BitSet result = (BitSet) internal.clone();
+        result.andNot(other.internal);
+        return new APISet(result);
+    }
+*/
+    public boolean isEmpty() {
+        return internal.isEmpty();
+    }
+
+    public boolean containsAll(APISet other) {
+        long[] containerArr = internal.toLongArray();
+        long[] containedArr = other.internal.toLongArray();
+        if (containedArr.length > containerArr.length) {
+            return false;
+        }
+
+        for (int i = 0; i < containedArr.length; i++) {
+            if ((containerArr[i] & containedArr[i]) != containedArr[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }

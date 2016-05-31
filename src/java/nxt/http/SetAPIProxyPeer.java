@@ -36,7 +36,7 @@ public class SetAPIProxyPeer extends APIServlet.APIRequestHandler {
             return PEER_NOT_OPEN_API;
         }
 
-        APIProxy.getInstance().setServingPeer(peer);
+        APIProxy.getInstance().setForcedPeer(peer);
         return JSONData.peer(peer);
     }
 

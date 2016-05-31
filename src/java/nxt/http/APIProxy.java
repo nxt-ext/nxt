@@ -23,9 +23,11 @@ import nxt.peer.Peers;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class APIProxy {
     private static APIProxy instance = new APIProxy();
@@ -34,9 +36,10 @@ public class APIProxy {
     public static final int blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod") / 1000;
     public static final String forcedServerURL = Nxt.getStringProperty("nxt.forceAPIProxyServerURL", "");
 
-    private String currentPeerHost;
+    private volatile String forcedPeerHost;
+    private volatile List<String> peersHosts;
+    private volatile String mainPeerAnnouncedAddress;
 
-    private Random randomGenerator;
 
     private ConcurrentHashMap<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
 
@@ -58,7 +61,7 @@ public class APIProxy {
     }
 
     private APIProxy() {
-        randomGenerator = new Random();
+
     }
 
     public static void init() {}
@@ -67,32 +70,68 @@ public class APIProxy {
         return instance;
     }
 
-    public Peer getServingPeer() {
-        Peer peer = null;
-
-        String currentPeerHost = this.currentPeerHost;
-        if (currentPeerHost != null) {
-            peer = Peers.getPeer(currentPeerHost);
+    public Peer getServingPeer(String requestType) {
+        if (forcedPeerHost != null) {
+            return Peers.getPeer(forcedPeerHost);
         }
 
-        if (peer == null
-                || peer.getState() != Peer.State.CONNECTED
-                || !isOpenAPIPeer(peer)) {
-            peer = getRandomAPIPeer();
-            if (peer != null) {
-                this.currentPeerHost = peer.getHost();
+        Peer resultPeer = null;
+        List<String> currentPeersHosts = this.peersHosts;
+        if (currentPeersHosts != null) {
+            for (String host:currentPeersHosts) {
+                resultPeer = Peers.getPeer(host);
+                if (isPeerConnectable(resultPeer) && !resultPeer.getDisabledAPIs().containsName(requestType)) {
+                    break;
+                }
             }
         }
 
-        return peer;
+        if (resultPeer == null) {
+            List<Peer> connectablePeers = Peers.getPeers(p -> isPeerConnectable(p)
+                    && !blacklistedPeers.containsKey(p.getHost()));
+            if (!connectablePeers.isEmpty()) {
+                //The first peer (element 0 of peersHosts) is chosen at random. Next peers are chosen randomply from a
+                // subset of connectable peers that have at least one new API enabled, which was disabled for the
+                // previously chosen peers. In worst the size of peersHosts will be the number of APIs
+                Peer peer = getRandomAPIPeer(connectablePeers);
+                if (peer != null) {
+                    currentPeersHosts = new ArrayList<>();
+
+                    APISet disabledAPIs = peer.getDisabledAPIs();
+                    currentPeersHosts.add(peer.getHost());
+                    mainPeerAnnouncedAddress = peer.getAnnouncedAddress();
+                    if (!peer.getDisabledAPIs().containsName(requestType)) {
+                        resultPeer = peer;
+                    }
+                    while (!disabledAPIs.isEmpty() && !connectablePeers.isEmpty()) {
+                        //remove all peers that do not introduce new enabled APIs
+                        connectablePeers.removeIf(p -> p.getDisabledAPIs().containsAll(disabledAPIs));
+                        peer = getRandomAPIPeer(connectablePeers);
+                        currentPeersHosts.add(peer.getHost());
+                        if (!peer.getDisabledAPIs().containsName(requestType)) {
+                            resultPeer = peer;
+                        }
+                        disabledAPIs.intersect(peer.getDisabledAPIs());
+                    }
+                    this.peersHosts = Collections.unmodifiableList(currentPeersHosts);
+                }
+            }
+        }
+
+        return resultPeer;
     }
 
-    public boolean setServingPeer(Peer peer) {
-        if (peer != null && peer.getState() == Peer.State.CONNECTED && isOpenAPIPeer(peer)) {
-            currentPeerHost = peer.getHost();
-            return true;
+    public void setForcedPeer(Peer peer) {
+        if (peer != null) {
+            forcedPeerHost = peer.getHost();
+            mainPeerAnnouncedAddress = peer.getAnnouncedAddress();
+        } else {
+            forcedPeerHost = null;
         }
-        return false;
+    }
+
+    public String getMainPeerAnnouncedAddress() {
+        return mainPeerAnnouncedAddress;
     }
 
     public static boolean isActivated() {
@@ -100,25 +139,28 @@ public class APIProxy {
     }
 
     public void blacklistHost(String host) {
-        if (host.equals(currentPeerHost)) {
-            currentPeerHost = null;
+        List<String> currentPeerHosts = this.peersHosts;
+        if (currentPeerHosts != null && currentPeerHosts.contains(host)) {
+            this.peersHosts = null;
         }
         blacklistedPeers.put(host, Nxt.getEpochTime() + blacklistingPeriod);
     }
 
-    private Peer getRandomAPIPeer() {
-        List<Peer> peers = Peers.getPeers(peer -> !blacklistedPeers.containsKey(peer.getHost())
-                && peer.getState() == Peer.State.CONNECTED && isOpenAPIPeer(peer));
-
+    private Peer getRandomAPIPeer(List<Peer> peers) {
         if (peers.isEmpty()) {
             return null;
         }
-        int index = randomGenerator.nextInt(peers.size());
+        int index = ThreadLocalRandom.current().nextInt(peers.size());
         return peers.get(index);
     }
 
     public static boolean isOpenAPIPeer(Peer peer) {
         return peer.providesService(Peer.Service.API) || peer.providesService(Peer.Service.API_SSL);
         //return peer.providesService(Peer.Service.API);
+    }
+
+    public static boolean isPeerConnectable(Peer peer) {
+        return peer != null && isOpenAPIPeer(peer) && peer.getState() == Peer.State.CONNECTED
+                && Nxt.VERSION.equals(peer.getVersion());
     }
 }

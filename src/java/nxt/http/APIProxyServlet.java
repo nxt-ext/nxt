@@ -45,6 +45,7 @@ import java.util.Set;
 public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<String> NOT_FORWARDED_REQUESTS;
     private static final Set<APITag> NOT_FORWARDED_TAGS;
+    private static final String REQUEST_TYPE = APIProxyServlet.class.getName() + ".requestType";
 
     static {
         Set<String> requests = new HashSet<>();
@@ -81,6 +82,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             if (apiServlet == null) {
                 apiServlet = new APIServlet();
             }
+            parseQueryString(request);
             if (APIProxy.isActivated() && isForwardable(request)) {
                 super.service(request, response);
             } else {
@@ -118,7 +120,8 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         if (!APIProxy.forcedServerURL.isEmpty()) {
             uri.append(APIProxy.forcedServerURL);
         } else {
-            Peer servingPeer = APIProxy.getInstance().getServingPeer();
+            String requestType = (String) clientRequest.getAttribute(REQUEST_TYPE);
+            Peer servingPeer = APIProxy.getInstance().getServingPeer(requestType);
             boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
             if (useHttps) {
                 uri.append("https://");
@@ -159,9 +162,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         }
     }
 
-    private boolean isForwardable(HttpServletRequest req) throws ParameterException {
+    private void parseQueryString(HttpServletRequest clientRequest) throws ParameterException {
         MultiMap<String> parameters = new MultiMap<>();
-        String queryString = req.getQueryString();
+        String queryString = clientRequest.getQueryString();
         String requestType = null;
 
         if (queryString != null) {
@@ -182,6 +185,23 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             }
         }
 
+        if (parameters.containsKey("secretPhrase")) {
+            throw new ParameterException(JSONResponses.PROXY_SECRET_PHRASE_DETECTED);
+        }
+
+        if (parameters.containsKey("adminPassword")) {
+            throw new ParameterException(JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
+        }
+
+        clientRequest.setAttribute(REQUEST_TYPE, requestType);
+    }
+
+    private boolean isForwardable(HttpServletRequest clientRequest) {
+
+        String requestType = (String) clientRequest.getAttribute(REQUEST_TYPE);
+
+        APIServlet.APIRequestHandler apiRequestHandler = APIServlet.apiRequestHandlers.get(requestType);
+
         if (!apiRequestHandler.requireBlockchain()) {
             return false;
         }
@@ -192,14 +212,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
         if (!Collections.disjoint(apiRequestHandler.getAPITags(), NOT_FORWARDED_TAGS)) {
             return false;
-        }
-
-        if (parameters.containsKey("secretPhrase")) {
-            throw new ParameterException(JSONResponses.PROXY_SECRET_PHRASE_DETECTED);
-        }
-
-        if (parameters.containsKey("adminPassword")) {
-            throw new ParameterException(JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
         }
 
         return true;
