@@ -940,7 +940,7 @@ NRS.addPagination = function () {
 				NRS.sendRequest("getFxtQuantity", {
 					"account": NRS.account
 				}, function(response) {
-					$("#fxt_balance_sidebar").html(NRS.formatQuantity(response.quantityQNT, 4));
+					$("#fxt_balance_sidebar").html(NRS.formatQuantity(response.totalExpectedQuantityQNT, 4));
 				});
 
                 var i;
