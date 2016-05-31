@@ -16,7 +16,7 @@
 
 package nxt.http;
 
-import nxt.DistributionListener;
+import nxt.FxtDistribution;
 import nxt.NxtException;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -35,7 +35,12 @@ public final class GetFxtQuantity extends APIServlet.APIRequestHandler {
     protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long accountId = ParameterParser.getAccountId(req, true);
         JSONObject json = new JSONObject();
-        json.put("quantityQNT", String.valueOf(DistributionListener.getFxtQuantity(accountId)));
+        long confirmedQuantity = FxtDistribution.getConfirmedFxtQuantity(accountId);
+        long remainingQuantity = FxtDistribution.getRemainingFxtQuantity(accountId);
+        long total = confirmedQuantity + remainingQuantity;
+        json.put("quantityQNT", String.valueOf(confirmedQuantity));
+        json.put("remainingQuantityQNT", String.valueOf(remainingQuantity));
+        json.put("totalExpectedQuantityQNT", String.valueOf(total));
         return json;
     }
 

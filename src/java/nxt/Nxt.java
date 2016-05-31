@@ -369,7 +369,7 @@ public final class Nxt {
                 ShufflingParticipant.init();
                 PrunableMessage.init();
                 TaggedData.init();
-                DistributionListener.init();
+                FxtDistribution.init();
                 Peers.init();
                 Generator.init();
                 AddOns.init();

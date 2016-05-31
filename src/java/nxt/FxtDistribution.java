@@ -30,7 +30,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class DistributionListener implements Listener<Block> {
+public final class FxtDistribution implements Listener<Block> {
 
     private static final int DISTRIBUTION_END = Constants.FXT_BLOCK;
     static final int DISTRIBUTION_START = DISTRIBUTION_END - 90 * 1440; // run for 90 days
@@ -65,10 +65,10 @@ public final class DistributionListener implements Listener<Block> {
     static void init() {}
 
     static {
-        Nxt.getBlockchainProcessor().addListener(new DistributionListener(), BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
+        Nxt.getBlockchainProcessor().addListener(new FxtDistribution(), BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
     }
 
-    public static long getFxtQuantity(long accountId) {
+    public static long getConfirmedFxtQuantity(long accountId) {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT balance FROM account_fxt WHERE id = ? ORDER BY height DESC LIMIT 1")) {
             pstmtSelect.setLong(1, accountId);
@@ -81,6 +81,20 @@ public final class DistributionListener implements Listener<Block> {
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);
         }
+    }
+
+    public static long getRemainingFxtQuantity(long accountId) {
+        long balance = Account.getAccount(accountId).getBalanceNQT();
+        int height = Nxt.getBlockchain().getHeight();
+        if (height >= DISTRIBUTION_END) {
+            return 0;
+        }
+        if (height < DISTRIBUTION_START) {
+            return balance / 10000L;
+        }
+        int done = (height - DISTRIBUTION_START) / DISTRIBUTION_FREQUENCY;
+        int total = (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_FREQUENCY;
+        return (balance * (total - done)) / (total * 10000L);
     }
 
     @Override

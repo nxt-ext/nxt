@@ -1172,7 +1172,7 @@ class NxtDbVersion extends DbVersion {
             case 483:
                 apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fxt_id_idx ON account_fxt (id, height DESC)");
             case 484:
-                BlockchainProcessorImpl.getInstance().scheduleScan(DistributionListener.DISTRIBUTION_START - 1, false);
+                BlockchainProcessorImpl.getInstance().scheduleScan(FxtDistribution.DISTRIBUTION_START - 1, false);
                 apply(null);
             case 485:
                 BlockDb.deleteBlocksFromHeight(Constants.FXT_BLOCK);
