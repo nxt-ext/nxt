@@ -213,7 +213,59 @@ var NRS = (function(NRS, $) {
 		}
 	};
 
-	$("#messages_sidebar").on("click", "a", function(e) {
+    function getMessage(message) {
+        var decoded = {};
+        if (!message.attachment) {
+            decoded.message = $.t("message_empty");
+        } else if (message.attachment.encryptedMessage) {
+            try {
+                $.extend(decoded, NRS.tryToDecryptMessage(message));
+                decoded.extra = "decrypted";
+            } catch (err) {
+                if (err.errorCode && err.errorCode == 1) {
+                    decoded.message = $.t("error_decryption_passphrase_required");
+                    decoded.extra = "to_decrypt";
+                } else {
+                    decoded.message = $.t("error_decryption_unknown");
+                }
+            }
+        } else if (message.attachment.message) {
+            if (!message.attachment["version.Message"] && !message.attachment["version.PrunablePlainMessage"]) {
+                try {
+                    decoded.message = converters.hexStringToString(message.attachment.message);
+                } catch (err) {
+                    //legacy
+                    if (message.attachment.message.indexOf("feff") === 0) {
+                        decoded.message = NRS.convertFromHex16(message.attachment.message);
+                    } else {
+                        decoded.message = NRS.convertFromHex8(message.attachment.message);
+                    }
+                }
+            } else {
+                decoded.message = String(message.attachment.message);
+            }
+        } else if (message.attachment.messageHash || message.attachment.encryptedMessageHash) {
+            decoded.message = $.t("message_pruned");
+        } else {
+            decoded.message = $.t("message_empty");
+        }
+        if (!$.isEmptyObject(decoded)) {
+            if (!decoded.message) {
+                decoded.message = $.t("message_empty");
+            }
+            decoded.message = String(decoded.message).escapeHTML().nl2br();
+            if (decoded.extra == "to_decrypt") {
+                decoded.message = "<i class='fa fa-warning'></i> " + decoded.message;
+            } else if (decoded.extra == "decrypted") {
+                decoded.message = "<i class='fa fa-unlock'></i> " + decoded.message;
+            }
+        } else {
+            decoded.message = "<i class='fa fa-warning'></i> " + $.t("error_could_not_decrypt_message");
+            decoded.extra = "decryption_failed";
+        }
+        return decoded;
+    };
+    $("#messages_sidebar").on("click", "a", function(e) {
 		e.preventDefault();
 		$("#messages_sidebar").find("a.active").removeClass("active");
 		$(this).addClass("active");
@@ -227,66 +279,13 @@ var NRS = (function(NRS, $) {
 		var messages = _messages[otherUser];
 		if (messages) {
 			for (var i = 0; i < messages.length; i++) {
-				var decoded = {};
-				var extra = "";
-				var type = "";
-				if (!messages[i].attachment) {
-					decoded.message = $.t("message_empty");
-				} else if (messages[i].attachment.encryptedMessage) {
-					try {
-                        $.extend(decoded, NRS.tryToDecryptMessage(messages[i]));
-						extra = "decrypted";
-					} catch (err) {
-						if (err.errorCode && err.errorCode == 1) {
-                            decoded.message = $.t("error_decryption_passphrase_required");
-							extra = "to_decrypt";
-						} else {
-                            decoded.message = $.t("error_decryption_unknown");
-						}
-					}
-				} else if (messages[i].attachment.message) {
-					if (!messages[i].attachment["version.Message"] && !messages[i].attachment["version.PrunablePlainMessage"]) {
-						try {
-                            decoded.message = converters.hexStringToString(messages[i].attachment.message);
-						} catch (err) {
-							//legacy
-							if (messages[i].attachment.message.indexOf("feff") === 0) {
-                                decoded.message = NRS.convertFromHex16(messages[i].attachment.message);
-							} else {
-                                decoded.message = NRS.convertFromHex8(messages[i].attachment.message);
-							}
-						}
-					} else {
-                        decoded.message = String(messages[i].attachment.message);
-					}
-				} else if (messages[i].attachment.messageHash || messages[i].attachment.encryptedMessageHash) {
-                    decoded.message = $.t("message_pruned");
-				} else {
-                    decoded.message = $.t("message_empty");
-				}
-				if (!$.isEmptyObject(decoded)) {
-					if (!decoded.message) {
-                        decoded.message = $.t("message_empty");
-					}
-					decoded.message = String(decoded.message).escapeHTML().nl2br();
-					if (extra == "to_decrypt") {
-						decoded.message = "<i class='fa fa-warning'></i> " + decoded.message;
-					} else if (extra == "decrypted") {
-						if (type == "payment") {
-							decoded.message = "<strong>+" + NRS.formatAmount(messages[i].amountNQT) + " NXT</strong><br />" + decoded.message;
-						}
-						decoded.message = "<i class='fa fa-unlock'></i> " + decoded.message;
-					}
-				} else {
-					decoded.message = "<i class='fa fa-warning'></i> " + $.t("error_could_not_decrypt_message");
-					extra = "decryption_failed";
-				}
+                var decoded = getMessage(messages[i]);
 				var day = NRS.formatTimestamp(messages[i].timestamp, true);
 				if (day != last_day) {
 					output += "<dt><strong>" + day + "</strong></dt>";
 					last_day = day;
 				}
-				var messageClass = (messages[i].recipient == NRS.account ? "from" : "to") + (extra ? " " + extra : "");
+				var messageClass = (messages[i].recipient == NRS.account ? "from" : "to") + (decoded.extra ? " " + decoded.extra : "");
 				var sharedKeyTag = "";
                 if (decoded.sharedKey) {
                     var inverseIcon = messages[i].recipient == NRS.account ? "" : " fa-inverse";
