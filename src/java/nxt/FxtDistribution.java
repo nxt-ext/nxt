@@ -39,6 +39,9 @@ public final class FxtDistribution implements Listener<Block> {
     private static final long FXT_ASSET_ID = Long.parseUnsignedLong(Constants.isTestnet ? "2532340154632699620" : "111111111111111111");
     private static final long FXT_ISSUER_ID = Convert.parseAccountId(Constants.isTestnet ? "NXT-46RQ-NXAE-RAQG-87D97" : "0");
     private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf(10000L * (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_STEP);
+    private static final String logAccount = Nxt.getStringProperty("nxt.logFxtBalance");
+    private static final long logAccountId = Convert.parseAccountId(logAccount);
+
 
     private static final DerivedDbTable accountFXTTable = new DerivedDbTable("account_fxt") {
         @Override
@@ -116,6 +119,11 @@ public final class FxtDistribution implements Listener<Block> {
                     while (rs.next()) {
                         Long accountId = rs.getLong("id");
                         long balance = rs.getLong("balance");
+                        if (logAccountId != 0) {
+                            if (accountId == logAccountId) {
+                                Logger.logMessage("NXT balance for " + logAccount + " at height " + height + ":\t" + balance);
+                            }
+                        }
                         BigInteger accountBalanceTotal = accountBalanceTotals.get(accountId);
                         accountBalanceTotals.put(accountId, accountBalanceTotal == null ?
                                 BigInteger.valueOf(balance) : accountBalanceTotal.add(BigInteger.valueOf(balance)));
@@ -143,6 +151,12 @@ public final class FxtDistribution implements Listener<Block> {
                         balanceTotal = balanceTotal.add(new BigInteger(rs.getBytes("balance")));
                     }
                 }
+                if (logAccountId != 0) {
+                    if (accountId == logAccountId) {
+                        Logger.logMessage("Average NXT balance for " + logAccount + " as of height " + currentHeight + ":\t"
+                                + balanceTotal.divide(BigInteger.valueOf((currentHeight - DISTRIBUTION_START) / DISTRIBUTION_STEP)).longValueExact());
+                    }
+                }
                 pstmtInsert.setLong(1, accountId);
                 pstmtInsert.setBytes(2, balanceTotal.toByteArray());
                 pstmtInsert.setInt(3, currentHeight);
@@ -160,6 +174,11 @@ public final class FxtDistribution implements Listener<Block> {
                         long accountId = rs.getLong("id");
                         // 1 NXT held for the full period should give 1 asset unit, i.e. 10000 QNT assuming 4 decimals
                         long quantity = new BigInteger(rs.getBytes("balance")).divide(BALANCE_DIVIDER).longValueExact();
+                        if (logAccountId != 0) {
+                            if (accountId == logAccountId) {
+                                Logger.logMessage("FXT quantity for " + logAccount + ":\t" + quantity);
+                            }
+                        }
                         Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
                                 FXT_ASSET_ID, quantity);
                         totalDistributed += quantity;
