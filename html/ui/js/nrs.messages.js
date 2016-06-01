@@ -230,8 +230,10 @@ var NRS = (function(NRS, $) {
 				var sharedKeyTag = "";
                 if (decoded.sharedKey) {
                     var inverseIcon = messages[i].recipient == NRS.account ? "" : " fa-inverse";
-                    sharedKeyTag = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#shared_key_modal' " +
-					                    "data-sharedkey='" + decoded.sharedKey + "'><i class='fa fa-key" + inverseIcon + "'></i></a>";
+					sharedKeyTag = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#shared_key_modal' " +
+						"data-sharedkey='" + decoded.sharedKey + "' data-transaction='" + messages[i].transaction +"'>" +
+						"<i class='fa fa-link" + inverseIcon + "'></i>" +
+					"</a>";
 				}
                 output += "<dd class='" + messageClass + "'><p>" + decoded.message + sharedKeyTag + "</p></dd>";
 			}
@@ -440,6 +442,7 @@ var NRS = (function(NRS, $) {
     $("#shared_key_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
         $("#shared_key_text").val($invoker.data("sharedkey"));
+        $("#shared_key_transaction").html(NRS.getTransactionLink($invoker.data("transaction")));
     });
 
 	return NRS;
