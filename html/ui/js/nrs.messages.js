@@ -77,23 +77,35 @@ var NRS = (function(NRS, $) {
 	NRS.jsondata = NRS.jsondata || {};
 
 	NRS.jsondata.messages = function (response) {
+        _messages[NRS.account].push(response);
 		var transaction = NRS.getTransactionLink(response.transaction, NRS.formatTimestamp(response.timestamp));
 		var from = NRS.getAccountLink(response, "sender");
 		var to = NRS.getAccountLink(response, "recipient");
-		var message = "place holder";
-		var decryptAction = "decrypt";
-		var retrieveAction = "retrieve";
+		var decoded = getMessage(response);
+        var decryptAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#messages_decrypt_modal'>" + $.t("decrypt") + "</a>";
+        var retrieveAction = "";
+        if (decoded.extra == "pruned") {
+            retrieveAction = "<a href='/nxt?requestType=getPrunableMessage&transaction=" + String(response.transaction).escapeHTML() +
+                "&retrieve=true' class='btn btn-xs'>" + $.t("retrieve") + "</a>";
+        }
+
 		return {
 			transactionFormatted: transaction,
 			fromFormatted: from,
 			toFormatted: to,
-			messageFormatted: message,
+			messageFormatted: decoded.message,
 			action_decrypt: decryptAction,
 			action_retrieve: retrieveAction
 		};
 	};
 	
-	NRS.pages.my_messages = function (type) {
+	NRS.pages.my_messages = function() {
+        _messages = {};
+        renderMyMessagesTable();
+    };
+
+    function renderMyMessagesTable() {
+        _messages[NRS.account] = [];
 		NRS.hasMorePages = false;
 		var view = NRS.simpleview.get('my_messages_section', {
 			errorMessage: null,
@@ -127,7 +139,7 @@ var NRS = (function(NRS, $) {
 				NRS.pageLoaded();
 			}
 		);
-	};
+	}
 
 
 	function displayMessageSidebar(callback) {
@@ -246,6 +258,7 @@ var NRS = (function(NRS, $) {
             }
         } else if (message.attachment.messageHash || message.attachment.encryptedMessageHash) {
             decoded.message = $.t("message_pruned");
+            decoded.extra = "pruned";
         } else {
             decoded.message = $.t("message_empty");
         }
@@ -264,7 +277,8 @@ var NRS = (function(NRS, $) {
             decoded.extra = "decryption_failed";
         }
         return decoded;
-    };
+    }
+    
     $("#messages_sidebar").on("click", "a", function(e) {
 		e.preventDefault();
 		$("#messages_sidebar").find("a.active").removeClass("active");
@@ -488,6 +502,7 @@ var NRS = (function(NRS, $) {
 			$.growl($.t("success_messages_decrypt"), {
 				"type": "success"
 			});
+            renderMyMessagesTable();
 		} else {
 			$.growl($.t("error_messages_decrypt"), {
 				"type": "danger"
