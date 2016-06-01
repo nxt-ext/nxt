@@ -27,7 +27,16 @@ var NRS = (function(NRS, $) {
 		$("#generate_token_button").show();
 		$("#validate_token_button").hide();
 	});
-
+	
+	NRS.forms.decodeToken = function() {
+		return {
+			data: {
+				"website": $("#decode_token_data").val(),
+				"token": $("#decode_token_token").val()
+			}
+		};
+	};
+	
 	NRS.forms.decodeTokenComplete = function(response) {
 		$("#token_modal").find(".error_message").hide();
 

@@ -1168,6 +1168,16 @@ class NxtDbVersion extends DbVersion {
             case 481:
                 apply("CREATE INDEX IF NOT EXISTS shuffling_blocks_remaining_height_idx ON shuffling (blocks_remaining, height DESC)");
             case 482:
+                apply("CREATE TABLE IF NOT EXISTS account_fxt (id BIGINT NOT NULL, balance VARBINARY NOT NULL, height INT NOT NULL)");
+            case 483:
+                apply("CREATE UNIQUE INDEX IF NOT EXISTS account_fxt_id_idx ON account_fxt (id, height DESC)");
+            case 484:
+                BlockchainProcessorImpl.getInstance().scheduleScan(FxtDistribution.DISTRIBUTION_START - 1, false);
+                apply(null);
+            case 485:
+                BlockDb.deleteBlocksFromHeight(Constants.FXT_BLOCK);
+                apply(null);
+            case 486:
                 return;
             default:
                 throw new RuntimeException("Blockchain database inconsistent with code, at update " + nextUpdate
