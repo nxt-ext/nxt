@@ -60,15 +60,75 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.setup.messages = function() {
-		var options = {
+		NRS.addTreeviewSidebarMenuItem({
 			"id": 'sidebar_messages',
 			"titleHTML": '<i class="fa fa-envelope"></i> <span data-i18n="messages">Messages</span>',
-			"page": 'messages',
+			"page": 'my_messages',
 			"desiredPosition": 90,
-			"depends": { tags: [ NRS.constants.API_TAGS.MESSAGES ] }
-		};
-		NRS.addSimpleSidebarMenuItem(options);
+			"depends": {tags: [NRS.constants.API_TAGS.MESSAGES]}
+		});
+		NRS.appendMenuItemToTSMenuItem('sidebar_messages', {
+			"titleHTML": '<i class="fa fa-comment"></i> <span data-i18n="chat">Chat</span>',
+			"type": 'PAGE',
+			"page": 'messages'
+		});
 	};
+
+	NRS.jsondata = NRS.jsondata || {};
+
+	NRS.jsondata.messages = function (response) {
+		var transaction = NRS.getTransactionLink(response.transaction, NRS.formatTimestamp(response.timestamp));
+		var from = NRS.getAccountLink(response, "sender");
+		var to = NRS.getAccountLink(response, "recipient");
+		var message = "place holder";
+		var decryptAction = "decrypt";
+		var retrieveAction = "retrieve";
+		return {
+			transactionFormatted: transaction,
+			fromFormatted: from,
+			toFormatted: to,
+			messageFormatted: message,
+			action_decrypt: decryptAction,
+			action_retrieve: retrieveAction
+		};
+	};
+	
+	NRS.pages.my_messages = function (type) {
+		NRS.hasMorePages = false;
+		var view = NRS.simpleview.get('my_messages_section', {
+			errorMessage: null,
+			isLoading: true,
+			isEmpty: false,
+			messages: []
+		});
+		var params = {
+			"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
+			"lastIndex": NRS.pageNumber * NRS.itemsPerPage,
+			"account": NRS.account,
+			"type": 1,
+			"subtype": 0
+		};
+		NRS.sendRequest("getBlockchainTransactions+", params, 
+			function (response) {
+				if (response.transactions.length > NRS.itemsPerPage) {
+					NRS.hasMorePages = true;
+					response.transactions.pop();
+				}
+				view.messages.length = 0;
+				response.transactions.forEach(
+					function (transactionsJson) {
+						view.messages.push(NRS.jsondata.messages(transactionsJson));
+					}
+				);
+				view.render({
+					isLoading: false,
+					isEmpty: view.messages.length == 0
+				});
+				NRS.pageLoaded();
+			}
+		);
+	};
+
 
 	function displayMessageSidebar(callback) {
 		var activeAccount = false;
