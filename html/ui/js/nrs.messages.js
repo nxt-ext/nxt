@@ -82,20 +82,26 @@ var NRS = (function(NRS, $) {
 		var from = NRS.getAccountLink(response, "sender");
 		var to = NRS.getAccountLink(response, "recipient");
 		var decoded = getMessage(response);
-        var decryptAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#messages_decrypt_modal'>" + $.t("decrypt") + "</a>";
+        var decryptAction = "";
+        if (decoded.extra == "to_decrypt") {
+            decryptAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#messages_decrypt_modal'>" + $.t("decrypt") + "</a>";
+        }
         var retrieveAction = "";
         if (decoded.extra == "pruned") {
-            retrieveAction = "<a href='/nxt?requestType=getPrunableMessage&transaction=" + String(response.transaction).escapeHTML() +
-                "&retrieve=true' class='btn btn-xs'>" + $.t("retrieve") + "</a>";
+            retrieveAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-transaction='" + response.transaction + "' data-hash='" + decoded.hash + "' data-target='#retrieve_message_modal'>" + $.t("retrieve") + "</a>";
         }
-
+        var shareAction = "";
+        if (decoded.extra == "decrypted") {
+            shareAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-transaction='" + response.transaction + "' data-sharedkey='" + decoded.sharedKey + "' data-target='#shared_key_modal'>" + $.t("share") + "</a>";
+        }
 		return {
 			transactionFormatted: transaction,
 			fromFormatted: from,
 			toFormatted: to,
 			messageFormatted: decoded.message,
 			action_decrypt: decryptAction,
-			action_retrieve: retrieveAction
+			action_retrieve: retrieveAction,
+			action_share: shareAction
 		};
 	};
 	
@@ -259,6 +265,7 @@ var NRS = (function(NRS, $) {
         } else if (message.attachment.messageHash || message.attachment.encryptedMessageHash) {
             decoded.message = $.t("message_pruned");
             decoded.extra = "pruned";
+            decoded.hash = message.attachment.messageHash || message.attachment.encryptedMessageHash;
         } else {
             decoded.message = $.t("message_empty");
         }
@@ -458,6 +465,10 @@ var NRS = (function(NRS, $) {
 		}
 	};
 
+    NRS.forms.GetPrunableMessageComplete = function(response, data) {
+        $.growl($.t("message_retrieved"));
+   	};
+
 	$("#message_details").on("click", "dd.to_decrypt", function() {
 		$("#messages_decrypt_modal").modal("show");
 	});
@@ -512,6 +523,12 @@ var NRS = (function(NRS, $) {
 			"stop": true
 		};
 	};
+
+    $("#retrieve_message_modal").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        $("#retrieve_message_hash").val($invoker.data("hash"));
+        $("#retrieve_message_transaction").val($invoker.data("transaction"));
+    });
 
     $("#shared_key_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);

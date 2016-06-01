@@ -1745,5 +1745,8 @@
   "share_message": "Share Message",
   "my_messages": "My Messages",
   "chat": "Chat",
-  "retrieve": "Retrieve"
+  "retrieve": "Retrieve",
+  "retrieve_message": "Retrieve Message",
+  "retrieve_message_info": "This message text is no longer stored in the blockchain. You can try to retrieve it from an archival node",
+  "share": "Share"
 }
