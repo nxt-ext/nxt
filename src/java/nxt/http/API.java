@@ -90,7 +90,18 @@ public final class API {
     private static URI serverRootUri;
 
     static {
-        List<String> disabled = Nxt.getStringListProperty("nxt.disabledAPIs");
+        List<String> disabled = new ArrayList<>(Nxt.getStringListProperty("nxt.disabledAPIs"));
+        if (Constants.isLightClient) {
+            disabled.add("getForging");
+            disabled.add("startForging");
+            disabled.add("stopForging");
+            disabled.add("getFundingMonitor");
+            disabled.add("startFundingMonitor");
+            disabled.add("stopFundingMonitor");
+            disabled.add("getShufflers");
+            disabled.add("startShuffler");
+            disabled.add("stopShuffler");
+        }
         Collections.sort(disabled);
         disabledAPIs = Collections.unmodifiableList(disabled);
         disabled = Nxt.getStringListProperty("nxt.disabledAPITags");
