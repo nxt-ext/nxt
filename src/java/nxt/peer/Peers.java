@@ -24,7 +24,7 @@ import nxt.Nxt;
 import nxt.Transaction;
 import nxt.http.API;
 import nxt.http.APIEnum;
-import nxt.http.APISet;
+import nxt.http.MutableAPISet;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
@@ -272,7 +272,7 @@ public final class Peers {
         }
 
         if ((API.openAPIPort > 0 || API.openAPISSLPort > 0) && !Constants.isLightClient) {
-            APISet disabledAPISet = new APISet();
+            MutableAPISet disabledAPISet = new MutableAPISet();
             API.disabledAPIs.forEach(apiName -> {
                 APIEnum api = APIEnum.fromName(apiName);
                 if (api != null) {
@@ -281,7 +281,7 @@ public final class Peers {
             });
             API.disabledAPITags.forEach(apiTag -> {
                 for (APIEnum api : APIEnum.values()) {
-                    if (api.getHandler().getAPITags().contains(apiTag)) {
+                    if (api.getHandler() != null && api.getHandler().getAPITags().contains(apiTag)) {
                         disabledAPISet.add(api);
                     }
                 }

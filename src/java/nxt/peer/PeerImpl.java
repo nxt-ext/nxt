@@ -96,6 +96,7 @@ final class PeerImpl implements Peer {
         this.shareAddress = true;
         this.webSocket = new PeerWebSocket();
         this.useWebSocket = Peers.useWebSockets && !Peers.useProxy;
+        this.disabledAPIs = APISet.EMPTY;
     }
 
     @Override

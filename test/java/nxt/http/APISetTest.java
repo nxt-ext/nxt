@@ -7,12 +7,12 @@ import org.junit.Test;
 public class APISetTest {
     @Test
     public void testBase64() {
-        APISet set = new APISet();
+        MutableAPISet set = new MutableAPISet();
         set.add(APIEnum.SET_API_PROXY_PEER);
         String base64String = set.toBase64String();
         Logger.logMessage("base64String: " + base64String);
 
-        set = APISet.fromBase64String(base64String);
+        set = new MutableAPISet(APISet.fromBase64String(base64String));
         Assert.assertTrue(set.containsName(APIEnum.SET_API_PROXY_PEER.getName()));
         for (int i = 0; i < APIEnum.values().length; i++) {
             if (i != APIEnum.SET_API_PROXY_PEER.ordinal()) {
@@ -23,8 +23,8 @@ public class APISetTest {
 
     @Test
     public void testContainsAll() {
-        APISet container = new APISet();
-        APISet contained = new APISet();
+        MutableAPISet container = new MutableAPISet();
+        MutableAPISet contained = new MutableAPISet();
 
         Assert.assertTrue(container.containsAll(contained));
 

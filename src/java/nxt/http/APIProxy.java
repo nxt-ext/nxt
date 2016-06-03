@@ -97,7 +97,7 @@ public class APIProxy {
                 if (peer != null) {
                     currentPeersHosts = new ArrayList<>();
 
-                    APISet disabledAPIs = peer.getDisabledAPIs();
+                    MutableAPISet disabledAPIs = new MutableAPISet(peer.getDisabledAPIs());
                     currentPeersHosts.add(peer.getHost());
                     mainPeerAnnouncedAddress = peer.getAnnouncedAddress();
                     if (!peer.getDisabledAPIs().containsName(requestType)) {
@@ -139,8 +139,8 @@ public class APIProxy {
     }
 
     public void blacklistHost(String host) {
-        List<String> currentPeerHosts = this.peersHosts;
-        if (currentPeerHosts != null && currentPeerHosts.contains(host)) {
+        List<String> currentPeersHosts = this.peersHosts;
+        if (currentPeersHosts != null && currentPeersHosts.contains(host)) {
             this.peersHosts = null;
         }
         blacklistedPeers.put(host, Nxt.getEpochTime() + blacklistingPeriod);

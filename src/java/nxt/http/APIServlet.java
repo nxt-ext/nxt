@@ -125,7 +125,9 @@ public final class APIServlet extends HttpServlet {
         Map<String,APIRequestHandler> disabledMap = new HashMap<>();
 
         for (APIEnum api : APIEnum.values()) {
-            map.put(api.getName(), api.getHandler());
+            if (!api.getName().isEmpty() && api.getHandler() != null) {
+                map.put(api.getName(), api.getHandler());
+            }
         }
 
         AddOns.registerAPIRequestHandlers(map);

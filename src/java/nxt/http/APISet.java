@@ -4,13 +4,11 @@ import java.util.Base64;
 import java.util.BitSet;
 
 public class APISet {
-    private BitSet internal;
+    protected BitSet internal;
 
-    public APISet() {
-        internal = new BitSet();
-    }
+    public final static APISet EMPTY = new APISet(new BitSet());
 
-    private APISet(BitSet bitSet) {
+    protected APISet(BitSet bitSet) {
         internal = bitSet;
     }
 
@@ -23,41 +21,12 @@ public class APISet {
         return Base64.getEncoder().encodeToString(internal.toByteArray());
     }
 
-    public boolean add(APIEnum apiEnum) {
-        if (internal.get(apiEnum.ordinal())) {
-            return false;
-        }
-        internal.set(apiEnum.ordinal());
-        return true;
-    }
-
-    public void intersect(APISet other) {
-        internal.and(other.internal);
-    }
 
     public boolean containsName(String name) {
         APIEnum api = APIEnum.fromName(name);
         return api != null && internal.get(api.ordinal());
     }
-/*
-    public APISet not() {
-        BitSet result = (BitSet) internal.clone();
-        result.flip(0, APIEnum.values().length);
-        return new APISet(result);
-    }
 
-    public APISet and(APISet other) {
-        BitSet result = (BitSet) internal.clone();
-        result.and(other.internal);
-        return new APISet(result);
-    }
-
-    public APISet andNot(APISet other) {
-        BitSet result = (BitSet) internal.clone();
-        result.andNot(other.internal);
-        return new APISet(result);
-    }
-*/
     public boolean isEmpty() {
         return internal.isEmpty();
     }
