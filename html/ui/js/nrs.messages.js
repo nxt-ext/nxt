@@ -543,7 +543,9 @@ var NRS = (function(NRS, $) {
 		url += "?account=" + NRS.accountRS + "&modal=transaction_info_modal" +
 			"&transaction=" + transaction +
 			"&sharedKey=" + sharedKey;
-		$("#shared_key_link").attr("href", url); // TODO need better UI
+		var sharedKeyLink = $("#shared_key_link");
+        sharedKeyLink.attr("href", url);
+		sharedKeyLink.html(NRS.addEllipsis(url, 64));
     });
 
 	return NRS;
