@@ -25,6 +25,7 @@ import nxt.util.ThreadPool;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -77,10 +78,11 @@ public class APIProxy {
 
         Peer resultPeer = null;
         List<String> currentPeersHosts = this.peersHosts;
+        APIEnum requestAPI = APIEnum.fromName(requestType);
         if (currentPeersHosts != null) {
             for (String host:currentPeersHosts) {
                 resultPeer = Peers.getPeer(host);
-                if (isPeerConnectable(resultPeer) && !resultPeer.getDisabledAPIs().containsName(requestType)) {
+                if (isPeerConnectable(resultPeer) && !resultPeer.getDisabledAPIs().contains(requestAPI)) {
                     break;
                 }
             }
@@ -90,17 +92,17 @@ public class APIProxy {
             List<Peer> connectablePeers = Peers.getPeers(p -> isPeerConnectable(p)
                     && !blacklistedPeers.containsKey(p.getHost()));
             if (!connectablePeers.isEmpty()) {
-                //The first peer (element 0 of peersHosts) is chosen at random. Next peers are chosen randomply from a
+                //The first peer (element 0 of peersHosts) is chosen at random. Next peers are chosen randomly from a
                 // subset of connectable peers that have at least one new API enabled, which was disabled for the
-                // previously chosen peers. In worst the size of peersHosts will be the number of APIs
+                // previously chosen peers. In worst case the size of peersHosts will be the number of APIs
                 Peer peer = getRandomAPIPeer(connectablePeers);
                 if (peer != null) {
                     currentPeersHosts = new ArrayList<>();
 
-                    MutableAPISet disabledAPIs = new MutableAPISet(peer.getDisabledAPIs());
+                    EnumSet<APIEnum> disabledAPIs = EnumSet.noneOf(APIEnum.class);
                     currentPeersHosts.add(peer.getHost());
                     mainPeerAnnouncedAddress = peer.getAnnouncedAddress();
-                    if (!peer.getDisabledAPIs().containsName(requestType)) {
+                    if (!peer.getDisabledAPIs().contains(requestAPI)) {
                         resultPeer = peer;
                     }
                     while (!disabledAPIs.isEmpty() && !connectablePeers.isEmpty()) {
@@ -108,10 +110,10 @@ public class APIProxy {
                         connectablePeers.removeIf(p -> p.getDisabledAPIs().containsAll(disabledAPIs));
                         peer = getRandomAPIPeer(connectablePeers);
                         currentPeersHosts.add(peer.getHost());
-                        if (!peer.getDisabledAPIs().containsName(requestType)) {
+                        if (!peer.getDisabledAPIs().contains(requestAPI)) {
                             resultPeer = peer;
                         }
-                        disabledAPIs.intersect(peer.getDisabledAPIs());
+                        disabledAPIs.retainAll(peer.getDisabledAPIs());
                     }
                     this.peersHosts = Collections.unmodifiableList(currentPeersHosts);
                 }

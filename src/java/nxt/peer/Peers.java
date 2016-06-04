@@ -24,7 +24,7 @@ import nxt.Nxt;
 import nxt.Transaction;
 import nxt.http.API;
 import nxt.http.APIEnum;
-import nxt.http.MutableAPISet;
+import nxt.util.APISet;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
@@ -272,7 +272,8 @@ public final class Peers {
         }
 
         if ((API.openAPIPort > 0 || API.openAPISSLPort > 0) && !Constants.isLightClient) {
-            MutableAPISet disabledAPISet = new MutableAPISet();
+            EnumSet<APIEnum> disabledAPISet = EnumSet.noneOf(APIEnum.class);
+
             API.disabledAPIs.forEach(apiName -> {
                 APIEnum api = APIEnum.fromName(apiName);
                 if (api != null) {
@@ -286,7 +287,7 @@ public final class Peers {
                     }
                 }
             });
-            json.put("disabledAPIs", disabledAPISet.toBase64String());
+            json.put("disabledAPIs", APISet.toBase64String(disabledAPISet));
         }
         long services = 0;
         for (Peer.Service service : servicesList) {

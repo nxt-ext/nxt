@@ -21,7 +21,8 @@ import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
-import nxt.http.APISet;
+import nxt.http.APIEnum;
+import nxt.util.APISet;
 import nxt.util.Convert;
 import nxt.util.CountingInputReader;
 import nxt.util.CountingInputStream;
@@ -53,7 +54,10 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
@@ -70,7 +74,7 @@ final class PeerImpl implements Peer {
     private volatile String application;
     private volatile int apiPort;
     private volatile int apiSSLPort;
-    private volatile APISet disabledAPIs;
+    private volatile EnumSet<APIEnum> disabledAPIs;
     private volatile String version;
     private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
@@ -96,7 +100,7 @@ final class PeerImpl implements Peer {
         this.shareAddress = true;
         this.webSocket = new PeerWebSocket();
         this.useWebSocket = Peers.useWebSockets && !Peers.useProxy;
-        this.disabledAPIs = APISet.EMPTY;
+        this.disabledAPIs = EnumSet.noneOf(APIEnum.class);
     }
 
     @Override
@@ -255,8 +259,9 @@ final class PeerImpl implements Peer {
         }
     }
 
-    public APISet getDisabledAPIs() {
-        return disabledAPIs;
+    @Override
+    public Set<APIEnum> getDisabledAPIs() {
+        return Collections.unmodifiableSet(disabledAPIs);
     }
 
     void setDisabledAPIs(Object apiSetBase64) {

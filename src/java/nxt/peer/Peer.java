@@ -16,9 +16,11 @@
 
 package nxt.peer;
 
-import nxt.http.APISet;
+import nxt.http.APIEnum;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import java.util.Set;
 
 public interface Peer extends Comparable<Peer> {
 
@@ -67,7 +69,7 @@ public interface Peer extends Comparable<Peer> {
 
     int getApiSSLPort();
 
-    APISet getDisabledAPIs();
+    Set<APIEnum> getDisabledAPIs();
 
     Hallmark getHallmark();
 
