@@ -406,12 +406,17 @@ var NRS = (function (NRS, $) {
 					if (typeof title != "string") {
 						title = title.title;
 					}
-
 					try {
-						data = NRS.decryptNote(encrypted, {
-							"nonce": nonce,
-							"account": account
-						});
+						var decryptOptions = {};
+						if (options.sharedKey) {
+							decryptOptions = { "sharedKey": converters.hexStringToByteArray(options.sharedKey) }
+						} else {
+							decryptOptions = {
+								"nonce": nonce,
+								"account": account
+							};
+						}
+                        data = NRS.decryptNote(encrypted, decryptOptions);
 					} catch (err) {
 						if (err.errorCode && err.errorCode == 1) {
 							showDecryptionForm = true;

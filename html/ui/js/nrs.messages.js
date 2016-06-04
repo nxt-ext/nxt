@@ -532,8 +532,18 @@ var NRS = (function(NRS, $) {
 
     $("#shared_key_modal").on("show.bs.modal", function(e) {
         var $invoker = $(e.relatedTarget);
-        $("#shared_key_text").val($invoker.data("sharedkey"));
-        $("#shared_key_transaction").html(NRS.getTransactionLink($invoker.data("transaction")));
+		var sharedKey = $invoker.data("sharedkey");
+        $("#shared_key_text").val(sharedKey);
+		var transaction = $invoker.data("transaction");
+        $("#shared_key_transaction").html(NRS.getTransactionLink(transaction));
+		var url = String(window.location);
+		if (url.lastIndexOf("#") == url.length-1) {
+			url = url.substr(0, url.length - 1);
+		}
+		url += "?account=" + NRS.accountRS + "&modal=transaction_info_modal" +
+			"&transaction=" + transaction +
+			"&sharedKey=" + sharedKey;
+		$("#shared_key_link").attr("href", url); // TODO need better UI
     });
 
 	return NRS;

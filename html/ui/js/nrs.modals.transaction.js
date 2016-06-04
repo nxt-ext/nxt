@@ -23,6 +23,7 @@ var NRS = (function (NRS, $, undefined) {
         e.preventDefault();
 
         var transactionId = $(this).data("transaction");
+        var sharedKey = $(this).data("sharedkey");
         var infoModal = $('#transaction_info_modal');
         var isModalVisible = false;
         if (infoModal && infoModal.data('bs.modal')) {
@@ -32,10 +33,10 @@ var NRS = (function (NRS, $, undefined) {
             NRS.modalStack.pop(); // The forward modal
             NRS.modalStack.pop(); // the current modal
         }
-        NRS.showTransactionModal(transactionId, isModalVisible);
+        NRS.showTransactionModal(transactionId, isModalVisible, sharedKey);
     });
 
-    NRS.showTransactionModal = function (transaction, isModalVisible) {
+    NRS.showTransactionModal = function (transaction, isModalVisible, sharedKey) {
         if (NRS.fetchingModalData) {
             return;
         }
@@ -54,10 +55,10 @@ var NRS = (function (NRS, $, undefined) {
                     "transaction": transaction
                 }, function (response, input) {
                     response.transaction = input.transaction;
-                    NRS.processTransactionModalData(response, isModalVisible);
+                    NRS.processTransactionModalData(response, isModalVisible, sharedKey);
                 });
             } else {
-                NRS.processTransactionModalData(transaction, isModalVisible);
+                NRS.processTransactionModalData(transaction, isModalVisible, sharedKey);
             }
         } catch (e) {
             NRS.fetchingModalData = false;
@@ -123,7 +124,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.processTransactionModalData = function (transaction, isModalVisible) {
+    NRS.processTransactionModalData = function (transaction, isModalVisible, sharedKey) {
         NRS.setBackLink();
         NRS.modalStack.push({ class: "show_transaction_modal_action", key: "transaction", value: transaction.transaction });
         try {
@@ -273,11 +274,15 @@ var NRS = (function (NRS, $, undefined) {
                                 if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
                                     fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
                                 }
-                                NRS.tryToDecrypt(transaction, fieldsToDecrypt, NRS.getAccountForDecryption(transaction), {
+                                var options = {
                                     "noPadding": true,
                                     "formEl": "#transaction_info_decryption_form",
                                     "outputEl": "#transaction_info_decryption_output"
-                                });
+                                };
+                                if (sharedKey) {
+                                    options["sharedKey"] = sharedKey;
+                                }
+                                NRS.tryToDecrypt(transaction, fieldsToDecrypt, NRS.getAccountForDecryption(transaction), options);
                             }
                         } else {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
