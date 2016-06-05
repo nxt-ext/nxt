@@ -219,6 +219,8 @@ var NRS = (function (NRS, $, undefined) {
             // TODO Someday I'd like to replace it with if (NRS.isOfType(transaction, "OrdinaryPayment"))
             var data;
             var message;
+            var fieldsToDecrypt = {};
+            var i;
             if (transaction.type == 0) {
                 switch (transaction.subtype) {
                     case 0:
@@ -267,7 +269,6 @@ var NRS = (function (NRS, $, undefined) {
                                     "<div id='transaction_info_decryption_form'></div>" +
                                     "<div id='transaction_info_decryption_output' style='display:none;padding-bottom:10px;'></div>"
                                 );
-                                var fieldsToDecrypt = {};
                                 if (transaction.attachment.encryptedMessage) {
                                     fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
                                 }
@@ -287,7 +288,7 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
                         }
-                        var hash = transaction.attachment.messageHash || transaction.attachment.encryptedMessageHash
+                        var hash = transaction.attachment.messageHash || transaction.attachment.encryptedMessageHash;
                         var hashRow = hash ? ("<tr><td><strong>" + $.t("hash") + "</strong>:&nbsp;</td><td>" + hash + "</td></tr>") : "";
                         $output.append("<table>" +
                             "<tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr>" +
@@ -343,7 +344,7 @@ var NRS = (function (NRS, $, undefined) {
                         }
 
 
-                        for (var i = 0; i < transaction.attachment.options.length; i++) {
+                        for (i = 0; i < transaction.attachment.options.length; i++) {
                             data["option_" + i] = transaction.attachment.options[i];
                         }
 
@@ -360,7 +361,7 @@ var NRS = (function (NRS, $, undefined) {
                         var vote = "";
                         var votes = transaction.attachment.vote;
                         if (votes && votes.length > 0) {
-                            for (var i = 0; i < votes.length; i++) {
+                            for (i = 0; i < votes.length; i++) {
                                 if (votes[i] == -128) {
                                     vote += "N/A";
                                 } else {
@@ -1079,12 +1080,12 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 2:
                         if (currency) {
-                            var currentReservePerUnitNQT = new BigInteger(currency.currentReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
+                            var reservePerUnitNQT = new BigInteger(currency.currentReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, currency.decimals)));
                             data = {
                                 "type": $.t("reserve_claim"),
                                 "code": currency.code,
                                 "units": [transaction.attachment.units, currency.decimals],
-                                "claimed_amount_formatted_html": NRS.formatAmount(NRS.convertToQNTf(NRS.calculateOrderTotalNQT(currentReservePerUnitNQT, transaction.attachment.units), currency.decimals)) + " NXT"
+                                "claimed_amount_formatted_html": NRS.formatAmount(NRS.convertToQNTf(NRS.calculateOrderTotalNQT(reservePerUnitNQT, transaction.attachment.units), currency.decimals)) + " NXT"
                             };
                         } else {
                             data = NRS.getUnknownCurrencyData(transaction);
@@ -1219,7 +1220,7 @@ var NRS = (function (NRS, $, undefined) {
                         "<th>" + $.t("participant") + "</th>" +
                         "<th>" + $.t("state") + "</th>" +
                         "<tr></thead><tbody>";
-                        for (var i = 0; i < response.participants.length; i++) {
+                        for (i = 0; i < response.participants.length; i++) {
                             var participant = response.participants[i];
                             rows += "<tr>" +
                             "<td>" + NRS.getAccountLink(participant, "account") + "<td>" +
@@ -1304,6 +1305,7 @@ var NRS = (function (NRS, $, undefined) {
             }
             if (!(transaction.type == 1 && transaction.subtype == 0)) {
                 if (transaction.attachment) {
+                    var transactionInfoOutputBottom = $("#transaction_info_output_bottom");
                     if (transaction.attachment.message) {
                         if (!transaction.attachment["version.Message"] && !transaction.attachment["version.PrunablePlainMessage"]) {
                             try {
@@ -1320,14 +1322,13 @@ var NRS = (function (NRS, $, undefined) {
                             message = String(transaction.attachment.message);
                         }
 
-                        $("#transaction_info_output_bottom").append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
+                        transactionInfoOutputBottom.append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
                     }
 
                     if (transaction.attachment.encryptedMessage || (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender)) {
                         if (transaction.attachment.message) {
-                            $("#transaction_info_output_bottom").append("<div style='height:5px'></div>");
+                            transactionInfoOutputBottom.append("<div style='height:5px'></div>");
                         }
-                        var fieldsToDecrypt = {};
                         if (transaction.attachment.encryptedMessage) {
                             fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
                         }
@@ -1340,7 +1341,7 @@ var NRS = (function (NRS, $, undefined) {
                         });
                     }
 
-                    $("#transaction_info_output_bottom").show();
+                    transactionInfoOutputBottom.show();
                 }
             }
 
