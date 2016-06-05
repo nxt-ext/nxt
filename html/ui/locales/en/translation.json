@@ -620,7 +620,6 @@
   "message_count": "Messages",
   "message_empty": "Message is empty.",
   "message_is_not_encrypted": "This message is not encrypted.",
-  "message_pruned": "Message pruned",
   "messages": "Messages",
   "mime_type": "Mime Type",
   "mime_type_placeholder": "Enter Mime Type",
@@ -1749,5 +1748,7 @@
   "retrieve_message": "Retrieve Message",
   "retrieve_message_info": "This message text is no longer stored in the blockchain. You can try to retrieve it from an archival node",
   "share": "Share",
-  "share_link": "Share Link"
+  "share_link": "Share Link",
+  "message_pruned": "Message is pruned.",
+  "message_encrypted": "Message is encrypted."
 }

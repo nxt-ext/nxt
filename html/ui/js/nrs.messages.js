@@ -98,7 +98,7 @@ var NRS = (function(NRS, $) {
 			transactionFormatted: transaction,
 			fromFormatted: from,
 			toFormatted: to,
-			messageFormatted: decoded.message,
+			messageFormatted: decoded.format + decoded.message,
 			action_decrypt: decryptAction,
 			action_retrieve: retrieveAction,
 			action_share: shareAction
@@ -241,7 +241,7 @@ var NRS = (function(NRS, $) {
                 decoded.extra = "decrypted";
             } catch (err) {
                 if (err.errorCode && err.errorCode == 1) {
-                    decoded.message = $.t("error_decryption_passphrase_required");
+                    decoded.message = $.t("message_encrypted");
                     decoded.extra = "to_decrypt";
                 } else {
                     decoded.message = $.t("error_decryption_unknown");
@@ -263,9 +263,18 @@ var NRS = (function(NRS, $) {
                 decoded.message = String(message.attachment.message);
             }
         } else if (message.attachment.messageHash || message.attachment.encryptedMessageHash) {
-            decoded.message = $.t("message_pruned");
-            decoded.extra = "pruned";
-            decoded.hash = message.attachment.messageHash || message.attachment.encryptedMessageHash;
+			// Try to read prunable message but do not retrieve it from other nodes
+            NRS.sendRequest("getPrunableMessage", { transaction: message.transaction, retrieve: "false"}, function(response) {
+				if (response.errorCode || !response.transaction) {
+					decoded.message = $.t("message_pruned");
+					decoded.extra = "pruned";
+					decoded.hash = message.attachment.messageHash || message.attachment.encryptedMessageHash;
+				} else {
+                    message.attachment.message = response.message;
+                    message.attachment.encryptedMessage = response.encryptedMessage;
+                    decoded = getMessage(message);
+                }
+			}, false);
         } else {
             decoded.message = $.t("message_empty");
         }
@@ -273,14 +282,19 @@ var NRS = (function(NRS, $) {
             if (!decoded.message) {
                 decoded.message = $.t("message_empty");
             }
-            decoded.message = String(decoded.message).escapeHTML().nl2br();
+            decoded.message = NRS.addEllipsis(String(decoded.message).escapeHTML().nl2br(), 100);
             if (decoded.extra == "to_decrypt") {
-                decoded.message = "<i class='fa fa-warning'></i> " + decoded.message;
+                decoded.format = "<i class='fa fa-warning'></i>&nbsp";
             } else if (decoded.extra == "decrypted") {
-                decoded.message = "<i class='fa fa-unlock'></i> " + decoded.message;
+                decoded.format = "<i class='fa fa-unlock'></i>&nbsp";
+            } else if (decoded.extra == "pruned") {
+                decoded.format = "<i class='fa fa-scissors'></i>&nbsp";
+            } else {
+                decoded.format = "";
             }
         } else {
-            decoded.message = "<i class='fa fa-warning'></i> " + $.t("error_could_not_decrypt_message");
+            decoded.message = $.t("error_could_not_decrypt_message");
+            decoded.format = "<i class='fa fa-warning'></i>&nbsp";
             decoded.extra = "decryption_failed";
         }
         return decoded;
@@ -315,7 +329,7 @@ var NRS = (function(NRS, $) {
 						"<i class='fa fa-link" + inverseIcon + "'></i>" +
 					"</a>";
 				}
-                output += "<dd class='" + messageClass + "'><p>" + decoded.message + sharedKeyTag + "</p></dd>";
+                output += "<dd class='" + messageClass + "'><p>" + decoded.format + decoded.message + sharedKeyTag + "</p></dd>";
 			}
 		}
 		output += "</dl>";
@@ -465,9 +479,9 @@ var NRS = (function(NRS, $) {
 		}
 	};
 
-    NRS.forms.GetPrunableMessageComplete = function(response, data) {
-        $.growl($.t("message_retrieved"));
-   	};
+    NRS.forms.getPrunableMessageComplete = function(response) {
+        renderMyMessagesTable();
+    };
 
 	$("#message_details").on("click", "dd.to_decrypt", function() {
 		$("#messages_decrypt_modal").modal("show");
