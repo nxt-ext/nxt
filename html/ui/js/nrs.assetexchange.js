@@ -244,11 +244,11 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.saveAssetBookmarks = function (assets, callback) {
+    NRS.saveAssetBookmarks = function (assetsNew, callback) {
         var newAssetIds = [];
         var newAssets = [];
 
-        $.each(assets, function (key, asset) {
+        $.each(assetsNew, function (key, asset) {
             var newAsset = {
                 "asset": String(asset.asset),
                 "name": String(asset.name),

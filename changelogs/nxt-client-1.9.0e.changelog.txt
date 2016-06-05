@@ -7,7 +7,8 @@ average of those balances, at the end of the snapshot, to be used for the FXT
 forging chain token distribution in Nxt 2.0.
 
 On testnet, the snapshot will start at block 632000 and end at block 761600.
-On mainnet, the snapshot will start at block 855000 and end at block 984600.
+On mainnet, the snapshot will start at block 855000 (expected July 3rd) and end
+at block 984600 (Oct 1st).
 
 Since on testnet the starting block is in the past, on upgrade to this release
 a blockchain rescan will be performed automatically in order to calculate past
@@ -26,7 +27,12 @@ automatically sent to the exchange account at snapshot end.
 
 A new getFxtQuantity API has been added, which allows retrieving the already
 accumulated FXT quantity for each account during the snapshot, and an estimate
-for the quantity yet to be obtained.
+for the quantity yet to be obtained. While snapshots are done every 60 blocks,
+the numbers that this API returns are updated once every 720 blocks only.
+
+Snapshot balances used for the FXT distribution for a specific account can be
+recorded in the log by setting the nxt.logFxtBalance property to that account
+number, and performing a rescan if the snapshot has already started.
 
 Added some additional transaction bytes validation, and phasing parameters
 validation, to take effect after the hardfork.
