@@ -562,47 +562,36 @@ var NRS = (function(NRS, $) {
 		sharedKeyLink.html(NRS.addEllipsis(url, 64));
     });
 
-    $('#messages_decrypt_password, #decrypt_note_form_password').on('input', function () {
-        var key = "";
-        if ($(this)[0].id == "messages_decrypt_password") {
-            key = "messages_decrypt_shared_key";
-        } else {
-            key = "decrypt_note_form_shared_key";
-        }
-
-        if ($(this).val() == "") {
-            document.getElementById(key).disabled = false;
-        } else {
-            document.getElementById(key).disabled = true;
-        }
-    });
-
-    $('#messages_decrypt_shared_key, #decrypt_note_form_shared_key').on('input', function () {
-        var keya = "";
-        var keyb = "";
-        if ($(this)[0].id == "messages_decrypt_shared_key") {
-            keya = "messages_decrypt_password";
-            keyb = "messages_decrypt_remember_password";
-        } else {
-            keya = "decrypt_note_form_password";
-            keyb = "decrypt_note_remember_password";
-        }
-        if ($(this).val() == "") {
-            document.getElementById(keya).disabled = false;
-            document.getElementById(keyb).disabled = false;
-        } else {
-            document.getElementById(keya).disabled = true;
-            document.getElementById(keyb).disabled = true;
-        }
-    });
+	$('#messages_decrypt_password, #decrypt_note_form_password, #messages_decrypt_shared_key, #decrypt_note_form_shared_key').on('input', function () {
+		var keya = "";
+		var keyb = "";
+		switch($(this)[0].id) {
+			case "messages_decrypt_password":
+				keya = "#messages_decrypt_shared_key";
+				break;
+			case "messages_decrypt_shared_key":
+				keya = "#messages_decrypt_password";
+				keyb = "#messages_decrypt_remember_password";
+				break;
+			case "decrypt_note_form_password":
+				keya = "#decrypt_note_form_shared_key";
+				break;
+			case "decrypt_note_form_shared_key":
+				keya = "#decrypt_note_form_password";
+				keyb = "#decrypt_note_remember_password";
+				break;
+		}
+		$(keya).prop('disabled', $(this).val() != "");
+		$(keyb).prop('disabled', $(this).val() != "");
+	});
 
     $("#messages_decrypt_modal, #transaction_info_modal").on("show.bs.modal", function () {
-        document.getElementById("messages_decrypt_password").disabled = false;
-        document.getElementById("messages_decrypt_remember_password").disabled = false;
-        document.getElementById("messages_decrypt_shared_key").disabled = false;
-        document.getElementById("decrypt_note_form_password").disabled = false;
-        document.getElementById("decrypt_note_remember_password").disabled = false;
-        document.getElementById("decrypt_note_form_shared_key").disabled = false;
+		$("#messages_decrypt_password").prop('disabled', false);
+		$("#messages_decrypt_remember_password").prop('disabled', false);
+		$("#messages_decrypt_shared_key").prop('disabled', false);
+		$("#decrypt_note_form_password").prop('disabled', false);
+		$("#decrypt_note_remember_password").prop('disabled', false);
+		$("#decrypt_note_form_shared_key").prop('disabled', false);
     });
     
 	return NRS;
