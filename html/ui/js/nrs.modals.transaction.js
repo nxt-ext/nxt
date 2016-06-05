@@ -288,11 +288,13 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
                         }
+                        var encoding = transaction.attachment.isText ? "Text (UTF-8)" : "Binary (Hex String)";
                         var hash = transaction.attachment.messageHash || transaction.attachment.encryptedMessageHash;
                         var hashRow = hash ? ("<tr><td><strong>" + $.t("hash") + "</strong>:&nbsp;</td><td>" + hash + "</td></tr>") : "";
                         $output.append("<table>" +
                             "<tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr>" +
                             "<tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr>" +
+                            "<tr><td><strong>" + $.t("encoding") + "</strong>:&nbsp;</td><td>" +  encoding + "</td></tr>" +
                             hashRow +
                         "</table>");
                         $output.show();
