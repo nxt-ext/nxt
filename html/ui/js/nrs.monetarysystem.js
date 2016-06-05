@@ -829,7 +829,7 @@ var NRS = (function (NRS, $, undefined) {
         var currencySearch = $("#currency_search");
         currencySearch.find("input[name=q]").val(currency);
         currencySearch.submit();
-        $("ul.sidebar-menu a[data-page=monetary_system]").last().trigger("click");
+        NRS.goToPage("monetary_system");
     };
 
     /* Transfer Currency Model */
@@ -1093,7 +1093,7 @@ var NRS = (function (NRS, $, undefined) {
         var options = {
             "id": sidebarId,
             "titleHTML": '<i class="fa fa-bank"></i><span data-i18n="monetary_system">Monetary System</span>',
-            "page": 'monetary_system',
+            "page": 'currencies',
             "desiredPosition": 40,
             "depends": { tags: [ NRS.constants.API_TAGS.MS ] }
         };
