@@ -563,35 +563,27 @@ var NRS = (function(NRS, $) {
     });
 
 	$('#messages_decrypt_password, #decrypt_note_form_password, #messages_decrypt_shared_key, #decrypt_note_form_shared_key').on('input', function () {
-		var keya = "";
-		var keyb = "";
+		var selector;
 		switch($(this)[0].id) {
 			case "messages_decrypt_password":
-				keya = "#messages_decrypt_shared_key";
+				selector = "#messages_decrypt_shared_key";
 				break;
 			case "messages_decrypt_shared_key":
-				keya = "#messages_decrypt_password";
-				keyb = "#messages_decrypt_remember_password";
+				selector = "#messages_decrypt_password, #messages_decrypt_remember_password";
 				break;
 			case "decrypt_note_form_password":
-				keya = "#decrypt_note_form_shared_key";
+				selector = "#decrypt_note_form_shared_key";
 				break;
 			case "decrypt_note_form_shared_key":
-				keya = "#decrypt_note_form_password";
-				keyb = "#decrypt_note_remember_password";
+				selector = "#decrypt_note_form_password, #decrypt_note_remember_password";
 				break;
 		}
-		$(keya).prop('disabled', $(this).val() != "");
-		$(keyb).prop('disabled', $(this).val() != "");
+        $(selector).prop('disabled', $(this).val() != "");
 	});
 
     $("#messages_decrypt_modal, #transaction_info_modal").on("show.bs.modal", function () {
-		$("#messages_decrypt_password").prop('disabled', false);
-		$("#messages_decrypt_remember_password").prop('disabled', false);
-		$("#messages_decrypt_shared_key").prop('disabled', false);
-		$("#decrypt_note_form_password").prop('disabled', false);
-		$("#decrypt_note_remember_password").prop('disabled', false);
-		$("#decrypt_note_form_shared_key").prop('disabled', false);
+		$("#messages_decrypt_password, #messages_decrypt_remember_password, #messages_decrypt_shared_key, " +
+            "#decrypt_note_form_password, #decrypt_note_remember_password, #decrypt_note_form_shared_key").prop('disabled', false);
     });
     
 	return NRS;
