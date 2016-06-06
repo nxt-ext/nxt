@@ -624,7 +624,27 @@ public final class ParameterParser {
         if (encryptedData == null) {
             String plainMessage = Convert.emptyToNull(req.getParameter("messageToEncrypt"));
             if (plainMessage == null) {
-                return null;
+                if (req.getContentType() == null || !req.getContentType().startsWith("multipart/form-data")) {
+                    return null;
+                }
+                try {
+                    Part part = req.getPart("messageToEncryptFile");
+                    if (part == null) {
+                        return null;
+                    }
+                    FileData fileData = new FileData(part).invoke();
+                    plainMessageBytes = fileData.getData();
+                    isText = "true".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+                } catch (IOException | ServletException e) {
+                    Logger.logDebugMessage("error in reading file data", e);
+                    throw new ParameterException(INCORRECT_MESSAGE_TO_ENCRYPT);
+                }
+            } else {
+                try {
+                    plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
+                } catch (RuntimeException e) {
+                    throw new ParameterException(INCORRECT_MESSAGE_TO_ENCRYPT);
+                }
             }
             if (recipient != null) {
                 recipientPublicKey = Account.getPublicKey(recipient.getId());
@@ -634,11 +654,6 @@ public final class ParameterParser {
             }
             if (recipientPublicKey == null) {
                 throw new ParameterException(MISSING_RECIPIENT_PUBLIC_KEY);
-            }
-            try {
-                plainMessageBytes = isText ? Convert.toBytes(plainMessage) : Convert.parseHexString(plainMessage);
-            } catch (RuntimeException e) {
-                throw new ParameterException(INCORRECT_MESSAGE_TO_ENCRYPT);
             }
             String secretPhrase = getSecretPhrase(req, false);
             if (secretPhrase != null) {

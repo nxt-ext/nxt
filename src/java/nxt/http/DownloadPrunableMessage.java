@@ -16,13 +16,11 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.Nxt;
 import nxt.NxtException;
 import nxt.PrunableMessage;
-import nxt.crypto.Crypto;
-import nxt.crypto.EncryptedData;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,7 +35,7 @@ public final class DownloadPrunableMessage extends APIServlet.APIRequestHandler 
     static final DownloadPrunableMessage instance = new DownloadPrunableMessage();
 
     private DownloadPrunableMessage() {
-        super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase", "retrieve");
+        super(new APITag[] {APITag.MESSAGES}, "transaction", "secretPhrase", "sharedKey", "retrieve", "save");
     }
 
     @Override
@@ -52,31 +50,30 @@ public final class DownloadPrunableMessage extends APIServlet.APIRequestHandler 
             prunableMessage = PrunableMessage.getPrunableMessage(transactionId);
         }
         String secretPhrase = ParameterParser.getSecretPhrase(request, false);
+        byte[] sharedKey = ParameterParser.getBytes(request, "sharedKey", false);
+        if (sharedKey.length != 0 && secretPhrase != null) {
+            return JSONResponses.either("secretPhrase", "sharedKey");
+        }
         byte[] data = null;
         if (prunableMessage != null) {
-            if (secretPhrase != null) {
-                EncryptedData encryptedData = prunableMessage.getEncryptedData();
-                if (encryptedData != null) {
-                    byte[] publicKey = prunableMessage.getSenderId() == Account.getId(Crypto.getPublicKey(secretPhrase))
-                            ? Account.getPublicKey(prunableMessage.getRecipientId()) : Account.getPublicKey(prunableMessage.getSenderId());
-                    if (publicKey != null) {
-                        try {
-                            data = Account.decryptFrom(publicKey, encryptedData, secretPhrase, prunableMessage.isCompressed());
-                        } catch (RuntimeException e) {
-                            return JSONResponses.error("Decryption failed");
-                        }
-                    } else {
-                        return JSONResponses.error("Missing public key"); // shouldn't happen
-                    }
+            try {
+                if (secretPhrase != null) {
+                    data = prunableMessage.decrypt(secretPhrase);
+                } else if (sharedKey.length > 0) {
+                    data = prunableMessage.decrypt(sharedKey);
+                } else {
+                    data = prunableMessage.getMessage();
                 }
-            } else {
-                data = prunableMessage.getMessage();
+            } catch (RuntimeException e) {
+                Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
+                return JSONResponses.error("Wrong secretPhrase or sharedKey");
             }
         }
         if (data == null) {
             data = Convert.EMPTY_BYTE;
         }
-        response.setHeader("Content-Disposition", "inline; filename=" + Long.toUnsignedString(transactionId));
+        String contentDisposition = "true".equalsIgnoreCase(request.getParameter("save")) ? "attachment" : "inline";
+        response.setHeader("Content-Disposition", contentDisposition + "; filename=" + Long.toUnsignedString(transactionId));
         response.setContentLength(data.length);
         try (OutputStream out = response.getOutputStream()) {
             try {
