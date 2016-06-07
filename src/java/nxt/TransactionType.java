@@ -2065,8 +2065,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                senderAccount.payDividends(transaction.getId(), attachment.getAssetId(), attachment.getHeight(),
-                        attachment.getAmountNQTPerQNT());
+                senderAccount.payDividends(transaction.getId(), attachment);
             }
 
             @Override

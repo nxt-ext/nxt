@@ -355,6 +355,7 @@ public final class Nxt {
                 Trade.init();
                 AssetTransfer.init();
                 AssetDelete.init();
+                AssetDividend.init();
                 Vote.init();
                 PhasingVote.init();
                 Currency.init();
