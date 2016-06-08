@@ -1490,8 +1490,9 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
+        var requestType = NRS.state.apiProxy ? "sendTransaction": "broadcastTransaction";
         $.ajax({
-            url: NRS.server + "/nxt-proxy?requestType=broadcastTransaction",
+            url: NRS.server + "/nxt-proxy?requestType=" + requestType,
             crossDomain: true,
             dataType: "json",
             type: "POST",
