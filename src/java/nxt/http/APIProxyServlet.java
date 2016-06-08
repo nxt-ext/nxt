@@ -241,7 +241,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                                                                     Request proxyRequest) {
 
         String contentType = clientRequest.getContentType();
-        Logger.logDebugMessage(System.identityHashCode(clientRequest) + " newClientRequestContentTransformer " + contentType);
         if (contentType != null && contentType.contains("multipart")) {
             return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
         } else {
@@ -296,7 +295,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
         @Override
         public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
-            Logger.logDebugMessage(clientRequestId + " PasswordFilteringContentTransformer.transform " + isPasswordDetected + " " + input.position());
             if (!isPasswordDetected) {
                 boolean positionChanged = false;
                 int position = input.position();

@@ -257,7 +257,8 @@ public enum APIEnum {
     GET_FUNDING_MONITOR("getFundingMonitor", GetFundingMonitor.instance),
     DOWNLOAD_PRUNABLE_MESSAGE("downloadPrunableMessage", DownloadPrunableMessage.instance),
     GET_SHARED_KEY("getSharedKey", GetSharedKey.instance),
-    SET_API_PROXY_PEER("setAPIProxyPeer", SetAPIProxyPeer.instance);
+    SET_API_PROXY_PEER("setAPIProxyPeer", SetAPIProxyPeer.instance),
+    SEND_TRANSACTION("sendTransaction", SendTransaction.instance);
 
 
     private static final Map<String, APIEnum> apiByName = new HashMap<>();
