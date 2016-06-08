@@ -1186,7 +1186,7 @@ class NxtDbVersion extends DbVersion {
             case 488:
                 apply("CREATE INDEX IF NOT EXISTS asset_dividend_asset_id_idx ON asset_dividend (asset_id, height DESC)");
             case 489:
-                apply("CREATE INDEX IF NOT EXISTS asset_delete_height_idx ON asset_delete (height)");
+                apply("CREATE INDEX IF NOT EXISTS asset_dividend_height_idx ON asset_dividend (height)");
             case 490:
                 return;
             default:

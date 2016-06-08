@@ -71,6 +71,15 @@ public final class AssetDividend {
         return assetDividendTable.getManyBy(new DbClause.LongClause("asset_id", assetId), from, to);
     }
 
+    public static AssetDividend getLastDividend(long assetId) {
+        try (DbIterator<AssetDividend> dividends = assetDividendTable.getManyBy(new DbClause.LongClause("asset_id", assetId), 0, 0)) {
+            if (dividends.hasNext()) {
+                return dividends.next();
+            }
+        }
+        return null;
+    }
+
     static AssetDividend addAssetDividend(long transactionId, Attachment.ColoredCoinsDividendPayment attachment,
                                           long totalDividend, long numAccounts) {
         AssetDividend assetDividend = new AssetDividend(transactionId, attachment, totalDividend, numAccounts);
