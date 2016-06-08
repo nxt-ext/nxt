@@ -123,7 +123,7 @@ var NRS = (function(NRS, $) {
 			if (response.type == "success") {
 				$("#send_money_account_info").hide();
 			} else {
-				$("#send_money_account_info").html(response.message).show();
+				$("#send_money_account_info").html(String(response.message).escapeHTML()).show();
 
 			}
 		});
@@ -138,7 +138,7 @@ var NRS = (function(NRS, $) {
 					callback({
 						"type": "info",
 						"message": $.t("recipient_info_with_name", {
-							"name" : response.name,
+							"name" : NRS.unescapeRespStr(response.name),
 							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
 						}),
 						"account": response
