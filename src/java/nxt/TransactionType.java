@@ -2130,7 +2130,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean isPhasingSafe() {
-                return true;
+                return false;
             }
 
         };
