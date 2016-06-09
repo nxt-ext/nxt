@@ -6,9 +6,10 @@ This release enables taking multiple snapshots of accounts NXT balances, every
 average of those balances, at the end of the snapshot, to be used for the FXT
 forging chain token distribution in Nxt 2.0.
 
-On testnet, the snapshot will start at block 632000 and end at block 761600.
-On mainnet, the snapshot will start at block 855000 (expected July 3rd) and end
-at block 984600 (Oct 1st).
+On testnet, the snapshot will start at block 641400 and end at block 771000
+(June 19).
+On mainnet, the snapshot will start at block 870400 (expected July 14) and end
+at block 1000000 (Oct 12).
 
 Since on testnet the starting block is in the past, on upgrade to this release
 a blockchain rescan will be performed automatically in order to calculate past
