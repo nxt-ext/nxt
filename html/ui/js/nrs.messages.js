@@ -451,12 +451,6 @@ var NRS = (function(NRS, $) {
 					type: "success"
 				});
 				$("#inline_message_text").val("");
-				if (data["_extra"].message && data.encryptedMessageData) {
-					NRS.addDecryptedTransaction(response.transaction, {
-						"encryptedMessage": String(data["_extra"].message)
-					});
-				}
-
                 NRS.addUnconfirmedTransaction(response.transaction, function (alreadyProcessed) {
                     if (!alreadyProcessed) {
                         $("#message_details").find("dl.chat").append("<dd class='to tentative" + (data.encryptedMessageData ? " decrypted" : "") + "'><p>" + (data.encryptedMessageData ? "<i class='fa fa-lock'></i> " : "") + (!data["_extra"].message ? $.t("message_empty") : String(data["_extra"].message).escapeHTML()) + "</p></dd>");

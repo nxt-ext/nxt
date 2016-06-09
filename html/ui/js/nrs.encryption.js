@@ -325,15 +325,11 @@ var NRS = (function (NRS, $) {
 		_decryptionPassword = password;
 	};
 
-	NRS.addDecryptedTransaction = function(identifier, content) {
-		if (!_decryptedTransactions[identifier]) {
-			_decryptedTransactions[identifier] = content;
-		}
-	};
-
 	NRS.tryToDecryptMessage = function(message) {
 		if (_decryptedTransactions && _decryptedTransactions[message.transaction]) {
-			return _decryptedTransactions[message.transaction];
+			if (_decryptedTransactions[message.transaction].encryptedMessage) {
+				return _decryptedTransactions[message.transaction].encryptedMessage; // cache is saved differently by the info modal vs the messages table
+			}
 		}
 		try {
 			if (!message.attachment.encryptedMessage.data) {
@@ -642,10 +638,8 @@ var NRS = (function (NRS, $) {
 					options.isText = message.attachment.encryptedMessage.isText;
 					options.isCompressed = message.attachment.encryptedMessage.isCompressed;
                     var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, options, password);
-
 					_decryptedTransactions[message.transaction] = {
-						"message": decoded.message,
-						"sharedKey": decoded.sharedKey
+						encryptedMessage: decoded
 					};
 					success++;
 				} catch (err) {
