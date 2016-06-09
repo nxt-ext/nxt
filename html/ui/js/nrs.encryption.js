@@ -341,7 +341,9 @@ var NRS = (function (NRS, $) {
 			} else {
 				var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
 					"nonce": message.attachment.encryptedMessage.nonce,
-					"account": (message.recipient == NRS.account ? message.sender : message.recipient)
+					"account": (message.recipient == NRS.account ? message.sender : message.recipient),
+					"isText": message.attachment.encryptedMessage.isText,
+					"isCompressed": message.attachment.encryptedMessage.isCompressed
 				});
 			}
 			return decoded;
@@ -416,6 +418,8 @@ var NRS = (function (NRS, $) {
 								"account": account
 							};
 						}
+						decryptOptions.isText = transaction.attachment.encryptedMessage.isText;
+						decryptOptions.isCompressed = transaction.attachment.encryptedMessage.isCompressed;
                         data = NRS.decryptNote(encrypted, decryptOptions);
 					} catch (err) {
 						if (err.errorCode && err.errorCode == 1) {
@@ -564,6 +568,8 @@ var NRS = (function (NRS, $) {
 						options.nonce = nonce;
 						options.account = otherAccount;
                     }
+					options.isText = _encryptedNote.transaction.attachment.encryptedMessage.isText;
+					options.isCompressed = _encryptedNote.transaction.attachment.encryptedMessage.isCompressed;
                     data = NRS.decryptNote(encrypted, options, password);
 					decryptedFields[key] = data;
 				} catch (err) {
@@ -633,6 +639,8 @@ var NRS = (function (NRS, $) {
 						options.nonce = message.attachment.encryptedMessage.nonce;
 						options.account = otherUser;
                     }
+					options.isText = message.attachment.encryptedMessage.isText;
+					options.isCompressed = message.attachment.encryptedMessage.isCompressed;
                     var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, options, password);
 
 					_decryptedTransactions[message.transaction] = {
@@ -825,9 +833,17 @@ var NRS = (function (NRS, $) {
 		}
 
 		var result = aesDecrypt(data, options);
-		var compressedPlaintext = result.decrypted;
-		var binData = new Uint8Array(compressedPlaintext);
-		return { message: converters.byteArrayToString(pako.inflate(binData)), sharedKey: converters.byteArrayToHexString(result.sharedKey) };
+		var binData = new Uint8Array(result.decrypted);
+		if (!(options.isCompressed === false)) {
+			binData = pako.inflate(binData);
+		}
+		var message;
+		if (!(options.isText === false)) {
+			message = converters.byteArrayToString(binData);
+		} else {
+			message = converters.byteArrayToHexString(binData);
+		}
+        return { message: message, sharedKey: converters.byteArrayToHexString(result.sharedKey) };
 	}
 
 	function getSharedSecret(key1, key2) {

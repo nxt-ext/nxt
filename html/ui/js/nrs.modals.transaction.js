@@ -244,7 +244,6 @@ var NRS = (function (NRS, $, undefined) {
                 switch (transaction.subtype) {
                     case 0:
                         var $output = $("#transaction_info_output_top");
-
                         if (transaction.attachment) {
                             if (transaction.attachment.message) {
                                 if (!transaction.attachment["version.Message"] && !transaction.attachment["version.PrunablePlainMessage"]) {
@@ -289,16 +288,22 @@ var NRS = (function (NRS, $, undefined) {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
                         }
                         var encoding = transaction.attachment.isText ? "Text (UTF-8)" : "Binary (Hex String)";
+                        var isCompressed = false;
+                        if (transaction.attachment.encryptedMessage) {
+                            isCompressed = transaction.attachment.encryptedMessage.isCompressed;
+                        } else if (transaction.attachment.encryptToSelfMessage) {
+                            isCompressed = transaction.attachment.encryptToSelfMessage.isCompressed;
+                        }
                         var hash = transaction.attachment.messageHash || transaction.attachment.encryptedMessageHash;
                         var hashRow = hash ? ("<tr><td><strong>" + $.t("hash") + "</strong>:&nbsp;</td><td>" + hash + "</td></tr>") : "";
                         $output.append("<table>" +
                             "<tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr>" +
                             "<tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr>" +
                             "<tr><td><strong>" + $.t("encoding") + "</strong>:&nbsp;</td><td>" +  encoding + "</td></tr>" +
+                            "<tr><td><strong>" + $.t("compressed") + "</strong>:&nbsp;</td><td>" + isCompressed + "</td></tr>" +
                             hashRow +
                         "</table>");
                         $output.show();
-
                         break;
                     case 1:
                         data = {

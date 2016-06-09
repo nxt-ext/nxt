@@ -94,6 +94,15 @@ var NRS = (function(NRS, $) {
         if (decoded.extra == "decrypted") {
             shareAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-transaction='" + response.transaction + "' data-sharedkey='" + decoded.sharedKey + "' data-target='#shared_key_modal'>" + $.t("share") + "</a>";
         }
+        var downloadAction = "";
+        if (!decryptAction && !retrieveAction && decoded.hash) {
+            var sharedKeyParam = "";
+            if (decoded.sharedKey) {
+                sharedKeyParam = "&sharedKey=" + decoded.sharedKey;
+            }
+            downloadAction = "<a href='/nxt?requestType=downloadPrunableMessage&transaction=" + String(response.transaction).escapeHTML() +
+                "&retrieve=true&save=true" + sharedKeyParam + "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+        }
 		return {
 			transactionFormatted: transaction,
 			fromFormatted: from,
@@ -101,7 +110,8 @@ var NRS = (function(NRS, $) {
 			messageFormatted: decoded.format + decoded.message,
 			action_decrypt: decryptAction,
 			action_retrieve: retrieveAction,
-			action_share: shareAction
+			action_share: shareAction,
+			action_download: downloadAction
 		};
 	};
 
@@ -146,7 +156,6 @@ var NRS = (function(NRS, $) {
 			}
 		);
 	}
-
 
 	function displayMessageSidebar(callback) {
 		var activeAccount = false;
@@ -268,7 +277,6 @@ var NRS = (function(NRS, $) {
 				if (response.errorCode || !response.transaction) {
 					decoded.message = $.t("message_pruned");
 					decoded.extra = "pruned";
-					decoded.hash = message.attachment.messageHash || message.attachment.encryptedMessageHash;
 				} else {
                     message.attachment.message = response.message;
                     message.attachment.encryptedMessage = response.encryptedMessage;
@@ -297,6 +305,7 @@ var NRS = (function(NRS, $) {
             decoded.format = "<i class='fa fa-warning'></i>&nbsp";
             decoded.extra = "decryption_failed";
         }
+        decoded.hash = message.attachment.messageHash || message.attachment.encryptedMessageHash;
         return decoded;
     }
 

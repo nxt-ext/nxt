@@ -74,3 +74,68 @@ QUnit.test("getSharedKey", function (assert) {
     assert.equal(decryptedMessage.sharedKey, converters.byteArrayToHexString(sharedKeyBytes));
 });
 
+// Based on testnet transaction 2376600560388810797
+QUnit.test("decryptCompressedText", function (assert) {
+    var privateKey = NRS.getPrivateKey("rshw9abtpsa2");
+    var publicKey = "112e0c5748b5ea610a44a09b1ad0d2bddc945a6ef5edc7551b80576249ba585b";
+    var nonce = "ca627f0252c6ca080067deedbed48f0a651789314fcbe8547815becce1d93cdc";
+    var options = {
+        privateKey: converters.hexStringToByteArray(privateKey),
+        publicKey: converters.hexStringToByteArray(publicKey),
+        nonce: converters.hexStringToByteArray(nonce)
+    };
+    var encryptedMessage = "a1b84c964ca98e0b2a57587c67286caf245d637c18f28938cf38544972dd30ccd3551db86cfceda21b750df076dce267";
+    var decryptedMessage = NRS.decryptDataRoof(converters.hexStringToByteArray(encryptedMessage), options);
+    assert.equal(decryptedMessage.message, "hello world");
+});
+
+// Based on testnet transaction 12445814829537070352
+QUnit.test("decryptUncompressedText", function (assert) {
+    var privateKey = NRS.getPrivateKey("rshw9abtpsa2");
+    var publicKey = "112e0c5748b5ea610a44a09b1ad0d2bddc945a6ef5edc7551b80576249ba585b";
+    var nonce = "c9a707dbfab3d4b8188f6ee4e884fee459f39e1b45f7d7e8ee8ae1100be18854";
+    var options = {
+        privateKey: converters.hexStringToByteArray(privateKey),
+        publicKey: converters.hexStringToByteArray(publicKey),
+        nonce: converters.hexStringToByteArray(nonce),
+        isCompressed: false
+    };
+    var encryptedMessage = "c0d97e7261a604f106ec3a17d1a650ef500747bab10e60f94958d1da6689abe9";
+    var decryptedMessage = NRS.decryptDataRoof(converters.hexStringToByteArray(encryptedMessage), options);
+    assert.equal(decryptedMessage.message.substring(0, 11), "hello world"); // messages less than 16 bytes long does not decrypt correctly
+});
+
+// Based on testnet transaction 16098450341097007976
+QUnit.test("decryptCompressedBinary", function (assert) {
+    var privateKey = NRS.getPrivateKey("rshw9abtpsa2");
+    var publicKey = "112e0c5748b5ea610a44a09b1ad0d2bddc945a6ef5edc7551b80576249ba585b";
+    var nonce = "704227105cf3701e2c4e581e43cc4266e1230474443f777d43c75bf4454f0782";
+    var options = {
+        privateKey: converters.hexStringToByteArray(privateKey),
+        publicKey: converters.hexStringToByteArray(publicKey),
+        nonce: converters.hexStringToByteArray(nonce),
+        isCompressed: true,
+        isText: false
+    };
+    var encryptedMessage = "6c6dbf1aaa0ff170df9d0f15785e9d956d6c1e860288916c7a7651dfcc3b81678b6fb7afd667a2a4e759ea96e615a8ab";
+    var decryptedMessage = NRS.decryptDataRoof(converters.hexStringToByteArray(encryptedMessage), options);
+    assert.equal(converters.byteArrayToString(converters.hexStringToByteArray(decryptedMessage.message)), "hello world");
+});
+
+// Based on testnet transaction 15981469747709703862
+QUnit.test("decryptUncompressedBinary", function (assert) {
+    var privateKey = NRS.getPrivateKey("rshw9abtpsa2");
+    var publicKey = "112e0c5748b5ea610a44a09b1ad0d2bddc945a6ef5edc7551b80576249ba585b";
+    var nonce = "bf8a1aa744dd7c95f10efca5cb55f6275f59816357307faab8faac8bf96ec822";
+    var options = {
+        privateKey: converters.hexStringToByteArray(privateKey),
+        publicKey: converters.hexStringToByteArray(publicKey),
+        nonce: converters.hexStringToByteArray(nonce),
+        isCompressed: false,
+        isText: false
+    };
+    var encryptedMessage = "5e8b0414de46cdb34ac0ad6dd6a30cd31524f5f8c65ae7c1c0fcd463973aa6df";
+    var decryptedMessage = NRS.decryptDataRoof(converters.hexStringToByteArray(encryptedMessage), options);
+    assert.equal(converters.byteArrayToString(converters.hexStringToByteArray(decryptedMessage.message)).substring(0, 11), "hello world");
+});
+

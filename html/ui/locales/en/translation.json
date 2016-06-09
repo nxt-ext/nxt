@@ -1751,5 +1751,6 @@
   "share_link": "Share Link",
   "message_pruned": "Message is pruned.",
   "message_encrypted": "Message is encrypted.",
-  "encoding": "Encoding"
+  "encoding": "Encoding",
+  "compressed": "Compressed"
 }
