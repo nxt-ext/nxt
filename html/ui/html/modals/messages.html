@@ -28,11 +28,19 @@
                     <div class="form-group">
                         <label for="send_message_message" data-i18n="message">MESSAGE</label>
                         <textarea class="form-control" id="send_message_message" name="message" rows="4" tabindex="3"></textarea>
-                        <div style="margin-top:3px">
-                            <label for="send_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_message_encrypt" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div style="margin-top:3px">
+                                <label for="send_message_encrypt" style="font-weight:normal;color:#666"><input type="checkbox" name="encrypt_message" id="send_message_encrypt" value="1" data-default="checked" checked="checked" /> <span data-i18n="encrypt_message">Encrypt Message</span></label>
+                            </div>
+                            <div style="margin-top:3px">
+                                <label for="send_message_permanent" style="font-weight:normal;color:#666"><input type="checkbox" name="permanent_message" id="send_message_permanent" value="1" data-default="unchecked" /> <span data-i18n="permanent_message">Message is Never Deleted</span></label>
+                            </div>
                         </div>
-                        <div style="margin-top:3px">
-                            <label for="send_message_permanent" style="font-weight:normal;color:#666"><input type="checkbox" name="permanent_message" id="send_message_permanent" value="1" data-default="unchecked" /> <span data-i18n="permanent_message">Message is Never Deleted</span></label>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label for="upload_file_message" data-i18n="file">File</label>
+                                <input type="file" name="file" id="upload_file_message" class="form-control" tabindex="6">
+                            </div>
                         </div>
                     </div>
                     <div data-replace-with-modal-template="fee_calculation_modal_template"></div>
@@ -46,6 +54,7 @@
                     <div class="callout account_info" style="display:none;margin-bottom: 0;"></div>
                     <input type="hidden" name="request_type" value="sendMessage" data-default="sendMessage" />
                     <input type="hidden" name="converted_account_id" value="" />
+                    <input type="hidden" name="message_is_text" id="message_is_text" value="true">
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">

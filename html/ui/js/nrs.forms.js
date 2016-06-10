@@ -103,12 +103,14 @@ var NRS = (function(NRS, $) {
 			delete data.encrypt_message;
 			delete data.add_message;
 			delete data.add_note_to_self;
+			delete data.message_is_text;
 
 			return data;
 		} else if (!data.add_message) {
 			delete data.message;
 			delete data.encrypt_message;
 			delete data.add_message;
+			delete data.message_is_text;
 		} else if (!data.add_note_to_self) {
 			delete data.note_to_self;
 			delete data.add_note_to_self;
@@ -119,7 +121,7 @@ var NRS = (function(NRS, $) {
 			"note_to_self": data.note_to_self
 		};
         var encrypted;
-		if (data.add_message && data.message) {
+		if (data.add_message && (data.message || data.message_is_text)) {
 			if (data.encrypt_message) {
 				try {
 					var options = {};
@@ -142,7 +144,12 @@ var NRS = (function(NRS, $) {
                         data.encryptedMessageData = encrypted.message;
                         data.encryptedMessageNonce = encrypted.nonce;
                     }
-					data.messageToEncryptIsText = "true";
+					if (data.message_is_text == "true") {
+						data.messageToEncryptIsText = "true";
+					} else {
+						data.messageToEncryptIsText = "false";
+						data.encryptedMessageIsPrunable = "true";
+					}
 					if (!data.permanent_message) {
 						data.encryptedMessageIsPrunable = "true";
 					}
@@ -151,7 +158,12 @@ var NRS = (function(NRS, $) {
 					throw err;
 				}
 			} else {
-				data.messageIsText = "true";
+				if (data.message_is_text == "true") {
+					data.messageIsText = "true";
+				} else {
+					data.messageIsText = "false";
+					data.messageIsPrunable = "true";
+				}
 				if (!data.permanent_message && converters.stringToByteArray(data.message).length >= NRS.constants.MIN_PRUNABLE_MESSAGE_LENGTH) {
 					data.messageIsPrunable = "true";
 				}
@@ -180,11 +192,11 @@ var NRS = (function(NRS, $) {
 		} else {
 			delete data.note_to_self;
 		}
-
+		delete data.message_is_text;
 		delete data.add_message;
 		delete data.encrypt_message;
 		delete data.add_note_to_self;
-
+		console.log(data);
 		return data;
 	};
 

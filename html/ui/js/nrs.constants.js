@@ -186,7 +186,7 @@ var NRS = (function (NRS, $) {
     };
 
     NRS.isFileUploadRequest = function (requestType) {
-        return requestType == "uploadTaggedData" || requestType == "dgsListing";
+        return requestType == "uploadTaggedData" || requestType == "dgsListing" || requestType == "sendMessage";
     };
 
     NRS.getFileUploadConfig = function (requestType) {
@@ -200,6 +200,11 @@ var NRS = (function (NRS, $) {
             config.selector = "#dgs_listing_image";
             config.requestParam = "messageFile";
             config.errorDescription = "error_image_too_big";
+            config.maxSize = NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH;
+        } else if (requestType == "sendMessage") {
+            config.selector = "#upload_file_message";
+            config.requestParam = "messageFile";
+            config.errorDescription = "error_file_too_big";
             config.maxSize = NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH;
         }
         return config;

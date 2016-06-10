@@ -588,6 +588,23 @@ var NRS = (function(NRS, $) {
 		$("#messages_decrypt_password, #messages_decrypt_remember_password, #messages_decrypt_shared_key, " +
             "#decrypt_note_form_password, #decrypt_note_remember_password, #decrypt_note_form_shared_key").prop('disabled', false);
     });
+
+	$("#send_message_modal").on("show.bs.modal", function () {
+		$("#send_message_message").prop('readonly',false);
+		$("#send_message_message").prop('value','');
+		$("#message_is_text").prop('value',true);
+	});
+
+	$('#upload_file_message').change(function () {
+		if ($("#upload_file_message")[0].files[0]) {
+			$("#send_message_message").prop('readonly',true);
+			$("#message_is_text").prop('value',false);
+		} else {
+			$("#send_message_message").prop('readonly',false);
+			$("#send_message_message").prop('value','');
+			$("#message_is_text").prop('value',true);
+		}
+	});
     
 	return NRS;
 }(NRS || {}, jQuery));
