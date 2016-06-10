@@ -71,6 +71,8 @@ public interface Peer extends Comparable<Peer> {
 
     Set<APIEnum> getDisabledAPIs();
 
+    int getApiServerIdleTimeout();
+
     Hallmark getHallmark();
 
     int getWeight();

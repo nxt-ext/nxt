@@ -46,6 +46,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<String> NOT_FORWARDED_REQUESTS;
     private static final Set<APITag> NOT_FORWARDED_TAGS;
     private static final String REQUEST_TYPE = APIProxyServlet.class.getName() + ".requestType";
+    public static final int PROXY_IDLE_TIMEOUT_DELTA = 5000;
 
     static {
         Set<String> requests = new HashSet<>();
@@ -135,6 +136,11 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 uri.append(servingPeer.getApiPort());
             }
             uri.append("/nxt");
+
+            HttpClient httpClient = getHttpClient();
+            if (httpClient != null) {
+                httpClient.setIdleTimeout(Math.max(servingPeer.getApiServerIdleTimeout() - PROXY_IDLE_TIMEOUT_DELTA, 0));
+            }
         }
 
         String query = clientRequest.getQueryString();

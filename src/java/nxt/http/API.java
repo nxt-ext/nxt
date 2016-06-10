@@ -84,6 +84,7 @@ public final class API {
     static final boolean disableAdminPassword;
     static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
     static final boolean enableAPIUPnP = Nxt.getBooleanProperty("nxt.enableAPIUPnP");
+    public static final int apiServerIdleTimeout = Nxt.getIntProperty("nxt.apiServerIdleTimeout");
 
     private static final Server apiServer;
     private static URI welcomePageUri;
@@ -153,7 +154,7 @@ public final class API {
                 connector = new ServerConnector(apiServer, new HttpConnectionFactory(configuration));
                 connector.setPort(port);
                 connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setIdleTimeout(apiServerIdleTimeout);
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTP port " + port);
@@ -186,7 +187,7 @@ public final class API {
                         new HttpConnectionFactory(https_config));
                 connector.setPort(sslPort);
                 connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setIdleTimeout(apiServerIdleTimeout);
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTPS port " + sslPort);
@@ -235,7 +236,8 @@ public final class API {
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
 
             servletHolder = apiHandler.addServlet(APIProxyServlet.class, "/nxt-proxy");
-            //servletHolder.setInitParameters(Collections.singletonMap("idleTimeout", "25000"));
+            servletHolder.setInitParameters(Collections.singletonMap("idleTimeout",
+                    "" + Math.max(apiServerIdleTimeout - APIProxyServlet.PROXY_IDLE_TIMEOUT_DELTA, 0)));
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
 

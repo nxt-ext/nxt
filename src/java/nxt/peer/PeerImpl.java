@@ -21,6 +21,7 @@ import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Nxt;
 import nxt.NxtException;
+import nxt.http.API;
 import nxt.http.APIEnum;
 import nxt.util.APISet;
 import nxt.util.Convert;
@@ -75,6 +76,7 @@ final class PeerImpl implements Peer {
     private volatile int apiPort;
     private volatile int apiSSLPort;
     private volatile EnumSet<APIEnum> disabledAPIs;
+    private volatile int apiServerIdleTimeout;
     private volatile String version;
     private volatile boolean isOldVersion;
     private volatile long adjustedWeight;
@@ -101,6 +103,7 @@ final class PeerImpl implements Peer {
         this.webSocket = new PeerWebSocket();
         this.useWebSocket = Peers.useWebSockets && !Peers.useProxy;
         this.disabledAPIs = EnumSet.noneOf(APIEnum.class);
+        this.apiServerIdleTimeout = API.apiServerIdleTimeout;
     }
 
     @Override
@@ -267,6 +270,17 @@ final class PeerImpl implements Peer {
     void setDisabledAPIs(Object apiSetBase64) {
         if (apiSetBase64 instanceof String) {
             disabledAPIs = APISet.fromBase64String((String) apiSetBase64);
+        }
+    }
+
+    @Override
+    public int getApiServerIdleTimeout() {
+        return apiServerIdleTimeout;
+    }
+
+    public void setApiServerIdleTimeout(Object apiServerIdleTimeout) {
+        if (apiServerIdleTimeout instanceof Integer) {
+            this.apiServerIdleTimeout = (int) apiServerIdleTimeout;
         }
     }
 
@@ -639,6 +653,7 @@ final class PeerImpl implements Peer {
                 setApiPort(response.get("apiPort"));
                 setApiSSLPort(response.get("apiSSLPort"));
                 setDisabledAPIs(response.get("disabledAPIs"));
+                setApiServerIdleTimeout(response.get("apiServerIdleTimeout"));
                 lastUpdated = lastConnectAttempt;
                 setVersion((String) response.get("version"));
                 setPlatform((String) response.get("platform"));

@@ -288,6 +288,8 @@ public final class Peers {
                 }
             });
             json.put("disabledAPIs", APISet.toBase64String(disabledAPISet));
+
+            json.put("apiServerIdleTimeout", API.apiServerIdleTimeout);
         }
         long services = 0;
         for (Peer.Service service : servicesList) {
