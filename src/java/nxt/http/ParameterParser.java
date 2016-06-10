@@ -323,20 +323,37 @@ public final class ParameterParser {
     public static EncryptedData getEncryptedData(HttpServletRequest req, String messageType) throws ParameterException {
         String dataString = Convert.emptyToNull(req.getParameter(messageType + "Data"));
         String nonceString = Convert.emptyToNull(req.getParameter(messageType + "Nonce"));
-        if (dataString == null || nonceString == null) {
+        if (nonceString == null) {
             return null;
         }
         byte[] data;
         byte[] nonce;
         try {
-            data = Convert.parseHexString(dataString);
-        } catch (RuntimeException e) {
-            throw new ParameterException(JSONResponses.incorrect(messageType + "Data"));
-        }
-        try {
             nonce = Convert.parseHexString(nonceString);
         } catch (RuntimeException e) {
             throw new ParameterException(JSONResponses.incorrect(messageType + "Nonce"));
+        }
+        if (dataString != null) {
+            try {
+                data = Convert.parseHexString(dataString);
+            } catch (RuntimeException e) {
+                throw new ParameterException(JSONResponses.incorrect(messageType + "Data"));
+            }
+        } else {
+            if (req.getContentType() == null || !req.getContentType().startsWith("multipart/form-data")) {
+                return null;
+            }
+            try {
+                Part part = req.getPart(messageType + "File");
+                if (part == null) {
+                    return null;
+                }
+                FileData fileData = new FileData(part).invoke();
+                data = fileData.getData();
+            } catch (IOException | ServletException e) {
+                Logger.logDebugMessage("error in reading file data", e);
+                throw new ParameterException(JSONResponses.incorrect(messageType + "File"));
+            }
         }
         return new EncryptedData(data, nonce);
     }
