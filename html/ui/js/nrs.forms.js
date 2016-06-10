@@ -196,7 +196,6 @@ var NRS = (function(NRS, $) {
 		delete data.add_message;
 		delete data.encrypt_message;
 		delete data.add_note_to_self;
-		console.log(data);
 		return data;
 	};
 
