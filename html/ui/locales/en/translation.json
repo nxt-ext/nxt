@@ -1737,5 +1737,10 @@
   "exchange_buy": "Exchange Buy",
   "exchange_sell": "Exchange Sell",
   "trade": "Trade",
-  "max_nxt_decimals": "Maximum NXT decimal positions"
+  "max_nxt_decimals": "Maximum NXT decimal positions",
+  "Asset_Dividend_History": "Asset Dividend History",
+  "amountNQTPerQNT": "Amount NQT Per QNT",
+  "no_recent_dividend_history": "No recent dividend history available.",
+  "dividend_history": "Dividend History",
+  "view_asset_dividend_history": "View Asset Dividend History"
 }
