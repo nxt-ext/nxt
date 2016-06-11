@@ -571,12 +571,15 @@ var NRS = (function (NRS, $, undefined) {
             var assetExchangeAskOrdersTable = $("#asset_exchange_ask_orders_table");
             var assetExchangeBidOrdersTable = $("#asset_exchange_bid_orders_table");
             var assetExchangeTradeHistoryTable = $("#asset_exchange_trade_history_table");
+            var assetExchangeRecentDividendHistoryTable = $("#asset_exchange_recent_dividend_history_table");
             assetExchangeAskOrdersTable.find("tbody").empty();
             assetExchangeBidOrdersTable.find("tbody").empty();
             assetExchangeTradeHistoryTable.find("tbody").empty();
+            assetExchangeRecentDividendHistoryTable.find("tbody").empty();
             assetExchangeAskOrdersTable.parent().addClass("data-loading").removeClass("data-empty");
             assetExchangeBidOrdersTable.parent().addClass("data-loading").removeClass("data-empty");
             assetExchangeTradeHistoryTable.parent().addClass("data-loading").removeClass("data-empty");
+            assetExchangeRecentDividendHistoryTable.parent().addClass("data-loading").removeClass("data-empty");
 
             $(".data-loading img.loading").hide();
 
@@ -663,6 +666,7 @@ var NRS = (function (NRS, $, undefined) {
         NRS.loadAssetOrders("ask", assetId, refresh);
         NRS.loadAssetOrders("bid", assetId, refresh);
         NRS.getAssetTradeHistory(assetId, refresh);
+        NRS.getAssetDividendHistory(assetId, refresh);
     };
 
     function processOrders(orders, type, refresh) {
@@ -756,6 +760,48 @@ var NRS = (function (NRS, $, undefined) {
                 });
                 processOrders(orders, type, refresh);
             });
+    };
+
+    NRS.getAssetDividendHistory = function (assetId, refresh) {
+        var assetExchangeRecentDividendHistoryTable = $("#asset_exchange_recent_dividend_history_table");
+        var options = {
+            "asset": assetId,
+            "firstIndex": 0,
+            "lastIndex": 50
+        };
+        NRS.sendRequest("getAssetDividends+", options, function (response) {
+            if (response.dividends && response.dividends.length) {
+                var dividends = response.dividends;
+                var rows = "";
+                var amountDecimals = NRS.getNumberOfDecimals(dividends, "totalDividend", function(val) {
+                    return NRS.formatAmount(val.totalDividend);
+                });
+                var accountsDecimals = NRS.getNumberOfDecimals(dividends, "numberOfAccounts", function(val) {
+                    return NRS.formatAmount(val.numberOfAccounts);
+                });
+                var amountNQTPerQNTDecimals = NRS.getNumberOfDecimals(dividends, "amountNQTPerQNT", function(val) {
+                    return NRS.formatOrderPricePerWholeQNT(val.amountNQTPerQNT, currentAsset.decimals);
+                });
+                for (var i = 0; i < dividends.length; i++) {
+                    var dividend = dividends[i];
+                    dividend.numberOfAccounts = new BigInteger(dividend.numberOfAccounts.toString());
+                    dividend.amountNQTPerQNT = new BigInteger(dividend.amountNQTPerQNT);
+                    dividend.totalDividend = new BigInteger(dividend.totalDividend);
+                    console.log(accountsDecimals);
+                    rows += "<tr>" +
+                        "<td>" + NRS.getTransactionLink(dividend.assetDividend, NRS.formatTimestamp(dividend.timestamp)) + "</td>" +
+                        "<td class='numeric'>" + dividend.dividendHeight + "</td>" +
+                        "<td class='numeric'>" + NRS.formatAmount(dividend.totalDividend,false,false,amountDecimals) + "</td>" +
+                        "<td class='numeric'>" + NRS.formatQuantity(dividend.numberOfAccounts,false,false,accountsDecimals) + "</td>" +
+                        "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(dividend.amountNQTPerQNT, currentAsset.decimals, amountNQTPerQNTDecimals) + "</td>" +
+                        "</tr>";
+                }
+                assetExchangeRecentDividendHistoryTable.find("tbody").empty().append(rows);
+                NRS.dataLoadFinished(assetExchangeRecentDividendHistoryTable, !refresh);
+            } else {
+                assetExchangeRecentDividendHistoryTable.parent().addClass("data-empty").removeClass("data-loading");
+            }
+        });
     };
 
     NRS.getAssetTradeHistory = function (assetId, refresh) {
