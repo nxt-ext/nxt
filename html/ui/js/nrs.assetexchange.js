@@ -787,7 +787,6 @@ var NRS = (function (NRS, $, undefined) {
                     dividend.numberOfAccounts = new BigInteger(dividend.numberOfAccounts.toString());
                     dividend.amountNQTPerQNT = new BigInteger(dividend.amountNQTPerQNT);
                     dividend.totalDividend = new BigInteger(dividend.totalDividend);
-                    console.log(accountsDecimals);
                     rows += "<tr>" +
                         "<td>" + NRS.getTransactionLink(dividend.assetDividend, NRS.formatTimestamp(dividend.timestamp)) + "</td>" +
                         "<td class='numeric'>" + dividend.dividendHeight + "</td>" +
