@@ -571,6 +571,7 @@ var NRS = (function (NRS, $, undefined) {
             var assetExchangeAskOrdersTable = $("#asset_exchange_ask_orders_table");
             var assetExchangeBidOrdersTable = $("#asset_exchange_bid_orders_table");
             var assetExchangeTradeHistoryTable = $("#asset_exchange_trade_history_table");
+            var assetExchangeDividendHistoryTable = $("#asset_dividend_table");
             var assetExchangeRecentDividendHistoryTable = $("#asset_exchange_recent_dividend_history_table");
             assetExchangeAskOrdersTable.find("tbody").empty();
             assetExchangeBidOrdersTable.find("tbody").empty();
@@ -764,10 +765,9 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.getAssetDividendHistory = function (assetId, refresh) {
         var assetExchangeRecentDividendHistoryTable = $("#asset_exchange_recent_dividend_history_table");
+        var assetExchangeDividendHistoryTable = $("#asset_dividend_table");
         var options = {
             "asset": assetId,
-            "firstIndex": 0,
-            "lastIndex": 50
         };
         NRS.sendRequest("getAssetDividends+", options, function (response) {
             if (response.dividends && response.dividends.length) {
@@ -796,9 +796,12 @@ var NRS = (function (NRS, $, undefined) {
                         "</tr>";
                 }
                 assetExchangeRecentDividendHistoryTable.find("tbody").empty().append(rows);
+                assetExchangeDividendHistoryTable.find("tbody").empty().append(rows);
                 NRS.dataLoadFinished(assetExchangeRecentDividendHistoryTable, !refresh);
+                NRS.dataLoadFinished(assetExchangeDividendHistoryTable, !refresh);
             } else {
                 assetExchangeRecentDividendHistoryTable.parent().addClass("data-empty").removeClass("data-loading");
+                assetExchangeDividendHistoryTable.parent().addClass("data-empty").removeClass("data-loading");
             }
         });
     };

@@ -261,6 +261,40 @@
     </div>
 </div>
 
+<div class="modal fade" id="asset_dividend_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-wider">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="Asset Distribution">Asset Dividend History</h4>
+            </div>
+            <div class="modal-body">
+                <div class="data-container data-loading" style="max-height:350px;overflow:auto">
+                    <table class="table table-striped" id="asset_dividend_table">
+                        <thead>
+                        <tr>
+                            <th data-i18n="date">Date</th>
+                            <th data-i18n="Height" class='numeric'>Height</th>
+                            <th data-i18n="total" class='numeric'>Total</th>
+                            <th data-i18n="Accounts" class='numeric'>Accounts</th>
+                            <th data-i18n="amountNQTPerQNT" class='numeric'>Amount NQT Per QNT</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-empty-container"><p data-i18n="no_recent_dividend_history">No recent dividend history available.</p></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="asset_exchange_change_group_name_modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
