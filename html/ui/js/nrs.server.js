@@ -328,7 +328,8 @@ var NRS = (function (NRS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        if (NRS.isFileUploadRequest(requestType)) {
+        var config = NRS.getFileUploadConfig(requestType, data);
+        if (config && $(config.selector)[0].files[0]) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
@@ -339,7 +340,6 @@ var NRS = (function (NRS, $, undefined) {
                 }
                 formData.append(key, data[key]);
             }
-            var config = NRS.getFileUploadConfig(requestType);
             var file = $(config.selector)[0].files[0];
             if (!file && requestType == "uploadTaggedData" ) {
                 callback({
@@ -349,12 +349,11 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
             if (file && file.size > config.maxSize) {
-                var description = config.errorDescription;
                 callback({
                     "errorCode": 3,
-                    "errorDescription": $.t(description, {
+                    "errorDescription": $.t(config.errorDescription, {
                         "size": file.size,
-                        "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                        "allowed": config.maxSize
                     })
                 }, data);
                 return;
@@ -368,6 +367,7 @@ var NRS = (function (NRS, $, undefined) {
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
             processData = true;
         }
+        delete data.encrypt_message;
 
         $.ajax({
             url: url,

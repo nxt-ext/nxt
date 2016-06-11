@@ -103,14 +103,11 @@ var NRS = (function(NRS, $) {
 			delete data.encrypt_message;
 			delete data.add_message;
 			delete data.add_note_to_self;
-			delete data.message_is_text;
-
 			return data;
 		} else if (!data.add_message) {
 			delete data.message;
 			delete data.encrypt_message;
 			delete data.add_message;
-			delete data.message_is_text;
 		} else if (!data.add_note_to_self) {
 			delete data.note_to_self;
 			delete data.add_note_to_self;
@@ -120,52 +117,54 @@ var NRS = (function(NRS, $) {
 			"message": data.message,
 			"note_to_self": data.note_to_self
 		};
-        var encrypted;
-		if (data.add_message && (data.message || data.message_is_text)) {
+		var encrypted;
+		var uploadConfig = NRS.getFileUploadConfig("sendMessage", data);
+		if ($(uploadConfig.selector)[0].files[0]) {
+			data.messageFile = $(uploadConfig.selector)[0].files[0];
+		}
+		if (data.add_message && (data.message || data.messageFile)) {
 			if (data.encrypt_message) {
 				try {
 					var options = {};
-
 					if (data.recipient) {
 						options.account = data.recipient;
 					} else if (data.encryptedMessageRecipient) {
 						options.account = data.encryptedMessageRecipient;
 						delete data.encryptedMessageRecipient;
 					}
-
 					if (data.recipientPublicKey) {
 						options.publicKey = data.recipientPublicKey;
 					}
-
-                    if (data.doNotSign) {
-                        data.messageToEncrypt = data.message;
-                    } else {
-                        encrypted = NRS.encryptNote(data.message, options, data.secretPhrase);
-                        data.encryptedMessageData = encrypted.message;
-                        data.encryptedMessageNonce = encrypted.nonce;
-                    }
-					if (data.message_is_text == "true") {
-						data.messageToEncryptIsText = "true";
-					} else {
+					if (data.messageFile) {
+						// We read the file data and encrypt it later
 						data.messageToEncryptIsText = "false";
 						data.encryptedMessageIsPrunable = "true";
-					}
-					if (!data.permanent_message) {
-						data.encryptedMessageIsPrunable = "true";
+					} else {
+						if (data.doNotSign) {
+							data.messageToEncrypt = data.message;
+						} else {
+							encrypted = NRS.encryptNote(data.message, options, data.secretPhrase);
+							data.encryptedMessageData = encrypted.message;
+							data.encryptedMessageNonce = encrypted.nonce;
+						}
+						data.messageToEncryptIsText = "true";
+						if (!data.permanent_message) {
+							data.encryptedMessageIsPrunable = "true";
+						}
 					}
 					delete data.message;
 				} catch (err) {
 					throw err;
 				}
 			} else {
-				if (data.message_is_text == "true") {
-					data.messageIsText = "true";
-				} else {
+				if (data.messageFile) {
 					data.messageIsText = "false";
 					data.messageIsPrunable = "true";
-				}
-				if (!data.permanent_message && converters.stringToByteArray(data.message).length >= NRS.constants.MIN_PRUNABLE_MESSAGE_LENGTH) {
-					data.messageIsPrunable = "true";
+				} else {
+					data.messageIsText = "true";
+					if (!data.permanent_message && converters.stringToByteArray(data.message).length >= NRS.constants.MIN_PRUNABLE_MESSAGE_LENGTH) {
+						data.messageIsPrunable = "true";
+					}
 				}
 			}
 		} else {
@@ -192,10 +191,9 @@ var NRS = (function(NRS, $) {
 		} else {
 			delete data.note_to_self;
 		}
-		delete data.message_is_text;
 		delete data.add_message;
-		delete data.encrypt_message;
 		delete data.add_note_to_self;
+		delete data.messageFile;
 		return data;
 	};
 

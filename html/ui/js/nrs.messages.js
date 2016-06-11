@@ -482,7 +482,7 @@ var NRS = (function(NRS, $) {
 		}
 	};
 
-    NRS.forms.getPrunableMessageComplete = function(response) {
+    NRS.forms.getPrunableMessageComplete = function() {
         renderMyMessagesTable();
     };
 
@@ -590,19 +590,18 @@ var NRS = (function(NRS, $) {
     });
 
 	$("#send_message_modal").on("show.bs.modal", function () {
-		$("#send_message_message").prop('readonly',false);
-		$("#send_message_message").prop('value','');
-		$("#message_is_text").prop('value',true);
+		var sendMessageMessage = $("#send_message_message");
+        sendMessageMessage.prop('readonly', false);
+		sendMessageMessage.prop('value', '');
 	});
 
 	$('#upload_file_message').change(function () {
+		var sendMessageMessage = $("#send_message_message");
+		sendMessageMessage.prop('value', '');
 		if ($("#upload_file_message")[0].files[0]) {
-			$("#send_message_message").prop('readonly',true);
-			$("#message_is_text").prop('value',false);
+			sendMessageMessage.prop('readonly', true);
 		} else {
-			$("#send_message_message").prop('readonly',false);
-			$("#send_message_message").prop('value','');
-			$("#message_is_text").prop('value',true);
+			sendMessageMessage.prop('readonly', false);
 		}
 	});
     
