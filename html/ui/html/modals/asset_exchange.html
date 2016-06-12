@@ -269,23 +269,41 @@
                 <h4 class="modal-title" data-i18n="asset_dividend_history">Asset Dividend History</h4>
             </div>
             <div class="modal-body">
-                <div class="data-container data-loading" style="max-height:350px;overflow:auto">
-                    <table class="table table-striped" id="asset_dividend_table">
-                        <thead>
-                        <tr>
-                            <th data-i18n="date">Date</th>
-                            <th data-i18n="height" class='numeric'>Height</th>
-                            <th data-i18n="total" class='numeric'>Total</th>
-                            <th data-i18n="Accounts" class='numeric'>Accounts</th>
-                            <th data-i18n="amountNQTPerQNT" class='numeric'>Amount NQT Per QNT</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
-                    <div class="data-empty-container"><p data-i18n="no_recent_dividend_history">No recent dividend history available.</p></div>
+                <div id="asset_dividend">
+                    <script type="text/x-handlebars-template">
+                        <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
+                            <table class="table table-striped" id="asset_dividend_table">
+                                <thead>
+                                    <tr>
+                                        <th>{{i18n "date"}}</th>
+                                        <th class='numeric'>{{i18n "dividend_height"}}</th>
+                                        <th class='numeric'>{{i18n "block_height"}}</th>
+                                        <th class="numeric" >{{i18n "total"}}</th>
+                                        <th class='numeric'>{{i18n "accounts"}}</th>
+                                        <th class='numeric'>{{i18n "amount_per_share"}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{#each data}}
+                                    <tr>
+                                        <td>{{{timestamp}}}</td>
+                                        <td class='numeric'>{{{dividend_height}}}</td>
+                                        <td class='numeric'>{{{height}}}</td>
+                                        <td class='numeric'>{{{total}}}</td>
+                                        <td class='numeric'>{{{accounts}}}</td>
+                                        <td class='numeric'>{{{amount_per_share}}}</td>
+                                    </tr>
+                                    {{/each}}
+                                    </tbody>
+                            </table>
+                            <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                            <div class="data-empty-container">
+                                <p>
+                                    <span>{{i18n "no_recent_dividend_history"}}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </script>
                 </div>
             </div>
             <div class="modal-footer" style="margin-top:0;">

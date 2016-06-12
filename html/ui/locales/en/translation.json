@@ -1739,8 +1739,10 @@
   "trade": "Trade",
   "max_nxt_decimals": "Maximum NXT decimal positions",
   "asset_dividend_history": "Asset Dividend History",
-  "amountNQTPerQNT": "Amount NQT Per QNT",
+  "amount_per_share": "Amount per share",
   "no_recent_dividend_history": "No recent dividend history available.",
   "dividend_history": "Dividend History",
-  "view_asset_dividend_history": "View Asset Dividend History"
+  "view_asset_dividend_history": "View Asset Dividend History",
+  "dividend_height": "Dividend Height",
+  "block_height": "Block Height"
 }
