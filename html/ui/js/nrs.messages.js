@@ -104,7 +104,7 @@ var NRS = (function(NRS, $) {
             shareAction = "<a href='#' class='btn btn-xs' data-toggle='modal' data-transaction='" + response.transaction + "' data-sharedkey='" + decoded.sharedKey + "' data-target='#shared_key_modal'>" + $.t("share") + "</a>";
         }
         var downloadAction = "";
-        if (!decryptAction && !retrieveAction && decoded.hash) {
+        if (!decryptAction && !retrieveAction && decoded.hash && decoded.message == $.t("binary_data")) {
             downloadAction = NRS.getMessageDownloadLink(response.transaction, decoded.sharedKey);
         }
 		return {
@@ -253,7 +253,7 @@ var NRS = (function(NRS, $) {
             try {
                 $.extend(decoded, NRS.tryToDecryptMessage(message));
                 decoded.extra = "decrypted";
-				if (!message.attachment.isText) {
+				if (!message.attachment.encryptedMessage.isText) {
 					decoded.message = $.t("binary_data");
 					decoded.format = "<i class='fa fa-database'></i>&nbsp";
 				}
@@ -278,7 +278,7 @@ var NRS = (function(NRS, $) {
                     }
                 }
             } else {
-				if (message.attachment.isText) {
+				if (message.attachment.messageIsText) {
 					decoded.message = String(message.attachment.message);
 				} else {
 					decoded.message = $.t("binary_data");

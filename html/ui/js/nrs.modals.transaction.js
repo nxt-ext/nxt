@@ -258,7 +258,7 @@ var NRS = (function (NRS, $, undefined) {
                                         }
                                     }
                                 } else {
-                                    if (transaction.attachment.isText) {
+                                    if (transaction.attachment.messageIsText) {
                                         message = String(transaction.attachment.message);
                                     } else {
                                         message = $.t("binary_data");

@@ -489,7 +489,7 @@ var NRS = (function (NRS, $) {
 		var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
 		var label = (title ? "<label" + labelStyle + "><i class='fa fa-unlock'></i> " + String(title).escapeHTML() + "</label>" : "");
 		var msg;
-		if (transaction.attachment.isText) {
+		if (transaction.attachment.messageIsText || (transaction.attachment.encryptedMessage && transaction.attachment.encryptedMessage.isText)) {
 			msg = String(data.message).autoLink().nl2br();
 		} else {
 			msg = $.t("binary_data");
