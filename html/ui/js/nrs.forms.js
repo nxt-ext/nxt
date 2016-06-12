@@ -139,6 +139,7 @@ var NRS = (function(NRS, $) {
 						// We read the file data and encrypt it later
 						data.messageToEncryptIsText = "false";
 						data.encryptedMessageIsPrunable = "true";
+						data.encryptionKeys = NRS.getEncryptionKeys(options, data.secretPhrase);
 					} else {
 						if (data.doNotSign) {
 							data.messageToEncrypt = data.message;

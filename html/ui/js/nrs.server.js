@@ -328,164 +328,189 @@ var NRS = (function (NRS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        var config = NRS.getFileUploadConfig(requestType, data);
-        if (config && $(config.selector)[0].files[0]) {
-            // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
-            contentType = false;
-            processData = false;
-            formData = new FormData();
-            for (var key in data) {
-                if (!data.hasOwnProperty(key)) {
-                    continue;
-                }
-                formData.append(key, data[key]);
-            }
-            var file = $(config.selector)[0].files[0];
-            if (!file && requestType == "uploadTaggedData" ) {
-                callback({
-                    "errorCode": 3,
-                    "errorDescription": $.t("error_no_file_chosen")
-                }, data);
-                return;
-            }
-            if (file && file.size > config.maxSize) {
-                callback({
-                    "errorCode": 3,
-                    "errorDescription": $.t(config.errorDescription, {
-                        "size": file.size,
-                        "allowed": config.maxSize
-                    })
-                }, data);
-                return;
-            }
-            if (file) {
-                formData.append(config.requestParam, file); // file data;
-            }
-            type = "POST";
-        } else {
-            // JQuery defaults
-            contentType = "application/x-www-form-urlencoded; charset=UTF-8";
-            processData = true;
-        }
-        delete data.encrypt_message;
-
-        $.ajax({
-            url: url,
-            crossDomain: true,
-            dataType: "json",
-            type: type,
-            timeout: 30000,
-            async: (isAsync === undefined ? true : isAsync),
-            currentPage: currentPage,
-            currentSubPage: currentSubPage,
-            shouldRetry: (type == "GET" ? 2 : undefined),
-            traditional: true,
-            data: (formData != null ? formData : data),
-            contentType: contentType,
-            processData: processData
-        }).done(function (response) {
-            if (NRS.console) {
-                NRS.addToConsole(this.url, this.type, this.data, response);
-            }
-            addAddressData(data);
-            if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error) {
-                var publicKey = NRS.generatePublicKey(secretPhrase);
-                var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
-
-                if (!NRS.verifySignature(signature, response.unsignedTransactionBytes, publicKey, callback)) {
-                    return;
-                }
-                addMissingData(data);
-                if (file) {
-                    var r = new FileReader();
-                    r.onload = function (e) {
-                        data.filebytes = e.target.result;
-                        data.filename = file.name;
-                        NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
-                    };
-                    r.readAsArrayBuffer(file);
-                } else {
-                    NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
-                }
-            } else {
-                if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
-                    response.errorDescription = NRS.translateServerError(response);
-                    delete response.fullHash;
-                    if (!response.errorCode) {
-                        response.errorCode = -1;
+        
+        // In order to support reading and encrypting a message file before sending it to the server, 
+        // We have to wait for the file to load before sending the ajax request.
+        async.waterfall([
+            function(nextCall) {
+                var config = NRS.getFileUploadConfig(requestType, data);
+                if (config && $(config.selector)[0].files[0]) {
+                    // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
+                    contentType = false;
+                    processData = false;
+                    formData = new FormData();
+                    var file = $(config.selector)[0].files[0];
+                    if (!file && requestType == "uploadTaggedData") {
+                        callback({
+                            "errorCode": 3,
+                            "errorDescription": $.t("error_no_file_chosen")
+                        }, data);
+                        return;
                     }
-                    callback(response, data);
-                } else {
-                    if (response.broadcasted == false && !data.calculateFee) {
-                        async.waterfall([
-                            function(callback) {
-                                addMissingData(data);
-                                if (!response.unsignedTransactionBytes) {
-                                    callback(null);
-                                }
-                                if (file) {
-                                    var r = new FileReader();
-                                    r.onload = function (e) {
-                                        data.filebytes = e.target.result;
-                                        data.filename = file.name;
-                                        callback(null);
-                                    };
-                                    r.readAsArrayBuffer(file);
-                                } else {
-                                    callback(null);
-                                }
-                            },
-                            function(callback) {
-                                if (response.unsignedTransactionBytes &&
-                                    !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment)) {
-                                    callback({
-                                        "errorCode": 1,
-                                        "errorDescription": $.t("error_bytes_validation_server")
-                                    }, data);
-                                    return;
-                                }
+                    if (file && file.size > config.maxSize) {
+                        callback({
+                            "errorCode": 3,
+                            "errorDescription": $.t(config.errorDescription, {
+                                "size": file.size,
+                                "allowed": config.maxSize
+                            })
+                        }, data);
+                        return;
+                    }
+                    type = "POST";
+                    async.waterfall([
+                        function (callback) {
+                            if (data.encrypt_message) {
+                                NRS.encryptFile(file, data.encryptionKeys, callback);
+                            } else {
                                 callback(null);
                             }
-                        ], function() {
-                            NRS.showRawTransactionModal(response);
-                        });
-                    } else {
-                        if (extra) {
-                            data["_extra"] = extra;
+                        },
+                        function (encrypted) {
+                            if (encrypted.file) {
+                                file = encrypted.file;
+                                data.encryptedMessageNonce = converters.byteArrayToHexString(encrypted.nonce);
+                                delete data.encrypt_message;
+                                delete data.encryptionKeys;
+                            }
+                            formData.append(config.requestParam, file);
+                            for (var key in data) {
+                                if (!data.hasOwnProperty(key)) {
+                                    continue;
+                                }
+                                formData.append(key, data[key]);
+                            }
+                            nextCall(null);
                         }
-                        callback(response, data);
-                        if (data.referencedTransactionFullHash && !response.errorCode) {
-                            $.growl($.t("info_referenced_transaction_hash"), {
-                                "type": "info"
+                    ]);
+                } else {
+                    // JQuery defaults
+                    contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                    processData = true;
+                    nextCall(null);
+                }
+            },
+            function(nextCall) {
+                $.ajax({
+                    url: url,
+                    crossDomain: true,
+                    dataType: "json",
+                    type: type,
+                    timeout: 30000,
+                    async: (isAsync === undefined ? true : isAsync),
+                    currentPage: currentPage,
+                    currentSubPage: currentSubPage,
+                    shouldRetry: (type == "GET" ? 2 : undefined),
+                    traditional: true,
+                    data: (formData != null ? formData : data),
+                    contentType: contentType,
+                    processData: processData
+                }).done(function (response) {
+                    if (NRS.console) {
+                        NRS.addToConsole(this.url, this.type, this.data, response);
+                    }
+                    addAddressData(data);
+                    if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error) {
+                        var publicKey = NRS.generatePublicKey(secretPhrase);
+                        var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
+
+                        if (!NRS.verifySignature(signature, response.unsignedTransactionBytes, publicKey, callback)) {
+                            return;
+                        }
+                        addMissingData(data);
+                        if (file) {
+                            var r = new FileReader();
+                            r.onload = function (e) {
+                                data.filebytes = e.target.result;
+                                data.filename = file.name;
+                                NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
+                            };
+                            r.readAsArrayBuffer(file);
+                        } else {
+                            NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
+                        }
+                    } else {
+                        if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
+                            response.errorDescription = NRS.translateServerError(response);
+                            delete response.fullHash;
+                            if (!response.errorCode) {
+                                response.errorCode = -1;
+                            }
+                            callback(response, data);
+                        } else {
+                            if (response.broadcasted == false && !data.calculateFee) {
+                                async.waterfall([
+                                    function (callback) {
+                                        addMissingData(data);
+                                        if (!response.unsignedTransactionBytes) {
+                                            callback(null);
+                                        }
+                                        if (file) {
+                                            var r = new FileReader();
+                                            r.onload = function (e) {
+                                                data.filebytes = e.target.result;
+                                                data.filename = file.name;
+                                                callback(null);
+                                            };
+                                            r.readAsArrayBuffer(file);
+                                        } else {
+                                            callback(null);
+                                        }
+                                    },
+                                    function (callback) {
+                                        if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment)) {
+                                            callback({
+                                                "errorCode": 1,
+                                                "errorDescription": $.t("error_bytes_validation_server")
+                                            }, data);
+                                            return;
+                                        }
+                                        callback(null);
+                                    }
+                                ], function () {
+                                    NRS.showRawTransactionModal(response);
+                                });
+                            } else {
+                                if (extra) {
+                                    data["_extra"] = extra;
+                                }
+                                callback(response, data);
+                                if (data.referencedTransactionFullHash && !response.errorCode) {
+                                    $.growl($.t("info_referenced_transaction_hash"), {
+                                        "type": "info"
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    nextCall(null);
+                }).fail(function (xhr, textStatus, error) {
+                    if (NRS.console) {
+                        NRS.addToConsole(this.url, this.type, this.data, error, true);
+                    }
+
+                    if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
+                        if (type == "POST") {
+                            $.growl($.t("error_server_connect"), {
+                                "type": "danger",
+                                "offset": 10
                             });
                         }
                     }
-                }
-            }
-        }).fail(function (xhr, textStatus, error) {
-            if (NRS.console) {
-                NRS.addToConsole(this.url, this.type, this.data, error, true);
-            }
 
-            if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
-                if (type == "POST") {
-                    $.growl($.t("error_server_connect"), {
-                        "type": "danger",
-                        "offset": 10
-                    });
-                }
+                    if (error != "abort") {
+                        if (error == "timeout") {
+                            error = $.t("error_request_timeout");
+                        }
+                        callback({
+                            "errorCode": -1,
+                            "errorDescription": error
+                        }, {});
+                    }
+                    nextCall(null);
+                });
             }
-
-            if (error != "abort") {
-                if (error == "timeout") {
-                    error = $.t("error_request_timeout");
-                }
-                callback({
-                    "errorCode": -1,
-                    "errorDescription": error
-                }, {});
-            }
-        });
+        ])
     };
 
     NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data, callback, response, extra) {

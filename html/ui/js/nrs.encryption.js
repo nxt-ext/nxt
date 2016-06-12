@@ -101,56 +101,59 @@ var NRS = (function (NRS, $) {
 		}
 	};
 
-	NRS.encryptNote = function(message, options, secretPhrase) {
-		try {
-			if (!options.sharedKey) {
-				if (!options.privateKey) {
-					if (!secretPhrase) {
-						if (NRS.rememberPassword) {
-							secretPhrase = _password;
-						} else {
-							throw {
-								"message": $.t("error_encryption_passphrase_required"),
-								"errorCode": 1
-							};
-						}
-					}
-
-					options.privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
-				}
-
-				if (!options.publicKey) {
-					if (!options.account) {
+	NRS.getEncryptionKeys = function (options, secretPhrase){
+		if (!options.sharedKey) {
+			if (!options.privateKey) {
+				if (!secretPhrase) {
+					if (NRS.rememberPassword) {
+						secretPhrase = _password;
+					} else {
 						throw {
-							"message": $.t("error_account_id_not_specified"),
-							"errorCode": 2
+							"message": $.t("error_encryption_passphrase_required"),
+							"errorCode": 1
 						};
 					}
-
-					try {
-						options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
-					} catch (err) {
-						var nxtAddress = new NxtAddress();
-
-						if (!nxtAddress.set(options.account)) {
-							throw {
-								"message": $.t("error_invalid_account_id"),
-								"errorCode": 3
-							};
-						} else {
-							throw {
-								"message": $.t("error_public_key_not_specified"),
-								"errorCode": 4
-							};
-						}
-					}
-				} else if (typeof options.publicKey == "string") {
-					options.publicKey = converters.hexStringToByteArray(options.publicKey);
 				}
+
+				options.privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
 			}
 
-			var encrypted = encryptData(converters.stringToByteArray(message), options);
+			if (!options.publicKey) {
+				if (!options.account) {
+					throw {
+						"message": $.t("error_account_id_not_specified"),
+						"errorCode": 2
+					};
+				}
 
+				try {
+					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+				} catch (err) {
+					var nxtAddress = new NxtAddress();
+
+					if (!nxtAddress.set(options.account)) {
+						throw {
+							"message": $.t("error_invalid_account_id"),
+							"errorCode": 3
+						};
+					} else {
+						throw {
+							"message": $.t("error_public_key_not_specified"),
+							"errorCode": 4
+						};
+					}
+				}
+			} else if (typeof options.publicKey == "string") {
+				options.publicKey = converters.hexStringToByteArray(options.publicKey);
+			}
+		}
+		return options;
+	};
+
+    NRS.encryptNote = function(message, options, secretPhrase) {
+		try {
+			options = NRS.getEncryptionKeys(options, secretPhrase);
+			var encrypted = encryptData(converters.stringToByteArray(message), options);
 			return {
 				"message": converters.byteArrayToHexString(encrypted.data),
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
@@ -854,6 +857,19 @@ var NRS = (function (NRS, $) {
     NRS.getSharedKey = function (privateKey, publicKey, nonce) {
 		var sharedSecret = getSharedSecret(privateKey, publicKey);
         return NRS.sharedSecretToSharedKey(sharedSecret, nonce);
+	};
+
+	NRS.encryptFile = function(file, options, callback) {
+		var r = new FileReader();
+		r.onload = function (e) {
+			var bytes = e.target.result;
+			options.isText = false;
+			var encrypted = encryptData(bytes, options);
+			var blobData = Uint8Array.from(encrypted.data);
+			var blob = new Blob([ blobData ], { type: "application/octet-stream" });
+			callback(null, { file: blob, nonce: encrypted.nonce });
+		};
+		r.readAsArrayBuffer(file);
 	};
 
 	return NRS;
