@@ -791,8 +791,7 @@ var NRS = (function (NRS, $, undefined) {
                     dividend.totalDividend = new BigInteger(dividend.totalDividend);
                     view.data.push({
                         "timestamp": NRS.getTransactionLink(dividend.assetDividend, NRS.formatTimestamp(dividend.timestamp)),
-                        "dividend_height": dividend.dividendHeight, 
-                        "height": NRS.getBlockLink(dividend.height),
+                        "dividend_height": dividend.dividendHeight,
                         "total": NRS.formatAmount(dividend.totalDividend,false,false,amountDecimals),
                         "accounts": NRS.formatQuantity(dividend.numberOfAccounts,false,false,accountsDecimals),
                         "amount_per_share": NRS.formatOrderPricePerWholeQNT(dividend.amountNQTPerQNT, currentAsset.decimals, amountNQTPerQNTDecimals)
