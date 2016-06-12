@@ -269,7 +269,7 @@
                 <h4 class="modal-title" data-i18n="asset_dividend_history">Asset Dividend History</h4>
             </div>
             <div class="modal-body">
-                <div id="asset_dividend">
+                <div id="asset_dividend" style="max-height:350px;overflow:auto">
                     <script type="text/x-handlebars-template">
                         <div class="data-container {{when isLoading 'data-loading' isEmpty 'data-empty'}}">
                             <table class="table table-striped" id="asset_dividend_table">
@@ -277,7 +277,6 @@
                                     <tr>
                                         <th>{{i18n "date"}}</th>
                                         <th class='numeric'>{{i18n "dividend_height"}}</th>
-                                        <th class='numeric'>{{i18n "block_height"}}</th>
                                         <th class="numeric" >{{i18n "total"}}</th>
                                         <th class='numeric'>{{i18n "accounts"}}</th>
                                         <th class='numeric'>{{i18n "amount_per_share"}}</th>
@@ -288,7 +287,6 @@
                                     <tr>
                                         <td>{{{timestamp}}}</td>
                                         <td class='numeric'>{{{dividend_height}}}</td>
-                                        <td class='numeric'>{{{height}}}</td>
                                         <td class='numeric'>{{{total}}}</td>
                                         <td class='numeric'>{{{accounts}}}</td>
                                         <td class='numeric'>{{{amount_per_share}}}</td>
