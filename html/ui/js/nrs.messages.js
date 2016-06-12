@@ -76,7 +76,16 @@ var NRS = (function(NRS, $) {
 
 	NRS.jsondata = NRS.jsondata || {};
 
-	NRS.jsondata.messages = function (response) {
+	NRS.getMessageDownloadLink = function (transaction, sharedKey) {
+		var sharedKeyParam = "";
+		if (sharedKey) {
+			sharedKeyParam = "&sharedKey=" + sharedKey;
+		}
+		return "<a href='/nxt?requestType=downloadPrunableMessage&transaction=" + String(transaction).escapeHTML() +
+			"&retrieve=true&save=true" + sharedKeyParam + "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+	};
+
+    NRS.jsondata.messages = function (response) {
         _messages[NRS.account].push(response);
 		var transaction = NRS.getTransactionLink(response.transaction, NRS.formatTimestamp(response.timestamp));
 		var from = NRS.getAccountLink(response, "sender");
@@ -96,12 +105,7 @@ var NRS = (function(NRS, $) {
         }
         var downloadAction = "";
         if (!decryptAction && !retrieveAction && decoded.hash) {
-            var sharedKeyParam = "";
-            if (decoded.sharedKey) {
-                sharedKeyParam = "&sharedKey=" + decoded.sharedKey;
-            }
-            downloadAction = "<a href='/nxt?requestType=downloadPrunableMessage&transaction=" + String(response.transaction).escapeHTML() +
-                "&retrieve=true&save=true" + sharedKeyParam + "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+            downloadAction = NRS.getMessageDownloadLink(response.transaction, decoded.sharedKey);
         }
 		return {
 			transactionFormatted: transaction,
@@ -242,12 +246,17 @@ var NRS = (function(NRS, $) {
 
     function getMessage(message) {
         var decoded = {};
+		decoded.format = "";
         if (!message.attachment) {
             decoded.message = $.t("message_empty");
         } else if (message.attachment.encryptedMessage) {
             try {
                 $.extend(decoded, NRS.tryToDecryptMessage(message));
                 decoded.extra = "decrypted";
+				if (!message.attachment.isText) {
+					decoded.message = $.t("binary_data");
+					decoded.format = "<i class='fa fa-database'></i>&nbsp";
+				}
             } catch (err) {
                 if (err.errorCode && err.errorCode == 1) {
                     decoded.message = $.t("message_encrypted");
@@ -269,7 +278,12 @@ var NRS = (function(NRS, $) {
                     }
                 }
             } else {
-                decoded.message = String(message.attachment.message);
+				if (message.attachment.isText) {
+					decoded.message = String(message.attachment.message);
+				} else {
+					decoded.message = $.t("binary_data");
+					decoded.format = "<i class='fa fa-database'></i>&nbsp";
+				}
             }
         } else if (message.attachment.messageHash || message.attachment.encryptedMessageHash) {
 			// Try to read prunable message but do not retrieve it from other nodes
@@ -294,11 +308,9 @@ var NRS = (function(NRS, $) {
             if (decoded.extra == "to_decrypt") {
                 decoded.format = "<i class='fa fa-warning'></i>&nbsp";
             } else if (decoded.extra == "decrypted") {
-                decoded.format = "<i class='fa fa-unlock'></i>&nbsp";
+                decoded.format += "<i class='fa fa-unlock'></i>&nbsp";
             } else if (decoded.extra == "pruned") {
                 decoded.format = "<i class='fa fa-scissors'></i>&nbsp";
-            } else {
-                decoded.format = "";
             }
         } else {
             decoded.message = $.t("error_could_not_decrypt_message");

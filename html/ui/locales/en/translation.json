@@ -1752,5 +1752,6 @@
   "message_pruned": "Message is pruned.",
   "message_encrypted": "Message is encrypted.",
   "encoding": "Encoding",
-  "compressed": "Compressed"
+  "compressed": "Compressed",
+  "binary_data": "Binary Data"
 }

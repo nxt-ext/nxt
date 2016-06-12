@@ -370,7 +370,7 @@ var NRS = (function (NRS, $) {
 					title = title.title;
 				}
 				if (key in decryptedTransaction) {
-                    output += formatMessageArea(title, nrFields, decryptedTransaction[key], options);
+                    output += formatMessageArea(title, nrFields, decryptedTransaction[key], options, transaction);
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -439,7 +439,7 @@ var NRS = (function (NRS, $) {
 							}
 						}
 					}
-                    output += formatMessageArea(title, nrFields, data, options);
+                    output += formatMessageArea(title, nrFields, data, options, transaction);
 				}
 			});
 		}
@@ -484,16 +484,23 @@ var NRS = (function (NRS, $) {
 		NRS.decryptNoteFormSubmit();
 	});
 
-    var formatMessageArea = function (title, nrFields, data, options) {
+    var formatMessageArea = function (title, nrFields, data, options, transaction) {
 		var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
 		var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
 		var label = (title ? "<label" + labelStyle + "><i class='fa fa-unlock'></i> " + String(title).escapeHTML() + "</label>" : "");
-		var msg = String(data.message).autoLink().nl2br();
+		var msg;
+		if (transaction.attachment.isText) {
+			msg = String(data.message).autoLink().nl2br();
+		} else {
+			msg = $.t("binary_data");
+		}
 		var sharedKeyField = "";
+		var downloadLink = "";
 		if (data.sharedKey) {
 			sharedKeyField = "<div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div><br>";
+			downloadLink = NRS.getMessageDownloadLink(transaction.transaction, data.sharedKey) + "<br>";
 		}
-        return "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div>" + sharedKeyField + "</div>";
+        return "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div>" + sharedKeyField + downloadLink + "</div>";
     };
 
     NRS.decryptNoteFormSubmit = function() {
@@ -582,7 +589,7 @@ var NRS = (function (NRS, $) {
 						return false;
 					}
 				}
-                output += formatMessageArea(title, nrFields, data, _encryptedNote.options);
+                output += formatMessageArea(title, nrFields, data, _encryptedNote.options, _encryptedNote.transaction);
 			}
 		});
 		if (decryptionError) {

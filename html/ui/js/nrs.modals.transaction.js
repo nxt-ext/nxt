@@ -258,7 +258,11 @@ var NRS = (function (NRS, $, undefined) {
                                         }
                                     }
                                 } else {
-                                    message = String(transaction.attachment.message);
+                                    if (transaction.attachment.isText) {
+                                        message = String(transaction.attachment.message);
+                                    } else {
+                                        message = $.t("binary_data");
+                                    }
                                 }
                                 $output.html("<div style='color:#999999;padding-bottom:10px'><i class='fa fa-unlock'></i> " + $.t("public_message") + "</div><div style='padding-bottom:10px'>" + String(message).escapeHTML().nl2br() + "</div>");
                             }
@@ -287,7 +291,6 @@ var NRS = (function (NRS, $, undefined) {
                         } else {
                             $output.append("<div style='padding-bottom:10px'>" + $.t("message_empty") + "</div>");
                         }
-                        var encoding = transaction.attachment.isText ? "Text (UTF-8)" : "Binary (Hex String)";
                         var isCompressed = false;
                         if (transaction.attachment.encryptedMessage) {
                             isCompressed = transaction.attachment.encryptedMessage.isCompressed;
@@ -296,12 +299,15 @@ var NRS = (function (NRS, $, undefined) {
                         }
                         var hash = transaction.attachment.messageHash || transaction.attachment.encryptedMessageHash;
                         var hashRow = hash ? ("<tr><td><strong>" + $.t("hash") + "</strong>:&nbsp;</td><td>" + hash + "</td></tr>") : "";
+                        var downloadLink = "";
+                        if (transaction.attachment.messageHash && !transaction.attachment.isText) {
+                            downloadLink = "<tr><td>" + NRS.getMessageDownloadLink(transaction.transaction, sharedKey) + "</td></tr>";
+                        }
                         $output.append("<table>" +
                             "<tr><td><strong>" + $.t("from") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "sender") + "</td></tr>" +
                             "<tr><td><strong>" + $.t("to") + "</strong>:&nbsp;</td><td>" + NRS.getAccountLink(transaction, "recipient") + "</td></tr>" +
-                            "<tr><td><strong>" + $.t("encoding") + "</strong>:&nbsp;</td><td>" +  encoding + "</td></tr>" +
                             "<tr><td><strong>" + $.t("compressed") + "</strong>:&nbsp;</td><td>" + isCompressed + "</td></tr>" +
-                            hashRow +
+                            hashRow + downloadLink +
                         "</table>");
                         $output.show();
                         break;
