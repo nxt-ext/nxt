@@ -1222,7 +1222,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     public Transaction restorePrunedTransaction(long transactionId) {
         TransactionImpl transaction = TransactionDb.findTransaction(transactionId);
         if (transaction == null) {
-            return null;
+            throw new IllegalArgumentException("Transaction not found");
         }
         boolean isPruned = false;
         for (Appendix.AbstractAppendix appendage : transaction.getAppendages(true)) {
