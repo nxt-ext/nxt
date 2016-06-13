@@ -417,8 +417,8 @@ var NRS = (function (NRS, $) {
 								"account": account
 							};
 						}
-						decryptOptions.isText = transaction.attachment.encryptedMessage.isText;
-						decryptOptions.isCompressed = transaction.attachment.encryptedMessage.isCompressed;
+						decryptOptions.isText = transaction.attachment[key].isText;
+						decryptOptions.isCompressed = transaction.attachment[key].isCompressed;
                         data = NRS.decryptNote(encrypted, decryptOptions);
 					} catch (err) {
 						if (err.errorCode && err.errorCode == 1) {
@@ -576,8 +576,8 @@ var NRS = (function (NRS, $) {
 						options.nonce = nonce;
 						options.account = otherAccount;
                     }
-					options.isText = _encryptedNote.transaction.attachment.encryptedMessage.isText;
-					options.isCompressed = _encryptedNote.transaction.attachment.encryptedMessage.isCompressed;
+					options.isText = _encryptedNote.transaction.attachment[key].isText;
+					options.isCompressed = _encryptedNote.transaction.attachment[key].isCompressed;
                     data = NRS.decryptNote(encrypted, options, password);
 					decryptedFields[key] = data;
 				} catch (err) {
@@ -876,7 +876,7 @@ var NRS = (function (NRS, $) {
 			var encrypted = encryptData(bytes, options);
 			var blobData = Uint8Array.from(encrypted.data);
 			var blob = new Blob([ blobData ], { type: "application/octet-stream" });
-			callback(null, { file: blob, nonce: encrypted.nonce });
+			callback({ file: blob, nonce: encrypted.nonce });
 		};
 		r.readAsArrayBuffer(file);
 	};

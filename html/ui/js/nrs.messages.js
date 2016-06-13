@@ -618,7 +618,9 @@ var NRS = (function(NRS, $) {
 	});
 	
 	NRS.isTextMessage = function(transaction) {
-		return transaction.attachment.messageIsText || (transaction.attachment.encryptedMessage && transaction.attachment.encryptedMessage.isText);
+		return transaction.attachment.messageIsText ||
+			(transaction.attachment.encryptedMessage && transaction.attachment.encryptedMessage.isText) ||
+			(transaction.attachment.encryptToSelfMessage && transaction.attachment.encryptToSelfMessage.isText);
 	};
     
 	return NRS;

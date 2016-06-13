@@ -551,11 +551,13 @@ var NRS = (function (NRS, $, undefined) {
                             data = {
                                 "type": $.t("asset_issuance"),
                                 "name": transaction.attachment.name,
-                                "initial_quantity": [asset.initialQuantityQNT, transaction.attachment.decimals],
-                                "quantity": [asset.quantityQNT, transaction.attachment.decimals],
                                 "decimals": transaction.attachment.decimals,
                                 "description": transaction.attachment.description
                             };
+                            if (asset) {
+                                data["initial_quantity"] = [asset.initialQuantityQNT, transaction.attachment.decimals];
+                                data["quantity"] = [asset.quantityQNT, transaction.attachment.decimals];
+                            }
                             data["sender"] = transaction.senderRS ? transaction.senderRS : transaction.sender;
                             $("#transaction_info_callout").html("<a href='#' data-goto-asset='" + String(transaction.transaction).escapeHTML() + "'>Click here</a> to view this asset in the Asset Exchange.").show();
 
@@ -1332,23 +1334,30 @@ var NRS = (function (NRS, $, undefined) {
                                 }
                             }
                         } else {
-                            message = String(transaction.attachment.message);
+                            if (NRS.isTextMessage(transaction)) {
+                                message = String(transaction.attachment.message);
+                            } else {
+                                message = $.t("binary_data")
+                            }
                         }
 
                         transactionInfoOutputBottom.append("<div style='padding-left:5px;'><label><i class='fa fa-unlock'></i> " + $.t("public_message") + "</label><div>" + String(message).escapeHTML().nl2br() + "</div></div>");
                     }
 
                     if (transaction.attachment.encryptedMessage || (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender)) {
+                        var account;
                         if (transaction.attachment.message) {
                             transactionInfoOutputBottom.append("<div style='height:5px'></div>");
                         }
                         if (transaction.attachment.encryptedMessage) {
                             fieldsToDecrypt.encryptedMessage = $.t("encrypted_message");
+                            account = NRS.getAccountForDecryption(transaction);
                         }
                         if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
                             fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
+                            account = transaction.sender;
                         }
-                        NRS.tryToDecrypt(transaction, fieldsToDecrypt, NRS.getAccountForDecryption(transaction), {
+                        NRS.tryToDecrypt(transaction, fieldsToDecrypt, account, {
                             "formEl": "#transaction_info_output_bottom",
                             "outputEl": "#transaction_info_output_bottom"
                         });

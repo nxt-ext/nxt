@@ -194,7 +194,6 @@ var NRS = (function(NRS, $) {
 		}
 		delete data.add_message;
 		delete data.add_note_to_self;
-		delete data.messageFile;
 		return data;
 	};
 
@@ -620,97 +619,115 @@ var NRS = (function(NRS, $) {
                 delete data.doNotBroadcast;
             }
 		}
+		if (data.messageFile) {
+			NRS.encryptFile(data.messageFile, data.encryptionKeys, function(encrypted) {
+				data.messageFile = encrypted.file;
+    			data.encryptedMessageNonce = converters.byteArrayToHexString(encrypted.nonce);
+				delete data.encryptionKeys;
+				
+				NRS.sendRequest(requestType, data, function (response) {
+					formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
+						originalRequestType, formErrorFunction);
+				})
+			});
+		} else {
+			NRS.sendRequest(requestType, data, function (response) {
+				formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
+					originalRequestType, formErrorFunction);
+			});
+		}
+	};
 
-		NRS.sendRequest(requestType, data, function(response) {
-			//todo check again.. response.error
-            var formCompleteFunction;
-			if (response.fullHash) {
-                NRS.unlockForm($modal, $btn);
-                if (data.calculateFee) {
-                    updateFee($modal, response.transactionJSON.feeNQT);
-                    return;
-                }
+	function formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
+						  originalRequestType, formErrorFunction) {
+		//todo check again.. response.error
+		var formCompleteFunction;
+		if (response.fullHash) {
+			NRS.unlockForm($modal, $btn);
+			if (data.calculateFee) {
+				updateFee($modal, response.transactionJSON.feeNQT);
+				return;
+			}
 
-				if (!$modal.hasClass("modal-no-hide")) {
-					$modal.modal("hide");
-				}
+			if (!$modal.hasClass("modal-no-hide")) {
+				$modal.modal("hide");
+			}
 
-				if (successMessage) {
-					$.growl(successMessage.escapeHTML(), {
-						type: "success"
-					});
-				}
+			if (successMessage) {
+				$.growl(successMessage.escapeHTML(), {
+					type: "success"
+				});
+			}
 
-				formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
+			formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
 
-				if (requestType != "parseTransaction" && requestType != "calculateFullHash") {
-					if (typeof formCompleteFunction == "function") {
-						data.requestType = requestType;
+			if (requestType != "parseTransaction" && requestType != "calculateFullHash") {
+				if (typeof formCompleteFunction == "function") {
+					data.requestType = requestType;
 
-						if (response.transaction) {
-							NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
-								response.alreadyProcessed = alreadyProcessed;
-								formCompleteFunction(response, data);
-							});
-						} else {
-							response.alreadyProcessed = false;
+					if (response.transaction) {
+						NRS.addUnconfirmedTransaction(response.transaction, function(alreadyProcessed) {
+							response.alreadyProcessed = alreadyProcessed;
 							formCompleteFunction(response, data);
-						}
+						});
 					} else {
-						NRS.addUnconfirmedTransaction(response.transaction);
+						response.alreadyProcessed = false;
+						formCompleteFunction(response, data);
 					}
 				} else {
-					if (typeof formCompleteFunction == "function") {
-						data.requestType = requestType;
-						formCompleteFunction(response, data);
-					}
+					NRS.addUnconfirmedTransaction(response.transaction);
 				}
-
-				if (NRS.accountInfo && !NRS.accountInfo.publicKey) {
-					$("#dashboard_message").hide();
-				}
-			} else if (response.errorCode) {
-				$form.find(".error_message").html(response.errorDescription.escapeHTML()).show();
-
-				if (formErrorFunction) {
-					formErrorFunction(response, data);
-				}
-
-				NRS.unlockForm($modal, $btn);
 			} else {
-                if (data.calculateFee) {
-                    NRS.unlockForm($modal, $btn, false);
-                    updateFee($modal, response.transactionJSON.feeNQT);
-                    return;
-                }
-				var sentToFunction = false;
-				if (!errorMessage) {
-					formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
-
-					if (typeof formCompleteFunction == 'function') {
-						sentToFunction = true;
-						data.requestType = requestType;
-
-						NRS.unlockForm($modal, $btn);
-
-						if (!$modal.hasClass("modal-no-hide")) {
-							$modal.modal("hide");
-						}
-						formCompleteFunction(response, data);
-					} else {
-						errorMessage = $.t("error_unknown");
-					}
-				}
-				if (!sentToFunction) {
-					NRS.unlockForm($modal, $btn, true);
-
-					$.growl(errorMessage.escapeHTML(), {
-						type: 'danger'
-					});
+				if (typeof formCompleteFunction == "function") {
+					data.requestType = requestType;
+					formCompleteFunction(response, data);
 				}
 			}
-		});
-	};
+
+			if (NRS.accountInfo && !NRS.accountInfo.publicKey) {
+				$("#dashboard_message").hide();
+			}
+		} else if (response.errorCode) {
+			$form.find(".error_message").html(response.errorDescription.escapeHTML()).show();
+
+			if (formErrorFunction) {
+				formErrorFunction(response, data);
+			}
+
+			NRS.unlockForm($modal, $btn);
+		} else {
+			if (data.calculateFee) {
+				NRS.unlockForm($modal, $btn, false);
+				updateFee($modal, response.transactionJSON.feeNQT);
+				return;
+			}
+			var sentToFunction = false;
+			if (!errorMessage) {
+				formCompleteFunction = NRS["forms"][originalRequestType + "Complete"];
+
+				if (typeof formCompleteFunction == 'function') {
+					sentToFunction = true;
+					data.requestType = requestType;
+
+					NRS.unlockForm($modal, $btn);
+
+					if (!$modal.hasClass("modal-no-hide")) {
+						$modal.modal("hide");
+					}
+					formCompleteFunction(response, data);
+				} else {
+					errorMessage = $.t("error_unknown");
+				}
+			}
+			if (!sentToFunction) {
+				NRS.unlockForm($modal, $btn, true);
+
+				$.growl(errorMessage.escapeHTML(), {
+					type: 'danger'
+				});
+			}
+		}
+	}
 
 	NRS.unlockForm = function($modal, $btn, hide) {
 		$modal.find("button").prop("disabled", false);
