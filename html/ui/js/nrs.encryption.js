@@ -498,7 +498,7 @@ var NRS = (function (NRS, $) {
 		var downloadLink = "";
 		if (data.sharedKey) {
 			sharedKeyField = "<div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div><br>";
-			if (!NRS.isTextMessage(transaction)) {
+			if (!NRS.isTextMessage(transaction) && transaction.block) {
 				downloadLink = NRS.getMessageDownloadLink(transaction.transaction, data.sharedKey) + "<br>";
 			}
 		}
