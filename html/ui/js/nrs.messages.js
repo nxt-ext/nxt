@@ -253,7 +253,7 @@ var NRS = (function(NRS, $) {
             try {
                 $.extend(decoded, NRS.tryToDecryptMessage(message));
                 decoded.extra = "decrypted";
-				if (!message.attachment.encryptedMessage.isText) {
+				if (!NRS.isTextMessage(message)) {
 					decoded.message = $.t("binary_data");
 					decoded.format = "<i class='fa fa-database'></i>&nbsp";
 				}
@@ -616,6 +616,10 @@ var NRS = (function(NRS, $) {
 			sendMessageMessage.prop('readonly', false);
 		}
 	});
+	
+	NRS.isTextMessage = function(transaction) {
+		return transaction.attachment.messageIsText || (transaction.attachment.encryptedMessage && transaction.attachment.encryptedMessage.isText);
+	};
     
 	return NRS;
 }(NRS || {}, jQuery));

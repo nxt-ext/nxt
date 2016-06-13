@@ -489,7 +489,7 @@ var NRS = (function (NRS, $) {
 		var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
 		var label = (title ? "<label" + labelStyle + "><i class='fa fa-unlock'></i> " + String(title).escapeHTML() + "</label>" : "");
 		var msg;
-		if (transaction.attachment.messageIsText || (transaction.attachment.encryptedMessage && transaction.attachment.encryptedMessage.isText)) {
+		if (NRS.isTextMessage(transaction)) {
 			msg = String(data.message).autoLink().nl2br();
 		} else {
 			msg = $.t("binary_data");
@@ -498,7 +498,9 @@ var NRS = (function (NRS, $) {
 		var downloadLink = "";
 		if (data.sharedKey) {
 			sharedKeyField = "<div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div><br>";
-			downloadLink = NRS.getMessageDownloadLink(transaction.transaction, data.sharedKey) + "<br>";
+			if (!NRS.isTextMessage(transaction)) {
+				downloadLink = NRS.getMessageDownloadLink(transaction.transaction, data.sharedKey) + "<br>";
+			}
 		}
         return "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div>" + sharedKeyField + downloadLink + "</div>";
     };

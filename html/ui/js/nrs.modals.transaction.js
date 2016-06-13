@@ -300,7 +300,7 @@ var NRS = (function (NRS, $, undefined) {
                         var hash = transaction.attachment.messageHash || transaction.attachment.encryptedMessageHash;
                         var hashRow = hash ? ("<tr><td><strong>" + $.t("hash") + "</strong>:&nbsp;</td><td>" + hash + "</td></tr>") : "";
                         var downloadLink = "";
-                        if (transaction.attachment.messageHash && !transaction.attachment.isText) {
+                        if (transaction.attachment.messageHash && !NRS.isTextMessage(transaction)) {
                             downloadLink = "<tr><td>" + NRS.getMessageDownloadLink(transaction.transaction, sharedKey) + "</td></tr>";
                         }
                         $output.append("<table>" +
