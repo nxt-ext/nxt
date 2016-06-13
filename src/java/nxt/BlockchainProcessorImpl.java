@@ -1221,6 +1221,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     @Override
     public Transaction restorePrunedTransaction(long transactionId) {
         TransactionImpl transaction = TransactionDb.findTransaction(transactionId);
+        if (transaction == null) {
+            return null;
+        }
         boolean isPruned = false;
         for (Appendix.AbstractAppendix appendage : transaction.getAppendages(true)) {
             if ((appendage instanceof Appendix.Prunable) &&
