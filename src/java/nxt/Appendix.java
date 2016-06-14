@@ -240,7 +240,7 @@ public interface Appendix {
             this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
         }
 
-        private Message(byte[] message, boolean isText) {
+        public Message(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
         }
@@ -355,7 +355,7 @@ public interface Appendix {
             this(Convert.toBytes(string, isText), isText);
         }
 
-        private PrunablePlainMessage(byte[] message, boolean isText) {
+        public PrunablePlainMessage(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
             this.hash = null;

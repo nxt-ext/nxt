@@ -1012,7 +1012,7 @@ public final class JSONData {
         return json;
     }
 
-    static JSONObject prunableMessage(PrunableMessage prunableMessage, long readerAccountId, String secretPhrase) {
+    static JSONObject prunableMessage(PrunableMessage prunableMessage, String secretPhrase, byte[] sharedKey) {
         JSONObject json = new JSONObject();
         json.put("transaction", Long.toUnsignedString(prunableMessage.getId()));
         if (prunableMessage.getMessage() == null || prunableMessage.getEncryptedData() == null) {
@@ -1028,17 +1028,18 @@ public final class JSONData {
         if (encryptedData != null) {
             json.put("encryptedMessage", encryptedData(prunableMessage.getEncryptedData()));
             json.put("encryptedMessageIsText", prunableMessage.encryptedMessageIsText());
-            if (secretPhrase != null) {
-                byte[] publicKey = prunableMessage.getSenderId() == readerAccountId
-                        ? Account.getPublicKey(prunableMessage.getRecipientId()) : Account.getPublicKey(prunableMessage.getSenderId());
-                if (publicKey != null) {
-                    try {
-                        byte[] decrypted = Account.decryptFrom(publicKey, encryptedData, secretPhrase, prunableMessage.isCompressed());
-                        json.put("decryptedMessage", Convert.toString(decrypted, prunableMessage.encryptedMessageIsText()));
-                    } catch (RuntimeException e) {
-                        putException(json, e, "Decryption failed");
-                    }
+            byte[] decrypted = null;
+            try {
+                if (secretPhrase != null) {
+                    decrypted = prunableMessage.decrypt(secretPhrase);
+                } else if (sharedKey != null && sharedKey.length > 0) {
+                    decrypted = prunableMessage.decrypt(sharedKey);
                 }
+                if (decrypted != null) {
+                    json.put("decryptedMessage", Convert.toString(decrypted, prunableMessage.encryptedMessageIsText()));
+                }
+            } catch (RuntimeException e) {
+                putException(json, e, "Decryption failed");
             }
             json.put("isCompressed", prunableMessage.isCompressed());
         }

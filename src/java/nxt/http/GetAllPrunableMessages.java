@@ -49,7 +49,7 @@ public final class GetAllPrunableMessages extends APIServlet.APIRequestHandler {
                 if (prunableMessage.getBlockTimestamp() < timestamp) {
                     break;
                 }
-                jsonArray.add(JSONData.prunableMessage(prunableMessage, 0, null));
+                jsonArray.add(JSONData.prunableMessage(prunableMessage, null, null));
             }
         }
         return response;

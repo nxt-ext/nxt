@@ -16,10 +16,8 @@
 
 package nxt.http;
 
-import nxt.Account;
 import nxt.NxtException;
 import nxt.PrunableMessage;
-import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -42,7 +40,6 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
         final int timestamp = ParameterParser.getTimestamp(req);
-        long readerAccountId = secretPhrase == null ? 0 : Account.getId(Crypto.getPublicKey(secretPhrase));
         long otherAccountId = ParameterParser.getAccountId(req, "otherAccount", false);
 
         JSONObject response = new JSONObject();
@@ -56,7 +53,7 @@ public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
                 if (prunableMessage.getBlockTimestamp() < timestamp) {
                     break;
                 }
-                jsonArray.add(JSONData.prunableMessage(prunableMessage, readerAccountId, secretPhrase));
+                jsonArray.add(JSONData.prunableMessage(prunableMessage, secretPhrase, null));
             }
         }
         return response;
