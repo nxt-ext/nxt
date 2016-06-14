@@ -663,6 +663,7 @@ var NRS = (function (NRS, $, undefined) {
         NRS.loadAssetOrders("ask", assetId, refresh);
         NRS.loadAssetOrders("bid", assetId, refresh);
         NRS.getAssetTradeHistory(assetId, refresh);
+        NRS.getAssetDividendHistory(assetId, "asset_dividend", refresh);
     };
 
     function processOrders(orders, type, refresh) {
@@ -756,6 +757,52 @@ var NRS = (function (NRS, $, undefined) {
                 });
                 processOrders(orders, type, refresh);
             });
+    };
+
+    NRS.getAssetDividendHistory = function (assetId, table, refresh) {
+        var assetExchangeDividendHistoryTable = $("#" + table + "table");
+        assetExchangeDividendHistoryTable.find("tbody").empty();
+        assetExchangeDividendHistoryTable.parent().addClass("data-loading").removeClass("data-empty");
+        var options = {
+            "asset": assetId,
+        };
+        var view = NRS.simpleview.get(table, {
+            errorMessage: null,
+            isLoading: true,
+            isEmpty: false,
+            data: []
+        });
+        NRS.sendRequest("getAssetDividends+", options, function (response) {
+                var dividends = response.dividends;
+                var rows = "";
+                var amountDecimals = NRS.getNumberOfDecimals(dividends, "totalDividend", function(val) {
+                    return NRS.formatAmount(val.totalDividend);
+                });
+                var accountsDecimals = NRS.getNumberOfDecimals(dividends, "numberOfAccounts", function(val) {
+                    return NRS.formatAmount(val.numberOfAccounts);
+                });
+                var amountNQTPerQNTDecimals = NRS.getNumberOfDecimals(dividends, "amountNQTPerQNT", function(val) {
+                    return NRS.formatOrderPricePerWholeQNT(val.amountNQTPerQNT, currentAsset.decimals);
+                });
+                for (var i = 0; i < dividends.length; i++) {
+                    var dividend = dividends[i];
+                    dividend.numberOfAccounts = new BigInteger(dividend.numberOfAccounts.toString());
+                    dividend.amountNQTPerQNT = new BigInteger(dividend.amountNQTPerQNT);
+                    dividend.totalDividend = new BigInteger(dividend.totalDividend);
+                    view.data.push({
+                        "timestamp": NRS.getTransactionLink(dividend.assetDividend, NRS.formatTimestamp(dividend.timestamp)),
+                        "dividend_height": dividend.dividendHeight,
+                        "total": NRS.formatAmount(dividend.totalDividend,false,false,amountDecimals),
+                        "accounts": NRS.formatQuantity(dividend.numberOfAccounts,false,false,accountsDecimals),
+                        "amount_per_share": NRS.formatOrderPricePerWholeQNT(dividend.amountNQTPerQNT, currentAsset.decimals, amountNQTPerQNTDecimals)
+                    })
+                }
+                view.render({
+                    isLoading: false,
+                    isEmpty: view.data.length == 0
+                });
+            NRS.pageLoaded();
+        });
     };
 
     NRS.getAssetTradeHistory = function (assetId, refresh) {

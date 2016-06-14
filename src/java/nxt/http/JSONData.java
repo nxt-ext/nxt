@@ -16,45 +16,8 @@
 
 package nxt.http;
 
-import nxt.Account;
-import nxt.AccountLedger;
+import nxt.*;
 import nxt.AccountLedger.LedgerEntry;
-import nxt.AccountRestrictions;
-import nxt.Alias;
-import nxt.Appendix;
-import nxt.Asset;
-import nxt.AssetDelete;
-import nxt.AssetTransfer;
-import nxt.Attachment;
-import nxt.Block;
-import nxt.Constants;
-import nxt.Currency;
-import nxt.CurrencyExchangeOffer;
-import nxt.CurrencyFounder;
-import nxt.CurrencyTransfer;
-import nxt.CurrencyType;
-import nxt.DigitalGoodsStore;
-import nxt.Exchange;
-import nxt.ExchangeRequest;
-import nxt.FundingMonitor;
-import nxt.Generator;
-import nxt.HoldingType;
-import nxt.MonetarySystem;
-import nxt.Nxt;
-import nxt.Order;
-import nxt.PhasingPoll;
-import nxt.PhasingVote;
-import nxt.Poll;
-import nxt.PrunableMessage;
-import nxt.Shuffler;
-import nxt.Shuffling;
-import nxt.ShufflingParticipant;
-import nxt.TaggedData;
-import nxt.Token;
-import nxt.Trade;
-import nxt.Transaction;
-import nxt.Vote;
-import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
@@ -835,6 +798,19 @@ public final class JSONData {
             putAssetInfo(json, attachment.getAssetId());
         }
         putExpectedTransaction(json, transaction);
+        return json;
+    }
+
+    static JSONObject assetDividend(AssetDividend assetDividend) {
+        JSONObject json = new JSONObject();
+        json.put("assetDividend", Long.toUnsignedString(assetDividend.getId()));
+        json.put("asset", Long.toUnsignedString(assetDividend.getAssetId()));
+        json.put("amountNQTPerQNT", String.valueOf(assetDividend.getAmountNQTPerQNT()));
+        json.put("totalDividend", String.valueOf(assetDividend.getTotalDividend()));
+        json.put("dividendHeight", assetDividend.getDividendHeight());
+        json.put("numberOfAccounts", assetDividend.getNumAccounts());
+        json.put("height", assetDividend.getHeight());
+        json.put("timestamp", assetDividend.getTimestamp());
         return json;
     }
 

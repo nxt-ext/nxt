@@ -57,3 +57,10 @@ Petko Petkov
 petkodp@gmail.com
 GPG key fingerprint: C3ED C327 AAE3 CA95 ED46 5996 DAB8 9FDE F203 C23F
 Nxt account: NXT-P6F5-J7VU-RWHZ-9LXN8
+
+
+Berzelius
+berzelius@countermail.com
+GPG key fingerprint: 206B 409C FF4F BF25 6E03  9834 3C8E EB47 926A 7AC7
+Nxt account: NXT-XNBG-5TB4-SC4R-B73ZW
+

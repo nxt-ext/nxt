@@ -1753,5 +1753,11 @@
   "message_encrypted": "Message is encrypted.",
   "encoding": "Encoding",
   "compressed": "Compressed",
-  "binary_data": "Binary Data"
+  "binary_data": "Binary Data",
+  "asset_dividend_history": "Asset Dividend History",
+  "amount_per_share": "Amount per share",
+  "no_recent_dividend_history": "No recent dividend history available.",
+  "dividend_history": "Dividend History",
+  "view_asset_dividend_history": "View Asset Dividend History",
+  "dividend_height": "Dividend Height"
 }
