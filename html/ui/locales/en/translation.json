@@ -1759,5 +1759,6 @@
   "dividend_history": "Dividend History",
   "view_asset_dividend_history": "View Asset Dividend History",
   "dividend_height": "Dividend Height",
-  "encrypted_file_upload_not_supported": "Encrypted file upload is not supported by this browser"
+  "encrypted_file_upload_not_supported": "Encrypted file upload is not supported by this browser",
+  "error_message_too_big": "Message file is too big"
 }
