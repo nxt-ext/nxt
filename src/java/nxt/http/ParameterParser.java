@@ -48,6 +48,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
@@ -599,8 +600,8 @@ public final class ParameterParser {
 
     public static Appendix getPlainMessage(HttpServletRequest req, boolean prunable) throws ParameterException {
         String messageValue = Convert.emptyToNull(req.getParameter("message"));
+        boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
         if (messageValue != null) {
-            boolean messageIsText = !"false".equalsIgnoreCase(req.getParameter("messageIsText"));
             try {
                 if (prunable) {
                     return new Appendix.PrunablePlainMessage(messageValue, messageIsText);
@@ -621,10 +622,17 @@ public final class ParameterParser {
             }
             FileData fileData = new FileData(part).invoke();
             byte[] message = fileData.getData();
+            String detectedMimeType = Search.detectMimeType(message);
+            if (detectedMimeType != null) {
+                messageIsText = detectedMimeType.equals("text/plain");
+            }
+            if (messageIsText && !Arrays.equals(message, Convert.toBytes(Convert.toString(message)))) {
+                messageIsText = false;
+            }
             if (prunable) {
-                return new Appendix.PrunablePlainMessage(message);
+                return new Appendix.PrunablePlainMessage(message, messageIsText);
             } else {
-                return new Appendix.Message(message);
+                return new Appendix.Message(message, messageIsText);
             }
         } catch (IOException | ServletException e) {
             Logger.logDebugMessage("error in reading file data", e);
@@ -651,7 +659,13 @@ public final class ParameterParser {
                     }
                     FileData fileData = new FileData(part).invoke();
                     plainMessageBytes = fileData.getData();
-                    isText = "true".equalsIgnoreCase(req.getParameter("messageToEncryptIsText"));
+                    String detectedMimeType = Search.detectMimeType(plainMessageBytes);
+                    if (detectedMimeType != null) {
+                        isText = detectedMimeType.equals("text/plain");
+                    }
+                    if (isText && !Arrays.equals(plainMessageBytes, Convert.toBytes(Convert.toString(plainMessageBytes)))) {
+                        isText = false;
+                    }
                 } catch (IOException | ServletException e) {
                     Logger.logDebugMessage("error in reading file data", e);
                     throw new ParameterException(INCORRECT_MESSAGE_TO_ENCRYPT);

@@ -57,6 +57,11 @@ public final class Search {
         return tika.detect(data, filename);
     }
 
+    public static String detectMimeType(byte[] data) {
+        Tika tika = new Tika();
+        return tika.detect(data);
+    }
+
     private Search() {}
 
 }
