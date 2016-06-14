@@ -16,11 +16,13 @@
 
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.PrunableDbTable;
+import nxt.util.Convert;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -231,6 +233,26 @@ public final class PrunableMessage {
 
     public int getHeight() {
         return height;
+    }
+
+    public byte[] decrypt(String secretPhrase) {
+        if (encryptedData == null) {
+            return null;
+        }
+        byte[] publicKey = senderId == Account.getId(Crypto.getPublicKey(secretPhrase))
+                ? Account.getPublicKey(recipientId) : Account.getPublicKey(senderId);
+        return Account.decryptFrom(publicKey, encryptedData, secretPhrase, isCompressed);
+    }
+
+    public byte[] decrypt(byte[] sharedKey) {
+        if (encryptedData == null) {
+            return null;
+        }
+        byte[] data = Crypto.aesDecrypt(encryptedData.getData(), sharedKey);
+        if (isCompressed) {
+            data = Convert.uncompress(data);
+        }
+        return data;
     }
 
     static void add(TransactionImpl transaction, Appendix.PrunablePlainMessage appendix) {

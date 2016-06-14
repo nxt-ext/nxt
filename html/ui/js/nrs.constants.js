@@ -185,24 +185,32 @@ var NRS = (function (NRS, $) {
             requestType == "markHost";
     };
 
-    NRS.isFileUploadRequest = function (requestType) {
-        return requestType == "uploadTaggedData" || requestType == "dgsListing";
-    };
-
-    NRS.getFileUploadConfig = function (requestType) {
+    NRS.getFileUploadConfig = function (requestType, data) {
         var config = {};
         if (requestType == "uploadTaggedData") {
             config.selector = "#upload_file";
             config.requestParam = "file";
             config.errorDescription = "error_file_too_big";
             config.maxSize = NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH;
+            return config;
         } else if (requestType == "dgsListing") {
             config.selector = "#dgs_listing_image";
             config.requestParam = "messageFile";
             config.errorDescription = "error_image_too_big";
             config.maxSize = NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH;
+            return config;
+        } else if (requestType == "sendMessage") {
+            config.selector = "#upload_file_message";
+            if (data.encrypt_message) {
+                config.requestParam = "encryptedMessageFile";    
+            } else {
+                config.requestParam = "messageFile";
+            }
+            config.errorDescription = "error_message_too_big";
+            config.maxSize = NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH;
+            return config;
         }
-        return config;
+        return null;
     };
 
     NRS.isApiEnabled = function(depends) {

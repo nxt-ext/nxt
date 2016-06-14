@@ -1409,6 +1409,22 @@ var NRS = (function (NRS, $, undefined) {
         }
         return statusIcon;
     };
+    
+    NRS.getAccountForDecryption = function(transaction, recipient, sender) {
+        if (!recipient && transaction.recipient == NRS.account) {
+            return transaction.sender;
+        }
+        if (transaction[recipient] == NRS.account) {
+            return transaction.sender;
+        }
+        if (!sender && transaction.sender == NRS.account) {
+            return transaction.recipient;
+        }
+        if (transaction[sender] == NRS.account) {
+            return transaction.recipient;
+        }
+        return null;
+    };
 
     NRS.phasingControlObjectToPhasingParams = function(controlObj) {
         var phasingParams = {};
