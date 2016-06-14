@@ -38,7 +38,32 @@ number, and performing a rescan if the snapshot has already started.
 Added some additional transaction bytes validation, and phasing parameters
 validation, to take effect after the hardfork.
 
-Minor bugfixes and UI improvements.
+Added getAssetDividends API, to retrieve the dividend payment history for an
+asset. It can be viewed in the client by clicking on the new "View Asset
+Dividends" link on the asset exchange page.
+
+After the hardfork block, asset dividend payment transactions will be limited
+to not more than one per asset every 60 blocks.
+
+Added a new Messages table in the client UI. Allowed uploading a file as a
+message attachment, plain or encrypted, and downloading such messages as files.
+All create transaction APIs that support prunable message attachments now also
+optionally accept multipart file uploads as messageFile or messageToEncryptFile
+parameters, or when using client-side encrypted data the data part can also be
+uploaded using encryptedMessageFile parameter. As the test API page does not
+support multiple file upload parameters, upload buttons for those are not
+currently available there.
+
+Accept sharedKey parameter in downloadPrunableMessage and getPrunableMessage
+APIs.
+
+Added client UI support for decrypting messages using a shared key, to allow
+disclosing the shared key for a specific encrypted message to a third party in
+order to decrypt it without having to reveal the account passphrase.
+
+Forging optimization to reduce block skipping when switching forks.
+
+Minor other bugfixes and UI improvements.
 
 Updated H2 library to version 1.4.192, tika to 1.13, and slf4j to 1.7.21. If
 installing manually, make sure to delete the old lib folder first.
