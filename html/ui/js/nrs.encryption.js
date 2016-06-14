@@ -869,7 +869,12 @@ var NRS = (function (NRS, $) {
 	};
 
 	NRS.encryptFile = function(file, options, callback) {
-		var r = new FileReader();
+		var r;
+		try {
+			r = new FileReader();
+		} catch(e) {
+			throw $.t("encrypted_file_upload_not_supported");
+		}
 		r.onload = function (e) {
 			var bytes = e.target.result;
 			options.isText = false;

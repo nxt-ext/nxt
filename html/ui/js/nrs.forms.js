@@ -620,16 +620,24 @@ var NRS = (function(NRS, $) {
             }
 		}
 		if (data.messageFile && data.encrypt_message) {
-			NRS.encryptFile(data.messageFile, data.encryptionKeys, function(encrypted) {
-				data.messageFile = encrypted.file;
-    			data.encryptedMessageNonce = converters.byteArrayToHexString(encrypted.nonce);
-				delete data.encryptionKeys;
-				
-				NRS.sendRequest(requestType, data, function (response) {
-					formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
-						originalRequestType, formErrorFunction);
-				})
-			});
+			try {
+				NRS.encryptFile(data.messageFile, data.encryptionKeys, function(encrypted) {
+					data.messageFile = encrypted.file;
+					data.encryptedMessageNonce = converters.byteArrayToHexString(encrypted.nonce);
+					delete data.encryptionKeys;
+
+					NRS.sendRequest(requestType, data, function (response) {
+						formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
+							originalRequestType, formErrorFunction);
+					})
+				});
+			} catch (err) {
+				$form.find(".error_message").html(String(err).escapeHTML()).show();
+				if (formErrorFunction) {
+					formErrorFunction(false, data);
+				}
+				NRS.unlockForm($modal, $btn);
+			}
 		} else {
 			NRS.sendRequest(requestType, data, function (response) {
 				formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
