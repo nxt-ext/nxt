@@ -619,7 +619,7 @@ var NRS = (function(NRS, $) {
                 delete data.doNotBroadcast;
             }
 		}
-		if (data.messageFile) {
+		if (data.messageFile && data.encrypt_message) {
 			NRS.encryptFile(data.messageFile, data.encryptionKeys, function(encrypted) {
 				data.messageFile = encrypted.file;
     			data.encryptedMessageNonce = converters.byteArrayToHexString(encrypted.nonce);
