@@ -574,6 +574,7 @@ var NRS = (function(NRS, $) {
 			"&sharedKey=" + sharedKey;
 		var sharedKeyLink = $("#shared_key_link");
         sharedKeyLink.attr("href", url);
+        sharedKeyLink.attr("target", "_blank");
 		sharedKeyLink.html(NRS.addEllipsis(url, 64));
     });
 
