@@ -323,10 +323,12 @@ public final class Generator implements Comparable<Generator> {
         Account account = Account.getAccount(accountId, height);
         if (account == null) {
             effectiveBalance = BigInteger.ZERO;
-            return;
+        } else {
+            effectiveBalance = BigInteger.valueOf(Math.max(account.getEffectiveBalanceNXT(height), 0));
         }
-        effectiveBalance = BigInteger.valueOf(Math.max(account.getEffectiveBalanceNXT(height), 0));
         if (effectiveBalance.signum() == 0) {
+            hitTime = 0;
+            hit = BigInteger.ZERO;
             return;
         }
         hit = getHit(publicKey, lastBlock);
