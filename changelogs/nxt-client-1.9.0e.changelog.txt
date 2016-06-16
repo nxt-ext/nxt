@@ -40,7 +40,9 @@ validation, to take effect after the hardfork.
 
 Added getAssetDividends API, to retrieve the dividend payment history for an
 asset. It can be viewed in the client by clicking on the new "View Asset
-Dividends" link on the asset exchange page.
+Dividends" link on the asset exchange page. Dividend payments made before a
+node is updated to 1.9.0e will not show in this history, unless a blockchain
+rescan is forced manually.
 
 After the hardfork block, asset dividend payment transactions will be limited
 to not more than one per asset every 60 blocks.
