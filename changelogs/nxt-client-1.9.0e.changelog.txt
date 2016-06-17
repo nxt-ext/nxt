@@ -2,12 +2,12 @@ This is an experimental release. It is a required update for all testnet nodes,
 optional for main net.
 
 This release enables taking multiple snapshots of accounts NXT balances, every
-60 blocks, for a period of 90 days, and distributing an FXT token based on the
-average of those balances, at the end of the snapshot, to be used for the FXT
-forging chain token distribution in Nxt 2.0.
+60 blocks, for a period of 90 days, and distributing an ARDR token based on the
+average of those balances, at the end of the snapshot, to be used for the Ardor
+consensus chain token distribution in Nxt 2.0.
 
-On testnet, the snapshot will start at block 641400 and end at block 771000
-(June 19).
+On testnet, the snapshot will start at block 649400 and end at block 779000
+(June 24).
 On mainnet, the snapshot will start at block 870400 (expected July 14) and end
 at block 1000000 (Oct 12).
 
@@ -16,22 +16,22 @@ a blockchain rescan will be performed automatically in order to calculate past
 account balances. Those who delay upgrading their mainnet nodes until after
 block 855000 will also experience such a rescan. However, the hard fork block
 is set at the end of the snapshot, so the final deadline for upgrading to 1.9
-is at blocks 771000 and 1000000 respectively.
+is at blocks 779000 and 1000000 respectively.
 
-To get your FXT tokens, it is essential that you keep your NXT balance in your
+To get your ARDR tokens, it is essential that you keep your NXT balance in your
 own account. There is no need to run a node or forge. It is the confirmed NXT
 balance that is used for the snapshot, not the unconfirmed (available) balance,
 so having some NXT locked in open AE bid orders, shufflings, etc, will not
-affect your FXT distribution. For balances on exchange accounts, it will be up
-to each exchange to handle the re-distribution of the FXT tokens that will get
+affect your ARDR distribution. For balances on exchange accounts, it will be up
+to each exchange to handle the re-distribution of the ARDR tokens that will get
 automatically sent to the exchange account at snapshot end.
 
 A new getFxtQuantity API has been added, which allows retrieving the already
-accumulated FXT quantity for each account during the snapshot, and an estimate
+accumulated ARDR quantity for each account during the snapshot, and an estimate
 for the quantity yet to be obtained. While snapshots are done every 60 blocks,
 the numbers that this API returns are updated once every 720 blocks only.
 
-Snapshot balances used for the FXT distribution for a specific account can be
+Snapshot balances used for the ARDR distribution for a specific account can be
 recorded in the log by setting the nxt.logFxtBalance property to that account
 number, and performing a rescan if the snapshot has already started.
 
