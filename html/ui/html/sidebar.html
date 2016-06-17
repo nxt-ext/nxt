@@ -40,19 +40,13 @@
                         </a>
                     </div>
                 </div>
-                <div style="margin-bottom:5px;">
-                    <div>
-                        <span class="badge-active" style="padding:3px;" id="fxt_balance_sidebar"></span>
-                        <span>FXT</span>
-                    </div>
-                </div>
                 <div style="margin-bottom:8px;">
                     <a href="#" data-page="peers" id="connected_indicator" class="connected goto-page" style="display:none;font-size:13px;" data-toggle="tooltip" data-placement="top" title="CONNECTION" data-i18n="[title]server_connection_status"><i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="connected">Connected</span></a>
                     <a href="#" id="forging_indicator" class="forging" data-toggle="tooltip" title="" data-placement="bottom" style="display:none;font-size:13px;">
                         <i class="fa fa-circle" style="font-size:12px;"></i> <span data-18n="forging">Forging</span>
                     </a>
                 </div>
-                <div>
+                <div class="input-group" style="margin-bottom:5px;">
                     <span data-i18n="height">HEIGHT</span>
                     <span class="badge-active" style="padding:3px;" id="sidebar_block_link" data-toggle="tooltip" data-placement="bottom" title="HEIGHT" data-i18n="[title]current_blockchain_height"></span>
                 </div>
@@ -66,7 +60,20 @@
                 <button type="submit" name="search" id="search-btn" class="btn btn-flat"><i class="fa fa-search"></i></button>
             </span>
         </div>
-    </form>             
+    </form>
+    <div class="sidebar-form">
+        <div class="input-group" style="margin-bottom:5px;">
+            <span class="badge-active" style="padding:3px;" data-18n="ardor_balance">Ardor Balance</span>
+        </div>
+        <div class="input-group" style="margin-bottom:5px;">
+            <span style="padding:3px;" id="ardor_quantity_sidebar"></span>
+            <span class="badge-active" data-18n="current">Current</span>
+        </div>
+        <div class="input-group">
+            <span style="padding:3px;" id="ardor_expected_quantity_sidebar"></span>
+            <span class="badge-active" data-18n="expected">Expected</span>
+        </div>
+    </div>
     <ul class="sidebar-menu" id="sidebar_menu">
     </ul>
     <div style="height:50px"></div> <!-- Dummy div, otherwise some browsers cut of the sidebar too high when scrolling on smaller screens -->
