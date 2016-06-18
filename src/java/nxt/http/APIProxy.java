@@ -34,7 +34,7 @@ public class APIProxy {
     private static APIProxy instance = new APIProxy();
 
     public static final boolean enableAPIProxy = Nxt.getBooleanProperty("nxt.enableAPIProxy");
-    public static final int blacklistingPeriod = Nxt.getIntProperty("nxt.blacklistingPeriod") / 1000;
+    public static final int blacklistingPeriod = Nxt.getIntProperty("nxt.apiProxyBlacklistingPeriod") / 1000;
     public static final String forcedServerURL = Nxt.getStringProperty("nxt.forceAPIProxyServerURL", "");
 
     private volatile String forcedPeerHost;
@@ -81,8 +81,9 @@ public class APIProxy {
         APIEnum requestAPI = APIEnum.fromName(requestType);
         if (currentPeersHosts != null) {
             for (String host:currentPeersHosts) {
-                resultPeer = Peers.getPeer(host);
-                if (isPeerConnectable(resultPeer) && !resultPeer.getDisabledAPIs().contains(requestAPI)) {
+                Peer peer = Peers.getPeer(host);
+                if (isPeerConnectable(peer) && !peer.getDisabledAPIs().contains(requestAPI)) {
+                    resultPeer = peer;
                     break;
                 }
             }

@@ -42,6 +42,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
+
 public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<String> NOT_FORWARDED_REQUESTS;
     private static final Set<APITag> NOT_FORWARDED_TAGS;
@@ -79,7 +81,12 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        JSONStreamAware responseJson = null;
         try {
+            if (!API.isAllowed(request.getRemoteHost())) {
+                responseJson = ERROR_NOT_ALLOWED;
+                return;
+            }
             if (apiServlet == null) {
                 apiServlet = new APIServlet();
             }
@@ -90,8 +97,12 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 apiServlet.service(request, response);
             }
         } catch (ParameterException e) {
-            try (Writer writer = response.getWriter()) {
-                JSON.writeJSONString(e.getErrorResponse(), writer);
+            responseJson = e.getErrorResponse();
+        } finally {
+            if (responseJson != null) {
+                try (Writer writer = response.getWriter()) {
+                    JSON.writeJSONString(responseJson, writer);
+                }
             }
         }
     }
@@ -123,6 +134,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         } else {
             String requestType = (String) clientRequest.getAttribute(REQUEST_TYPE);
             Peer servingPeer = APIProxy.getInstance().getServingPeer(requestType);
+            if (servingPeer == null) {
+                return null;
+            }
             boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
             if (useHttps) {
                 uri.append("https://");
