@@ -14,7 +14,7 @@ at block 1000000 (Oct 12).
 Since on testnet the starting block is in the past, on upgrade to this release
 a blockchain rescan will be performed automatically in order to calculate past
 account balances. Those who delay upgrading their mainnet nodes until after
-block 855000 will also experience such a rescan. However, the hard fork block
+block 870400 will also experience such a rescan. However, the hard fork block
 is set at the end of the snapshot, so the final deadline for upgrading to 1.9
 is at blocks 779000 and 1000000 respectively.
 
