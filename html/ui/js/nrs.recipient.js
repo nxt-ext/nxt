@@ -123,7 +123,7 @@ var NRS = (function(NRS, $) {
 			if (response.type == "success") {
 				$("#send_money_account_info").hide();
 			} else {
-				$("#send_money_account_info").html(String(response.message).escapeHTML()).show();
+				$("#send_money_account_info").html(response.message).show();
 
 			}
 		});
@@ -133,59 +133,62 @@ var NRS = (function(NRS, $) {
 		NRS.sendRequest("getAccount", {
 			"account": accountId
 		}, function(response) {
+			var result;
 			if (response.publicKey) {
 				if (response.name){
-					callback({
+					result = {
 						"type": "info",
 						"message": $.t("recipient_info_with_name", {
 							"name" : NRS.unescapeRespStr(response.name),
 							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
 						}),
 						"account": response
-					});
+					};
 				}
 				else{
-					callback({
+					result = {
 						"type": "info",
 						"message": $.t("recipient_info", {
 							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
 						}),
 						"account": response
-					});
+					};
 				}
 			} else {
 				if (response.errorCode) {
 					if (response.errorCode == 4) {
-						callback({
+						result = {
 							"type": "danger",
 							"message": $.t("recipient_malformed") + (!/^(NXT\-)/i.test(accountId) ? " " + $.t("recipient_alias_suggestion") : ""),
 							"account": null
-						});
+						};
 					} else if (response.errorCode == 5) {
-						callback({
+						result = {
 							"type": "warning",
 							"message": $.t("recipient_unknown_pka"),
 							"account": null,
 							"noPublicKey": true
-						});
+						};
 					} else {
-						callback({
+						result = {
 							"type": "danger",
-							"message": $.t("recipient_problem") + " " + NRS.escapeRespStr(response.errorDescription),
+							"message": $.t("recipient_problem") + " " + NRS.unescapeRespStr(response.errorDescription),
 							"account": null
-						});
+						};
 					}
 				} else {
-					callback({
+					result = {
 						"type": "warning",
 						"message": $.t("recipient_no_public_key_pka", {
 							"nxt": NRS.formatAmount(response.unconfirmedBalanceNQT, false, true)
 						}),
 						"account": response,
 						"noPublicKey": true
-					});
+					};
 				}
 			}
+			result.message = result.message.escapeHTML();
+			callback(result);
 		});
 	};
 
@@ -224,8 +227,7 @@ var NRS = (function(NRS, $) {
 					if (account==NRS.accountRS)
 						callout.removeClass(classes).addClass("callout-" + response.type).html("This is your account").show();
 					else{
-						var message = response.message.escapeHTML();
-						callout.removeClass(classes).addClass("callout-" + response.type).html(message).show();
+						callout.removeClass(classes).addClass("callout-" + response.type).html(response.message).show();
 					}
 				});
 			} else {
@@ -266,7 +268,7 @@ var NRS = (function(NRS, $) {
 
 							callout.removeClass(classes).addClass("callout-" + response.type).html($.t("contact_account_link", {
 								"account_id": NRS.getAccountFormatted(contact, "account")
-							}) + " " + response.message.escapeHTML()).show();
+							}) + " " + response.message).show();
 
 							if (response.type == "info" || response.type == "warning") {
 								accountInputField.val(contact.accountRS);
@@ -345,7 +347,7 @@ var NRS = (function(NRS, $) {
 
 							callout.removeClass(classes).addClass("callout-" + response.type).html($.t("alias_account_link", {
 								"account_id": NRS.escapeRespStr(match[1])
-							}) + " " + response.message.escapeHTML() + " " + $.t("alias_last_adjusted", {
+							}) + " " + response.message + " " + $.t("alias_last_adjusted", {
 								"timestamp": NRS.formatTimestamp(timestamp)
 							})).show();
 
