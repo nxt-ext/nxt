@@ -41,6 +41,11 @@ public final class GetFxtQuantity extends APIServlet.APIRequestHandler {
         json.put("quantityQNT", String.valueOf(confirmedQuantity));
         json.put("remainingQuantityQNT", String.valueOf(remainingQuantity));
         json.put("totalExpectedQuantityQNT", String.valueOf(total));
+        json.put("distributionStart", FxtDistribution.DISTRIBUTION_START);
+        json.put("distributionEnd", FxtDistribution.DISTRIBUTION_END);
+        json.put("distributionFrequency", FxtDistribution.DISTRIBUTION_FREQUENCY);
+        json.put("distributionStep", FxtDistribution.DISTRIBUTION_STEP);
+        json.put("fxtAsset", Long.toUnsignedString(FxtDistribution.FXT_ASSET_ID));
         return json;
     }
 
