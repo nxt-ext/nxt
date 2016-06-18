@@ -1475,7 +1475,12 @@ var NRS = (function (NRS, $, undefined) {
                 sha256.update(converters.byteArrayToWordArrayEx([0]));
             }
             sha256.update(converters.byteArrayToWordArrayEx([1])); // compression
-            sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageData)));
+            if (data.filebytes) {
+                utfBytes = new Int8Array(data.filebytes);
+            } else {
+                utfBytes = converters.hexStringToByteArray(data.encryptedMessageData);
+            }
+            sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
             sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageNonce)));
             hashWords = sha256.finalize();
             calculatedHash = converters.wordArrayToByteArrayEx(hashWords);
