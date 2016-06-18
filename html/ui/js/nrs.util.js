@@ -523,13 +523,20 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
-    NRS.getBlockHeightTimeEstimate = function(height) {
+    NRS.getBlockHeightMoment = function(height) {
         if (!height || !NRS.lastBlockHeight || !NRS.averageBlockGenerationTime) {
             return "-";
         }
-   		var blockDiff = height - NRS.lastBlockHeight;
-   		var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
-   		return moment().add(diffSecs, 'seconds').format("YYYY/MM/DD hh:mm a");
+        var heightDiff = height - NRS.lastBlockHeight;
+        return moment().add(heightDiff * NRS.averageBlockGenerationTime, 'seconds');
+    };
+    
+    NRS.getBlockHeightTimeEstimate = function(height) {
+        var heightMoment = NRS.getBlockHeightMoment(height);
+        if (heightMoment == "-") {
+            return "-";
+        }
+        return heightMoment.format("YYYY/MM/DD hh:mm a");
    	};
 
     NRS.baseTargetPercent = function(block) {

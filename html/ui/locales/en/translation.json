@@ -1769,6 +1769,7 @@
   "start_height": "Start Height",
   "start_time": "Start Time",
   "end_height": "End Height",
-  "end_time": "End Time"
-
+  "end_time": "End Time",
+  "distribution_starts_in": "Distribution starts in __interval__",
+  "distribution_ends_in": "Distribution ends in __interval__"
 }
