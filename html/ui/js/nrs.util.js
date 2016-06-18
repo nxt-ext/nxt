@@ -523,6 +523,15 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
+    NRS.getBlockHeightTimeEstimate = function(height) {
+        if (!height || !NRS.lastBlockHeight || !NRS.averageBlockGenerationTime) {
+            return "-";
+        }
+   		var blockDiff = height - NRS.lastBlockHeight;
+   		var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
+   		return moment().add(diffSecs, 'seconds').format("YYYY/MM/DD hh:mm a");
+   	};
+
     NRS.baseTargetPercent = function(block) {
         if (block) {
             return Math.round(block.baseTarget / 153722867 * 100)

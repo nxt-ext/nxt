@@ -59,5 +59,18 @@ var NRS = (function(NRS, $) {
         }
     });
 
+    $("#ardor_distribution_modal").on("show.bs.modal", function() {
+        NRS.sendRequest("getFxtQuantity", {
+            "account": NRS.account
+        }, function (response) {
+            $("#ardor_distribution_start_height").html(response.distributionStart);
+            $("#ardor_distribution_start_time").html(NRS.getBlockHeightTimeEstimate(response.distributionStart));
+            $("#ardor_distribution_end_height").html(response.distributionEnd);
+            $("#ardor_distribution_end_time").html(NRS.getBlockHeightTimeEstimate(response.distributionEnd));
+            $("#ardor_distribution_current_balance").html(NRS.formatQuantity(response.quantityQNT, 4));
+            $("#ardor_distribution_expected_balance").html(NRS.formatQuantity(response.totalExpectedQuantityQNT, 4));
+        });
+    });
+
     return NRS;
 }(NRS || {}, jQuery));

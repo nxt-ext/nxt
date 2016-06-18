@@ -856,7 +856,7 @@ NRS.addPagination = function () {
 			NRS.accountInfo = response;
 
 			if (response.errorCode) {
-				$("#account_balance, #account_balance_sidebar, #ardor_quantity_sidebar, #ardor_expected_quantity_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
+				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
 
 				if (NRS.accountInfo.errorCode == 5) {
 					if (NRS.downloadingBlockchain) {
@@ -946,12 +946,6 @@ NRS.addPagination = function () {
 
 				$("#account_balance, #account_balance_sidebar").html(NRS.formatStyledAmount(response.unconfirmedBalanceNQT));
 				$("#account_forged_balance").html(NRS.formatStyledAmount(response.forgedBalanceNQT));
-				NRS.sendRequest("getFxtQuantity", {
-					"account": NRS.account
-				}, function(response) {
-					$("#ardor_quantity_sidebar").html(NRS.formatQuantity(response.quantityQNT, 4));
-					$("#ardor_expected_quantity_sidebar").html(NRS.formatQuantity(response.totalExpectedQuantityQNT, 4));
-				});
 
                 var i;
 				if (response.assetBalances) {
@@ -1098,7 +1092,7 @@ NRS.addPagination = function () {
 			}
 
 			if (firstRun) {
-				$("#account_balance, #account_balance_sidebar, #ardor_quantity_sidebar, #ardor_expected_quantity_sidebar, #account_assets_balance, #account_nr_assets, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
+				$("#account_balance, #account_balance_sidebar, #account_assets_balance, #account_nr_assets, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").removeClass("loading_dots");
 			}
 
 			if (callback) {
