@@ -1,3 +1,9 @@
+nxt-client-1.9.1e:
+
+Fixed a client UI bug affecting some form submission.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.9.0e:
 
 This is an experimental release. It is a required update for all testnet nodes,
