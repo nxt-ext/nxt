@@ -129,8 +129,6 @@ public final class APIServlet extends HttpServlet {
                 map.put(api.getName(), api.getHandler());
             }
         }
-        map.put("getFxtQuantity", GetFxtQuantity.instance);
-        map.put("getAssetDividends", GetAssetDividends.instance);
 
         AddOns.registerAPIRequestHandlers(map);
 
