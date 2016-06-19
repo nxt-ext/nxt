@@ -36,8 +36,8 @@ public final class FxtDistribution implements Listener<Block> {
     public static final int DISTRIBUTION_START = DISTRIBUTION_END - 90 * 1440; // run for 90 days
     public static final int DISTRIBUTION_FREQUENCY = 720; // run processing every 720 blocks
     public static final int DISTRIBUTION_STEP = 60; // take snapshots every 60 blocks
-    public static final long FXT_ASSET_ID = Long.parseUnsignedLong(Constants.isTestnet ? "2532340154632699620" : "111111111111111111");
-    public static final long FXT_ISSUER_ID = Convert.parseAccountId(Constants.isTestnet ? "NXT-46RQ-NXAE-RAQG-87D97" : "0");
+    public static final long FXT_ASSET_ID = Long.parseUnsignedLong(Constants.isTestnet ? "861080501219231688" : "12422608354438203866");
+    public static final long FXT_ISSUER_ID = Convert.parseAccountId(Constants.isTestnet ? "NXT-F8FG-RDWZ-GRW7-4GSK9" : "NXT-FQ28-G9SQ-BG8M-6V6QH");
     private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf(10000L * (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_STEP);
     private static final String logAccount = Nxt.getStringProperty("nxt.logFxtBalance");
     private static final long logAccountId = Convert.parseAccountId(logAccount);
