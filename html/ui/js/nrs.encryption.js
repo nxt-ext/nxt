@@ -38,7 +38,7 @@ var NRS = (function (NRS, $) {
 			if (NRS.rememberPassword) {
 				secretPhrase = _password;
 			} else {
-				throw $.t("error_generate_public_key_no_password");
+				throw { message: $.t("error_generate_public_key_no_password") };
 			}
 		}
 
