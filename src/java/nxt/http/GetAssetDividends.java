@@ -16,8 +16,8 @@
 
 package nxt.http;
 
+import nxt.AssetDividend;
 import nxt.NxtException;
-import nxt.PrunableMessage;
 import nxt.db.DbIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,37 +25,34 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
+public final class GetAssetDividends extends APIServlet.APIRequestHandler {
 
-    static final GetPrunableMessages instance = new GetPrunableMessages();
+    static final GetAssetDividends instance = new GetAssetDividends();
 
-    private GetPrunableMessages() {
-        super(new APITag[] {APITag.MESSAGES}, "account", "otherAccount", "secretPhrase", "firstIndex", "lastIndex", "timestamp");
+    private GetAssetDividends() {
+        super(new APITag[] {APITag.AE}, "asset", "firstIndex", "lastIndex", "timestamp");
     }
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
-        long accountId = ParameterParser.getAccountId(req, true);
-        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
+
+        long assetId = ParameterParser.getUnsignedLong(req, "asset", false);
+        int timestamp = ParameterParser.getTimestamp(req);
         int firstIndex = ParameterParser.getFirstIndex(req);
         int lastIndex = ParameterParser.getLastIndex(req);
-        final int timestamp = ParameterParser.getTimestamp(req);
-        long otherAccountId = ParameterParser.getAccountId(req, "otherAccount", false);
 
         JSONObject response = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        response.put("prunableMessages", jsonArray);
-
-        try (DbIterator<PrunableMessage> messages = otherAccountId == 0 ? PrunableMessage.getPrunableMessages(accountId, firstIndex, lastIndex)
-                : PrunableMessage.getPrunableMessages(accountId, otherAccountId, firstIndex, lastIndex)) {
-            while (messages.hasNext()) {
-                PrunableMessage prunableMessage = messages.next();
-                if (prunableMessage.getBlockTimestamp() < timestamp) {
+        JSONArray dividendsData = new JSONArray();
+        try (DbIterator<AssetDividend> dividends = AssetDividend.getAssetDividends(assetId, firstIndex, lastIndex)) {
+            while (dividends.hasNext()) {
+                AssetDividend assetDividend = dividends.next();
+                if (assetDividend.getTimestamp() < timestamp) {
                     break;
                 }
-                jsonArray.add(JSONData.prunableMessage(prunableMessage, secretPhrase, null));
+                dividendsData.add(JSONData.assetDividend(assetDividend));
             }
         }
+        response.put("dividends", dividendsData);
         return response;
     }
 

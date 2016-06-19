@@ -27,19 +27,10 @@ var NRS = (function(NRS, $, undefined) {
   		};
 	})();
 
-	//block_height_modal_ui_element
-	function _updateBlockHeightEstimates($bhmElem) {
+    function _updateBlockHeightEstimates($bhmElem) {
 		var $input = $bhmElem.find(' .bhm_ue_time_input');
 		var blockHeight = $input.val();
-		var output = "<i class='fa fa-clock-o'></i> ";
-		if (blockHeight) {
-			var blockDiff = blockHeight - NRS.lastBlockHeight;
-			var diffSecs = blockDiff * NRS.averageBlockGenerationTime;
-			output += moment().add(diffSecs, 'seconds').format("YYYY/MM/DD hh:mm a") + " ";
-
-		} else {
-			output += '-';
-		}
+		var output = "<i class='fa fa-clock-o'></i> " + NRS.getBlockHeightTimeEstimate(blockHeight) + " ";
 		$bhmElem.find(".bhm_ue_time_estimate").html(output);
 	}
 

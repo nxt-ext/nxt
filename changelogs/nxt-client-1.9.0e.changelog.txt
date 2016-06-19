@@ -1,0 +1,72 @@
+This is an experimental release. It is a required update for all testnet nodes,
+optional for main net.
+
+This release enables taking multiple snapshots of accounts NXT balances, every
+60 blocks, for a period of 90 days, and distributing an ARDR token based on the
+average of those balances, at the end of the snapshot, to be used for the Ardor
+consensus chain token distribution in Nxt 2.0.
+
+On testnet, the snapshot will start at block 649400 and end at block 779000
+(June 24).
+On mainnet, the snapshot will start at block 870400 (expected July 14) and end
+at block 1000000 (Oct 12).
+
+Since on testnet the starting block is in the past, on upgrade to this release
+a blockchain rescan will be performed automatically in order to calculate past
+account balances. Those who delay upgrading their mainnet nodes until after
+block 870400 will also experience such a rescan. However, the hard fork block
+is set at the end of the snapshot, so the final deadline for upgrading to 1.9
+is at blocks 779000 and 1000000 respectively.
+
+To get your ARDR tokens, it is essential that you keep your NXT balance in your
+own account. There is no need to run a node or forge. It is the confirmed NXT
+balance that is used for the snapshot, not the unconfirmed (available) balance,
+so having some NXT locked in open AE bid orders, shufflings, etc, will not
+affect your ARDR distribution. For balances on exchange accounts, it will be up
+to each exchange to handle the re-distribution of the ARDR tokens that will get
+automatically sent to the exchange account at snapshot end.
+
+A new getFxtQuantity API has been added, which allows retrieving the already
+accumulated ARDR quantity for each account during the snapshot, and an estimate
+for the quantity yet to be obtained. While snapshots are done every 60 blocks,
+the numbers that this API returns are updated once every 720 blocks only.
+
+Snapshot balances used for the ARDR distribution for a specific account can be
+recorded in the log by setting the nxt.logFxtBalance property to that account
+number, and performing a rescan if the snapshot has already started.
+
+Added some additional transaction bytes validation, and phasing parameters
+validation, to take effect after the hardfork.
+
+Added getAssetDividends API, to retrieve the dividend payment history for an
+asset. It can be viewed in the client by clicking on the new "View Asset
+Dividends" link on the asset exchange page. Dividend payments made before a
+node is updated to 1.9.0e will not show in this history, unless a blockchain
+rescan is forced manually.
+
+After the hardfork block, asset dividend payment transactions will be limited
+to not more than one per asset every 60 blocks.
+
+Added a new Messages table in the client UI. Allowed uploading a file as a
+message attachment, plain or encrypted, and downloading such messages as files.
+All create transaction APIs that support prunable message attachments now also
+optionally accept multipart file uploads as messageFile or messageToEncryptFile
+parameters, or when using client-side encrypted data the data part can also be
+uploaded using encryptedMessageFile parameter. As the test API page does not
+support multiple file upload parameters, upload buttons for those are not
+currently available there.
+
+Accept sharedKey parameter in downloadPrunableMessage and getPrunableMessage
+APIs.
+
+Added client UI support for decrypting messages using a shared key, to allow
+disclosing the shared key for a specific encrypted message to a third party in
+order to decrypt it without having to reveal the account passphrase.
+
+Forging optimization to reduce block skipping when switching forks.
+
+Minor other bugfixes and UI improvements.
+
+Updated H2 library to version 1.4.192, tika to 1.13, and slf4j to 1.7.21. If
+installing manually, make sure to delete the old lib folder first.
+

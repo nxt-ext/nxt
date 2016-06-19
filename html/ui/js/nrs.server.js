@@ -332,20 +332,22 @@ var NRS = (function (NRS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        if (NRS.isFileUploadRequest(requestType)) {
+        
+        var config = NRS.getFileUploadConfig(requestType, data);
+        if (config && $(config.selector)[0].files[0]) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
             formData = new FormData();
-            for (var key in data) {
-                if (!data.hasOwnProperty(key)) {
-                    continue;
-                }
-                formData.append(key, data[key]);
+            var file;
+            if (data.messageFile) {
+                file = data.messageFile;
+                delete data.messageFile;
+                delete data.encrypt_message;
+            } else {
+                file = $(config.selector)[0].files[0];
             }
-            var config = NRS.getFileUploadConfig(requestType);
-            var file = $(config.selector)[0].files[0];
-            if (!file && requestType == "uploadTaggedData" ) {
+            if (!file && requestType == "uploadTaggedData") {
                 callback({
                     "errorCode": 3,
                     "errorDescription": $.t("error_no_file_chosen")
@@ -353,20 +355,23 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
             if (file && file.size > config.maxSize) {
-                var description = config.errorDescription;
                 callback({
                     "errorCode": 3,
-                    "errorDescription": $.t(description, {
+                    "errorDescription": $.t(config.errorDescription, {
                         "size": file.size,
-                        "allowed": NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH
+                        "allowed": config.maxSize
                     })
                 }, data);
                 return;
             }
-            if (file) {
-                formData.append(config.requestParam, file); // file data;
-            }
             type = "POST";
+            formData.append(config.requestParam, file);
+            for (var key in data) {
+                if (!data.hasOwnProperty(key)) {
+                    continue;
+                }
+                formData.append(key, data[key]);
+            }
         } else {
             // JQuery defaults
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
@@ -424,7 +429,7 @@ var NRS = (function (NRS, $, undefined) {
                 } else {
                     if (response.broadcasted == false && !data.calculateFee) {
                         async.waterfall([
-                            function(callback) {
+                            function (callback) {
                                 addMissingData(data);
                                 if (!response.unsignedTransactionBytes) {
                                     callback(null);
@@ -441,9 +446,8 @@ var NRS = (function (NRS, $, undefined) {
                                     callback(null);
                                 }
                             },
-                            function(callback) {
-                                if (response.unsignedTransactionBytes &&
-                                    !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment)) {
+                            function (callback) {
+                                if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment)) {
                                     callback({
                                         "errorCode": 1,
                                         "errorDescription": $.t("error_bytes_validation_server")
@@ -452,7 +456,7 @@ var NRS = (function (NRS, $, undefined) {
                                 }
                                 callback(null);
                             }
-                        ], function() {
+                        ], function () {
                             NRS.showRawTransactionModal(response);
                         });
                     } else {
@@ -1477,7 +1481,12 @@ var NRS = (function (NRS, $, undefined) {
                 sha256.update(converters.byteArrayToWordArrayEx([0]));
             }
             sha256.update(converters.byteArrayToWordArrayEx([1])); // compression
-            sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageData)));
+            if (data.filebytes) {
+                utfBytes = new Int8Array(data.filebytes);
+            } else {
+                utfBytes = converters.hexStringToByteArray(data.encryptedMessageData);
+            }
+            sha256.update(converters.byteArrayToWordArrayEx(utfBytes));
             sha256.update(converters.byteArrayToWordArrayEx(converters.hexStringToByteArray(data.encryptedMessageNonce)));
             hashWords = sha256.finalize();
             calculatedHash = converters.wordArrayToByteArrayEx(hashWords);

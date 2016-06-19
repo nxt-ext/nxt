@@ -915,7 +915,7 @@ var NRS = (function(NRS, $) {
 							try {
 								NRS.tryToDecrypt(response, {
 									"note": ""
-								}, (response.buyer == NRS.account ? response.seller : response.buyer), {
+								}, NRS.getAccountForDecryption(response, "buyer", "seller"), {
 									"identifier": "purchase",
 									"formEl": "#" + type + "_note",
 									"outputEl": "#" + type + "_note",
@@ -938,7 +938,7 @@ var NRS = (function(NRS, $) {
 						} else if (type == "dgs_view_refund_modal") {
 							NRS.tryToDecrypt(response, {
 								"refundNote": $.t("Refund Note")
-							}, (response.buyer == NRS.account ? response.seller : response.buyer), {
+							}, NRS.getAccountForDecryption(response, "buyer", "seller"), {
 								"identifier": "purchase",
 								"noPadding": true,
 								"formEl": "#dgs_view_refund_output",
@@ -965,7 +965,7 @@ var NRS = (function(NRS, $) {
 								fieldsToDecrypt["refundNote"] = $.t("refund_note");
 							}
 
-							NRS.tryToDecrypt(response, fieldsToDecrypt, (response.buyer == NRS.account ? response.seller : response.buyer), {
+							NRS.tryToDecrypt(response, fieldsToDecrypt, NRS.getAccountForDecryption(response, "buyer", "seller"), {
 								"identifier": "purchase",
 								"noPadding": true,
 								"formEl": "#dgs_view_delivery_output",

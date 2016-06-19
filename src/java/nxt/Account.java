@@ -1562,6 +1562,9 @@ public final class Account {
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
+        if (event == null) {
+            return; // do not try to log ledger entry for FXT distribution
+        }
         if (AccountLedger.mustLogEntry(this.id, true)) {
             AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
                     LedgerHolding.UNCONFIRMED_ASSET_BALANCE, assetId,
@@ -1790,23 +1793,27 @@ public final class Account {
         }
     }
 
-    void payDividends(final long transactionId, final long assetId, final int height, final long amountNQTPerQNT) {
+    void payDividends(final long transactionId, Attachment.ColoredCoinsDividendPayment attachment) {
         long totalDividend = 0;
         List<AccountAsset> accountAssets = new ArrayList<>();
-        try (DbIterator<AccountAsset> iterator = getAssetAccounts(assetId, height, 0, -1)) {
+        try (DbIterator<AccountAsset> iterator = getAssetAccounts(attachment.getAssetId(), attachment.getHeight(), 0, -1)) {
             while (iterator.hasNext()) {
                 accountAssets.add(iterator.next());
             }
         }
+        final long amountNQTPerQNT = attachment.getAmountNQTPerQNT();
+        long numAccounts = 0;
         for (final AccountAsset accountAsset : accountAssets) {
             if (accountAsset.getAccountId() != this.id && accountAsset.getQuantityQNT() != 0) {
                 long dividend = Math.multiplyExact(accountAsset.getQuantityQNT(), amountNQTPerQNT);
                 Account.getAccount(accountAsset.getAccountId())
                         .addToBalanceAndUnconfirmedBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, transactionId, dividend);
                 totalDividend += dividend;
+                numAccounts += 1;
             }
         }
         this.addToBalanceNQT(LedgerEvent.ASSET_DIVIDEND_PAYMENT, transactionId, -totalDividend);
+        AssetDividend.addAssetDividend(transactionId, attachment, totalDividend, numAccounts);
     }
 
     @Override

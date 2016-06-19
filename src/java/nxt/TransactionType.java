@@ -22,6 +22,8 @@ import nxt.Attachment.AbstractAttachment;
 import nxt.NxtException.ValidationException;
 import nxt.VoteWeighting.VotingModel;
 import nxt.util.Convert;
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MediaType;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -2063,8 +2065,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                senderAccount.payDividends(transaction.getId(), attachment.getAssetId(), attachment.getHeight(),
-                        attachment.getAmountNQTPerQNT());
+                senderAccount.payDividends(transaction.getId(), attachment);
             }
 
             @Override
@@ -2105,6 +2106,21 @@ public abstract class TransactionType {
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
+                    AssetDividend lastDividend = AssetDividend.getLastDividend(attachment.getAssetId());
+                    if (lastDividend != null && lastDividend.getHeight() > Nxt.getBlockchain().getHeight() - 60) {
+                        throw new NxtException.NotCurrentlyValidException("Last dividend payment for asset " + Long.toUnsignedString(attachment.getAssetId())
+                                + " was less than 60 blocks ago at " + lastDividend.getHeight() + ", current height is " + Nxt.getBlockchain().getHeight()
+                                + ", limit is one dividend per 60 blocks");
+                    }
+                }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment) transaction.getAttachment();
+                return Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK &&
+                        isDuplicate(ColoredCoins.DIVIDEND_PAYMENT, Long.toUnsignedString(attachment.getAssetId()), duplicates, true);
             }
 
             @Override
@@ -2114,7 +2130,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean isPhasingSafe() {
-                return true;
+                return false;
             }
 
         };
@@ -2208,7 +2224,20 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
-                //TODO: at next hard fork, add validation that only prunable, binary, image message attachments are allowed
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
+                    Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
+                    if (prunablePlainMessage != null) {
+                        byte[] image = prunablePlainMessage.getMessage();
+                        if (image != null) {
+                            Tika tika = new Tika();
+                            String mediaTypeName = tika.detect(image);
+                            MediaType mediaType = MediaType.parse(mediaTypeName);
+                            if (mediaType == null || !"image".equals(mediaType.getType())) {
+                                throw new NxtException.NotValidException("Only image attachments allowed for DGS listing, media type is " + mediaType);
+                            }
+                        }
+                    }
+                }
             }
 
             @Override
@@ -2837,7 +2866,7 @@ public abstract class TransactionType {
                 }
                 byte[] recipientPublicKey = Account.getPublicKey(transaction.getRecipientId());
                 if (recipientPublicKey == null && Nxt.getBlockchain().getHeight() > Constants.PHASING_BLOCK) {
-                    throw new NxtException.NotValidException("Invalid effective balance leasing: "
+                    throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + Long.toUnsignedString(transaction.getRecipientId()) + " not found or no public key published");
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
@@ -3099,6 +3128,12 @@ public abstract class TransactionType {
                     if (!Arrays.equals(attachment.getHash(), taggedDataUpload.getHash())) {
                         throw new NxtException.NotValidException("Hashes don't match! Extend hash: " + Convert.toHexString(attachment.getHash())
                                 + " upload hash: " + Convert.toHexString(taggedDataUpload.getHash()));
+                    }
+                }
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
+                    TaggedData taggedData = TaggedData.getData(attachment.getTaggedDataId());
+                    if (taggedData != null && taggedData.getTransactionTimestamp() > Nxt.getEpochTime() + 6 * Constants.MIN_PRUNABLE_LIFETIME) {
+                        throw new NxtException.NotCurrentlyValidException("Data already extended, timestamp is " + taggedData.getTransactionTimestamp());
                     }
                 }
             }

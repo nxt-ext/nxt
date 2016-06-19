@@ -130,7 +130,7 @@ public interface Appendix {
         }
 
         boolean verifyVersion(byte transactionVersion) {
-            return transactionVersion == 0 ? version == 0 : version > 0;
+            return transactionVersion == 0 ? version == 0 : (Nxt.getBlockchain().getHeight() < Constants.FXT_BLOCK ? version > 0 : version == 1);
         }
 
         @Override
@@ -240,7 +240,7 @@ public interface Appendix {
             this(isText ? Convert.toBytes(string) : Convert.parseHexString(string), isText);
         }
 
-        private Message(byte[] message, boolean isText) {
+        public Message(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
         }
@@ -355,7 +355,7 @@ public interface Appendix {
             this(Convert.toBytes(string, isText), isText);
         }
 
-        private PrunablePlainMessage(byte[] message, boolean isText) {
+        public PrunablePlainMessage(byte[] message, boolean isText) {
             this.message = message;
             this.isText = isText;
             this.hash = null;
@@ -550,6 +550,14 @@ public interface Appendix {
             if ((getVersion() != 2 && !isCompressed) || (getVersion() == 2 && isCompressed)) {
                 throw new NxtException.NotValidException("Version mismatch - version " + getVersion() + ", isCompressed " + isCompressed);
             }
+        }
+
+        @Override
+        final boolean verifyVersion(byte transactionVersion) {
+            if (Nxt.getBlockchain().getHeight() < Constants.FXT_BLOCK) {
+                return super.verifyVersion(transactionVersion);
+            }
+            return transactionVersion == 0 ? getVersion() == 0 : (getVersion() == 1 || getVersion() == 2);
         }
 
         @Override
@@ -1380,7 +1388,11 @@ public interface Appendix {
 
         @Override
         void validateAtFinish(Transaction transaction) throws NxtException.ValidationException {
-            params.getVoteWeighting().validate();
+            if (Nxt.getBlockchain().getHeight() < Constants.FXT_BLOCK) {
+                params.getVoteWeighting().validate();
+            } else {
+                params.checkApprovable();
+            }
         }
 
         @Override

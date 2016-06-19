@@ -118,8 +118,7 @@ var NRS = (function (NRS, $, undefined) {
 
 		var result = a.div(b).times(new Big("100")).toFixed(2);
 		Big.RM = 1;
-
-		return result.toString();
+		return NRS.format(result.toString());
 	};
 
     NRS.convertToNXT = function (amount, returnAsObject) {
@@ -524,8 +523,28 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
+    NRS.getBlockHeightMoment = function(height) {
+        if (!height || !NRS.lastBlockHeight || !NRS.averageBlockGenerationTime) {
+            return "-";
+        }
+        var heightDiff = height - NRS.lastBlockHeight;
+        return moment().add(heightDiff * NRS.averageBlockGenerationTime, 'seconds');
+    };
+    
+    NRS.getBlockHeightTimeEstimate = function(height) {
+        var heightMoment = NRS.getBlockHeightMoment(height);
+        if (heightMoment == "-") {
+            return "-";
+        }
+        return heightMoment.format("YYYY/MM/DD hh:mm a");
+   	};
+
     NRS.baseTargetPercent = function(block) {
-        return Math.round(block.baseTarget / 153722867 * 100)
+        if (block) {
+            return Math.round(block.baseTarget / 153722867 * 100)
+        } else {
+            return 0;
+        }
     };
 
     NRS.isPrivateIP = function (ip) {
@@ -576,7 +595,7 @@ var NRS = (function (NRS, $, undefined) {
 	};
 
     NRS.getFormData = function ($form, unmodified) {
-		var serialized = $form.serializeArray();
+		var serialized = $form.serializeArray(); // Warning: converts \n to \r\n
 		var data = {};
         var multiValuedFields = ["phasingWhitelisted", "controlWhitelisted"];
 		for (var s in serialized) {
@@ -1405,6 +1424,22 @@ var NRS = (function (NRS, $, undefined) {
             statusIcon = "<i class='fa fa-circle' title='" + $.t("confirmed") + "'></i>";
         }
         return statusIcon;
+    };
+    
+    NRS.getAccountForDecryption = function(transaction, recipient, sender) {
+        if (!recipient && transaction.recipient == NRS.account) {
+            return transaction.sender;
+        }
+        if (transaction[recipient] == NRS.account) {
+            return transaction.sender;
+        }
+        if (!sender && transaction.sender == NRS.account) {
+            return transaction.recipient;
+        }
+        if (transaction[sender] == NRS.account) {
+            return transaction.recipient;
+        }
+        return null;
     };
 
     NRS.phasingControlObjectToPhasingParams = function(controlObj) {

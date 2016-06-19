@@ -16,47 +16,37 @@
 
 package nxt.http;
 
+import nxt.FxtDistribution;
 import nxt.NxtException;
-import nxt.PrunableMessage;
-import nxt.db.DbIterator;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
-public final class GetPrunableMessages extends APIServlet.APIRequestHandler {
+public final class GetFxtQuantity extends APIServlet.APIRequestHandler {
 
-    static final GetPrunableMessages instance = new GetPrunableMessages();
+    static final GetFxtQuantity instance = new GetFxtQuantity();
 
-    private GetPrunableMessages() {
-        super(new APITag[] {APITag.MESSAGES}, "account", "otherAccount", "secretPhrase", "firstIndex", "lastIndex", "timestamp");
+    private GetFxtQuantity() {
+        super(new APITag[] {APITag.ACCOUNTS}, "account");
     }
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
         long accountId = ParameterParser.getAccountId(req, true);
-        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
-        int firstIndex = ParameterParser.getFirstIndex(req);
-        int lastIndex = ParameterParser.getLastIndex(req);
-        final int timestamp = ParameterParser.getTimestamp(req);
-        long otherAccountId = ParameterParser.getAccountId(req, "otherAccount", false);
-
-        JSONObject response = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        response.put("prunableMessages", jsonArray);
-
-        try (DbIterator<PrunableMessage> messages = otherAccountId == 0 ? PrunableMessage.getPrunableMessages(accountId, firstIndex, lastIndex)
-                : PrunableMessage.getPrunableMessages(accountId, otherAccountId, firstIndex, lastIndex)) {
-            while (messages.hasNext()) {
-                PrunableMessage prunableMessage = messages.next();
-                if (prunableMessage.getBlockTimestamp() < timestamp) {
-                    break;
-                }
-                jsonArray.add(JSONData.prunableMessage(prunableMessage, secretPhrase, null));
-            }
-        }
-        return response;
+        JSONObject json = new JSONObject();
+        long confirmedQuantity = FxtDistribution.getConfirmedFxtQuantity(accountId);
+        long remainingQuantity = FxtDistribution.getRemainingFxtQuantity(accountId);
+        long total = confirmedQuantity + remainingQuantity;
+        json.put("quantityQNT", String.valueOf(confirmedQuantity));
+        json.put("remainingQuantityQNT", String.valueOf(remainingQuantity));
+        json.put("totalExpectedQuantityQNT", String.valueOf(total));
+        json.put("distributionStart", FxtDistribution.DISTRIBUTION_START);
+        json.put("distributionEnd", FxtDistribution.DISTRIBUTION_END);
+        json.put("distributionFrequency", FxtDistribution.DISTRIBUTION_FREQUENCY);
+        json.put("distributionStep", FxtDistribution.DISTRIBUTION_STEP);
+        json.put("fxtAsset", Long.toUnsignedString(FxtDistribution.FXT_ASSET_ID));
+        return json;
     }
 
 }
