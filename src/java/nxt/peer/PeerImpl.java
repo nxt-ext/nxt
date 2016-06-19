@@ -54,11 +54,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
@@ -91,6 +87,7 @@ final class PeerImpl implements Peer {
     private volatile long hallmarkBalance = -1;
     private volatile int hallmarkBalanceHeight;
     private volatile long services;
+    private BlockchainState blockchainState;
 
     PeerImpl(String host, String announcedAddress) {
         this.host = host;
@@ -104,6 +101,7 @@ final class PeerImpl implements Peer {
         this.useWebSocket = Peers.useWebSockets && !Peers.useProxy;
         this.disabledAPIs = EnumSet.noneOf(APIEnum.class);
         this.apiServerIdleTimeout = API.apiServerIdleTimeout;
+        this.blockchainState = BlockchainState.UP_TO_DATE;
     }
 
     @Override
@@ -281,6 +279,20 @@ final class PeerImpl implements Peer {
     public void setApiServerIdleTimeout(Object apiServerIdleTimeout) {
         if (apiServerIdleTimeout instanceof Integer) {
             this.apiServerIdleTimeout = (int) apiServerIdleTimeout;
+        }
+    }
+
+    @Override
+    public BlockchainState getBlockchainState() {
+        return blockchainState;
+    }
+
+    public void setBlockchainState(Object blockchainStateObj) {
+        if (blockchainStateObj instanceof Integer) {
+            int blockchainStateInt = (int)blockchainStateObj;
+            if (blockchainStateInt >= 0 && blockchainStateInt < BlockchainState.values().length) {
+                this.blockchainState = BlockchainState.values()[blockchainStateInt];
+            }
         }
     }
 
@@ -569,7 +581,7 @@ final class PeerImpl implements Peer {
             //
             if (response != null && response.get("error") != null) {
                 deactivate();
-                if (Errors.SEQUENCE_ERROR.equals(response.get("error")) && request != Peers.myPeerInfoRequest) {
+                if (Errors.SEQUENCE_ERROR.equals(response.get("error")) && request != Peers.getMyPeerInfoRequest()) {
                     Logger.logDebugMessage("Sequence error, reconnecting to " + host);
                     connect();
                 } else {
@@ -640,7 +652,7 @@ final class PeerImpl implements Peer {
                     return;
                 }
             }
-            JSONObject response = send(Peers.myPeerInfoRequest);
+            JSONObject response = send(Peers.getMyPeerInfoRequest());
             if (response != null) {
                 if (response.get("error") != null) {
                     setState(State.NON_CONNECTED);
@@ -654,6 +666,7 @@ final class PeerImpl implements Peer {
                 setApiSSLPort(response.get("apiSSLPort"));
                 setDisabledAPIs(response.get("disabledAPIs"));
                 setApiServerIdleTimeout(response.get("apiServerIdleTimeout"));
+                setBlockchainState(response.get("blockchainState"));
                 lastUpdated = lastConnectAttempt;
                 setVersion((String) response.get("version"));
                 setPlatform((String) response.get("platform"));

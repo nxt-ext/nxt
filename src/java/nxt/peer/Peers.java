@@ -132,8 +132,7 @@ public final class Peers {
     static final int MAX_ANNOUNCED_ADDRESS_LENGTH = 100;
     static final boolean hideErrorDetails = Nxt.getBooleanProperty("nxt.hideErrorDetails");
 
-    static final JSONStreamAware myPeerInfoRequest;
-    static final JSONStreamAware myPeerInfoResponse;
+    static final JSONObject myPeerInfo;
     private static final List<Peer.Service> myServices;
 
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
@@ -298,9 +297,7 @@ public final class Peers {
         json.put("services", Long.toUnsignedString(services));
         myServices = Collections.unmodifiableList(servicesList);
         Logger.logDebugMessage("My peer info:\n" + json.toJSONString());
-        myPeerInfoResponse = JSON.prepare(json);
-        json.put("requestType", "getInfo");
-        myPeerInfoRequest = JSON.prepareRequest(json);
+        myPeerInfo = json;
 
         final List<String> defaultPeers = Constants.isTestnet ? Nxt.getStringListProperty("nxt.defaultTestnetPeers")
                 : Nxt.getStringListProperty("nxt.defaultPeers");
@@ -1030,7 +1027,8 @@ public final class Peers {
                     continue;
                 }
 
-                if (!peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
+                if (!peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
+                        && peer.getBlockchainState() != Peer.BlockchainState.LIGHT_CLIENT) {
                     Future<JSONObject> futureResponse = peersService.submit(() -> peer.send(jsonRequest));
                     expectedResponses.add(futureResponse);
                 }
@@ -1161,6 +1159,26 @@ public final class Peers {
      */
     public static List<Peer.Service> getServices() {
         return myServices;
+    }
+
+    private static JSONObject getCurrentPeerInfo() {
+        JSONObject result = new JSONObject(myPeerInfo);
+        Peer.BlockchainState state = Constants.isLightClient ? Peer.BlockchainState.LIGHT_CLIENT :
+                Nxt.getBlockchainProcessor().isDownloading() ? Peer.BlockchainState.DOWNLOADING :
+                        Peer.BlockchainState.UP_TO_DATE;
+        result.put("blockchainState", state.ordinal());
+        return result;
+    }
+
+    public static JSONStreamAware getMyPeerInfoRequest() {
+        JSONObject json = getCurrentPeerInfo();
+        json.put("requestType", "getInfo");
+        return JSON.prepareRequest(json);
+    }
+
+    public static JSONStreamAware getMyPeerInfoResponse() {
+        JSONObject json = getCurrentPeerInfo();
+        return JSON.prepareRequest(json);
     }
 
     private Peers() {} // never

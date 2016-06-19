@@ -45,6 +45,12 @@ public interface Peer extends Comparable<Peer> {
         }
     }
 
+    enum BlockchainState {
+        UP_TO_DATE,
+        DOWNLOADING,
+        LIGHT_CLIENT
+    }
+
     boolean providesService(Service service);
 
     boolean providesServices(long services);
@@ -72,6 +78,8 @@ public interface Peer extends Comparable<Peer> {
     Set<APIEnum> getDisabledAPIs();
 
     int getApiServerIdleTimeout();
+
+    BlockchainState getBlockchainState();
 
     Hallmark getHallmark();
 

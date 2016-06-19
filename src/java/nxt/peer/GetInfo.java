@@ -96,12 +96,13 @@ final class GetInfo extends PeerServlet.PeerRequestHandler {
         peerImpl.setApiSSLPort(request.get("apiSSLPort"));
         peerImpl.setDisabledAPIs(request.get("disabledAPIs"));
         peerImpl.setApiServerIdleTimeout(request.get("apiServerIdleTimeout"));
+        peerImpl.setBlockchainState(request.get("blockchainState"));
 
         if (peerImpl.getServices() != origServices) {
             Peers.notifyListeners(peerImpl, Peers.Event.CHANGED_SERVICES);
         }
 
-        return Peers.myPeerInfoResponse;
+        return Peers.getMyPeerInfoResponse();
 
     }
 
