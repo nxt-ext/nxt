@@ -628,7 +628,7 @@ var NRS = (function(NRS, $) {
 
 					NRS.sendRequest(requestType, data, function (response) {
 						formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
-							originalRequestType, formErrorFunction);
+							originalRequestType, formErrorFunction, errorMessage);
 					})
 				});
 			} catch (err) {
