@@ -1928,7 +1928,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 Logger.logDebugMessage("Also verifying signatures and validating transactions...");
             }
             try (Connection con = Db.db.getConnection();
-                 PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block " + (height > 0 ? "WHERE height >= ? " : "") + "ORDER BY db_id ASC");
+                 PreparedStatement pstmtSelect = con.prepareStatement("SELECT * FROM block WHERE " + (height > 0 ? "height >= ? AND " : "")
+                         + " db_id >= ? ORDER BY db_id ASC LIMIT 50000");
                  PreparedStatement pstmtDone = con.prepareStatement("UPDATE scan SET rescan = FALSE, height = 0, validate = FALSE")) {
                 isScanning = true;
                 initialScanHeight = blockchain.getHeight();
@@ -1968,76 +1969,87 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }).start();
                     return;
                 }
+                int pstmtSelectIndex = 1;
                 if (height > 0) {
-                    pstmtSelect.setInt(1, height);
+                    pstmtSelect.setInt(pstmtSelectIndex++, height);
                 }
-                try (ResultSet rs = pstmtSelect.executeQuery()) {
-                    while (rs.next()) {
-                        try {
-                            currentBlock = BlockDb.loadBlock(con, rs, true);
-                            currentBlock.loadTransactions();
-                            if (currentBlock.getId() != currentBlockId || currentBlock.getHeight() > blockchain.getHeight() + 1) {
-                                throw new NxtException.NotValidException("Database blocks in the wrong order!");
-                            }
-                            Map<TransactionType, Map<String, Integer>> duplicates = new HashMap<>();
-                            List<TransactionImpl> validPhasedTransactions = new ArrayList<>();
-                            List<TransactionImpl> invalidPhasedTransactions = new ArrayList<>();
-                            validatePhasedTransactions(blockchain.getHeight(), validPhasedTransactions, invalidPhasedTransactions, duplicates);
-                            if (validate && currentBlockId != Genesis.GENESIS_BLOCK_ID) {
-                                int curTime = Nxt.getEpochTime();
-                                validate(currentBlock, blockchain.getLastBlock(), curTime);
-                                byte[] blockBytes = currentBlock.bytes();
-                                JSONObject blockJSON = (JSONObject) JSONValue.parse(currentBlock.getJSONObject().toJSONString());
-                                if (!Arrays.equals(blockBytes, BlockImpl.parseBlock(blockJSON).bytes())) {
-                                    throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
-                                }
-                                validateTransactions(currentBlock, blockchain.getLastBlock(), curTime, duplicates, true);
-                                for (TransactionImpl transaction : currentBlock.getTransactions()) {
-                                    byte[] transactionBytes = transaction.bytes();
-                                    if (currentBlock.getHeight() > Constants.NQT_BLOCK
-                                            && !Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionBytes).build().bytes())) {
-                                        throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction: "
-                                                + transaction.getJSONObject().toJSONString());
-                                    }
-                                    JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
-                                    if (!Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionJSON).build().bytes())) {
-                                        throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction: "
-                                                + transaction.getJSONObject().toJSONString());
-                                    }
-                                }
-                            }
-                            blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
-                            blockchain.setLastBlock(currentBlock);
-                            accept(currentBlock, validPhasedTransactions, invalidPhasedTransactions, duplicates);
-                            currentBlockId = currentBlock.getNextBlockId();
-                            Db.db.clearCache();
-                            Db.db.commitTransaction();
-                            blockListeners.notify(currentBlock, Event.AFTER_BLOCK_ACCEPT);
-                        } catch (NxtException | RuntimeException e) {
-                            Db.db.rollbackTransaction();
-                            Logger.logDebugMessage(e.toString(), e);
-                            Logger.logDebugMessage("Applying block " + Long.toUnsignedString(currentBlockId) + " at height "
-                                    + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
-                            if (currentBlock != null) {
+                long dbId = Long.MIN_VALUE;
+                boolean hasMore = true;
+                outer:
+                while (hasMore) {
+                    hasMore = false;
+                    pstmtSelect.setLong(pstmtSelectIndex, dbId);
+                    try (ResultSet rs = pstmtSelect.executeQuery()) {
+                        while (rs.next()) {
+                            try {
+                                dbId = rs.getLong("db_id");
+                                currentBlock = BlockDb.loadBlock(con, rs, true);
                                 currentBlock.loadTransactions();
-                                TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
-                            }
-                            while (rs.next()) {
-                                try {
-                                    currentBlock = BlockDb.loadBlock(con, rs, true);
+                                if (currentBlock.getId() != currentBlockId || currentBlock.getHeight() > blockchain.getHeight() + 1) {
+                                    throw new NxtException.NotValidException("Database blocks in the wrong order!");
+                                }
+                                Map<TransactionType, Map<String, Integer>> duplicates = new HashMap<>();
+                                List<TransactionImpl> validPhasedTransactions = new ArrayList<>();
+                                List<TransactionImpl> invalidPhasedTransactions = new ArrayList<>();
+                                validatePhasedTransactions(blockchain.getHeight(), validPhasedTransactions, invalidPhasedTransactions, duplicates);
+                                if (validate && currentBlockId != Genesis.GENESIS_BLOCK_ID) {
+                                    int curTime = Nxt.getEpochTime();
+                                    validate(currentBlock, blockchain.getLastBlock(), curTime);
+                                    byte[] blockBytes = currentBlock.bytes();
+                                    JSONObject blockJSON = (JSONObject) JSONValue.parse(currentBlock.getJSONObject().toJSONString());
+                                    if (!Arrays.equals(blockBytes, BlockImpl.parseBlock(blockJSON).bytes())) {
+                                        throw new NxtException.NotValidException("Block JSON cannot be parsed back to the same block");
+                                    }
+                                    validateTransactions(currentBlock, blockchain.getLastBlock(), curTime, duplicates, true);
+                                    for (TransactionImpl transaction : currentBlock.getTransactions()) {
+                                        byte[] transactionBytes = transaction.bytes();
+                                        if (currentBlock.getHeight() > Constants.NQT_BLOCK
+                                                && !Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionBytes).build().bytes())) {
+                                            throw new NxtException.NotValidException("Transaction bytes cannot be parsed back to the same transaction: "
+                                                    + transaction.getJSONObject().toJSONString());
+                                        }
+                                        JSONObject transactionJSON = (JSONObject) JSONValue.parse(transaction.getJSONObject().toJSONString());
+                                        if (!Arrays.equals(transactionBytes, TransactionImpl.newTransactionBuilder(transactionJSON).build().bytes())) {
+                                            throw new NxtException.NotValidException("Transaction JSON cannot be parsed back to the same transaction: "
+                                                    + transaction.getJSONObject().toJSONString());
+                                        }
+                                    }
+                                }
+                                blockListeners.notify(currentBlock, Event.BEFORE_BLOCK_ACCEPT);
+                                blockchain.setLastBlock(currentBlock);
+                                accept(currentBlock, validPhasedTransactions, invalidPhasedTransactions, duplicates);
+                                currentBlockId = currentBlock.getNextBlockId();
+                                Db.db.clearCache();
+                                Db.db.commitTransaction();
+                                blockListeners.notify(currentBlock, Event.AFTER_BLOCK_ACCEPT);
+                            } catch (NxtException | RuntimeException e) {
+                                Db.db.rollbackTransaction();
+                                Logger.logDebugMessage(e.toString(), e);
+                                Logger.logDebugMessage("Applying block " + Long.toUnsignedString(currentBlockId) + " at height "
+                                        + (currentBlock == null ? 0 : currentBlock.getHeight()) + " failed, deleting from database");
+                                if (currentBlock != null) {
                                     currentBlock.loadTransactions();
                                     TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
-                                } catch (RuntimeException e2) {
-                                    Logger.logErrorMessage(e2.toString(), e);
-                                    break;
                                 }
+                                while (rs.next()) {
+                                    try {
+                                        currentBlock = BlockDb.loadBlock(con, rs, true);
+                                        currentBlock.loadTransactions();
+                                        TransactionProcessorImpl.getInstance().processLater(currentBlock.getTransactions());
+                                    } catch (RuntimeException e2) {
+                                        Logger.logErrorMessage(e2.toString(), e);
+                                        break;
+                                    }
+                                }
+                                BlockImpl lastBlock = BlockDb.deleteBlocksFrom(currentBlockId);
+                                blockchain.setLastBlock(lastBlock);
+                                popOffTo(lastBlock);
+                                break outer;
                             }
-                            BlockImpl lastBlock = BlockDb.deleteBlocksFrom(currentBlockId);
-                            blockchain.setLastBlock(lastBlock);
-                            popOffTo(lastBlock);
-                            break;
+                            blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                            hasMore = true;
                         }
-                        blockListeners.notify(currentBlock, Event.BLOCK_SCANNED);
+                        dbId = dbId + 1;
                     }
                 }
                 if (height == 0) {
