@@ -52,11 +52,18 @@ public final class FxtDistribution implements Listener<Block> {
                         stmt.executeUpdate("TRUNCATE TABLE account_fxt");
                     }
                 } else {
-                    try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_fxt WHERE (id, height) NOT IN "
-                            + "(SELECT (id, MAX(height)) FROM account_fxt WHERE height < ? GROUP BY id) AND height < ? AND height >= 0")) {
-                        pstmt.setInt(1, height);
-                        pstmt.setInt(2, height);
-                        pstmt.executeUpdate();
+                    try (PreparedStatement pstmtCreate = con.prepareStatement("CREATE TEMP TABLE account_fxt_tmp NOT PERSISTENT AS "
+                            + "SELECT id, MAX(height) AS height FROM account_fxt WHERE height < ? GROUP BY id");
+                         PreparedStatement pstmtDrop = con.prepareStatement("DROP TABLE account_fxt_tmp")) {
+                        pstmtCreate.setInt(1, height);
+                        pstmtCreate.executeUpdate();
+                        try (PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_fxt WHERE (id, height) NOT IN "
+                                + "(SELECT (id, height) FROM account_fxt_tmp) AND height < ? AND height >= 0")) {
+                            pstmt.setInt(1, height);
+                            pstmt.executeUpdate();
+                        } finally {
+                            pstmtDrop.executeUpdate();
+                        }
                     }
                 }
             } catch (SQLException e) {
@@ -112,21 +119,28 @@ public final class FxtDistribution implements Listener<Block> {
         for (int height = currentHeight - DISTRIBUTION_FREQUENCY + DISTRIBUTION_STEP; height <= currentHeight; height += DISTRIBUTION_STEP) {
             Logger.logDebugMessage("Calculating balances at height " + height);
             try (Connection con = Db.db.getConnection();
-                 PreparedStatement pstmt = con.prepareStatement("SELECT id, balance FROM account WHERE (id, height) IN "
-                         + "(SELECT (id, MAX(height)) FROM account WHERE height <= ? GROUP BY id) AND balance > 0")) {
-                pstmt.setInt(1, height);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        Long accountId = rs.getLong("id");
-                        long balance = rs.getLong("balance");
-                        if (logAccountId != 0) {
-                            if (accountId == logAccountId) {
-                                Logger.logMessage("NXT balance for " + logAccount + " at height " + height + ":\t" + balance);
+                 PreparedStatement pstmtCreate = con.prepareStatement("CREATE TEMP TABLE account_tmp NOT PERSISTENT AS SELECT id, MAX(height) as height FROM account "
+                         + "WHERE height <= ? GROUP BY id")) {
+                pstmtCreate.setInt(1, height);
+                pstmtCreate.executeUpdate();
+                try (PreparedStatement pstmtSelect = con.prepareStatement("SELECT account.id, account.balance FROM account, account_tmp WHERE account.id = account_tmp.id "
+                        + "AND account.height = account_tmp.height AND account.balance > 0");
+                     PreparedStatement pstmtDrop = con.prepareStatement("DROP TABLE account_tmp")) {
+                    try (ResultSet rs = pstmtSelect.executeQuery()) {
+                        while (rs.next()) {
+                            Long accountId = rs.getLong("id");
+                            long balance = rs.getLong("balance");
+                            if (logAccountId != 0) {
+                                if (accountId == logAccountId) {
+                                    Logger.logMessage("NXT balance for " + logAccount + " at height " + height + ":\t" + balance);
+                                }
                             }
+                            BigInteger accountBalanceTotal = accountBalanceTotals.get(accountId);
+                            accountBalanceTotals.put(accountId, accountBalanceTotal == null ?
+                                    BigInteger.valueOf(balance) : accountBalanceTotal.add(BigInteger.valueOf(balance)));
                         }
-                        BigInteger accountBalanceTotal = accountBalanceTotals.get(accountId);
-                        accountBalanceTotals.put(accountId, accountBalanceTotal == null ?
-                                BigInteger.valueOf(balance) : accountBalanceTotal.add(BigInteger.valueOf(balance)));
+                    } finally {
+                        pstmtDrop.executeUpdate();
                     }
                 }
             } catch (SQLException e) {
@@ -142,6 +156,7 @@ public final class FxtDistribution implements Listener<Block> {
         try (Connection con = Db.db.getConnection();
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT balance FROM account_fxt WHERE id = ? ORDER BY height DESC LIMIT 1");
              PreparedStatement pstmtInsert = con.prepareStatement("INSERT INTO account_fxt (id, balance, height) values (?, ?, ?)")) {
+            int count = 0;
             for (Map.Entry<Long, BigInteger> entry : accountBalanceTotals.entrySet()) {
                 long accountId = entry.getKey();
                 BigInteger balanceTotal = entry.getValue();
@@ -161,38 +176,53 @@ public final class FxtDistribution implements Listener<Block> {
                 pstmtInsert.setBytes(2, balanceTotal.toByteArray());
                 pstmtInsert.setInt(3, currentHeight);
                 pstmtInsert.executeUpdate();
+                if (++count % 1000 == 0) {
+                    Db.db.commitTransaction();
+                }
             }
+            accountBalanceTotals.clear();
             Db.db.commitTransaction();
             if (currentHeight == DISTRIBUTION_END) {
                 Logger.logDebugMessage("Running FXT distribution at height " + currentHeight);
                 long totalDistributed = 0;
-                int count = 0;
-                try (Statement stmt = con.createStatement();
-                     ResultSet rs = stmt.executeQuery("SELECT id, balance FROM account_fxt WHERE (id, height) IN "
-                             + "(SELECT (id, MAX(height)) FROM account_fxt WHERE height <= " + currentHeight + " GROUP BY id)")) {
-                    while (rs.next()) {
-                        long accountId = rs.getLong("id");
-                        // 1 NXT held for the full period should give 1 asset unit, i.e. 10000 QNT assuming 4 decimals
-                        long quantity = new BigInteger(rs.getBytes("balance")).divide(BALANCE_DIVIDER).longValueExact();
-                        if (logAccountId != 0) {
-                            if (accountId == logAccountId) {
-                                Logger.logMessage("FXT quantity for " + logAccount + ":\t" + quantity);
+                count = 0;
+                try (PreparedStatement pstmtCreate = con.prepareStatement("CREATE TEMP TABLE account_fxt_tmp NOT PERSISTENT AS SELECT id, MAX(height) AS height FROM account_fxt "
+                        + "WHERE height <= ? GROUP BY id");
+                     PreparedStatement pstmtDrop = con.prepareStatement("DROP TABLE account_fxt_tmp")) {
+                    pstmtCreate.setInt(1, currentHeight);
+                    pstmtCreate.executeUpdate();
+                    try (PreparedStatement pstmt = con.prepareStatement("SELECT account_fxt.id, account_fxt.balance FROM account_fxt, account_fxt_tmp "
+                            + "WHERE account_fxt.id = account_fxt_tmp.id AND account_fxt.height = account_fxt_tmp.height");
+                         ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            long accountId = rs.getLong("id");
+                            // 1 NXT held for the full period should give 1 asset unit, i.e. 10000 QNT assuming 4 decimals
+                            long quantity = new BigInteger(rs.getBytes("balance")).divide(BALANCE_DIVIDER).longValueExact();
+                            if (logAccountId != 0) {
+                                if (accountId == logAccountId) {
+                                    Logger.logMessage("FXT quantity for " + logAccount + ":\t" + quantity);
+                                }
+                            }
+                            Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
+                                    FXT_ASSET_ID, quantity);
+                            totalDistributed += quantity;
+                            if (++count % 1000 == 0) {
+                                Db.db.commitTransaction();
                             }
                         }
-                        Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
-                                FXT_ASSET_ID, quantity);
-                        totalDistributed += quantity;
-                        count += 1;
+                    } finally {
+                        pstmtDrop.executeUpdate();
                     }
-                    Account issuerAccount = Account.getAccount(FXT_ISSUER_ID);
-                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
-                            FXT_ASSET_ID, -totalDistributed);
-                    long excessFxtQuantity = Asset.getAsset(FXT_ASSET_ID).getInitialQuantityQNT() - totalDistributed;
-                    issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
-                            FXT_ASSET_ID, -excessFxtQuantity);
-                    Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
-                    Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
                 }
+                Account issuerAccount = Account.getAccount(FXT_ISSUER_ID);
+                issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
+                        FXT_ASSET_ID, -totalDistributed);
+                long excessFxtQuantity = Asset.getAsset(FXT_ASSET_ID).getInitialQuantityQNT() - totalDistributed;
+                issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
+                        FXT_ASSET_ID, -excessFxtQuantity);
+                Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
+                Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
+
                 Logger.logDebugMessage("Distributed " + totalDistributed + " QNT to " + count + " accounts");
                 Db.db.commitTransaction();
             }
