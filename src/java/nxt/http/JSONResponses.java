@@ -391,6 +391,14 @@ public final class JSONResponses {
         PROXY_ADMIN_PASSWORD_DETECTED = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware LIGHT_CLIENT_NO_OPEN_API_PEERS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 19);
+        response.put("errorDescription", "No openAPI peers found");
+        LIGHT_CLIENT_NO_OPEN_API_PEERS = JSON.prepare(response);
+    }
+
     public static final JSONStreamAware PEER_NOT_CONNECTED;
     static {
         JSONObject response = new JSONObject();

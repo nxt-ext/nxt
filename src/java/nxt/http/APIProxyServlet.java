@@ -16,6 +16,7 @@
 
 package nxt.http;
 
+import nxt.Constants;
 import nxt.peer.Peer;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -47,7 +48,8 @@ import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<String> NOT_FORWARDED_REQUESTS;
     private static final Set<APITag> NOT_FORWARDED_TAGS;
-    private static final String REQUEST_TYPE = APIProxyServlet.class.getName() + ".requestType";
+    private static final String REMOTE_URL = APIProxyServlet.class.getName() + ".remoteUrl";
+    private static final String REMOTE_SERVER_IDLE_TIMEOUT = APIProxyServlet.class.getName() + ".remoteServerIdleTimeout";
     public static final int PROXY_IDLE_TIMEOUT_DELTA = 5000;
 
     static {
@@ -90,9 +92,18 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             if (apiServlet == null) {
                 apiServlet = new APIServlet();
             }
-            parseQueryString(request);
-            if (APIProxy.isActivated() && isForwardable(request)) {
-                super.service(request, response);
+            String requestType = parseQueryString(request);
+
+            if (APIProxy.isActivated() && isForwardable(requestType)) {
+                if (!initRemoteRequest(request, requestType)) {
+                    if (Constants.isLightClient) {
+                        responseJson = JSONResponses.LIGHT_CLIENT_NO_OPEN_API_PEERS;
+                    } else {
+                        apiServlet.service(request, response);
+                    }
+                } else {
+                    super.service(request, response);
+                }
             } else {
                 apiServlet.service(request, response);
             }
@@ -128,40 +139,14 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     @Override
     protected String rewriteTarget(HttpServletRequest clientRequest) {
 
-        StringBuilder uri = new StringBuilder();
-        if (!APIProxy.forcedServerURL.isEmpty()) {
-            uri.append(APIProxy.forcedServerURL);
-        } else {
-            String requestType = (String) clientRequest.getAttribute(REQUEST_TYPE);
-            Peer servingPeer = APIProxy.getInstance().getServingPeer(requestType);
-            if (servingPeer == null) {
-                return null;
-            }
-            boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
-            if (useHttps) {
-                uri.append("https://");
-            } else {
-                uri.append("http://");
-            }
-            uri.append(servingPeer.getHost()).append(":");
-            if (useHttps) {
-                uri.append(servingPeer.getApiSSLPort());
-            } else {
-                uri.append(servingPeer.getApiPort());
-            }
-            uri.append("/nxt");
-
-            HttpClient httpClient = getHttpClient();
-            if (httpClient != null) {
-                httpClient.setIdleTimeout(Math.max(servingPeer.getApiServerIdleTimeout() - PROXY_IDLE_TIMEOUT_DELTA, 0));
-            }
+        Integer timeout = (Integer) clientRequest.getAttribute(REMOTE_SERVER_IDLE_TIMEOUT);
+        HttpClient httpClient = getHttpClient();
+        if (timeout != null && httpClient != null) {
+            httpClient.setIdleTimeout(Math.max(timeout - PROXY_IDLE_TIMEOUT_DELTA, 0));
         }
 
-        String query = clientRequest.getQueryString();
-        if (query != null) {
-            uri.append("?").append(query);
-        }
-        URI rewrittenURI = URI.create(uri.toString()).normalize();
+        String remoteUrl = (String) clientRequest.getAttribute(REMOTE_URL);
+        URI rewrittenURI = URI.create(remoteUrl).normalize();
         return rewrittenURI.toString();
     }
 
@@ -182,7 +167,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         }
     }
 
-    private void parseQueryString(HttpServletRequest clientRequest) throws ParameterException {
+    private String parseQueryString(HttpServletRequest clientRequest) throws ParameterException {
         MultiMap<String> parameters = new MultiMap<>();
         String queryString = clientRequest.getQueryString();
         String requestType = null;
@@ -213,13 +198,47 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             throw new ParameterException(JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
         }
 
-        clientRequest.setAttribute(REQUEST_TYPE, requestType);
+
+        return requestType;
     }
 
-    private boolean isForwardable(HttpServletRequest clientRequest) {
+    private boolean initRemoteRequest(HttpServletRequest clientRequest, String requestType) {
+        StringBuilder uri = new StringBuilder();
+        if (!APIProxy.forcedServerURL.isEmpty()) {
+            uri.append(APIProxy.forcedServerURL);
+        } else {
+            Peer servingPeer = APIProxy.getInstance().getServingPeer(requestType);
+            if (servingPeer == null) {
+                return false;
+            }
+            boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
+            if (useHttps) {
+                uri.append("https://");
+            } else {
+                uri.append("http://");
+            }
+            uri.append(servingPeer.getHost()).append(":");
+            if (useHttps) {
+                uri.append(servingPeer.getApiSSLPort());
+            } else {
+                uri.append(servingPeer.getApiPort());
+            }
+            uri.append("/nxt");
 
-        String requestType = (String) clientRequest.getAttribute(REQUEST_TYPE);
+            clientRequest.setAttribute(REMOTE_SERVER_IDLE_TIMEOUT, servingPeer.getApiServerIdleTimeout());
+        }
 
+        String query = clientRequest.getQueryString();
+        if (query != null) {
+            uri.append("?").append(query);
+        }
+
+        clientRequest.setAttribute(REMOTE_URL, uri.toString());
+
+        return true;
+    }
+
+    private boolean isForwardable(String requestType) {
         APIServlet.APIRequestHandler apiRequestHandler = APIServlet.apiRequestHandlers.get(requestType);
 
         if (!apiRequestHandler.requireBlockchain()) {
