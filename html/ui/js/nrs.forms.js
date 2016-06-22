@@ -628,7 +628,7 @@ var NRS = (function(NRS, $) {
 
 					NRS.sendRequest(requestType, data, function (response) {
 						formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
-							originalRequestType, formErrorFunction);
+							originalRequestType, formErrorFunction, errorMessage);
 					})
 				});
 			} catch (err) {
@@ -641,13 +641,13 @@ var NRS = (function(NRS, $) {
 		} else {
 			NRS.sendRequest(requestType, data, function (response) {
 				formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
-					originalRequestType, formErrorFunction);
+					originalRequestType, formErrorFunction, errorMessage);
 			});
 		}
 	};
 
 	function formResponse(response, data, requestType, $modal, $form, $btn, successMessage,
-						  originalRequestType, formErrorFunction) {
+						  originalRequestType, formErrorFunction, errorMessage) {
 		//todo check again.. response.error
 		var formCompleteFunction;
 		if (response.fullHash) {

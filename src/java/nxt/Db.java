@@ -33,6 +33,7 @@ public final class Db {
             .maxConnections(Nxt.getIntProperty("nxt.maxDbConnections"))
             .loginTimeout(Nxt.getIntProperty("nxt.dbLoginTimeout"))
             .defaultLockTimeout(Nxt.getIntProperty("nxt.dbDefaultLockTimeout") * 1000)
+            .maxMemoryRows(Nxt.getIntProperty("nxt.dbMaxMemoryRows"))
     );
 
     static void init() {

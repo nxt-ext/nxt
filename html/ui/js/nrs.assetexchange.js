@@ -314,8 +314,10 @@ var NRS = (function (NRS, $, undefined) {
         if (!assets.length) {
             NRS.pageLoaded(callback);
             assetExchangeSidebarContent.empty();
-            $("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
-            $("#no_assets_available").show();
+            if (!viewingAsset) {
+                $("#no_asset_selected, #loading_asset_data, #no_asset_search_results, #asset_details").hide();
+                $("#no_assets_available").show();
+            }
             assetExchangePage.addClass("no_assets");
             return;
         }
@@ -1776,6 +1778,7 @@ var NRS = (function (NRS, $, undefined) {
         if ($visible_modal.length) {
             $visible_modal.modal("hide");
         }
+        viewingAsset = true;
         NRS.goToAsset($(this).data("goto-asset"));
     });
 
