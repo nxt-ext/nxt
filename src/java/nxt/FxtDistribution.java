@@ -27,9 +27,7 @@ import org.json.simple.JSONValue;
 import java.io.*;
 import java.math.BigInteger;
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public final class FxtDistribution implements Listener<Block> {
 
@@ -227,7 +225,7 @@ public final class FxtDistribution implements Listener<Block> {
                 Logger.logDebugMessage("Running FXT distribution at height " + currentHeight);
                 long totalDistributed = 0;
                 count = 0;
-                JSONObject snapshotJson = new JSONObject();
+                SortedMap<String, Long> snapshotMap = new TreeMap<>();
                 try (PreparedStatement pstmtCreate = con.prepareStatement("CREATE TEMP TABLE account_fxt_tmp NOT PERSISTENT AS SELECT id, MAX(height) AS height FROM account_fxt "
                         + "WHERE height <= ? GROUP BY id");
                      PreparedStatement pstmtDrop = con.prepareStatement("DROP TABLE account_fxt_tmp")) {
@@ -247,7 +245,7 @@ public final class FxtDistribution implements Listener<Block> {
                             }
                             Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
                                     FXT_ASSET_ID, quantity);
-                            snapshotJson.put(Long.toUnsignedString(accountId), quantity);
+                            snapshotMap.put(Long.toUnsignedString(accountId), quantity);
                             totalDistributed += quantity;
                             if (++count % 1000 == 0) {
                                 Db.db.commitTransaction();
@@ -265,15 +263,17 @@ public final class FxtDistribution implements Listener<Block> {
                         FXT_ASSET_ID, -excessFxtQuantity);
                 long issuerAssetBalance = issuerAccount.getAssetBalanceQNT(FXT_ASSET_ID);
                 if (issuerAssetBalance > 0) {
-                    snapshotJson.put(Long.toUnsignedString(FXT_ISSUER_ID), issuerAssetBalance);
+                    snapshotMap.put(Long.toUnsignedString(FXT_ISSUER_ID), issuerAssetBalance);
                 } else {
-                    snapshotJson.remove(FXT_ISSUER_ID);
+                    snapshotMap.remove(FXT_ISSUER_ID);
                 }
                 Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
                 Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
                 Logger.logDebugMessage("Distributed " + totalDistributed + " QNT to " + count + " accounts");
                 try (PrintWriter writer = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fxtJsonFile)))), true)) {
-                    JSON.writeJSONString(snapshotJson, writer);
+                    StringBuilder sb = new StringBuilder(1024);
+                    JSON.encodeObject(snapshotMap, sb);
+                    writer.write(sb.toString());
                 }
                 Db.db.commitTransaction();
             }
