@@ -18,16 +18,17 @@ package nxt;
 
 import nxt.db.DerivedDbTable;
 import nxt.util.Convert;
+import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Logger;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
+import java.io.*;
 import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public final class FxtDistribution implements Listener<Block> {
@@ -41,7 +42,8 @@ public final class FxtDistribution implements Listener<Block> {
     private static final BigInteger BALANCE_DIVIDER = BigInteger.valueOf(10000L * (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_STEP);
     private static final String logAccount = Nxt.getStringProperty("nxt.logFxtBalance");
     private static final long logAccountId = Convert.parseAccountId(logAccount);
-
+    private static final String fxtJsonFile = Constants.isTestnet ? "fxt-testnet.json" : "fxt.json";
+    private static final boolean hasSnapshot = ClassLoader.getSystemResource(fxtJsonFile) != null;
 
     private static final DerivedDbTable accountFXTTable = new DerivedDbTable("account_fxt") {
         @Override
@@ -111,6 +113,45 @@ public final class FxtDistribution implements Listener<Block> {
     public void notify(Block block) {
 
         final int currentHeight = block.getHeight();
+        if (hasSnapshot) {
+            if (currentHeight == DISTRIBUTION_END) {
+                Logger.logDebugMessage("Distributing FXT based on snapshot file " + fxtJsonFile);
+                JSONObject snapshotJSON;
+                try (Reader reader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream(fxtJsonFile)))) {
+                    snapshotJSON = (JSONObject) JSONValue.parse(reader);
+                } catch (IOException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                boolean wasInTransaction = Db.db.isInTransaction();
+                if (!wasInTransaction) {
+                    Db.db.beginTransaction();
+                }
+                try {
+                    Iterator<Map.Entry> iterator = snapshotJSON.entrySet().iterator();
+                    int count = 0;
+                    while (iterator.hasNext()) {
+                        Map.Entry entry = iterator.next();
+                        long accountId = Long.parseUnsignedLong((String) entry.getKey());
+                        long quantity = (Long)entry.getValue();
+                        Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
+                                FXT_ASSET_ID, quantity);
+                        if (++count % 1000 == 0) {
+                            Db.db.commitTransaction();
+                        }
+                    }
+                    Logger.logDebugMessage("Distributed to " + count + " accounts");
+                    Db.db.commitTransaction();
+                } catch (Exception e) {
+                    Db.db.rollbackTransaction();
+                    throw new RuntimeException(e.toString(), e);
+                } finally {
+                    if (!wasInTransaction) {
+                        Db.db.endTransaction();
+                    }
+                }
+            }
+            return;
+        }
         if (currentHeight <= DISTRIBUTION_START || currentHeight > DISTRIBUTION_END || (currentHeight - DISTRIBUTION_START) % DISTRIBUTION_FREQUENCY != 0) {
             return;
         }
@@ -186,6 +227,7 @@ public final class FxtDistribution implements Listener<Block> {
                 Logger.logDebugMessage("Running FXT distribution at height " + currentHeight);
                 long totalDistributed = 0;
                 count = 0;
+                JSONObject snapshotJson = new JSONObject();
                 try (PreparedStatement pstmtCreate = con.prepareStatement("CREATE TEMP TABLE account_fxt_tmp NOT PERSISTENT AS SELECT id, MAX(height) AS height FROM account_fxt "
                         + "WHERE height <= ? GROUP BY id");
                      PreparedStatement pstmtDrop = con.prepareStatement("DROP TABLE account_fxt_tmp")) {
@@ -205,6 +247,7 @@ public final class FxtDistribution implements Listener<Block> {
                             }
                             Account.getAccount(accountId).addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
                                     FXT_ASSET_ID, quantity);
+                            snapshotJson.put(Long.toUnsignedString(accountId), quantity);
                             totalDistributed += quantity;
                             if (++count % 1000 == 0) {
                                 Db.db.commitTransaction();
@@ -220,10 +263,18 @@ public final class FxtDistribution implements Listener<Block> {
                 long excessFxtQuantity = Asset.getAsset(FXT_ASSET_ID).getInitialQuantityQNT() - totalDistributed;
                 issuerAccount.addToAssetAndUnconfirmedAssetBalanceQNT(null, block.getId(),
                         FXT_ASSET_ID, -excessFxtQuantity);
+                long issuerAssetBalance = issuerAccount.getAssetBalanceQNT(FXT_ASSET_ID);
+                if (issuerAssetBalance > 0) {
+                    snapshotJson.put(Long.toUnsignedString(FXT_ISSUER_ID), issuerAssetBalance);
+                } else {
+                    snapshotJson.remove(FXT_ISSUER_ID);
+                }
                 Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
                 Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
-
                 Logger.logDebugMessage("Distributed " + totalDistributed + " QNT to " + count + " accounts");
+                try (PrintWriter writer = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fxtJsonFile)))), true)) {
+                    JSON.writeJSONString(snapshotJson, writer);
+                }
                 Db.db.commitTransaction();
             }
         } catch (Exception e) {
