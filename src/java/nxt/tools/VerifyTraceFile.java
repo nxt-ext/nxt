@@ -16,6 +16,7 @@
 
 package nxt.tools;
 
+import nxt.Constants;
 import nxt.Genesis;
 import nxt.util.Convert;
 
@@ -184,6 +185,7 @@ public final class VerifyTraceFile {
                 }
             }
 
+            final String fxtAssetId = Constants.isTestnet ? "861080501219231688" : "12422608354438203866";
             Set<String> failed = new HashSet<>();
             for (Map.Entry<String,Map<String,Long>> mapEntry : totals.entrySet()) {
                 String accountId = mapEntry.getKey();
@@ -208,6 +210,9 @@ public final class VerifyTraceFile {
                 Map<String,Map<String,Long>> accountAssetMap = accountAssetTotals.get(accountId);
                 for (Map.Entry<String,Map<String,Long>> assetMapEntry : accountAssetMap.entrySet()) {
                     String assetId = assetMapEntry.getKey();
+                    if (assetId.equals(fxtAssetId)) {
+                        continue;
+                    }
                     Map<String,Long> assetValues = assetMapEntry.getValue();
                     System.out.println("asset: " + assetId);
                     for (Map.Entry<String,Long> assetValueEntry : assetValues.entrySet()) {
@@ -254,6 +259,9 @@ public final class VerifyTraceFile {
             Set<String> failedAssets = new HashSet<>();
             for (Map.Entry<String,Long> assetEntry : issuedAssetQuantities.entrySet()) {
                 String assetId = assetEntry.getKey();
+                if (assetId.equals(fxtAssetId)) {
+                    continue;
+                }
                 long issuedAssetQuantity = assetEntry.getValue();
                 if (issuedAssetQuantity != nullToZero(accountAssetQuantities.get(assetId))) {
                     System.out.println("ERROR: asset " + assetId + " balances don't match, issued: "
