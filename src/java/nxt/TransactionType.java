@@ -2224,17 +2224,15 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
-                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
-                    Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
-                    if (prunablePlainMessage != null) {
-                        byte[] image = prunablePlainMessage.getMessage();
-                        if (image != null) {
-                            Tika tika = new Tika();
-                            String mediaTypeName = tika.detect(image);
-                            MediaType mediaType = MediaType.parse(mediaTypeName);
-                            if (mediaType == null || !"image".equals(mediaType.getType())) {
-                                throw new NxtException.NotValidException("Only image attachments allowed for DGS listing, media type is " + mediaType);
-                            }
+                Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
+                if (prunablePlainMessage != null) {
+                    byte[] image = prunablePlainMessage.getMessage();
+                    if (image != null) {
+                        Tika tika = new Tika();
+                        String mediaTypeName = tika.detect(image);
+                        MediaType mediaType = MediaType.parse(mediaTypeName);
+                        if (mediaType == null || !"image".equals(mediaType.getType())) {
+                            throw new NxtException.NotValidException("Only image attachments allowed for DGS listing, media type is " + mediaType);
                         }
                     }
                 }
@@ -3130,11 +3128,9 @@ public abstract class TransactionType {
                                 + " upload hash: " + Convert.toHexString(taggedDataUpload.getHash()));
                     }
                 }
-                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
-                    TaggedData taggedData = TaggedData.getData(attachment.getTaggedDataId());
-                    if (taggedData != null && taggedData.getTransactionTimestamp() > Nxt.getEpochTime() + 6 * Constants.MIN_PRUNABLE_LIFETIME) {
-                        throw new NxtException.NotCurrentlyValidException("Data already extended, timestamp is " + taggedData.getTransactionTimestamp());
-                    }
+                TaggedData taggedData = TaggedData.getData(attachment.getTaggedDataId());
+                if (taggedData != null && taggedData.getTransactionTimestamp() > Nxt.getEpochTime() + 6 * Constants.MIN_PRUNABLE_LIFETIME) {
+                    throw new NxtException.NotCurrentlyValidException("Data already extended, timestamp is " + taggedData.getTransactionTimestamp());
                 }
             }
 
