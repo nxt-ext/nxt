@@ -23,7 +23,6 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.http.API;
 import nxt.http.APIEnum;
-import nxt.util.APISet;
 import nxt.util.Convert;
 import nxt.util.CountingInputReader;
 import nxt.util.CountingInputStream;
@@ -267,7 +266,7 @@ final class PeerImpl implements Peer {
 
     void setDisabledAPIs(Object apiSetBase64) {
         if (apiSetBase64 instanceof String) {
-            disabledAPIs = APISet.fromBase64String((String) apiSetBase64);
+            disabledAPIs = APIEnum.base64StringToEnumSet((String) apiSetBase64);
         }
     }
 

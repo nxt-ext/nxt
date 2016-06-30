@@ -1,7 +1,6 @@
 package nxt.http;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public enum APIEnum {
     //To preserve compatibility, please add new APIs to the end of the enum.
@@ -290,5 +289,26 @@ public enum APIEnum {
 
     public APIServlet.APIRequestHandler getHandler() {
         return handler;
+    }
+
+    public static EnumSet<APIEnum> base64StringToEnumSet(String apiSetBase64) {
+        byte[] decoded = Base64.getDecoder().decode(apiSetBase64);
+        BitSet bs = BitSet.valueOf(decoded);
+        EnumSet<APIEnum> result = EnumSet.noneOf(APIEnum.class);
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+            result.add(APIEnum.values()[i]);
+            if (i == Integer.MAX_VALUE) {
+                break; // or (i+1) would overflow
+            }
+        }
+        return result;
+    }
+
+    public static String enumSetToBase64String(EnumSet<APIEnum> apiSet) {
+        BitSet bitSet = new BitSet();
+        for (APIEnum api: apiSet) {
+            bitSet.set(api.ordinal());
+        }
+        return Base64.getEncoder().encodeToString(bitSet.toByteArray());
     }
 }

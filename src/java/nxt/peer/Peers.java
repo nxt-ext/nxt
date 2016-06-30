@@ -24,7 +24,6 @@ import nxt.Nxt;
 import nxt.Transaction;
 import nxt.http.API;
 import nxt.http.APIEnum;
-import nxt.util.APISet;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
@@ -286,7 +285,7 @@ public final class Peers {
                     }
                 }
             });
-            json.put("disabledAPIs", APISet.toBase64String(disabledAPISet));
+            json.put("disabledAPIs", APIEnum.enumSetToBase64String(disabledAPISet));
 
             json.put("apiServerIdleTimeout", API.apiServerIdleTimeout);
         }
