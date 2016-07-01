@@ -1772,8 +1772,7 @@
   "end_time": "End Time",
   "distribution_starts_in": "Distribution starts in __interval__",
   "distribution_ends_in": "Distribution ends in __interval__",
-  "max_nxt_decimals": "Maximum NXT decimal positions",
-  "status_blockchain_downloading_proxy": "The blockchain is currently downloading. You are exploring NXT through the peer __peer__.",
-  "status_light_client_proxy": "Running as light client. You are exploring NXT through the peer __peer__.",
+  "status_blockchain_downloading_proxy": "The blockchain is currently downloading. You are exploring Nxt through peer __peer__.",
+  "status_light_client_proxy": "Running as light client. You are exploring Nxt through peer __peer__.",
   "proxy_info_link": "Understand the risks"
 }
