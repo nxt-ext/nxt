@@ -1105,6 +1105,65 @@ public final class Peers {
         }
     }
 
+    public static boolean isOldVersion(String version, int[] minVersion) {
+        if (version == null) {
+            return true;
+        }
+        if (version.endsWith("e")) {
+            version = version.substring(0, version.length() - 1);
+        }
+        String[] versions = version.split("\\.");
+        for (int i = 0; i < minVersion.length && i < versions.length; i++) {
+            try {
+                int v = Integer.parseInt(versions[i]);
+                if (v > minVersion[i]) {
+                    return false;
+                } else if (v < minVersion[i]) {
+                    return true;
+                }
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return versions.length < minVersion.length;
+    }
+
+    private static final int[] MAX_VERSION;
+    static {
+        String version = Nxt.VERSION;
+        if (version.endsWith("e")) {
+            version = version.substring(0, version.length() - 1);
+        }
+        String[] versions = version.split("\\.");
+        MAX_VERSION = new int[versions.length];
+        for (int i = 0; i < versions.length; i++) {
+            MAX_VERSION[i] = Integer.parseInt(versions[i]);
+        }
+    }
+
+    public static boolean isNewVersion(String version) {
+        if (version == null) {
+            return true;
+        }
+        if (version.endsWith("e")) {
+            version = version.substring(0, version.length() - 1);
+        }
+        String[] versions = version.split("\\.");
+        for (int i = 0; i < MAX_VERSION.length && i < versions.length; i++) {
+            try {
+                int v = Integer.parseInt(versions[i]);
+                if (v > MAX_VERSION[i]) {
+                    return true;
+                } else if (v < MAX_VERSION[i]) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return versions.length > MAX_VERSION.length;
+    }
+
     public static boolean hasTooFewKnownPeers() {
         return peers.size() < Peers.minNumberOfKnownPeers;
     }

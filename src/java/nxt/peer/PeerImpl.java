@@ -167,26 +167,7 @@ final class PeerImpl implements Peer {
         this.version = version;
         isOldVersion = false;
         if (Nxt.APPLICATION.equals(application)) {
-            String[] versions;
-            if (version == null || (versions = version.split("\\.")).length < Constants.MIN_VERSION.length) {
-                isOldVersion = true;
-            } else {
-                for (int i = 0; i < Constants.MIN_VERSION.length; i++) {
-                    try {
-                        int v = Integer.parseInt(versions[i]);
-                        if (v > Constants.MIN_VERSION[i]) {
-                            isOldVersion = false;
-                            break;
-                        } else if (v < Constants.MIN_VERSION[i]) {
-                            isOldVersion = true;
-                            break;
-                        }
-                    } catch (NumberFormatException e) {
-                        isOldVersion = true;
-                        break;
-                    }
-                }
-            }
+            isOldVersion = Peers.isOldVersion(version, Constants.MIN_VERSION);
             if (isOldVersion) {
                 if (versionChanged) {
                     Logger.logDebugMessage(String.format("Blacklisting %s version %s", host, version));

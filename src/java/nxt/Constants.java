@@ -156,6 +156,7 @@ public final class Constants {
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 789000 : 851000;
 
     public static final int[] MIN_VERSION = new int[] {1, 7};
+    public static final int[] MIN_PROXY_VERSION = new int[] {1, 9, 2};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
     public static final long SHUFFLING_DEPOSIT_NQT = (isTestnet ? 7 : 1000) * ONE_NXT;

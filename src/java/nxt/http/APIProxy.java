@@ -164,6 +164,8 @@ public class APIProxy {
 
     public static boolean isPeerConnectable(Peer peer) {
         return peer != null && isOpenAPIPeer(peer) && peer.getState() == Peer.State.CONNECTED
-                && Nxt.VERSION.equals(peer.getVersion()) && peer.getBlockchainState() == Peer.BlockchainState.UP_TO_DATE;
+                && !Peers.isOldVersion(peer.getVersion(), Constants.MIN_PROXY_VERSION)
+                && !Peers.isNewVersion(peer.getVersion())
+                && peer.getBlockchainState() == Peer.BlockchainState.UP_TO_DATE;
     }
 }
