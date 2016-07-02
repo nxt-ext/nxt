@@ -1236,7 +1236,7 @@ public final class Peers {
 
     public static JSONStreamAware getMyPeerInfoResponse() {
         JSONObject json = getCurrentPeerInfo();
-        return JSON.prepareRequest(json);
+        return JSON.prepare(json);
     }
 
     private Peers() {} // never
