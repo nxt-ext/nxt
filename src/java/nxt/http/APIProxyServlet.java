@@ -77,9 +77,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
     private APIServlet apiServlet;
 
-    static void initClass() {
-        APIProxy.init();
-    }
+    static void initClass() {}
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
