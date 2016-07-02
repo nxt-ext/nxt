@@ -115,7 +115,7 @@ public final class PeerServlet extends WebSocketServlet {
     private static final JSONStreamAware LITE_CLIENT;
     static {
         JSONObject response = new JSONObject();
-        response.put("error", Errors.LITE_CLIENT);
+        response.put("error", Errors.LIGHT_CLIENT);
         LITE_CLIENT = JSON.prepare(response);
     }
 
