@@ -399,6 +399,14 @@ public final class JSONResponses {
         LIGHT_CLIENT_NO_OPEN_API_PEERS = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware LIGHT_CLIENT_DISABLED_API;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 20);
+        response.put("errorDescription", "This API is disabled when running as light client");
+        LIGHT_CLIENT_DISABLED_API = JSON.prepare(response);
+    }
+
     public static final JSONStreamAware PEER_NOT_CONNECTED;
     static {
         JSONObject response = new JSONObject();

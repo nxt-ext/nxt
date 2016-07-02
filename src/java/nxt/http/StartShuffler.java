@@ -16,6 +16,7 @@
 
 package nxt.http;
 
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.Shuffler;
 import nxt.Shuffling;
@@ -35,6 +36,9 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        if (Constants.isLightClient) {
+            return JSONResponses.LIGHT_CLIENT_DISABLED_API;
+        }
         byte[] shufflingFullHash = ParameterParser.getBytes(req, "shufflingFullHash", true);
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         byte[] recipientPublicKey = ParameterParser.getPublicKey(req, "recipient");
