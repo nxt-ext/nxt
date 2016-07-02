@@ -243,7 +243,7 @@ public final class API {
 
             GzipHandler gzipHandler = new GzipHandler();
             if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
-                gzipHandler.setExcludedPaths("/nxt");
+                gzipHandler.setExcludedPaths("/nxt", "/nxt-proxy");
             }
             gzipHandler.setIncludedMethods("GET", "POST");
             gzipHandler.setMinGzipSize(nxt.peer.Peers.MIN_COMPRESS_SIZE);
