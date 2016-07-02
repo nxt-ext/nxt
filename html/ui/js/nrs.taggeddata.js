@@ -41,7 +41,7 @@ var NRS = (function(NRS, $) {
                 "data-target='#tagged_data_view_modal' " +
                 "data-transaction='" + NRS.escapeRespStr(transaction) + "'>" + $.t("view") + "</a>";
         } else {
-			return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + NRS.escapeRespStr(transaction) +
+			return "<a href='/nxt-proxy?requestType=downloadTaggedData&transaction=" + NRS.escapeRespStr(transaction) +
                 "&retrieve=true' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
         }
     };
@@ -287,7 +287,7 @@ var NRS = (function(NRS, $) {
                 $("#tagged_data_content").val(response.data);
 			}
 		}, false);
-		$("#tagged_data_download").attr("href", "/nxt?requestType=downloadTaggedData&transaction=" + transaction + "&retrieve=true");
+		$("#tagged_data_download").attr("href", "/nxt-proxy?requestType=downloadTaggedData&transaction=" + transaction + "&retrieve=true");
     });
 
     $("#extend_data_modal").on("show.bs.modal", function (e) {
