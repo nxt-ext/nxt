@@ -70,6 +70,22 @@ public final class Generator implements Comparable<Generator> {
                         }
                         if (lastBlock.getId() != lastBlockId || sortedForgers == null) {
                             lastBlockId = lastBlock.getId();
+                            if (lastBlock.getTimestamp() > Nxt.getEpochTime() - 600) {
+                                Block previousBlock = Nxt.getBlockchain().getBlock(lastBlock.getPreviousBlockId());
+                                for (Generator generator : generators.values()) {
+                                    generator.setLastBlock(previousBlock);
+                                    if (generator.getHitTime() > 0 && generator.getHitTime() < lastBlock.getTimestamp() - 1) {
+                                        Logger.logDebugMessage("Pop off: " + generator.toString() + " will pop off last block " + lastBlock.getStringId());
+                                        List<BlockImpl> poppedOffBlock = BlockchainProcessorImpl.getInstance().popOffTo(previousBlock);
+                                        for (BlockImpl block : poppedOffBlock) {
+                                            TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+                                        }
+                                        lastBlock = previousBlock;
+                                        lastBlockId = previousBlock.getId();
+                                        break;
+                                    }
+                                }
+                            }
                             List<Generator> forgers = new ArrayList<>();
                             for (Generator generator : generators.values()) {
                                 generator.setLastBlock(lastBlock);
@@ -255,16 +271,17 @@ public final class Generator implements Comparable<Generator> {
     private volatile long hitTime;
     private volatile BigInteger hit;
     private volatile BigInteger effectiveBalance;
+    private volatile long deadline;
 
     private Generator(String secretPhrase) {
         this.secretPhrase = secretPhrase;
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.accountId = Account.getId(publicKey);
-        if (Nxt.getBlockchain().getHeight() >= Constants.LAST_KNOWN_BLOCK) {
-            setLastBlock(Nxt.getBlockchain().getLastBlock());
-        }
         Nxt.getBlockchain().updateLock();
         try {
+            if (Nxt.getBlockchain().getHeight() >= Constants.LAST_KNOWN_BLOCK) {
+                setLastBlock(Nxt.getBlockchain().getLastBlock());
+            }
             sortedForgers = null;
         } finally {
             Nxt.getBlockchain().updateUnlock();
@@ -280,7 +297,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public long getDeadline() {
-        return Math.max(hitTime - Nxt.getBlockchain().getLastBlock().getTimestamp(), 0);
+        return deadline;
     }
 
     public long getHitTime() {
@@ -302,20 +319,28 @@ public final class Generator implements Comparable<Generator> {
     }
 
     private void setLastBlock(Block lastBlock) {
-        Account account = Account.getAccount(accountId);
-        effectiveBalance = BigInteger.valueOf(account == null || account.getEffectiveBalanceNXT() <= 0 ? 0 : account.getEffectiveBalanceNXT());
+        int height = lastBlock.getHeight();
+        Account account = Account.getAccount(accountId, height);
+        if (account == null) {
+            effectiveBalance = BigInteger.ZERO;
+        } else {
+            effectiveBalance = BigInteger.valueOf(Math.max(account.getEffectiveBalanceNXT(height), 0));
+        }
         if (effectiveBalance.signum() == 0) {
+            hitTime = 0;
+            hit = BigInteger.ZERO;
             return;
         }
         hit = getHit(publicKey, lastBlock);
         hitTime = getHitTime(effectiveBalance, hit, lastBlock);
+        deadline = Math.max(hitTime - lastBlock.getTimestamp(), 0);
         listeners.notify(this, Event.GENERATION_DEADLINE);
     }
 
     boolean forge(Block lastBlock, int generationLimit) throws BlockchainProcessor.BlockNotAcceptedException {
         int timestamp = (generationLimit - hitTime > 3600) ? generationLimit : (int)hitTime + 1;
         if (!verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
-            Logger.logDebugMessage(this.toString() + " failed to forge at " + timestamp);
+            Logger.logDebugMessage(this.toString() + " failed to forge at " + timestamp + " height " + lastBlock.getHeight() + " last timestamp " + lastBlock.getTimestamp());
             return false;
         }
         int start = Nxt.getEpochTime();

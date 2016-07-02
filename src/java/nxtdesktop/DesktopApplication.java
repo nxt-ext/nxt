@@ -44,14 +44,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class DesktopApplication extends Application {
 
+    private static final Set DOWNLOAD_REQUEST_TYPES = new HashSet<>(Arrays.asList("downloadTaggedData", "downloadPrunableMessage"));
     private static volatile boolean isLaunched;
     private static volatile Stage stage;
     private static volatile WebEngine webEngine;
@@ -239,33 +238,78 @@ public class DesktopApplication extends Application {
                 params.put(keyValuePair[0], keyValuePair[1]);
             }
         }
-        if ("downloadTaggedData".equals(params.get("requestType"))) {
-            download(params);
+        String requestType = params.get("requestType");
+        if (DOWNLOAD_REQUEST_TYPES.contains(requestType)) {
+            download(requestType, params);
         } else {
-            Logger.logInfoMessage(String.format("requestType %s is not a download request", params.get("requestType")));
+            Logger.logInfoMessage(String.format("requestType %s is not a download request", requestType));
         }
     }
 
-    private void download(Map<String, String> params) {
+    private void download(String requestType, Map<String, String> params) {
         long transactionId = Convert.parseUnsignedLong(params.get("transaction"));
         TaggedData taggedData = TaggedData.getData(transactionId);
         boolean retrieve = "true".equals(params.get("retrieve"));
-        if (taggedData == null && retrieve) {
-            if (Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId) == null) {
-                growl("Pruned transaction data not currently available from any peer");
+        if (requestType.equals("downloadTaggedData")) {
+            if (taggedData == null && retrieve) {
+                if (Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId) == null) {
+                    growl("Pruned transaction data not currently available from any peer");
+                    return;
+                }
+                taggedData = TaggedData.getData(transactionId);
+            }
+            if (taggedData == null) {
+                growl("Tagged data not found");
                 return;
             }
-            taggedData = TaggedData.getData(transactionId);
+            byte[] data = taggedData.getData();
+            String filename = taggedData.getFilename();
+            if (filename == null || filename.trim().isEmpty()) {
+                filename = taggedData.getName().trim();
+            }
+            downloadFile(data, filename);
+        } else if (requestType.equals("downloadPrunableMessage")) {
+            PrunableMessage prunableMessage = PrunableMessage.getPrunableMessage(transactionId);
+            if (prunableMessage == null && retrieve) {
+                if (Nxt.getBlockchainProcessor().restorePrunedTransaction(transactionId) == null) {
+                    growl("Pruned message not currently available from any peer");
+                    return;
+                }
+                prunableMessage = PrunableMessage.getPrunableMessage(transactionId);
+            }
+            String secretPhrase = params.get("secretPhrase");
+            byte[] sharedKey = Convert.parseHexString(params.get("sharedKey"));
+            if (sharedKey == null) {
+                sharedKey = Convert.EMPTY_BYTE;
+            }
+            if (sharedKey.length != 0 && secretPhrase != null) {
+                growl("Do not specify both secret phrase and shared key");
+                return;
+            }
+            byte[] data = null;
+            if (prunableMessage != null) {
+                try {
+                    if (secretPhrase != null) {
+                        data = prunableMessage.decrypt(secretPhrase);
+                    } else if (sharedKey.length > 0) {
+                        data = prunableMessage.decrypt(sharedKey);
+                    } else {
+                        data = prunableMessage.getMessage();
+                    }
+                } catch (RuntimeException e) {
+                    Logger.logDebugMessage("Decryption of message to recipient failed: " + e.toString());
+                    growl("Wrong secretPhrase or sharedKey");
+                    return;
+                }
+            }
+            if (data == null) {
+                data = Convert.EMPTY_BYTE;
+            }
+            downloadFile(data, "" + transactionId);
         }
-        if (taggedData == null) {
-            growl("Tagged data not found");
-            return;
-        }
-        byte[] data = taggedData.getData();
-        String filename = taggedData.getFilename();
-        if (filename == null || filename.trim().isEmpty()) {
-            filename = taggedData.getName().trim();
-        }
+    }
+
+    private void downloadFile(byte[] data, String filename) {
         Path folderPath = Paths.get(System.getProperty("user.home"), "downloads");
         Path path = Paths.get(folderPath.toString(), filename);
         Logger.logInfoMessage("Downloading data to " + path.toAbsolutePath());

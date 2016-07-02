@@ -582,11 +582,15 @@ NRS.addPagination = function () {
 				});
 			}
 		}
-		var modal = NRS.getUrlParameter("modal");
-		if (modal) {
-			modal = "#" + modal.escapeHTML();
-			var urlParams = window.location.search.substring(1).split('&');
-			if ($(modal)[0]) {
+		if (NRS.getUrlParameter("modal")) {
+			var urlParams = [];
+			if (window.location.search && window.location.search.length > 1) {
+				urlParams = window.location.search.substring(1).split('&');
+			}
+			var modalId = "#" + NRS.getUrlParameter("modal").escapeHTML();
+			var modal = $(modalId);
+			var attributes = {};
+			if (modal[0]) {
 				var isValidParams = true;
 				for (var i = 0; i < urlParams.length; i++) {
 					var paramKeyValue = urlParams[i].split('=');
@@ -598,7 +602,7 @@ NRS.addPagination = function () {
 						continue;
 					}
 					var value = paramKeyValue[1].escapeHTML();
-                    var input = $(modal).find("input[name=" + key + "]");
+                    var input = modal.find("input[name=" + key + "]");
                     if (input[0]) {
 						if (input.attr("type") == "text") {
 							input.val(value);
@@ -617,21 +621,26 @@ NRS.addPagination = function () {
 								input.prop('checked', isChecked);
 							}
 						}
-					} else if ($(modal).find("textarea[name=" + key + "]")[0]) {
-						$(modal).find("textarea[name=" + key + "]").val(decodeURI(value));
+					} else if (modal.find("textarea[name=" + key + "]")[0]) {
+						modal.find("textarea[name=" + key + "]").val(decodeURI(value));
 					} else {
-						$.growl($.t("input") + " " + key + " " + $.t("does_not_exist_in") + " " + modal, {
-							"type": "danger",
-							"offset": 50
-						});
-						isValidParams = false;
+						attributes["data-" + key.toLowerCase().escapeHTML()] = String(value).escapeHTML();
 					}
 				}
 				if (isValidParams) {
-					$(modal).modal();
+					var a = $('<a />');
+					a.addClass('show_transaction_modal_action');
+					a.attr('href', '#');
+					a.attr('data-toggle', 'modal');
+					a.attr('data-target', modalId);
+					Object.keys(attributes).forEach(function (key) {
+						a.attr(key, attributes[key]);
+					});
+					$('body').append(a);
+					a.click();
 				}
 			} else {
-				$.growl($.t("modal") + " " + modal + " " + $.t("does_not_exist"), {
+				$.growl($.t("modal") + " " + modalId + " " + $.t("does_not_exist"), {
 					"type": "danger",
 					"offset": 50
 				});
@@ -937,6 +946,7 @@ NRS.addPagination = function () {
 
 				$("#account_balance, #account_balance_sidebar").html(NRS.formatStyledAmount(response.unconfirmedBalanceNQT));
 				$("#account_forged_balance").html(NRS.formatStyledAmount(response.forgedBalanceNQT));
+
                 var i;
 				if (response.assetBalances) {
                     var assets = [];

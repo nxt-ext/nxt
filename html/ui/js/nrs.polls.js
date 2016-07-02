@@ -951,7 +951,7 @@ var NRS = (function(NRS, $, undefined) {
         if (!NRS.followedPolls.length && requestedPoll == "") {
 			NRS.pageLoaded(callback);
 			followedPollsSidebarContent.empty();
-			$("#no_poll_selected, #loading_poll_data, #no_poll_search_results, #poll_details").hide();
+			$("#no_poll_selected, #loading_poll_data, #no_poll_search_results").hide();
 			$("#no_polls_available").show();
 			followedPollsPage.addClass("no_polls");
 			return;

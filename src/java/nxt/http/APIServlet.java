@@ -376,6 +376,8 @@ public final class APIServlet extends HttpServlet {
         map.put("getFundingMonitor", GetFundingMonitor.instance);
         map.put("downloadPrunableMessage", DownloadPrunableMessage.instance);
         map.put("getSharedKey", GetSharedKey.instance);
+        map.put("getFxtQuantity", GetFxtQuantity.instance);
+        map.put("getAssetDividends", GetAssetDividends.instance);
 
         AddOns.registerAPIRequestHandlers(map);
 

@@ -38,7 +38,7 @@ var NRS = (function (NRS, $) {
 			if (NRS.rememberPassword) {
 				secretPhrase = _password;
 			} else {
-				throw $.t("error_generate_public_key_no_password");
+				throw { message: $.t("error_generate_public_key_no_password") };
 			}
 		}
 
@@ -101,56 +101,59 @@ var NRS = (function (NRS, $) {
 		}
 	};
 
-	NRS.encryptNote = function(message, options, secretPhrase) {
-		try {
-			if (!options.sharedKey) {
-				if (!options.privateKey) {
-					if (!secretPhrase) {
-						if (NRS.rememberPassword) {
-							secretPhrase = _password;
-						} else {
-							throw {
-								"message": $.t("error_encryption_passphrase_required"),
-								"errorCode": 1
-							};
-						}
-					}
-
-					options.privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
-				}
-
-				if (!options.publicKey) {
-					if (!options.account) {
+	NRS.getEncryptionKeys = function (options, secretPhrase){
+		if (!options.sharedKey) {
+			if (!options.privateKey) {
+				if (!secretPhrase) {
+					if (NRS.rememberPassword) {
+						secretPhrase = _password;
+					} else {
 						throw {
-							"message": $.t("error_account_id_not_specified"),
-							"errorCode": 2
+							"message": $.t("error_encryption_passphrase_required"),
+							"errorCode": 1
 						};
 					}
-
-					try {
-						options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
-					} catch (err) {
-						var nxtAddress = new NxtAddress();
-
-						if (!nxtAddress.set(options.account)) {
-							throw {
-								"message": $.t("error_invalid_account_id"),
-								"errorCode": 3
-							};
-						} else {
-							throw {
-								"message": $.t("error_public_key_not_specified"),
-								"errorCode": 4
-							};
-						}
-					}
-				} else if (typeof options.publicKey == "string") {
-					options.publicKey = converters.hexStringToByteArray(options.publicKey);
 				}
+
+				options.privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
 			}
 
-			var encrypted = encryptData(converters.stringToByteArray(message), options);
+			if (!options.publicKey) {
+				if (!options.account) {
+					throw {
+						"message": $.t("error_account_id_not_specified"),
+						"errorCode": 2
+					};
+				}
 
+				try {
+					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
+				} catch (err) {
+					var nxtAddress = new NxtAddress();
+
+					if (!nxtAddress.set(options.account)) {
+						throw {
+							"message": $.t("error_invalid_account_id"),
+							"errorCode": 3
+						};
+					} else {
+						throw {
+							"message": $.t("error_public_key_not_specified"),
+							"errorCode": 4
+						};
+					}
+				}
+			} else if (typeof options.publicKey == "string") {
+				options.publicKey = converters.hexStringToByteArray(options.publicKey);
+			}
+		}
+		return options;
+	};
+
+    NRS.encryptNote = function(message, options, secretPhrase) {
+		try {
+			options = NRS.getEncryptionKeys(options, secretPhrase);
+			var encrypted = encryptData(converters.stringToByteArray(message), options);
 			return {
 				"message": converters.byteArrayToHexString(encrypted.data),
 				"nonce": converters.byteArrayToHexString(encrypted.nonce)
@@ -221,9 +224,9 @@ var NRS = (function (NRS, $) {
 					options.publicKey = converters.hexStringToByteArray(NRS.getPublicKey(options.account, true));
 				}
 			}
-
-			options.nonce = converters.hexStringToByteArray(options.nonce);
-
+			if (options.nonce) {
+				options.nonce = converters.hexStringToByteArray(options.nonce);
+			}
 			return decryptData(converters.hexStringToByteArray(message), options);
 		} catch (err) {
 			if (err.errorCode && err.errorCode < 3) {
@@ -325,27 +328,23 @@ var NRS = (function (NRS, $) {
 		_decryptionPassword = password;
 	};
 
-	NRS.addDecryptedTransaction = function(identifier, content) {
-		if (!_decryptedTransactions[identifier]) {
-			_decryptedTransactions[identifier] = content;
-		}
-	};
-
 	NRS.tryToDecryptMessage = function(message) {
 		if (_decryptedTransactions && _decryptedTransactions[message.transaction]) {
-			return _decryptedTransactions[message.transaction].encryptedMessage;
+			if (_decryptedTransactions[message.transaction].encryptedMessage) {
+				return _decryptedTransactions[message.transaction].encryptedMessage; // cache is saved differently by the info modal vs the messages table
+			}
 		}
-
 		try {
 			if (!message.attachment.encryptedMessage.data) {
-				return $.t("message_empty");
+				return { message: $.t("message_empty") };
 			} else {
 				var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
 					"nonce": message.attachment.encryptedMessage.nonce,
-					"account": (message.recipient == NRS.account ? message.sender : message.recipient)
+					"account": (message.recipient == NRS.account ? message.sender : message.recipient),
+					"isText": message.attachment.encryptedMessage.isText,
+					"isCompressed": message.attachment.encryptedMessage.isCompressed
 				});
 			}
-
 			return decoded;
 		} catch (err) {
 			throw err;
@@ -354,31 +353,24 @@ var NRS = (function (NRS, $) {
 
 	NRS.tryToDecrypt = function(transaction, fields, account, options) {
 		var showDecryptionForm = false;
-
 		if (!options) {
 			options = {};
 		}
-
 		var nrFields = Object.keys(fields).length;
-
 		var formEl = (options.formEl ? String(options.formEl).escapeHTML() : "#transaction_info_output_bottom");
 		var outputEl = (options.outputEl ? String(options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
-
 		var output = "";
-
 		var identifier = (options.identifier ? transaction[options.identifier] : transaction.transaction);
 
 		//check in cache first..
 		if (_decryptedTransactions && _decryptedTransactions[identifier]) {
 			var decryptedTransaction = _decryptedTransactions[identifier];
-
 			$.each(fields, function(key, title) {
 				if (typeof title != "string") {
 					title = title.title;
 				}
-
 				if (key in decryptedTransaction) {
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(decryptedTransaction[key]).escapeHTML().nl2br() + "</div></div>";
+                    output += formatMessageArea(title, nrFields, decryptedTransaction[key], options, transaction);
 				} else {
 					//if a specific key was not found, the cache is outdated..
 					output = "";
@@ -390,8 +382,7 @@ var NRS = (function (NRS, $) {
 
 		if (!output) {
 			$.each(fields, function(key, title) {
-				var data = "";
-
+				var data = {};
 				var encrypted = "";
 				var nonce = "";
 				var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
@@ -416,12 +407,19 @@ var NRS = (function (NRS, $) {
 					if (typeof title != "string") {
 						title = title.title;
 					}
-
 					try {
-						data = NRS.decryptNote(encrypted, {
-							"nonce": nonce,
-							"account": account
-						});
+						var decryptOptions = {};
+						if (options.sharedKey) {
+							decryptOptions = { "sharedKey": converters.hexStringToByteArray(options.sharedKey) }
+						} else {
+							decryptOptions = {
+								"nonce": nonce,
+								"account": account
+							};
+						}
+						decryptOptions.isText = transaction.attachment[key].isText;
+						decryptOptions.isCompressed = transaction.attachment[key].isCompressed;
+                        data = NRS.decryptNote(encrypted, decryptOptions);
 					} catch (err) {
 						if (err.errorCode && err.errorCode == 1) {
 							showDecryptionForm = true;
@@ -433,16 +431,15 @@ var NRS = (function (NRS, $) {
 									translatedTitle = String(title).escapeHTML().toLowerCase();
 								}
 
-								data = $.t("error_could_not_decrypt_var", {
+								data.message = $.t("error_could_not_decrypt_var", {
 									"var": translatedTitle
 								}).capitalize();
 							} else {
-								data = $.t("error_could_not_decrypt");
+								data.message = $.t("error_could_not_decrypt");
 							}
 						}
 					}
-
-					output += "<div style='" + (!options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).escapeHTML().nl2br() + "</div></div>";
+                    output += formatMessageArea(title, nrFields, data, options, transaction);
 				}
 			});
 		}
@@ -455,9 +452,13 @@ var NRS = (function (NRS, $) {
 				"options": options,
 				"identifier": identifier
 			};
-
+			if (_encryptedNote.account) {
+				$("#decrypt_note_secret_phrase_div").show();
+			} else {
+				$("#decrypt_note_form_password").val("");
+				$("#decrypt_note_secret_phrase_div").hide();
+			}
 			$("#decrypt_note_form_container").detach().appendTo(formEl);
-
 			$("#decrypt_note_form_container, " + formEl).show();
 		} else {
 			NRS.removeDecryptionForm();
@@ -467,66 +468,83 @@ var NRS = (function (NRS, $) {
 
 	NRS.removeDecryptionForm = function($modal) {
 		var noteFormContainer = $("#decrypt_note_form_container");
-        if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && noteFormContainer.length)) {
+		if (($modal && $modal.find("#decrypt_note_form_container").length) || (!$modal && noteFormContainer.length)) {
 			noteFormContainer.find("input").val("");
-			noteFormContainer.find(".callout").html($.t("passphrase_required_to_decrypt_data"));
 			noteFormContainer.hide().detach().appendTo("body");
 		}
 	};
 
-	var noteFormContainer = $("#decrypt_note_form_container");
-	noteFormContainer.find("button.btn-primary").click(function() {
+	var decryptNoteFormContainer = $("#decrypt_note_form_container");
+	decryptNoteFormContainer.find("button.btn-primary").click(function() {
 		NRS.decryptNoteFormSubmit();
 	});
 
-	noteFormContainer.on("submit", function(e) {
+	decryptNoteFormContainer.on("submit", function(e) {
 		e.preventDefault();
 		NRS.decryptNoteFormSubmit();
 	});
 
-	NRS.decryptNoteFormSubmit = function() {
-		var $form = $("#decrypt_note_form_container");
+    var formatMessageArea = function (title, nrFields, data, options, transaction) {
+		var outputStyle = (!options.noPadding && title ? "padding-left:5px;" : "");
+		var labelStyle = (nrFields > 1 ? " style='margin-top:5px'" : "");
+		var label = (title ? "<label" + labelStyle + "><i class='fa fa-unlock'></i> " + String(title).escapeHTML() + "</label>" : "");
+		var msg;
+		if (NRS.isTextMessage(transaction)) {
+			msg = String(data.message).autoLink().nl2br();
+		} else {
+			msg = $.t("binary_data");
+		}
+		var sharedKeyField = "";
+		var downloadLink = "";
+		if (data.sharedKey) {
+			sharedKeyField = "<div><label>" + $.t('shared_key') + "</label><br><span>" + data.sharedKey + "</span></div><br>";
+			if (!NRS.isTextMessage(transaction) && transaction.block) {
+				downloadLink = NRS.getMessageDownloadLink(transaction.transaction, data.sharedKey) + "<br>";
+			}
+		}
+        return "<div style='" + outputStyle + "'>" + label + "<div>" + msg + "</div>" + sharedKeyField + downloadLink + "</div>";
+    };
 
+    NRS.decryptNoteFormSubmit = function() {
+		var $form = $("#decrypt_note_form_container");
 		if (!_encryptedNote) {
 			$form.find(".callout").html($.t("error_encrypted_note_not_found")).show();
 			return;
 		}
 
 		var password = $form.find("input[name=secretPhrase]").val();
-
+		var sharedKey = $form.find("input[name=sharedKey]").val();
+		var useSharedKey = false;
 		if (!password) {
 			if (NRS.rememberPassword) {
 				password = _password;
 			} else if (_decryptionPassword) {
 				password = _decryptionPassword;
-			} else {
-				$form.find(".callout").html($.t("error_passphrase_required")).show();
+			} else if (!sharedKey) {
+				$form.find(".callout").html($.t("error_passphrase_or_shared_key_required")).show();
 				return;
 			}
+			useSharedKey = true;
 		}
 
 		var accountId = NRS.getAccountId(password);
-		if (accountId != NRS.account) {
+		if (accountId != NRS.account && !useSharedKey) {
 			$form.find(".callout").html($.t("error_incorrect_passphrase")).show();
 			return;
 		}
 
 		var rememberPassword = $form.find("input[name=rememberPassword]").is(":checked");
-
 		var otherAccount = _encryptedNote.account;
-
 		var output = "";
 		var decryptionError = false;
 		var decryptedFields = {};
 		var nrFields = Object.keys(_encryptedNote.fields).length;
 
 		$.each(_encryptedNote.fields, function(key, title) {
-			var data = "";
-
+			var data = {};
 			var encrypted = "";
 			var nonce = "";
 			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
-
 			if (key == "encryptedMessage" || key == "encryptToSelfMessage") {
 			    if (key == "encryptToSelfMessage") {
 					otherAccount=accountId;
@@ -550,58 +568,61 @@ var NRS = (function (NRS, $) {
 				if (typeof title != "string") {
 					title = title.title;
 				}
-
 				try {
-					data = NRS.decryptNote(encrypted, {
-						"nonce": nonce,
-						"account": otherAccount
-					}, password);
-
+					var options = {};
+					if (useSharedKey) {
+						options.sharedKey = converters.hexStringToByteArray(sharedKey);
+					} else {
+						options.nonce = nonce;
+						options.account = otherAccount;
+                    }
+					options.isText = _encryptedNote.transaction.attachment[key].isText;
+					options.isCompressed = _encryptedNote.transaction.attachment[key].isCompressed;
+                    data = NRS.decryptNote(encrypted, options, password);
 					decryptedFields[key] = data;
 				} catch (err) {
-					decryptionError = true;
-					var message = String(err.message ? err.message : err);
-
-					$form.find(".callout").html(message.escapeHTML());
-					return false;
+					if (useSharedKey) {
+						data = { message: $.t("error_could_not_decrypt_message") };
+						decryptedFields[key] = data;
+					} else {
+						decryptionError = true;
+						var message = String(err.message ? err.message : err);
+						$form.find(".callout").html(message.escapeHTML());
+						return false;
+					}
 				}
-
-				output += "<div style='" + (!_encryptedNote.options.noPadding && title ? "padding-left:5px;" : "") + "'>" + (title ? "<label" + (nrFields > 1 ? " style='margin-top:5px'" : "") + "><i class='fa fa-lock'></i> " + String(title).escapeHTML() + "</label>" : "") + "<div>" + String(data).autoLink().nl2br() + "</div></div>";
+                output += formatMessageArea(title, nrFields, data, _encryptedNote.options, _encryptedNote.transaction);
 			}
 		});
-
 		if (decryptionError) {
 			return;
 		}
-
 		_decryptedTransactions[_encryptedNote.identifier] = decryptedFields;
 
-		//only save 150 decryptions maximum in cache...
+		//only save 150 decrypted messages in cache...
 		var decryptionKeys = Object.keys(_decryptedTransactions);
-
 		if (decryptionKeys.length > 150) {
 			delete _decryptedTransactions[decryptionKeys[0]];
 		}
-
 		NRS.removeDecryptionForm();
-
 		var outputEl = (_encryptedNote.options.outputEl ? String(_encryptedNote.options.outputEl).escapeHTML() : "#transaction_info_output_bottom");
-
 		$(outputEl).append(output).show();
-
 		_encryptedNote = null;
-
 		if (rememberPassword) {
 			_decryptionPassword = password;
 		}
 	};
 
-	NRS.decryptAllMessages = function(messages, password) {
+	NRS.decryptAllMessages = function(messages, password, sharedKey) {
+		var useSharedKey = false;
 		if (!password) {
-			throw {
-				"message": $.t("error_passphrase_required"),
-				"errorCode": 1
-			};
+			if (!sharedKey) {
+				throw {
+					"message": $.t("error_passphrase_required"),
+					"errorCode": 1
+				};
+			}
+			useSharedKey = true;
 		} else {
 			var accountId = NRS.getAccountId(password);
 			if (accountId != NRS.account) {
@@ -614,28 +635,31 @@ var NRS = (function (NRS, $) {
 
 		var success = 0;
 		var error = 0;
-
 		for (var i = 0; i < messages.length; i++) {
 			var message = messages[i];
-
 			if (message.attachment.encryptedMessage && !_decryptedTransactions[message.transaction]) {
 				try {
 					var otherUser = (message.sender == NRS.account ? message.recipient : message.sender);
-
-					var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, {
-						"nonce": message.attachment.encryptedMessage.nonce,
-						"account": otherUser
-					}, password);
-
+					var options = {};
+					if (useSharedKey) {
+						options.sharedKey = converters.hexStringToByteArray(sharedKey);
+					} else {
+						options.nonce = message.attachment.encryptedMessage.nonce;
+						options.account = otherUser;
+                    }
+					options.isText = message.attachment.encryptedMessage.isText;
+					options.isCompressed = message.attachment.encryptedMessage.isCompressed;
+                    var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, options, password);
 					_decryptedTransactions[message.transaction] = {
-						"encryptedMessage": decoded
+						encryptedMessage: decoded
 					};
-
 					success++;
 				} catch (err) {
-					_decryptedTransactions[message.transaction] = {
-						"encryptedMessage": $.t("error_decryption_unknown")
-					};
+					if (!useSharedKey) {
+						_decryptedTransactions[message.transaction] = {
+							"message": $.t("error_decryption_unknown")
+						};
+					}
 					error++;
 				}
 			}
@@ -660,14 +684,14 @@ var NRS = (function (NRS, $) {
 	}
 
 	function areByteArraysEqual(bytes1, bytes2) {
-		if (bytes1.length !== bytes2.length)
-			return false;
-
+		if (bytes1.length !== bytes2.length) {
+            return false;
+        }
 		for (var i = 0; i < bytes1.length; ++i) {
-			if (bytes1[i] !== bytes2[i])
-				return false;
+			if (bytes1[i] !== bytes2[i]) {
+                return false;
+            }
 		}
-
 		return true;
 	}
 
@@ -686,7 +710,6 @@ var NRS = (function (NRS, $) {
 			temp2 = temp1.add(new BigInteger(byteArray[i].toString(10), 10));
 			value = temp2;
 		}
-
 		return value;
 	}
 
@@ -706,30 +729,23 @@ var NRS = (function (NRS, $) {
 		} else {
 			sharedKey = options.sharedKey.slice(0); //clone
 		}
-
 		for (var i = 0; i < 32; i++) {
 			sharedKey[i] ^= options.nonce[i];
 		}
-
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
 
-		var tmp = new Uint8Array(16);
-
+		var ivBytes = new Uint8Array(16);
 		if (window.crypto) {
-			window.crypto.getRandomValues(tmp);
+			window.crypto.getRandomValues(ivBytes);
 		} else {
-			window.msCrypto.getRandomValues(tmp);
+			window.msCrypto.getRandomValues(ivBytes);
 		}
-
-		var iv = converters.byteArrayToWordArray(tmp);
 		var encrypted = CryptoJS.AES.encrypt(text, key, {
-			iv: iv
+			iv: converters.byteArrayToWordArray(ivBytes)
 		});
 
 		var ivOut = converters.wordArrayToByteArray(encrypted.iv);
-
 		var ciphertextOut = converters.wordArrayToByteArray(encrypted.ciphertext);
-
 		return ivOut.concat(ciphertextOut);
 	}
 
@@ -742,6 +758,11 @@ var NRS = (function (NRS, $) {
 
 		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
+		
+		// shared key is use for two different purposes here
+		// (1) if nonce exists, shared key represents the shared secret between the private and public keys
+		// (2) if nonce does not exists, shared key is the specific key needed for decryption already xored
+		// with the nonce and hashed
 		var sharedKey;
 		if (!options.sharedKey) {
 			sharedKey = getSharedSecret(options.privateKey, options.publicKey);
@@ -769,8 +790,15 @@ var NRS = (function (NRS, $) {
 			iv: iv
 		});
 
-		return converters.wordArrayToByteArray(decrypted);
+		return { 
+            decrypted: converters.wordArrayToByteArray(decrypted), 
+            sharedKey: converters.wordArrayToByteArray(key)
+		};
 	}
+
+    NRS.encryptDataRoof = function(data, options) {
+   		return encryptData(data, options);
+   	};
 
 	function encryptData(plaintext, options) {
 		if (!window.crypto && !window.msCrypto) {
@@ -785,9 +813,7 @@ var NRS = (function (NRS, $) {
 		}
 
 		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
-
 		options.nonce = new Uint8Array(32);
-
 		if (window.crypto) {
 			//noinspection JSUnresolvedFunction
 			window.crypto.getRandomValues(options.nonce);
@@ -797,7 +823,6 @@ var NRS = (function (NRS, $) {
 		}
 
 		var data = aesEncrypt(compressedPlaintext, options);
-
 		return {
 			"nonce": options.nonce,
 			"data": data
@@ -813,21 +838,52 @@ var NRS = (function (NRS, $) {
 			options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
 		}
 
-		var compressedPlaintext = aesDecrypt(data, options);
-		var binData = new Uint8Array(compressedPlaintext);
-		return converters.byteArrayToString(pako.inflate(binData));
+		var result = aesDecrypt(data, options);
+		var binData = new Uint8Array(result.decrypted);
+		if (!(options.isCompressed === false)) {
+			binData = pako.inflate(binData);
+		}
+		var message;
+		if (!(options.isText === false)) {
+			message = converters.byteArrayToString(binData);
+		} else {
+			message = converters.byteArrayToHexString(binData);
+		}
+        return { message: message, sharedKey: converters.byteArrayToHexString(result.sharedKey) };
 	}
 
 	function getSharedSecret(key1, key2) {
 		return converters.shortArrayToByteArray(curve25519_(converters.byteArrayToShortArray(key1), converters.byteArrayToShortArray(key2), null));
 	}
 
-	NRS.getSharedKey = function (privateKey, publicKey, nonce) {
+    NRS.sharedSecretToSharedKey = function (sharedSecret, nonce) {
+        for (var i = 0; i < 32; i++) {
+            sharedSecret[i] ^= nonce[i];
+        }
+        return simpleHash(sharedSecret);
+    };
+
+    NRS.getSharedKey = function (privateKey, publicKey, nonce) {
 		var sharedSecret = getSharedSecret(privateKey, publicKey);
-		for (var i=0; i<32; i++) {
-			sharedSecret[i] ^= nonce[i];
+        return NRS.sharedSecretToSharedKey(sharedSecret, nonce);
+	};
+
+	NRS.encryptFile = function(file, options, callback) {
+		var r;
+		try {
+			r = new FileReader();
+		} catch(e) {
+			throw $.t("encrypted_file_upload_not_supported");
 		}
-		return simpleHash(sharedSecret);
+		r.onload = function (e) {
+			var bytes = e.target.result;
+			options.isText = false;
+			var encrypted = encryptData(bytes, options);
+			var blobData = Uint8Array.from(encrypted.data);
+			var blob = new Blob([ blobData ], { type: "application/octet-stream" });
+			callback({ file: blob, nonce: encrypted.nonce });
+		};
+		r.readAsArrayBuffer(file);
 	};
 
 	return NRS;

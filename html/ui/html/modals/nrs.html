@@ -689,7 +689,6 @@
                             <th data-i18n="date">Date</th>
                             <th data-i18n="type">Type</th>
                             <th data-i18n="amount" class="numeric">Amount</th>
-                            <th></th>
                             <th data-i18n="fee" class="numeric">Fee</th>
                             <th data-i18n="account">Account</th>
                         </tr>
@@ -846,6 +845,45 @@
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn btn-default" id="logout_clear_user_data_confirm_btn" data-i18n="continue">Continue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ardor_distribution_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="ardor_distribution_status">Ardor Distribution Status</h4>
+            </div>
+            <div class="modal-body">
+                <div class="callout callout-info fomo_message"></div>
+                <table class="table" id="ardor_distribution_table" style="margin-bottom:0;table-layout:fixed;">
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: bold;width:180px;"><span data-i18n="start_height">Start Height</span>:</td><td><span id="ardor_distribution_start_height"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;width:180px;"><span data-i18n="start_time">Start Time</span>:</td><td><span id="ardor_distribution_start_time"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;width:180px;"><span data-i18n="end_height">End Height</span>:</td><td><span id="ardor_distribution_end_height"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;width:180px;"><span data-i18n="end_time">End Time</span>:</td><td><span id="ardor_distribution_end_time"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;width:180px;"><span data-i18n="current_balance">Current Balance</span>:</td><td><span id="ardor_distribution_current_balance"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold;width:180px;"><span data-i18n="expected_balance">Expected Balance</span>:</td><td><span id="ardor_distribution_expected_balance"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
             </div>
         </div>
     </div>

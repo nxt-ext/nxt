@@ -59,5 +59,27 @@ var NRS = (function(NRS, $) {
         }
     });
 
+    $("#ardor_distribution_modal").on("show.bs.modal", function() {
+        NRS.sendRequest("getFxtQuantity", {
+            "account": NRS.account
+        }, function (response) {
+            $("#ardor_distribution_start_height").html(response.distributionStart);
+            $("#ardor_distribution_start_time").html(NRS.getBlockHeightTimeEstimate(response.distributionStart));
+            $("#ardor_distribution_end_height").html(response.distributionEnd);
+            $("#ardor_distribution_end_time").html(NRS.getBlockHeightTimeEstimate(response.distributionEnd));
+            $("#ardor_distribution_current_balance").html(NRS.formatQuantity(response.quantityQNT, 4));
+            $("#ardor_distribution_expected_balance").html(NRS.formatQuantity(response.totalExpectedQuantityQNT, 4));
+
+            var duration;
+            if (response.distributionStart > NRS.lastBlockHeight) {
+                duration = moment.duration(NRS.getBlockHeightMoment(response.distributionStart).diff(moment()));
+                $("#ardor_distribution_modal").find(".fomo_message").html($.t("distribution_starts_in", { interval: duration.humanize() }));
+            } else {
+                duration = moment.duration(NRS.getBlockHeightMoment(response.distributionEnd).diff(moment()));
+                $("#ardor_distribution_modal").find(".fomo_message").html($.t("distribution_ends_in", {interval: duration.humanize()}));
+            }
+        });
+    });
+
     return NRS;
 }(NRS || {}, jQuery));
