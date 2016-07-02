@@ -94,7 +94,11 @@ public final class FxtDistribution implements Listener<Block> {
     }
 
     public static long getRemainingFxtQuantity(long accountId) {
-        long balance = Account.getAccount(accountId).getBalanceNQT();
+        Account account = Account.getAccount(accountId);
+        if (account == null) {
+            return 0;
+        }
+        long balance = account.getBalanceNQT();
         int height = Nxt.getBlockchain().getHeight();
         if (height >= DISTRIBUTION_END) {
             return 0;
