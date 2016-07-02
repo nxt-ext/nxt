@@ -112,11 +112,11 @@ public final class PeerServlet extends WebSocketServlet {
         DOWNLOADING = JSON.prepare(response);
     }
 
-    private static final JSONStreamAware LITE_CLIENT;
+    private static final JSONStreamAware LIGHT_CLIENT;
     static {
         JSONObject response = new JSONObject();
         response.put("error", Errors.LIGHT_CLIENT);
-        LITE_CLIENT = JSON.prepare(response);
+        LIGHT_CLIENT = JSON.prepare(response);
     }
 
     private static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
@@ -284,7 +284,7 @@ public final class PeerServlet extends WebSocketServlet {
                     return DOWNLOADING;
                 }
                 if (Constants.isLightClient) {
-                    return LITE_CLIENT;
+                    return LIGHT_CLIENT;
                 }
             }
             return peerRequestHandler.processRequest(request, peer);
