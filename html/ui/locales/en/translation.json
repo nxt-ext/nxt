@@ -1771,5 +1771,6 @@
   "end_height": "End Height",
   "end_time": "End Time",
   "distribution_starts_in": "Distribution starts in __interval__",
-  "distribution_ends_in": "Distribution ends in __interval__"
+  "distribution_ends_in": "Distribution ends in __interval__",
+  "download_verification": "Make sure the file downloaded from __url__ has sha256 hash code __hash__ or download the file using the web wallet"
 }
