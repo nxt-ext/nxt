@@ -110,7 +110,7 @@ public class DesktopApplication extends Application {
         loadWorker.stateProperty().addListener(
                 (ov, oldState, newState) -> {
                     JSObject window = (JSObject)webEngine.executeScript("window");
-                    window.setMember("java", new JavaScriptBridge());
+                    window.setMember("java", new JavaScriptBridge(this));
                     Locale locale = Locale.getDefault();
                     String language = locale.getLanguage().toLowerCase() + "-" + locale.getCountry().toUpperCase();
                     window.setMember("javaFxLanguage", language);
@@ -204,7 +204,6 @@ public class DesktopApplication extends Application {
         return url;
     }
 
-    // Invoked from JavaScript
     @SuppressWarnings("WeakerAccess")
     public void popupHandlerURLChange(String newValue) {
         Logger.logInfoMessage("popup request for " + newValue);

@@ -20,6 +20,12 @@ import java.nio.file.Paths;
 @SuppressWarnings("WeakerAccess")
 public class JavaScriptBridge {
 
+    DesktopApplication application;
+
+    public JavaScriptBridge(DesktopApplication application) {
+        this.application = application;
+    }
+
     public void log(String message) {
         Logger.logInfoMessage(message);
     }
@@ -64,5 +70,10 @@ public class JavaScriptBridge {
 
     public String getAdminPassword() {
         return API.adminPassword;
+    }
+
+    @SuppressWarnings("unused")
+    public void popupHandlerURLChange(String newValue) {
+        application.popupHandlerURLChange(newValue);
     }
 }
