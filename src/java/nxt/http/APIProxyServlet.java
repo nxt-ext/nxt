@@ -65,6 +65,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         requests.add("getShufflers");
         requests.add("startShuffler");
         requests.add("stopShuffler");
+        requests.add("sendTransaction");
 
         NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
