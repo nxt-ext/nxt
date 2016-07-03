@@ -196,6 +196,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             throw new ParameterException(JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
         }
 
+        if (parameters.containsKey("sharedKey")) {
+            throw new ParameterException(JSONResponses.PROXY_SHARED_KEY_DETECTED);
+        }
 
         return requestType;
     }
@@ -324,6 +327,8 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         private final int clientRequestId;
         private final PasswordFinder secretPhraseFinder = new PasswordFinder("secretPhrase=");
         private final PasswordFinder adminPasswordFinder = new PasswordFinder("adminPassword=");
+        private final PasswordFinder sharedKeyFinder = new PasswordFinder("sharedKey=");
+
         private boolean isPasswordDetected = false;
 
         public PasswordFilteringContentTransformer(HttpServletRequest clientRequest) {
@@ -339,14 +344,20 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                     positionChanged = true;
                     boolean secretPhaseFound = secretPhraseFinder.process(input);
                     boolean adminPasswordFound = false;
+                    boolean sharedKeyFound = false;
                     if (!secretPhaseFound) {
                         input.position(position);
                         adminPasswordFound = adminPasswordFinder.process(input);
                     }
-                    if (secretPhaseFound || adminPasswordFound) {
+                    if (!adminPasswordFound) {
+                        input.position(position);
+                        sharedKeyFound = sharedKeyFinder.process(input);
+                    }
+                    if (secretPhaseFound || adminPasswordFound || sharedKeyFound) {
                         isPasswordDetected = true;
                         JSONStreamAware error = secretPhaseFound ? JSONResponses.PROXY_SECRET_PHRASE_DETECTED :
-                                JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED;
+                                adminPasswordFound ? JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED :
+                                        JSONResponses.PROXY_SHARED_KEY_DETECTED;
 
                         throw new PasswordDetectedException(error);
                     }

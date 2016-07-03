@@ -391,6 +391,14 @@ public final class JSONResponses {
         PROXY_ADMIN_PASSWORD_DETECTED = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware PROXY_SHARED_KEY_DETECTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 18);
+        response.put("errorDescription", "Proxied requests contains sharedKey parameter");
+        PROXY_SHARED_KEY_DETECTED = JSON.prepare(response);
+    }
+
     public static final JSONStreamAware LIGHT_CLIENT_NO_OPEN_API_PEERS;
     static {
         JSONObject response = new JSONObject();
