@@ -41,10 +41,9 @@ public class APIProxy {
     private volatile List<String> peersHosts;
     private volatile String mainPeerAnnouncedAddress;
 
-
     private ConcurrentHashMap<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
 
-    private static final Runnable peerUnBlacklistingThread = () -> {
+    private static final Runnable peersUpdateThread = () -> {
         int curTime = Nxt.getEpochTime();
         instance.blacklistedPeers.entrySet().removeIf((entry) -> {
             if (entry.getValue() < curTime) {
@@ -53,11 +52,20 @@ public class APIProxy {
             }
             return false;
         });
+        List<String> currentPeersHosts = instance.peersHosts;
+        if (currentPeersHosts != null) {
+            for (String host:currentPeersHosts) {
+                Peer peer = Peers.getPeer(host);
+                if (peer != null) {
+                    Peers.connectPeer(peer);
+                }
+            }
+        }
     };
 
     static {
         if (!Constants.isOffline && enableAPIProxy) {
-            ThreadPool.scheduleThread("APIProxyPeerUnBlacklisting", peerUnBlacklistingThread, blacklistingPeriod);
+            ThreadPool.scheduleThread("APIProxyPeersUpdate", peersUpdateThread, 60);
         }
     }
 
@@ -110,11 +118,13 @@ public class APIProxy {
                         //remove all peers that do not introduce new enabled APIs
                         connectablePeers.removeIf(p -> p.getDisabledAPIs().containsAll(disabledAPIs));
                         peer = getRandomAPIPeer(connectablePeers);
-                        currentPeersHosts.add(peer.getHost());
-                        if (!peer.getDisabledAPIs().contains(requestAPI)) {
-                            resultPeer = peer;
+                        if (peer != null) {
+                            currentPeersHosts.add(peer.getHost());
+                            if (!peer.getDisabledAPIs().contains(requestAPI)) {
+                                resultPeer = peer;
+                            }
+                            disabledAPIs.retainAll(peer.getDisabledAPIs());
                         }
-                        disabledAPIs.retainAll(peer.getDisabledAPIs());
                     }
                     this.peersHosts = Collections.unmodifiableList(currentPeersHosts);
                     Logger.logDebugMessage("Proxy peers hosts selected: " + currentPeersHosts);
