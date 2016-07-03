@@ -1,3 +1,21 @@
+nxt-client-1.9.2:
+
+This is the first stable release in the 1.9 series. Update to this release on
+mainnet is optional up until block 1000000 (Oct 12), however users are advised
+to do it earlier, as after July 14th updating will trigger a blockchain rescan.
+
+The main new feature in 1.9 is the distribution of ARDR assets. See the 1.9.0e
+changelog for details.
+
+Performance optimizations for blockchain rescans and for snapshot balance
+calculations. Added nxt.dbMaxMemoryRows property to allow setting the H2
+MAX_MEMORY_ROWS parameter.
+
+Updated Jetty to version 9.3.10, delete the old lib folder before unpacking on
+top.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.9.1e:
 
 Fixed a client UI bug affecting some form submission.
