@@ -36,6 +36,9 @@ public final class ShufflingCreate extends CreateTransaction {
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        if (Constants.isLightClient) {
+            return JSONResponses.LIGHT_CLIENT_DISABLED_API;
+        }
         HoldingType holdingType = ParameterParser.getHoldingType(req);
         long holdingId = ParameterParser.getHoldingId(req, holdingType);
         long amount = ParameterParser.getLong(req, "amount", 0L, Long.MAX_VALUE, true);

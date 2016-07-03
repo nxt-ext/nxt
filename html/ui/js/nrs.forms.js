@@ -237,7 +237,7 @@ var NRS = (function(NRS, $) {
 
 		var originalRequestType = requestType;
         if (NRS.isRequireBlockchain(requestType)) {
-			if (NRS.downloadingBlockchain) {
+			if (NRS.downloadingBlockchain && !NRS.state.apiProxy) {
 				$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
 				if (formErrorFunction) {
 					formErrorFunction();

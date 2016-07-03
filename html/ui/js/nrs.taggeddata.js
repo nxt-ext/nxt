@@ -28,9 +28,9 @@ var NRS = (function(NRS, $) {
         return {
             nameFormatted: NRS.getTransactionLink(response.transaction, NRS.addEllipsis(response.name, 20)),
             accountFormatted: NRS.getAccountLink(response, "account"),
-            type: NRS.addEllipsis(String(response.type).escapeHTML(), 20),
-            channel: NRS.addEllipsis(String(response.channel).escapeHTML(), 20),
-            filename: NRS.addEllipsis(String(response.filename).escapeHTML(), 20),
+            type: NRS.addEllipsis(NRS.escapeRespStr(response.type), 20),
+            channel: NRS.addEllipsis(NRS.escapeRespStr(response.channel), 20),
+            filename: NRS.addEllipsis(NRS.escapeRespStr(response.filename), 20),
             dataFormatted: NRS.getTaggedDataLink(response.transaction, response.isText)
         };
     };
@@ -39,9 +39,9 @@ var NRS = (function(NRS, $) {
         if (isText) {
             return "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' " +
                 "data-target='#tagged_data_view_modal' " +
-                "data-transaction='" + String(transaction).escapeHTML() + "'>" + $.t("view") + "</a>";
+                "data-transaction='" + NRS.escapeRespStr(transaction) + "'>" + $.t("view") + "</a>";
         } else {
-			return "<a href='/nxt?requestType=downloadTaggedData&transaction=" + String(transaction).escapeHTML() +
+			return "<a href='/nxt-proxy?requestType=downloadTaggedData&transaction=" + NRS.escapeRespStr(transaction) +
                 "&retrieve=true' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
         }
     };
@@ -287,7 +287,7 @@ var NRS = (function(NRS, $) {
                 $("#tagged_data_content").val(response.data);
 			}
 		}, false);
-		$("#tagged_data_download").attr("href", "/nxt?requestType=downloadTaggedData&transaction=" + transaction + "&retrieve=true");
+		$("#tagged_data_download").attr("href", "/nxt-proxy?requestType=downloadTaggedData&transaction=" + transaction + "&retrieve=true");
     });
 
     $("#extend_data_modal").on("show.bs.modal", function (e) {
@@ -297,7 +297,7 @@ var NRS = (function(NRS, $) {
         NRS.sendRequest("getTransaction", {
             "transaction": transaction
         }, function (response) {
-            var fee = NRS.convertToNXT(String(response.feeNQT).escapeHTML());
+            var fee = NRS.convertToNXT(NRS.escapeRespStr(response.feeNQT));
             $('#extend_data_fee').val(fee);
             $('#extend_data_fee_label').html(String(fee) + " NXT");
         })

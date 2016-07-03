@@ -193,6 +193,8 @@ var ATS = (function(ATS, $, undefined) {
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
             processData = true;
         }
+        url += "?requestType=" + params["requestType"];
+        
         $.ajax({
             url: url,
             type: 'POST',

@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Attachment;
+import nxt.Constants;
 import nxt.NxtException;
 import nxt.Shuffling;
 import org.json.simple.JSONStreamAware;
@@ -34,6 +35,9 @@ public final class ShufflingRegister extends CreateTransaction {
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        if (Constants.isLightClient) {
+            return JSONResponses.LIGHT_CLIENT_DISABLED_API;
+        }
         byte[] shufflingFullHash = ParameterParser.getBytes(req, "shufflingFullHash", true);
 
         Attachment attachment = new Attachment.ShufflingRegistration(shufflingFullHash);

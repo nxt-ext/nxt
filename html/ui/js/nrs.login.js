@@ -289,17 +289,17 @@ var NRS = (function(NRS, $, undefined) {
 			//this is done locally..
 			NRS.sendRequest(accountRequest, requestVariable, function(response, data) {
 				if (!response.errorCode) {
-					NRS.account = String(response.account).escapeHTML();
-					NRS.accountRS = String(response.accountRS).escapeHTML();
+					NRS.account = NRS.escapeRespStr(response.account);
+					NRS.accountRS = NRS.escapeRespStr(response.accountRS);
 					if (isPassphraseLogin) {
-						NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(id));
-					} else {
-						NRS.publicKey = String(response.publicKey).escapeHTML();
-					}
+                        NRS.publicKey = NRS.getPublicKey(converters.stringToHexString(id));
+                    } else {
+                        NRS.publicKey = NRS.escapeRespStr(response.publicKey);
+                    }
 				}
 				if (!isPassphraseLogin && response.errorCode == 5) {
-					NRS.account = String(response.account).escapeHTML();
-					NRS.accountRS = String(response.accountRS).escapeHTML();
+					NRS.account = NRS.escapeRespStr(response.account);
+					NRS.accountRS = NRS.escapeRespStr(response.accountRS);
 				}
 				if (!NRS.account) {
 					$.growl($.t("error_find_account_id", { accountRS: (data && data.account ? String(data.account).escapeHTML() : "") }), {
@@ -347,7 +347,10 @@ var NRS = (function(NRS, $, undefined) {
 					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
 						NRS.lastBlockHeight = NRS.state.numberOfBlocks - 1;
 					}
-					$("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
+					if (NRS.lastBlockHeight == 0 && NRS.lastProxyBlockHeight) {
+						NRS.lastBlockHeight = NRS.lastProxyBlockHeight;
+					}
+                    $("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
 
 					var passwordNotice = "";
 

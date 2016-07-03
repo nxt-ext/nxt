@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.Account;
 import nxt.Asset;
+import nxt.Constants;
 import nxt.Currency;
 import nxt.FundingMonitor;
 import nxt.HoldingType;
@@ -76,6 +77,9 @@ public final class StartFundingMonitor extends APIServlet.APIRequestHandler {
      */
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws NxtException {
+        if (Constants.isLightClient) {
+            return JSONResponses.LIGHT_CLIENT_DISABLED_API;
+        }
         HoldingType holdingType = ParameterParser.getHoldingType(req);
         long holdingId = ParameterParser.getHoldingId(req, holdingType);
         String property = ParameterParser.getAccountProperty(req, true);

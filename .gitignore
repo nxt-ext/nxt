@@ -34,3 +34,4 @@ deploy.sh
 *.patch
 /addons/classes/
 /addons/src/*.java
+/out

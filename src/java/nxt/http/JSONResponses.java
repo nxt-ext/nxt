@@ -367,6 +367,62 @@ public final class JSONResponses {
         PRUNED_TRANSACTION = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware PROXY_MISSING_REQUEST_TYPE;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 17);
+        response.put("errorDescription", "Proxy servlet needs requestType parameter in the URL query");
+        PROXY_MISSING_REQUEST_TYPE = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PROXY_SECRET_PHRASE_DETECTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 18);
+        response.put("errorDescription", "Proxied requests contains secretPhrase parameter");
+        PROXY_SECRET_PHRASE_DETECTED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PROXY_ADMIN_PASSWORD_DETECTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 18);
+        response.put("errorDescription", "Proxied requests contains adminPassword parameter");
+        PROXY_ADMIN_PASSWORD_DETECTED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware LIGHT_CLIENT_NO_OPEN_API_PEERS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 19);
+        response.put("errorDescription", "No openAPI peers found");
+        LIGHT_CLIENT_NO_OPEN_API_PEERS = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware LIGHT_CLIENT_DISABLED_API;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 20);
+        response.put("errorDescription", "This API is disabled when running as light client");
+        LIGHT_CLIENT_DISABLED_API = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PEER_NOT_CONNECTED;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Peer not connected");
+        PEER_NOT_CONNECTED = JSON.prepare(response);
+    }
+
+    public static final JSONStreamAware PEER_NOT_OPEN_API;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 5);
+        response.put("errorDescription", "Peer is not providing open API");
+        PEER_NOT_OPEN_API = JSON.prepare(response);
+    }
+
     static JSONStreamAware missing(String... paramNames) {
         JSONObject response = new JSONObject();
         response.put("errorCode", 3);

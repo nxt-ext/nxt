@@ -1630,5 +1630,35 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
+    /**
+     * Escapes all strings in a response object
+     * @param obj
+     */
+    NRS.escapeResponseObjStrings = function (obj) {
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                var val = obj[key];
+                if (typeof val === 'string') {
+                    obj[key] = String(val).escapeHTML();
+                } else if (typeof val === 'object') {
+                    NRS.escapeResponseObjStrings(obj[key]);
+                }
+            }
+        }
+    };
+
+    /**
+     * Escapes a string that was returned in response from the server.
+     * This is used to avoid the double escaping of strings since the response strings started to be escaped in a global
+     * level because of the proxy feature
+     * @param val
+     */
+    NRS.escapeRespStr = function (val) {
+        return String(val).unescapeHTML().escapeHTML();
+    };
+
+    NRS.unescapeRespStr = function (val) {
+        return String(val).unescapeHTML();
+    };
     return NRS;
 }(NRS || {}, jQuery));

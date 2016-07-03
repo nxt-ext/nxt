@@ -67,6 +67,11 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    protected boolean requireBlockchain() {
+        return false;
+    }
+
     private static class PluginDirListing extends SimpleFileVisitor<Path> {
 
         private final List<Path> directories = new ArrayList<>();

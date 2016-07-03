@@ -175,7 +175,7 @@ var NRS = (function(NRS, $) {
                     }
                 } else {
                     status = NRS.constants.UNKNOWN;
-                    tooltip = response.errorDescription.escapeHTML();
+                    tooltip = NRS.escapeRespStr(response.errorDescription);
                 }
             }, false);
         }

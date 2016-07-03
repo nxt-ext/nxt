@@ -23,6 +23,7 @@ import nxt.Db;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.http.API;
+import nxt.http.APIEnum;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
@@ -130,8 +131,7 @@ public final class Peers {
     static final int MAX_ANNOUNCED_ADDRESS_LENGTH = 100;
     static final boolean hideErrorDetails = Nxt.getBooleanProperty("nxt.hideErrorDetails");
 
-    static final JSONStreamAware myPeerInfoRequest;
-    static final JSONStreamAware myPeerInfoResponse;
+    static final JSONObject myPeerInfo;
     private static final List<Peer.Service> myServices;
 
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
@@ -260,13 +260,34 @@ public final class Peers {
         if (!Constants.ENABLE_PRUNING && Constants.INCLUDE_EXPIRED_PRUNABLE) {
             servicesList.add(Peer.Service.PRUNABLE);
         }
-        if (API.openAPIPort > 0) {
+        if (API.openAPIPort > 0 && !Constants.isLightClient) {
             json.put("apiPort", API.openAPIPort);
             servicesList.add(Peer.Service.API);
         }
-        if (API.openAPISSLPort > 0) {
+        if (API.openAPISSLPort > 0 && !Constants.isLightClient) {
             json.put("apiSSLPort", API.openAPISSLPort);
             servicesList.add(Peer.Service.API_SSL);
+        }
+
+        if ((API.openAPIPort > 0 || API.openAPISSLPort > 0) && !Constants.isLightClient) {
+            EnumSet<APIEnum> disabledAPISet = EnumSet.noneOf(APIEnum.class);
+
+            API.disabledAPIs.forEach(apiName -> {
+                APIEnum api = APIEnum.fromName(apiName);
+                if (api != null) {
+                    disabledAPISet.add(api);
+                }
+            });
+            API.disabledAPITags.forEach(apiTag -> {
+                for (APIEnum api : APIEnum.values()) {
+                    if (api.getHandler() != null && api.getHandler().getAPITags().contains(apiTag)) {
+                        disabledAPISet.add(api);
+                    }
+                }
+            });
+            json.put("disabledAPIs", APIEnum.enumSetToBase64String(disabledAPISet));
+
+            json.put("apiServerIdleTimeout", API.apiServerIdleTimeout);
         }
         long services = 0;
         for (Peer.Service service : servicesList) {
@@ -275,9 +296,7 @@ public final class Peers {
         json.put("services", Long.toUnsignedString(services));
         myServices = Collections.unmodifiableList(servicesList);
         Logger.logDebugMessage("My peer info:\n" + json.toJSONString());
-        myPeerInfoResponse = JSON.prepare(json);
-        json.put("requestType", "getInfo");
-        myPeerInfoRequest = JSON.prepareRequest(json);
+        myPeerInfo = json;
 
         final List<String> defaultPeers = Constants.isTestnet ? Nxt.getStringListProperty("nxt.defaultTestnetPeers")
                 : Nxt.getStringListProperty("nxt.defaultPeers");
@@ -299,7 +318,7 @@ public final class Peers {
         minNumberOfKnownPeers = Nxt.getIntProperty("nxt.minNumberOfKnownPeers");
         connectTimeout = Nxt.getIntProperty("nxt.connectTimeout");
         readTimeout = Nxt.getIntProperty("nxt.readTimeout");
-        enableHallmarkProtection = Nxt.getBooleanProperty("nxt.enableHallmarkProtection");
+        enableHallmarkProtection = Nxt.getBooleanProperty("nxt.enableHallmarkProtection") && !Constants.isLightClient;
         pushThreshold = Nxt.getIntProperty("nxt.pushThreshold");
         pullThreshold = Nxt.getIntProperty("nxt.pullThreshold");
         useWebSockets = Nxt.getBooleanProperty("nxt.useWebSockets");
@@ -1007,7 +1026,8 @@ public final class Peers {
                     continue;
                 }
 
-                if (!peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null) {
+                if (!peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
+                        && peer.getBlockchainState() != Peer.BlockchainState.LIGHT_CLIENT) {
                     Future<JSONObject> futureResponse = peersService.submit(() -> peer.send(jsonRequest));
                     expectedResponses.add(futureResponse);
                 }
@@ -1085,6 +1105,65 @@ public final class Peers {
         }
     }
 
+    public static boolean isOldVersion(String version, int[] minVersion) {
+        if (version == null) {
+            return true;
+        }
+        if (version.endsWith("e")) {
+            version = version.substring(0, version.length() - 1);
+        }
+        String[] versions = version.split("\\.");
+        for (int i = 0; i < minVersion.length && i < versions.length; i++) {
+            try {
+                int v = Integer.parseInt(versions[i]);
+                if (v > minVersion[i]) {
+                    return false;
+                } else if (v < minVersion[i]) {
+                    return true;
+                }
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return versions.length < minVersion.length;
+    }
+
+    private static final int[] MAX_VERSION;
+    static {
+        String version = Nxt.VERSION;
+        if (version.endsWith("e")) {
+            version = version.substring(0, version.length() - 1);
+        }
+        String[] versions = version.split("\\.");
+        MAX_VERSION = new int[versions.length];
+        for (int i = 0; i < versions.length; i++) {
+            MAX_VERSION[i] = Integer.parseInt(versions[i]);
+        }
+    }
+
+    public static boolean isNewVersion(String version) {
+        if (version == null) {
+            return true;
+        }
+        if (version.endsWith("e")) {
+            version = version.substring(0, version.length() - 1);
+        }
+        String[] versions = version.split("\\.");
+        for (int i = 0; i < MAX_VERSION.length && i < versions.length; i++) {
+            try {
+                int v = Integer.parseInt(versions[i]);
+                if (v > MAX_VERSION[i]) {
+                    return true;
+                } else if (v < MAX_VERSION[i]) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                return true;
+            }
+        }
+        return versions.length > MAX_VERSION.length;
+    }
+
     public static boolean hasTooFewKnownPeers() {
         return peers.size() < Peers.minNumberOfKnownPeers;
     }
@@ -1138,6 +1217,27 @@ public final class Peers {
      */
     public static List<Peer.Service> getServices() {
         return myServices;
+    }
+
+    private static JSONObject getCurrentPeerInfo() {
+        JSONObject result = new JSONObject(myPeerInfo);
+        Peer.BlockchainState state = Constants.isLightClient ? Peer.BlockchainState.LIGHT_CLIENT :
+                (Nxt.getBlockchainProcessor().isDownloading() || Nxt.getBlockchain().getLastBlockTimestamp() < Nxt.getEpochTime() - 600) ? Peer.BlockchainState.DOWNLOADING :
+                        (Nxt.getBlockchain().getLastBlock().getBaseTarget() / Constants.INITIAL_BASE_TARGET > 10 && !Constants.isTestnet) ? Peer.BlockchainState.FORK :
+                        Peer.BlockchainState.UP_TO_DATE;
+        result.put("blockchainState", state.ordinal());
+        return result;
+    }
+
+    public static JSONStreamAware getMyPeerInfoRequest() {
+        JSONObject json = getCurrentPeerInfo();
+        json.put("requestType", "getInfo");
+        return JSON.prepareRequest(json);
+    }
+
+    public static JSONStreamAware getMyPeerInfoResponse() {
+        JSONObject json = getCurrentPeerInfo();
+        return JSON.prepare(json);
     }
 
     private Peers() {} // never

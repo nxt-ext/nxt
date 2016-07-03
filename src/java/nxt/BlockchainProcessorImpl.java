@@ -1046,7 +1046,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, false);
 
-        ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
+        if (!Constants.isLightClient && !Constants.isOffline) {
+            ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
+        }
 
     }
 

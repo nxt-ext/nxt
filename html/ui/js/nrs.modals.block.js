@@ -48,7 +48,7 @@ var NRS = (function(NRS, $, undefined) {
         NRS.setBackLink();
         NRS.modalStack.push({ class: "show_block_modal_action", key: "block", value: block.height });
         try {
-            $("#block_info_modal_block").html(String(block.block).escapeHTML());
+            $("#block_info_modal_block").html(NRS.escapeRespStr(block.block));
             $("#block_info_transactions_tab_link").tab("show");
 
             var blockDetails = $.extend({}, block);
