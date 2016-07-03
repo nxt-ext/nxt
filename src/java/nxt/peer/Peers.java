@@ -1222,7 +1222,8 @@ public final class Peers {
     private static JSONObject getCurrentPeerInfo() {
         JSONObject result = new JSONObject(myPeerInfo);
         Peer.BlockchainState state = Constants.isLightClient ? Peer.BlockchainState.LIGHT_CLIENT :
-                Nxt.getBlockchainProcessor().isDownloading() ? Peer.BlockchainState.DOWNLOADING :
+                (Nxt.getBlockchainProcessor().isDownloading() || Nxt.getBlockchain().getLastBlockTimestamp() < Nxt.getEpochTime() - 600) ? Peer.BlockchainState.DOWNLOADING :
+                        (Nxt.getBlockchain().getLastBlock().getBaseTarget() / Constants.INITIAL_BASE_TARGET > 10 && !Constants.isTestnet) ? Peer.BlockchainState.FORK :
                         Peer.BlockchainState.UP_TO_DATE;
         result.put("blockchainState", state.ordinal());
         return result;

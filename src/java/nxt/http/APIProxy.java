@@ -117,6 +117,7 @@ public class APIProxy {
                         disabledAPIs.retainAll(peer.getDisabledAPIs());
                     }
                     this.peersHosts = Collections.unmodifiableList(currentPeersHosts);
+                    Logger.logDebugMessage("Proxy peers hosts selected: " + currentPeersHosts);
                 }
             }
         }
