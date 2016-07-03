@@ -58,4 +58,9 @@ public final class StopForging extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
 }

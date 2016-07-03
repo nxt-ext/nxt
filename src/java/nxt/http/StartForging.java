@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Constants;
 import nxt.Generator;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -34,10 +33,6 @@ public final class StartForging extends APIServlet.APIRequestHandler {
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
-
-        if (Constants.isLightClient) {
-            return JSONResponses.LIGHT_CLIENT_DISABLED_API;
-        }
 
         String secretPhrase = ParameterParser.getSecretPhrase(req, true);
         Generator generator = Generator.startForging(secretPhrase);
@@ -57,6 +52,11 @@ public final class StartForging extends APIServlet.APIRequestHandler {
     @Override
     protected boolean allowRequiredBlockParameters() {
         return false;
+    }
+
+    @Override
+    protected boolean requireFullClient() {
+        return true;
     }
 
 }

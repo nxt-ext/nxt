@@ -68,4 +68,9 @@ public final class GetForging extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
 }

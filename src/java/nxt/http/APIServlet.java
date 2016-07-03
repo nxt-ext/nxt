@@ -16,6 +16,7 @@
 
 package nxt.http;
 
+import nxt.Constants;
 import nxt.Db;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -44,6 +45,7 @@ import java.util.Set;
 import static nxt.http.JSONResponses.ERROR_DISABLED;
 import static nxt.http.JSONResponses.ERROR_INCORRECT_REQUEST;
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
+import static nxt.http.JSONResponses.LIGHT_CLIENT_DISABLED_API;
 import static nxt.http.JSONResponses.POST_REQUIRED;
 import static nxt.http.JSONResponses.REQUIRED_BLOCK_NOT_FOUND;
 import static nxt.http.JSONResponses.REQUIRED_LAST_BLOCK_NOT_FOUND;
@@ -111,6 +113,10 @@ public final class APIServlet extends HttpServlet {
 
         protected boolean requireBlockchain() {
             return true;
+        }
+
+        protected boolean requireFullClient() {
+            return false;
         }
 
     }
@@ -207,6 +213,11 @@ public final class APIServlet extends HttpServlet {
                 } else {
                     response = ERROR_INCORRECT_REQUEST;
                 }
+                return;
+            }
+
+            if (Constants.isLightClient && apiRequestHandler.requireFullClient()) {
+                response = LIGHT_CLIENT_DISABLED_API;
                 return;
             }
 

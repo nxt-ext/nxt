@@ -16,8 +16,46 @@
 
 package nxt.http;
 
-import nxt.*;
+import nxt.Account;
+import nxt.AccountLedger;
 import nxt.AccountLedger.LedgerEntry;
+import nxt.AccountRestrictions;
+import nxt.Alias;
+import nxt.Appendix;
+import nxt.Asset;
+import nxt.AssetDelete;
+import nxt.AssetDividend;
+import nxt.AssetTransfer;
+import nxt.Attachment;
+import nxt.Block;
+import nxt.Constants;
+import nxt.Currency;
+import nxt.CurrencyExchangeOffer;
+import nxt.CurrencyFounder;
+import nxt.CurrencyTransfer;
+import nxt.CurrencyType;
+import nxt.DigitalGoodsStore;
+import nxt.Exchange;
+import nxt.ExchangeRequest;
+import nxt.FundingMonitor;
+import nxt.Generator;
+import nxt.HoldingType;
+import nxt.MonetarySystem;
+import nxt.Nxt;
+import nxt.Order;
+import nxt.PhasingPoll;
+import nxt.PhasingVote;
+import nxt.Poll;
+import nxt.PrunableMessage;
+import nxt.Shuffler;
+import nxt.Shuffling;
+import nxt.ShufflingParticipant;
+import nxt.TaggedData;
+import nxt.Token;
+import nxt.Trade;
+import nxt.Transaction;
+import nxt.Vote;
+import nxt.VoteWeighting;
 import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
@@ -1088,6 +1126,7 @@ public final class JSONData {
         json.put("requireBlockchain", handler.requireBlockchain());
         json.put("requirePost", handler.requirePost());
         json.put("requirePassword", handler.requirePassword());
+        json.put("requireFullClient", handler.requireFullClient());
         return json;
     }
 

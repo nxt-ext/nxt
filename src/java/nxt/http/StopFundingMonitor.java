@@ -94,4 +94,10 @@ public class StopFundingMonitor extends APIServlet.APIRequestHandler {
     protected boolean allowRequiredBlockParameters() {
         return false;
     }
+
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
 }
