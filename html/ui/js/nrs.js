@@ -123,13 +123,6 @@ var NRS = (function(NRS, $, undefined) {
 				if (key == "version") {
 					NRS.appVersion = response[key];
 				}
-				if (key == "isLightClient") {
-					NRS.isLocalHost = !response[key];
-					NRS.logProperty("NRS.isLocalHost");
-					if (!NRS.isLocalHost) {
-						$(".remote_warning").show();
-					}
-				}
 			}
 
 			if (!isTestnet) {
@@ -335,6 +328,9 @@ var NRS = (function(NRS, $, undefined) {
                 $.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(response.errorDescription));
 			} else {
 				if (response.isLightClient) {
+					NRS.isLocalHost = false;
+					NRS.logProperty("NRS.isLocalHost");
+
 					NRS.sendRequest("getBlocks", {
 						"firstIndex": 0, "lastIndex": 0
 					}, function(proxyBlocksResponse) {
