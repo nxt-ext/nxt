@@ -53,9 +53,4 @@ public final class ShufflingRegister extends CreateTransaction {
         }
     }
 
-    @Override
-    protected boolean requireFullClient() {
-        return true;
-    }
-
 }

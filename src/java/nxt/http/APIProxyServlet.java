@@ -56,16 +56,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         Set<String> requests = new HashSet<>();
         requests.add("getBlockchainStatus");
         requests.add("getState");
-        requests.add("getForging");
-        requests.add("startForging");
-        requests.add("stopForging");
-        requests.add("getFundingMonitor");
-        requests.add("startFundingMonitor");
-        requests.add("stopFundingMonitor");
-        requests.add("getShufflers");
-        requests.add("startShuffler");
-        requests.add("stopShuffler");
-        requests.add("sendTransaction");
 
         NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
@@ -244,6 +234,10 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         APIServlet.APIRequestHandler apiRequestHandler = APIServlet.apiRequestHandlers.get(requestType);
 
         if (!apiRequestHandler.requireBlockchain()) {
+            return false;
+        }
+
+        if (apiRequestHandler.requireFullClient()) {
             return false;
         }
 
