@@ -259,7 +259,8 @@ public enum APIEnum {
     SET_API_PROXY_PEER("setAPIProxyPeer", SetAPIProxyPeer.instance),
     SEND_TRANSACTION("sendTransaction", SendTransaction.instance),
     GET_FXT_QUANTITY("getFxtQuantity", GetFxtQuantity.instance),
-    GET_ASSET_DIVIDENDS("getAssetDividends", GetAssetDividends.instance);
+    GET_ASSET_DIVIDENDS("getAssetDividends", GetAssetDividends.instance),
+    BLACKLIST_API_PROXY_PEER("blacklistAPIProxyPeer", BlacklistAPIProxyPeer.instance);
 
     private static final Map<String, APIEnum> apiByName = new HashMap<>();
 
