@@ -1775,5 +1775,7 @@
   "download_verification": "Make sure the file downloaded from __url__ has sha256 hash code __hash__ or download the file using the web wallet",
   "status_blockchain_downloading_proxy": "The blockchain is currently downloading. You are exploring Nxt through peer __peer__.",
   "status_light_client_proxy": "Running as light client. You are exploring Nxt through peer __peer__.",
-  "proxy_info_link": "Understand the risks"
+  "proxy_info_link": "Understand the risks",
+  "light_client": "Light Client",
+  "roaming_client": "Roaming Client"
 }

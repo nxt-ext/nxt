@@ -140,15 +140,6 @@ var NRS = (function(NRS, $, undefined) {
             NRS.printEnvInfo();
 		});
 
-		if (!NRS.server) {
-			var hostName = window.location.hostname.toLowerCase();
-			NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
-            NRS.logProperty("NRS.isLocalHost");
-		}
-
-		if (!NRS.isLocalHost) {
-			$(".remote_warning").show();
-		}
 		var hasLocalStorage = false;
 		try {
 			//noinspection BadExpressionStatementJS
@@ -325,12 +316,14 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 				NRS.serverConnect = false;
-                $.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(response.errorDescription));
+				$.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(response.errorDescription));
 			} else {
+				var clientOptionsLink = $("#header_client_options_link");
+				var clientOptions = $("#header_client_options");
 				if (response.isLightClient) {
 					NRS.isLocalHost = false;
-					NRS.logProperty("NRS.isLocalHost");
-
+                    clientOptionsLink.html($.t("light_client"));
+					clientOptions.show();
 					NRS.sendRequest("getBlocks", {
 						"firstIndex": 0, "lastIndex": 0
 					}, function(proxyBlocksResponse) {
@@ -345,9 +338,20 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}, false);
 				} else {
+					if (response.apiProxy) {
+						NRS.isLocalHost = false;
+						clientOptionsLink.html($.t("roaming_client"));
+						clientOptions.show();
+					} else {
+						var hostName = window.location.hostname.toLowerCase();
+						NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
+						clientOptions.hide();
+					}
 					NRS.handleBlockchainStatus(response, callback);
 				}
-
+				if (!NRS.isLocalHost) {
+					$(".remote_warning").show();
+				}
 			}
 			/* Checks if the client is connected to active peers */
 			NRS.checkConnected();

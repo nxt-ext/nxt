@@ -271,7 +271,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url = NRS.server + "/nxt";
+        var url = "/nxt";
         if (!noProxy) {
             url += "-proxy";
         }
@@ -1501,7 +1501,7 @@ var NRS = (function (NRS, $, undefined) {
     NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
         var requestType = NRS.state.apiProxy ? "sendTransaction": "broadcastTransaction";
         $.ajax({
-            url: NRS.server + "/nxt-proxy?requestType=" + requestType,
+            url: "/nxt-proxy?requestType=" + requestType,
             crossDomain: true,
             dataType: "json",
             type: "POST",
