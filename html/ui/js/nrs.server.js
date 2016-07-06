@@ -1509,7 +1509,8 @@ var NRS = (function (NRS, $, undefined) {
             async: true,
             data: {
                 "transactionBytes": transactionData,
-                "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment)
+                "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment),
+                "adminPassword": NRS.settings.admin_password
             }
         }).done(function (response) {
             NRS.escapeResponseObjStrings(response);
