@@ -348,6 +348,7 @@ var NRS = (function(NRS, $, undefined) {
 						clientOptions.hide();
 					}
 					NRS.handleBlockchainStatus(response, callback);
+					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
 				}
 				if (!NRS.isLocalHost) {
 					$(".remote_warning").show();
