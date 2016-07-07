@@ -345,10 +345,10 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					});
 					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
-						NRS.lastBlockHeight = NRS.state.numberOfBlocks - 1;
+						NRS.checkBlockHeight(NRS.state.numberOfBlocks - 1);
 					}
 					if (NRS.lastBlockHeight == 0 && NRS.lastProxyBlockHeight) {
-						NRS.lastBlockHeight = NRS.lastProxyBlockHeight;
+						NRS.checkBlockHeight(NRS.lastProxyBlockHeight);
 					}
                     $("#sidebar_block_link").html(NRS.getBlockLink(NRS.lastBlockHeight));
 

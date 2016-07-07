@@ -35,7 +35,7 @@ var NRS = (function(NRS, $) {
 					callback(response);
 				}
 			}
-		}, true, !NRS.state.isLightClient);
+		}, true, true);
 	};
 
 	NRS.handleInitialBlocks = function(response) {
@@ -74,8 +74,10 @@ var NRS = (function(NRS, $) {
 					}
 				}
 			}
-			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(NRS.blocks[0].timestamp));
-			$(".nrs_current_block").empty().append(NRS.escapeRespStr(NRS.blocks[0].height));
+			if (!NRS.state.apiProxy) {
+				NRS.updateDashboardLastBlock(NRS.blocks[0]);
+			}
+
 		}
 	};
 
@@ -108,7 +110,10 @@ var NRS = (function(NRS, $) {
 				NRS.blocks = NRS.blocks.slice(0, 100);
 			}
 			NRS.checkBlockHeight(NRS.blocks[0].height);
-			NRS.incoming.updateDashboardBlocks(newBlocks);
+			NRS.incoming.updateDashboardBlocks(newBlocks.length);
+			if (!NRS.state.apiProxy) {
+				NRS.updateDashboardLastBlock(NRS.blocks[0]);
+			}
 		} else {
 			NRS.tempBlocks.push(response);
 			NRS.getBlock(response.previousBlock, NRS.handleNewBlocks);
@@ -117,12 +122,21 @@ var NRS = (function(NRS, $) {
 
 	NRS.checkBlockHeight = function(blockHeight) {
 		if (blockHeight) {
-			NRS.lastBlockHeight = blockHeight;
+			if (NRS.state && NRS.state.apiProxy) {
+				NRS.lastLocalBlockHeight = blockHeight;
+			} else {
+				NRS.lastBlockHeight = blockHeight;
+			}
 		}
 	};
 
+	NRS.updateDashboardLastBlock = function(block) {
+		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
+		$(".nrs_current_block").empty().append(NRS.escapeRespStr(block.height));
+	};
+
 	//we always update the dashboard page..
-	NRS.incoming.updateDashboardBlocks = function(newBlocks) {
+	NRS.incoming.updateDashboardBlocks = function(newBlocksCount) {
         var timeDiff;
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state) {
@@ -172,10 +186,6 @@ var NRS = (function(NRS, $) {
 			}
 		}
 
-		block = NRS.blocks[0];
-		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
-		$(".nrs_current_block").empty().append(NRS.escapeRespStr(block.height));
-
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
 		$("#dashboard_table").find("tr.confirmed td.confirmations").each(function() {
 			if ($(this).data("incoming")) {
@@ -183,7 +193,7 @@ var NRS = (function(NRS, $) {
 				return true;
 			}
 			var confirmations = parseInt($(this).data("confirmations"), 10);
-			var nrConfirmations = confirmations + newBlocks.length;
+			var nrConfirmations = confirmations + newBlocksCount;
 			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
 				$(this).attr("data-content", $.t("x_confirmations", {

@@ -69,6 +69,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.ledgerTrimKeep = 0;
 
 	NRS.lastBlockHeight = 0;
+	NRS.lastLocalBlockHeight = 0;
 	NRS.downloadingBlockchain = false;
 
 	NRS.rememberPassword = false;
@@ -249,19 +250,19 @@ var NRS = (function(NRS, $, undefined) {
 	var _prevLastProxyBlock = "0";
 
 	NRS.getLastBlock = function() {
-		return NRS.state.isLightClient ? NRS.lastProxyBlock : NRS.state.lastBlock;
+		return NRS.state.apiProxy ? NRS.lastProxyBlock : NRS.state.lastBlock;
 	};
 
 	NRS.handleBlockchainStatus = function(response, callback) {
 		var firstTime = !("lastBlock" in NRS.state);
 		var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
-		if (response.isLightClient) {
-			previousLastBlock = _prevLastProxyBlock;
-		}
+		// if (response.apiProxy) {
+		// 	previousLastBlock = _prevLastProxyBlock;
+		// }
 		
 		NRS.state = response;
-		var lastBlock = NRS.getLastBlock();
-		var height = response.isLightClient ? NRS.lastProxyBlockHeight : NRS.state.numberOfBlocks - 1;
+		var lastBlock = NRS.state.lastBlock;
+		var height = response.apiProxy ? NRS.lastProxyBlockHeight : NRS.state.numberOfBlocks - 1;
 
 		NRS.serverConnect = true;
 		NRS.ledgerTrimKeep = response.ledgerTrimKeep;
@@ -320,7 +321,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var clientOptionsLink = $("#header_client_options_link");
 				var clientOptions = $("#header_client_options");
-				if (response.isLightClient) {
+				if (response.apiProxy) {
 					NRS.isLocalHost = false;
                     clientOptionsLink.html($.t("light_client"));
 					clientOptions.show();
@@ -332,8 +333,12 @@ var NRS = (function(NRS, $, undefined) {
 							$.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(proxyBlocksResponse.errorDescription));
 						} else {
 							_prevLastProxyBlock = NRS.lastProxyBlock;
+							var prevHeight = NRS.lastProxyBlockHeight;
 							NRS.lastProxyBlock = proxyBlocksResponse.blocks[0].block;
 							NRS.lastProxyBlockHeight = proxyBlocksResponse.blocks[0].height;
+							NRS.lastBlockHeight = NRS.lastProxyBlockHeight;
+							NRS.incoming.updateDashboardBlocks(NRS.lastProxyBlockHeight - prevHeight);
+							NRS.updateDashboardLastBlock(proxyBlocksResponse.blocks[0]);
 							NRS.handleBlockchainStatus(response, callback);
 						}
 					}, false);
