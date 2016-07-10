@@ -99,8 +99,10 @@ var NRS = (function(NRS, $) {
     };
 
     NRS.forms.setAPIProxyPeerComplete = function(response) {
-        if (response.announcedAddress) {
-            $.growl($.t("remote_peer_updated", { peer: String(response.announcedAddress).escapeHTML() }));
+        var announcedAddress = response.announcedAddress;
+        if (announcedAddress) {
+            NRS.state.apiProxy = announcedAddress;
+            $.growl($.t("remote_peer_updated", { peer: String(announcedAddress).escapeHTML() }));
         } else {
             $.growl($.t("remote_peer_selected_by_server"));
         }
