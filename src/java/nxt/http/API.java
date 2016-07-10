@@ -190,8 +190,8 @@ public final class API {
             } catch (URISyntaxException e) {
                 Logger.logInfoMessage("Cannot resolve browser URI", e);
             }
-            openAPIPort = "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
-            openAPISSLPort = "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
+            openAPIPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
+            openAPISSLPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
 
             HandlerList apiHandlers = new HandlerList();
 
