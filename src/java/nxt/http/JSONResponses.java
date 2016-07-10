@@ -399,12 +399,12 @@ public final class JSONResponses {
         PROXY_SHARED_KEY_DETECTED = JSON.prepare(response);
     }
 
-    public static final JSONStreamAware LIGHT_CLIENT_NO_OPEN_API_PEERS;
+    public static final JSONStreamAware API_PROXY_NO_OPEN_API_PEERS;
     static {
         JSONObject response = new JSONObject();
         response.put("errorCode", 19);
         response.put("errorDescription", "No openAPI peers found");
-        LIGHT_CLIENT_NO_OPEN_API_PEERS = JSON.prepare(response);
+        API_PROXY_NO_OPEN_API_PEERS = JSON.prepare(response);
     }
 
     public static final JSONStreamAware LIGHT_CLIENT_DISABLED_API;

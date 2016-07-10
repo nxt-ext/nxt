@@ -85,11 +85,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
             if (APIProxy.isActivated() && isForwardable(requestType)) {
                 if (!initRemoteRequest(request, requestType)) {
-                    if (Constants.isLightClient) {
-                        responseJson = JSONResponses.LIGHT_CLIENT_NO_OPEN_API_PEERS;
-                    } else {
-                        apiServlet.service(request, response);
-                    }
+                    responseJson = JSONResponses.API_PROXY_NO_OPEN_API_PEERS;
                 } else {
                     super.service(request, response);
                 }
