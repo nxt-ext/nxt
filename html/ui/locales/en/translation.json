@@ -1783,5 +1783,10 @@
   "remote_peer": "Remote Peer",
   "set_peer": "Set Peer",
   "api_proxy_description": "You are operating in API proxy mode. Your wallet is connected to a remote node while your local blockchain is being downloaded",
-  "light_client_description": "You are working as a Light Wallet. Your wallet is connected to a remote node"
+  "light_client_description": "You are working as a Light Wallet. Your wallet is connected to a remote node",
+  "last_connect_attempt": "Last Connection Attempt",
+  "inbound_web_socket": "Inbound Web Socket",
+  "outbound_web_socket": "Outbound Web Socket",
+  "api_port": "Api Port",
+  "api_s_s_l_port": "Api SSL Port"
 }

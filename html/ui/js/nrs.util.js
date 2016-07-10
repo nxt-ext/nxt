@@ -695,6 +695,11 @@ var NRS = (function (NRS, $, undefined) {
             + (isEscapedText ? text : String(text).escapeHTML()) + "</a>";
     };
 
+    NRS.getPeerLink = function(address) {
+        return "<a href='#' class='show_peer_modal_action' data-address='" + String(address).escapeHTML() + "'>"
+            + String(address).escapeHTML() + "</a>";
+    };
+
     NRS.setBackLink = function() {
         var backLink = $(".back-link");
         if (NRS.modalStack.length > 0) {
