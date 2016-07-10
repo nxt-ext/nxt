@@ -35,8 +35,8 @@ var NRS = (function (NRS) {
     };
 
     NRS.isPollGetState = function() {
-        // When using JavaFX do not poll the server unless it's a light client
-        return !isDesktopApplication || NRS.state && NRS.state.isLightClient;
+        // When using JavaFX do not poll the server unless it's a working as a proxy
+        return !isDesktopApplication || NRS.state && NRS.state.apiProxy;
     };
 
     NRS.isExportContactsAvailable = function() {
