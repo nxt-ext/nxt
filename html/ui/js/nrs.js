@@ -348,11 +348,11 @@ var NRS = (function(NRS, $, undefined) {
 					}, false);
 				} else {
 					NRS.handleBlockchainStatus(response, callback);
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
 				}
 				if (!NRS.isLocalHost) {
 					$(".remote_warning").show();
 				}
+				$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
 			}
 			/* Checks if the client is connected to active peers */
 			NRS.checkConnected();

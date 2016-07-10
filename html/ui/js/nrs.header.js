@@ -81,5 +81,31 @@ var NRS = (function(NRS, $) {
         });
     });
 
+    $("#client_status_modal").on("show.bs.modal", function(e) {
+        if (NRS.state.isLightClient) {
+            $("#client_status_description").text($.t("light_client_description"));
+        } else {
+            $("#client_status_description").text($.t("api_proxy_description"));
+        }
+        $("#client_status_remote_peer").val(String(NRS.state.apiProxy).escapeHTML());
+    });
+
+    NRS.forms.setAPIProxyPeer = function ($modal) {
+        var data = NRS.getFormData($modal.find("form:first"));
+        data.adminPassword = NRS.getAdminPassword();
+        return {
+            "data": data
+        };
+    };
+
+    NRS.forms.setAPIProxyPeerComplete = function(response) {
+        if (response.announcedAddress) {
+            $.growl($.t("remote_peer_updated", { peer: String(response.announcedAddress).escapeHTML() }));
+        } else {
+            $.growl($.t("remote_peer_selected_by_server"));
+        }
+        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
