@@ -118,6 +118,7 @@ public class DesktopApplication extends Application {
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
                     if (newState == Worker.State.SUCCEEDED) {
                         nrs = (JSObject) webEngine.executeScript("NRS");
+                        updateClientState("Desktop Wallet started");
                         BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
                         blockchainProcessor.addListener((block) ->
                                 updateClientState(BlockchainProcessor.Event.BLOCK_PUSHED, block), BlockchainProcessor.Event.BLOCK_PUSHED);
