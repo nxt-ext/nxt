@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Constants;
 import nxt.peer.Peer;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -276,7 +275,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         if (contentType != null && contentType.contains("multipart")) {
             return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
         } else {
-            return new PasswordFilteringContentTransformer(clientRequest);
+            return new PasswordFilteringContentTransformer();
         }
 
     }
@@ -289,15 +288,15 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         }
     }
 
-    private static class PasswordFinder {
+    static class PasswordFinder {
         private final byte[] token;
         private int state;
 
-        private PasswordFinder(String tokenStr) {
+        PasswordFinder(String tokenStr) {
             token = tokenStr.getBytes();
         }
 
-        private boolean process(ByteBuffer buffer) {
+        boolean process(ByteBuffer buffer) {
             while (buffer.hasRemaining()) {
                 int current = buffer.get() & 0xFF;
                 if (state < token.length) {
@@ -316,16 +315,11 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     }
 
     private static class PasswordFilteringContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
-        private final int clientRequestId;
         private final PasswordFinder secretPhraseFinder = new PasswordFinder("secretPhrase=");
         private final PasswordFinder adminPasswordFinder = new PasswordFinder("adminPassword=");
         private final PasswordFinder sharedKeyFinder = new PasswordFinder("sharedKey=");
 
         private boolean isPasswordDetected = false;
-
-        public PasswordFilteringContentTransformer(HttpServletRequest clientRequest) {
-            this.clientRequestId = System.identityHashCode(clientRequest);
-        }
 
         @Override
         public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
