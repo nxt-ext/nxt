@@ -31,29 +31,60 @@ var NRS = (function(NRS, $) {
 		});
 	});
 
-	NRS.showPeerModal = function(peer) {
+    NRS.showPeerModal = function(peer) {
         try {
-            $("#peer_info").html(peer.announcedAddress);
             var peerDetails = $.extend({}, peer);
-            peerDetails.state = NRS.getPeerState(peer.state);
-            if (peerDetails.lastUpdated) {
-                peerDetails.lastUpdated = NRS.formatTimestamp(peerDetails.lastUpdated);
+            if (peerDetails.hallmark && NRS.isDecodePeerHallmark()) {
+                var promise = new Promise(function(resolve, reject) {
+                    NRS.sendRequest("decodeHallmark", { hallmark: peerDetails.hallmark }, function(response) {
+                        if (response.errorCode) {
+                            reject(response);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                promise.then(function(response) {
+                    var hallmark = peerDetails.hallmark;
+                    delete peerDetails.hallmark;
+                    peerDetails.hallmark = hallmark;
+                    peerDetails.hallmarkAccount_formatted_html = NRS.getAccountLink(response, "account");
+                    peerDetails.hallmarkHost = response.host;
+                    peerDetails.hallmarkPort = response.port;
+                    peerDetails.hallmarkWeight = response.weight;
+                    peerDetails.hallmarkDate = response.date;
+                    peerDetails.hallmarkValid = response.valid;
+                    showPeerModalImpl(peerDetails);
+                }).catch(function(response) {
+                    peerDetails.hallmarkError = response.errorDescription;
+                    showPeerModalImpl(peerDetails);
+                })
+            } else {
+                showPeerModalImpl(peerDetails);
             }
-            if (peerDetails.lastConnectAttempt) {
-                peerDetails.lastConnectAttempt = NRS.formatTimestamp(peerDetails.lastConnectAttempt);
-            }
-            peerDetails.downloaded_formatted_html = NRS.formatVolume(peerDetails.downloadedVolume);
-            delete peerDetails.downloadedVolume;
-            peerDetails.uploaded_formatted_html = NRS.formatVolume(peerDetails.uploadedVolume);
-            delete peerDetails.uploadedVolume;
-            var detailsTable = $("#peer_details_table");
-            detailsTable.find("tbody").empty().append(NRS.createInfoTable(peerDetails));
-            detailsTable.show();
-            $("#peer_modal").modal("show");
         } finally {
             NRS.fetchingModalData = false;
         }
 	};
+
+    function showPeerModalImpl(peerDetails) {
+        $("#peer_info").html(peerDetails.announcedAddress);
+        peerDetails.state = NRS.getPeerState(peerDetails.state);
+        if (peerDetails.lastUpdated) {
+            peerDetails.lastUpdated = NRS.formatTimestamp(peerDetails.lastUpdated);
+        }
+        if (peerDetails.lastConnectAttempt) {
+            peerDetails.lastConnectAttempt = NRS.formatTimestamp(peerDetails.lastConnectAttempt);
+        }
+        peerDetails.downloaded_formatted_html = NRS.formatVolume(peerDetails.downloadedVolume);
+        delete peerDetails.downloadedVolume;
+        peerDetails.uploaded_formatted_html = NRS.formatVolume(peerDetails.uploadedVolume);
+        delete peerDetails.uploadedVolume;
+        var detailsTable = $("#peer_details_table");
+        detailsTable.find("tbody").empty().append(NRS.createInfoTable(peerDetails));
+        detailsTable.show();
+        $("#peer_modal").modal("show");
+    }
 
 	return NRS;
 }(NRS || {}, jQuery));

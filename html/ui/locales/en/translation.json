@@ -1788,5 +1788,11 @@
   "inbound_web_socket": "Inbound Web Socket",
   "outbound_web_socket": "Outbound Web Socket",
   "api_port": "Api Port",
-  "api_s_s_l_port": "Api SSL Port"
+  "api_s_s_l_port": "Api SSL Port",
+  "hallmark_account": "Hallmark Account",
+  "hallmark_host": "Hallmark Host",
+  "hallmark_port": "Hallmark Port",
+  "hallmark_weight": "Hallmark Weight",
+  "hallmark_valid": "Hallmark Is Valid",
+  "hallmark_error": "Hallmark Error"
 }
