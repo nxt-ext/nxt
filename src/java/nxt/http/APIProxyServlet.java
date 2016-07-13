@@ -30,6 +30,7 @@ import org.eclipse.jetty.util.UrlEncoded;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.json.simple.JSONStreamAware;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -49,7 +50,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<APITag> NOT_FORWARDED_TAGS;
     private static final String REMOTE_URL = APIProxyServlet.class.getName() + ".remoteUrl";
     private static final String REMOTE_SERVER_IDLE_TIMEOUT = APIProxyServlet.class.getName() + ".remoteServerIdleTimeout";
-    public static final int PROXY_IDLE_TIMEOUT_DELTA = 5000;
+    static final int PROXY_IDLE_TIMEOUT_DELTA = 5000;
 
     static {
         Set<String> requests = new HashSet<>();
@@ -66,9 +67,13 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         NOT_FORWARDED_TAGS = Collections.unmodifiableSet(tags);
     }
 
-    private APIServlet apiServlet;
-
     static void initClass() {}
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        config.getServletContext().setAttribute("apiServlet", new APIServlet());
+    }
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -78,18 +83,19 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 responseJson = ERROR_NOT_ALLOWED;
                 return;
             }
-            if (apiServlet == null) {
-                apiServlet = new APIServlet();
-            }
-            String requestType = parseQueryString(request);
-
+            MultiMap<String> parameters = getRequestParameters(request);
+            String requestType = getRequestType(parameters);
             if (APIProxy.isActivated() && isForwardable(requestType)) {
+                if (parameters.containsKey("secretPhrase") || parameters.containsKey("adminPassword") || parameters.containsKey("sharedKey")) {
+                    throw new ParameterException(JSONResponses.PROXY_SECRET_DATA_DETECTED);
+                }
                 if (!initRemoteRequest(request, requestType)) {
                     responseJson = JSONResponses.API_PROXY_NO_OPEN_API_PEERS;
                 } else {
                     super.service(request, response);
                 }
             } else {
+                APIServlet apiServlet = (APIServlet)request.getServletContext().getAttribute("apiServlet");
                 apiServlet.service(request, response);
             }
         } catch (ParameterException e) {
@@ -101,6 +107,15 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 }
             }
         }
+    }
+
+    private MultiMap<String> getRequestParameters(HttpServletRequest request) {
+        MultiMap<String> parameters = new MultiMap<>();
+        String queryString = request.getQueryString();
+        if (queryString != null) {
+            UrlEncoded.decodeUtf8To(queryString, parameters);
+        }
+        return parameters;
     }
 
     @Override
@@ -152,16 +167,8 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         }
     }
 
-    private String parseQueryString(HttpServletRequest clientRequest) throws ParameterException {
-        MultiMap<String> parameters = new MultiMap<>();
-        String queryString = clientRequest.getQueryString();
-        String requestType = null;
-
-        if (queryString != null) {
-            UrlEncoded.decodeUtf8To(queryString, parameters);
-            requestType = parameters.getString("requestType");
-        }
-
+    private String getRequestType(MultiMap<String> parameters) throws ParameterException {
+        String requestType = parameters.getString("requestType");
         if (Convert.emptyToNull(requestType) == null) {
             throw new ParameterException(JSONResponses.PROXY_MISSING_REQUEST_TYPE);
         }
@@ -174,19 +181,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 throw new ParameterException(JSONResponses.ERROR_INCORRECT_REQUEST);
             }
         }
-
-        if (parameters.containsKey("secretPhrase")) {
-            throw new ParameterException(JSONResponses.PROXY_SECRET_PHRASE_DETECTED);
-        }
-
-        if (parameters.containsKey("adminPassword")) {
-            throw new ParameterException(JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
-        }
-
-        if (parameters.containsKey("sharedKey")) {
-            throw new ParameterException(JSONResponses.PROXY_SHARED_KEY_DETECTED);
-        }
-
         return requestType;
     }
 
@@ -268,16 +262,17 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     }
 
     @Override
-    protected ContentTransformer newClientRequestContentTransformer(HttpServletRequest clientRequest,
-                                                                    Request proxyRequest) {
-
+    protected ContentTransformer newClientRequestContentTransformer(HttpServletRequest clientRequest, Request proxyRequest) {
         String contentType = clientRequest.getContentType();
         if (contentType != null && contentType.contains("multipart")) {
             return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
         } else {
-            return new PasswordFilteringContentTransformer();
+            if (APIProxy.isActivated() && isForwardable(clientRequest.getParameter("requestType"))) {
+                return new PasswordFilteringContentTransformer();
+            } else {
+                return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
+            }
         }
-
     }
 
     private static class PasswordDetectedException extends RuntimeException {
@@ -289,72 +284,51 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     }
 
     static class PasswordFinder {
-        private final byte[] token;
-        private int state;
 
-        PasswordFinder(String tokenStr) {
-            token = tokenStr.getBytes();
-        }
-
-        boolean process(ByteBuffer buffer) {
+        static int process(ByteBuffer buffer, String[] secrets) {
+            int[] pos = new int[secrets.length];
+            byte[][] tokens = new byte[secrets.length][];
+            for (int i=0; i<tokens.length; i++) {
+                tokens[i] = secrets[i].getBytes();
+            }
             while (buffer.hasRemaining()) {
-                int current = buffer.get() & 0xFF;
-                if (state < token.length) {
-                    if (current != token[state]) {
-                        state = 0;
+                byte current = buffer.get();
+                for (int i=0; i < tokens.length; i++) {
+                    if (current != tokens[i][pos[i]]) {
+                        pos[i] = 0;
                         continue;
                     }
-
-                    ++state;
-                    if (state == token.length)
-                        return true;
+                    pos[i]++;
+                    if (pos[i] == tokens[i].length) {
+                        return buffer.position() - tokens[i].length;
+                    }
                 }
             }
-            return state == token.length;
+            return -1;
         }
     }
 
     private static class PasswordFilteringContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
-        private final PasswordFinder secretPhraseFinder = new PasswordFinder("secretPhrase=");
-        private final PasswordFinder adminPasswordFinder = new PasswordFinder("adminPassword=");
-        private final PasswordFinder sharedKeyFinder = new PasswordFinder("sharedKey=");
 
-        private boolean isPasswordDetected = false;
+        private boolean isPasswordDetected;
 
         @Override
         public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
+            if (isPasswordDetected) {
+                return;
+            }
+            int savedPosition = input.position();
+            while (input.hasRemaining()) {
+                int tokenPos = PasswordFinder.process(input, new String[] { "secretPhrase=", "adminPassword=", "sharedKey=" });
+                if (tokenPos >= 0) {
+                    isPasswordDetected = true;
+                    JSONStreamAware error = JSONResponses.PROXY_SECRET_DATA_DETECTED;
+                    throw new PasswordDetectedException(error);
+                }
+            }
+            input.position(savedPosition);
             if (!isPasswordDetected) {
-                boolean positionChanged = false;
-                int position = input.position();
-                while (input.hasRemaining()) {
-                    positionChanged = true;
-                    boolean secretPhaseFound = secretPhraseFinder.process(input);
-                    boolean adminPasswordFound = false;
-                    boolean sharedKeyFound = false;
-                    if (!secretPhaseFound) {
-                        input.position(position);
-                        adminPasswordFound = adminPasswordFinder.process(input);
-                    }
-                    if (!adminPasswordFound) {
-                        input.position(position);
-                        sharedKeyFound = sharedKeyFinder.process(input);
-                    }
-                    if (secretPhaseFound || adminPasswordFound || sharedKeyFound) {
-                        isPasswordDetected = true;
-                        JSONStreamAware error = secretPhaseFound ? JSONResponses.PROXY_SECRET_PHRASE_DETECTED :
-                                adminPasswordFound ? JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED :
-                                        JSONResponses.PROXY_SHARED_KEY_DETECTED;
-
-                        throw new PasswordDetectedException(error);
-                    }
-                }
-                if (positionChanged) {
-                    input.position(position);
-                }
-
-                if (!isPasswordDetected) {
-                    output.add(input);
-                }
+                output.add(input);
             }
         }
     }
