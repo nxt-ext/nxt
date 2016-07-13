@@ -888,7 +888,7 @@ final class PeerImpl implements Peer {
 
     @Override
     public boolean isApiConnectable() {
-        return isOpenAPI() && getState() == Peer.State.CONNECTED
+        return isOpenAPI() && state == Peer.State.CONNECTED
                 && !Peers.isOldVersion(version, Constants.MIN_PROXY_VERSION)
                 && !Peers.isNewVersion(version)
                 && blockchainState == Peer.BlockchainState.UP_TO_DATE;
