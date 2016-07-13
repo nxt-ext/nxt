@@ -32,14 +32,12 @@ public class SetAPIProxyPeer extends APIServlet.APIRequestHandler {
         if (peer == null) {
             return UNKNOWN_PEER;
         }
-
         if (peer.getState() != Peer.State.CONNECTED ) {
             return PEER_NOT_CONNECTED;
         }
-        if (!APIProxy.isOpenAPIPeer(peer)) {
+        if (!peer.isOpenAPI()) {
             return PEER_NOT_OPEN_API;
         }
-
         APIProxy.getInstance().setForcedPeer(peer);
         return JSONData.peer(peer);
     }

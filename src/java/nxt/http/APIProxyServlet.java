@@ -57,7 +57,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         requests.add("getBlockchainStatus");
         requests.add("getState");
         requests.add("setAPIProxyPeer");
-
         NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
         Set<APITag> tags = new HashSet<>();
@@ -102,8 +101,11 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             responseJson = e.getErrorResponse();
         } finally {
             if (responseJson != null) {
-                try (Writer writer = response.getWriter()) {
+                try {
+                    Writer writer = response.getWriter();
                     JSON.writeJSONString(responseJson, writer);
+                } catch(IOException e) {
+                    Logger.logInfoMessage("Failed to write response to client", e);
                 }
             }
         }
@@ -193,52 +195,33 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             if (servingPeer == null) {
                 return false;
             }
-            boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
-            if (useHttps) {
-                uri.append("https://");
-            } else {
-                uri.append("http://");
-            }
-            uri.append(servingPeer.getHost()).append(":");
-            if (useHttps) {
-                uri.append(servingPeer.getApiSSLPort());
-            } else {
-                uri.append(servingPeer.getApiPort());
-            }
-            uri.append("/nxt");
-
+            uri = servingPeer.getPeerApiUri();
             clientRequest.setAttribute(REMOTE_SERVER_IDLE_TIMEOUT, servingPeer.getApiServerIdleTimeout());
         }
-
+        uri.append("/nxt");
         String query = clientRequest.getQueryString();
         if (query != null) {
             uri.append("?").append(query);
         }
-
         clientRequest.setAttribute(REMOTE_URL, uri.toString());
-
         return true;
     }
 
     private boolean isForwardable(String requestType) {
         APIServlet.APIRequestHandler apiRequestHandler = APIServlet.apiRequestHandlers.get(requestType);
-
         if (!apiRequestHandler.requireBlockchain()) {
             return false;
         }
-
         if (apiRequestHandler.requireFullClient()) {
             return false;
         }
-
         if (NOT_FORWARDED_REQUESTS.contains(requestType)) {
             return false;
         }
-
+        //noinspection RedundantIfStatement
         if (!Collections.disjoint(apiRequestHandler.getAPITags(), NOT_FORWARDED_TAGS)) {
             return false;
         }
-
         return true;
     }
 
@@ -247,9 +230,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         return new APIProxyResponseListener(request, response);
     }
 
-    protected class APIProxyResponseListener extends AsyncMiddleManServlet.ProxyResponseListener {
+    private class APIProxyResponseListener extends AsyncMiddleManServlet.ProxyResponseListener {
 
-        protected APIProxyResponseListener(HttpServletRequest request, HttpServletResponse response) {
+        APIProxyResponseListener(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
         }
 
