@@ -81,7 +81,7 @@ var NRS = (function(NRS, $) {
         });
     });
 
-    $("#client_status_modal").on("show.bs.modal", function(e) {
+    $("#client_status_modal").on("show.bs.modal", function() {
         if (NRS.state.isLightClient) {
             $("#client_status_description").text($.t("light_client_description"));
         } else {
