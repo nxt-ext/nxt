@@ -321,7 +321,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var clientOptionsLink = $("#header_client_options_link");
 				var clientOptions = $("#header_client_options");
-				if (response.apiProxy || response.isLightClient) {
+				if (response.apiProxy) {
 					NRS.isLocalHost = false;
                     if (response.isLightClient) {
 						clientOptionsLink.html($.t("light_client"));
@@ -1412,12 +1412,18 @@ NRS.addPagination = function () {
         var downloadingBlockchain = $('#downloading_blockchain');
         downloadingBlockchain.find('.last_num_blocks').html($.t('last_num_blocks', { "blocks": lastNumBlocks }));
 
-		if (!NRS.serverConnect || !NRS.peerConnect) {
+		if (NRS.state.isLightClient) {
+			downloadingBlockchain.find(".db_active").hide();
+			downloadingBlockchain.find(".db_halted").hide();
+			downloadingBlockchain.find(".db_light").show();
+		} else if (!NRS.serverConnect || !NRS.peerConnect) {
 			downloadingBlockchain.find(".db_active").hide();
 			downloadingBlockchain.find(".db_halted").show();
+			downloadingBlockchain.find(".db_light").hide();
 		} else {
 			downloadingBlockchain.find(".db_halted").hide();
 			downloadingBlockchain.find(".db_active").show();
+			downloadingBlockchain.find(".db_light").hide();
 
 			var percentageTotal = 0;
 			var blocksLeft;
