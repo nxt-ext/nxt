@@ -143,6 +143,12 @@ public class APIProxy {
     }
 
     String getMainPeerAnnouncedAddress() {
+        // The first client request GetBlockchainState is handled by the server
+        // Not by the proxy. In order to report a peer to the client we have
+        // To select some initial peer.
+        if (mainPeerAnnouncedAddress == null) {
+            getServingPeer(null);
+        }
         return mainPeerAnnouncedAddress;
     }
 
