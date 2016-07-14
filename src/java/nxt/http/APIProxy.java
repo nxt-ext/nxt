@@ -33,7 +33,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class APIProxy {
     private static APIProxy instance = new APIProxy();
 
-    private static final boolean enableAPIProxy = Constants.isLightClient ||
+    static final boolean enableAPIProxy = Constants.isLightClient ||
             (Nxt.getBooleanProperty("nxt.enableAPIProxy") && API.openAPIPort == 0 && API.openAPISSLPort == 0);
     private static final int blacklistingPeriod = Nxt.getIntProperty("nxt.apiProxyBlacklistingPeriod") / 1000;
     static final String forcedServerURL = Nxt.getStringProperty("nxt.forceAPIProxyServerURL", "");
