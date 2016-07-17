@@ -218,7 +218,12 @@ var NRS = (function(NRS, $) {
 			$form = $modal.find("form:first");
 		}
 
-		var requestType = $form.find("input[name=request_type]").val();
+		var requestType;
+		if ($btn.data("request")) {
+			requestType = $btn.data("request");
+		} else {
+			$form.find("input[name=request_type]").val();
+		}
 		var requestTypeKey = requestType.replace(/([A-Z])/g, function($1) {
 			return "_" + $1.toLowerCase();
 		});
