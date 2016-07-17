@@ -157,10 +157,11 @@ public class APIProxy {
     }
 
     void blacklistHost(String host) {
+        blacklistedPeers.put(host, Nxt.getEpochTime() + blacklistingPeriod);
         if (peersHosts.contains(host)) {
             peersHosts = Collections.emptyList();
+            getServingPeer(null);
         }
-        blacklistedPeers.put(host, Nxt.getEpochTime() + blacklistingPeriod);
     }
 
     private Peer getRandomAPIPeer(List<Peer> peers) {
