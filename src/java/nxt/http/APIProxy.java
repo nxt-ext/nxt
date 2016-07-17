@@ -132,13 +132,15 @@ public class APIProxy {
         return resultPeer;
     }
 
-    void setForcedPeer(Peer peer) {
+    Peer setForcedPeer(Peer peer) {
         if (peer != null) {
             forcedPeerHost = peer.getHost();
             mainPeerAnnouncedAddress = peer.getAnnouncedAddress();
+            return peer;
         } else {
             forcedPeerHost = null;
             mainPeerAnnouncedAddress = null;
+            return getServingPeer(null);
         }
     }
 
