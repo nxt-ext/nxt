@@ -904,18 +904,14 @@
                     </div>
                     <div class="form-group">
                         <label for="client_status_remote_peer" data-i18n="remote_peer">Remote Peer</label>
-                        <input class="form-control" id="client_status_remote_peer" readonly/>
+                        <input class="form-control" name="peer" id="client_status_remote_peer" placeholder="Random" data-i18n="[placeholder]random">
                     </div>
-                    <div class="form-group">
-                        <label for="client_status_set_peer" data-i18n="set_peer">Set Peer</label>
-                        <input class="form-control" name="peer" id="client_status_set_peer" placeholder="Random" data-i18n="[placeholder]random"/>
-                    </div>
-                    <input type="hidden" name="request_type" value="setAPIProxyPeer"/>
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="close">Close</button>
-                <button type="button" class="btn btn-primary" data-loading-text="Submitting..." data-i18n="set_peer">Set Peer</button>
+                <button type="button" class="btn btn-primary" id="client_status_blacklist_peer" data-request="blacklistAPIProxyPeer" data-loading-text="Submitting..." data-i18n="blacklist">Blacklist</button>
+                <button type="button" class="btn btn-primary" id="client_status_set_peer" data-request="setAPIProxyPeer" data-loading-text="Submitting..." data-i18n="set_peer">Set Peer</button>
             </div>
         </div>
     </div>
