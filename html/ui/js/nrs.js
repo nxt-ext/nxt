@@ -887,6 +887,14 @@ NRS.addPagination = function () {
 		});
 	};
 
+	NRS.getRequestPath = function() {
+		if (NRS.state.apiProxy) {
+			return "/nxt-proxy";
+		} else {
+			return "/nxt";
+		}
+	};
+
 	NRS.getAccountInfo = function(firstRun, callback, isAccountSwitch) {
 		NRS.sendRequest("getAccount", {
 			"account": NRS.account,
