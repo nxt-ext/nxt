@@ -101,8 +101,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             responseJson = e.getErrorResponse();
         } finally {
             if (responseJson != null) {
-                try {
-                    Writer writer = response.getWriter();
+                try (Writer writer = response.getWriter()) {
                     JSON.writeJSONString(responseJson, writer);
                 } catch(IOException e) {
                     Logger.logInfoMessage("Failed to write response to client", e);
@@ -187,8 +186,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     }
 
     private boolean initRemoteRequest(HttpServletRequest clientRequest, String requestType) {
-        StringBuilder uri = new StringBuilder();
+        StringBuilder uri;
         if (!APIProxy.forcedServerURL.isEmpty()) {
+            uri = new StringBuilder();
             uri.append(APIProxy.forcedServerURL);
         } else {
             Peer servingPeer = APIProxy.getInstance().getServingPeer(requestType);
