@@ -32,7 +32,14 @@ var NRS = (function(NRS, $) {
 	});
 
 	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true]),button.btn-calculate-fee").click(function() {
-		NRS.submitForm($(this).closest(".modal"), $(this));
+		var $btn = $(this);
+		var $modal = $(this).closest(".modal");
+		try {
+			NRS.submitForm($modal, $btn);
+		} catch(e) {
+			$modal.find(".error_message").html("Form submission error '" + e.message + "' - please report to developers").show();
+			NRS.unlockForm($modal, $btn);
+		}
 	});
 
 	$(".modal input,select,textarea").change(function() {
