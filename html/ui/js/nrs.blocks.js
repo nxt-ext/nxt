@@ -338,6 +338,8 @@ var NRS = (function(NRS, $) {
 			return $.t(NRS.state.isLightClient ? "status_light_client_proxy" : "status_blockchain_downloading_proxy",
 					{ peer: NRS.getPeerLink(NRS.state.apiProxy) }) +
 				" <a href='#' class='btn btn-xs' data-toggle='modal' data-target='#client_status_modal'>" + $.t("proxy_info_link") + "</a>";
+		} else if(NRS.state.isLightClient) {
+			$.t("status_light_client_proxy");
 		} else {
 			return $.t("status_blockchain_downloading");
 		}
