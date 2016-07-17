@@ -414,7 +414,7 @@ final class BlockchainImpl implements Blockchain {
                 }
             }
             if (height < Integer.MAX_VALUE) {
-                buf.append("AND height <= ? ");
+                buf.append("AND transaction.height <= ? ");
             }
             if (withMessage) {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE ");
@@ -443,7 +443,7 @@ final class BlockchainImpl implements Blockchain {
                 }
             }
             if (height < Integer.MAX_VALUE) {
-                buf.append("AND height <= ? ");
+                buf.append("AND transaction.height <= ? ");
             }
             if (withMessage) {
                 buf.append("AND (has_message = TRUE OR has_encrypted_message = TRUE OR has_encrypttoself_message = TRUE ");
