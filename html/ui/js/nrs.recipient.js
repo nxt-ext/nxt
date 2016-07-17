@@ -370,8 +370,7 @@ var NRS = (function(NRS, $) {
 	};
 
 	function checkForMerchant(accountInfo, modal) {
-		var requestType = modal.find("input[name=request_type]").val();
-
+		var requestType = modal.find("input[name=request_type]").val(); // only works for single request type per modal
 		if (requestType == "sendMoney" || requestType == "transferAsset") {
 			if (accountInfo.match(/merchant/i)) {
 				modal.find("input[name=merchant_info]").val(accountInfo);
