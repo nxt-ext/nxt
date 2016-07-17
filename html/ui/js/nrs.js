@@ -256,9 +256,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.handleBlockchainStatus = function(response, callback) {
 		var firstTime = !("lastBlock" in NRS.state);
 		var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
-		// if (response.apiProxy) {
-		// 	previousLastBlock = _prevLastProxyBlock;
-		// }
 		
 		NRS.state = response;
 		var lastBlock = NRS.state.lastBlock;
