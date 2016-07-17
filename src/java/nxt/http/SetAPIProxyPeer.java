@@ -4,7 +4,6 @@ import nxt.NxtException;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
 import nxt.util.Convert;
-import nxt.util.JSON;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,8 +24,8 @@ public class SetAPIProxyPeer extends APIServlet.APIRequestHandler {
     protected JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
         String peerAddress = Convert.emptyToNull(request.getParameter("peer"));
         if (peerAddress == null) {
-            APIProxy.getInstance().setForcedPeer(null);
-            return JSON.emptyJSON;
+            Peer peer = APIProxy.getInstance().setForcedPeer(null);
+            return JSONData.peer(peer);
         }
         Peer peer = Peers.findOrCreatePeer(peerAddress, false);
         if (peer == null) {
