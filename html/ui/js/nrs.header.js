@@ -87,8 +87,8 @@ var NRS = (function(NRS, $) {
         } else {
             $("#client_status_description").text($.t("api_proxy_description"));
         }
-        if (NRS.state.apiProxy) {
-            $("#client_status_remote_peer").val(String(NRS.state.apiProxy).escapeHTML());
+        if (NRS.state.apiProxyPeer) {
+            $("#client_status_remote_peer").val(String(NRS.state.apiProxyPeer).escapeHTML());
             $("#client_status_set_peer").prop('disabled', true);
             $("#client_status_blacklist_peer").prop('disabled', false);
         } else {
@@ -99,7 +99,7 @@ var NRS = (function(NRS, $) {
     });
 
     $("#client_status_remote_peer").keydown(function() {
-        if ($(this).val() == NRS.state.apiProxy) {
+        if ($(this).val() == NRS.state.apiProxyPeer) {
             $("#client_status_set_peer").prop('disabled', true);
             $("#client_status_blacklist_peer").prop('disabled', false);
         } else {
@@ -119,7 +119,7 @@ var NRS = (function(NRS, $) {
     NRS.forms.setAPIProxyPeerComplete = function(response) {
         var announcedAddress = response.announcedAddress;
         if (announcedAddress) {
-            NRS.state.apiProxy = announcedAddress;
+            NRS.state.apiProxyPeer = announcedAddress;
             $.growl($.t("remote_peer_updated", { peer: String(announcedAddress).escapeHTML() }));
         } else {
             $.growl($.t("remote_peer_selected_by_server"));
@@ -137,7 +137,7 @@ var NRS = (function(NRS, $) {
 
     NRS.forms.blacklistAPIProxyPeerComplete = function(response) {
         if (response.done) {
-            NRS.state.apiProxy = null;
+            NRS.state.apiProxyPeer = null;
             $.growl($.t("remote_peer_blacklisted"));
         }
         $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());

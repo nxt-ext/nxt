@@ -696,6 +696,9 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.getPeerLink = function(address) {
+        if (!address ) {
+            return "(" + $.t("temporarily_disconnected") + ")";
+        }
         return "<a href='#' class='show_peer_modal_action' data-address='" + String(address).escapeHTML() + "'>"
             + String(address).escapeHTML() + "</a>";
     };
