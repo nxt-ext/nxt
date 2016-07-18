@@ -65,6 +65,8 @@ public class APITestServlet extends HttpServlet {
             "           <ul class='nav navbar-nav navbar-right'>\n" +
             "               <li><input type='text' class='form-control' id='nodeType' " +
             "                    readonly style='margin-top:8px;'></li>\n" +
+            "               <li><input type='text' class='form-control' id='servletPath' " +
+            "                    readonly style='margin-top:8px;'></li>\n" +
             "               <li><input type='text' class='form-control' id='search' " +
             "                    placeholder='Search' style='margin-top:8px;'></li>\n" +
             "               <li><a href='https://nxtwiki.org/wiki/The_Nxt_API' target='_blank' style='margin-left:20px;'>Wiki Docs</a></li>\n" +
@@ -195,6 +197,7 @@ public class APITestServlet extends HttpServlet {
                 nodeType = "Roaming Client";
             }
             bufJSCalls.append("    $('#nodeType').val('").append(nodeType).append("');");
+            bufJSCalls.append("    $('#servletPath').val('").append(req.getServletPath()).append("');");
             if (requestHandler != null) {
                 writer.print(form(req, requestType, true, requestHandler));
                 bufJSCalls.append("    ATS.apiCalls.push('").append(requestType).append("');\n");
@@ -265,7 +268,8 @@ public class APITestServlet extends HttpServlet {
         }
         buf.append("'>\n");
         buf.append("<div class='panel-body'>\n");
-        String formAction = APIProxy.enableAPIProxy ? "/nxt-proxy" : "/nxt";
+        String path = req.getServletPath();
+        String formAction = "/test-proxy".equals(path) ? "/nxt-proxy" : "/nxt";
         buf.append("<form action='").append(formAction).append("' method='POST' ");
         if (fileParameter != null) {
             buf.append("enctype='multipart/form-data' ");
