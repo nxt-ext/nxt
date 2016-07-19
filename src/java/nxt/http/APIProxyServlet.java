@@ -34,6 +34,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -269,49 +270,61 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     static class PasswordFinder {
 
         static int process(ByteBuffer buffer, String[] secrets) {
-            int[] pos = new int[secrets.length];
-            byte[][] tokens = new byte[secrets.length][];
-            for (int i=0; i<tokens.length; i++) {
-                tokens[i] = secrets[i].getBytes();
-            }
-            while (buffer.hasRemaining()) {
-                byte current = buffer.get();
-                for (int i=0; i < tokens.length; i++) {
-                    if (current != tokens[i][pos[i]]) {
-                        pos[i] = 0;
-                        continue;
-                    }
-                    pos[i]++;
-                    if (pos[i] == tokens[i].length) {
-                        return buffer.position() - tokens[i].length;
+            try {
+                int[] pos = new int[secrets.length];
+                byte[][] tokens = new byte[secrets.length][];
+                for (int i = 0; i < tokens.length; i++) {
+                    tokens[i] = secrets[i].getBytes();
+                }
+                while (buffer.hasRemaining()) {
+                    byte current = buffer.get();
+                    for (int i = 0; i < tokens.length; i++) {
+                        if (current != tokens[i][pos[i]]) {
+                            pos[i] = 0;
+                            continue;
+                        }
+                        pos[i]++;
+                        if (pos[i] == tokens[i].length) {
+                            return buffer.position() - tokens[i].length;
+                        }
                     }
                 }
+                return -1;
+            } finally {
+                buffer.rewind();
             }
-            return -1;
         }
     }
 
     private static class PasswordFilteringContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
 
-        private boolean isPasswordDetected;
+        ByteArrayOutputStream os;
 
         @Override
         public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
-            if (isPasswordDetected) {
-                return;
-            }
-            int savedPosition = input.position();
-            while (input.hasRemaining()) {
-                int tokenPos = PasswordFinder.process(input, new String[] { "secretPhrase=", "adminPassword=", "sharedKey=" });
+            if (finished) {
+                ByteBuffer allInput;
+                if (os == null) {
+                    allInput = input;
+                } else {
+                    byte[] b = new byte[input.remaining()];
+                    input.get(b);
+                    os.write(b);
+                    allInput = ByteBuffer.wrap(os.toByteArray());
+                }
+                int tokenPos = PasswordFinder.process(allInput, new String[] { "secretPhrase=", "adminPassword=", "sharedKey=" });
                 if (tokenPos >= 0) {
-                    isPasswordDetected = true;
                     JSONStreamAware error = JSONResponses.PROXY_SECRET_DATA_DETECTED;
                     throw new PasswordDetectedException(error);
                 }
-            }
-            input.position(savedPosition);
-            if (!isPasswordDetected) {
-                output.add(input);
+                output.add(allInput);
+            } else {
+                if (os == null) {
+                    os = new ByteArrayOutputStream();
+                }
+                byte[] b = new byte[input.remaining()];
+                input.get(b);
+                os.write(b);
             }
         }
     }
