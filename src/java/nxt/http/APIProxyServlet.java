@@ -102,8 +102,10 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
             responseJson = e.getErrorResponse();
         } finally {
             if (responseJson != null) {
-                try (Writer writer = response.getWriter()) {
-                    JSON.writeJSONString(responseJson, writer);
+                try {
+                    try (Writer writer = response.getWriter()) {
+                        JSON.writeJSONString(responseJson, writer);
+                    }
                 } catch(IOException e) {
                     Logger.logInfoMessage("Failed to write response to client", e);
                 }
