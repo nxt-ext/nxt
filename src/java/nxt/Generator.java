@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
+ * Copyright Ãƒâ€šÃ‚Â© 2013-2016 The Nxt Core Developers.                             *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -29,8 +29,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -360,4 +362,124 @@ public final class Generator implements Comparable<Generator> {
         }
     }
 
+    /** Active block generators */
+    private static final Set<Long> activeGeneratorIds = new HashSet<>();
+
+    /** Active block height */
+    private static int activeHeight = 0;
+
+    /** Sorted list of generators for the next block */
+    private static final List<ActiveGenerator> activeGenerators = new ArrayList<>();
+
+    /** Generator list has been initialized */
+    private static boolean generatorsInitialized = false;
+
+    /**
+     * Return a list of generators for the next block.  The caller must hold the blockchain
+     * read lock to ensure the integrity of the returned list.
+     *
+     * @return                      List of generator account identifiers
+     */
+    public static List<ActiveGenerator> getNextGenerators() {
+        List<ActiveGenerator> generatorList;
+        Blockchain blockchain = Nxt.getBlockchain();
+        synchronized(activeGenerators) {
+            if (!generatorsInitialized) {
+                activeGeneratorIds.addAll(BlockDb.getBlockGenerators(Math.max(1, blockchain.getHeight() - 10000)));
+                Iterator<Long> it = activeGeneratorIds.iterator();
+                while (it.hasNext()) {
+                    activeGenerators.add(new ActiveGenerator(it.next()));
+                }
+                Logger.logDebugMessage(activeGeneratorIds.size() + " block generators found");
+                Nxt.getBlockchainProcessor().addListener(block -> {
+                    long generatorId = block.getGeneratorId();
+                    synchronized(activeGenerators) {
+                        if (!activeGeneratorIds.contains(generatorId)) {
+                            activeGeneratorIds.add(generatorId);
+                            activeGenerators.add(new ActiveGenerator(generatorId));
+                        }
+                        activeHeight = 0;
+                    }
+                }, BlockchainProcessor.Event.BLOCK_PUSHED);
+                generatorsInitialized = true;
+            }
+            int height = blockchain.getHeight();
+            if (height != activeHeight) {
+                activeHeight = height;
+                Block lastBlock = blockchain.getLastBlock();
+                for (ActiveGenerator generator : activeGenerators) {
+                    generator.setLastBlock(lastBlock);
+                }
+                Collections.sort(activeGenerators);
+            }
+            generatorList = new ArrayList<>(activeGenerators);
+        }
+        return generatorList;
+    }
+
+    /**
+     * Active generator
+     */
+    public static class ActiveGenerator implements Comparable<ActiveGenerator> {
+        private final long accountId;
+        private long hitTime;
+        private long effectiveBalanceNXT;
+        private byte[] publicKey;
+
+        public ActiveGenerator(long accountId) {
+            this.accountId = accountId;
+            this.hitTime = Long.MAX_VALUE;
+        }
+
+        public long getAccountId() {
+            return accountId;
+        }
+
+        public long getEffectiveBalance() {
+            return effectiveBalanceNXT;
+        }
+
+        public long getHitTime() {
+            return hitTime;
+        }
+
+        private void setLastBlock(Block lastBlock) {
+            if (publicKey == null) {
+                publicKey = Account.getPublicKey(accountId);
+                if (publicKey == null) {
+                    hitTime = Long.MAX_VALUE;
+                    return;
+                }
+            }
+            int height = lastBlock.getHeight();
+            Account account = Account.getAccount(accountId, height);
+            if (account == null) {
+                hitTime = Long.MAX_VALUE;
+                return;
+            }
+            effectiveBalanceNXT = Math.max(account.getEffectiveBalanceNXT(height), 0);
+            if (effectiveBalanceNXT == 0) {
+                hitTime = Long.MAX_VALUE;
+                return;
+            }
+            BigInteger effectiveBalance = BigInteger.valueOf(effectiveBalanceNXT);
+            BigInteger hit = Generator.getHit(publicKey, lastBlock);
+            hitTime = Generator.getHitTime(effectiveBalance, hit, lastBlock);
+        }
+
+        @Override
+        public int hashCode() {
+            return Long.hashCode(accountId);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (obj != null && (obj instanceof ActiveGenerator) && accountId == ((ActiveGenerator)obj).accountId);
+        }
+
+        @Override
+        public int compareTo(ActiveGenerator obj) {
+            return (hitTime < obj.hitTime ? -1 : (hitTime > obj.hitTime ? 1 : 0));
+        }
+    }
 }
