@@ -24,7 +24,7 @@ var NRS = (function(NRS, $) {
 		"page": "",
 		"searchStr": ""
 	};
-    var missingImage = "/img/no_image_available.png";
+    var missingImage = "img/no_image_available.png";
 
 	NRS.getMarketplaceItemHTML = function(good) {
 		var html = "";
