@@ -24,43 +24,6 @@ var NRS = (function (NRS, $, undefined) {
         _password = password;
     };
 
-    NRS.sendOutsideRequest = function (url, data, callback, async) {
-        if ($.isFunction(data)) {
-            async = callback;
-            callback = data;
-            data = {};
-        } else {
-            data = data || {};
-        }
-
-        $.support.cors = true;
-
-        $.ajax({
-            url: url,
-            crossDomain: true,
-            dataType: "json",
-            type: "GET",
-            timeout: 30000,
-            async: (async === undefined ? true : async),
-            data: data
-        }).done(function (json) {
-            //why is this necessary??..
-            if (json.errorCode && !json.errorDescription) {
-                json.errorDescription = (json.errorMessage ? json.errorMessage : $.t("server_error_unknown"));
-            }
-            if (callback) {
-                callback(json, data);
-            }
-        }).fail(function (xhr, textStatus, error) {
-            if (callback) {
-                callback({
-                    "errorCode": -1,
-                    "errorDescription": error
-                }, {});
-            }
-        });
-    };
-
     NRS.sendRequest = function (requestType, data, callback, isAsync, noProxy) {
         if (requestType == undefined) {
             NRS.logConsole("Undefined request type");
@@ -271,10 +234,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url = NRS.getRequestPath();
-        if (noProxy) {
-            url = "/nxt";
-        }
+        var url = NRS.getRequestPath(noProxy);
         url += "?requestType=" + requestType;
 
         if (type == "GET") {
@@ -332,7 +292,7 @@ var NRS = (function (NRS, $, undefined) {
         var contentType;
         var processData;
         var formData = null;
-        
+
         var config = NRS.getFileUploadConfig(requestType, data);
         if (config && $(config.selector)[0].files[0]) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
@@ -1555,7 +1515,7 @@ var NRS = (function (NRS, $, undefined) {
             }, {});
         });
     };
-    
+
     NRS.sendRequestQRCode = function(target, qrCodeData, width, height) {
         width = width || 0;
         height = height || 0;

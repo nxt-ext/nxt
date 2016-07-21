@@ -256,7 +256,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.handleBlockchainStatus = function(response, callback) {
 		var firstTime = !("lastBlock" in NRS.state);
 		var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
-		
+
 		NRS.state = response;
 		var lastBlock = NRS.state.lastBlock;
 		var height = response.apiProxy ? NRS.lastProxyBlockHeight : NRS.state.numberOfBlocks - 1;
@@ -881,17 +881,18 @@ NRS.addPagination = function () {
 			} else {
 				NRS.peerConnect = false;
 				connectedIndicator.removeClass("connected");
-                connectedIndicator.find("span").html($.t("Not Connected")).attr("data-i18n", "not_connected");
+				connectedIndicator.find("span").html($.t("Not Connected")).attr("data-i18n", "not_connected");
 				connectedIndicator.show();
 			}
 		});
 	};
 
-	NRS.getRequestPath = function() {
-		if (NRS.state.apiProxy) {
-			return "/nxt-proxy";
+	NRS.getRequestPath = function (noProxy) {
+		var url = "http://107.170.3.62:6876";
+		if (!NRS.state.apiProxy || noProxy) {
+			return url + "/nxt";
 		} else {
-			return "/nxt";
+			return url + "/nxt-proxy";
 		}
 	};
 
@@ -1507,6 +1508,9 @@ NRS.addPagination = function () {
         NRS.logProperty("navigator.userLanguage");
         NRS.logProperty("navigator.cookieEnabled");
         NRS.logProperty("navigator.onLine");
+		if (device) {
+			NRS.logProperty("device.platform");
+		}
         NRS.logProperty("NRS.isTestNet");
         NRS.logProperty("NRS.needsAdminPassword");
     };
