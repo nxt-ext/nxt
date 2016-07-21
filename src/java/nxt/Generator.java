@@ -365,8 +365,8 @@ public final class Generator implements Comparable<Generator> {
     /** Active block generators */
     private static final Set<Long> activeGeneratorIds = new HashSet<>();
 
-    /** Active block height */
-    private static int activeHeight = 0;
+    /** Active block identifier */
+    private static long activeBlockId;
 
     /** Sorted list of generators for the next block */
     private static final List<ActiveGenerator> activeGenerators = new ArrayList<>();
@@ -398,14 +398,13 @@ public final class Generator implements Comparable<Generator> {
                             activeGeneratorIds.add(generatorId);
                             activeGenerators.add(new ActiveGenerator(generatorId));
                         }
-                        activeHeight = 0;
                     }
                 }, BlockchainProcessor.Event.BLOCK_PUSHED);
                 generatorsInitialized = true;
             }
-            int height = blockchain.getHeight();
-            if (height != activeHeight) {
-                activeHeight = height;
+            long blockId = blockchain.getLastBlock().getId();
+            if (blockId != activeBlockId) {
+                activeBlockId = blockId;
                 Block lastBlock = blockchain.getLastBlock();
                 for (ActiveGenerator generator : activeGenerators) {
                     generator.setLastBlock(lastBlock);
