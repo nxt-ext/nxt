@@ -28,6 +28,9 @@
         <style id="user_header_style" type="text/css"></style>
         <style id="user_sidebar_style" type="text/css"></style>
         <style id="user_boxes_style" type="text/css"></style>
+
+        <!-- cordova script (this will be missing unless deployed as a mobile application) -->
+        <script src="cordova.js"></script>
     </head>
     <body class="lockscreen fixed">
         <div id="page" class="wrapper row-offcanvas row-offcanvas-left">
@@ -41,7 +44,7 @@
 
         <!-- Modals moved to own files in html/modals/ -->
         <!-- Sidebar context infos moved to html/sidebar_context.html -->
-			
+
         <!--[if lte IE 9]>
         <script type="text/javascript">
             window.onload = function() {
@@ -90,7 +93,7 @@
             NRS.loadHeaderHTML("html/header.html");
             NRS.loadSidebarHTML("html/sidebar.html");
             NRS.loadSidebarContextHTML("html/sidebar_context.html");
-            
+
             NRS.loadPageHTML("html/pages/dashboard.html");
             NRS.loadPageHTML("html/pages/settings.html");
             NRS.loadPageHTML("html/pages/plugins.html");
