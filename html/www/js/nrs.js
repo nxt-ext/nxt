@@ -888,7 +888,10 @@ NRS.addPagination = function () {
 	};
 
 	NRS.getRequestPath = function (noProxy) {
-		var url = "http://107.170.3.62:6876";
+		var url = "";
+		if (cordova) {
+			url += "http://107.170.3.62:6876";
+		}
 		if (!NRS.state.apiProxy || noProxy) {
 			return url + "/nxt";
 		} else {
