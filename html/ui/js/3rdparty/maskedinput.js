@@ -87,6 +87,12 @@
                 }
                 function androidInputEvent() {
                     var curVal = input.val(), pos = input.caret();
+                    //console.log("androidInputEvent " + pos.begin + "-" + pos.end + " " + curVal + " " + oldVal + " " + isKeyPressed);
+                    
+                    //A dirty fix for the weird Android 6 keyboard which deletes the text from the current pos to the 
+                    //input start at every char, and then inserts it again
+                    if (pos.begin == 0 && pos.end == 0 && oldVal && oldVal.endsWith(curVal)) return;
+                    
                     if (oldVal && oldVal.length && oldVal.length > curVal.length) {
                         checkVal(!0);
                         for (; pos.end > 0 && !tests[pos.end - 1]; ) pos.end--;
@@ -123,6 +129,7 @@
                             input.caret(pos.end, pos.end);
                         }
                     }
+                    oldVal = input.val();
                     tryFireCompleted();
                 }
                 function blurEvent() {
@@ -149,7 +156,7 @@
 
                     if (!input.prop("readonly")) {
                         var pos, begin, end, k = e.which || e.keyCode;
-                        oldVal = input.val(), 8 === k || 46 === k || iPhone && 127 === k ? (pos = input.caret(), 
+                        8 === k || 46 === k || iPhone && 127 === k ? (pos = input.caret(), 
                         begin = pos.begin, end = pos.end, end - begin === 0 && (begin = 46 !== k ? seekPrev(begin) : end = seekNext(begin - 1), 
                         end = 46 === k ? seekNext(end) : end), clearBuffer(begin, end), shiftL(begin, end - 1), 
                         e.preventDefault()) : 13 === k ? blurEvent.call(this, e) : 27 === k && (input.val(focusText),
