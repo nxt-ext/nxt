@@ -81,8 +81,12 @@ var NRS = (function(NRS, $) {
 		if (sharedKey) {
 			sharedKeyParam = "&sharedKey=" + sharedKey;
 		}
-		return "<a href='/nxt?requestType=downloadPrunableMessage&transaction=" + String(transaction).escapeHTML() +
-			"&retrieve=true&save=true" + sharedKeyParam + "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+		var url = NRS.getRequestPath() + "?requestType=downloadPrunableMessage&transaction=" + String(transaction).escapeHTML() + "&retrieve=true&save=true" + sharedKeyParam;
+		if (cordova) {
+			cordova.InAppBrowser.open(url, '_blank', 'location=yes');
+		} else {
+			return "<a href='" + url + "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+		}
 	};
 
     NRS.jsondata.messages = function (response) {
