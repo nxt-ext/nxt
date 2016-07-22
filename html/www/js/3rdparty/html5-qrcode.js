@@ -44,12 +44,16 @@
                 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
                 var successCallback = function(stream) {
-                    video.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
-                    localMediaStream = stream;
-                    $.data(currentElem[0], "stream", stream);
+                    try {
+                        video.src = (window.URL && window.URL.createObjectURL(stream)) || stream;
+                        localMediaStream = stream;
+                        $.data(currentElem[0], "stream", stream);
 
-                    video.play();
-                    $.data(currentElem[0], "timeout", setTimeout(scan, 1000));
+                        video.play();
+                        $.data(currentElem[0], "timeout", setTimeout(scan, 1000));
+                    } catch(e) {
+                        NRS.logConsole(e.message);
+                    }
                 };
 
                 // Call the getUserMedia method with our callback functions
@@ -70,7 +74,10 @@
             return this.each(function() {
                 //stop the stream and cancel timeouts
                 var currentElem = $(this);
-                $.data(currentElem[0], 'stream').stop();
+                var stream = $.data(currentElem[0], 'stream');
+                if (stream && stream.stop) {
+                    stream.stop();
+                }
                 clearTimeout($.data(currentElem[0], 'timeout'));
             });
         }
