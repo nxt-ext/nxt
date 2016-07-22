@@ -103,14 +103,14 @@ var NRS = (function(NRS, $, undefined) {
         reader.show();
         reader.html5_qrcode(
             function (data) {
-                console.log(data);
+				NRS.logConsole(data);
                 $("#" + outputId).val(data);
                 reader.hide();
                 reader.html5_qrcode_stop();
             },
             function (error) {},
             function (videoError, localMediaStream) {
-                console.log(videoError);
+				NRS.logConsole(videoError);
                 reader.hide();
 				if (!localMediaStream) {
 					$(".qr_code_reader_link").hide(); // Video is not supported, disable all links
