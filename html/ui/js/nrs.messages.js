@@ -79,6 +79,10 @@ var NRS = (function(NRS, $) {
 	NRS.getMessageDownloadLink = function (transaction, sharedKey) {
 		var sharedKeyParam = "";
 		if (sharedKey) {
+			if (NRS.state.apiProxy) {
+				NRS.logConsole("Do not display a download link with shared key when using light client");
+				return "";
+			}
 			sharedKeyParam = "&sharedKey=" + sharedKey;
 		}
 		return "<a href='/nxt?requestType=downloadPrunableMessage&transaction=" + String(transaction).escapeHTML() +
