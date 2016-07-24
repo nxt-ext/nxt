@@ -1797,5 +1797,7 @@
   "hallmark_valid": "Hallmark Is Valid",
   "hallmark_error": "Hallmark Error",
   "no_blockchain_download": "blockchain is not downloaded",
-  "temporarily_disconnected": "Temporarily Disconnected"
+  "temporarily_disconnected": "Temporarily Disconnected",
+  "next_snapshot": "Next Snapshot",
+  "next_balance_update": "Next Balance Update"
 }
