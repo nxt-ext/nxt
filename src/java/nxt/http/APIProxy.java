@@ -149,7 +149,10 @@ public class APIProxy {
         // Not by the proxy. In order to report a peer to the client we have
         // To select some initial peer.
         if (mainPeerAnnouncedAddress == null) {
-            getServingPeer(null);
+            Peer peer = getServingPeer(null);
+            if (peer != null) {
+                mainPeerAnnouncedAddress = peer.getAnnouncedAddress();
+            }
         }
         return mainPeerAnnouncedAddress;
     }
