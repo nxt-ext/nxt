@@ -135,7 +135,7 @@ var ATS = (function(ATS, $, undefined) {
     };
 
     ATS.submitForm = function(form, fileParameter) {
-        var url = '/nxt';
+        var url = $('#formAction').val();
         var params = {};
         for (var i = 0; i < form.elements.length; i++) {
             if (form.elements[i].type != 'button' && form.elements[i].value && form.elements[i].value != 'submit') {

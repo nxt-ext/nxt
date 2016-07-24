@@ -256,9 +256,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.handleBlockchainStatus = function(response, callback) {
 		var firstTime = !("lastBlock" in NRS.state);
 		var previousLastBlock = (firstTime ? "0" : NRS.state.lastBlock);
-		// if (response.apiProxy) {
-		// 	previousLastBlock = _prevLastProxyBlock;
-		// }
 		
 		NRS.state = response;
 		var lastBlock = NRS.state.lastBlock;
@@ -321,7 +318,7 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var clientOptionsLink = $("#header_client_options_link");
 				var clientOptions = $("#header_client_options");
-				if (response.apiProxy || response.isLightClient) {
+				if (response.apiProxy) {
 					NRS.isLocalHost = false;
                     if (response.isLightClient) {
 						clientOptionsLink.html($.t("light_client"));
@@ -344,6 +341,7 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.incoming.updateDashboardBlocks(NRS.lastProxyBlockHeight - prevHeight);
 							NRS.updateDashboardLastBlock(proxyBlocksResponse.blocks[0]);
 							NRS.handleBlockchainStatus(response, callback);
+							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
 						}
 					}, false);
 				} else {
@@ -889,6 +887,14 @@ NRS.addPagination = function () {
 		});
 	};
 
+	NRS.getRequestPath = function() {
+		if (NRS.state.apiProxy) {
+			return "/nxt-proxy";
+		} else {
+			return "/nxt";
+		}
+	};
+
 	NRS.getAccountInfo = function(firstRun, callback, isAccountSwitch) {
 		NRS.sendRequest("getAccount", {
 			"account": NRS.account,
@@ -1412,12 +1418,18 @@ NRS.addPagination = function () {
         var downloadingBlockchain = $('#downloading_blockchain');
         downloadingBlockchain.find('.last_num_blocks').html($.t('last_num_blocks', { "blocks": lastNumBlocks }));
 
-		if (!NRS.serverConnect || !NRS.peerConnect) {
+		if (NRS.state.isLightClient) {
+			downloadingBlockchain.find(".db_active").hide();
+			downloadingBlockchain.find(".db_halted").hide();
+			downloadingBlockchain.find(".db_light").show();
+		} else if (!NRS.serverConnect || !NRS.peerConnect) {
 			downloadingBlockchain.find(".db_active").hide();
 			downloadingBlockchain.find(".db_halted").show();
+			downloadingBlockchain.find(".db_light").hide();
 		} else {
 			downloadingBlockchain.find(".db_halted").hide();
 			downloadingBlockchain.find(".db_active").show();
+			downloadingBlockchain.find(".db_light").hide();
 
 			var percentageTotal = 0;
 			var blocksLeft;

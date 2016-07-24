@@ -697,7 +697,7 @@
                         
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_transactions">This user has no transactions.</div>
                 </div>
 
@@ -718,7 +718,7 @@
 
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_ledger">This user has no ledger entries.</div>
                 </div>
 
@@ -734,7 +734,7 @@
                         
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_aliases">This user has no aliases.</div>
                 </div>
                 
@@ -752,7 +752,7 @@
                         
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_assets">This user has no assets.</div>
                 </div>
                 
@@ -772,7 +772,7 @@
 
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_trade_history">This user has no trade history.</div>
                 </div>
                 
@@ -789,7 +789,7 @@
                         
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_currencies">This user has no currencies.</div>
                 </div>
 
@@ -806,7 +806,7 @@
                         
                         </tbody>
                     </table>
-                    <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                    <div class="data-loading-container"><img src="/img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_marketplace_listings">This user has no marketplace listings.</div>
                 </div>
 
@@ -884,6 +884,34 @@
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-primary" data-dismiss="modal" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="client_status_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="client_status">Client Status</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="callout callout-danger error_message" style="display:none"></div>
+                    <div class="callout callout-info never_hide">
+                        <span id="client_status_description"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="client_status_remote_peer" data-i18n="remote_peer">Remote Peer</label>
+                        <input class="form-control" name="peer" id="client_status_remote_peer" placeholder="Random" data-i18n="[placeholder]random">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="close">Close</button>
+                <button type="button" class="btn btn-primary" id="client_status_blacklist_peer" data-request="blacklistAPIProxyPeer" data-loading-text="Submitting..." data-i18n="blacklist">Blacklist</button>
+                <button type="button" class="btn btn-primary" id="client_status_set_peer" data-request="setAPIProxyPeer" data-loading-text="Submitting..." data-i18n="set_peer">Set Peer</button>
             </div>
         </div>
     </div>

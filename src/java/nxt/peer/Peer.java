@@ -114,6 +114,12 @@ public interface Peer extends Comparable<Peer> {
 
     boolean isOutboundWebSocket();
 
+    boolean isOpenAPI();
+
+    boolean isApiConnectable();
+
+    StringBuilder getPeerApiUri();
+
     String getBlacklistingCause();
 
     JSONObject send(JSONStreamAware request);

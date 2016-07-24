@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Constants;
 import nxt.peer.Peer;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -31,9 +30,11 @@ import org.eclipse.jetty.util.UrlEncoded;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.json.simple.JSONStreamAware;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -50,13 +51,13 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     private static final Set<APITag> NOT_FORWARDED_TAGS;
     private static final String REMOTE_URL = APIProxyServlet.class.getName() + ".remoteUrl";
     private static final String REMOTE_SERVER_IDLE_TIMEOUT = APIProxyServlet.class.getName() + ".remoteServerIdleTimeout";
-    public static final int PROXY_IDLE_TIMEOUT_DELTA = 5000;
+    static final int PROXY_IDLE_TIMEOUT_DELTA = 5000;
 
     static {
         Set<String> requests = new HashSet<>();
         requests.add("getBlockchainStatus");
         requests.add("getState");
-
+        requests.add("setAPIProxyPeer");
         NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
         Set<APITag> tags = new HashSet<>();
@@ -66,9 +67,13 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         NOT_FORWARDED_TAGS = Collections.unmodifiableSet(tags);
     }
 
-    private APIServlet apiServlet;
-
     static void initClass() {}
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        config.getServletContext().setAttribute("apiServlet", new APIServlet());
+    }
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -78,33 +83,43 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 responseJson = ERROR_NOT_ALLOWED;
                 return;
             }
-            if (apiServlet == null) {
-                apiServlet = new APIServlet();
-            }
-            String requestType = parseQueryString(request);
-
+            MultiMap<String> parameters = getRequestParameters(request);
+            String requestType = getRequestType(parameters);
             if (APIProxy.isActivated() && isForwardable(requestType)) {
+                if (parameters.containsKey("secretPhrase") || parameters.containsKey("adminPassword") || parameters.containsKey("sharedKey")) {
+                    throw new ParameterException(JSONResponses.PROXY_SECRET_DATA_DETECTED);
+                }
                 if (!initRemoteRequest(request, requestType)) {
-                    if (Constants.isLightClient) {
-                        responseJson = JSONResponses.LIGHT_CLIENT_NO_OPEN_API_PEERS;
-                    } else {
-                        apiServlet.service(request, response);
-                    }
+                    responseJson = JSONResponses.API_PROXY_NO_OPEN_API_PEERS;
                 } else {
                     super.service(request, response);
                 }
             } else {
+                APIServlet apiServlet = (APIServlet)request.getServletContext().getAttribute("apiServlet");
                 apiServlet.service(request, response);
             }
         } catch (ParameterException e) {
             responseJson = e.getErrorResponse();
         } finally {
             if (responseJson != null) {
-                try (Writer writer = response.getWriter()) {
-                    JSON.writeJSONString(responseJson, writer);
+                try {
+                    try (Writer writer = response.getWriter()) {
+                        JSON.writeJSONString(responseJson, writer);
+                    }
+                } catch(IOException e) {
+                    Logger.logInfoMessage("Failed to write response to client", e);
                 }
             }
         }
+    }
+
+    private MultiMap<String> getRequestParameters(HttpServletRequest request) {
+        MultiMap<String> parameters = new MultiMap<>();
+        String queryString = request.getQueryString();
+        if (queryString != null) {
+            UrlEncoded.decodeUtf8To(queryString, parameters);
+        }
+        return parameters;
     }
 
     @Override
@@ -156,16 +171,8 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         }
     }
 
-    private String parseQueryString(HttpServletRequest clientRequest) throws ParameterException {
-        MultiMap<String> parameters = new MultiMap<>();
-        String queryString = clientRequest.getQueryString();
-        String requestType = null;
-
-        if (queryString != null) {
-            UrlEncoded.decodeUtf8To(queryString, parameters);
-            requestType = parameters.getString("requestType");
-        }
-
+    private String getRequestType(MultiMap<String> parameters) throws ParameterException {
+        String requestType = parameters.getString("requestType");
         if (Convert.emptyToNull(requestType) == null) {
             throw new ParameterException(JSONResponses.PROXY_MISSING_REQUEST_TYPE);
         }
@@ -178,77 +185,46 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
                 throw new ParameterException(JSONResponses.ERROR_INCORRECT_REQUEST);
             }
         }
-
-        if (parameters.containsKey("secretPhrase")) {
-            throw new ParameterException(JSONResponses.PROXY_SECRET_PHRASE_DETECTED);
-        }
-
-        if (parameters.containsKey("adminPassword")) {
-            throw new ParameterException(JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED);
-        }
-
-        if (parameters.containsKey("sharedKey")) {
-            throw new ParameterException(JSONResponses.PROXY_SHARED_KEY_DETECTED);
-        }
-
         return requestType;
     }
 
     private boolean initRemoteRequest(HttpServletRequest clientRequest, String requestType) {
-        StringBuilder uri = new StringBuilder();
+        StringBuilder uri;
         if (!APIProxy.forcedServerURL.isEmpty()) {
+            uri = new StringBuilder();
             uri.append(APIProxy.forcedServerURL);
         } else {
             Peer servingPeer = APIProxy.getInstance().getServingPeer(requestType);
             if (servingPeer == null) {
                 return false;
             }
-            boolean useHttps = servingPeer.providesService(Peer.Service.API_SSL);
-            if (useHttps) {
-                uri.append("https://");
-            } else {
-                uri.append("http://");
-            }
-            uri.append(servingPeer.getHost()).append(":");
-            if (useHttps) {
-                uri.append(servingPeer.getApiSSLPort());
-            } else {
-                uri.append(servingPeer.getApiPort());
-            }
-            uri.append("/nxt");
-
+            uri = servingPeer.getPeerApiUri();
             clientRequest.setAttribute(REMOTE_SERVER_IDLE_TIMEOUT, servingPeer.getApiServerIdleTimeout());
         }
-
+        uri.append("/nxt");
         String query = clientRequest.getQueryString();
         if (query != null) {
             uri.append("?").append(query);
         }
-
         clientRequest.setAttribute(REMOTE_URL, uri.toString());
-
         return true;
     }
 
     private boolean isForwardable(String requestType) {
         APIServlet.APIRequestHandler apiRequestHandler = APIServlet.apiRequestHandlers.get(requestType);
-
         if (!apiRequestHandler.requireBlockchain()) {
             return false;
         }
-
         if (apiRequestHandler.requireFullClient()) {
             return false;
         }
-
         if (NOT_FORWARDED_REQUESTS.contains(requestType)) {
             return false;
         }
-
+        //noinspection RedundantIfStatement
         if (!Collections.disjoint(apiRequestHandler.getAPITags(), NOT_FORWARDED_TAGS)) {
             return false;
         }
-
         return true;
     }
 
@@ -257,9 +233,9 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         return new APIProxyResponseListener(request, response);
     }
 
-    protected class APIProxyResponseListener extends AsyncMiddleManServlet.ProxyResponseListener {
+    private class APIProxyResponseListener extends AsyncMiddleManServlet.ProxyResponseListener {
 
-        protected APIProxyResponseListener(HttpServletRequest request, HttpServletResponse response) {
+        APIProxyResponseListener(HttpServletRequest request, HttpServletResponse response) {
             super(request, response);
         }
 
@@ -272,16 +248,17 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
     }
 
     @Override
-    protected ContentTransformer newClientRequestContentTransformer(HttpServletRequest clientRequest,
-                                                                    Request proxyRequest) {
-
+    protected ContentTransformer newClientRequestContentTransformer(HttpServletRequest clientRequest, Request proxyRequest) {
         String contentType = clientRequest.getContentType();
         if (contentType != null && contentType.contains("multipart")) {
             return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
         } else {
-            return new PasswordFilteringContentTransformer(clientRequest);
+            if (APIProxy.isActivated() && isForwardable(clientRequest.getParameter("requestType"))) {
+                return new PasswordFilteringContentTransformer();
+            } else {
+                return super.newClientRequestContentTransformer(clientRequest, proxyRequest);
+            }
         }
-
     }
 
     private static class PasswordDetectedException extends RuntimeException {
@@ -292,78 +269,64 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         }
     }
 
-    private static class PasswordFinder {
-        private final byte[] token;
-        private int state;
+    static class PasswordFinder {
 
-        private PasswordFinder(String tokenStr) {
-            token = tokenStr.getBytes();
-        }
-
-        private boolean process(ByteBuffer buffer) {
-            while (buffer.hasRemaining()) {
-                int current = buffer.get() & 0xFF;
-                if (state < token.length) {
-                    if (current != token[state]) {
-                        state = 0;
-                        continue;
-                    }
-
-                    ++state;
-                    if (state == token.length)
-                        return true;
+        static int process(ByteBuffer buffer, String[] secrets) {
+            try {
+                int[] pos = new int[secrets.length];
+                byte[][] tokens = new byte[secrets.length][];
+                for (int i = 0; i < tokens.length; i++) {
+                    tokens[i] = secrets[i].getBytes();
                 }
+                while (buffer.hasRemaining()) {
+                    byte current = buffer.get();
+                    for (int i = 0; i < tokens.length; i++) {
+                        if (current != tokens[i][pos[i]]) {
+                            pos[i] = 0;
+                            continue;
+                        }
+                        pos[i]++;
+                        if (pos[i] == tokens[i].length) {
+                            return buffer.position() - tokens[i].length;
+                        }
+                    }
+                }
+                return -1;
+            } finally {
+                buffer.rewind();
             }
-            return state == token.length;
         }
     }
 
     private static class PasswordFilteringContentTransformer implements AsyncMiddleManServlet.ContentTransformer {
-        private final int clientRequestId;
-        private final PasswordFinder secretPhraseFinder = new PasswordFinder("secretPhrase=");
-        private final PasswordFinder adminPasswordFinder = new PasswordFinder("adminPassword=");
-        private final PasswordFinder sharedKeyFinder = new PasswordFinder("sharedKey=");
 
-        private boolean isPasswordDetected = false;
-
-        public PasswordFilteringContentTransformer(HttpServletRequest clientRequest) {
-            this.clientRequestId = System.identityHashCode(clientRequest);
-        }
+        ByteArrayOutputStream os;
 
         @Override
         public void transform(ByteBuffer input, boolean finished, List<ByteBuffer> output) throws IOException {
-            if (!isPasswordDetected) {
-                boolean positionChanged = false;
-                int position = input.position();
-                while (input.hasRemaining()) {
-                    positionChanged = true;
-                    boolean secretPhaseFound = secretPhraseFinder.process(input);
-                    boolean adminPasswordFound = false;
-                    boolean sharedKeyFound = false;
-                    if (!secretPhaseFound) {
-                        input.position(position);
-                        adminPasswordFound = adminPasswordFinder.process(input);
-                    }
-                    if (!adminPasswordFound) {
-                        input.position(position);
-                        sharedKeyFound = sharedKeyFinder.process(input);
-                    }
-                    if (secretPhaseFound || adminPasswordFound || sharedKeyFound) {
-                        isPasswordDetected = true;
-                        JSONStreamAware error = secretPhaseFound ? JSONResponses.PROXY_SECRET_PHRASE_DETECTED :
-                                adminPasswordFound ? JSONResponses.PROXY_ADMIN_PASSWORD_DETECTED :
-                                        JSONResponses.PROXY_SHARED_KEY_DETECTED;
-
-                        throw new PasswordDetectedException(error);
-                    }
+            if (finished) {
+                ByteBuffer allInput;
+                if (os == null) {
+                    allInput = input;
+                } else {
+                    byte[] b = new byte[input.remaining()];
+                    input.get(b);
+                    os.write(b);
+                    allInput = ByteBuffer.wrap(os.toByteArray());
                 }
-                if (positionChanged) {
-                    input.position(position);
+                int tokenPos = PasswordFinder.process(allInput, new String[] { "secretPhrase=", "adminPassword=", "sharedKey=" });
+                if (tokenPos >= 0) {
+                    JSONStreamAware error = JSONResponses.PROXY_SECRET_DATA_DETECTED;
+                    throw new PasswordDetectedException(error);
                 }
-
-                if (!isPasswordDetected) {
-                    output.add(input);
+                output.add(allInput);
+            } else {
+                if (os == null) {
+                    os = new ByteArrayOutputStream();
                 }
+                byte[] b = new byte[input.remaining()];
+                input.get(b);
+                os.write(b);
             }
         }
     }

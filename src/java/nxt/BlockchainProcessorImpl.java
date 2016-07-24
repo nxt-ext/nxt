@@ -152,6 +152,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
     private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
             ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
+    private final boolean simulateEndlessDownload = Nxt.getBooleanProperty("nxt.simulateEndlessDownload");
 
     private int initialScanHeight;
     private volatile int lastTrimHeight;
@@ -199,7 +200,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     int chainHeight = blockchain.getHeight();
                     downloadPeer();
                     if (blockchain.getHeight() == chainHeight) {
-                        if (isDownloading) {
+                        if (isDownloading && !simulateEndlessDownload) {
                             Logger.logMessage("Finished blockchain download");
                             isDownloading = false;
                         }
@@ -284,8 +285,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
                     long lastBlockId = blockchain.getLastBlock().getId();
+                    if (simulateEndlessDownload) {
+                        isDownloading = true;
+                        return;
+                    }
                     downloadBlockchain(peer, commonBlock, commonBlock.getHeight());
-
                     if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
                         return;
                     }

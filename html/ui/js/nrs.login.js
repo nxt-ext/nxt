@@ -188,6 +188,10 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.resetEncryptionState();
 		NRS.setServerPassword(null);
 		NRS.rememberPassword = false;
+		NRS.account = "";
+		NRS.accountRS = "";
+		NRS.publicKey = "";
+		NRS.accountInfo = {};
 		$("#remember_password").prop("checked", false);
 
 		// Reset other functional state

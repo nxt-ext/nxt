@@ -256,7 +256,7 @@ final class PeerImpl implements Peer {
         return apiServerIdleTimeout;
     }
 
-    public void setApiServerIdleTimeout(Object apiServerIdleTimeout) {
+    void setApiServerIdleTimeout(Object apiServerIdleTimeout) {
         if (apiServerIdleTimeout instanceof Integer) {
             this.apiServerIdleTimeout = (int) apiServerIdleTimeout;
         }
@@ -267,7 +267,7 @@ final class PeerImpl implements Peer {
         return blockchainState;
     }
 
-    public void setBlockchainState(Object blockchainStateObj) {
+    void setBlockchainState(Object blockchainStateObj) {
         if (blockchainStateObj instanceof Integer) {
             int blockchainStateInt = (int)blockchainStateObj;
             if (blockchainStateInt >= 0 && blockchainStateInt < BlockchainState.values().length) {
@@ -829,7 +829,7 @@ final class PeerImpl implements Peer {
         addService(Service.HALLMARK, false);
     }
 
-    void addService(Service service, boolean doNotify) {
+    private void addService(Service service, boolean doNotify) {
         boolean notifyListeners;
         synchronized (this) {
             notifyListeners = ((services & service.getCode()) == 0);
@@ -840,7 +840,7 @@ final class PeerImpl implements Peer {
         }
     }
 
-    void removeService(Service service, boolean doNotify) {
+    private void removeService(Service service, boolean doNotify) {
         boolean notifyListeners;
         synchronized (this) {
             notifyListeners = ((services & service.getCode()) != 0);
@@ -879,5 +879,45 @@ final class PeerImpl implements Peer {
             isProvided = (services & this.services) == services;
         }
         return isProvided;
+    }
+
+    @Override
+    public boolean isOpenAPI() {
+        return providesService(Peer.Service.API) || providesService(Peer.Service.API_SSL);
+    }
+
+    @Override
+    public boolean isApiConnectable() {
+        return isOpenAPI() && state == Peer.State.CONNECTED
+                && !Peers.isOldVersion(version, Constants.MIN_PROXY_VERSION)
+                && !Peers.isNewVersion(version)
+                && blockchainState == Peer.BlockchainState.UP_TO_DATE;
+    }
+
+    public StringBuilder getPeerApiUri() {
+        StringBuilder uri = new StringBuilder();
+        if (providesService(Peer.Service.API_SSL)) {
+            uri.append("https://");
+        } else {
+            uri.append("http://");
+        }
+        uri.append(host).append(":");
+        if (providesService(Peer.Service.API_SSL)) {
+            uri.append(apiSSLPort);
+        } else {
+            uri.append(apiPort);
+        }
+        return uri;
+    }
+
+    @Override
+    public String toString() {
+        return "Peer{" +
+                "state=" + state +
+                ", announcedAddress='" + announcedAddress + '\'' +
+                ", services=" + services +
+                ", host='" + host + '\'' +
+                ", version='" + version + '\'' +
+                '}';
     }
 }
