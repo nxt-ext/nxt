@@ -406,6 +406,8 @@ public final class Nxt {
                 }
             } catch (Exception e) {
                 Logger.logErrorMessage(e.getMessage(), e);
+                runtimeMode.alert(e.getMessage() + "\n" +
+                        "See additional information in " + dirProvider.getLogFileDir() + System.getProperty("file.separator") + "nxt.log");
                 System.exit(1);
             }
         }
