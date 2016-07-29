@@ -96,6 +96,8 @@ var NRS = (function(NRS, $, undefined) {
 	var isScanning = false;
 
     NRS.init = function() {
+		NRS.loadServerConstants();
+
 		NRS.sendRequest("getState", {
 			"includeCounts": "false"
 		}, function (response) {
@@ -136,7 +138,7 @@ var NRS = (function(NRS, $, undefined) {
 				testnetWarningDiv.text(warningText);
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
-			NRS.loadServerConstants();
+
 			NRS.initializePlugins();
             NRS.printEnvInfo();
 		});
