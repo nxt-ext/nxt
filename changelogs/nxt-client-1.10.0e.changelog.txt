@@ -1,0 +1,62 @@
+This is an experimental release introducing the new light client and roaming
+client features.
+
+The roaming client feature, enabled by default, makes the client immediately
+usable by forwarding API requests that need the full blockchain to a randomly
+chosen peer (remote node), selected to provide the openAPI service. As all html
+and javascript files are still served locally and not from the remote host,
+this is considerably safer than just using a remote node. Outgoing transactions
+are also signed locally, never sending the secret phrase to the remote peer.
+
+This roaming client (API Proxy) mode is used automatically while the blockchain
+is still downloading, with a switch to full client mode once the download is
+complete.
+It can be disabled by setting nxt.enableAPIProxy=false in nxt.properties.
+For openAPI nodes, the API proxy remains disabled, ignoring this setting. For
+light clients, the API proxy is always enabled.
+
+The light client feature, disabled by default, makes the node run in roaming
+mode permanently, without downloading the blockchain at all. It can be enabled
+by setting nxt.isLightClient=true.
+Light clients are not advertised as providing openAPI service even if they do
+have their API publicly accessible.
+
+The remote node to use when in roaming and light client modes is selected
+randomly, but can be changed manually in the UI, or using the new
+setAPIProxyPeer API, or forced to a specific peer using the
+nxt.forceAPIProxyServerURL property.
+
+Remote nodes can be blacklisted from the UI, or using the blacklistAPIProxyPeer
+API. This blacklisting is independent from peer blacklisting. The API proxy
+blacklisting period can be set using the nxt.apiProxyBlacklistingPeriod
+property (default 1800000 milliseconds).
+
+API requests that require sending the secret phrase, shared key, or admin
+password to the server, for features like forging, shuffling, or running a
+funding monitor, are disabled when in roaming or light client mode.
+
+While a remote node cannot steal your secret phrase, and data returned by such
+nodes is escaped to prevent javascript injection attacks, users must be aware
+that the validity of such data cannot be verified. For example, a rogue remote
+node can still return fake asset exchange recent trades or open orders prices,
+or modified voting system poll options and descriptions.
+
+To force using a remote node for testing APIs, the /test-proxy URL can be used
+instead of /test for the API test page, i.e. http://localhost:7876/test-proxy.
+
+A new sendTransaction API has been added, similar to broadcastTransaction but
+without validating the transaction, without re-broadcasting the transaction and
+without adding it locally as unconfirmed transaction. This API is mostly useful
+for light or roaming clients that cannot validate or accept locally unconfirmed
+transactions, but must nevertheless be able to send such to peers.
+
+A new getNextBlockGenerators API has been added, returning the next block
+generators ordered by hit time. The list of currently active forgers is first
+initialized using the block generators with at least 2 blocks generated within
+the previous 10,000 blocks, excluding accounts without a public key. The list
+is updated as new blocks are processed. The results are not 100% correct since
+previously active generators may no longer be running and new generators won't
+be known until they generate a block.
+
+Added a peer info modal. Minor other UI improvements and bugfixes.
+
