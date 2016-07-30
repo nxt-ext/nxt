@@ -278,6 +278,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (commonBlock == null || blockchain.getHeight() - commonBlock.getHeight() >= 720) {
                     return;
                 }
+                if (simulateEndlessDownload) {
+                    isDownloading = true;
+                    return;
+                }
+                if (!isDownloading && lastBlockchainFeederHeight - commonBlock.getHeight() > 10) {
+                    Logger.logMessage("Blockchain download in progress");
+                    isDownloading = true;
+                }
 
                 blockchain.updateLock();
                 try {
@@ -285,19 +293,11 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                         return;
                     }
                     long lastBlockId = blockchain.getLastBlock().getId();
-                    if (simulateEndlessDownload) {
-                        isDownloading = true;
-                        return;
-                    }
                     downloadBlockchain(peer, commonBlock, commonBlock.getHeight());
                     if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
                         return;
                     }
 
-                    if (!isDownloading) {
-                        Logger.logMessage("Blockchain download in progress");
-                        isDownloading = true;
-                    }
                     int confirmations = 0;
                     for (Peer otherPeer : connectedPublicPeers) {
                         if (confirmations >= numberOfForkConfirmations) {
