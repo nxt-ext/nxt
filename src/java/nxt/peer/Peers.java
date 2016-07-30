@@ -131,8 +131,11 @@ public final class Peers {
     static final int MAX_ANNOUNCED_ADDRESS_LENGTH = 100;
     static final boolean hideErrorDetails = Nxt.getBooleanProperty("nxt.hideErrorDetails");
 
-    static final JSONObject myPeerInfo;
+    private static final JSONObject myPeerInfo;
     private static final List<Peer.Service> myServices;
+    private static volatile Peer.BlockchainState currentBlockchainState;
+    private static volatile JSONStreamAware myPeerInfoRequest;
+    private static volatile JSONStreamAware myPeerInfoResponse;
 
     private static final Listeners<Peer,Event> listeners = new Listeners<>();
 
@@ -1219,25 +1222,29 @@ public final class Peers {
         return myServices;
     }
 
-    private static JSONObject getCurrentPeerInfo() {
-        JSONObject result = new JSONObject(myPeerInfo);
+    private static void checkBlockchainState() {
         Peer.BlockchainState state = Constants.isLightClient ? Peer.BlockchainState.LIGHT_CLIENT :
                 (Nxt.getBlockchainProcessor().isDownloading() || Nxt.getBlockchain().getLastBlockTimestamp() < Nxt.getEpochTime() - 600) ? Peer.BlockchainState.DOWNLOADING :
                         (Nxt.getBlockchain().getLastBlock().getBaseTarget() / Constants.INITIAL_BASE_TARGET > 10 && !Constants.isTestnet) ? Peer.BlockchainState.FORK :
                         Peer.BlockchainState.UP_TO_DATE;
-        result.put("blockchainState", state.ordinal());
-        return result;
+        if (state != currentBlockchainState) {
+            JSONObject json = new JSONObject(myPeerInfo);
+            json.put("blockchainState", state.ordinal());
+            myPeerInfoResponse = JSON.prepare(json);
+            json.put("requestType", "getInfo");
+            myPeerInfoRequest = JSON.prepareRequest(json);
+            currentBlockchainState = state;
+        }
     }
 
     public static JSONStreamAware getMyPeerInfoRequest() {
-        JSONObject json = getCurrentPeerInfo();
-        json.put("requestType", "getInfo");
-        return JSON.prepareRequest(json);
+        checkBlockchainState();
+        return myPeerInfoRequest;
     }
 
     public static JSONStreamAware getMyPeerInfoResponse() {
-        JSONObject json = getCurrentPeerInfo();
-        return JSON.prepare(json);
+        checkBlockchainState();
+        return myPeerInfoResponse;
     }
 
     private Peers() {} // never
