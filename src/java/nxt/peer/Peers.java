@@ -204,7 +204,7 @@ public final class Peers {
         }
         shareMyAddress = Nxt.getBooleanProperty("nxt.shareMyAddress") && ! Constants.isOffline;
         enablePeerUPnP = Nxt.getBooleanProperty("nxt.enablePeerUPnP");
-        myHallmark = Nxt.getStringProperty("nxt.myHallmark");
+        myHallmark = Convert.emptyToNull(Nxt.getStringProperty("nxt.myHallmark", "").trim());
         if (Peers.myHallmark != null && Peers.myHallmark.length() > 0) {
             try {
                 Hallmark hallmark = Hallmark.parseHallmark(Peers.myHallmark);
