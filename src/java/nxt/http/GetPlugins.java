@@ -41,7 +41,7 @@ public final class GetPlugins extends APIServlet.APIRequestHandler {
         super(new APITag[] {APITag.INFO});
     }
 
-    private static final Path PLUGINS_HOME = Paths.get("./html/ui/plugins");
+    private static final Path PLUGINS_HOME = Paths.get("./html/www/plugins");
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) {
