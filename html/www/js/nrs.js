@@ -94,6 +94,7 @@ var NRS = (function(NRS, $, undefined) {
 	var stateInterval;
 	var stateIntervalSeconds = 30;
 	var isScanning = false;
+	var cordova;
 
     NRS.init = function() {
 		NRS.loadServerConstants();
