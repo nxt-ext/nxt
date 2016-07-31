@@ -32,4 +32,7 @@ public class CommandLineMode implements RuntimeMode {
 
     @Override
     public void shutdown() {}
+
+    @Override
+    public void alert(String message) {}
 }

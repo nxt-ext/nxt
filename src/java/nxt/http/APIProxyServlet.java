@@ -57,7 +57,6 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         Set<String> requests = new HashSet<>();
         requests.add("getBlockchainStatus");
         requests.add("getState");
-        requests.add("setAPIProxyPeer");
         NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
 
         Set<APITag> tags = new HashSet<>();

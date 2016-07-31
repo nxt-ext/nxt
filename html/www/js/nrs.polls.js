@@ -105,7 +105,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								rows += "<tr>";
 								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
-								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + NRS.escapeRespStr(pollDescription) + "</td>";
 								rows += "<td>" + NRS.getAccountLink(poll, "sender") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
@@ -166,7 +166,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								rows += "<tr>";
 								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
-								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + NRS.escapeRespStr(pollDescription) + "</td>";
 								rows += "<td>" + NRS.getAccountLink(poll, "sender") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight) {
@@ -227,7 +227,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								rows += "<tr>";
 								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
-								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + NRS.escapeRespStr(pollDescription) + "</td>";
 								rows += "<td>" + NRS.getAccountLink(poll, "sender") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight) {
@@ -1175,7 +1175,7 @@ var NRS = (function(NRS, $, undefined) {
 					head += "<tr>";
 					head += "<th data-i18n=\"voter\">Voter</th>";
 					for(var b=0; b<polldata.options.length; b++) {
-						head += "<th>"+String(polldata.options[b].escapeHTML()) + "</th>";
+						head += "<th>"+String(NRS.escapeRespStr(polldata.options[b])) + "</th>";
 					}
 					head += "</tr>";
 					followedPollsVotesCast.find("thead").empty().append(head);
@@ -1248,13 +1248,13 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			for (var i = 0; i < polls.length; i++) {
 				var poll = polls[i];
-				var description = poll.description.escapeHTML();
+				var description = NRS.escapeRespStr(poll.description);
 				if (description.length > 100) {
 					description = description.substring(0, 100) + "...";
 				}
 				var actions = '<a class="view_button btn btn-xs btn-default" href="#" data-view="' + poll.poll + '">' + $.t('view') + '</a>';
 				view.data.push({
-					"title": NRS.getTransactionLink(poll.poll, poll.name),
+					"title": NRS.getTransactionLink(poll.poll, NRS.escapeRespStr(poll.name), true),
 					"description": description,
 					"sender": NRS.getAccountLink(poll, "account"),
 					"timestamp": NRS.formatTimestamp(poll.timestamp),
