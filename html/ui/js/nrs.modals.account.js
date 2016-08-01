@@ -61,6 +61,7 @@ var NRS = (function(NRS, $) {
 		$("#user_info_modal_actions").find("button").data("account", accountButton);
 
 		if (NRS.fetchingModalData) {
+			$('#loading').fadeToggle(500);
 			NRS.sendRequest("getAccount", {
 				"account": NRS.userInfoModal.user
             }, function(response) {
@@ -106,6 +107,7 @@ var NRS = (function(NRS, $) {
         if (!userInfoModal.data('bs.modal') || !userInfoModal.data('bs.modal').isShown) {
             userInfoModal.modal("show");
         }
+		$('#loading').fadeToggle(500);
 	};
 
 	body.on("click", ".switch-account", function() {
