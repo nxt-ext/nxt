@@ -1668,5 +1668,12 @@ var NRS = (function (NRS, $, undefined) {
     NRS.unescapeRespStr = function (val) {
         return String(val).unescapeHTML();
     };
+
+    $(document).keyup(function(e) {
+        if (e.which === 27 && $('#loading').is(':visible') ) {
+            $('#overlay').remove();
+        }
+    });
+
     return NRS;
 }(NRS || {}, jQuery));
