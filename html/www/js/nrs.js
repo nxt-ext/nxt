@@ -675,7 +675,6 @@ NRS.addPagination = function () {
 				}
 				if (isValidParams) {
 					var a = $('<a />');
-					a.addClass('show_transaction_modal_action');
 					a.attr('href', '#');
 					a.attr('data-toggle', 'modal');
 					a.attr('data-target', modalId);

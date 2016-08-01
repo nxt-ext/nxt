@@ -1799,5 +1799,6 @@
   "no_blockchain_download": "blockchain is not downloaded",
   "temporarily_disconnected": "Temporarily Disconnected",
   "next_snapshot": "Next Snapshot",
-  "next_balance_update": "Next Balance Update"
+  "next_balance_update": "Next Balance Update",
+  "error_forging_light_client": "Forging is disabled when running as light client"
 }

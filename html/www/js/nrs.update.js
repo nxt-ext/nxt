@@ -32,7 +32,7 @@ var NRS = (function(NRS, $) {
 	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
-		if (NRS.downloadingBlockchain) {
+		if (NRS.downloadingBlockchain && !(NRS.state && NRS.state.apiProxy)) {
 			$("#nrs_update_explanation").find("span").hide();
 			$("#nrs_update_explanation_blockchain_sync").show();
 			return;
