@@ -1671,7 +1671,7 @@ var NRS = (function (NRS, $, undefined) {
 
     $(document).keyup(function(e) {
         if (e.which === 27 && $('#loading').is(':visible') ) {
-            $('#loading').remove();
+            $('#loading').hide();
         }
     });
 
