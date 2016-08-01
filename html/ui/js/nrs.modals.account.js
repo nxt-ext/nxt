@@ -69,6 +69,7 @@ var NRS = (function(NRS, $) {
 				NRS.fetchingModalData = false;
 			});
 		} else {
+			$('#loading').fadeToggle(500);
 			NRS.processAccountModalData(account);
 		}
 		$("#user_info_modal_transactions").show();
