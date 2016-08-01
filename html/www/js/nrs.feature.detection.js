@@ -52,5 +52,39 @@ var NRS = (function (NRS) {
         return isPromiseSupported;
     };
 
+    NRS.getRemoteNode = function() {
+        var url = "";
+        if (window["cordova"]) {
+            url += "http://107.170.3.62:6876";
+        }
+        return url;
+    };
+
+    NRS.getDownloadLink = function(url, link) {
+        if (window["cordova"]) {
+            var script = "NRS.openMobileBrowser(\"" + url + "\");";
+            if (link) {
+                link.attr("onclick", script);
+                return;
+            }
+            return "<a onclick='" + script +"' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+        } else {
+            if (link) {
+                link.attr("href", url);
+                return;
+            }
+            return "<a href='" + url + "' class='btn btn-xs btn-default'>" + $.t("download") + "</a>";
+        }
+    };
+
+    NRS.openMobileBrowser = function(url) {
+        try {
+            // TODO tested only on Android 6.0
+            cordova.InAppBrowser.open(url, '_system');
+        } catch(e) {
+            NRS.logConsole(e.message);
+        }
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

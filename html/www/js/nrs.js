@@ -94,7 +94,6 @@ var NRS = (function(NRS, $, undefined) {
 	var stateInterval;
 	var stateIntervalSeconds = 30;
 	var isScanning = false;
-	var cordova;
 
     NRS.init = function() {
 		NRS.loadServerConstants();
@@ -891,10 +890,7 @@ NRS.addPagination = function () {
 	};
 
 	NRS.getRequestPath = function (noProxy) {
-		var url = "";
-		if (cordova) {
-			url += "http://107.170.3.62:6876";
-		}
+		var url = NRS.getRemoteNode();
 		if (!NRS.state.apiProxy || noProxy) {
 			return url + "/nxt";
 		} else {
