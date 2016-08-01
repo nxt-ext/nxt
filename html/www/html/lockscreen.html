@@ -60,12 +60,13 @@
                 </div>
 
                 <div id="remem-wrap" class="remem-pass-hide">
-                  <div id="remember_account_container">
-                      <input type="checkbox" name="remember_account" id="remember_account" value="1" /> <span></span><label for="remember_account" data-i18n="remember_account">Remember Account</label>
-                  </div>
-                  <div id="remember_password_container">
-                          <input type="checkbox" name="remember_password" id="remember_password" value="1" /> <span></span><label for="remember_password" data-i18n="remember_passphrase_during_session">Remember Passphrase in Session</label>
-                  </div>
+                    <div id="remember_account_container">
+                        <input type="checkbox" name="remember_account" id="remember_account" value="1" /> <span></span><label for="remember_account" data-i18n="remember_account">Remember Account</label>
+                    </div>
+                    <div id="remember_password_container">
+                        <input type="checkbox" name="remember_password" id="remember_password" value="1"/> <span></span><label
+                            for="remember_password" data-i18n="remember_passphrase_during_session">Remember Passphrase in Session</label>
+                    </div>
                 </div>
 
                 <div id="lockscreen_active_plugins_warning" style="margin-top:7px;display:none;">
@@ -87,7 +88,8 @@
                 </div>
 
                 <div id="registration_link">
-                    <a href="#" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Create Account</a> </div>
+                    <a href="#" onclick="NRS.registerAccount();" data-i18n="no_account_q_create_account">Don't have an account? Click here to create one!</a>
+                </div>
             </div>
 
             <div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
@@ -101,8 +103,8 @@
                     </div>
                 </div>
                 <div class="panel-body">
-                    <button class="btn btn-primary" id="registration_cancel" onclick="NRS.showLoginScreen();return false;" data-i18n="returning_user_q">Returning User?</button>
-                    <button class="btn btn-success" id="registration_cancel" onclick="NRS.registerAccount();return false;" data-i18n="new_q_create_account">Create New Account</button>
+                    <button class="btn btn-primary" onclick="NRS.showLoginScreen();return false;" data-i18n="returning_user_q">Returning User?</button>
+                    <button class="btn btn-success" onclick="NRS.registerAccount();return false;" data-i18n="new_q_create_account">Create New Account</button>
                 </div>
             </div>
 
@@ -189,7 +191,7 @@
                                 <div style="text-align:right">
                                     <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />
                                     &nbsp;&nbsp;
-                                    <button class="btn btn-sm btn-default" id="registration_cancel" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
+                                    <button class="btn btn-sm btn-default" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
                                 </div>
                             </div>
                         </div>
