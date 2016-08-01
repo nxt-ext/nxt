@@ -1751,7 +1751,7 @@ body > .header .logo .icon {
 .callout.callout-danger {
   background-color: #fcf2f2;
   border-color: #dFb5b4;
-  word-break: break-all;
+  word-break: break-word;
 }
 .callout.callout-warning {
   background-color: #fefbed;
@@ -1944,7 +1944,8 @@ body > .header .logo .icon {
   -moz-border-radius: 4px;
   border-radius: 4px;
   margin: 10px auto;
-  width: 320px;
+  width: 80%;
+  max-width: 320px;
   display: inline-block;
 }
 .lockscreen-item:before,
@@ -2652,15 +2653,15 @@ tr.tentative-crossed td , tr.tentative-crossed td a {
 	display: none;
 }
 
-.data-container.data-loading .data-loading-container {
+#dashboard_page .data-container.data-loading .data-loading-container {
 	display: block;
 }
 
-.data-container.data-empty .data-empty-container {
+#dashboard_page .data-container.data-empty .data-empty-container {
 	display: block;
 }
 
-.data-container.data-empty table, .data-container.data-loading table {
+#dashboard_page .data-container.data-empty table, .data-container.data-loading table {
 	display: none;
 }
 
@@ -2952,9 +2953,26 @@ label .popover-content {
 #account_id_dropdown ul.dropdown-menu>li>a {
 	padding:3px 8px;
 }
+
+.dropdown-menu > li > a.zeroclipboard-is-hover {
+  background-color: #3c8dbc;
+  color: #f9f9f9;
+}
+#remem-wrap { 
+  width: 210px;
+  margin: 0 auto;
+  text-align: left;
+}
+#remem-wrap.remem-pass-hide { text-align: center; }
+#remem-wrap.remem-pass-hide #remember_account_container  { width: auto; }
+#remem-wrap.remem-pass-hide #remember_password_container { display: none; }
+
+#remem-wrap input,
+#remem-wrap label { vertical-align: middle; position: relative; margin: 0; } 
+
 #remember_password_container,#remember_account_container {
   color:#fff;
-  text-align:center;
+  width: 260px; 
 }
 #remember_password_container label,#remember_account_container label {
 	font-weight:normal;
@@ -3104,9 +3122,23 @@ hr {
 }
 
 #testnet_login {
-  display:block;
-  text-align:left;
+  display:none;
+  text-align:center;
   margin:auto auto 0px auto;
+  width: 100%;
+  max-width: 400px; 
+}
+
+#testnet_warning {
+  display:none;
+  position:fixed;
+  bottom:0;
+  left:0;
+  padding:5px;
+  background:red;
+  color:white;
+  text-align: center;
+  cursor: pointer;
 }
 
 #login_error  {
@@ -3375,7 +3407,7 @@ body > .header .navbar {
   height: 50px; 
 }
 
-@media screen and (max-width: 965px) {
+@media (max-width: 965px) {
 
   /*Shorten width of send containers to wrap on 2 lines*/
   .navbar-right > .nav.sends > .dropdown > a { 
@@ -3400,7 +3432,7 @@ body > .header .navbar {
 }/* @media min-width: 955px */
 
 
-@media screen and (max-width: 800px) {
+@media (max-width: 800px) {
 
   .sidebar,
   body.fixed .wrapper { 
@@ -3442,7 +3474,7 @@ body > .header .navbar {
 }/* @media min-width: 800px */
 
 
-@media screen and (max-width: 767px) {
+@media (max-width: 767px) {
   .navbar .navbar-nav > li {
     position: static; 
   }
@@ -3472,7 +3504,7 @@ body > .header .navbar {
 }/* @media min-width: 767px */
 
 
-@media screen and (max-width: 550px) {
+@media (max-width: 550px) {
 
   .sidebar,
   body.fixed .wrapper { 
@@ -3503,9 +3535,11 @@ body > .header .navbar {
 
     .navbar .navbar-right > .nav.sends + .nav {
       margin: 0; 
+      display: -webkit-flex;
       display: flex;
       float: none;
       width: 100%;
+      -webkit-justify-content: space-between;
       justify-content: space-between;
     }
     .navbar .navbar-right > .nav.sends + .nav > li > a {
@@ -3514,7 +3548,9 @@ body > .header .navbar {
 
     .navbar .navbar-right > .nav.sends { 
       height: 31px; 
+      display: -webkit-flex;
       display: flex;
+      -webkit-justify-content: space-around;
       justify-content: space-around;
       margin: 0;
     }
@@ -3536,3 +3572,261 @@ body > .header .navbar {
 .numeric {
   text-align: right;
 }
+
+@media (max-width: 600px) {
+
+  /* Dashboard BOXES  @media 600px -- duckx */
+   #dashboard_page .small-box { 
+     height: 110px;
+   }
+   #dashboard_page .small-box > .inner {
+     padding: 5px;
+   }
+   #dashboard_page .small-box h3 {
+     font-size: 23px; 
+     white-space: normal;
+   }
+   #dashboard_page .small-box p {
+     display: inline !important; 
+   }
+   #dashboard_page .small-box > .small-box-footer { 
+     position: absolute;
+     width: 100%;
+     bottom: 0;
+   }
+
+
+  /* Dashboard Tables @media 600px -- duckx */
+   #dashboard_page .content,
+   #dashboard_page .row,
+   #dashboard_page .panel-body { margin:0; padding: 0 }
+
+   #dashboard_page .data-container th, 
+   #transactions_page .data-container th { 
+     display:none;
+   }
+   #dashboard_page .data-container tr,
+   #transactions_page .data-container tr { 
+     display: flex;
+     flex-wrap: wrap; 
+     justify-content: center; 
+   }
+     #dashboard_page .table-striped>tbody>tr:nth-of-type(odd),
+     #transactions_page .table-striped>tbody>tr:nth-of-type(odd) { background: #eee; } 
+
+   #dashboard_page .data-container td,
+   #transactions_page .data-container td { 
+     display:block;
+     width: 33% !important;
+     box-sizing: border-box;
+     text-align: center;
+     font-size: 12px;
+     padding: 15px 3px !important;
+     border: 0 !important;
+     background: none !important;
+   }
+     #dashboard_page .data-container td:nth-child(5):before,
+     #transactions_page .data-container td:nth-child(5):before { 
+       font-weight: bold;
+       content: "Amount: ";
+     }
+     #dashboard_page .data-container td:nth-child(6):before,
+     #transactions_page .data-container td:nth-child(6):before { 
+       font-weight: bold;
+       content: "Fee: ";
+     }
+     #dashboard_page .data-container td:nth-child(9):before,
+     #transactions_page .data-container td:nth-child(9):before { 
+       font-weight: bold;
+       content: "Conf: ";
+     }
+
+     #dashboard_page .data-container td:nth-child(1),
+     #transactions_page .data-container td:nth-child(1) { /* date */
+       order: 1;
+       width: 25% !important;
+       padding: 15px 0 0 15px !important;
+     } 
+     #dashboard_page .data-container td:nth-child(2),
+     #transactions_page .data-container td:nth-child(2) { /* has message */
+       width: 0% !important;
+       position: absolute;
+     }
+       #dashboard_page .data-container td:nth-child(2) .fa-envelope-o,
+       #transactions_page .data-container td:nth-child(2) .fa-envelope-o { 
+         top: 0;
+         left: 0; 
+         position: absolute;
+         border-bottom: 35px solid transparent !important;
+         border-left: 35px solid #337ab7 !important;
+         height: 0;
+       }
+       #dashboard_page .data-container td:nth-child(2) .fa-envelope-o:before,
+       #transactions_page .data-container td:nth-child(2) .fa-envelope-o:before { 
+         margin: 6px 0 0 -46px;
+         transform: rotate(-45deg);
+         display: block;
+         color: #fff;
+       }
+     #dashboard_page .data-container td:nth-child(3),
+     #transactions_page .data-container td:nth-child(3) { /* trans type */ 
+       order: 3;
+       width: 22% !important;
+       background: #337ab7 !important;
+       color: #fff;
+       padding: 5px 9px !important;
+     }
+     #dashboard_page .data-container td:nth-child(4),
+     #transactions_page .data-container td:nth-child(4) { /* plus or minus */ 
+       order: 4;
+       width: 10% !important;
+     }
+     #dashboard_page .data-container td:nth-child(5),
+     #transactions_page .data-container td:nth-child(5) { /* amount */ 
+       order: 5;
+       width: 35% !important;
+     }
+     #dashboard_page .data-container td:nth-child(6),
+     #transactions_page .data-container td:nth-child(6) { /* fee */ 
+       order: 6;
+       width: 25% !important;
+     }
+     #dashboard_page .data-container td:nth-child(7),
+     #transactions_page .data-container td:nth-child(7) { /* account */ 
+       order: 2;
+       width: 53% !important;
+     }
+     #dashboard_page .data-container td:nth-child(8),
+     #transactions_page .data-container td:nth-child(8) { /* phasing */ 
+       order: 9;
+       padding: 0 !important;
+     }
+       #dashboard_page .data-container td:nth-child(8) .show_popover,
+       #transactions_page .data-container td:nth-child(8) .show_popover { 
+         margin: 0 0 15px;
+       }
+     #dashboard_page .data-container td:nth-child(9),
+     #transactions_page .data-container td:nth-child(9) {  /* confirms */
+       order: 7; 
+       width: 30% !important;
+     }
+
+
+  /* My Transaction Page @media 600px -- duckx */
+  #transactions_type_navi {
+    clear: both;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; 
+    text-align: center; 
+  }
+  #transactions_type_navi li:nth-child(9) { 
+    flex-basis: 100%;
+    text-align: center;
+  }
+    #transactions_type_navi li a { padding: 9px; }
+
+  #transactions_sub_type_navi {
+    display: flex; 
+    flex-wrap: wrap;
+    justify-content: flex-start; 
+    padding: 9px; 
+  }
+    #transactions_sub_type_navi li { flex-basis: 49%; font-size: 12px; }
+    #transactions_sub_type_navi li>a { padding: 9px 5px; }
+
+}/* @media min-width: 600px */
+
+
+
+/*
+ * @duckx 20150812 - login screen  */
+
+#logo-nxt-img { 
+  margin: 0 auto 40px auto;
+  display: block;
+}
+
+#welcome_panel {
+  margin: 0 9px;
+}
+
+#welcome_panel .panel-body {
+  text-align: center; 
+}
+
+#welcome_panel .panel-body .btn {
+  margin: 0 5px 9px 5px;
+}
+
+
+.lockscreen-credentials #login_account {
+    min-width: 256px;
+    max-width: 320px;
+    width: 100%;
+}
+
+.lockscreen-credentials .dropdown-menu a {
+    height: 24px;
+    padding: 3px 30px 0px 15px;
+}
+
+.lockscreen-credentials .dropdown-menu button.close {
+  padding: 0 5px 0 0;
+  margin: -22px 0 0 0;
+}
+
+#custom_passphrase_link {
+  margin-top: 10px;
+  margin-bottom: 0;
+  display:none; 
+  text-align: center;
+}
+
+#testnet_warning.testnet-collapse {
+  height: 12px;
+  padding: 0;
+  font-size: 9px;
+  width: 100%;
+  overflow: hidden;
+  cursor: none;
+}
+
+@media (max-width: 700px) {
+  #testnet_login,
+  #testnet_warning {
+    font-size: 11px; 
+  }
+}/* @media min-width: 700px */
+
+
+@media (max-height: 680px) {
+  body.lockscreen #testnet_warning {
+    top: 0;
+    bottom: initial;
+  }
+
+  #logo-nxt-img { 
+    width: 221px;
+    margin-bottom: 9px;
+  }
+
+  #account_phrase_generator_panel {
+    margin: -189px 0 0 0;
+  }
+}/* @media min-height: 680px */
+
+
+@media (max-height: 400px) { /* When mobile keyboard is displayed. Hide logo. */
+  html.lockscreen body { margin-top: 25px }
+  #logo-nxt-img { display: none; }
+  #registration_link { margin-top: 15px }
+}/* @media min-height: 400px */
+
+
+/*
+ * dux - Global Styles
+ * * * * * * * * * * * */
+
+/* Text Counter Below Textarea */
+.txt-count { float: right; margin: 3px 9px 0 0; font-size: 12px; }

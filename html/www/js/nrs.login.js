@@ -159,17 +159,15 @@ var NRS = (function(NRS, $, undefined) {
 					.append($("<li></li>")
 						.append($("<a></a>")
 							.attr("href","#")
-							.attr("style","display: inline-block;width: 360px;")
 							.attr("onClick","NRS.login(false,'"+account+"')")
 							.text(account))
 						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
-							.attr("onClick","NRS.removeAccount('"+account+"')")
-							.attr("style","margin-right:5px"))
+							.attr("onClick","NRS.removeAccount('"+account+"')"))
 					);
 				}
 			});
-			var otherHTML = "<li><a href='#' style='display: inline-block;width: 380px;' ";
-			otherHTML += "data-i18n='other'>Other</a></li>";
+			var otherHTML = "<li><a href='#'";
+			otherHTML += "data-i18n='other'><em>Add Another Account</em></a></li>";
 			var $otherHTML = $(otherHTML);
 			$otherHTML.click(function() {
 				$('#login_account_container').hide();
@@ -221,17 +219,16 @@ var NRS = (function(NRS, $, undefined) {
 	$("#loginButtons").on('click',function(e) {
 		e.preventDefault();
 		if ($(this).data( "login-type" ) == "password") {
-            NRS.listAccounts();
+      NRS.listAccounts();
 			$('#login_password').parent().hide();
-			$('#remember_password_container').hide();
+			$('#remem-wrap').addClass('remem-pass-hide');
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>');
 			$(this).data( "login-type","account");
-        }
-        else {
-            $('#login_account_container').hide();
+    } else {
+      $('#login_account_container').hide();
 			$('#login_account_container_other').hide();
 			$('#login_password').parent().show();
-			$('#remember_password_container').show();
+			$('#remem-wrap').removeClass('remem-pass-hide');
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="passwordLogin" autocomplete="off" /><i class="fa fa-key"></i>');
 			$(this).data( "login-type","password");
         }
