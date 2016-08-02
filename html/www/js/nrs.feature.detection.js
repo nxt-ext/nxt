@@ -21,6 +21,8 @@ var NRS = (function (NRS) {
 
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
+    var isMobileApp = window["cordova"] !== undefined;
+    var remoteNodeUrl;
 
     NRS.isIndexedDBSupported = function() {
         return window.indexedDB !== undefined;
@@ -53,15 +55,19 @@ var NRS = (function (NRS) {
     };
 
     NRS.getRemoteNode = function() {
-        var url = "";
-        if (window["cordova"]) {
-            url += "http://107.170.3.62:6876";
+        if (remoteNodeUrl) {
+            return remoteNodeUrl;
         }
+        var url = "";
+        if (isMobileApp) {
+            url += NRS.getRandomNodeUrl(NRS.mobileSettings.isTestNet, NRS.mobileSettings.isSSL);
+        }
+        remoteNodeUrl = url;
         return url;
     };
 
     NRS.getDownloadLink = function(url, link) {
-        if (window["cordova"]) {
+        if (isMobileApp) {
             var script = "NRS.openMobileBrowser(\"" + url + "\");";
             if (link) {
                 link.attr("onclick", script);
@@ -79,7 +85,7 @@ var NRS = (function (NRS) {
 
     NRS.openMobileBrowser = function(url) {
         try {
-            // TODO tested only on Android 6.0
+            // Works on Android 6.0 (does not work in 5.1)
             cordova.InAppBrowser.open(url, '_system');
         } catch(e) {
             NRS.logConsole(e.message);

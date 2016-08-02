@@ -57,6 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.peerConnect = false;
 
 	NRS.settings = {};
+	NRS.mobileSettings = { isTestNet: false, isSSL: false };
 	NRS.contacts = {};
 
 	NRS.isTestNet = false;
@@ -95,7 +96,18 @@ var NRS = (function(NRS, $, undefined) {
 	var stateIntervalSeconds = 30;
 	var isScanning = false;
 
+	NRS.loadMobileSettings = function () {
+		if (!window["cordova"] || !window["localstorage"]) {
+			return;
+		}
+		var mobileSettings = NRS.getJSONItem("mobile");
+		if (mobileSettings) {
+			NRS.mobileSettings = mobileSettings;
+		}
+	};
+
     NRS.init = function() {
+    	NRS.loadMobileSettings();
 		NRS.loadServerConstants();
 
 		NRS.sendRequest("getState", {
@@ -1509,7 +1521,7 @@ NRS.addPagination = function () {
         NRS.logProperty("navigator.userLanguage");
         NRS.logProperty("navigator.cookieEnabled");
         NRS.logProperty("navigator.onLine");
-		if (device) {
+		if (window["cordova"]) {
 			NRS.logProperty("device.platform");
 		}
         NRS.logProperty("NRS.isTestNet");
