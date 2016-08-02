@@ -129,7 +129,7 @@ var NRS = (function(NRS, $) {
         } else {
             $.growl($.t("remote_peer_selected_by_server"));
         }
-        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
+        NRS.updateDashboardMessage();
     };
 
     NRS.forms.blacklistAPIProxyPeer = function ($modal) {
@@ -145,7 +145,7 @@ var NRS = (function(NRS, $) {
             NRS.state.apiProxyPeer = null;
             $.growl($.t("remote_peer_blacklisted"));
         }
-        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
+        NRS.updateDashboardMessage();
     };
 
     return NRS;

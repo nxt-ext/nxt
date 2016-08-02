@@ -355,12 +355,12 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.incoming.updateDashboardBlocks(NRS.lastProxyBlockHeight - prevHeight);
 							NRS.updateDashboardLastBlock(proxyBlocksResponse.blocks[0]);
 							NRS.handleBlockchainStatus(response, callback);
-							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
+                            NRS.updateDashboardMessage();
 						}
 					}, false);
 				} else {
 					NRS.handleBlockchainStatus(response, callback);
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage());
+                    NRS.updateDashboardMessage();
 				}
 				if (!NRS.isLocalHost) {
 					$(".remote_warning").show();
@@ -924,34 +924,7 @@ NRS.addPagination = function () {
 			if (response.errorCode) {
 				$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
 
-				if (NRS.accountInfo.errorCode == 5) {
-					if (NRS.downloadingBlockchain) {
-						if (NRS.newlyCreatedAccount) {
-                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-                                "account_id": NRS.escapeRespStr(NRS.accountRS),
-                                "public_key": NRS.escapeRespStr(NRS.publicKey)
-                            }) + "<br/><br/>" + NRS.blockchainDownloadingMessage() +
-                            "<br/><br/>" + NRS.getFundAccountLink()).show();
-						} else {
-							$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
-						}
-					} else if (NRS.state && NRS.state.isScanning) {
-						$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
-					} else {
-                        if (NRS.publicKey == "") {
-                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk_v2", {
-                                "account_id": NRS.escapeRespStr(NRS.accountRS)
-                            })).show();
-                        } else {
-                            $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-                                "account_id": NRS.escapeRespStr(NRS.accountRS),
-                                "public_key": NRS.escapeRespStr(NRS.publicKey)
-                            }) + "<br/><br/>" + NRS.getFundAccountLink()).show();
-                        }
-					}
-				} else {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.escapeRespStr(NRS.accountInfo.errorDescription) : $.t("error_unknown")).show();
-				}
+                NRS.updateDashboardMessage();
 			} else {
 				if (NRS.accountRS && NRS.accountInfo.accountRS != NRS.accountRS) {
 					$.growl("Generated Reed Solomon address different from the one in the blockchain!", {
@@ -960,18 +933,7 @@ NRS.addPagination = function () {
 					NRS.accountRS = NRS.accountInfo.accountRS;
 				}
 
-				if (NRS.downloadingBlockchain) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
-				} else if (NRS.state && NRS.state.isScanning) {
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
-				} else if (!NRS.accountInfo.publicKey) {
-                    var warning = NRS.publicKey != 'undefined' ? $.t("public_key_not_announced_warning", { "public_key": NRS.publicKey }) : $.t("no_public_key_warning");
-					$("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(warning + " " + $.t("public_key_actions")).show();
-				} else if (NRS.state.isLightClient) {
-					$("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
-				} else {
-					$("#dashboard_message").hide();
-				}
+                NRS.updateDashboardMessage();
 
 				// only show if happened within last week and not during account switch
 				var showAssetDifference = !isAccountSwitch &&
@@ -1168,6 +1130,52 @@ NRS.addPagination = function () {
 			}
 		});
 	};
+
+    NRS.updateDashboardMessage = function() {
+        if (NRS.accountInfo.errorCode) {
+            if (NRS.accountInfo.errorCode == 5) {
+                if (NRS.downloadingBlockchain) {
+                    if (NRS.newlyCreatedAccount) {
+                        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+                                "account_id": NRS.escapeRespStr(NRS.accountRS),
+                                "public_key": NRS.escapeRespStr(NRS.publicKey)
+                            }) + "<br/><br/>" + NRS.blockchainDownloadingMessage() +
+                            "<br/><br/>" + NRS.getFundAccountLink()).show();
+                    } else {
+                        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
+                    }
+                } else if (NRS.state && NRS.state.isScanning) {
+                    $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
+                } else {
+                    if (NRS.publicKey == "") {
+                        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk_v2", {
+                            "account_id": NRS.escapeRespStr(NRS.accountRS)
+                        })).show();
+                    } else {
+                        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
+                                "account_id": NRS.escapeRespStr(NRS.accountRS),
+                                "public_key": NRS.escapeRespStr(NRS.publicKey)
+                            }) + "<br/><br/>" + NRS.getFundAccountLink()).show();
+                    }
+                }
+            } else {
+                $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.escapeRespStr(NRS.accountInfo.errorDescription) : $.t("error_unknown")).show();
+            }
+        } else {
+            if (NRS.downloadingBlockchain) {
+                $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
+            } else if (NRS.state && NRS.state.isScanning) {
+                $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
+            } else if (!NRS.accountInfo.publicKey) {
+                var warning = NRS.publicKey != 'undefined' ? $.t("public_key_not_announced_warning", { "public_key": NRS.publicKey }) : $.t("no_public_key_warning");
+                $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(warning + " " + $.t("public_key_actions")).show();
+            } else if (NRS.state.isLightClient) {
+                $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
+            } else {
+                $("#dashboard_message").hide();
+            }
+        }
+    };
 
 	NRS.updateAccountLeasingStatus = function() {
 		var accountLeasingLabel = "";
