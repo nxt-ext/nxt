@@ -26,12 +26,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 final class BlockchainImpl implements Blockchain {
@@ -332,6 +327,15 @@ final class BlockchainImpl implements Blockchain {
             return block;
         }
         return BlockDb.findBlockAtHeight(height);
+    }
+
+    @Override
+    public BlockImpl getECBlock(int timestamp) {
+        Block block = getLastBlock(timestamp);
+        if (block == null) {
+            return getBlockAtHeight(0);
+        }
+        return BlockDb.findBlockAtHeight(Math.max(block.getHeight() - 720, 0));
     }
 
     @Override

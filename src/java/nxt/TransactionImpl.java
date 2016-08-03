@@ -27,11 +27,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 final class TransactionImpl implements Transaction {
 
@@ -84,7 +80,7 @@ final class TransactionImpl implements Transaction {
                 timestamp = Nxt.getEpochTime();
             }
             if (!ecBlockSet) {
-                Block ecBlock = EconomicClustering.getECBlock(timestamp);
+                Block ecBlock = BlockchainImpl.getInstance().getECBlock(timestamp);
                 this.ecBlockHeight = ecBlock.getHeight();
                 this.ecBlockId = ecBlock.getId();
             }
