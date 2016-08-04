@@ -1013,10 +1013,22 @@ final class TransactionImpl implements Transaction {
         }
 
         if (!validatingAtFinish) {
-            long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
+            int blockchainHeight = Nxt.getBlockchain().getHeight();
+            long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
             if (feeNQT < minimumFeeNQT) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
-                        ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+                        ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, blockchainHeight));
+            }
+            if (blockchainHeight > Constants.FXT_BLOCK && ecBlockId == 0) {
+                if (blockchainHeight < ecBlockHeight) {
+                    throw new NxtException.NotCurrentlyValidException("ecBlockHeight " + ecBlockHeight
+                            + " exceeds blockchain height " + blockchainHeight);
+                }
+                if (BlockDb.findBlockIdAtHeight(ecBlockHeight) != ecBlockId) {
+                    throw new NxtException.NotCurrentlyValidException("ecBlockHeight " + ecBlockHeight
+                            + " does not match ecBlockId " + Long.toUnsignedString(ecBlockId)
+                            + ", transaction was generated on a fork");
+                }
             }
         }
         AccountRestrictions.checkTransaction(this, validatingAtFinish);

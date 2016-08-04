@@ -1483,13 +1483,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
                             + " at height " + previousLastBlock.getHeight(), transaction);
                 }
-                if (!verifyFork(transaction)) {
-                    Logger.logDebugMessage("Block " + block.getStringId() + " height " + (previousLastBlock.getHeight() + 1)
-                            + " contains transaction that was generated on a fork: "
-                            + transaction.getStringId() + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId "
-                            + Long.toUnsignedString(transaction.getECBlockId()));
-                    throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
-                }
                 if (transaction.getId() == 0L) {
                     throw new TransactionNotAcceptedException("Invalid transaction id 0", transaction);
                 }
@@ -1524,20 +1517,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         if (hasPrunedTransactions ? payloadLength > block.getPayloadLength() : payloadLength != block.getPayloadLength()) {
             throw new BlockNotAcceptedException("Transaction payload length " + payloadLength + " does not match block payload length "
                     + block.getPayloadLength(), block);
-        }
-    }
-
-    private boolean verifyFork(Transaction transaction) {
-        if (blockchain.getHeight() < Constants.FXT_BLOCK || transaction.getECBlockId() == 0) {
-            return true;
-        }
-        if (blockchain.getHeight() < transaction.getECBlockHeight()) {
-            return false;
-        }
-        try {
-            return BlockDb.findBlockIdAtHeight(transaction.getECBlockHeight()) == transaction.getECBlockId();
-        } catch (RuntimeException e) {
-            return false;
         }
     }
 
@@ -1781,9 +1760,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     continue;
                 }
                 if (unconfirmedTransaction.getTransaction().attachmentIsDuplicate(duplicates, true)) {
-                    continue;
-                }
-                if (!verifyFork(unconfirmedTransaction)) {
                     continue;
                 }
                 sortedTransactions.add(unconfirmedTransaction);
