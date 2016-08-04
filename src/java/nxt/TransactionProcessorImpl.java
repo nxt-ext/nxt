@@ -627,11 +627,6 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 if (getUnconfirmedTransaction(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     continue;
                 }
-                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK && transaction.getECBlockId() != 0) {
-                    if (transaction.getECBlockHeight() > Nxt.getBlockchain().getHeight() || !BlockDb.hasBlock(transaction.getECBlockId(), transaction.getECBlockHeight())) {
-                        continue;
-                    }
-                }
                 transaction.validate();
                 UnconfirmedTransaction unconfirmedTransaction = new UnconfirmedTransaction(transaction, arrivalTimestamp);
                 processTransaction(unconfirmedTransaction);
@@ -684,6 +679,15 @@ final class TransactionProcessorImpl implements TransactionProcessor {
 
                 if (getUnconfirmedTransaction(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     throw new NxtException.ExistingTransactionException("Transaction already processed");
+                }
+
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK && transaction.getECBlockId() != 0) {
+                    if (transaction.getECBlockHeight() > Nxt.getBlockchain().getHeight()) {
+                        throw new NxtException.NotCurrentlyValidException("Transaction ecBlockHeight " + transaction.getECBlockHeight()
+                                + " exceeds blockchain height " + Nxt.getBlockchain().getHeight());
+                    } else if (!BlockDb.hasBlock(transaction.getECBlockId(), transaction.getECBlockHeight())) {
+                        throw new NxtException.NotCurrentlyValidException("Invalid transaction ecBlockId " + Long.toUnsignedString(transaction.getECBlockId()));
+                    }
                 }
 
                 if (! transaction.verifySignature()) {
