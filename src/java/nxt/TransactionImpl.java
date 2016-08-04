@@ -1019,7 +1019,7 @@ final class TransactionImpl implements Transaction {
                 throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
                         ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, blockchainHeight));
             }
-            if (blockchainHeight > Constants.FXT_BLOCK && ecBlockId == 0) {
+            if (blockchainHeight > Constants.FXT_BLOCK && ecBlockId != 0) {
                 if (blockchainHeight < ecBlockHeight) {
                     throw new NxtException.NotCurrentlyValidException("ecBlockHeight " + ecBlockHeight
                             + " exceeds blockchain height " + blockchainHeight);
