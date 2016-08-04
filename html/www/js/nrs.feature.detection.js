@@ -37,6 +37,10 @@ var NRS = (function (NRS) {
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
     };
 
+    NRS.isMobileSettingsModalAvailable = function() {
+        return isMobileApp;
+    };
+
     NRS.isPollGetState = function() {
         // When using JavaFX do not poll the server unless it's a working as a proxy
         return !isDesktopApplication || NRS.state && NRS.state.apiProxy;

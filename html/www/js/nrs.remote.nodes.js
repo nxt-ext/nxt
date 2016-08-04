@@ -26,9 +26,9 @@ var NRS = (function(NRS, $) {
     NRS.getRandomNodeUrl = function(isTestNet, isSSL) {
     	var nodes;
     	if (isTestNet && isSSL) {
-    		nodes = testnetApiNodes.peers;
+    		nodes = testnetApiSSLNodes.peers;
 		} else if (isTestNet) {
-			nodes = testnetApiSSLNodes.peers;
+			nodes = testnetApiNodes.peers;
 		} else if (isSSL) {
 			nodes = mainnetApiSSLNodes.peers;
 		} else {

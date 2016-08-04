@@ -97,10 +97,10 @@ var NRS = (function(NRS, $, undefined) {
 	var isScanning = false;
 
 	NRS.loadMobileSettings = function () {
-		if (!window["cordova"] || !window["localstorage"]) {
+		if (!window["cordova"] || !window["localStorage"]) {
 			return;
 		}
-		var mobileSettings = NRS.getJSONItem("mobile");
+		var mobileSettings = NRS.getJSONItem("mobile_settings");
 		if (mobileSettings) {
 			NRS.mobileSettings = mobileSettings;
 		}

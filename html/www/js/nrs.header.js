@@ -39,6 +39,9 @@ var NRS = (function(NRS, $) {
             $("#api_console_li").hide();
             $("#database_shell_li").hide();
         }
+        if (!NRS.isMobileSettingsModalAvailable()) {
+            $("#mobile_settings_li").remove();
+        }
     });
 
     $("#refreshSearchIndex").on("click", function() {

@@ -1800,5 +1800,9 @@
   "temporarily_disconnected": "Temporarily Disconnected",
   "next_snapshot": "Next Snapshot",
   "next_balance_update": "Next Balance Update",
-  "error_forging_light_client": "Forging is disabled when running as light client"
+  "error_forging_light_client": "Forging is disabled when running as light client",
+  "remote_node_url": "Remote Node URL __url__",
+  "connect_to_testnet": "Connect to Testnet",
+  "encrypt_communication": "Encrypt Communication",
+  "mobile_settings": "Mobile Settings"
 }
