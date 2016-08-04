@@ -1528,13 +1528,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private boolean verifyFork(Transaction transaction) {
-        if (blockchain.getHeight() < Constants.FXT_BLOCK) {
+        if (blockchain.getHeight() < Constants.FXT_BLOCK || transaction.getECBlockId() == 0) {
             return true;
         }
-        if (transaction.getReferencedTransactionFullHash() != null) {
-            return true;
+        if (blockchain.getHeight() < transaction.getECBlockHeight()) {
+            return false;
         }
-        return transaction.getECBlockId() == 0 || blockchain.hasBlock(transaction.getECBlockId());
+        try {
+            return BlockDb.findBlockIdAtHeight(transaction.getECBlockHeight()) == transaction.getECBlockId();
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     private void accept(BlockImpl block, List<TransactionImpl> validPhasedTransactions, List<TransactionImpl> invalidPhasedTransactions,

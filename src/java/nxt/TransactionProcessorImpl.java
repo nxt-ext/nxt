@@ -627,6 +627,11 @@ final class TransactionProcessorImpl implements TransactionProcessor {
                 if (getUnconfirmedTransaction(transaction.getDbKey()) != null || TransactionDb.hasTransaction(transaction.getId())) {
                     continue;
                 }
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK && transaction.getECBlockId() != 0) {
+                    if (transaction.getECBlockHeight() > Nxt.getBlockchain().getHeight() || !BlockDb.hasBlock(transaction.getECBlockId(), transaction.getECBlockHeight())) {
+                        continue;
+                    }
+                }
                 transaction.validate();
                 UnconfirmedTransaction unconfirmedTransaction = new UnconfirmedTransaction(transaction, arrivalTimestamp);
                 processTransaction(unconfirmedTransaction);
