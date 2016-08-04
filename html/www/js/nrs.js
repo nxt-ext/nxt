@@ -1134,7 +1134,7 @@ NRS.addPagination = function () {
     NRS.updateDashboardMessage = function() {
         if (NRS.accountInfo.errorCode) {
             if (NRS.accountInfo.errorCode == 5) {
-                if (NRS.downloadingBlockchain) {
+                if (NRS.downloadingBlockchain && !(NRS.state && NRS.state.apiProxy) && !NRS.state.isLightClient) {
                     if (NRS.newlyCreatedAccount) {
                         $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
                                 "account_id": NRS.escapeRespStr(NRS.accountRS),
@@ -1147,16 +1147,25 @@ NRS.addPagination = function () {
                 } else if (NRS.state && NRS.state.isScanning) {
                     $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html($.t("status_blockchain_rescanning")).show();
                 } else {
+                    var message;
                     if (NRS.publicKey == "") {
-                        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account_no_pk_v2", {
+                        message = $.t("status_new_account_no_pk_v2", {
                             "account_id": NRS.escapeRespStr(NRS.accountRS)
-                        })).show();
+                        });
+                        if (NRS.downloadingBlockchain) {
+                            message += "<br/><br/>" + NRS.blockchainDownloadingMessage();
+                        }
                     } else {
-                        $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
-                                "account_id": NRS.escapeRespStr(NRS.accountRS),
-                                "public_key": NRS.escapeRespStr(NRS.publicKey)
-                            }) + "<br/><br/>" + NRS.getFundAccountLink()).show();
+                        message = $.t("status_new_account", {
+                            "account_id": NRS.escapeRespStr(NRS.accountRS),
+                            "public_key": NRS.escapeRespStr(NRS.publicKey)
+                        });
+                        if (NRS.downloadingBlockchain) {
+                            message += "<br/><br/>" + NRS.blockchainDownloadingMessage();
+                        }
+                        message += "<br/><br/>" + NRS.getFundAccountLink();
                     }
+                    $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(message).show();
                 }
             } else {
                 $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.escapeRespStr(NRS.accountInfo.errorDescription) : $.t("error_unknown")).show();

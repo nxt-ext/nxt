@@ -704,9 +704,6 @@ var NRS = (function(NRS, $) {
 				}
 			}
 
-			if (NRS.accountInfo && !NRS.accountInfo.publicKey) {
-				$("#dashboard_message").hide();
-			}
 		} else if (response.errorCode) {
 			$form.find(".error_message").html(NRS.escapeRespStr(response.errorDescription)).show();
 
