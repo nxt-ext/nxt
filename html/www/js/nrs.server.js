@@ -1502,10 +1502,11 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         }).fail(function (xhr, textStatus, error) {
+            NRS.logConsole("request failed, status: " + textStatus + ", error: " + error);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }
-
+            NRS.resetRemoteNode();
             if (error == "timeout") {
                 error = $.t("error_request_timeout");
             }

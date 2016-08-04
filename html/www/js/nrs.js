@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.peerConnect = false;
 
 	NRS.settings = {};
-	NRS.mobileSettings = { isTestNet: false, isSSL: false };
+	NRS.mobileSettings = { is_testnet: false, is_ssl: false };
 	NRS.contacts = {};
 
 	NRS.isTestNet = false;

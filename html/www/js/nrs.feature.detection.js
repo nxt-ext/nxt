@@ -60,10 +60,15 @@ var NRS = (function (NRS) {
         }
         var url = "";
         if (isMobileApp) {
-            url += NRS.getRandomNodeUrl(NRS.mobileSettings.isTestNet, NRS.mobileSettings.isSSL);
+            url += NRS.getRandomNodeUrl(NRS.mobileSettings.is_testnet, NRS.mobileSettings.is_ssl);
         }
+        NRS.logConsole("Remote node url: " + url);
         remoteNodeUrl = url;
         return url;
+    };
+
+    NRS.resetRemoteNode = function() {
+        remoteNodeUrl = null;
     };
 
     NRS.getDownloadLink = function(url, link) {
