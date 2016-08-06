@@ -23,6 +23,7 @@ import nxt.env.RuntimeEnvironment;
 import nxt.env.RuntimeMode;
 import nxt.env.ServerStatus;
 import nxt.http.API;
+import nxt.http.APIProxy;
 import nxt.peer.Peers;
 import nxt.user.Users;
 import nxt.util.Convert;
@@ -50,7 +51,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.9.2";
+    public static final String VERSION = "1.10.0e";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -372,6 +373,7 @@ public final class Nxt {
                 TaggedData.init();
                 FxtDistribution.init();
                 Peers.init();
+                APIProxy.init();
                 Generator.init();
                 AddOns.init();
                 API.init();
@@ -404,6 +406,8 @@ public final class Nxt {
                 }
             } catch (Exception e) {
                 Logger.logErrorMessage(e.getMessage(), e);
+                runtimeMode.alert(e.getMessage() + "\n" +
+                        "See additional information in " + dirProvider.getLogFileDir() + System.getProperty("file.separator") + "nxt.log");
                 System.exit(1);
             }
         }

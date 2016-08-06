@@ -105,6 +105,7 @@ var NRS = (function (NRS, $) {
                 NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
                 NRS.constants.DISABLED_APIS = response.disabledAPIs;
                 NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
+                NRS.constants.PEER_STATES = response.peerStates;
                 NRS.loadTransactionTypeConstants(response);
             }
         }, false);
@@ -147,6 +148,10 @@ var NRS = (function (NRS, $) {
 
     NRS.getShufflingParticipantState = function (code) {
         return getKeyByValue(NRS.constants.SHUFFLING_PARTICIPANTS_STATES, code);
+    };
+
+    NRS.getPeerState = function (code) {
+        return getKeyByValue(NRS.constants.PEER_STATES, code);
     };
 
     NRS.isRequireBlockchain = function(requestType) {

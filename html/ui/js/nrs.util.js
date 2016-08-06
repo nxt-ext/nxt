@@ -695,11 +695,19 @@ var NRS = (function (NRS, $, undefined) {
             + (isEscapedText ? text : String(text).escapeHTML()) + "</a>";
     };
 
+    NRS.getPeerLink = function(address) {
+        if (!address ) {
+            return "(" + $.t("temporarily_disconnected") + ")";
+        }
+        return "<a href='#' class='show_peer_modal_action' data-address='" + String(address).escapeHTML() + "'>"
+            + String(address).escapeHTML() + "</a>";
+    };
+
     NRS.setBackLink = function() {
         var backLink = $(".back-link");
         if (NRS.modalStack.length > 0) {
             var backModalInfo = NRS.modalStack[NRS.modalStack.length - 1];
-            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action dgs_show_picture_modal_action_purchase dgs_show_picture_modal_action_product");
+            backLink.removeClass("show_transaction_modal_action show_account_modal_action show_block_modal_action show_ledger_modal_action dgs_show_modal_action_purchase dgs_show_modal_action_product");
             backLink.addClass(backModalInfo.class);
             backLink.data(backModalInfo.key, backModalInfo.value);
             backLink.data("back", "true");
@@ -1630,5 +1638,35 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
+    /**
+     * Escapes all strings in a response object
+     * @param obj
+     */
+    NRS.escapeResponseObjStrings = function (obj) {
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                var val = obj[key];
+                if (typeof val === 'string') {
+                    obj[key] = String(val).escapeHTML();
+                } else if (typeof val === 'object') {
+                    NRS.escapeResponseObjStrings(obj[key]);
+                }
+            }
+        }
+    };
+
+    /**
+     * Escapes a string that was returned in response from the server.
+     * This is used to avoid the double escaping of strings since the response strings started to be escaped in a global
+     * level because of the proxy feature
+     * @param val
+     */
+    NRS.escapeRespStr = function (val) {
+        return String(val).unescapeHTML().escapeHTML();
+    };
+
+    NRS.unescapeRespStr = function (val) {
+        return String(val).unescapeHTML();
+    };
     return NRS;
 }(NRS || {}, jQuery));

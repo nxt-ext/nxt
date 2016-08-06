@@ -43,7 +43,7 @@ var NRS = (function(NRS, $) {
                         state = $.t(NRS.getShufflingParticipantState(shuffler.participantState).toLowerCase());
                     }
                     if (shuffler.failureCause) {
-                        error = String(response.failureCause).escapeHTML()
+                        error = NRS.escapeRespStr(response.failureCause)
                     }
                     break;
                 }
@@ -126,7 +126,7 @@ var NRS = (function(NRS, $) {
                     case 2: return NRS.getTransactionLink(response.holding, response.holdingInfo.code)  + " (" + $.t('currency') + ")";
                 }
             })(),
-            participants: String(response.registrantCount).escapeHTML() + " / " + String(response.participantCount).escapeHTML(),
+            participants: NRS.escapeRespStr(response.registrantCount) + " / " + NRS.escapeRespStr(response.participantCount),
             blocks: response.blocksRemaining,
             shuffling: response.shuffling,
             shufflingFullHash: response.shufflingFullHash

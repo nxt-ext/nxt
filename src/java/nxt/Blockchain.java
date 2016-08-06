@@ -67,6 +67,8 @@ public interface Blockchain {
 
     long getBlockIdAtHeight(int height);
 
+    Block getECBlock(int timestamp);
+
     Transaction getTransaction(long transactionId);
 
     Transaction getTransactionByFullHash(String fullHash);

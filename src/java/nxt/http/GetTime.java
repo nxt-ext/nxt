@@ -44,4 +44,9 @@ public final class GetTime extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    protected boolean requireBlockchain() {
+        return false;
+    }
+
 }

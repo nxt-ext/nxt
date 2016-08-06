@@ -32,7 +32,7 @@ var NRS = (function(NRS, $) {
 	NRS.isOutdated = false;
 
 	NRS.checkAliasVersions = function() {
-		if (NRS.downloadingBlockchain) {
+		if (NRS.downloadingBlockchain && !(NRS.state && NRS.state.apiProxy)) {
 			$("#nrs_update_explanation").find("span").hide();
 			$("#nrs_update_explanation_blockchain_sync").show();
 			return;
@@ -148,12 +148,15 @@ var NRS = (function(NRS, $) {
         }
         var filename = bundle.prefix + NRS.downloadedVersion.versionNr + "." + bundle.ext;
         var fileurl = "https://bitbucket.org/JeanLucPicard/nxt/downloads/" + filename;
+        var nrsUpdateExplanation = $("#nrs_update_explanation");
         if (window.java !== undefined) {
             window.java.popupHandlerURLChange(fileurl);
+            nrsUpdateExplanation.html($.t("download_verification", { url: fileurl, hash: NRS.downloadedVersion.hash }));
+            return;
         } else {
             $("#nrs_update_iframe").attr("src", fileurl);
         }
-        $("#nrs_update_explanation").hide();
+        nrsUpdateExplanation.hide();
         var updateDropZone = $("#nrs_update_drop_zone");
         updateDropZone.html($.t("drop_update_v2", { filename: filename }));
         updateDropZone.show();

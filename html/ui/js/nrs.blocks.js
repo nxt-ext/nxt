@@ -35,7 +35,7 @@ var NRS = (function(NRS, $) {
 					callback(response);
 				}
 			}
-		}, true);
+		}, true, true);
 	};
 
 	NRS.handleInitialBlocks = function(response) {
@@ -74,15 +74,17 @@ var NRS = (function(NRS, $) {
 					}
 				}
 			}
-			$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(NRS.blocks[0].timestamp));
-			$(".nrs_current_block").empty().append(String(NRS.blocks[0].height).escapeHTML());
+			if (!NRS.state.apiProxy) {
+				NRS.updateDashboardLastBlock(NRS.blocks[0]);
+			}
+
 		}
 	};
 
 	NRS.handleNewBlocks = function(response) {
 		if (NRS.downloadingBlockchain) {
 			//new round started...
-			if (NRS.tempBlocks.length == 0 && NRS.state.lastBlock != response.block) {
+			if (NRS.tempBlocks.length == 0 && NRS.getLastBlock() != response.block) {
 				return;
 			}
 		}
@@ -108,7 +110,10 @@ var NRS = (function(NRS, $) {
 				NRS.blocks = NRS.blocks.slice(0, 100);
 			}
 			NRS.checkBlockHeight(NRS.blocks[0].height);
-			NRS.incoming.updateDashboardBlocks(newBlocks);
+			NRS.incoming.updateDashboardBlocks(newBlocks.length);
+			if (!NRS.state.apiProxy) {
+				NRS.updateDashboardLastBlock(NRS.blocks[0]);
+			}
 		} else {
 			NRS.tempBlocks.push(response);
 			NRS.getBlock(response.previousBlock, NRS.handleNewBlocks);
@@ -117,12 +122,21 @@ var NRS = (function(NRS, $) {
 
 	NRS.checkBlockHeight = function(blockHeight) {
 		if (blockHeight) {
-			NRS.lastBlockHeight = blockHeight;
+			if (NRS.state && NRS.state.apiProxy) {
+				NRS.lastLocalBlockHeight = blockHeight;
+			} else {
+				NRS.lastBlockHeight = blockHeight;
+			}
 		}
 	};
 
+	NRS.updateDashboardLastBlock = function(block) {
+		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
+		$(".nrs_current_block").empty().append(NRS.escapeRespStr(block.height));
+	};
+
 	//we always update the dashboard page..
-	NRS.incoming.updateDashboardBlocks = function(newBlocks) {
+	NRS.incoming.updateDashboardBlocks = function(newBlocksCount) {
         var timeDiff;
 		if (NRS.downloadingBlockchain) {
 			if (NRS.state) {
@@ -172,10 +186,6 @@ var NRS = (function(NRS, $) {
 			}
 		}
 
-		block = NRS.blocks[0];
-		$("#nrs_current_block_time").empty().append(NRS.formatTimestamp(block.timestamp));
-		$(".nrs_current_block").empty().append(String(block.height).escapeHTML());
-
 		//update number of confirmations... perhaps we should also update it in tne NRS.transactions array
 		$("#dashboard_table").find("tr.confirmed td.confirmations").each(function() {
 			if ($(this).data("incoming")) {
@@ -183,7 +193,7 @@ var NRS = (function(NRS, $) {
 				return true;
 			}
 			var confirmations = parseInt($(this).data("confirmations"), 10);
-			var nrConfirmations = confirmations + newBlocks.length;
+			var nrConfirmations = confirmations + newBlocksCount;
 			if (confirmations <= 10) {
 				$(this).data("confirmations", nrConfirmations);
 				$(this).attr("data-content", $.t("x_confirmations", {
@@ -263,7 +273,7 @@ var NRS = (function(NRS, $) {
 			totalFees = totalFees.add(new BigInteger(block.totalFeeNQT));
 			totalTransactions += block.numberOfTransactions;
 			rows += "<tr>" +
-                "<td><a href='#' data-block='" + String(block.height).escapeHTML() + "' data-blockid='" + String(block.block).escapeHTML() + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + String(block.height).escapeHTML() + "</a></td>" +
+                "<td><a href='#' data-block='" + NRS.escapeRespStr(block.height) + "' data-blockid='" + NRS.escapeRespStr(block.block) + "' class='block show_block_modal_action'" + (block.numberOfTransactions > 0 ? " style='font-weight:bold'" : "") + ">" + NRS.escapeRespStr(block.height) + "</a></td>" +
                 "<td>" + NRS.formatTimestamp(block.timestamp) + "</td>" +
                 "<td>" + NRS.formatAmount(block.totalAmountNQT) + "</td>" +
                 "<td>" + NRS.formatAmount(block.totalFeeNQT) + "</td>" +
@@ -321,6 +331,18 @@ var NRS = (function(NRS, $) {
 			blocksAverageAmount.html(NRS.formatStyledAmount(averageAmount)).removeClass("loading_dots");
 		}
 		NRS.dataLoaded(rows);
+	};
+
+	NRS.blockchainDownloadingMessage = function() {
+		if (NRS.state.apiProxy) {
+			return $.t(NRS.state.isLightClient ? "status_light_client_proxy" : "status_blockchain_downloading_proxy",
+					{ peer: NRS.getPeerLink(NRS.state.apiProxyPeer) }) +
+				" <a href='#' class='btn btn-xs' data-toggle='modal' data-target='#client_status_modal'>" + $.t("proxy_info_link") + "</a>";
+		} else if(NRS.state.isLightClient) {
+			$.t("status_light_client_proxy");
+		} else {
+			return $.t("status_blockchain_downloading");
+		}
 	};
 
 	$("#blocks_page_type").find(".btn").click(function(e) {

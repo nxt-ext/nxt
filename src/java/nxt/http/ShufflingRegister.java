@@ -52,4 +52,5 @@ public final class ShufflingRegister extends CreateTransaction {
             return JSONResponses.notEnoughHolding(shuffling.getHoldingType());
         }
     }
+
 }

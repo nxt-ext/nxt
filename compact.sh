@@ -9,5 +9,5 @@ echo "* under ~/.nxt/ , invoke this script as:                              *"
 echo "* ./compact.sh -Dnxt.runtime.mode=desktop                             *"
 echo "***********************************************************************"
 
-java -Xmx768m -cp "classes:lib/*:conf" $@ nxt.tools.CompactDatabase
+java -Xmx1024m -cp "classes:lib/*:conf" $@ nxt.tools.CompactDatabase
 exit $?

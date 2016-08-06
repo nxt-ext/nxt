@@ -23,6 +23,7 @@ public final class Constants {
 
     public static final boolean isTestnet = Nxt.getBooleanProperty("nxt.isTestnet");
     public static final boolean isOffline = Nxt.getBooleanProperty("nxt.isOffline");
+    public static final boolean isLightClient = Nxt.getBooleanProperty("nxt.isLightClient");
 
     public static final int MAX_NUMBER_OF_TRANSACTIONS = 255;
     public static final int MIN_TRANSACTION_SIZE = 176;
@@ -154,7 +155,8 @@ public final class Constants {
     public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_19;
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 789000 : 851000;
 
-    public static final int[] MIN_VERSION = new int[] {1, 7};
+    public static final int[] MIN_VERSION = Constants.isTestnet ? new int[] {1, 9} : new int[] {1, 7};
+    public static final int[] MIN_PROXY_VERSION = new int[] {1, 9, 2};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;
     public static final long SHUFFLING_DEPOSIT_NQT = (isTestnet ? 7 : 1000) * ONE_NXT;

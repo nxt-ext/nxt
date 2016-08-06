@@ -28,4 +28,6 @@ public interface RuntimeMode {
     void launchDesktopApplication();
 
     void shutdown();
+
+    void alert(String message);
 }

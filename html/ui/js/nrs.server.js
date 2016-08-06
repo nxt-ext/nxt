@@ -61,7 +61,7 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.sendRequest = function (requestType, data, callback, isAsync) {
+    NRS.sendRequest = function (requestType, data, callback, isAsync, noProxy) {
         if (requestType == undefined) {
             NRS.logConsole("Undefined request type");
             return;
@@ -236,14 +236,14 @@ var NRS = (function (NRS, $, undefined) {
                 });
             } else {
                 //ok, accountId matches..continue with the real request.
-                NRS.processAjaxRequest(requestType, data, callback, isAsync);
+                NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
             }
         } else {
-            NRS.processAjaxRequest(requestType, data, callback, isAsync);
+            NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
         }
     };
 
-    NRS.processAjaxRequest = function (requestType, data, callback, isAsync) {
+    NRS.processAjaxRequest = function (requestType, data, callback, isAsync, noProxy) {
         var extra = null;
         if (data["_extra"]) {
             extra = data["_extra"];
@@ -271,7 +271,11 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url = NRS.server + "/nxt?requestType=" + requestType;
+        var url = NRS.getRequestPath();
+        if (noProxy) {
+            url = "/nxt";
+        }
+        url += "?requestType=" + requestType;
 
         if (type == "GET") {
             if (typeof data == "string") {
@@ -300,7 +304,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
+        if ((!NRS.isLocalHost || data.doNotSign || NRS.state.apiProxy) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
             } else {
@@ -389,6 +393,7 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
+            NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -413,6 +418,7 @@ var NRS = (function (NRS, $, undefined) {
                     NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
                 }
             } else {
+
                 if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
                     response.errorDescription = NRS.translateServerError(response);
                     delete response.fullHash;
@@ -1493,8 +1499,9 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
+        var requestType = NRS.state.apiProxy ? "sendTransaction": "broadcastTransaction";
         $.ajax({
-            url: NRS.server + "/nxt?requestType=broadcastTransaction",
+            url: NRS.getRequestPath() + "?requestType=" + requestType,
             crossDomain: true,
             dataType: "json",
             type: "POST",
@@ -1502,9 +1509,11 @@ var NRS = (function (NRS, $, undefined) {
             async: true,
             data: {
                 "transactionBytes": transactionData,
-                "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment)
+                "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment),
+                "adminPassword": NRS.settings.admin_password
             }
         }).done(function (response) {
+            NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }

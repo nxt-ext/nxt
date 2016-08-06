@@ -61,7 +61,11 @@ var NRS = (function(NRS, $) {
 	forgingIndicator.click(function(e) {
 		e.preventDefault();
 
-		if (NRS.downloadingBlockchain) {
+        if (NRS.state.isLightClient) {
+            $.growl($.t("error_forging_light_client"), {
+                "type": "danger"
+            });
+        } else if (NRS.downloadingBlockchain) {
 			$.growl($.t("error_forging_blockchain_downloading"), {
 				"type": "danger"
 			});
@@ -120,7 +124,10 @@ var NRS = (function(NRS, $) {
     NRS.updateForgingStatus = function(secretPhrase) {
         var status = NRS.forgingStatus;
         var tooltip = $("#forging_indicator").attr('title');
-        if (!NRS.accountInfo.publicKey) {
+        if (NRS.state.isLightClient) {
+            status = NRS.constants.NOT_FORGING;
+            tooltip = $.t("error_forging_light_client");
+        } else if (!NRS.accountInfo.publicKey) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_no_public_key");
         } else if (NRS.isLeased) {
@@ -175,7 +182,7 @@ var NRS = (function(NRS, $) {
                     }
                 } else {
                     status = NRS.constants.UNKNOWN;
-                    tooltip = response.errorDescription.escapeHTML();
+                    tooltip = NRS.escapeRespStr(response.errorDescription);
                 }
             }, false);
         }
