@@ -1621,7 +1621,8 @@ var NRS = (function (NRS, $, undefined) {
             return -1;
         }
         pos++;
-        if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== String(data[prefix + "Quorum"])) {
+        var quorum = String(converters.byteArrayToBigInteger(byteArray, pos));
+        if (quorum !== "0" && quorum !== String(data[prefix + "Quorum"])) {
             return -1;
         }
         pos += 8;
@@ -1645,7 +1646,8 @@ var NRS = (function (NRS, $, undefined) {
             return -1;
         }
         pos += 8;
-        if (String(byteArray[pos]) !== String(data[prefix + "MinBalanceModel"])) {
+        var minBalanceModel = String(byteArray[pos]);
+        if (minBalanceModel !== "0" && minBalanceModel !== String(data[prefix + "MinBalanceModel"])) {
             return -1;
         }
         pos++;
