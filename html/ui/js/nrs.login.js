@@ -184,7 +184,8 @@ var NRS = (function(NRS, $, undefined) {
 	};
 	
 	NRS.switchAccount = function(account) {
-		$('#loading').fadeToggle(500);
+	    var target = document.getElementById('page');
+	    NRS.spinner.spin(target);
 		// Reset security related state
 		NRS.resetEncryptionState();
 		NRS.setServerPassword(null);
@@ -215,7 +216,7 @@ var NRS = (function(NRS, $, undefined) {
 		// Return to the dashboard and notify the user
 		NRS.goToPage("dashboard");
         NRS.login(false, account, function() {
-			$('#loading').fadeToggle(500);
+			NRS.spinner.stop(target);
             $.growl($.t("switched_to_account", { account: account }))
         }, true);
 	};

@@ -23,6 +23,9 @@ var NRS = (function(NRS, $) {
 		"user": 0
 	};
 
+    var target = document.getElementById('user_info_modal_transactions_table');
+
+
 	var body = $("body");
     body.on("click", ".show_account_modal_action, a[data-user].user_info", function(e) {
 		e.preventDefault();
@@ -61,7 +64,7 @@ var NRS = (function(NRS, $) {
 		$("#user_info_modal_actions").find("button").data("account", accountButton);
 
 		if (NRS.fetchingModalData) {
-			$('#loading').fadeToggle(500);
+            NRS.spinner.spin(target);
 			NRS.sendRequest("getAccount", {
 				"account": NRS.userInfoModal.user
             }, function(response) {
@@ -69,7 +72,7 @@ var NRS = (function(NRS, $) {
 				NRS.fetchingModalData = false;
 			});
 		} else {
-			$('#loading').fadeToggle(500);
+			NRS.spinner.spin(target);
 			NRS.processAccountModalData(account);
 		}
 		$("#user_info_modal_transactions").show();
@@ -108,7 +111,7 @@ var NRS = (function(NRS, $) {
         if (!userInfoModal.data('bs.modal') || !userInfoModal.data('bs.modal').isShown) {
             userInfoModal.modal("show");
         }
-		$('#loading').fadeToggle(500);
+        NRS.spinner.stop(target);
 	};
 
 	body.on("click", ".switch-account", function() {
