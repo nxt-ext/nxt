@@ -22,7 +22,7 @@ var NRS = (function (NRS) {
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
     var isMobileApp = window["cordova"] !== undefined;
-    var remoteNodeUrl;
+    var remoteNodeUrl = "";
 
     NRS.isIndexedDBSupported = function() {
         return window.indexedDB !== undefined;
@@ -59,20 +59,18 @@ var NRS = (function (NRS) {
     };
 
     NRS.getRemoteNode = function() {
-        if (remoteNodeUrl) {
+        if (remoteNodeUrl !== "") {
             return remoteNodeUrl;
         }
-        var url = "";
         if (isMobileApp) {
-            url += NRS.getRandomNodeUrl(NRS.mobileSettings.is_testnet, NRS.mobileSettings.is_ssl);
+            remoteNodeUrl += NRS.getRandomNodeUrl(NRS.mobileSettings.is_testnet, NRS.mobileSettings.is_ssl);
+            NRS.logConsole("Remote node url: " + remoteNodeUrl);
         }
-        NRS.logConsole("Remote node url: " + url);
-        remoteNodeUrl = url;
-        return url;
+        return remoteNodeUrl;
     };
 
     NRS.resetRemoteNode = function() {
-        remoteNodeUrl = null;
+        remoteNodeUrl = "";
     };
 
     NRS.getDownloadLink = function(url, link) {
