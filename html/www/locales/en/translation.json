@@ -1804,5 +1804,7 @@
   "remote_node_url": "Remote Node URL __url__",
   "connect_to_testnet": "Connect to Testnet",
   "encrypt_communication": "Encrypt Communication",
-  "mobile_settings": "Mobile Settings"
+  "mobile_settings": "Mobile Settings",
+  "ec_block_id": "EC Block Id",
+  "ec_block_height": "EC Block Height"
 }

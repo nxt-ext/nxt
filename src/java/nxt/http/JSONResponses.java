@@ -150,6 +150,7 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_PROPERTY = incorrect("property", "(cannot be deleted by this account)");
     public static final JSONStreamAware UNKNOWN_PROPERTY = unknown("property");
     public static final JSONStreamAware MISSING_PROPERTY = missing("property");
+    public static final JSONStreamAware INCORRECT_EC_BLOCK = incorrect("ecBlockId", "ecBlockId does not match the block id at ecBlockHeight");
 
     public static final JSONStreamAware NOT_ENOUGH_FUNDS;
     static {
