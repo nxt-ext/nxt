@@ -22,3 +22,6 @@ parameters, allowing the default values to be overridden by the client.
 
 Minor bugfixes and UI improvements.
 
+Updated Jetty to version 9.3.11, delete the old lib folder before unpacking on
+top.
+
