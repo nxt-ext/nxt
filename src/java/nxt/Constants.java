@@ -153,7 +153,7 @@ public final class Constants {
     public static final int FXT_BLOCK = isTestnet ? 779000 : 1000000;
 
     public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_19;
-    public static final int LAST_KNOWN_BLOCK = isTestnet ? 789000 : 851000;
+    public static final int LAST_KNOWN_BLOCK = isTestnet ? 847000 : 907000;
 
     public static final int[] MIN_VERSION = Constants.isTestnet ? new int[] {1, 9} : new int[] {1, 7};
     public static final int[] MIN_PROXY_VERSION = new int[] {1, 10, 1};
@@ -178,7 +178,7 @@ public final class Constants {
 
     public static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
     public static final String ALLOWED_CURRENCY_CODE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    
+
     private Constants() {} // never
 
 }
