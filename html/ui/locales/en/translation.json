@@ -1800,5 +1800,7 @@
   "temporarily_disconnected": "Temporarily Disconnected",
   "next_snapshot": "Next Snapshot",
   "next_balance_update": "Next Balance Update",
-  "error_forging_light_client": "Forging is disabled when running as light client"
+  "error_forging_light_client": "Forging is disabled when running as light client",
+  "ec_block_id": "EC Block Id",
+  "ec_block_height": "EC Block Height"
 }

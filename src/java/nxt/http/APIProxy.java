@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class APIProxy {
-    private static APIProxy instance = new APIProxy();
+    private static final APIProxy instance = new APIProxy();
 
     static final boolean enableAPIProxy = Constants.isLightClient ||
             (Nxt.getBooleanProperty("nxt.enableAPIProxy") && API.openAPIPort == 0 && API.openAPISSLPort == 0);
@@ -42,7 +42,7 @@ public class APIProxy {
     private volatile List<String> peersHosts = Collections.emptyList();
     private volatile String mainPeerAnnouncedAddress;
 
-    private ConcurrentHashMap<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
 
     private static final Runnable peersUpdateThread = () -> {
         int curTime = Nxt.getEpochTime();

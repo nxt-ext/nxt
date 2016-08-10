@@ -86,7 +86,7 @@ final class PeerImpl implements Peer {
     private volatile long hallmarkBalance = -1;
     private volatile int hallmarkBalanceHeight;
     private volatile long services;
-    private BlockchainState blockchainState;
+    private volatile BlockchainState blockchainState;
 
     PeerImpl(String host, String announcedAddress) {
         this.host = host;

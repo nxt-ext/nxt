@@ -34,6 +34,7 @@ import java.util.Arrays;
 
 import static nxt.http.JSONResponses.FEATURE_NOT_AVAILABLE;
 import static nxt.http.JSONResponses.INCORRECT_DEADLINE;
+import static nxt.http.JSONResponses.INCORRECT_EC_BLOCK;
 import static nxt.http.JSONResponses.INCORRECT_LINKED_FULL_HASH;
 import static nxt.http.JSONResponses.INCORRECT_WHITELIST;
 import static nxt.http.JSONResponses.MISSING_DEADLINE;
@@ -51,7 +52,8 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             "phasingWhitelisted", "phasingWhitelisted", "phasingWhitelisted",
             "phasingLinkedFullHash", "phasingLinkedFullHash", "phasingLinkedFullHash",
             "phasingHashedSecret", "phasingHashedSecretAlgorithm",
-            "recipientPublicKey"};
+            "recipientPublicKey",
+            "ecBlockId", "ecBlockHeight"};
 
     private static String[] addCommonParameters(String[] parameters) {
         String[] result = Arrays.copyOf(parameters, parameters.length + commonParameters.length);
@@ -183,6 +185,14 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
         }
 
         long feeNQT = ParameterParser.getFeeNQT(req);
+        int ecBlockHeight = ParameterParser.getInt(req, "ecBlockHeight", 0, Integer.MAX_VALUE, false);
+        long ecBlockId = ParameterParser.getUnsignedLong(req, "ecBlockId", false);
+        if (ecBlockId != 0 && ecBlockId != Nxt.getBlockchain().getBlockIdAtHeight(ecBlockHeight)) {
+            return INCORRECT_EC_BLOCK;
+        }
+        if (ecBlockId == 0 && ecBlockHeight > 0) {
+            ecBlockId = Nxt.getBlockchain().getBlockIdAtHeight(ecBlockHeight);
+        }
 
         JSONObject response = new JSONObject();
 
@@ -202,6 +212,10 @@ abstract class CreateTransaction extends APIServlet.APIRequestHandler {
             builder.appendix(phasing);
             builder.appendix(prunablePlainMessage);
             builder.appendix(prunableEncryptedMessage);
+            if (ecBlockId != 0) {
+                builder.ecBlockId(ecBlockId);
+                builder.ecBlockHeight(ecBlockHeight);
+            }
             Transaction transaction = builder.build(secretPhrase);
             try {
                 if (Math.addExact(amountNQT, transaction.getFeeNQT()) > senderAccount.getUnconfirmedBalanceNQT()) {

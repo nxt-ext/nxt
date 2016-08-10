@@ -68,7 +68,9 @@ var NRS = (function (NRS, $) {
         'EPOCH_BEGINNING': 0,
         'FORGING': 'forging',
         'NOT_FORGING': 'not_forging',
-        'UNKNOWN': 'unknown'
+        'UNKNOWN': 'unknown',
+        'LAST_KNOWN_BLOCK': { id: "3598118011993378267", height: "907000" },
+        'LAST_KNOWN_TESTNET_BLOCK': { id: "13314497267292659355", height: "847000" }
     };
 
     NRS.loadAlgorithmList = function (algorithmSelect, isPhasingHash) {
@@ -152,6 +154,10 @@ var NRS = (function (NRS, $) {
 
     NRS.getPeerState = function (code) {
         return getKeyByValue(NRS.constants.PEER_STATES, code);
+    };
+
+    NRS.getECBlock = function(isTestNet) {
+        return isTestNet ? NRS.constants.LAST_KNOWN_TESTNET_BLOCK : NRS.constants.LAST_KNOWN_BLOCK;
     };
 
     NRS.isRequireBlockchain = function(requestType) {
