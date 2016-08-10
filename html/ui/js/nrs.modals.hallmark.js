@@ -39,7 +39,7 @@ var NRS = (function(NRS, $) {
         hallmarkModal.find(".error_message").hide();
 
 		if (response.hallmark) {
-			$("#generate_hallmark_output").html($.t("generated_hallmark_is") + "<br /><br /><textarea readonly style='width:100%' rows='4'>" + String(response.hallmark).escapeHTML() + "</textarea>").show();
+			$("#generate_hallmark_output").html($.t("generated_hallmark_is") + "<br /><br /><textarea readonly style='width:100%' rows='4'>" + NRS.escapeRespStr(response.hallmark) + "</textarea>").show();
 		} else {
 			$.growl($.t("error_generate_hallmark"), {
 				"type": "danger"
@@ -66,7 +66,7 @@ var NRS = (function(NRS, $) {
             $("#parse_hallmark_valid").val(response.valid);
 		} else {
 			$("#parse_hallmark_output").html($.t("error_invalid_hallmark", {
-				"error": response.errorDescription.escapeHTML()
+				"error": NRS.escapeRespStr(response.errorDescription)
             })).addClass("callout-danger").removeClass("callout-info").show();
             $("#parse_hallmark_host").val("");
             $("#parse_hallmark_port").val("");

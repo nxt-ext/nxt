@@ -80,4 +80,9 @@ public final class GetShufflers extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
 }

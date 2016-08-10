@@ -20,6 +20,7 @@
 var NRS = (function (NRS) {
 
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
+    var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
 
     NRS.isIndexedDBSupported = function() {
         return window.indexedDB !== undefined;
@@ -35,7 +36,8 @@ var NRS = (function (NRS) {
     };
 
     NRS.isPollGetState = function() {
-        return !isDesktopApplication; // When using JavaFX do not poll the server
+        // When using JavaFX do not poll the server unless it's a working as a proxy
+        return !isDesktopApplication || NRS.state && NRS.state.apiProxy;
     };
 
     NRS.isExportContactsAvailable = function() {
@@ -44,6 +46,10 @@ var NRS = (function (NRS) {
 
     NRS.isShowDummyCheckbox = function() {
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") >= 0; // Correct rendering problem of checkboxes on Linux
+    };
+
+    NRS.isDecodePeerHallmark = function() {
+        return isPromiseSupported;
     };
 
     return NRS;

@@ -72,6 +72,11 @@ public final class Hallmark {
 
     public static Hallmark parseHallmark(String hallmarkString) {
 
+        hallmarkString = hallmarkString.trim();
+        if (hallmarkString.length() % 2 != 0) {
+            throw new IllegalArgumentException("Invalid hallmark string length " + hallmarkString.length());
+        }
+
         byte[] hallmarkBytes = Convert.parseHexString(hallmarkString);
 
         ByteBuffer buffer = ByteBuffer.wrap(hallmarkBytes);

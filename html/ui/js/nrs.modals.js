@@ -213,7 +213,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.showModalError = function(errorMessage, $modal) {
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
 		$modal.find("button").prop("disabled", false);
-		$modal.find(".error_message").html(String(errorMessage).escapeHTML()).show();
+		$modal.find(".error_message").html(NRS.escapeRespStr(errorMessage)).show();
 		$btn.button("reset");
 		$modal.modal("unlock");
 	};

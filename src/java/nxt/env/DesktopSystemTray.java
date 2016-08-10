@@ -278,4 +278,8 @@ public class DesktopSystemTray {
         String pre = "" + ("KMGTPE").charAt(exp-1);
         return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
     }
+
+    void alert(String message) {
+        JOptionPane.showMessageDialog(null, message, "Initialization Error", JOptionPane.ERROR_MESSAGE);
+    }
 }

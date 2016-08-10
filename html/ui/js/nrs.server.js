@@ -61,7 +61,7 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.sendRequest = function (requestType, data, callback, isAsync) {
+    NRS.sendRequest = function (requestType, data, callback, isAsync, noProxy) {
         if (requestType == undefined) {
             NRS.logConsole("Undefined request type");
             return;
@@ -236,14 +236,18 @@ var NRS = (function (NRS, $, undefined) {
                 });
             } else {
                 //ok, accountId matches..continue with the real request.
-                NRS.processAjaxRequest(requestType, data, callback, isAsync);
+                NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
             }
         } else {
-            NRS.processAjaxRequest(requestType, data, callback, isAsync);
+            NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
         }
     };
 
-    NRS.processAjaxRequest = function (requestType, data, callback, isAsync) {
+    function isVolatileRequest(doNotSign, type, requestType) {
+        return (!NRS.isLocalHost || doNotSign || NRS.state.apiProxy) && type == "POST" && !NRS.isSubmitPassphrase(requestType);
+    }
+
+    NRS.processAjaxRequest = function (requestType, data, callback, isAsync, noProxy) {
         var extra = null;
         if (data["_extra"]) {
             extra = data["_extra"];
@@ -271,7 +275,11 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url = NRS.server + "/nxt?requestType=" + requestType;
+        var url = NRS.getRequestPath();
+        if (noProxy) {
+            url = "/nxt";
+        }
+        url += "?requestType=" + requestType;
 
         if (type == "GET") {
             if (typeof data == "string") {
@@ -300,7 +308,8 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        if ((!NRS.isLocalHost || data.doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType)) {
+        var isVolatile = isVolatileRequest(data.doNotSign, type, requestType);
+        if (isVolatile) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
             } else {
@@ -315,6 +324,9 @@ var NRS = (function (NRS, $, undefined) {
                 data.publicKey = NRS.generatePublicKey(secretPhrase);
                 NRS.accountInfo.publicKey = data.publicKey;
             }
+            var ecBlock = NRS.getECBlock(NRS.isTestNet);
+            data.ecBlockId = ecBlock.id;
+            data.ecBlockHeight = ecBlock.height;
         } else if (type == "POST" && NRS.rememberPassword) {
             data.secretPhrase = _password;
         }
@@ -389,6 +401,7 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
+            NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -406,11 +419,11 @@ var NRS = (function (NRS, $, undefined) {
                     r.onload = function (e) {
                         data.filebytes = e.target.result;
                         data.filename = file.name;
-                        NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
+                        NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra, isVolatile);
                     };
                     r.readAsArrayBuffer(file);
                 } else {
-                    NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra);
+                    NRS.verifyAndSignTransactionBytes(response.unsignedTransactionBytes, signature, requestType, data, callback, response, extra, isVolatile);
                 }
             } else {
                 if (response.errorCode || response.errorDescription || response.errorMessage || response.error) {
@@ -441,7 +454,8 @@ var NRS = (function (NRS, $, undefined) {
                                 }
                             },
                             function (callback) {
-                                if (response.unsignedTransactionBytes && !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment)) {
+                                if (response.unsignedTransactionBytes &&
+                                    !NRS.verifyTransactionBytes(converters.hexStringToByteArray(response.unsignedTransactionBytes), requestType, data, response.transactionJSON.attachment, isVolatile)) {
                                     callback({
                                         "errorCode": 1,
                                         "errorDescription": $.t("error_bytes_validation_server")
@@ -492,9 +506,9 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data, callback, response, extra) {
+    NRS.verifyAndSignTransactionBytes = function (transactionBytes, signature, requestType, data, callback, response, extra, isVerifyECBlock) {
         var byteArray = converters.hexStringToByteArray(transactionBytes);
-        if (!NRS.verifyTransactionBytes(byteArray, requestType, data, response.transactionJSON.attachment)) {
+        if (!NRS.verifyTransactionBytes(byteArray, requestType, data, response.transactionJSON.attachment, isVerifyECBlock)) {
             callback({
                 "errorCode": 1,
                 "errorDescription": $.t("error_bytes_validation_server")
@@ -514,7 +528,7 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.verifyTransactionBytes = function (byteArray, requestType, data, attachment) {
+    NRS.verifyTransactionBytes = function (byteArray, requestType, data, attachment, isVerifyECBlock) {
         var transaction = {};
         transaction.type = byteArray[0];
         transaction.version = (byteArray[1] & 0xF0) >> 4;
@@ -531,14 +545,20 @@ var NRS = (function (NRS, $, undefined) {
         if (transaction.referencedTransactionFullHash == "0000000000000000000000000000000000000000000000000000000000000000") {
             transaction.referencedTransactionFullHash = "";
         }
-        //transaction.referencedTransactionId = converters.byteArrayToBigInteger([refHash[7], refHash[6], refHash[5], refHash[4], refHash[3], refHash[2], refHash[1], refHash[0]], 0);
-
         transaction.flags = 0;
-
         if (transaction.version > 0) {
             transaction.flags = converters.byteArrayToSignedInt32(byteArray, 160);
             transaction.ecBlockHeight = String(converters.byteArrayToSignedInt32(byteArray, 164));
             transaction.ecBlockId = String(converters.byteArrayToBigInteger(byteArray, 168));
+            if (isVerifyECBlock) {
+                var ecBlock = NRS.getECBlock(NRS.isTestNet);
+                if (transaction.ecBlockHeight != ecBlock.height) {
+                    return false;
+                }
+                if (transaction.ecBlockId != ecBlock.id) {
+                    return false;
+                }
+            }
         }
 
         if (transaction.publicKey != NRS.accountInfo.publicKey && transaction.publicKey != data.publicKey) {
@@ -1493,8 +1513,9 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
+        var requestType = NRS.state.apiProxy ? "sendTransaction": "broadcastTransaction";
         $.ajax({
-            url: NRS.server + "/nxt?requestType=broadcastTransaction",
+            url: NRS.getRequestPath() + "?requestType=" + requestType,
             crossDomain: true,
             dataType: "json",
             type: "POST",
@@ -1502,9 +1523,11 @@ var NRS = (function (NRS, $, undefined) {
             async: true,
             data: {
                 "transactionBytes": transactionData,
-                "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment)
+                "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment),
+                "adminPassword": NRS.settings.admin_password
             }
         }).done(function (response) {
+            NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -1598,7 +1621,8 @@ var NRS = (function (NRS, $, undefined) {
             return -1;
         }
         pos++;
-        if (String(converters.byteArrayToBigInteger(byteArray, pos)) !== String(data[prefix + "Quorum"])) {
+        var quorum = String(converters.byteArrayToBigInteger(byteArray, pos));
+        if (quorum !== "0" && quorum !== String(data[prefix + "Quorum"])) {
             return -1;
         }
         pos += 8;
@@ -1622,7 +1646,8 @@ var NRS = (function (NRS, $, undefined) {
             return -1;
         }
         pos += 8;
-        if (String(byteArray[pos]) !== String(data[prefix + "MinBalanceModel"])) {
+        var minBalanceModel = String(byteArray[pos]);
+        if (minBalanceModel !== "0" && minBalanceModel !== String(data[prefix + "MinBalanceModel"])) {
             return -1;
         }
         pos++;

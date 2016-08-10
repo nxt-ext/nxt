@@ -33,16 +33,16 @@ var NRS = (function(NRS, $) {
     NRS.jsondata.monitors = function (response) {
         return {
             accountFormatted: NRS.getAccountLink(response, "account"),
-            property: String(response.property).escapeHTML(),
+            property: NRS.escapeRespStr(response.property),
             amountFormatted: NRS.formatAmount(response.amount),
             thresholdFormatted: NRS.formatAmount(response.threshold),
-            interval: String(response.interval).escapeHTML(),
+            interval: NRS.escapeRespStr(response.interval),
             statusLinkFormatted: "<a href='#' class='btn btn-xs' " +
                         "onclick='NRS.goToMonitor(" + JSON.stringify(response) + ");'>" +
                          $.t("status") + "</a>",
             stopLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#stop_funding_monitor_modal' " +
-                        "data-account='" + String(response.accountRS).escapeHTML() + "' " +
-                        "data-property='" + String(response.property).escapeHTML() + "'>" + $.t("stop") + "</a>"
+                        "data-account='" + NRS.escapeRespStr(response.accountRS) + "' " +
+                        "data-property='" + NRS.escapeRespStr(response.property) + "'>" + $.t("stop") + "</a>"
         };
     };
 
@@ -54,13 +54,13 @@ var NRS = (function(NRS, $) {
         }
         return {
             accountFormatted: NRS.getAccountLink(response, "recipient"),
-            property: String(response.property).escapeHTML(),
+            property: NRS.escapeRespStr(response.property),
             amountFormatted: (value && value.amount) ? "<b>" + NRS.formatAmount(value.amount) : NRS.formatAmount(currentMonitor.amount),
             thresholdFormatted: (value && value.threshold) ? "<b>" + NRS.formatAmount(value.threshold) : NRS.formatAmount(currentMonitor.threshold),
-            intervalFormatted: (value && value.interval) ? "<b>" + String(value.interval).escapeHTML() : String(currentMonitor.interval).escapeHTML(),
+            intervalFormatted: (value && value.interval) ? "<b>" + NRS.escapeRespStr(value.interval) : NRS.escapeRespStr(currentMonitor.interval),
             removeLinkFormatted: "<a href='#' class='btn btn-xs' data-toggle='modal' data-target='#remove_monitored_account_modal' " +
-                        "data-recipient='" + String(response.recipientRS).escapeHTML() + "' " +
-                        "data-property='" + String(response.property).escapeHTML() + "' " +
+                        "data-recipient='" + NRS.escapeRespStr(response.recipientRS) + "' " +
+                        "data-property='" + NRS.escapeRespStr(response.property) + "' " +
                         "data-value='" + NRS.normalizePropertyValue(response.value) + "'>" + $.t("remove") + "</a>"
         };
     };
@@ -149,8 +149,8 @@ var NRS = (function(NRS, $) {
 
     NRS.pages.funding_monitor_status = function (callback) {
         currentMonitor = callback();
-        $("#monitor_funding_account").html(String(currentMonitor.account).escapeHTML());
-        $("#monitor_control_property").html(String(currentMonitor.property).escapeHTML());
+        $("#monitor_funding_account").html(NRS.escapeRespStr(currentMonitor.account));
+        $("#monitor_control_property").html(NRS.escapeRespStr(currentMonitor.property));
         NRS.hasMorePages = false;
         var view = NRS.simpleview.get('funding_monitor_status_page', {
             errorMessage: null,

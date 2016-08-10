@@ -83,4 +83,9 @@ public final class StartShuffler extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
 }

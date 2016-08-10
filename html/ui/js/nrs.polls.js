@@ -105,7 +105,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								rows += "<tr>";
 								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
-								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + NRS.escapeRespStr(pollDescription) + "</td>";
 								rows += "<td>" + NRS.getAccountLink(poll, "sender") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								rows += "<td style='text-align:center;'>" + String(poll.attachment.finishHeight - NRS.lastBlockHeight) + "</td>";
@@ -166,7 +166,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								rows += "<tr>";
 								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
-								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + NRS.escapeRespStr(pollDescription) + "</td>";
 								rows += "<td>" + NRS.getAccountLink(poll, "sender") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight) {
@@ -227,7 +227,7 @@ var NRS = (function(NRS, $, undefined) {
 								}
 								rows += "<tr>";
 								rows += "<td>" + NRS.getTransactionLink(poll.transaction, poll.attachment.name) + "</td>";
-								rows += "<td>" + pollDescription.escapeHTML() + "</td>";
+								rows += "<td>" + NRS.escapeRespStr(pollDescription) + "</td>";
 								rows += "<td>" + NRS.getAccountLink(poll, "sender") + "</td>";
 								rows += "<td>" + NRS.formatTimestamp(poll.timestamp) + "</td>";
 								if(poll.attachment.finishHeight > NRS.lastBlockHeight) {
@@ -403,7 +403,7 @@ var NRS = (function(NRS, $, undefined) {
 			if(response.attachment.maxRangeValue != 1) {
 				for (var b=0; b<response.attachment.options.length; b++) {
 					var html = "<div class='answer_slider' style='padding:6px;background-color:#f9f9f9;border:1px solid #ddd;margin-bottom:4px;'>";
-					html += "<label>"+String(response.attachment.options[b]).escapeHTML()+"</label> &nbsp;&nbsp;";
+					html += "<label>"+NRS.escapeRespStr(response.attachment.options[b])+"</label> &nbsp;&nbsp;";
 					html += "<span class='cast_vote_value label label-default' style='float:right;'>"+response.attachment.minRangeValue+"</span><br/>";
 					html += "<input class='form-control' step='1' value='"+response.attachment.minRangeValue+"' max='"+response.attachment.maxRangeValue+"' min='"+response.attachment.minRangeValue+"' type='range'/>";
 					html += "</div>";
@@ -411,7 +411,7 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			} else {
 				for (b=0; b<response.attachment.options.length; b++) {
-					castVoteAnswersEntry.append("<div class='answer_boxes'><label><input type='checkbox'/>&nbsp;&nbsp;"+String(response.attachment.options[b]).escapeHTML()+"</label></div>");
+					castVoteAnswersEntry.append("<div class='answer_boxes'><label><input type='checkbox'/>&nbsp;&nbsp;"+NRS.escapeRespStr(response.attachment.options[b])+"</label></div>");
 				}
 			}
 			$("#cast_vote_modal").modal();
@@ -440,7 +440,7 @@ var NRS = (function(NRS, $, undefined) {
             for (var i = 0; i < results.length; i++) {
                 var result = results[i];
                 rows += "<tr>";
-                rows += "<td>" + String(options[i]).escapeHTML() + "</td>";
+                rows += "<td>" + NRS.escapeRespStr(options[i]) + "</td>";
                 var resultStr = "";
                 var weightStr = "";
                 if (polldata.votingModel == 0) {
@@ -570,10 +570,10 @@ var NRS = (function(NRS, $, undefined) {
             }
 			if (resultsdata !== undefined && votesdata !== undefined && polldata !== undefined) {
 				var resultsOptions = $("#poll_results_options");
-                resultsOptions.append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+String(polldata.name).escapeHTML()+"</span></td></tr>");
+                resultsOptions.append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_name'>Poll Name</span>:</td><td><span id='poll_results_poll_name'>"+NRS.escapeRespStr(polldata.name)+"</span></td></tr>");
 				resultsOptions.append("<tr><td style='font-weight: bold;width:180px;'><span data-i18n='poll_id'>Poll Id</span>:</td><td><span id='poll_results_poll_id'>"+polldata.poll+"</span></td></tr>");
 
-				$("#poll_results_poll_name").text(String(polldata.name).escapeHTML());
+				$("#poll_results_poll_name").text(NRS.escapeRespStr(polldata.name));
 				$("#poll_results_poll_id").text(polldata.poll);
 				$("#poll_results_modal").modal();
                 var rows = layoutPollResults(resultsdata, polldata);
@@ -975,7 +975,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			rows += "<a href='#' class='list-group-item list-group-item-ungrouped not_owns_asset" + "' ";
 			rows += "data-cache='" + i + "' ";
-			rows += "data-poll='" + String(poll.poll).escapeHTML() + "' ";
+			rows += "data-poll='" + NRS.escapeRespStr(poll.poll) + "' ";
 			rows += "data-closed='false'>";
 			rows += "<h4 class='list-group-item-heading'>" + poll.name.escapeHTML() + "</h4>";
 
@@ -1081,9 +1081,9 @@ var NRS = (function(NRS, $, undefined) {
 			$("#poll_account").html(NRS.getAccountLink(poll, "account"));
 			$("#poll_id").html(NRS.getTransactionLink(pollId));
 
-			$("#followed_polls_poll_name").html(String(poll.name).escapeHTML());
+			$("#followed_polls_poll_name").html(NRS.escapeRespStr(poll.name));
 			$("#poll_description").html(String(poll.description).autoLink());
-			$(".poll_name").html(String(poll.name).escapeHTML());
+			$(".poll_name").html(NRS.escapeRespStr(poll.name));
             var votePollLink = $("#vote_poll_link");
             votePollLink.find(".vote_button").data("poll", pollId);
 
@@ -1175,7 +1175,7 @@ var NRS = (function(NRS, $, undefined) {
 					head += "<tr>";
 					head += "<th data-i18n=\"voter\">Voter</th>";
 					for(var b=0; b<polldata.options.length; b++) {
-						head += "<th>"+String(polldata.options[b].escapeHTML()) + "</th>";
+						head += "<th>"+String(NRS.escapeRespStr(polldata.options[b])) + "</th>";
 					}
 					head += "</tr>";
 					followedPollsVotesCast.find("thead").empty().append(head);
@@ -1248,13 +1248,13 @@ var NRS = (function(NRS, $, undefined) {
 			}
 			for (var i = 0; i < polls.length; i++) {
 				var poll = polls[i];
-				var description = poll.description.escapeHTML();
+				var description = NRS.escapeRespStr(poll.description);
 				if (description.length > 100) {
 					description = description.substring(0, 100) + "...";
 				}
 				var actions = '<a class="view_button btn btn-xs btn-default" href="#" data-view="' + poll.poll + '">' + $.t('view') + '</a>';
 				view.data.push({
-					"title": NRS.getTransactionLink(poll.poll, poll.name),
+					"title": NRS.getTransactionLink(poll.poll, NRS.escapeRespStr(poll.name), true),
 					"description": description,
 					"sender": NRS.getAccountLink(poll, "account"),
 					"timestamp": NRS.formatTimestamp(poll.timestamp),

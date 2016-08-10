@@ -32,7 +32,14 @@ var NRS = (function(NRS, $) {
 	});
 
 	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true]),button.btn-calculate-fee").click(function() {
-		NRS.submitForm($(this).closest(".modal"), $(this));
+		var $btn = $(this);
+		var $modal = $(this).closest(".modal");
+		try {
+			NRS.submitForm($modal, $btn);
+		} catch(e) {
+			$modal.find(".error_message").html("Form submission error '" + e.message + "' - please report to developers").show();
+			NRS.unlockForm($modal, $btn);
+		}
 	});
 
 	$(".modal input,select,textarea").change(function() {
@@ -218,7 +225,12 @@ var NRS = (function(NRS, $) {
 			$form = $modal.find("form:first");
 		}
 
-		var requestType = $form.find("input[name=request_type]").val();
+		var requestType;
+		if ($btn.data("request")) {
+			requestType = $btn.data("request");
+		} else {
+			requestType = $form.find("input[name=request_type]").val();
+		}
 		var requestTypeKey = requestType.replace(/([A-Z])/g, function($1) {
 			return "_" + $1.toLowerCase();
 		});
@@ -237,7 +249,7 @@ var NRS = (function(NRS, $) {
 
 		var originalRequestType = requestType;
         if (NRS.isRequireBlockchain(requestType)) {
-			if (NRS.downloadingBlockchain) {
+			if (NRS.downloadingBlockchain && !NRS.state.apiProxy) {
 				$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
 				if (formErrorFunction) {
 					formErrorFunction();
@@ -692,11 +704,8 @@ var NRS = (function(NRS, $) {
 				}
 			}
 
-			if (NRS.accountInfo && !NRS.accountInfo.publicKey) {
-				$("#dashboard_message").hide();
-			}
 		} else if (response.errorCode) {
-			$form.find(".error_message").html(response.errorDescription.escapeHTML()).show();
+			$form.find(".error_message").html(NRS.escapeRespStr(response.errorDescription)).show();
 
 			if (formErrorFunction) {
 				formErrorFunction(response, data);

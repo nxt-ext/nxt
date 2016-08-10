@@ -84,13 +84,14 @@ public final class API {
     static final boolean disableAdminPassword;
     static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
     static final boolean enableAPIUPnP = Nxt.getBooleanProperty("nxt.enableAPIUPnP");
+    public static final int apiServerIdleTimeout = Nxt.getIntProperty("nxt.apiServerIdleTimeout");
 
     private static final Server apiServer;
     private static URI welcomePageUri;
     private static URI serverRootUri;
 
     static {
-        List<String> disabled = Nxt.getStringListProperty("nxt.disabledAPIs");
+        List<String> disabled = new ArrayList<>(Nxt.getStringListProperty("nxt.disabledAPIs"));
         Collections.sort(disabled);
         disabledAPIs = Collections.unmodifiableList(disabled);
         disabled = Nxt.getStringListProperty("nxt.disabledAPITags");
@@ -135,10 +136,14 @@ public final class API {
             // Create the HTTP connector
             //
             if (!enableSSL || port != sslPort) {
-                connector = new ServerConnector(apiServer);
+                HttpConfiguration configuration = new HttpConfiguration();
+                configuration.setSendDateHeader(false);
+                configuration.setSendServerVersion(false);
+
+                connector = new ServerConnector(apiServer, new HttpConnectionFactory(configuration));
                 connector.setPort(port);
                 connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setIdleTimeout(apiServerIdleTimeout);
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTP port " + port);
@@ -149,6 +154,8 @@ public final class API {
             final SslContextFactory sslContextFactory;
             if (enableSSL) {
                 HttpConfiguration https_config = new HttpConfiguration();
+                https_config.setSendDateHeader(false);
+                https_config.setSendServerVersion(false);
                 https_config.setSecureScheme("https");
                 https_config.setSecurePort(sslPort);
                 https_config.addCustomizer(new SecureRequestCustomizer());
@@ -169,7 +176,7 @@ public final class API {
                         new HttpConnectionFactory(https_config));
                 connector.setPort(sslPort);
                 connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setIdleTimeout(apiServerIdleTimeout);
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTPS port " + sslPort);
@@ -183,8 +190,8 @@ public final class API {
             } catch (URISyntaxException e) {
                 Logger.logInfoMessage("Cannot resolve browser URI", e);
             }
-            openAPIPort = "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
-            openAPISSLPort = "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
+            openAPIPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
+            openAPISSLPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
 
             HandlerList apiHandlers = new HandlerList();
 
@@ -217,15 +224,22 @@ public final class API {
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
 
+            servletHolder = apiHandler.addServlet(APIProxyServlet.class, "/nxt-proxy");
+            servletHolder.setInitParameters(Collections.singletonMap("idleTimeout",
+                    "" + Math.max(apiServerIdleTimeout - APIProxyServlet.PROXY_IDLE_TIMEOUT_DELTA, 0)));
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
+                    null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
+
             GzipHandler gzipHandler = new GzipHandler();
             if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
-                gzipHandler.setExcludedPaths("/nxt");
+                gzipHandler.setExcludedPaths("/nxt", "/nxt-proxy");
             }
             gzipHandler.setIncludedMethods("GET", "POST");
             gzipHandler.setMinGzipSize(nxt.peer.Peers.MIN_COMPRESS_SIZE);
             apiHandler.setGzipHandler(gzipHandler);
 
             apiHandler.addServlet(APITestServlet.class, "/test");
+            apiHandler.addServlet(APITestServlet.class, "/test-proxy");
 
             apiHandler.addServlet(DbShellServlet.class, "/dbshell");
 
@@ -256,6 +270,7 @@ public final class API {
                         }
                     }
                     APIServlet.initClass();
+                    APIProxyServlet.initClass();
                     APITestServlet.initClass();
                     apiServer.start();
                     if (sslContextFactory != null) {

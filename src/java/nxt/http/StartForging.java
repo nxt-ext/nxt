@@ -54,4 +54,9 @@ public final class StartForging extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
 }

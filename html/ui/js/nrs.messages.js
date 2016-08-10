@@ -79,6 +79,10 @@ var NRS = (function(NRS, $) {
 	NRS.getMessageDownloadLink = function (transaction, sharedKey) {
 		var sharedKeyParam = "";
 		if (sharedKey) {
+			if (NRS.state.apiProxy) {
+				NRS.logConsole("Do not display a download link with shared key when using light client");
+				return "";
+			}
 			sharedKeyParam = "&sharedKey=" + sharedKey;
 		}
 		return "<a href='/nxt?requestType=downloadPrunableMessage&transaction=" + String(transaction).escapeHTML() +
@@ -565,17 +569,22 @@ var NRS = (function(NRS, $) {
         $("#shared_key_text").val(sharedKey);
 		var transaction = $invoker.data("transaction");
         $("#shared_key_transaction").html(NRS.getTransactionLink(transaction));
-		var url = String(window.location);
-		if (url.lastIndexOf("#") == url.length-1) {
-			url = url.substr(0, url.length - 1);
+		if (NRS.state.apiProxy) {
+			$("#shared_key_link_container").hide();
+		} else {
+			var url = String(window.location);
+			if (url.lastIndexOf("#") == url.length-1) {
+				url = url.substr(0, url.length - 1);
+			}
+			url += "?account=" + NRS.accountRS + "&modal=transaction_info_modal" +
+				"&transaction=" + transaction +
+				"&sharedKey=" + sharedKey;
+			var sharedKeyLink = $("#shared_key_link");
+	        sharedKeyLink.attr("href", url);
+	        sharedKeyLink.attr("target", "_blank");
+			sharedKeyLink.html(NRS.addEllipsis(url, 64));
+			$("#shared_key_link_container").show();
 		}
-		url += "?account=" + NRS.accountRS + "&modal=transaction_info_modal" +
-			"&transaction=" + transaction +
-			"&sharedKey=" + sharedKey;
-		var sharedKeyLink = $("#shared_key_link");
-        sharedKeyLink.attr("href", url);
-        sharedKeyLink.attr("target", "_blank");
-		sharedKeyLink.html(NRS.addEllipsis(url, 64));
     });
 
 	$('#messages_decrypt_password, #decrypt_note_form_password, #messages_decrypt_shared_key, #decrypt_note_form_shared_key').on('input', function () {

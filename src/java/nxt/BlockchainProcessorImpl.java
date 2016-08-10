@@ -23,12 +23,7 @@ import nxt.db.FilteringIterator;
 import nxt.db.FullTextTrigger;
 import nxt.peer.Peer;
 import nxt.peer.Peers;
-import nxt.util.Convert;
-import nxt.util.JSON;
-import nxt.util.Listener;
-import nxt.util.Listeners;
-import nxt.util.Logger;
-import nxt.util.ThreadPool;
+import nxt.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -36,30 +31,9 @@ import org.json.simple.JSONValue;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadLocalRandom;
+import java.sql.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 final class BlockchainProcessorImpl implements BlockchainProcessor {
 
@@ -152,6 +126,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     private final boolean trimDerivedTables = Nxt.getBooleanProperty("nxt.trimDerivedTables");
     private final int defaultNumberOfForkConfirmations = Nxt.getIntProperty(Constants.isTestnet
             ? "nxt.testnetNumberOfForkConfirmations" : "nxt.numberOfForkConfirmations");
+    private final boolean simulateEndlessDownload = Nxt.getBooleanProperty("nxt.simulateEndlessDownload");
 
     private int initialScanHeight;
     private volatile int lastTrimHeight;
@@ -199,7 +174,7 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     int chainHeight = blockchain.getHeight();
                     downloadPeer();
                     if (blockchain.getHeight() == chainHeight) {
-                        if (isDownloading) {
+                        if (isDownloading && !simulateEndlessDownload) {
                             Logger.logMessage("Finished blockchain download");
                             isDownloading = false;
                         }
@@ -277,6 +252,14 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (commonBlock == null || blockchain.getHeight() - commonBlock.getHeight() >= 720) {
                     return;
                 }
+                if (simulateEndlessDownload) {
+                    isDownloading = true;
+                    return;
+                }
+                if (!isDownloading && lastBlockchainFeederHeight - commonBlock.getHeight() > 10) {
+                    Logger.logMessage("Blockchain download in progress");
+                    isDownloading = true;
+                }
 
                 blockchain.updateLock();
                 try {
@@ -285,15 +268,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     }
                     long lastBlockId = blockchain.getLastBlock().getId();
                     downloadBlockchain(peer, commonBlock, commonBlock.getHeight());
-
                     if (blockchain.getHeight() - commonBlock.getHeight() <= 10) {
                         return;
                     }
 
-                    if (!isDownloading) {
-                        Logger.logMessage("Blockchain download in progress");
-                        isDownloading = true;
-                    }
                     int confirmations = 0;
                     for (Peer otherPeer : connectedPublicPeers) {
                         if (confirmations >= numberOfForkConfirmations) {
@@ -1046,7 +1024,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }, false);
 
-        ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
+        if (!Constants.isLightClient && !Constants.isOffline) {
+            ThreadPool.scheduleThread("GetMoreBlocks", getMoreBlocksThread, 1);
+        }
 
     }
 
@@ -1503,15 +1483,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     throw new TransactionNotAcceptedException("Invalid transaction version " + transaction.getVersion()
                             + " at height " + previousLastBlock.getHeight(), transaction);
                 }
-                /*
-                    if (!EconomicClustering.verifyFork(transaction)) {
-                        Logger.logDebugMessage("Block " + block.getStringId() + " height " + (previousLastBlock.getHeight() + 1)
-                                + " contains transaction that was generated on a fork: "
-                                + transaction.getStringId() + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId "
-                                + Convert.toUnsignedLong(transaction.getECBlockId()));
-                        //throw new TransactionNotAcceptedException("Transaction belongs to a different fork", transaction);
-                    }
-                    */
                 if (transaction.getId() == 0L) {
                     throw new TransactionNotAcceptedException("Invalid transaction id 0", transaction);
                 }
@@ -1791,13 +1762,6 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 if (unconfirmedTransaction.getTransaction().attachmentIsDuplicate(duplicates, true)) {
                     continue;
                 }
-                /*
-                if (!EconomicClustering.verifyFork(transaction)) {
-                    Logger.logDebugMessage("Including transaction that was generated on a fork: " + transaction.getStringId()
-                            + " ecBlockHeight " + transaction.getECBlockHeight() + " ecBlockId " + Convert.toUnsignedLong(transaction.getECBlockId()));
-                    //continue;
-                }
-                */
                 sortedTransactions.add(unconfirmedTransaction);
                 payloadLength += transactionLength;
             }
