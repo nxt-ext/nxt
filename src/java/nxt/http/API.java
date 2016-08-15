@@ -60,12 +60,15 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
 import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
+import static nxt.http.JSONResponses.LOCKED_ADMIN_PASSWORD;
 
 public final class API {
 
@@ -80,6 +83,7 @@ public final class API {
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
+    private static final Map<String, PasswordCount> incorrectPasswords = new HashMap<>();
     public static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
     static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
@@ -321,10 +325,34 @@ public final class API {
         }
         if (API.adminPassword.isEmpty()) {
             throw new ParameterException(NO_PASSWORD_IN_CONFIG);
-        } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
-            Logger.logWarningMessage("Incorrect adminPassword");
-            throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
         }
+        int now = Nxt.getEpochTime();
+        String remoteHost = req.getRemoteHost();
+        synchronized(incorrectPasswords) {
+            PasswordCount passwordCount = incorrectPasswords.get(remoteHost);
+            if (passwordCount != null && passwordCount.count >= 3 && now - passwordCount.time < 60*60) {
+                Logger.logWarningMessage("Too many incorrect admin password attempts from " + remoteHost);
+                throw new ParameterException(LOCKED_ADMIN_PASSWORD);
+            }
+            if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
+                if (passwordCount == null) {
+                    passwordCount = new PasswordCount();
+                    incorrectPasswords.put(remoteHost, passwordCount);
+                }
+                passwordCount.count++;
+                passwordCount.time = now;
+                Logger.logWarningMessage("Incorrect adminPassword from " + remoteHost);
+                throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
+            }
+            if (passwordCount != null) {
+                incorrectPasswords.remove(remoteHost);
+            }
+        }
+    }
+
+    public static class PasswordCount {
+        private int count;
+        private int time;
     }
 
     public static boolean checkPassword(HttpServletRequest req) {
