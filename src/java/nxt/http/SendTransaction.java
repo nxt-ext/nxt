@@ -16,7 +16,6 @@
 
 package nxt.http;
 
-import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.peer.Peers;

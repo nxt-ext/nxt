@@ -26,11 +26,11 @@ var NRS = (function(NRS, $) {
 
     NRS.jsondata.data = function(response) {
         return {
-            nameFormatted: NRS.getTransactionLink(response.transaction, NRS.addEllipsis(response.name, 20)),
+            nameFormatted: NRS.getTransactionLink(response.transaction, NRS.addEllipsis(NRS.unescapeRespStr(response.name), 20)),
             accountFormatted: NRS.getAccountLink(response, "account"),
-            type: NRS.addEllipsis(NRS.escapeRespStr(response.type), 20),
-            channel: NRS.addEllipsis(NRS.escapeRespStr(response.channel), 20),
-            filename: NRS.addEllipsis(NRS.escapeRespStr(response.filename), 20),
+            type: NRS.addEllipsis(NRS.unescapeRespStr(response.type), 20),
+            channel: NRS.addEllipsis(NRS.unescapeRespStr(response.channel), 20),
+            filename: NRS.addEllipsis(NRS.unescapeRespStr(response.filename), 20),
             dataFormatted: NRS.getTaggedDataLink(response.transaction, response.isText)
         };
     };
@@ -282,9 +282,9 @@ var NRS = (function(NRS, $) {
 			"retrieve": "true"
 		}, function (response) {
 			if (response.errorCode) {
-                $("#tagged_data_content").val(response.errorDescription.escapeHTML());
+                $("#tagged_data_content").val(NRS.unescapeRespStr(response.errorDescription));
 			} else {
-                $("#tagged_data_content").val(response.data);
+                $("#tagged_data_content").val(NRS.unescapeRespStr(response.data));
 			}
 		}, false);
 		NRS.getDownloadLink(NRS.getRequestPath() + "?requestType=downloadTaggedData&transaction=" + transaction + "&retrieve=true", $("#tagged_data_download"));

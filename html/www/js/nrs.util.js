@@ -552,7 +552,7 @@ var NRS = (function (NRS, $, undefined) {
 			return false;
 		}
 		var parts = ip.split('.');
-      return parts[0] === '10' || parts[0] == '127' || parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31) || parts[0] === '192' && parts[1] === '168';
+        return parts[0] === '10' || parts[0] == '127' || parts[0] === '172' && (parseInt(parts[1], 10) >= 16 && parseInt(parts[1], 10) <= 31) || parts[0] === '192' && parts[1] === '168';
 	};
 
     NRS.convertToHex16 = function (str) {
@@ -853,7 +853,7 @@ var NRS = (function (NRS, $, undefined) {
                 value = String(value);
             } else if (/_formatted$/i.test(key)) {
                 key = key.replace("_formatted", "");
-                value = String(value).escapeHTML();
+                value = NRS.escapeRespStr(value);
             } else if ((key == "quantity" || key == "units" || key == "initial_buy_supply" || key == "initial_sell_supply" ||
                 key == "total_buy_limit" || key == "total_sell_limit" || key == "units_exchanged" || key == "total_exchanged" ||
                 key == "initial_units" || key == "reserve_units" || key == "max_units" || key == "quantity_traded" || key == "initial_quantity") && $.isArray(value)) {
@@ -865,11 +865,11 @@ var NRS = (function (NRS, $, undefined) {
             } else if (key == "price" || key == "total" || key == "amount" || key == "fee" || key == "refund" || key == "discount") {
                 value = NRS.formatAmount(new BigInteger(String(value))) + " NXT";
             } else if (key == "sender" || key == "recipient" || key == "account" || key == "seller" || key == "buyer" || key == "lessee") {
-                value = "<a href='#' data-user='" + String(value).escapeHTML() + "' class='show_account_modal_action'>" + NRS.getAccountTitle(value) + "</a>";
+                value = "<a href='#' data-user='" + NRS.escapeRespStr(value) + "' class='show_account_modal_action'>" + NRS.getAccountTitle(value) + "</a>";
             } else if (key == "request_processing_time") { /* Skip from displaying request processing time */
                 continue;
             } else {
-                value = String(value).escapeHTML().nl2br();
+                value = NRS.escapeRespStr(value).nl2br();
             }
 
             rows += "<tr><td style='font-weight:bold" + (fixed ? ";width:150px" : "") + "'>" + $.t(key).escapeHTML() + (type ? " " + type.escapeHTML() : "") + ":</td><td style='width:90%;word-break:break-all'>" + value + "</td></tr>";

@@ -359,6 +359,8 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}, false);
 				} else {
+					var hostName = window.location.hostname.toLowerCase();
+					NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
 					NRS.handleBlockchainStatus(response, callback);
                     NRS.updateDashboardMessage();
 				}
