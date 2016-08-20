@@ -35,8 +35,7 @@ var NRS = (function(NRS, $) {
 		"regional_format": "default",
 		"enable_plugins": "0",
 		"items_page": "15",
-		"themeChoice": "default",
-        "admin_password": "",
+		"admin_password": "",
         "exchange_url": "https://cors.shapeshift.io/",
         "exchange_api_key": "773ecd081abd54e760a45b3551bbd4d725cf788590619e3f4bdeb81d01994d1dcad8a1d35771f669cfa47742af38e2207e297bc0eeeaea733853c2235548fba3",
         "exchange_coin0": "BTC",
@@ -474,9 +473,6 @@ var NRS = (function(NRS, $) {
 			if (NRS.getStrItem("language")) {
 				NRS.settings["language"] = NRS.getStrItem("language");
 			}
-			if (NRS.getStrItem("themeChoice")) {
-				NRS.settings["themeChoice"] = NRS.getStrItem("themeChoice");
-			}
 			NRS.createLangSelect();
 			NRS.createRegionalFormatSelect();
 			NRS.applySettings();
@@ -539,32 +535,7 @@ var NRS = (function(NRS, $) {
 	};
 
 	NRS.applySettings = function(key) {
-	    if (!key || key == "themeChoice") {
-			var oldlink, newlink;
-			var settingsBox = $("#settings_box");
-            if(NRS.settings["themeChoice"] == "default"){
-				oldlink = document.getElementsByTagName("link").item(3);
-				newlink = document.createElement("link");
-        		newlink.setAttribute("rel", "stylesheet");
-       			newlink.setAttribute("type", "text/css");
-        		newlink.setAttribute("href", 'css/app.css');
-				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
-				settingsBox.find(".box-success form .box-body .form-group").css("display", "block");
-			}
-			else if (NRS.settings["themeChoice"] != ""){
-				oldlink = document.getElementsByTagName("link").item(3);
-				newlink = document.createElement("link");
-        		newlink.setAttribute("rel", "stylesheet");
-       			newlink.setAttribute("type", "text/css");
-        		newlink.setAttribute("href", "css/" + NRS.settings["themeChoice"] + ".css");
-				document.getElementsByTagName("head").item(0).replaceChild(newlink, oldlink);
-				settingsBox.find(".box-success form .box-body .form-group").css("display", "none");
-				settingsBox.find(".box-success form .box-body .form-group:first-child").css("display", "block");
-			}
-			$("#change_theme").val(NRS.settings["themeChoice"]);
-		}
-		
-		if (!key || key == "language") {
+	    if (!key || key == "language") {
 			if ($.i18n.lng() != NRS.settings["language"]) {
 				$.i18n.setLng(NRS.settings["language"], null, function() {
 					$("[data-i18n]").i18n();
@@ -602,7 +573,7 @@ var NRS = (function(NRS, $) {
 				$("#news_link").show();
 			}
 		}
-		
+
 		if (!key || key == "items_page") {
 			NRS.itemsPerPage = parseInt(NRS.settings["items_page"], 10);
 		}
@@ -641,10 +612,6 @@ var NRS = (function(NRS, $) {
 	NRS.updateSettings = function(key, value) {
 		if (key) {
 			NRS.settings[key] = value;
-
-			if (key == "themeChoice") {
-				NRS.setStrItem("themeChoice", value);
-			}
 			if (key == "language") {
 				NRS.setStrItem("language", value);
 			}
