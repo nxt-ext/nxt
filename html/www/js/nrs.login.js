@@ -50,7 +50,7 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_custom_panel").find(":input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_generator_panel").find(":input:not(:button):not([type=submit])").val("");
         $("#login_account_other").mask("NXT-****-****-****-*****");
-        
+
 		$("#login_panel").show();
 		setTimeout(function() {
 			$("#login_password").focus()
@@ -145,7 +145,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.login(true,password);
 		}
 	});
-	
+
 	NRS.listAccounts = function() {
 		var loginAccount = $('#login_account');
         loginAccount.empty();
@@ -179,7 +179,7 @@ var NRS = (function(NRS, $, undefined) {
 			$('#login_account_container_other').show();
 		}
 	};
-	
+
 	NRS.switchAccount = function(account) {
 		// Reset security related state
 		NRS.resetEncryptionState();
@@ -207,7 +207,7 @@ var NRS = (function(NRS, $, undefined) {
 		$.each(NRS.plugins, function(pluginId) {
 			NRS.determinePluginLaunchStatus(pluginId);
 		});
-		
+
 		// Return to the dashboard and notify the user
 		NRS.goToPage("dashboard");
         NRS.login(false, account, function() {
@@ -232,7 +232,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).data( "login-type","password");
 		}
 	});
-	
+
 	NRS.removeAccount = function(account) {
 		var accounts = NRS.getStrItem("savedNxtAccounts").replace(account+';','');
 		if (accounts == '') {
@@ -274,7 +274,7 @@ var NRS = (function(NRS, $, undefined) {
 
 				return;
 			}
-			
+
 			NRS.state = response;
 			var accountRequest;
 			var requestVariable;
@@ -420,13 +420,13 @@ var NRS = (function(NRS, $, undefined) {
 					if (callback) {
 						callback();
 					}
-					
+
 					$.each(NRS.pages, function(key) {
 						if(key in NRS.setup) {
 							NRS.setup[key]();
 						}
 					});
-					
+
 					$(".sidebar .treeview").tree();
 					$('#dashboard_link').find('a').addClass("ignore").click();
 
@@ -452,7 +452,7 @@ var NRS = (function(NRS, $, undefined) {
 					}
 
 					$("[data-i18n]").i18n();
-					
+
 					/* Add accounts to dropdown for quick switching */
 					var accountIdDropdown = $("#account_id_dropdown");
 					accountIdDropdown.find(".dropdown-menu .switchAccount").remove();
@@ -474,7 +474,7 @@ var NRS = (function(NRS, $, undefined) {
 					} else {
 						accountIdDropdown.hide();
 					}
-					
+
 					NRS.updateApprovalRequests();
 				});
 			});
@@ -567,7 +567,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.setDecryptionPassword("");
 			NRS.setPassword("");
 			//window.location.reload();
-			window.location.href = window.location.pathname;    
+			window.location.href = window.location.pathname;
 		}
 	};
 
@@ -584,7 +584,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.removeItem("logged_in");
 		NRS.removeItem("savedNxtAccounts");
 		NRS.removeItem("language");
-		NRS.removeItem("themeChoice");
 		NRS.removeItem("remember_passphrase");
 		NRS.localStorageDrop("data");
 		NRS.localStorageDrop("polls");
