@@ -85,6 +85,7 @@ public final class API {
     static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
     static final boolean enableAPIUPnP = Nxt.getBooleanProperty("nxt.enableAPIUPnP");
     public static final int apiServerIdleTimeout = Nxt.getIntProperty("nxt.apiServerIdleTimeout");
+    public static final boolean apiServerCORS = Nxt.getBooleanProperty("nxt.apiServerCORS");
 
     private static final Server apiServer;
     private static URI welcomePageUri;
@@ -243,7 +244,7 @@ public final class API {
 
             apiHandler.addServlet(DbShellServlet.class, "/dbshell");
 
-            if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
+            if (apiServerCORS) {
                 FilterHolder filterHolder = apiHandler.addFilter(CrossOriginFilter.class, "/*", null);
                 filterHolder.setInitParameter("allowedHeaders", "*");
                 filterHolder.setAsyncSupported(true);

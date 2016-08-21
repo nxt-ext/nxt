@@ -291,7 +291,12 @@ public final class Peers {
             json.put("disabledAPIs", APIEnum.enumSetToBase64String(disabledAPISet));
 
             json.put("apiServerIdleTimeout", API.apiServerIdleTimeout);
+
+            if (API.apiServerCORS) {
+                servicesList.add(Peer.Service.CORS);
+            }
         }
+
         long services = 0;
         for (Peer.Service service : servicesList) {
             services |= service.getCode();
