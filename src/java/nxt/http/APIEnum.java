@@ -282,9 +282,21 @@ public enum APIEnum {
     private static final Map<String, APIEnum> apiByName = new HashMap<>();
 
     static {
+        final EnumSet<APITag> tagsNotRequiringBlockchain = EnumSet.of(APITag.UTILS);
         for (APIEnum api : values()) {
             if (apiByName.put(api.getName(), api) != null) {
-                throw new RuntimeException("Duplicate API name: " + api.getName());
+                AssertionError assertionError = new AssertionError("Duplicate API name: " + api.getName());
+                assertionError.printStackTrace();
+                throw assertionError;
+            }
+
+            final APIServlet.APIRequestHandler handler = api.getHandler();
+            if (!Collections.disjoint(handler.getAPITags(), tagsNotRequiringBlockchain)
+                    && handler.requireBlockchain()) {
+                AssertionError assertionError = new AssertionError("API " + api.getName()
+                        + " is not supposed to require blockchain");
+                assertionError.printStackTrace();
+                throw assertionError;
             }
         }
     }
