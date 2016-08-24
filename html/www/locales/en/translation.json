@@ -462,7 +462,6 @@
   "error_search_no_results": "Nothing found, please try another query.",
   "error_sell_alias": "An unknown error occurred! Alias sale offer may or may not be created.",
   "error_send_message": "An unknown error occurred! Message may or may not be sent.",
-  "error_server_connect": "Could not connect to server.",
   "error_signature_verification_client": "Could not verify signature (client side).",
   "error_start_forging": "Couldn't start forging, unknown error.",
   "error_stop_forging": "You weren't forging to begin with.",
@@ -1806,5 +1805,6 @@
   "encrypt_communication": "Encrypt Communication",
   "mobile_settings": "Mobile Settings",
   "ec_block_id": "EC Block Id",
-  "ec_block_height": "EC Block Height"
+  "ec_block_height": "EC Block Height",
+  "error_server_connect": "Cannot connect to __url__"
 }

@@ -447,10 +447,7 @@ var NRS = (function (NRS, $, undefined) {
 
             if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
                 if (type == "POST") {
-                    $.growl($.t("error_server_connect"), {
-                        "type": "danger",
-                        "offset": 10
-                    });
+                    NRS.connectionError();
                 }
             }
 

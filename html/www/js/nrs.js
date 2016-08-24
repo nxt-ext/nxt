@@ -321,14 +321,25 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-	NRS.getState = function(callback, msg) {
+    NRS.connectionError = function(errorDescription) {
+        NRS.serverConnect = false;
+        var msg = $.t("error_server_connect", {url: NRS.getRequestPath()}) +
+            (errorDescription ? " " + NRS.escapeRespStr(errorDescription) : "");
+        $.growl(msg, {
+            "type": "danger",
+            "offset": 10
+        });
+        NRS.logConsole(msg);
+        NRS.resetRemoteNode();
+    };
+
+    NRS.getState = function(callback, msg) {
 		if (msg) {
 			NRS.logConsole("getState event " + msg);
 		}
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
-				NRS.serverConnect = false;
-				$.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(response.errorDescription));
+                NRS.connectionError(response.errorDescription);
 			} else {
 				var clientOptionsLink = $("#header_client_options_link");
 				var clientOptions = $("#header_client_options");
@@ -344,8 +355,7 @@ var NRS = (function(NRS, $, undefined) {
 						"firstIndex": 0, "lastIndex": 0
 					}, function(proxyBlocksResponse) {
 						if (proxyBlocksResponse.errorCode) {
-							NRS.serverConnect = false;
-							$.growl($.t("server_connection_error") + " " + NRS.escapeRespStr(proxyBlocksResponse.errorDescription));
+                            NRS.connectionError(proxyBlocksResponse.errorDescription);
 						} else {
 							_prevLastProxyBlock = NRS.lastProxyBlock;
 							var prevHeight = NRS.lastProxyBlockHeight;

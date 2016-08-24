@@ -267,11 +267,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
-				$.growl($.t("error_server_connect"), {
-					"type": "danger",
-					"offset": 10
-				});
-
+			    NRS.connectionError(response.errorDescription);
 				return;
 			}
 

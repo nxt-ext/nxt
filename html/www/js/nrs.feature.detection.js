@@ -59,13 +59,14 @@ var NRS = (function (NRS) {
     };
 
     NRS.getRemoteNode = function() {
+        if (!isMobileApp) {
+            return "";
+        }
         if (remoteNodeUrl !== "") {
             return remoteNodeUrl;
         }
-        if (isMobileApp) {
-            remoteNodeUrl += NRS.getRandomNodeUrl(NRS.mobileSettings.is_testnet, NRS.mobileSettings.is_ssl);
-            NRS.logConsole("Remote node url: " + remoteNodeUrl);
-        }
+        remoteNodeUrl += NRS.getRandomNodeUrl(NRS.mobileSettings.is_testnet, NRS.mobileSettings.is_ssl);
+        NRS.logConsole("Remote node url: " + remoteNodeUrl);
         return remoteNodeUrl;
     };
 
