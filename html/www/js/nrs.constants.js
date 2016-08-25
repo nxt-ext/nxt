@@ -109,6 +109,7 @@ var NRS = (function (NRS, $) {
                 NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
                 NRS.constants.PEER_STATES = response.peerStates;
                 NRS.loadTransactionTypeConstants(response);
+                NRS.constants.PROXY_NOT_FORWARDED_REQUESTS = response.proxyNotForwardedRequests;
             }
         }, false);
     };
@@ -169,6 +170,22 @@ var NRS = (function (NRS, $) {
         return true == NRS.constants.REQUEST_TYPES[requestType].requireBlockchain;
     };
 
+    NRS.isRequireFullClient = function(requestType) {
+        if (!NRS.constants.REQUEST_TYPES[requestType]) {
+            // For requests invoked before the getConstants request returns,
+            // we implicitly assume that they do not require full client
+            return false;
+        }
+        return true == NRS.constants.REQUEST_TYPES[requestType].requireFullClient;
+    };
+
+    NRS.isRequestForwardable = function(requestType) {
+        return NRS.isRequireBlockchain(requestType) &&
+            !NRS.isRequireFullClient(requestType) &&
+            NRS.constants.PROXY_NOT_FORWARDED_REQUESTS instanceof Array &&
+            NRS.constants.PROXY_NOT_FORWARDED_REQUESTS.indexOf(requestType) < 0;
+    };
+
     NRS.isRequirePost = function(requestType) {
         if (!NRS.constants.REQUEST_TYPES[requestType]) {
             // For requests invoked before the getConstants request returns
@@ -214,7 +231,7 @@ var NRS = (function (NRS, $) {
         } else if (requestType == "sendMessage") {
             config.selector = "#upload_file_message";
             if (data.encrypt_message) {
-                config.requestParam = "encryptedMessageFile";    
+                config.requestParam = "encryptedMessageFile";
             } else {
                 config.requestParam = "messageFile";
             }

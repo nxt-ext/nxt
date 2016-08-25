@@ -104,6 +104,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (mobileSettings) {
 			NRS.mobileSettings = mobileSettings;
 		}
+        NRS.initRemoteNodesMgr(mobileSettings.is_testnet, true);
 	};
 
     NRS.init = function() {
@@ -139,6 +140,11 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.appVersion = response[key];
 				}
 			}
+
+			if (!NRS.remoteNodesMgr) {
+                NRS.initRemoteNodesMgr(mobileSettings.is_testnet, false);
+            }
+
 
 			if (!isTestnet) {
 				$(".testnet_only").hide();
