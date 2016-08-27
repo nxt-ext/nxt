@@ -22,7 +22,7 @@ var NRS = (function (NRS) {
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
     var isMobileApp = window["cordova"] !== undefined;
-    var remoteNodeUrl = "";
+    var remoteNode = null;
 
     NRS.isIndexedDBSupported = function() {
         return window.indexedDB !== undefined;
@@ -35,6 +35,10 @@ var NRS = (function (NRS) {
     NRS.isExternalLinkVisible = function() {
         // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
+    };
+
+    NRS.isMobileApp = function () {
+        return isMobileApp;
     };
 
     NRS.isMobileSettingsModalAvailable = function() {
@@ -62,16 +66,20 @@ var NRS = (function (NRS) {
         if (!isMobileApp) {
             return "";
         }
-        if (remoteNodeUrl !== "") {
-            return remoteNodeUrl;
+        if (remoteNode) {
+            return remoteNode.getUrl();
         }
-        remoteNodeUrl += NRS.getRandomNodeUrl(NRS.mobileSettings.is_testnet, NRS.mobileSettings.is_ssl);
-        NRS.logConsole("Remote node url: " + remoteNodeUrl);
-        return remoteNodeUrl;
+        remoteNode = NRS.remoteNodesMgr.getRandomNode();
+        var url = remoteNode.getUrl();
+        NRS.logConsole("Remote node url: " + url);
+        return url;
     };
 
-    NRS.resetRemoteNode = function() {
-        remoteNodeUrl = "";
+    NRS.resetRemoteNode = function(blacklist) {
+        if (remoteNode && blacklist) {
+            remoteNode.blacklist();
+        }
+        remoteNode = null;
     };
 
     NRS.getDownloadLink = function(url, link) {

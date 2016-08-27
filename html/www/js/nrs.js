@@ -97,18 +97,20 @@ var NRS = (function(NRS, $, undefined) {
 	var isScanning = false;
 
 	NRS.loadMobileSettings = function () {
-		if (!window["cordova"] || !window["localStorage"]) {
+		if (!NRS.isMobileApp() || !window["localStorage"]) {
 			return;
 		}
 		var mobileSettings = NRS.getJSONItem("mobile_settings");
 		if (mobileSettings) {
 			NRS.mobileSettings = mobileSettings;
 		}
-        NRS.initRemoteNodesMgr(mobileSettings.is_testnet, true);
 	};
 
     NRS.init = function() {
     	NRS.loadMobileSettings();
+        if (NRS.isMobileApp()) {
+            NRS.initRemoteNodesMgr(NRS.mobileSettings.is_testnet, true);
+        }
 		NRS.loadServerConstants();
 
 		NRS.sendRequest("getState", {
@@ -141,8 +143,8 @@ var NRS = (function(NRS, $, undefined) {
 				}
 			}
 
-			if (!NRS.remoteNodesMgr) {
-                NRS.initRemoteNodesMgr(mobileSettings.is_testnet, false);
+			if (!NRS.isMobileApp()) {
+                NRS.initRemoteNodesMgr(isTestnet, false);
             }
 
 
@@ -336,7 +338,6 @@ var NRS = (function(NRS, $, undefined) {
             "offset": 10
         });
         NRS.logConsole(msg);
-        NRS.resetRemoteNode();
     };
 
     NRS.getState = function(callback, msg) {

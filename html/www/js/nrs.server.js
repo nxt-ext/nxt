@@ -445,6 +445,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }
 
+            NRS.resetRemoteNode(true);
             if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
                 if (type == "POST") {
                     NRS.connectionError();
@@ -1517,7 +1518,7 @@ var NRS = (function (NRS, $, undefined) {
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }
-            NRS.resetRemoteNode();
+            NRS.resetRemoteNode(true);
             if (error == "timeout") {
                 error = $.t("error_request_timeout");
             }

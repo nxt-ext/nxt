@@ -15,7 +15,7 @@
  ******************************************************************************/
 
 function RemoteNode(peerData) {
-    this.announcedAddress = peerData.announcedAddress;
+    this.address = peerData.address;
     if (peerData.apiSSLPort) {
         this.port = peerData.apiSSLPort;
         this.isSSL = true;
@@ -24,15 +24,15 @@ function RemoteNode(peerData) {
         this.isSSL = false;
     }
     this.isCORSSupported = peerData.services instanceof Array && peerData.services.indexOf("CORS") >= 0;
-
-
+    this.blacklistedUntil = 0;
 }
 
 RemoteNode.prototype.getUrl = function () {
-    return (this.isSSL ? "https://" : "http://") + this.announcedAddress + ":" + this.port;
+    return (this.isSSL ? "https://" : "http://") + this.address + ":" + this.port;
 };
 
 RemoteNode.prototype.sendRequest = function(requestType, data, callback, isAsync) {
+    var node = this;
     var url = this.getUrl();
     url += "?requestType=" + requestType;
 
@@ -46,10 +46,19 @@ RemoteNode.prototype.sendRequest = function(requestType, data, callback, isAsync
         traditional: true,
         data: data
     }).done(function (response) {
-
+        callback(response);
     }).fail(function (xhr, textStatus, error) {
-
+        node.blacklist();
     });
+};
+
+RemoteNode.prototype.isBlacklisted = function () {
+    return new Date().getTime() < this.blacklistedUntil;
+};
+
+RemoteNode.prototype.blacklist = function () {
+
+    this.blacklistedUntil = new Date().getTime() + 10 * 60 * 1000;
 };
 
 function RemoteNodesManager(isTestnet, isMobileApp) {
@@ -61,14 +70,21 @@ function RemoteNodesManager(isTestnet, isMobileApp) {
 }
 
 RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
+    var mgr = this;
     $.each(peersData, function(index, peerData) {
-        this.nodes[peerData.address] = new RemoteNode(peerData);
+        mgr.nodes[peerData.address] = new RemoteNode(peerData);
     });
 };
 
 RemoteNodesManager.prototype.getRandomNode = function () {
     var addresses = Object.keys(this.nodes);
-    return this.nodes[addresses[Math.floor((Math.random() * addresses.length))]];
+    var index = Math.floor((Math.random() * addresses.length));
+    var node;
+    do {
+        node = this.nodes[addresses[index]];
+        index = (index+1) % addresses.length;
+    } while(node.isBlacklisted());
+    return node;
 };
 
 RemoteNodesManager.prototype.findMoreNodes = function () {
