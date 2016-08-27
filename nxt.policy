@@ -1,8 +1,7 @@
 grant {
   permission java.util.PropertyPermission "*", "read, write";
   permission java.lang.management.ManagementPermission "monitor";
-  permission java.io.FilePermission "<<ALL FILES>>", "read, execute";
-  permission java.io.FilePermission "-", "read, write, delete, execute";
+  permission java.io.FilePermission "<<ALL FILES>>", "read, write, delete, execute";
   permission java.util.logging.LoggingPermission "control";
   permission java.lang.RuntimePermission "modifyThread";
   permission java.security.SecurityPermission "getProperty.ssl.*";
