@@ -1,3 +1,34 @@
+nxt-client-1.10.1:
+
+This release adds transaction replay protection, to be enabled at the hard fork
+scheduled for block 1,000,000. Upgrading to 1.10.1 or later before that block
+is mandatory for all.
+
+The ecBlockId and ecBlockHeight transaction fields, previously populated but
+not used, will begin to be used for enforcing that a transaction submitted on
+one blockchain or fork will not be accepted on another blockchain or fork that
+shares the same code. These fields by default will be set to a block 720 blocks
+behind the last block at the time the transaction is created, and transactions
+will only be accepted if their ecBlockId and ecBlockHeight values point to an
+existing block when they are included in the blockchain. This default setting
+provides protection against replaying the transaction on a hard fork that has
+diverged more than 720 blocks from the one where the transaction was created.
+
+Light clients that have no way of verifying the ecBlock values returned by a
+remote node will use hardcoded values, to be updated manually at some releases.
+Transactions from legacy light clients that leave eBlockId and height set to 0
+will still be accepted, but cannot benefit from such replay protection.
+
+All CreateTransaction APIs now accept additional ecBlockId and ecBlockHeight
+parameters, allowing the default values to be overridden by the client.
+
+Minor bugfixes and UI improvements.
+
+Updated Jetty to version 9.3.11, delete the old lib folder before unpacking on
+top.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.10.0e:
 
 This is an experimental release introducing the new light client and roaming

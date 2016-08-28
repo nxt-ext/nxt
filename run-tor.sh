@@ -10,5 +10,5 @@ if [ -x jre/bin/java ]; then
 else
     JAVA=java
 fi
-${JAVA} -DsocksProxyHost=localhost -DsocksProxyPort=9050 -cp classes:lib/*:conf:addons/classes nxt.Nxt
+${JAVA} -DsocksProxyHost=localhost -DsocksProxyPort=9050 -cp classes:lib/*:conf:addons/classes:addons/lib/* nxt.Nxt
 
