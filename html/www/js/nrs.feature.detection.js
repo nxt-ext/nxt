@@ -108,5 +108,9 @@ var NRS = (function (NRS) {
         }
     };
 
+    NRS.isCodeScanningEnabled = function () {
+        return isMobileApp;
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
