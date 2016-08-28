@@ -16,10 +16,10 @@
 
 function RemoteNode(peerData) {
     this.address = peerData.address;
-    if (peerData.apiSSLPort) {
+    /*if (peerData.apiSSLPort) {
         this.port = peerData.apiSSLPort;
         this.isSSL = true;
-    } else {
+    } else*/ {
         this.port = peerData.apiPort;
         this.isSSL = false;
     }
@@ -34,7 +34,7 @@ RemoteNode.prototype.getUrl = function () {
 RemoteNode.prototype.sendRequest = function(requestType, data, callback, isAsync) {
     var node = this;
     var url = this.getUrl();
-    url += "?requestType=" + requestType;
+    url += "/nxt?requestType=" + requestType;
 
     $.ajax({
         url: url,
@@ -48,6 +48,10 @@ RemoteNode.prototype.sendRequest = function(requestType, data, callback, isAsync
     }).done(function (response) {
         callback(response);
     }).fail(function (xhr, textStatus, error) {
+        callback({
+            "errorCode": -1,
+            "errorDescription": error
+        });
         node.blacklist();
     });
 };
@@ -72,7 +76,9 @@ function RemoteNodesManager(isTestnet, isMobileApp) {
 RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
     var mgr = this;
     $.each(peersData, function(index, peerData) {
-        mgr.nodes[peerData.address] = new RemoteNode(peerData);
+        if (peerData.services instanceof Array && (peerData.services.indexOf("API") >= 0)) {
+            mgr.nodes[peerData.address] = new RemoteNode(peerData);
+        }
     });
 };
 
