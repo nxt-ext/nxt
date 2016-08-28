@@ -91,8 +91,9 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.lastProxyBlock = 0;
 	NRS.lastProxyBlockHeight = 0;
+    NRS.spinner = null;
 
-	var stateInterval;
+    var stateInterval;
 	var stateIntervalSeconds = 30;
 	var isScanning = false;
 
@@ -106,8 +107,36 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
+	function initSpinner() {
+        var opts = {
+            lines: 13 // The number of lines to draw
+            , length: 10 // The length of each line
+            , width: 4 // The line thickness
+            , radius: 20 // The radius of the inner circle
+            , scale: 1 // Scales overall size of the spinner
+            , corners: 1 // Corner roundness (0..1)
+            , color: '#ffffff' // #rgb or #rrggbb or array of colors
+            , opacity: 0.25 // Opacity of the lines
+            , rotate: 0 // The rotation offset
+            , direction: 1 // 1: clockwise, -1: counterclockwise
+            , speed: 1 // Rounds per second
+            , trail: 60 // Afterglow percentage
+            , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+            , zIndex: 2e9 // The z-index (defaults to 2000000000)
+            , className: 'spinner' // The CSS class to assign to the spinner
+            , top: '50%' // Top position relative to parent
+            , left: '50%' // Left position relative to parent
+            , shadow: false // Whether to render a shadow
+            , hwaccel: false // Whether to use hardware acceleration
+            , position: 'absolute' // Element positioning
+        };
+        NRS.spinner = new Spinner(opts);
+    }
+
     NRS.init = function() {
-    	NRS.loadMobileSettings();
+        initSpinner();
+        NRS.spinner.spin($("#center")[0]);
+        NRS.loadMobileSettings();
         if (NRS.isMobileApp()) {
             NRS.initRemoteNodesMgr(NRS.mobileSettings.is_testnet, true);
         }
@@ -161,6 +190,7 @@ var NRS = (function(NRS, $, undefined) {
 
 			NRS.initializePlugins();
             NRS.printEnvInfo();
+            NRS.spinner.stop();
 		});
 
 		var hasLocalStorage = false;
