@@ -18,6 +18,7 @@ package nxt.http;
 
 import nxt.Constants;
 import nxt.Nxt;
+import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import nxt.util.UPnP;
@@ -326,6 +327,34 @@ public final class API {
         if (API.adminPassword.isEmpty()) {
             throw new ParameterException(NO_PASSWORD_IN_CONFIG);
         }
+        checkOrLockPassword(req);
+    }
+
+    public static boolean checkPassword(HttpServletRequest req) {
+        if (API.disableAdminPassword) {
+            return true;
+        }
+        if (API.adminPassword.isEmpty()) {
+            return false;
+        }
+        if (Convert.emptyToNull(req.getParameter("adminPassword")) == null) {
+            return false;
+        }
+        try {
+            checkOrLockPassword(req);
+            return true;
+        } catch (ParameterException e) {
+            return false;
+        }
+    }
+
+
+    private static class PasswordCount {
+        private int count;
+        private int time;
+    }
+
+    private static void checkOrLockPassword(HttpServletRequest req) throws ParameterException {
         int now = Nxt.getEpochTime();
         String remoteHost = req.getRemoteHost();
         synchronized(incorrectPasswords) {
@@ -348,15 +377,6 @@ public final class API {
                 incorrectPasswords.remove(remoteHost);
             }
         }
-    }
-
-    public static class PasswordCount {
-        private int count;
-        private int time;
-    }
-
-    public static boolean checkPassword(HttpServletRequest req) {
-        return (API.disableAdminPassword || (!API.adminPassword.isEmpty() && API.adminPassword.equals(req.getParameter("adminPassword"))));
     }
 
     static boolean isAllowed(String remoteHost) {
