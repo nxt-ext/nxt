@@ -1559,6 +1559,7 @@ NRS.addPagination = function () {
         NRS.logProperty("navigator.onLine");
 		if (window["cordova"]) {
 			NRS.logProperty("device.platform");
+			NRS.logProperty("device.version");
 		}
         NRS.logProperty("NRS.isTestNet");
         NRS.logProperty("NRS.needsAdminPassword");
