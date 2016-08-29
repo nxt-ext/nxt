@@ -135,7 +135,7 @@ RemoteNodesManager.prototype.getRandomNodes = function (count, ignoredAddresses)
 RemoteNodesManager.prototype.findMoreNodes = function () {
     var nodesMgr = this;
     var node = this.getRandomNode();
-    var data = {active: true, includePeerInfo: true};
+    var data = {state: "CONNECTED", includePeerInfo: true};
     node.sendRequest("getPeers", data, function (response) {
         if (response.peers) {
             nodesMgr.addRemoteNodes(response.peers);

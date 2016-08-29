@@ -21,7 +21,7 @@ var NRS = (function(NRS, $) {
     var requestConfirmations = [];
 
     NRS.updateRemoteNodes = function() {
-        var data = {active: true, includePeerInfo: true};
+        var data = {state: "CONNECTED", includePeerInfo: true};
         NRS.sendRequest("getPeers", data, function (response) {
             if (response.peers) {
                 NRS.remoteNodesMgr.setRemoteNodes(response.peers);
@@ -90,6 +90,10 @@ var NRS = (function(NRS, $) {
                         NRS.logConsole(fromNode.announcedAddress + " does not agree with "
                             + requestRemoteNode.announcedAddress + " about " + requestType);
                         confirmationReport.rejections.push(fromNode.announcedAddress);
+                    }
+
+                    if (confirmationReport.processing.length == 0) {
+                        NRS.logConsole("Request " + requestType + " confirmed by " + confirmationReport.confirmations);
                     }
                 }
             }
