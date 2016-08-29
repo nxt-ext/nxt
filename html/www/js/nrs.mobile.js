@@ -20,7 +20,7 @@
 var NRS = (function(NRS, $) {
 
     $("#mobile_settings_modal").on("show.bs.modal", function(e) {
-        $(".info_message").html($.t("remote_node_url", { url: NRS.getRemoteNode() }));
+        $(".info_message").html($.t("remote_node_url", { url: NRS.getRemoteNodeUrl() }));
         if (NRS.mobileSettings.is_testnet) {
             $("#mobile_is_testnet").prop('checked', true);
         } else {
@@ -42,7 +42,7 @@ var NRS = (function(NRS, $) {
         NRS.mobileSettings.is_ssl = $("#mobile_is_ssl").prop('checked');
         NRS.setJSONItem("mobile_settings", NRS.mobileSettings);
         NRS.resetRemoteNode();
-        NRS.getRemoteNode();
+        NRS.getRemoteNodeUrl();
         return { stop: true };
     };
 

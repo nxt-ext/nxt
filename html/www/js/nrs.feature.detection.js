@@ -62,7 +62,7 @@ var NRS = (function (NRS) {
         return isPromiseSupported;
     };
 
-    NRS.getRemoteNode = function() {
+    NRS.getRemoteNodeUrl = function() {
         if (!isMobileApp) {
             return "";
         }
@@ -73,6 +73,10 @@ var NRS = (function (NRS) {
         var url = remoteNode.getUrl();
         NRS.logConsole("Remote node url: " + url);
         return url;
+    };
+
+    NRS.getRemoteNode = function () {
+        return remoteNode;
     };
 
     NRS.resetRemoteNode = function(blacklist) {

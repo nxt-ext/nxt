@@ -920,7 +920,7 @@ NRS.addPagination = function () {
 	};
 
 	NRS.getRequestPath = function (noProxy) {
-		var url = NRS.getRemoteNode();
+		var url = NRS.getRemoteNodeUrl();
 		if (!NRS.state.apiProxy || noProxy) {
 			return url + "/nxt";
 		} else {

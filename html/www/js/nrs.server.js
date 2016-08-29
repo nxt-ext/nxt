@@ -346,6 +346,8 @@ var NRS = (function (NRS, $, undefined) {
             processData = true;
         }
 
+        var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : null;
+
         $.ajax({
             url: url,
             crossDomain: true,
@@ -361,6 +363,9 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
+            if (!(response.errorCode || response.errorDescription || response.errorMessage || response.error)) {
+                NRS.confirmRequest(requestType, data, response, requestRemoteNode);
+            }
             NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
