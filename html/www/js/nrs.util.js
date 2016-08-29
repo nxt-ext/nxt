@@ -419,7 +419,7 @@ var NRS = (function (NRS, $, undefined) {
             "mantissa": mantissa
         }, no_escaping, zeroPad);
     };
-    
+
     NRS.getTransactionsAmountDecimals = function(transactions) {
         var decimals = {};
    		decimals.amount = NRS.getNumberOfDecimals(transactions, "amountNQT", function (transaction) {
@@ -430,7 +430,7 @@ var NRS = (function (NRS, $, undefined) {
    		});
         return decimals;
    	};
-    
+
     NRS.getNumberOfDecimals = function(rows, key, callback) {
         var locale = NRS.getLocale();
         var decimals = 0;
@@ -530,7 +530,7 @@ var NRS = (function (NRS, $, undefined) {
         var heightDiff = height - NRS.lastBlockHeight;
         return moment().add(heightDiff * NRS.averageBlockGenerationTime, 'seconds');
     };
-    
+
     NRS.getBlockHeightTimeEstimate = function(height) {
         var heightMoment = NRS.getBlockHeightMoment(height);
         if (heightMoment == "-") {
@@ -1433,7 +1433,7 @@ var NRS = (function (NRS, $, undefined) {
         }
         return statusIcon;
     };
-    
+
     NRS.getAccountForDecryption = function(transaction, recipient, sender) {
         if (!recipient && transaction.recipient == NRS.account) {
             return transaction.sender;
@@ -1668,5 +1668,6 @@ var NRS = (function (NRS, $, undefined) {
     NRS.unescapeRespStr = function (val) {
         return String(val).unescapeHTML();
     };
+
     return NRS;
 }(NRS || {}, jQuery));

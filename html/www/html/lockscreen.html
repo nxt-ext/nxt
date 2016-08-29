@@ -21,12 +21,13 @@
         <tr><td style="text-align:center;vertical-align:middle">
             <img src="img/nxt_logo.png" alt="Nxt" id="logo-nxt-img" />
 
-            <div id="login_panel">   
-                <div class="callout callout-danger" id="testnet_login" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">                        
+            <div id="login_panel">
+                <div class="callout callout-danger" id="testnet_login" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">
                     <div class="callout callout-danger"></div>
                 </div>
 
-				<button type="button" id="loginButtons" class="btn btn-primary" data-toggle="button" data-login-type="account" aria-pressed="false" style="min-width:40px;">
+                <button type="button" id="scanQRCode" class="btn btn-primary" style="display:none; min-width:40px;" aria-pressed="false"><i class="fa fa-camera"></i></button>
+                <button type="button" id="loginButtons" class="btn btn-primary" data-toggle="button" data-login-type="account" style="min-width:40px;">
     				<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>
 				</button>
 
@@ -212,7 +213,7 @@
                     </div>
                 </div>
             </div>
-        
+
             <div id="custom_passphrase_link">
                 <a href="#" onclick="NRS.registerUserDefinedAccount();" data-i18n="choose_own_passphrase">Want to choose your own passphrase? Click here.</a>
             </div>
