@@ -49,9 +49,9 @@ var NRS = (function(NRS, $) {
 
     NRS.toNormalizedResponseString = function (response) {
         var responseWithoutProcTime = {};
-        for (var key in obj) {
-            if (obj.hasOwnProperty(key) && key != "requestProcessingTime") {
-                responseWithoutProcTime[key] = obj[key];
+        for (var key in response) {
+            if (response.hasOwnProperty(key) && key != "requestProcessingTime") {
+                responseWithoutProcTime[key] = response[key];
             }
         }
         return JSON.stringify(responseWithoutProcTime);
@@ -87,6 +87,8 @@ var NRS = (function(NRS, $) {
                     if (responseStr == checkedResponseStr) {
                         confirmationReport.confirmations.push(fromNode.announcedAddress);
                     } else {
+                        NRS.logConsole(fromNode.announcedAddress + " does not agree with "
+                            + requestRemoteNode.announcedAddress + " about " + requestType);
                         confirmationReport.rejections.push(fromNode.announcedAddress);
                     }
                 }

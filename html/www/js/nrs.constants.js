@@ -88,7 +88,7 @@ var NRS = (function (NRS, $) {
     };
 
     NRS.loadServerConstants = function () {
-        NRS.sendRequest("getConstants", {}, function (response) {
+        function processConstants(response) {
             if (response.genesisAccountId) {
                 NRS.constants.SERVER = response;
                 NRS.constants.VOTING_MODELS = response.votingModels;
@@ -111,7 +111,16 @@ var NRS = (function (NRS, $) {
                 NRS.loadTransactionTypeConstants(response);
                 NRS.constants.PROXY_NOT_FORWARDED_REQUESTS = response.proxyNotForwardedRequests;
             }
-        }, false);
+        }
+        if (NRS.isMobileApp()) {
+            jQuery.ajaxSetup({ async: false });
+            $.getScript("js/data/constants.js" );
+            jQuery.ajaxSetup({async: true});
+            processConstants(NRS.constants.SERVER);
+        } else {
+            NRS.sendRequest("getConstants", {}, processConstants, false);
+        }
+
     };
 
     function getKeyByValue(map, value) {
@@ -182,8 +191,8 @@ var NRS = (function (NRS, $) {
     NRS.isRequestForwardable = function(requestType) {
         return NRS.isRequireBlockchain(requestType) &&
             !NRS.isRequireFullClient(requestType) &&
-            NRS.constants.PROXY_NOT_FORWARDED_REQUESTS instanceof Array &&
-            NRS.constants.PROXY_NOT_FORWARDED_REQUESTS.indexOf(requestType) < 0;
+            (!(NRS.constants.PROXY_NOT_FORWARDED_REQUESTS instanceof Array) ||
+            NRS.constants.PROXY_NOT_FORWARDED_REQUESTS.indexOf(requestType) < 0);
     };
 
     NRS.isRequirePost = function(requestType) {

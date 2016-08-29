@@ -150,7 +150,7 @@ RemoteNodesManager.prototype.init = function () {
     if (this.isMobileApp) {
         //load the remote nodes bootstrap file only for mobile wallet
         jQuery.ajaxSetup({ async: false });
-        $.getScript(this.isTestnet ? "js/util/remotenodesbootstrap.testnet.js" : "js/util/remotenodesbootstrap.mainnet.js");
+        $.getScript(this.isTestnet ? "js/data/remotenodesbootstrap.testnet.js" : "js/data/remotenodesbootstrap.mainnet.js");
         jQuery.ajaxSetup({async: true});
 
         this.addRemoteNodes(this.REMOTE_NODES_BOOTSTRAP);

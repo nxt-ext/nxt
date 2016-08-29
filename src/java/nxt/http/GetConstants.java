@@ -183,7 +183,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
 
                 JSONArray notForwardedRequests = new JSONArray();
                 notForwardedRequests.addAll(APIProxy.NOT_FORWARDED_REQUESTS);
-                response.put("proxyNotForwardedRequests", disabledAPITags);
+                response.put("proxyNotForwardedRequests", notForwardedRequests);
 
                 CONSTANTS = JSON.prepare(response);
             } catch (Exception e) {

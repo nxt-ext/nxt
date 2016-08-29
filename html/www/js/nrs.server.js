@@ -346,7 +346,7 @@ var NRS = (function (NRS, $, undefined) {
             processData = true;
         }
 
-        var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : null;
+        var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : {address: "localhost", announcedAddress: "localhost"}; //TODO unify getRemoteNode with apiProxyPeer
 
         $.ajax({
             url: url,
