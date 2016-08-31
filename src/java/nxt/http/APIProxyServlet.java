@@ -27,7 +27,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.proxy.AsyncMiddleManServlet;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.ServletConfig;
@@ -128,15 +127,7 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
 
     @Override
     protected HttpClient newHttpClient() {
-        SslContextFactory sslContextFactory = new SslContextFactory();
-        
-        sslContextFactory.addExcludeCipherSuites("SSL_RSA_WITH_DES_CBC_SHA", "SSL_DHE_RSA_WITH_DES_CBC_SHA",
-                "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
-                "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
-        sslContextFactory.addExcludeProtocols("SSLv3");
-        sslContextFactory.setTrustAll(true);
-
-        return new HttpClient(sslContextFactory);
+        return HttpClientFactory.newHttpClient();
     }
 
     @Override
