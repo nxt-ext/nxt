@@ -58,7 +58,7 @@ var NRS = (function(NRS, $) {
         NRS.logConsole("api call action: " + action + " ,data: " + JSON.stringify(requestData) + " ,method: " + method +
             (ignoreError ? " ignore " + ignoreError : "") + (modal ? " modal " + modal : ""));
         $.ajax({
-            url: NRS.settings.exchange_url + action,
+            url: NRS.getShapeShiftUrl() + action,
             crossDomain: true,
             dataType: "json",
             type: method,
