@@ -28,10 +28,6 @@ var NRS = (function (NRS) {
         return window.indexedDB !== undefined;
     };
 
-    NRS.isCoinExchangePageAvailable = function() {
-        return !isDesktopApplication; // JavaFX does not support CORS required by ShapeShift
-    };
-
     NRS.isExternalLinkVisible = function() {
         // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
@@ -114,6 +110,14 @@ var NRS = (function (NRS) {
 
     NRS.isCodeScanningEnabled = function () {
         return isMobileApp;
+    };
+
+    NRS.getShapeShiftUrl = function() {
+        if (isDesktopApplication) {
+            return location.origin + "/shapeshift/";
+        } else {
+            return NRS.settings.exchange_url;
+        }
     };
 
     return NRS;

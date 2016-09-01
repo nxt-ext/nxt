@@ -58,7 +58,7 @@ var NRS = (function(NRS, $) {
         NRS.logConsole("api call action: " + action + " ,data: " + JSON.stringify(requestData) + " ,method: " + method +
             (ignoreError ? " ignore " + ignoreError : "") + (modal ? " modal " + modal : ""));
         $.ajax({
-            url: NRS.settings.exchange_url + action,
+            url: NRS.getShapeShiftUrl() + action,
             crossDomain: true,
             dataType: "json",
             type: method,
@@ -715,7 +715,7 @@ var NRS = (function(NRS, $) {
         $("#m_send_amount_sell_withdrawal_amount_coin").html("NXT");
         $("#m_send_amount_sell_deposit_amount_coin").html(coin);
         $("#m_send_amount_sell_deposit_address").html("");
-        $("#m_send_amount_sell_qr_code").html("");
+        $("#m_send_amount_sell_qr_code").html("<span style='color: blue'>" + $.t("please_enter_withdrawal_amount") + "</span>");
         $("#m_send_amount_sell_pair").val(pair);
         $("#m_send_amount_sell_done").prop('disabled', true);
     });
@@ -733,7 +733,7 @@ var NRS = (function(NRS, $) {
             NRS.showModalError("Account has no public key, please login using your passphrase", modal);
             return;
         }
-        $("#m_send_amount_sell_qr_code").html("");
+        $("#m_send_amount_sell_qr_code").html("<span style='color: blue'>" + $.t("please_enter_withdrawal_amount") + "</span>");
         modal.css('cursor','wait');
         apiCall('sendamount', { amount: amount, withdrawal: NRS.accountRS, pubKey: publicKey, pair: pair, apiKey: NRS.settings.exchange_api_key },
                 "POST", function (data) {
