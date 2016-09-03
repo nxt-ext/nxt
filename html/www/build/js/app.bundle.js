@@ -34,12 +34,6 @@ var MyApp = (function () {
         this.backPressed = false;
         this.rootPage = login_1.LoginPage;
         platform.ready().then(function () {
-            if (window.resolveLocalFileSystemURL) {
-                window.resolveLocalFileSystemURL(cordova.file.applicationDirectory + "www/SkyNxt/user/skynxt.user", NRS.mobile.userSettingFileLoad, null);
-            }
-            else {
-                NRS.mobile.setRandomPeer(NRS.mobile.CORS_PEERS);
-            }
             ionic_native_1.StatusBar.styleDefault();
         });
     }
@@ -276,15 +270,6 @@ var SendPage = (function () {
             }
             if (msg.errorCode == -1) {
                 displayMsg = _this.failedTxt();
-                //if the server connection has failed reset the server address to a new peer randomly
-                var peers = void 0;
-                if (NRS.mobile.OPEN_API_PEERS) {
-                    peers = NRS.mobile.OPEN_API_PEERS;
-                }
-                else {
-                    peers = NRS.mobile.CORS_PEERS;
-                }
-                NRS.mobile.setRandomPeer(peers);
             }
             var toast = _this.toastCtrl.create({
                 message: displayMsg,

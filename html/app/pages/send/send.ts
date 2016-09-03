@@ -105,17 +105,6 @@ export class SendPage {
 	  if(msg.errorCode == -1)
 	  {
 		displayMsg = this.failedTxt();
-		//if the server connection has failed reset the server address to a new peer randomly
-		let peers;
-		if(NRS.mobile.OPEN_API_PEERS)
-		{
-			peers = NRS.mobile.OPEN_API_PEERS;
-		}
-		else
-		{
-			peers = NRS.mobile.CORS_PEERS
-		}
-		NRS.mobile.setRandomPeer(peers);
 	  }
 
 	  let toast = this.toastCtrl.create({

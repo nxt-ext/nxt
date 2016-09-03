@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Ionic</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <link ios-href="build/css/app.ios.css" rel="stylesheet">
+  <link md-href="build/css/app.md.css" rel="stylesheet">
+  <link wp-href="build/css/app.wp.css" rel="stylesheet">  
+</head>
+<body>
+
+  <ion-app></ion-app>
+
+  <!-- cordova.js required for cordova apps -->
+  <script src="cordova.js"></script>
+  <script src="js/3rdparty/jquery.js"></script>
+  <script src="js/3rdparty/ajaxmultiqueue.js"></script>
+  <script src="js/crypto/passphrasegenerator.js"></script>
+  <script src="js/3rdparty/qrcode.js"></script>
+  <script src="js/3rdparty/i18next.js"></script>
+  <script src="js/3rdparty/moment-with-locales.min.js"></script>
+  <script src="js/3rdparty/spin.min.js"></script>
+  <script src="js/nrs.feature.detection.js"></script>
+  <script src="js/util/remotenodesmgr.js"></script>
+  <script src="js/data/remotenodesbootstrap.mainnet.js"></script>
+  <script src="js/nrs.remote.nodes.js"></script>
+  <script src="js/nrs.localstorage.js"></script>
+  <script src="js/nrs.transactions.types.js"></script>
+  <script src="js/nrs.constants.js"></script>
+  <script src="js/nrs.js"></script>
+  <script src="js/nrs.settings.js"></script>
+
+  <script>
+	i18nGlobal = {};
+	i18nGlobal = $.i18n;
+
+	NRS.settings["language"] = "en";
+	NRS.settings['regional_format'] = "en-US";
+
+	i18nGlobal.init({
+		fallbackLng: NRS.settings["language"],
+		fallbackOnEmpty: true,
+		lowerCaseLng: true,
+		detectLngFromLocalStorage: true,
+		resGetPath: "build/locales/__lng__/translation.json",
+		debug: false
+	}, function() {
+
+	});
+
+	NRS.settings["language"] = i18nGlobal.lng();//If different language is detected from local storage
+
+	moment.locale(NRS.settings["language"]);
+
+	//function call that just returns original string, this is just workaround to support already existing NXT core JS
+	$.growl = function(x) {
+		return (x);
+	}  
+  </script>
+  <script src="js/nrs.console.js"></script>
+  <script src="js/util/extensions.js"></script>
+  <script src="js/util/locale.js"></script>
+  <script src="js/crypto/3rdparty/jssha256.js"></script>
+  <script src="js/crypto/3rdparty/cryptojs/sha256.js"></script>
+  <script src="js/util/nxtaddress.js"></script>
+  <script src="js/util/converters.js"></script>
+  <script src="js/3rdparty/jsbn.js"></script>
+  <script src="js/3rdparty/jsbn2.js"></script>
+  <script src="js/crypto/curve25519.js"></script>
+  <script src="js/nrs.util.js"></script>
+  <script src="js/nrs.encryption.js"></script>
+  <script src="js/nrs.server.js"></script>
+  <!-- Polyfill needed for platforms without Promise and Collection support -->
+  <script src="build/js/es6-shim.min.js"></script>
+  <!-- Zone.js and Reflect-metadata  -->
+  <script src="build/js/Reflect.js"></script>
+  <script src="build/js/zone.js"></script>
+  <!-- the bundle which is built from the app's source code -->
+  <script src="build/js/app.bundle.js"></script>
+</body>
+</html>

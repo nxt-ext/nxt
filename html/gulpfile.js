@@ -38,7 +38,7 @@ var isRelease = argv.indexOf('--release') > -1;
 
 gulp.task('watch', ['clean'], function(done){
   runSequence(
-    ['sass', 'html', 'fonts', 'scripts', 'extlibs', 'copyLocale'],
+    ['sass', 'html', 'fonts', 'scripts', 'copyLocale'],
     function(){
       gulpWatch('app/**/*.scss', function(){ gulp.start('sass'); });
       gulpWatch('app/**/*.html', function(){ gulp.start('html'); });
@@ -49,7 +49,7 @@ gulp.task('watch', ['clean'], function(done){
 
 gulp.task('build', ['clean'], function(done){
   runSequence(
-    ['sass', 'html', 'fonts', 'scripts', 'extlibs', 'copyLocale'],
+    ['sass', 'html', 'fonts', 'scripts', 'copyLocale'],
     function(){
       buildBrowserify({
         minify: isRelease,
@@ -63,12 +63,6 @@ gulp.task('build', ['clean'], function(done){
     }
   );
 });
-var gulpConcat = require('gulp-concat');
- gulp.task('extlibs', function() {
-   return gulp.src(['www/js/3rdparty/jquery.js', 'www/js/3rdparty/ajaxmultiqueue.js', 'www/js/crypto/passphrasegenerator.js', 'js/qrcode.js', 'www/js/3rdparty/i18next.js', 'js/moment-with-locales.min.js', 'js/init.js', 'www/js/nrs.console.js', 'www/js/util/extensions.js', 'www/js/util/locale.js', 'www/js/nrs.settings.js', 'www/js/crypto/3rdparty/jssha256.js', 'www/js/crypto/3rdparty/cryptojs/sha256.js', 'www/js/util/nxtaddress.js', 'www/js/nrs.constants.js', 'www/js/util/converters.js', 'www/js/3rdparty/jsbn.js', 'www/js/3rdparty/jsbn2.js', 'www/js/crypto/curve25519.js', 'www/js/nrs.util.js', 'www/js/nrs.encryption.js', 'www/js/nrs.server.js'])
-     .pipe(gulpConcat('nxtlib.js'))
-     .pipe(gulp.dest('www/build/js'));
- });
 
 gulp.task('copyLocale', function(){
   gulp.src("www/locales/**/*.json").pipe(gulp.dest("www/build/locales"));

@@ -33,14 +33,6 @@ export class MyApp {
     this.rootPage = LoginPage;
 
     platform.ready().then(() => {	
-		if(window.resolveLocalFileSystemURL)
-		{
-			window.resolveLocalFileSystemURL(cordova.file.applicationDirectory + "www/SkyNxt/user/skynxt.user", NRS.mobile.userSettingFileLoad, null);	
-		}
-		else
-		{
-			NRS.mobile.setRandomPeer(NRS.mobile.CORS_PEERS);
-		}
 		StatusBar.styleDefault();
 	  
     });
