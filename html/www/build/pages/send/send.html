@@ -1,0 +1,60 @@
+<!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~ Copyright © 2016 The Nxt Core Developers.                                 ~
+  ~                                                                           ~
+  ~ See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at     ~
+  ~ the top-level directory of this distribution for the individual copyright ~
+  ~ holder information and the developer policies on copyright and licensing. ~
+  ~                                                                           ~
+  ~ Unless otherwise agreed in a custom licensing agreement, no part of the   ~
+  ~ Nxt software, including this file, may be copied, modified, propagated,   ~
+  ~ or distributed except according to the terms contained in the LICENSE.txt ~
+  ~ file.                                                                     ~
+  ~                                                                           ~
+  ~ Removal or modification of this copyright notice is prohibited.           ~
+  ~                                                                           ~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+<ion-header>
+  <ion-navbar>
+    <ion-title>{{sendNxtTxt()}}</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding class="send">
+<ion-card>
+	<ion-card-content>
+		<ion-row>
+			<ion-col width-80>
+				<ion-card-title>
+					<ion-spinner name="ios" [hidden]="balance_disp_spin"></ion-spinner><strong>{{balance[0]}}<span class="decimal-font">{{balance[1]}}</span></strong> <span class="nxt-font">NXT</span>
+				</ion-card-title>
+			</ion-col>
+			<ion-col width-20>
+				<button light (click)='showQRCode()'><ion-icon name="ios-barcode-outline"></ion-icon></button>
+			</ion-col>
+		</ion-row>	
+		<p>
+		{{accountTxt()}} <strong>{{accountRS}}</strong> 
+		</p>
+	</ion-card-content>
+</ion-card>
+
+<ion-list>
+<p></p>
+	<ion-row padding>
+		<ion-col width-90>
+			<ion-input type="text" [(ngModel)]='address' placeholder="{{addressTxt()}}"></ion-input>
+		</ion-col>
+		<ion-col width-10>
+			<button light (click)='scanQR()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
+		</ion-col>
+	</ion-row>
+	<ion-row padding>
+	<ion-col width-90>
+		<ion-input type="text" [(ngModel)]='amount' (keydown)='keydownEvent($event)' placeholder="{{amountTxt()}}"></ion-input>
+	</ion-col>
+	</ion-row>
+	<p></p>
+</ion-list>
+
+<button full (click)='sendNxt()'>{{sendNxtTxt()}}<ion-icon name="ios-send"></ion-icon></button>
+</ion-content>
