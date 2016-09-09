@@ -179,4 +179,21 @@ export class LoginPage {
 		this.navController.push(TabsPage);
 	}	
   }
+  
+  switchToWebUI() {
+  	if(this.passphrase == "")
+	{
+		this.showToast(i18nGlobal.t("error_passphrase_required_login"), 'top');
+	}
+	else
+	{
+		let skynxt = <HTMLElement>document.querySelector('.skynxtApp');
+		skynxt.style.visibility = "hidden";
+		let nrs = <HTMLElement>document.querySelector('.nrsApp');
+		nrs.style.visibility = "visible";
+		let header = <HTMLElement>document.querySelector('.header')
+		header.style.visibility = "visible";
+		NRS.login(1,this.passphrase);
+	}
+  }
 }

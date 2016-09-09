@@ -25,8 +25,15 @@
 		<ion-input type="password" [(ngModel)]="passphrase" placeholder="{{passphraseTxt()}}"><ion-icon name="ios-person-outline"></ion-icon></ion-input>
 	</ion-item>
 </ion-list>
-
-<button full large (click)='passphraseEntered()'><ion-icon name="ios-arrow-forward-outline"></ion-icon></button>
+<span>Login to</span>
+<ion-row>
+ <ion-col>
+<button (click)='passphraseEntered()'><ion-icon name="ios-arrow-forward-outline"></ion-icon>SkyNxt UI(minimal features)</button>
+ </ion-col>
+<ion-col>
+<button (click)='switchToWebUI()'>NRS Web UI(full features)</button>
+</ion-col>		
+</ion-row>
 
   <ion-item>
     <ion-select [(ngModel)]="language" (ngModelChange)="languageChanged()">

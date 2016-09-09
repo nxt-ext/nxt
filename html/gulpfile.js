@@ -38,7 +38,7 @@ var isRelease = argv.indexOf('--release') > -1;
 
 gulp.task('watch', ['clean'], function(done){
   runSequence(
-    ['sass', 'html', 'fonts', 'scripts', 'copyLocale'],
+    ['sass', 'html', 'fonts', 'scripts'],
     function(){
       gulpWatch('app/**/*.scss', function(){ gulp.start('sass'); });
       gulpWatch('app/**/*.html', function(){ gulp.start('html'); });
@@ -49,7 +49,7 @@ gulp.task('watch', ['clean'], function(done){
 
 gulp.task('build', ['clean'], function(done){
   runSequence(
-    ['sass', 'html', 'fonts', 'scripts', 'copyLocale'],
+    ['sass', 'html', 'fonts', 'scripts'],
     function(){
       buildBrowserify({
         minify: isRelease,
@@ -62,11 +62,6 @@ gulp.task('build', ['clean'], function(done){
       }).on('end', done);
     }
   );
-});
-
-gulp.task('copyLocale', function(){
-  gulp.src("www/locales/**/*.json").pipe(gulp.dest("www/build/locales"));
-  gulp.src("SkyNxt/user/skynxt.user").pipe(gulp.dest("www/SkyNxt/user/"));
 });
 
 gulp.task('sass', buildSass);
