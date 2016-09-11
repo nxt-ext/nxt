@@ -105,7 +105,7 @@ RemoteNodesManager.prototype.getRandomNode = function (ignoredAddresses) {
             node = null;
         } else {
             node = this.nodes[address];
-            if (node.isBlacklisted()) {
+            if (node != null && node.isBlacklisted()) {
                 node = null;
             }
         }
@@ -135,6 +135,9 @@ RemoteNodesManager.prototype.getRandomNodes = function (count, ignoredAddresses)
 RemoteNodesManager.prototype.findMoreNodes = function () {
     var nodesMgr = this;
     var node = this.getRandomNode();
+    if (node == null) {
+        return;
+    }
     var data = {state: "CONNECTED", includePeerInfo: true};
     node.sendRequest("getPeers", data, function (response) {
         if (response.peers) {

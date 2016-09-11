@@ -66,8 +66,12 @@ var NRS = (function (NRS) {
             return remoteNode.getUrl();
         }
         remoteNode = NRS.remoteNodesMgr.getRandomNode();
-        var url = remoteNode.getUrl();
-        NRS.logConsole("Remote node url: " + url);
+        if (remoteNode) {
+            var url = remoteNode.getUrl();
+            NRS.logConsole("Remote node url: " + url);
+        } else {
+            NRS.logConsole("No available remote nodes");
+        }
         return url;
     };
 

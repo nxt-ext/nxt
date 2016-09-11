@@ -47,20 +47,66 @@ var NRS = (function(NRS, $) {
         return !NRS.isRequirePost(requestType) && NRS.isRequestForwardable(requestType)
     };
 
-    NRS.toNormalizedResponseString = function (response) {
-        var responseWithoutProcTime = {};
-        for (var key in response) {
-            if (response.hasOwnProperty(key) && key != "requestProcessingTime") {
-                responseWithoutProcTime[key] = response[key];
+    var prunableAttachments = [
+        "PrunablePlainMessage", "PrunableEncryptedMessage", "UnencryptedPrunableEncryptedMessage", "ShufflingProcessing", "TaggedDataUpload"
+    ];
+
+    function normalizePrunableAttachment(transaction) {
+        var attachment = transaction.attachment;
+        if (attachment) {
+            // Check if prunable attachment
+            var isPrunableAttachment = false;
+            for (var key in attachment) {
+                if (!attachment.hasOwnProperty(key) || !key.startsWith("version.")) {
+                    continue;
+                }
+                key = key.substring("version.".length);
+                for (var i=0; i<prunableAttachments.length; i++) {
+                    if (key == prunableAttachments[i]) {
+                        isPrunableAttachment = true;
+                    }
+                }
+            }
+            if (!isPrunableAttachment) {
+                return;
+            }
+            for (key in attachment) {
+                if (!attachment.hasOwnProperty(key)) {
+                    continue;
+                }
+                if (key.length < 4 || !(key.substring(key.length - 4, key.length).toLowerCase() == "hash")) {
+                    delete attachment[key];
+                }
             }
         }
-        return JSON.stringify(responseWithoutProcTime);
+    }
+
+    NRS.getComparableResponse = function(origResponse) {
+        delete origResponse.requestProcessingTime;
+        if (origResponse.transactions) {
+            var transactions = origResponse.transactions;
+            for (var i=0; i<transactions.length; i++) {
+                var transaction = transactions[i];
+                delete transaction.confirmations;
+                normalizePrunableAttachment(transaction);
+            }
+        }
+        return JSON.stringify(origResponse);
     };
 
-    NRS.confirmRequest = function(requestType, data, responseToCheck, requestRemoteNode) {
+    NRS.confirmRequest = function(requestType, data, expectedResponse, requestRemoteNode) {
         if (NRS.requestNeedsConfirmation(requestType)) {
-            var checkedResponseStr = NRS.toNormalizedResponseString(responseToCheck);
+            try {
+                // First clone the response so that we do not change it
+                var expectedResponseStr = JSON.stringify(expectedResponse);
+                expectedResponse = JSON.parse(expectedResponseStr);
 
+                // Now remove all variable parts
+                expectedResponseStr = NRS.getComparableResponse(expectedResponse);
+            } catch(e) {
+                NRS.logConsole("Cannot parse JSON response for request " + requestType);
+                return;
+            }
             var ignoredAddresses = [];
             if (requestRemoteNode) {
                 ignoredAddresses.push(requestRemoteNode.address);
@@ -73,27 +119,34 @@ var NRS = (function(NRS, $) {
             }
             function onConfirmation(response) {
                 var fromNode = this;
+                NRS.logConsole("Confirm with node " + fromNode.announcedAddress);
                 var index = confirmationReport.processing.indexOf(fromNode.announcedAddress);
                 confirmationReport.processing.splice(index, 1);
 
                 if (response.errorCode && response.errorCode == -1) {
-                    //network error
+                    // Confirmation request received a network error
+                    // Retry the request on another node until all nodes are ignored
                     var retryNode = NRS.remoteNodesMgr.getRandomNode(ignoredAddresses);
-                    confirmationReport.processing.push(retryNode.announcedAddress);
-                    ignoredAddresses.push(retryNode.address);
-                    retryNode.sendRequest(requestType, data, onConfirmation);
+                    if (retryNode != null) {
+                        NRS.logConsole("Retry node " + retryNode.announcedAddress);
+                        confirmationReport.processing.push(retryNode.announcedAddress);
+                        ignoredAddresses.push(retryNode.address);
+                        retryNode.sendRequest(requestType, data, onConfirmation);
+                    }
                 } else {
-                    var responseStr = NRS.toNormalizedResponseString(response);
-                    if (responseStr == checkedResponseStr) {
+                    // here it's Ok to modify the response since it is only being for comparison
+                    var responseStr = NRS.getComparableResponse(response);
+                    if (responseStr == expectedResponseStr) {
                         confirmationReport.confirmations.push(fromNode.announcedAddress);
                     } else {
-                        NRS.logConsole(fromNode.announcedAddress + " does not agree with "
-                            + requestRemoteNode.announcedAddress + " about " + requestType);
+                        NRS.logConsole(fromNode.announcedAddress + " response defers from " + requestRemoteNode.announcedAddress + " response for " + requestType);
+                        NRS.logConsole("Expected Response: " + expectedResponseStr);
+                        NRS.logConsole("Actual   Response: " + responseStr);
                         confirmationReport.rejections.push(fromNode.announcedAddress);
                     }
 
                     if (confirmationReport.processing.length == 0) {
-                        NRS.logConsole("Request " + requestType + " confirmed by " + confirmationReport.confirmations);
+                        NRS.logConsole("Request " + requestType + " confirmed " + confirmationReport.confirmations.length + " times");
                     }
                 }
             }
