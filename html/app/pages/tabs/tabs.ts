@@ -33,13 +33,11 @@ export class TabsPage {
     this.tab2Root = TransactionPage;
   }
   
-  transactionsTxt()
-  {
+  transactionsTxt() {
 	return i18nGlobal.t("transaction");
   }
   
-  tabsendNxtTxt()
-  {
+  tabsendNxtTxt() {
 	return i18nGlobal.t("send_nxt");
   }  
 }

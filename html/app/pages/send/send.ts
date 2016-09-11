@@ -14,7 +14,8 @@
  *                                                                            *
  ******************************************************************************/
 import {Component} from '@angular/core';
-import {Page, ViewController, Alert, ModalController, LoadingController, ToastController, NavController} from 'ionic-angular';
+import {Page, ViewController, AlertController, ModalController, LoadingController, ToastController, NavController} from 'ionic-angular';
+import {LoginPage} from '../login/login';
 
 declare var i18nGlobal;
 declare var NxtAddress;
@@ -45,8 +46,7 @@ declare var cordova;
 export class AccountQRCodeModal {
 	qrCode:any;
 	
-    constructor(private nav:NavController, private viewCtrl:ViewController) 
-	{
+    constructor(private nav:NavController, private viewCtrl:ViewController) {
 		var qr = qrcode(3, 'M');
 		var text = NRS.accountRS.replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
 		qr.addData(text);
@@ -54,23 +54,19 @@ export class AccountQRCodeModal {
 		this.qrCode = qr.createImgTag(6);	
     }
 	
-	accountQRCodeTxt()
-	{
+	accountQRCodeTxt() {
 		return i18nGlobal.t("account_qr_code");
 	}
 	
-	accountRS()
-	{
+	accountRS() {
 		return NRS.accountRS;
 	}
 	
-	closeTxt()
-	{
+	closeTxt() {
 		return i18nGlobal.t("close");
 	}
 	
-    close()
-	{
+    close() {
 		this.viewCtrl.dismiss();
     }
 }
@@ -80,30 +76,26 @@ export class AccountQRCodeModal {
 })
 export class SendPage {
   
-  balance:string = "";
-  address:string = "";
-  amount:string = "";
+  balance : string = "";
+  address : string = "";
+  amount : string = "";
   accountRS = "";
-  accountId = "";
-  balance_disp_spin:any = false;
-  loading: any;
+  balance_disp_spin : any = false;
+  loading : any;
   
-  constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController, private loadingCtrl: LoadingController) 
-  {
+  constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController, private loadingCtrl: LoadingController, public alertCtrl: AlertController) {
 
   }
 
   showToast = (msg) => {
 	  let displayMsg = msg.errorDescription;
-	  if(msg.broadcasted)
-	  {
+	  if(msg.broadcasted) {
 		displayMsg = i18nGlobal.t("success_send_money");
 		this.address = "";
 		this.amount = "";
 		this.balanceUpdate();
 	  }
-	  if(msg.errorCode == -1)
-	  {
+	  if(msg.errorCode == -1) {
 		displayMsg = this.failedTxt();
 	  }
 
@@ -116,91 +108,106 @@ export class SendPage {
 	  toast.present();
   }
   
-  onPageLoaded() {
-	  this.accountId = NRS.account = NRS.getAccountId(NRS.secret);  
-	  let nxtAddress = new NxtAddress();
-	  if (nxtAddress.set(this.accountId)) {
-		NRS.accountRS = this.accountRS = nxtAddress.toString();
-	  }
-	  NRS.accountInfo = {
-		"publickey" : NRS.getPublicKey(converters.stringToHexString(NRS.secret))
-	  };
-	  this.balanceUpdate();
+  publicKeyCallBack = (response) => {
+	NRS.accountInfo = {
+		"publickey" : response.publicKey
+	};
+	this.balanceUpdate();
   }
   
-  onPageWillLeave() 
-  {
+  onPageLoaded() {
+	  let nxtAddress = new NxtAddress();
+	  if(NRS.secret == undefined) {
+		  if (nxtAddress.set(NRS.accountRS)) {
+			NRS.account = nxtAddress.account_id();
+			this.accountRS = nxtAddress.toString();
+
+			NRS.sendRequest("getAccountPublicKey", {
+				"account": NRS.account
+			}, this.publicKeyCallBack
+			);
+		  }
+	  }
+	  else {
+		  NRS.account = NRS.getAccountId(NRS.secret);  
+		  if (nxtAddress.set(NRS.account)) {
+			NRS.accountRS = this.accountRS = nxtAddress.toString();
+		  }
+		  NRS.accountInfo = {
+			"publickey" : NRS.getPublicKey(converters.stringToHexString(NRS.secret))
+		  };
+		  this.balanceUpdate();
+	  }
+  }
+  
+  onPageWillLeave() {
   }
 
-  balanceUpdate()
-  {
+  logoff() {
+	NRS.secret = "";
+	NRS.account = "";
+	NRS.accountRS = "";
+	NRS.accountInfo = {};
+	this.navController.push(LoginPage);
+  }
+  
+  balanceUpdate() {
   	  NRS.sendRequest("getAccount", {
 			"account": NRS.account
 		}, this.balanceCallBack);
   }
   
-  showQRCode()
-  {
+  showQRCode() {
 	let qrModal = this.modalCtrl.create(AccountQRCodeModal);
 	qrModal.present();
   }
   
-  loadingTxt()
-  {
+  loadingTxt() {
 	return i18nGlobal.t("loading_please_wait");
   }
   
   balanceCallBack = (response) => {
   	this.balance_disp_spin = true;
 	if (!response.errorCode) {
-		if (response.account != NRS.account || response.accountRS != this.accountRS) {
+		if (response.account != NRS.account || response.accountRS != NRS.accountRS) {
 			response.errorDescription = i18nGlobal.t("error_account_id");
 		}
-		else
-		{
+		else {
 			this.balance = NRS.formatAmount(response.unconfirmedBalanceNQT, false, true).split(".");
 			if(this.balance[1] != undefined)
 				this.balance[0] = this.balance[0] + ".";
 		}
 	}
-	else
-	{
+	else {
 		this.showToast(response);
 	}
   }
 
-  addressTxt()
-  {
+  addressTxt() {
 	return i18nGlobal.t("recipient_account");
   }
 
-  accountTxt()
-  {
+  accountTxt() {
 	return i18nGlobal.t("account");
   }
   
-  balanceTxt()
-  {
+  balanceTxt() {
 	return i18nGlobal.t("balance");
   }
   
-  amountTxt()
-  {
+  amountTxt() {
 	return i18nGlobal.t("amount");
   }
   
-  sendNxtTxt()
-  {
+  sendNxtTxt() {
 	return i18nGlobal.t("send_nxt");
   }
 
-  failedTxt()
-  {
+  failedTxt() {
 	return i18nGlobal.t("error_server_connect");
   }
     
-  keydownEvent(e)
-  {
+  keydownEvent(e) {
   		let charCode = !e.charCode ? e.which : e.charCode;
 
 		if (NRS.isControlKey(charCode) || e.ctrlKey || e.metaKey) {
@@ -210,27 +217,20 @@ export class SendPage {
 		NRS.validateDecimals(8, charCode, this.amount, e);
   }
   
-  scanQRDone = (result) =>
-  {
-	if(result.cancelled == false && result.format == "QR_CODE")
-	{
+  scanQRDone = (result) => {
+	if(result.cancelled == false && result.format == "QR_CODE") {
 		this.address = result.text;
 	}	
   }
   
-  scanQR()
-  {
-	var scannedAddress = "";
-	try 
-	{
+  scanQR() {
+	try {
 		cordova.plugins.barcodeScanner.scan( this.scanQRDone, 
-			function (error)
-			{
+			function (error) {
 			}
 		);
 	} 
-	catch (e) 
-	{
+	catch (e) {
 	}
   }
 
@@ -239,11 +239,38 @@ export class SendPage {
 	this.showToast(response);
   }
   
-  sendNxt()
-  {
+	showInputPassphrase() {
+		let prompt = this.alertCtrl.create({
+		  title: i18nGlobal.t("passphrase"),
+		  inputs: [
+			{
+			  name: 'alertPassphrase',
+			  placeholder: i18nGlobal.t("passphrase")
+			},
+		  ],
+		  buttons: [
+			{
+			  text: i18nGlobal.t("cancel"),
+			  handler: data => {
+				console.log('Cancel clicked');
+				console.log(data);
+			  }
+			},
+			{
+			  text: i18nGlobal.t("submit"),
+			  handler: data => {
+				console.log('submit clicked');
+				console.log(data);
+			  }
+			}
+		  ]
+		});
+		prompt.present();
+	}
+
+  sendNxt() {
 	  let msg = { errorCode: 1, errorDescription:""};
-	  if(this.address == "" || this.amount == "")
-	  {	    
+	  if(this.address == "" || this.amount == "") {	    
 		msg.errorDescription = i18nGlobal.t("error_invalid_input");
 		this.showToast(msg);
 		return;
@@ -253,8 +280,7 @@ export class SendPage {
 	  if (nxtAddress.set(this.address)) {
 		recipientAccountRS = nxtAddress.toString();
 	  }
-	  else
-	  {
+	  else {
 		msg.errorDescription = i18nGlobal.t("recipient_malformed");
 		this.showToast(msg);
 		return;
@@ -265,6 +291,11 @@ export class SendPage {
 		  duration: 5000
 		});	
 	this.loading.present();	
+	if(NRS.secret == undefined)
+	{
+		//this.showInputPassphrase();
+		return;
+	}
 	NRS.sendRequest("sendMoney", {
 		"recipient": recipientAccountRS,
 		"type": "POST",

@@ -32,8 +32,7 @@ export class TransactionPage {
 
   }
 
-  onPageDidEnter()
-  {
+  onPageDidEnter() {
 	  this.loading = this.loadingCtrl.create({
 		  content: i18nGlobal.t("loading")
 		});	
@@ -67,13 +66,11 @@ export class TransactionPage {
 			if(addressRecipient.set(transaction.recipient))
 				addressRecipientStr = addressRecipient.toString()
 			
-			if(addressRecipientStr != NRS.accountRS)
-			{
+			if(addressRecipientStr != NRS.accountRS) {
 				transaction.class = "to";
 				transaction.addr = addressRecipientStr;
 			}
-			else
-			{
+			else {
 				transaction.class = "from";
 				transaction.addr = addressSenderStr;
 			}
@@ -92,8 +89,7 @@ export class TransactionPage {
 	}
   }
   
-  failedTxt()
-  {
+  failedTxt() {
 	return i18nGlobal.t("error_server_connect");
   }
   
@@ -112,8 +108,7 @@ export class TransactionPage {
 	  toast.present();
   }
   
-  transactionsTxt()
-  {
+  transactionsTxt() {
 	return i18nGlobal.t("transaction");
   }  
 }

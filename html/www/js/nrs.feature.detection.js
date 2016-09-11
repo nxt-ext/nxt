@@ -21,7 +21,7 @@ var NRS = (function (NRS) {
 
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
-    var isMobileApp = window["cordova"] !== undefined;
+    var isMobileApp = true;//window["cordova"] !== undefined;
     var remoteNode = null;
 
     NRS.isIndexedDBSupported = function() {

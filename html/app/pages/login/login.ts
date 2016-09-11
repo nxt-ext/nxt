@@ -20,6 +20,8 @@ declare var i18nGlobal;
 declare var NRS;
 declare var moment;
 declare var PassPhraseGenerator;
+declare var cordova;
+declare var NxtAddress;
 
 @Page({
     template: `
@@ -44,40 +46,33 @@ declare var PassPhraseGenerator;
 export class PassPhraseGeneratorModal {
 	autoPassPhrase:any;
 	
-    constructor(private viewCtrl:ViewController) 
-	{
+    constructor(private viewCtrl:ViewController) {
 		PassPhraseGenerator.generatePassPhrase();
 		this.autoPassPhrase = PassPhraseGenerator.passPhrase;
 		PassPhraseGenerator.reset();
     }
 	
-	genPassTxt()
-	{
+	genPassTxt() {
 		return i18nGlobal.t("generate") + " " + i18nGlobal.t("passphrase");
 	}
 	
-	autoGenTxt()
-	{
+	autoGenTxt() {
 		return i18nGlobal.t("automatically_generated_passphrase_is");
 	}
 	
-	warningTxt()
-	{
+	warningTxt() {
 		return i18nGlobal.t("passphrase_disclosure_warning");
 	}
 	
-	memorizeTxt()
-	{
+	memorizeTxt() {
 		return i18nGlobal.t("memorize_passphrase_help");
 	}
 	
-	closeTxt()
-	{
+	closeTxt() {
 		return i18nGlobal.t("close");
 	}
 	
-    close()
-	{
+    close() {
 		this.viewCtrl.dismiss();
     }
 }
@@ -86,34 +81,73 @@ export class PassPhraseGeneratorModal {
   templateUrl: 'build/pages/login/login.html'
 })
 export class LoginPage {
-  passphrase:string = "";
-  language:any;
+  loginData : string = "";
+  nxtAddress : string = "";
+  language : any;
+  textType : string = "text";
+  iconType : string = "ios-person-outline";
+  rememberMe : boolean = true;
 
   constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController) {
   }
   
-  onPageLoaded() 
-  {
+  onPageLoaded() {
 	NRS.constants.EPOCH_BEGINNING = 1385294400000; //hardcoded genesis data
   }
   
-  generatePassphrase()
-  {
+  generatePassphrase() {
 	let passPhraseGenModal = this.modalCtrl.create(PassPhraseGeneratorModal);
     passPhraseGenModal.present();
   }
   
-  closeTxt()
-  {
+  closeTxt() {
 	return i18nGlobal.t("close");
   }
   
-  languageChanged()
-  {
-	for(var lng in NRS.languages)
-	{
-		if(NRS.languages[lng] == this.language)
-		{
+  switchInputType() {
+	if(this.textType == "text") {
+		this.textType = "password";
+		this.iconType = "ios-key-outline";
+	}
+	else {
+		this.textType = "text";
+		this.iconType = "ios-person-outline";
+	}
+  }
+  
+  scanQRDone = (result) => {
+	if(result.cancelled == false && result.format == "QR_CODE") {
+	  if(this.textType == "text") {
+		  let nxtAddress = new NxtAddress();
+		  if (nxtAddress.set(result.text)) {
+			this.loginData = this.nxtAddress = nxtAddress.toString();
+		  }
+		  else {
+			this.showToast(i18nGlobal.t("recipient_malformed"), 'top');
+		  }
+		}
+		else {
+			this.loginData = result.text;
+		}
+	}
+  }
+
+  scanQRCode() {
+  this.loginData = "";
+  this.nxtAddress = "";
+	try {
+		cordova.plugins.barcodeScanner.scan( this.scanQRDone, 
+			function (error) {
+			}
+		);
+	}
+	catch (e) {
+	}
+  }
+  
+  languageChanged() {
+	for(var lng in NRS.languages) {
+		if(NRS.languages[lng] == this.language) {
 			NRS.settings["language"] = lng;
 			i18nGlobal.setLng(NRS.settings["language"], null, function() {
 					
@@ -124,32 +158,32 @@ export class LoginPage {
 	}
   }
   
-  defaultLang(lang)
-  {
+  defaultLang(lang) {
 	if(lang == NRS.languages[NRS.settings["language"]])
 		return true;
 	else
 		return false;
   }
   
-  supportedLanguages()
-  {
+  supportedLanguages() {
 	let languages = [];
-	for( var lg in NRS.languages)
-	{
+	for( var lg in NRS.languages) {
 		languages.push(NRS.languages[lg]);
 	}
 	return languages;
   }
 
-  getLang()
-  {
+  getLang() {
 	return (NRS.languages);
   }
 
-  passphraseTxt()
-  {
-	return i18nGlobal.t("passphrase");
+  loginTxt() {
+	if(this.textType == "text") {
+		return "NXT-____-____-____-_____";
+	}
+	else {
+		return i18nGlobal.t("passphrase");
+	}
   }
 
   showToast = (msg, pos) => {
@@ -162,38 +196,56 @@ export class LoginPage {
 	  toast.present();
   }
   
-  passphraseEntered()
-  {
-	if(this.passphrase == "")
-	{
+  checkForInput() {
+	let retVal = true;
+	if((this.loginData == "") && this.textType == "password") {
 		this.showToast(i18nGlobal.t("error_passphrase_required_login"), 'top');
+		retVal = false;
 	}
-	else
-	{
-		NRS.secret = this.passphrase;
-		this.passphrase = "";
-		if(NRS.secret.length < 35)
-		{
-			this.showToast(i18nGlobal.t("error_passphrase_length"), 'bottom');
+	else if(this.textType == "text") {
+	  let nxtAddress = new NxtAddress();
+	  if (nxtAddress.set(this.loginData)) {
+		this.nxtAddress = nxtAddress.toString();
+	  }
+	  if(this.loginData == ""  || this.nxtAddress == "") {
+		this.showToast(i18nGlobal.t("error_invalid_account_id"), 'top');
+		retVal = false;
+	  }
+	}
+	return retVal;
+  }
+  
+  loginDataEntered() {
+	if(this.checkForInput()) {
+		if(this.textType == "text") {
+			NRS.accountRS = this.loginData;
+		}
+		else {
+			NRS.secret = this.loginData;
+			this.loginData = "";
+			if(NRS.secret.length < 35) {
+				this.showToast(i18nGlobal.t("error_passphrase_length"), 'bottom');
+			}
 		}
 		this.navController.push(TabsPage);
-	}	
+	}
   }
   
   switchToWebUI() {
-  	if(this.passphrase == "")
-	{
-		this.showToast(i18nGlobal.t("error_passphrase_required_login"), 'top');
-	}
-	else
-	{
+	  if(this.checkForInput()) {
 		let skynxt = <HTMLElement>document.querySelector('.skynxtApp');
 		skynxt.style.visibility = "hidden";
 		let nrs = <HTMLElement>document.querySelector('.nrsApp');
 		nrs.style.visibility = "visible";
 		let header = <HTMLElement>document.querySelector('.header')
 		header.style.visibility = "visible";
-		NRS.login(1,this.passphrase);
-	}
+		
+		if(this.textType == "password") {
+			NRS.login(true, this.loginData);
+		}
+		else {
+			NRS.login(false, this.loginData);
+		}
+	  }
   }
 }

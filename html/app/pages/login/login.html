@@ -21,14 +21,29 @@
 
 <ion-content padding class="login">
 <ion-list >
-	<ion-item>
-		<ion-input type="password" [(ngModel)]="passphrase" placeholder="{{passphraseTxt()}}"><ion-icon name="ios-person-outline"></ion-icon></ion-input>
-	</ion-item>
+
+	<ion-row>
+		<ion-col width-10>
+			<button light (click)='switchInputType()'><ion-icon name="{{iconType}}"></ion-icon></button>
+		</ion-col>
+		<ion-col width-80>
+			<ion-input type="{{textType}}" [(ngModel)]="loginData" placeholder="{{loginTxt()}}"><ion-icon name="ios-person-outline"></ion-icon></ion-input>
+		</ion-col>
+		<ion-col width-10>
+			<button light (click)='scanQRCode()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
+		</ion-col>
+	</ion-row>
+
 </ion-list>
+<ion-item>
+  <ion-label>Remember me</ion-label>
+  <ion-checkbox dark [(ngModel)]="rememberMe"></ion-checkbox>
+</ion-item>
+
 <span>Login to</span>
 <ion-row>
  <ion-col>
-<button (click)='passphraseEntered()'><ion-icon name="ios-arrow-forward-outline"></ion-icon>SkyNxt UI(minimal features)</button>
+<button (click)='loginDataEntered()'><ion-icon name="ios-arrow-forward-outline"></ion-icon>SkyNxt UI(minimal features)</button>
  </ion-col>
 <ion-col>
 <button (click)='switchToWebUI()'>NRS Web UI(full features)</button>
