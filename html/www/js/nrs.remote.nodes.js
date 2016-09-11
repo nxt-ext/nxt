@@ -57,9 +57,9 @@ var NRS = (function(NRS, $) {
         return JSON.stringify(responseWithoutProcTime);
     };
 
-    NRS.confirmRequest = function(requestType, data, responseToCheck, requestRemoteNode) {
+    NRS.confirmRequest = function(requestType, data, expectedResponse, requestRemoteNode) {
         if (NRS.requestNeedsConfirmation(requestType)) {
-            var checkedResponseStr = NRS.toNormalizedResponseString(responseToCheck);
+            var expectedResponseStr = NRS.toNormalizedResponseString(expectedResponse);
 
             var ignoredAddresses = [];
             if (requestRemoteNode) {
@@ -73,27 +73,33 @@ var NRS = (function(NRS, $) {
             }
             function onConfirmation(response) {
                 var fromNode = this;
+                NRS.logConsole("Confirm with node " + fromNode.announcedAddress);
                 var index = confirmationReport.processing.indexOf(fromNode.announcedAddress);
                 confirmationReport.processing.splice(index, 1);
 
                 if (response.errorCode && response.errorCode == -1) {
-                    //network error
+                    // Confirmation request received a network error
+                    // Retry the request on another node until all nodes are ignored
                     var retryNode = NRS.remoteNodesMgr.getRandomNode(ignoredAddresses);
-                    confirmationReport.processing.push(retryNode.announcedAddress);
-                    ignoredAddresses.push(retryNode.address);
-                    retryNode.sendRequest(requestType, data, onConfirmation);
+                    if (retryNode != null) {
+                        NRS.logConsole("Retry node " + retryNode.announcedAddress);
+                        confirmationReport.processing.push(retryNode.announcedAddress);
+                        ignoredAddresses.push(retryNode.address);
+                        retryNode.sendRequest(requestType, data, onConfirmation);
+                    }
                 } else {
                     var responseStr = NRS.toNormalizedResponseString(response);
-                    if (responseStr == checkedResponseStr) {
+                    if (responseStr == expectedResponseStr) {
                         confirmationReport.confirmations.push(fromNode.announcedAddress);
                     } else {
-                        NRS.logConsole(fromNode.announcedAddress + " does not agree with "
-                            + requestRemoteNode.announcedAddress + " about " + requestType);
+                        NRS.logConsole(fromNode.announcedAddress + " response defers from " + requestRemoteNode.announcedAddress + " response for " + requestType);
+                        NRS.logConsole("Expected Response: " + expectedResponseStr);
+                        NRS.logConsole("Actual   Response: " + responseStr);
                         confirmationReport.rejections.push(fromNode.announcedAddress);
                     }
 
                     if (confirmationReport.processing.length == 0) {
-                        NRS.logConsole("Request " + requestType + " confirmed by " + confirmationReport.confirmations);
+                        NRS.logConsole("Request " + requestType + " confirmed by " + confirmationReport.confirmations.length + " times");
                     }
                 }
             }
