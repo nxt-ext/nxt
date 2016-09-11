@@ -13,18 +13,9 @@
   ~ Removal or modification of this copyright notice is prohibited.           ~
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<ion-header>
-  <ion-navbar>
-    <ion-title>{{sendNxtTxt()}}</ion-title>
-    <ion-buttons end>
-      <button (click)='logoff()'>
-        <ion-icon name="ios-power-outline"></ion-icon>
-      </button>
-    </ion-buttons>  
-  </ion-navbar>
-</ion-header>
 
 <ion-content padding class="send">
+<ion-item> </ion-item>
 <ion-card>
 	<ion-card-content>
 		<ion-row>
@@ -61,5 +52,5 @@
 	<p></p>
 </ion-list>
 
-<button full (click)='sendNxt()'>{{sendNxtTxt()}}<ion-icon name="ios-send"></ion-icon></button>
+<button full (click)='onSendNxtClick()'>{{sendNxtTxt()}}<ion-icon name="ios-send"></ion-icon></button>
 </ion-content>

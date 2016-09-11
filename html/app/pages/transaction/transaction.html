@@ -13,16 +13,9 @@
   ~ Removal or modification of this copyright notice is prohibited.           ~
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<ion-header>
-  <ion-navbar>
-    <ion-title>
-      {{transactionsTxt()}}
-    </ion-title>
-  </ion-navbar>
-</ion-header>
 
 <ion-content padding class="transaction">
-
+<ion-item> </ion-item>
 <ion-item *ngFor="let transaction of transactions">
 <ion-row>
  <ion-col padding text-left><span class="{{transaction.class}}">{{transaction.prefix}} <strong>{{transaction.amount[0]}}</strong></span><span class="date-address {{transaction.class}}">{{transaction.amount[1]}}</span> <span class="nxt-font">NXT</span><br><span class="date-address moment-color">{{transaction.addr}} </span>

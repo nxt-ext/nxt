@@ -15,7 +15,6 @@
  ******************************************************************************/
 import {Component} from '@angular/core';
 import {Page, ViewController, AlertController, ModalController, LoadingController, ToastController, NavController} from 'ionic-angular';
-import {LoginPage} from '../login/login';
 
 declare var i18nGlobal;
 declare var NxtAddress;
@@ -142,14 +141,6 @@ export class SendPage {
   
   onPageWillLeave() {
   }
-
-  logoff() {
-	NRS.secret = "";
-	NRS.account = "";
-	NRS.accountRS = "";
-	NRS.accountInfo = {};
-	this.navController.push(LoginPage);
-  }
   
   balanceUpdate() {
   	  NRS.sendRequest("getAccount", {
@@ -253,14 +244,22 @@ export class SendPage {
 			  text: i18nGlobal.t("cancel"),
 			  handler: data => {
 				console.log('Cancel clicked');
-				console.log(data);
+				console.log(data.alertPassphrase);
 			  }
 			},
 			{
 			  text: i18nGlobal.t("submit"),
 			  handler: data => {
 				console.log('submit clicked');
-				console.log(data);
+				console.log(data.alertPassphrase);
+				if(data.alertPassphrase == undefined || data.alertPassphrase == "") {
+					let msg = { errorCode: 1, errorDescription:""};
+					msg.errorDescription = i18nGlobal.t("error_invalid_input");
+					this.showToast(msg);
+				}
+				else {
+					this.sendNxt(data.alertPassphrase);
+				}
 			  }
 			}
 		  ]
@@ -268,13 +267,14 @@ export class SendPage {
 		prompt.present();
 	}
 
-  sendNxt() {
+  sendNxt(secret) {
 	  let msg = { errorCode: 1, errorDescription:""};
 	  if(this.address == "" || this.amount == "") {	    
 		msg.errorDescription = i18nGlobal.t("error_invalid_input");
 		this.showToast(msg);
 		return;
 	  }
+
 	  let recipientAccountRS = "";
 	  let nxtAddress = new NxtAddress();
 	  if (nxtAddress.set(this.address)) {
@@ -285,24 +285,29 @@ export class SendPage {
 		this.showToast(msg);
 		return;
 	  }
-	  
+	    
 	this.loading = this.loadingCtrl.create({
 		  content: "",
 		  duration: 5000
 		});	
 	this.loading.present();	
-	if(NRS.secret == undefined)
-	{
-		//this.showInputPassphrase();
-		return;
-	}
+
 	NRS.sendRequest("sendMoney", {
 		"recipient": recipientAccountRS,
 		"type": "POST",
 		"amountNQT": NRS.convertToNQT(this.amount),
-		"secretPhrase": NRS.secret,
+		"secretPhrase": secret,
 		"deadline": "1440",
 		"feeNQT": NRS.convertToNQT(1)
-	}, this.onSendNxt);
-  }  
+	}, this.onSendNxt);  
+  }
+  
+  onSendNxtClick() {
+	if(NRS.secret == undefined) {
+		this.showInputPassphrase();
+	}
+	else {
+		this.sendNxt(NRS.secret);
+	}
+  }
 }

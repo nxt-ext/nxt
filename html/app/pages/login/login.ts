@@ -16,6 +16,7 @@
 import {Component} from '@angular/core';
 import {ToastController, Page, ViewController, ModalController, NavController} from 'ionic-angular';
 import {TabsPage} from '../tabs/tabs';
+
 declare var i18nGlobal;
 declare var NRS;
 declare var moment;
@@ -237,9 +238,8 @@ export class LoginPage {
 		skynxt.style.visibility = "hidden";
 		let nrs = <HTMLElement>document.querySelector('.nrsApp');
 		nrs.style.visibility = "visible";
-		let header = <HTMLElement>document.querySelector('.header')
-		header.style.visibility = "visible";
-		
+		NRS.initWebUI();
+
 		if(this.textType == "password") {
 			NRS.login(true, this.loginData);
 		}

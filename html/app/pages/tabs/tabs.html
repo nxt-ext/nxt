@@ -13,7 +13,16 @@
   ~ Removal or modification of this copyright notice is prohibited.           ~
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-<ion-tabs>
+<ion-header>
+    <ion-buttons end>
+      <button clear (click)='logoff()'>
+        <ion-icon name="ios-power-outline"></ion-icon>
+      </button>
+    </ion-buttons>  
+</ion-header>
+<ion-content>
+<ion-tabs class="skyNxtTabs" [hidden]="sky_nxt_tabs">
   <ion-tab [root]="tab1Root" tabTitle="{{tabsendNxtTxt()}}" tabIcon="ios-send"></ion-tab>
   <ion-tab [root]="tab2Root" tabTitle="{{transactionsTxt()}}" tabIcon="ios-swap"></ion-tab>
 </ion-tabs>
+</ion-content>
