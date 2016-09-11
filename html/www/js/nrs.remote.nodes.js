@@ -47,20 +47,66 @@ var NRS = (function(NRS, $) {
         return !NRS.isRequirePost(requestType) && NRS.isRequestForwardable(requestType)
     };
 
-    NRS.toNormalizedResponseString = function (response) {
-        var responseWithoutProcTime = {};
-        for (var key in response) {
-            if (response.hasOwnProperty(key) && key != "requestProcessingTime") {
-                responseWithoutProcTime[key] = response[key];
+    var prunableAttachments = [
+        "PrunablePlainMessage", "PrunableEncryptedMessage", "UnencryptedPrunableEncryptedMessage", "ShufflingProcessing", "TaggedDataUpload"
+    ];
+
+    function normalizePrunableAttachment(transaction) {
+        var attachment = transaction.attachment;
+        if (attachment) {
+            // Check if prunable attachment
+            var isPrunableAttachment = false;
+            for (var key in attachment) {
+                if (!attachment.hasOwnProperty(key) || !key.startsWith("version.")) {
+                    continue;
+                }
+                key = key.substring("version.".length);
+                for (var i=0; i<prunableAttachments.length; i++) {
+                    if (key == prunableAttachments[i]) {
+                        isPrunableAttachment = true;
+                    }
+                }
+            }
+            if (!isPrunableAttachment) {
+                return;
+            }
+            for (key in attachment) {
+                if (!attachment.hasOwnProperty(key)) {
+                    continue;
+                }
+                if (key.length < 4 || !(key.substring(key.length - 4, key.length).toLowerCase() == "hash")) {
+                    delete attachment[key];
+                }
             }
         }
-        return JSON.stringify(responseWithoutProcTime);
+    }
+
+    NRS.getComparableResponse = function(origResponse) {
+        delete origResponse.requestProcessingTime;
+        if (origResponse.transactions) {
+            var transactions = origResponse.transactions;
+            for (var i=0; i<transactions.length; i++) {
+                var transaction = transactions[i];
+                delete transaction.confirmations;
+                normalizePrunableAttachment(transaction);
+            }
+        }
+        return JSON.stringify(origResponse);
     };
 
     NRS.confirmRequest = function(requestType, data, expectedResponse, requestRemoteNode) {
         if (NRS.requestNeedsConfirmation(requestType)) {
-            var expectedResponseStr = NRS.toNormalizedResponseString(expectedResponse);
+            try {
+                // First clone the response so that we do not change it
+                var expectedResponseStr = JSON.stringify(expectedResponse);
+                expectedResponse = JSON.parse(expectedResponseStr);
 
+                // Now remove all variable parts
+                expectedResponseStr = NRS.getComparableResponse(expectedResponse);
+            } catch(e) {
+                NRS.logConsole("Cannot parse JSON response for request " + requestType);
+                return;
+            }
             var ignoredAddresses = [];
             if (requestRemoteNode) {
                 ignoredAddresses.push(requestRemoteNode.address);
@@ -88,7 +134,8 @@ var NRS = (function(NRS, $) {
                         retryNode.sendRequest(requestType, data, onConfirmation);
                     }
                 } else {
-                    var responseStr = NRS.toNormalizedResponseString(response);
+                    // here it's Ok to modify the response since it is only being for comparison
+                    var responseStr = NRS.getComparableResponse(response);
                     if (responseStr == expectedResponseStr) {
                         confirmationReport.confirmations.push(fromNode.announcedAddress);
                     } else {
@@ -99,7 +146,7 @@ var NRS = (function(NRS, $) {
                     }
 
                     if (confirmationReport.processing.length == 0) {
-                        NRS.logConsole("Request " + requestType + " confirmed by " + confirmationReport.confirmations.length + " times");
+                        NRS.logConsole("Request " + requestType + " confirmed " + confirmationReport.confirmations.length + " times");
                     }
                 }
             }
