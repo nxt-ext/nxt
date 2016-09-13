@@ -1823,5 +1823,9 @@
   "option_7": "Option 7",
   "option_8": "Option 8",
   "option_9": "Option 9",
-  "please_enter_withdrawal_amount": "To generate QR code, please enter withdrawal amount"
+  "please_enter_withdrawal_amount": "To generate QR code, please enter withdrawal amount",
+  "simulate_mobile_app": "Simulate Mobile App",
+  "mobile_client": "Mobile Client",
+  "mobile_client_description": "You are working as a mobile client. You are connected to remote node __url__",
+  "no_available_remote_nodes": "No available remote nodes"
 }

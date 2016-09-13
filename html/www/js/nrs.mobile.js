@@ -21,30 +21,22 @@ var NRS = (function(NRS, $) {
 
     $("#mobile_settings_modal").on("show.bs.modal", function() {
         $(".info_message").html($.t("remote_node_url", { url: NRS.getRemoteNodeUrl() }));
+        if (NRS.mobileSettings.is_simulate_app) {
+            $("#mobile_is_simulate_app").prop('checked', true);
+        } else {
+            $("#mobile_is_simulate_app").prop('checked', false);
+        }
         if (NRS.mobileSettings.is_testnet) {
             $("#mobile_is_testnet").prop('checked', true);
         } else {
             $("#mobile_is_testnet").prop('checked', false);
         }
-        if (NRS.mobileSettings.is_ssl) {
-            $("#mobile_is_ssl").prop('checked', true);
-        } else {
-            $("#mobile_is_ssl").prop('checked', false);
-        }
     });
 
     NRS.forms.setMobileSettings = function() {
-        var isTestnet = $("#mobile_is_testnet");
-        var isSsl = $("#mobile_is_ssl");
-        if (isTestnet.prop('checked') == NRS.mobileSettings.is_testnet &&
-            isSsl.prop('checked') == NRS.mobileSettings.is_ssl) {
-            return { stop: true };
-        }
-        NRS.mobileSettings.is_testnet = isTestnet.prop('checked');
-        NRS.mobileSettings.is_ssl = isSsl.prop('checked');
+        NRS.mobileSettings.is_simulate_app = $("#mobile_is_simulate_app").prop('checked');
+        NRS.mobileSettings.is_testnet = $("#mobile_is_testnet").prop('checked');
         NRS.setJSONItem("mobile_settings", NRS.mobileSettings);
-        NRS.resetRemoteNode();
-        NRS.getRemoteNodeUrl();
         return { stop: true };
     };
 

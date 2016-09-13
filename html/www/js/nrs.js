@@ -57,7 +57,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.peerConnect = false;
 
 	NRS.settings = {};
-	NRS.mobileSettings = { is_testnet: false, is_ssl: false };
+	NRS.mobileSettings = { is_simulate_app: false, is_testnet: false };
 	NRS.contacts = {};
 
 	NRS.isTestNet = false;
@@ -98,7 +98,7 @@ var NRS = (function(NRS, $, undefined) {
 	var isScanning = false;
 
 	NRS.loadMobileSettings = function () {
-		if (!NRS.isMobileApp() || !window["localStorage"]) {
+		if (!window["localStorage"]) {
 			return;
 		}
 		var mobileSettings = NRS.getJSONItem("mobile_settings");
@@ -380,14 +380,20 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				var clientOptionsLink = $("#header_client_options_link");
 				var clientOptions = $("#header_client_options");
+                if (NRS.isMobileApp()) {
+                    clientOptionsLink.html($.t("mobile_client"));
+                    clientOptions.show();
+                }
 				if (response.apiProxy) {
 					NRS.isLocalHost = false;
-                    if (response.isLightClient) {
-						clientOptionsLink.html($.t("light_client"));
-					} else {
-						clientOptionsLink.html($.t("roaming_client"));
-					}
-					clientOptions.show();
+                    if (!NRS.isMobileApp()) {
+                        if (response.isLightClient) {
+                            clientOptionsLink.html($.t("light_client"));
+                        } else {
+                            clientOptionsLink.html($.t("roaming_client"));
+                        }
+                        clientOptions.show();
+                    }
 					NRS.sendRequest("getBlocks", {
 						"firstIndex": 0, "lastIndex": 0
 					}, function(proxyBlocksResponse) {

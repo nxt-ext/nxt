@@ -34,9 +34,7 @@ var NRS = (function(NRS, $) {
 
     NRS.initRemoteNodesMgr = function(isTestnet, isMobileApp) {
         NRS.remoteNodesMgr = new RemoteNodesManager(isTestnet, isMobileApp);
-        if (!isMobileApp) {
-            NRS.updateRemoteNodes();
-        }
+        NRS.updateRemoteNodes();
     };
 
     NRS.requestNeedsConfirmation = function (requestType) {
