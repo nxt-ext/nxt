@@ -36,7 +36,7 @@
 
 </ion-list>
 <ion-item>
-  <ion-label>Remember me</ion-label>
+  <ion-label>{{rememberTxt()}}</ion-label>
   <ion-checkbox dark [(ngModel)]="rememberMe"></ion-checkbox>
 </ion-item>
 
@@ -52,7 +52,7 @@
 
   <ion-item>
     <ion-select [(ngModel)]="language" (ngModelChange)="languageChanged()">
-      <ion-option *ngFor="let languageKeyVal of supportedLanguages()" value="{{languageKeyVal}}" checked="{{defaultLang(languageKeyVal)}}">{{languageKeyVal}}</ion-option>
+      <ion-option *ngFor="let languageKeyVal of languages" value="{{languageKeyVal}}">{{languageKeyVal}}</ion-option>
     </ion-select>
   </ion-item>
 

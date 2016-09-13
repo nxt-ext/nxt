@@ -84,12 +84,15 @@ export class PassPhraseGeneratorModal {
 export class LoginPage {
   loginData : string = "";
   nxtAddress : string = "";
-  language : any;
+  language : string = "";
   textType : string = "text";
   iconType : string = "ios-person-outline";
   rememberMe : boolean = true;
+  languages : any;
 
   constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController) {
+	this.supportedLanguages();
+	this.language = NRS.languages[NRS.settings["language"]];
   }
   
   onPageLoaded() {
@@ -158,26 +161,25 @@ export class LoginPage {
 		}
 	}
   }
-  
-  defaultLang(lang) {
-	if(lang == NRS.languages[NRS.settings["language"]])
-		return true;
-	else
-		return false;
-  }
-  
+
   supportedLanguages() {
-	let languages = [];
-	for( var lg in NRS.languages) {
-		languages.push(NRS.languages[lg]);
+	this.languages = [];
+	if(this.languages.length == 0) {
+		for( var lg in NRS.languages) {
+			this.languages.push(NRS.languages[lg]);
+		}
 	}
-	return languages;
+	return this.languages;
   }
 
   getLang() {
 	return (NRS.languages);
   }
 
+  rememberTxt() {
+	return i18nGlobal.t("remember");
+  }
+  
   loginTxt() {
 	if(this.textType == "text") {
 		return "NXT-____-____-____-_____";
@@ -220,14 +222,19 @@ export class LoginPage {
 	if(this.checkForInput()) {
 		if(this.textType == "text") {
 			NRS.accountRS = this.loginData;
+			NRS.loginType = false;
 		}
 		else {
+			NRS.rememberPassword = this.rememberMe;
+			NRS.loginType = true;
 			NRS.secret = this.loginData;
 			this.loginData = "";
 			if(NRS.secret.length < 35) {
 				this.showToast(i18nGlobal.t("error_passphrase_length"), 'bottom');
 			}
 		}
+		NRS.loginData = this.loginData;
+		this.loginData = "";
 		this.navController.push(TabsPage);
 	}
   }

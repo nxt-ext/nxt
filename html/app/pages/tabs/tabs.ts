@@ -57,4 +57,13 @@ export class TabsPage {
   tabsendNxtTxt() {
 	return i18nGlobal.t("send_nxt");
   }
+
+  switchToWebUI() {
+	let skynxt = <HTMLElement>document.querySelector('.skynxtApp');
+	skynxt.style.visibility = "hidden";
+	let nrs = <HTMLElement>document.querySelector('.nrsApp');
+	nrs.style.visibility = "visible";
+	NRS.initWebUI();
+	NRS.login(NRS.loginType, NRS.loginData);
+  }  
 }

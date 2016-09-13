@@ -49,6 +49,14 @@
 		<ion-input type="text" [(ngModel)]='amount' (keydown)='keydownEvent($event)' placeholder="{{amountTxt()}}"></ion-input>
 	</ion-col>
 	</ion-row>
+	<ion-row padding class="passphraseRow">
+		<ion-col width-90>
+			<ion-input type="password" [(ngModel)]='secret' placeholder="{{passphraseTxt()}}"></ion-input>
+		</ion-col>
+		<ion-col width-10>
+			<button light (click)='scanPassphrase()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
+		</ion-col>
+	</ion-row>
 	<p></p>
 </ion-list>
 

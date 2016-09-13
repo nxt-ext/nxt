@@ -81,6 +81,8 @@ export class SendPage {
   accountRS = "";
   balance_disp_spin : any = false;
   loading : any;
+  secret : string = "";
+  rememberPassword = true;
   
   constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController, private loadingCtrl: LoadingController, public alertCtrl: AlertController) {
 
@@ -115,8 +117,17 @@ export class SendPage {
   }
   
   onPageLoaded() {
+	  this.rememberPassword = NRS.rememberPassword;
+	  let passphraseRow = <HTMLElement>document.getElementsByTagName("ion-row")[5];
+	  if(this.rememberPassword) {
+		passphraseRow.style.visibility = "hidden";
+	  }
+	  else {
+		passphraseRow.style.visibility = "visible";
+	  }
 	  let nxtAddress = new NxtAddress();
-	  if(NRS.secret == undefined) {
+	  if(NRS.accountRS != undefined) {
+		  this.rememberPassword = false;
 		  if (nxtAddress.set(NRS.accountRS)) {
 			NRS.account = nxtAddress.account_id();
 			this.accountRS = nxtAddress.toString();
@@ -135,6 +146,9 @@ export class SendPage {
 		  NRS.accountInfo = {
 			"publickey" : NRS.getPublicKey(converters.stringToHexString(NRS.secret))
 		  };
+		  if(!NRS.rememberPassword) {
+			NRS.secret = undefined;
+		  }
 		  this.balanceUpdate();
 	  }
   }
@@ -155,6 +169,10 @@ export class SendPage {
   
   loadingTxt() {
 	return i18nGlobal.t("loading_please_wait");
+  }
+
+  passphraseTxt() {
+	return i18nGlobal.t("passphrase");
   }
   
   balanceCallBack = (response) => {
@@ -197,7 +215,7 @@ export class SendPage {
   failedTxt() {
 	return i18nGlobal.t("error_server_connect");
   }
-    
+
   keydownEvent(e) {
   		let charCode = !e.charCode ? e.which : e.charCode;
 
@@ -207,16 +225,10 @@ export class SendPage {
 
 		NRS.validateDecimals(8, charCode, this.amount, e);
   }
-  
-  scanQRDone = (result) => {
-	if(result.cancelled == false && result.format == "QR_CODE") {
-		this.address = result.text;
-	}	
-  }
-  
-  scanQR() {
+
+  scan(callBack) {
 	try {
-		cordova.plugins.barcodeScanner.scan( this.scanQRDone, 
+		cordova.plugins.barcodeScanner.scan( callBack, 
 			function (error) {
 			}
 		);
@@ -224,52 +236,36 @@ export class SendPage {
 	catch (e) {
 	}
   }
+  
+  scanQRDone = (result) => {
+	if(result.cancelled == false && result.format == "QR_CODE") {
+		this.address = result.text;
+	}
+  }
+
+  scanQR() {
+	this.scan(this.scanQRDone);
+  }
+  
+  scanPassphraseDone = (result) => {
+	if(result.cancelled == false && result.format == "QR_CODE") {
+		this.secret = result.text;
+	}
+  }
+
+  scanPassphrase() {
+	this.scan(this.scanPassphraseDone);
+  }
 
   onSendNxt = (response) => {
 	this.loading.dismiss();	
 	this.showToast(response);
   }
-  
-	showInputPassphrase() {
-		let prompt = this.alertCtrl.create({
-		  title: i18nGlobal.t("passphrase"),
-		  inputs: [
-			{
-			  name: 'alertPassphrase',
-			  placeholder: i18nGlobal.t("passphrase")
-			},
-		  ],
-		  buttons: [
-			{
-			  text: i18nGlobal.t("cancel"),
-			  handler: data => {
-				console.log('Cancel clicked');
-				console.log(data.alertPassphrase);
-			  }
-			},
-			{
-			  text: i18nGlobal.t("submit"),
-			  handler: data => {
-				console.log('submit clicked');
-				console.log(data.alertPassphrase);
-				if(data.alertPassphrase == undefined || data.alertPassphrase == "") {
-					let msg = { errorCode: 1, errorDescription:""};
-					msg.errorDescription = i18nGlobal.t("error_invalid_input");
-					this.showToast(msg);
-				}
-				else {
-					this.sendNxt(data.alertPassphrase);
-				}
-			  }
-			}
-		  ]
-		});
-		prompt.present();
-	}
 
-  sendNxt(secret) {
+  onSendNxtClick() {
+	  let secret = "";
 	  let msg = { errorCode: 1, errorDescription:""};
-	  if(this.address == "" || this.amount == "") {	    
+	  if(this.address == "" || this.amount == "" || (!this.rememberPassword && this.secret == "")) {	    
 		msg.errorDescription = i18nGlobal.t("error_invalid_input");
 		this.showToast(msg);
 		return;
@@ -285,12 +281,19 @@ export class SendPage {
 		this.showToast(msg);
 		return;
 	  }
-	    
+	  
+	if(this.rememberPassword) {
+		secret = NRS.secret;
+	}
+	else {
+		secret = this.secret;
+	}
+	  
 	this.loading = this.loadingCtrl.create({
 		  content: "",
 		  duration: 5000
 		});	
-	this.loading.present();	
+	this.loading.present();
 
 	NRS.sendRequest("sendMoney", {
 		"recipient": recipientAccountRS,
@@ -300,14 +303,5 @@ export class SendPage {
 		"deadline": "1440",
 		"feeNQT": NRS.convertToNQT(1)
 	}, this.onSendNxt);  
-  }
-  
-  onSendNxtClick() {
-	if(NRS.secret == undefined) {
-		this.showInputPassphrase();
-	}
-	else {
-		this.sendNxt(NRS.secret);
-	}
   }
 }
