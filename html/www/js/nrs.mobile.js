@@ -36,7 +36,7 @@ var NRS = (function(NRS, $) {
     NRS.forms.setMobileSettings = function() {
         if ($("#mobile_is_testnet").prop('checked') == NRS.mobileSettings.is_testnet &&
             $("#mobile_is_ssl").prop('checked') == NRS.mobileSettings.is_ssl) {
-            return;
+            return { stop: true };
         }
         NRS.mobileSettings.is_testnet = $("#mobile_is_testnet").prop('checked');
         NRS.mobileSettings.is_ssl = $("#mobile_is_ssl").prop('checked');
