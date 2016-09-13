@@ -21,7 +21,7 @@ var NRS = (function (NRS) {
 
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
-    var isMobileApp = window["cordova"] !== undefined;
+    var isMobileDevice = window["cordova"] !== undefined;
     var remoteNode = null;
 
     NRS.isIndexedDBSupported = function() {
@@ -34,11 +34,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.isMobileApp = function () {
-        return isMobileApp;
-    };
-
-    NRS.isMobileSettingsModalAvailable = function() {
-        return isMobileApp;
+        return isMobileDevice || NRS.mobileSettings.is_simulate_app;
     };
 
     NRS.isPollGetState = function() {
@@ -59,7 +55,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.getRemoteNodeUrl = function() {
-        if (!isMobileApp) {
+        if (!NRS.isMobileApp()) {
             return "";
         }
         if (remoteNode) {
@@ -69,10 +65,13 @@ var NRS = (function (NRS) {
         if (remoteNode) {
             var url = remoteNode.getUrl();
             NRS.logConsole("Remote node url: " + url);
+            return url;
         } else {
-            NRS.logConsole("No available remote nodes");
+            NRS.logConsole("No available remote nodes, retry bootstrap nodes");
+            $.growl($.t("no_available_remote_nodes"));
+            NRS.initRemoteNodesMgr(NRS.mobileSettings.is_testnet, true);
+            return NRS.getRemoteNodeUrl();
         }
-        return url;
     };
 
     NRS.getRemoteNode = function () {
@@ -87,7 +86,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.getDownloadLink = function(url, link) {
-        if (isMobileApp) {
+        if (NRS.isMobileApp()) {
             var script = "NRS.openMobileBrowser(\"" + url + "\");";
             if (link) {
                 link.attr("onclick", script);
@@ -113,7 +112,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.isCodeScanningEnabled = function () {
-        return isMobileApp;
+        return NRS.isMobileApp();
     };
 
     NRS.getShapeShiftUrl = function() {

@@ -132,7 +132,7 @@ RemoteNodesManager.prototype.getRandomNodes = function (count, ignoredAddresses)
     return result;
 };
 
-RemoteNodesManager.prototype.findMoreNodes = function () {
+RemoteNodesManager.prototype.findMoreNodes = function (isReschedule) {
     var nodesMgr = this;
     var node = this.getRandomNode();
     if (node == null) {
@@ -143,9 +143,11 @@ RemoteNodesManager.prototype.findMoreNodes = function () {
         if (response.peers) {
             nodesMgr.addRemoteNodes(response.peers);
         }
-        setTimeout(function () {
-            nodesMgr.findMoreNodes();
-        }, 30000);
+        if (isReschedule) {
+            setTimeout(function () {
+                nodesMgr.findMoreNodes(true);
+            }, 30000);
+        }
     });
 };
 
@@ -157,6 +159,6 @@ RemoteNodesManager.prototype.init = function () {
         jQuery.ajaxSetup({async: true});
 
         this.addRemoteNodes(this.REMOTE_NODES_BOOTSTRAP);
-        this.findMoreNodes();
+        this.findMoreNodes(true);
     }
 };

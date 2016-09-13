@@ -36,9 +36,6 @@ var NRS = (function(NRS, $) {
             $("#api_console_li").hide();
             $("#database_shell_li").hide();
         }
-        if (!NRS.isMobileSettingsModalAvailable()) {
-            $("#mobile_settings_li").remove();
-        }
     });
 
     $("#refreshSearchIndex").on("click", function() {
@@ -87,7 +84,13 @@ var NRS = (function(NRS, $) {
     });
 
     $("#client_status_modal").on("show.bs.modal", function() {
-        if (NRS.state.isLightClient) {
+        if (NRS.isMobileApp()) {
+            $("#client_status_description").text($.t("mobile_client_description", { url: NRS.getRemoteNodeUrl() }));
+            $("#client_status_set_peer").hide();
+            $("#client_status_remote_peer_container").hide();
+            $("#client_status_blacklist_peer").hide();
+            return;
+        } else if (NRS.state.isLightClient) {
             $("#client_status_description").text($.t("light_client_description"));
         } else {
             $("#client_status_description").text($.t("api_proxy_description"));

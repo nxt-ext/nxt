@@ -21,7 +21,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="send_nxt">Send NXT</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div data-replace-with-modal-template="recipient_modal_template"></div>
@@ -68,12 +68,12 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="nrs_info">NRS Info</h4>
             </div>
-            <div class="modal-body">    
+            <div class="modal-body">
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
                     <li class="active" id="nrs_modal_state_nav" data-tab="state"><a href="#" data-i18n="nrs_state">NRS State</a></li>
                     <li data-tab="update"><a href="#" data-i18n="nrs_update">NRS Update</a></li>
                 </ul>
-                    
+
                 <div id="nrs_modal_update" class="nrs_modal_content" style="display:none">
                     <div id="nrs_update_explanation" class="nrs_message">
                         <span id="nrs_update_explanation_blockchain_sync" data-i18n="update_blockchain_downloading">The blockchain is still downloading, check again after it's up to date.</span>
@@ -178,7 +178,7 @@
                             </button>
                         </span>
                     </div>
-                        
+
                     <div id="nrs_update_drop_zone" data-i18n="drop_update_v2"></div>
                     <div id="nrs_update_result"></div>
                     <div id="nrs_update_hashes" style="display:none;padding-top:10px;">
@@ -188,16 +188,16 @@
                             <tr><td style="background-color:#efefef;font-weight:bold;"><span data-i18n="official_hash">Official hash</span>:</td><td><span id="nrs_update_hash_official"></span></td></tr>
                         </table>
                     </div>
-                    
+
                     <div id="nrs_update_hash_progress">&nbsp;</div>
-                        
+
                     <div style="display:none">
                         <iframe id="nrs_update_iframe"></iframe>
                         <input type="file" id="nrs_update_file_select" name="files[]" />
                     </div>
                 </div>
-                
-                <div id="nrs_modal_state" class="nrs_modal_content" style="display:none">       
+
+                <div id="nrs_modal_state" class="nrs_modal_content" style="display:none">
                     <table class="table table-striped" id="nrs_node_state_table" style="margin-bottom:0;">
                         <tbody>
                             <tr>
@@ -278,7 +278,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="set_account_info">Set Account Info</h4>
             </div>
-            <div class="modal-body">            
+            <div class="modal-body">
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="form-group">
@@ -296,7 +296,7 @@
                     <div data-replace-with-modal-template="advanced_rt_hash_template"></div>
                     <div data-replace-with-modal-template="advanced_broadcast_template"></div>
                     <div data-replace-with-modal-template="advanced_note_to_self_template"></div>
-                    
+
                     <input type="hidden" name="request_type" value="setAccountInfo" />
                 </form>
             </div>
@@ -317,7 +317,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="account_details">Account Details</h4>
             </div>
-            <div class="modal-body">    
+            <div class="modal-body">
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
                     <li class="active" id="account_details_balance_nav" data-tab="balance"><a href="#" data-i18n="account_details">Account Details</a></li>
                     <li data-tab="leasing"><a href="#" data-i18n="account_leasing">Account Leasing</a></li>
@@ -326,7 +326,7 @@
 
                 <div id="account_details_modal_balance" class="account_details_modal_content" style="display:none">
                     <div class="callout callout-danger" id="account_balance_warning" style="display:none"></div>
-    
+
                     <table class="table" id="account_balance_table" style="margin-bottom:0;table-layout:fixed;">
                         <tbody>
                             <tr>
@@ -360,7 +360,7 @@
                     </table>
                  </div>
 
-                <div id="account_details_modal_leasing" class="account_details_modal_content" style="display:none">     
+                <div id="account_details_modal_leasing" class="account_details_modal_content" style="display:none">
                     <div id="account_leasing_status" class="nrs_message" style="display:none"></div>
                     <div id="account_lessor_container" style="display:none;max-height:350px;overflow:auto;">
                         <table class="table table-striped" id="account_lessor_table" style="margin-bottom:0">
@@ -373,7 +373,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                                
+
                             </tbody>
                         </table>
                     </div>
@@ -408,7 +408,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-i18n="nxt_token_generation_validation">Nxt Token Generation / Validation</h4>
             </div>
-            <div class="modal-body">    
+            <div class="modal-body">
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
                     <li class="active" id="generate_token_nav" data-tab="generate_token"><a href="#" data-i18n="generate_token">Generate Token</a></li>
                     <li data-tab="validate_token"><a href="#" data-i18n="validate_token">Validate Token</a></li>
@@ -429,7 +429,7 @@
                     </form>
                 </div>
 
-                <div id="token_modal_validate_token" class="token_modal_content" style="display:none">     
+                <div id="token_modal_validate_token" class="token_modal_content" style="display:none">
                     <form role="form" id="validate_token_form" autocomplete="off">
                         <div class="callout callout-danger error_message" style="display:none"></div>
                         <div class="callout callout-info" id="decode_token_output" style="display:none;"></div>
@@ -582,7 +582,7 @@
                     <span data-i18n="block">Block</span>&nbsp;<strong><span id="block_info_modal_block"></span></strong>&nbsp;<span data-i18n="info">Info</span>
                 </h4>
             </div>
-            <div class="modal-body">    
+            <div class="modal-body">
                 <div class="tabbable">
                     <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
                         <li class="active"><a href="#block_info_transactions_tab" data-toggle="tab" id="block_info_transactions_tab_link" data-i18n="transactions">Transactions</a></li>
@@ -602,7 +602,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    
+
                                 </tbody>
                             </table>
                             <div id="block_info_transactions_none" style="display:none;" data-i18n="no_transactions_in_block">No transactions in this block.</div>
@@ -610,7 +610,7 @@
                         <div class="tab-pane" id="block_info_details_tab" style="max-height:350px;overflow:auto;">
                             <table class="table table-striped" id="block_info_details_table" style="margin-bottom:0">
                                 <tbody>
-                                    
+
                                 </tbody>
                             </table>
                         </div>
@@ -658,7 +658,7 @@
                     <span data-i18n="account">Account</span>&nbsp;<strong><span id="user_info_modal_account"></span></strong>&nbsp;<span data-i18n="info">Info</span>
                 </h4>
             </div>
-            <div class="modal-body">    
+            <div class="modal-body">
                 <div class="callout callout-info">
                     <span data-i18n="account">Account</span>&nbsp;
                     <span id="user_info_modal_account_name_container">
@@ -669,7 +669,7 @@
                     <strong><span id="user_info_modal_account_balance"></span></strong>
                     <span id="user_info_switch_account"></span>
                 </div>
-                    
+
                 <ul class="nav nav-pills nav-justified" style="margin-bottom:10px">
                     <li class="active" id="user_info_transactions" data-tab="transactions"><a href="#" data-i18n="transactions">Transactions</a></li>
                     <li id="user_info_ledger" data-tab="ledger"><a href="#" data-i18n="ledger">Ledger</a></li>
@@ -694,7 +694,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        
+
                         </tbody>
                     </table>
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
@@ -731,13 +731,13 @@
                         </tr>
                         </thead>
                         <tbody>
-                        
+
                         </tbody>
                     </table>
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_aliases">This user has no aliases.</div>
                 </div>
-                
+
                 <div class="data-container data-loading user_info_modal_content" id="user_info_modal_assets" style="display:none;max-height:350px;overflow:auto;">
                     <table class="table table-striped" id="user_info_modal_assets_table">
                         <thead>
@@ -749,13 +749,13 @@
                         </tr>
                         </thead>
                         <tbody>
-                        
+
                         </tbody>
                     </table>
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_assets">This user has no assets.</div>
                 </div>
-                
+
                 <div class="data-container data-loading user_info_modal_content" id="user_info_modal_trade_history" style="display:none;max-height:350px;overflow:auto;">
                     <table class="table table-striped" id="user_info_modal_trade_history_table">
                         <thead>
@@ -775,7 +775,7 @@
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
                     <div class="data-empty-container" style="padding-top:10px" data-i18n="user_no_trade_history">This user has no trade history.</div>
                 </div>
-                
+
                 <div class="data-container data-loading user_info_modal_content" id="user_info_modal_currencies" style="display:none;max-height:350px;overflow:auto;">
                     <table class="table table-striped" id="user_info_modal_currencies_table">
                         <thead>
@@ -786,7 +786,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        
+
                         </tbody>
                     </table>
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
@@ -803,7 +803,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        
+
                         </tbody>
                     </table>
                     <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
@@ -908,7 +908,7 @@
                     <div class="callout callout-info never_hide">
                         <span id="client_status_description"></span>
                     </div>
-                    <div class="form-group">
+                    <div id="client_status_remote_peer_container" class="form-group">
                         <label for="client_status_remote_peer" data-i18n="remote_peer">Remote Peer</label>
                         <input class="form-control" name="peer" id="client_status_remote_peer" placeholder="Random" data-i18n="[placeholder]random">
                     </div>

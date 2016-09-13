@@ -346,8 +346,6 @@ var NRS = (function (NRS, $, undefined) {
             processData = true;
         }
 
-        var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : {address: "localhost", announcedAddress: "localhost"}; //TODO unify getRemoteNode with apiProxyPeer
-
         $.ajax({
             url: url,
             crossDomain: true,
@@ -364,6 +362,7 @@ var NRS = (function (NRS, $, undefined) {
             processData: processData
         }).done(function (response) {
             if (!(response.errorCode || response.errorDescription || response.errorMessage || response.error)) {
+                var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : {address: "localhost", announcedAddress: "localhost"}; //TODO unify getRemoteNode with apiProxyPeer
                 NRS.confirmRequest(requestType, data, response, requestRemoteNode);
             }
             NRS.escapeResponseObjStrings(response);
@@ -446,6 +445,8 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         }).fail(function (xhr, textStatus, error) {
+            NRS.logConsole("Node " + NRS.getRemoteNodeUrl() + " received an error for request type " + requestType +
+                " status " + textStatus + " error " + error);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }
