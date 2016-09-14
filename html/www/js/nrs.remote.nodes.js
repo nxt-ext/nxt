@@ -24,7 +24,8 @@ var NRS = (function(NRS, $) {
         var data = {state: "CONNECTED", includePeerInfo: true};
         NRS.sendRequest("getPeers", data, function (response) {
             if (response.peers) {
-                NRS.remoteNodesMgr.setRemoteNodes(response.peers);
+                NRS.remoteNodesMgr.nodes = {};
+                NRS.remoteNodesMgr.addRemoteNodes(response.peers);
             }
             setTimeout(function () {
                 NRS.updateRemoteNodes();
@@ -32,9 +33,9 @@ var NRS = (function(NRS, $) {
         });
     };
 
-    NRS.initRemoteNodesMgr = function(isTestnet, isMobileApp) {
-        NRS.remoteNodesMgr = new RemoteNodesManager(isTestnet, isMobileApp);
-        if (!isMobileApp) {
+    NRS.initRemoteNodesMgr = function(isTestnet) {
+        NRS.remoteNodesMgr = new RemoteNodesManager(isTestnet);
+        if (!NRS.isMobileApp()) {
             NRS.updateRemoteNodes();
         }
     };

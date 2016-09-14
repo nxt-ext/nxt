@@ -17,19 +17,12 @@
 function RemoteNode(peerData) {
     this.address = peerData.address;
     this.announcedAddress = peerData.announcedAddress;
-    /*if (peerData.apiSSLPort) {
-        this.port = peerData.apiSSLPort;
-        this.isSSL = true;
-    } else*/ {
-        this.port = peerData.apiPort;
-        this.isSSL = false;
-    }
-    //this.isCORSSupported = peerData.services instanceof Array && peerData.services.indexOf("CORS") >= 0;
+    this.port = peerData.apiPort;
     this.blacklistedUntil = 0;
 }
 
 RemoteNode.prototype.getUrl = function () {
-    return (this.isSSL ? "https://" : "http://") + this.address + ":" + this.port;
+    return "http://" + this.address + ":" + this.port;
 };
 
 RemoteNode.prototype.sendRequest = function(requestType, data, callback, isAsync) {
@@ -65,11 +58,9 @@ RemoteNode.prototype.blacklist = function () {
     this.blacklistedUntil = new Date().getTime() + 10 * 60 * 1000;
 };
 
-function RemoteNodesManager(isTestnet, isMobileApp) {
+function RemoteNodesManager(isTestnet) {
     this.isTestnet = isTestnet;
-    this.isMobileApp = isMobileApp;
     this.nodes = {};
-
     this.init();
 }
 
@@ -77,7 +68,7 @@ RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
     var mgr = this;
     $.each(peersData, function(index, peerData) {
         if (peerData.services instanceof Array && (peerData.services.indexOf("API") >= 0)) {
-            if (this.isMobileApp || true || peerData.services.indexOf("CORS") >= 0) {
+            if (!NRS.isRequireCors() || peerData.services.indexOf("CORS") >= 0) {
                 var oldNode = mgr.nodes[peerData.address];
                 var newNode = new RemoteNode(peerData);
                 if (oldNode) {
@@ -89,10 +80,7 @@ RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
     });
 };
 
-RemoteNodesManager.prototype.setRemoteNodes = function (peersData) {
-    this.nodes = {};
-    this.addRemoteNodes(peersData);
-};
+
 
 RemoteNodesManager.prototype.getRandomNode = function (ignoredAddresses) {
     var addresses = Object.keys(this.nodes);
@@ -152,7 +140,7 @@ RemoteNodesManager.prototype.findMoreNodes = function (isReschedule) {
 };
 
 RemoteNodesManager.prototype.init = function () {
-    if (this.isMobileApp) {
+    if (NRS.isMobileApp()) {
         //load the remote nodes bootstrap file only for mobile wallet
         jQuery.ajaxSetup({ async: false });
         $.getScript(this.isTestnet ? "js/data/remotenodesbootstrap.testnet.js" : "js/data/remotenodesbootstrap.mainnet.js");

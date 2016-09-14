@@ -37,6 +37,10 @@ var NRS = (function (NRS) {
         return isMobileDevice || NRS.mobileSettings.is_simulate_app;
     };
 
+    NRS.isRequireCors = function () {
+        return !isMobileDevice;
+    };
+
     NRS.isPollGetState = function() {
         // When using JavaFX do not poll the server unless it's a working as a proxy
         return !isDesktopApplication || NRS.state && NRS.state.apiProxy;
