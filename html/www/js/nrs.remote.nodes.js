@@ -118,9 +118,9 @@ var NRS = (function(NRS, $) {
             if (requestConfirmations.length > 10) {
                 requestConfirmations.pop();
             }
-            function onConfirmation(response) {
+            function onConfirmation(response, requestType) {
                 var fromNode = this;
-                NRS.logConsole("Confirm with node " + fromNode.announcedAddress);
+                NRS.logConsole("Confirm request " + requestType + " with node " + fromNode.announcedAddress);
                 var index = confirmationReport.processing.indexOf(fromNode.announcedAddress);
                 confirmationReport.processing.splice(index, 1);
 
@@ -147,7 +147,9 @@ var NRS = (function(NRS, $) {
                     }
 
                     if (confirmationReport.processing.length == 0) {
-                        NRS.logConsole("Request " + requestType + " confirmed " + confirmationReport.confirmations.length + " times");
+                        NRS.logConsole("Request " + requestType +
+                            " confirmations " + confirmationReport.confirmations.length +
+                            " rejections " + confirmationReport.rejections.length);
                     }
                 }
             }

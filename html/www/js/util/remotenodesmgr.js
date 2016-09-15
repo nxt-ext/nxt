@@ -40,12 +40,12 @@ RemoteNode.prototype.sendRequest = function(requestType, data, callback, isAsync
         traditional: true,
         data: data
     }).done(function (response) {
-        callback.call(node, response);
+        callback.call(node, response, requestType);
     }).fail(function (xhr, textStatus, error) {
         callback.call(node, {
             "errorCode": -1,
             "errorDescription": error
-        });
+        }, requestType);
         node.blacklist();
     });
 };
