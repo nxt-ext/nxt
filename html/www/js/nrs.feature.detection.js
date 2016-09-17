@@ -30,7 +30,7 @@ var NRS = (function (NRS) {
 
     NRS.isExternalLinkVisible = function() {
         // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
-        if (isMobileApp()) {
+        if (NRS.isMobileApp()) {
             return false;
         }
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
