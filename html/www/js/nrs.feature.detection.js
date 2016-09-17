@@ -30,6 +30,9 @@ var NRS = (function (NRS) {
 
     NRS.isExternalLinkVisible = function() {
         // When using JavaFX add a link to a web wallet except on Linux since on Ubuntu it sometimes hangs
+        if (isMobileApp()) {
+            return false;
+        }
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
     };
 
@@ -128,6 +131,10 @@ var NRS = (function (NRS) {
     };
 
     NRS.isForgingSupported = function() {
+        return !NRS.isMobileApp() && !(NRS.state && NRS.state.apiProxy);
+    };
+
+    NRS.isFundingMonitorSupported = function() {
         return !NRS.isMobileApp() && !(NRS.state && NRS.state.apiProxy);
     };
 
