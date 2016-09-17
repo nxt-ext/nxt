@@ -24,7 +24,7 @@ var NRS = (function(NRS, $) {
 
     function getErrorMessage(response) {
         return response.errorDescription || response.errorMessage || response.error;
-    } 
+    }
 
     NRS.jsondata = NRS.jsondata||{};
 
@@ -136,6 +136,9 @@ var NRS = (function(NRS, $) {
     NRS.pages.shuffling = function () {};
 
     NRS.setup.shuffling = function() {
+        if (!NRS.isShufflingSupported()) {
+            return;
+        }
         var sidebarId = 'sidebar_shuffling';
         NRS.addTreeviewSidebarMenuItem({
             "id": sidebarId,
@@ -231,7 +234,7 @@ var NRS = (function(NRS, $) {
     NRS.pages.finished_shufflings = function() {
         NRS.finished_shufflings("finished_shufflings_full", true);
     };
-    
+
     NRS.pages.active_shufflings = function () {
         NRS.finished_shufflings("finished_shufflings",false);
         async.waterfall([
@@ -458,7 +461,7 @@ var NRS = (function(NRS, $) {
                 var params = {
                     "account": NRS.account,
                     "finishedOnly": "true",
-                    "includeHoldingInfo": "true"                     
+                    "includeHoldingInfo": "true"
                 };
                 if (full) {
                     params["firstIndex"] = NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage;

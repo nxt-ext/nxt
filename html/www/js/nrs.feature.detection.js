@@ -138,5 +138,9 @@ var NRS = (function (NRS) {
         return !NRS.isMobileApp() && !(NRS.state && NRS.state.apiProxy);
     };
 
+    NRS.isShufflingSupported = function() {
+        return !NRS.isMobileApp() && !(NRS.state && NRS.state.apiProxy);
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
