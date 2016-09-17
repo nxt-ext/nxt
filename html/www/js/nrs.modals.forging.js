@@ -118,12 +118,16 @@ var NRS = (function(NRS, $) {
         forgingIndicator.removeClass(NRS.constants.NOT_FORGING);
         forgingIndicator.removeClass(NRS.constants.UNKNOWN);
         forgingIndicator.addClass(status);
-        return forgingIndicator;
     }
 
     NRS.updateForgingStatus = function(secretPhrase) {
+        var forgingIndicator = $("#forging_indicator");
+        if (!NRS.isForgingSupported()) {
+            forgingIndicator.hide();
+            return;
+        }
         var status = NRS.forgingStatus;
-        var tooltip = $("#forging_indicator").attr('title');
+        var tooltip = forgingIndicator.attr('title');
         if (NRS.state.isLightClient) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_light_client");
@@ -186,7 +190,7 @@ var NRS = (function(NRS, $) {
                 }
             }, false);
         }
-        var forgingIndicator = setForgingIndicatorStatus(status);
+        setForgingIndicatorStatus(status);
         if (status == NRS.constants.NOT_FORGING) {
             NRS.isAccountForging = false;
         }
