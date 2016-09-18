@@ -82,7 +82,6 @@ export class SendPage {
   balance_disp_spin : any = false;
   loading : any;
   secret : string = "";
-  rememberPassword = true;
   
   constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController, private loadingCtrl: LoadingController, public alertCtrl: AlertController) {
 
@@ -117,17 +116,28 @@ export class SendPage {
   }
   
   onPageLoaded() {
-	  this.rememberPassword = NRS.rememberPassword;
 	  let passphraseRow = <HTMLElement>document.getElementsByTagName("ion-row")[5];
-	  if(this.rememberPassword) {
+	  if(NRS.isPassphraseLogin) {
 		passphraseRow.style.visibility = "hidden";
 	  }
 	  else {
 		passphraseRow.style.visibility = "visible";
 	  }
 	  let nxtAddress = new NxtAddress();
-	  if(NRS.accountRS != undefined) {
-		  this.rememberPassword = false;
+	  if(NRS.isPassphraseLogin) {
+		  NRS.account = NRS.getAccountId(NRS.secret);  
+		  if (nxtAddress.set(NRS.account)) {
+			NRS.accountRS = this.accountRS = nxtAddress.toString();
+		  }
+		  NRS.accountInfo = {
+			"publickey" : NRS.getPublicKey(converters.stringToHexString(NRS.secret))
+		  };
+		  if(!NRS.isPassphraseLogin) {
+			NRS.secret = undefined;
+		  }
+		  this.balanceUpdate();
+	  }
+	  else {
 		  if (nxtAddress.set(NRS.accountRS)) {
 			NRS.account = nxtAddress.account_id();
 			this.accountRS = nxtAddress.toString();
@@ -137,19 +147,6 @@ export class SendPage {
 			}, this.publicKeyCallBack
 			);
 		  }
-	  }
-	  else {
-		  NRS.account = NRS.getAccountId(NRS.secret);  
-		  if (nxtAddress.set(NRS.account)) {
-			NRS.accountRS = this.accountRS = nxtAddress.toString();
-		  }
-		  NRS.accountInfo = {
-			"publickey" : NRS.getPublicKey(converters.stringToHexString(NRS.secret))
-		  };
-		  if(!NRS.rememberPassword) {
-			NRS.secret = undefined;
-		  }
-		  this.balanceUpdate();
 	  }
   }
   
@@ -265,7 +262,7 @@ export class SendPage {
   onSendNxtClick() {
 	  let secret = "";
 	  let msg = { errorCode: 1, errorDescription:""};
-	  if(this.address == "" || this.amount == "" || (!this.rememberPassword && this.secret == "")) {	    
+	  if(this.address == "" || this.amount == "" || (!NRS.isPassphraseLogin && this.secret == "")) {	    
 		msg.errorDescription = i18nGlobal.t("error_invalid_input");
 		this.showToast(msg);
 		return;
@@ -282,7 +279,7 @@ export class SendPage {
 		return;
 	  }
 	  
-	if(this.rememberPassword) {
+	if(NRS.rememberPassword) {
 		secret = NRS.secret;
 	}
 	else {

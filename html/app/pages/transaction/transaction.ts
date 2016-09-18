@@ -80,7 +80,7 @@ export class TransactionPage {
 			if(transaction.amount[1] != undefined)
 				transaction.amount[0] = transaction.amount[0] + ".";
 			
-			transaction.moment = moment(NRS.formatTimestamp(parseInt(transaction.timestamp))).fromNow();
+			transaction.moment = moment(new Date(NRS.formatTimestamp(parseInt(transaction.timestamp)))).fromNow();
 
 			this.transactions.push(transaction);
 		}

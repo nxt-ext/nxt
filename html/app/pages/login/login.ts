@@ -89,14 +89,54 @@ export class LoginPage {
   iconType : string = "ios-person-outline";
   rememberMe : boolean = true;
   languages : any;
+  saved_accounts : boolean = false;
+  accounts : any;
+  account : string = "";
 
   constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController) {
+	//NRS.removeItem("savedNxtAccounts");
+
 	this.supportedLanguages();
 	this.language = NRS.languages[NRS.settings["language"]];
+	this.listAccounts();
   }
   
   onPageLoaded() {
 	NRS.constants.EPOCH_BEGINNING = 1385294400000; //hardcoded genesis data
+  }
+  
+  listAccounts() {
+	let accountSaved = NRS.getStrItem("savedNxtAccounts");
+	if(accountSaved && accountSaved != '' && this.textType == "text") {
+		this.accounts = accountSaved.split(";");
+		this.saved_accounts = (this.accounts.length > 0) ? true : false;
+		this.loginData = this.account = this.accounts[0];
+		this.accounts[this.accounts.length-1] = "other";
+	}
+  }
+  
+  accountChanged() {
+	if(this.account == "other") {
+		this.saved_accounts = false;
+	}
+	else {
+		this.saved_accounts = true;
+	}
+  }
+  
+  removeAccount() {
+	let listAccounts;
+	  if(this.account != "other") {
+			listAccounts = NRS.getStrItem("savedNxtAccounts").replace(this.loginData+';','');
+			if (listAccounts == '') {
+				NRS.removeItem('savedNxtAccounts');
+				this.saved_accounts = false;
+				this.loginData = "";
+			} else {
+				NRS.setStrItem("savedNxtAccounts", listAccounts);
+				this.listAccounts();
+			}
+		}
   }
   
   generatePassphrase() {
@@ -104,12 +144,18 @@ export class LoginPage {
     passPhraseGenModal.present();
   }
   
+  removeTxt() {
+	return i18nGlobal.t("remove");
+  }
+  
   closeTxt() {
 	return i18nGlobal.t("close");
   }
   
   switchInputType() {
+	this.loginData = "";
 	if(this.textType == "text") {
+		this.saved_accounts = false;
 		this.textType = "password";
 		this.iconType = "ios-key-outline";
 	}
@@ -219,15 +265,35 @@ export class LoginPage {
   }
   
   loginDataEntered() {
+	NRS.rememberPassword = this.rememberMe;
+	
 	if(this.checkForInput()) {
 		if(this.textType == "text") {
 			NRS.accountRS = this.loginData;
-			NRS.loginType = false;
+			NRS.isPassphraseLogin = false;
+			if(this.rememberMe) { //this also remembers account
+				let accountExists = 0;
+				if (NRS.getStrItem("savedNxtAccounts")) {
+					let accounts = NRS.getStrItem("savedNxtAccounts").split(";");
+					for(let i = 0; i < accounts.length; i++) {
+						if (accounts[i] == NRS.accountRS) {
+							accountExists = 1;
+						}
+					}
+				}
+				if(!accountExists) {
+					if (NRS.getStrItem("savedNxtAccounts") && NRS.getStrItem("savedNxtAccounts") != "") {
+						let accounts = NRS.getStrItem("savedNxtAccounts") + NRS.accountRS + ";";
+						NRS.setStrItem("savedNxtAccounts", accounts);
+					} else {
+						NRS.setStrItem("savedNxtAccounts", NRS.accountRS + ";");
+					}
+				}
+			}
 		}
 		else {
-			NRS.rememberPassword = this.rememberMe;
-			NRS.loginType = true;
 			NRS.secret = this.loginData;
+			NRS.isPassphraseLogin = true;
 			this.loginData = "";
 			if(NRS.secret.length < 35) {
 				this.showToast(i18nGlobal.t("error_passphrase_length"), 'bottom');

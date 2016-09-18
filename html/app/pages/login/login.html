@@ -26,7 +26,14 @@
 		<ion-col width-10>
 			<button light (click)='switchInputType()'><ion-icon name="{{iconType}}"></ion-icon></button>
 		</ion-col>
-		<ion-col width-80>
+		<ion-col width-80 [hidden]='!saved_accounts'>
+		  <ion-item>
+			<ion-select [(ngModel)]="account" (ngModelChange)="accountChanged()" cancelText="{{removeTxt()}}" (ionCancel)="removeAccount()">
+			  <ion-option *ngFor="let accountVal of accounts">{{accountVal}}</ion-option>
+			</ion-select>
+		  </ion-item>
+		</ion-col>
+		<ion-col width-80 [hidden]='saved_accounts'>
 			<ion-input type="{{textType}}" [(ngModel)]="loginData" placeholder="{{loginTxt()}}"><ion-icon name="ios-person-outline"></ion-icon></ion-input>
 		</ion-col>
 		<ion-col width-10>
