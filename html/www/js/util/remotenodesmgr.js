@@ -19,35 +19,11 @@ function RemoteNode(peerData) {
     this.announcedAddress = peerData.announcedAddress;
     this.port = peerData.apiPort;
     this.blacklistedUntil = 0;
+    this.connectionTime = new Date();
 }
 
 RemoteNode.prototype.getUrl = function () {
     return "http://" + this.address + ":" + this.port;
-};
-
-RemoteNode.prototype.sendRequest = function(requestType, data, callback, isAsync) {
-    var node = this;
-    var url = this.getUrl();
-    url += "/nxt?requestType=" + requestType;
-
-    $.ajax({
-        url: url,
-        crossDomain: true,
-        dataType: "json",
-        type: "GET",
-        timeout: 30000,
-        async: (typeof isAsync == 'undefined' ? true : isAsync),
-        traditional: true,
-        data: data
-    }).done(function (response) {
-        callback.call(node, response, requestType);
-    }).fail(function (xhr, textStatus, error) {
-        callback.call(node, {
-            "errorCode": -1,
-            "errorDescription": error
-        }, requestType);
-        node.blacklist();
-    });
 };
 
 RemoteNode.prototype.isBlacklisted = function () {
@@ -55,7 +31,9 @@ RemoteNode.prototype.isBlacklisted = function () {
 };
 
 RemoteNode.prototype.blacklist = function () {
-    this.blacklistedUntil = new Date().getTime() + 10 * 60 * 1000;
+    var blacklistedUntil = new Date().getTime() + 10 * 60 * 1000;
+    NRS.logConsole("Blacklist " + this.address + " until " + new Date(blacklistedUntil).format("isoDateTime"));
+    this.blacklistedUntil = blacklistedUntil;
 };
 
 function RemoteNodesManager(isTestnet) {
@@ -75,15 +53,48 @@ RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
                     newNode.blacklistedUntil = oldNode.blacklistedUntil;
                 }
                 mgr.nodes[peerData.address] = newNode;
+                NRS.logConsole("Found remote node " + peerData.address + " blacklisted " + newNode.isBlacklisted());
             }
         }
     });
 };
 
-
+RemoteNodesManager.prototype.addBootstrapNodes = function (isTestnet, resolve, reject) {
+    var peersData = this.REMOTE_NODES_BOOTSTRAP;
+    var mgr = this;
+    var data = {state: "CONNECTED", includePeerInfo: true};
+    var rejections = 0;
+    peersData = NRS.getRandomPermutation(peersData);
+    for (var i=0; i<peersData.length && i<6; i++) {
+        var peerData = peersData[i];
+        var node = new RemoteNode(peerData);
+        data["_extra"] = node;
+        NRS.logConsole("Connecting to bootstrap node " + node.address);
+        NRS.sendRequest("getPeers", data, function(response, data) {
+            if (response.errorCode) {
+                NRS.logConsole("Bootstrap node returned error " + response.errorDescription);
+                rejections ++;
+                if (rejections == 3) {
+                    reject();
+                }
+                return;
+            }
+            var responseNode = data["_extra"];
+            NRS.logConsole("Adding bootstrap node " + responseNode.address + " response time " + (new Date() - responseNode.connectionTime) + " ms");
+            mgr.nodes[responseNode.address] = responseNode;
+            if (isTestnet && Object.keys(mgr.nodes).length == 1 || Object.keys(mgr.nodes).length == 3) {
+                resolve();
+            }
+        }, true, true, node);
+    }
+};
 
 RemoteNodesManager.prototype.getRandomNode = function (ignoredAddresses) {
     var addresses = Object.keys(this.nodes);
+    if (addresses.length == 0) {
+        NRS.logConsole("Cannot get random node. No nodes available");
+        return null;
+    }
     var index = Math.floor((Math.random() * addresses.length));
     var startIndex = index;
     var node;
@@ -127,7 +138,7 @@ RemoteNodesManager.prototype.findMoreNodes = function (isReschedule) {
         return;
     }
     var data = {state: "CONNECTED", includePeerInfo: true};
-    node.sendRequest("getPeers", data, function (response) {
+    NRS.sendRequest("getPeers", data, function (response) {
         if (response.peers) {
             nodesMgr.addRemoteNodes(response.peers);
         }
@@ -136,7 +147,7 @@ RemoteNodesManager.prototype.findMoreNodes = function (isReschedule) {
                 nodesMgr.findMoreNodes(true);
             }, 30000);
         }
-    });
+    }, true, true, node);
 };
 
 RemoteNodesManager.prototype.init = function () {
@@ -145,8 +156,5 @@ RemoteNodesManager.prototype.init = function () {
         jQuery.ajaxSetup({ async: false });
         $.getScript(this.isTestnet ? "js/data/remotenodesbootstrap.testnet.js" : "js/data/remotenodesbootstrap.mainnet.js");
         jQuery.ajaxSetup({async: true});
-
-        this.addRemoteNodes(this.REMOTE_NODES_BOOTSTRAP);
-        this.findMoreNodes(true);
     }
 };

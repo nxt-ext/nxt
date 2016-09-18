@@ -33,9 +33,11 @@ var NRS = (function(NRS, $) {
         });
     };
 
-    NRS.initRemoteNodesMgr = function(isTestnet) {
+    NRS.initRemoteNodesMgr = function(isTestnet, resolve, reject) {
         NRS.remoteNodesMgr = new RemoteNodesManager(isTestnet);
-        if (!NRS.isMobileApp()) {
+        if (NRS.isMobileApp()) {
+            NRS.remoteNodesMgr.addBootstrapNodes(isTestnet, resolve, reject);
+        } else {
             NRS.updateRemoteNodes();
         }
     };
@@ -82,9 +84,11 @@ var NRS = (function(NRS, $) {
         }
     }
 
-    NRS.getComparableResponse = function(origResponse) {
+    NRS.getComparableResponse = function(origResponse, requestType) {
         delete origResponse.requestProcessingTime;
-        if (origResponse.transactions) {
+        if (requestType == "getBlock") {
+            delete origResponse.nextBlock;
+        } else if (origResponse.transactions) {
             var transactions = origResponse.transactions;
             for (var i=0; i<transactions.length; i++) {
                 var transaction = transactions[i];
@@ -95,7 +99,7 @@ var NRS = (function(NRS, $) {
         return JSON.stringify(origResponse);
     };
 
-    NRS.confirmRequest = function(requestType, data, expectedResponse, requestRemoteNode) {
+    NRS.confirmResponse = function(requestType, data, expectedResponse, requestRemoteNode) {
         if (NRS.requestNeedsConfirmation(requestType)) {
             try {
                 // First clone the response so that we do not change it
@@ -103,7 +107,7 @@ var NRS = (function(NRS, $) {
                 expectedResponse = JSON.parse(expectedResponseStr);
 
                 // Now remove all variable parts
-                expectedResponseStr = NRS.getComparableResponse(expectedResponse);
+                expectedResponseStr = NRS.getComparableResponse(expectedResponse, requestType);
             } catch(e) {
                 NRS.logConsole("Cannot parse JSON response for request " + requestType);
                 return;
@@ -118,47 +122,47 @@ var NRS = (function(NRS, $) {
             if (requestConfirmations.length > 10) {
                 requestConfirmations.pop();
             }
-            function onConfirmation(response, requestType) {
+            function onConfirmation(response) {
                 var fromNode = this;
-                NRS.logConsole("Confirm request " + requestType + " with node " + fromNode.announcedAddress);
                 var index = confirmationReport.processing.indexOf(fromNode.announcedAddress);
                 confirmationReport.processing.splice(index, 1);
 
-                if (response.errorCode && response.errorCode == -1) {
-                    // Confirmation request received a network error
-                    // Retry the request on another node until all nodes are ignored
-                    var retryNode = NRS.remoteNodesMgr.getRandomNode(ignoredAddresses);
-                    if (retryNode != null) {
-                        NRS.logConsole("Retry node " + retryNode.announcedAddress);
-                        confirmationReport.processing.push(retryNode.announcedAddress);
-                        ignoredAddresses.push(retryNode.address);
-                        retryNode.sendRequest(requestType, data, onConfirmation);
-                    }
-                } else {
-                    // here it's Ok to modify the response since it is only being for comparison
-                    var responseStr = NRS.getComparableResponse(response);
+                if (!response.errorCode) {
+                    // here it's Ok to modify the response since it is only being used for comparison
+                    var node = data["_extra"].node;
+                    var type = data["_extra"].requestType;
+                    NRS.logConsole("Confirm request " + type + " with node " + node.announcedAddress);
+                    var responseStr = NRS.getComparableResponse(response, type);
                     if (responseStr == expectedResponseStr) {
-                        confirmationReport.confirmations.push(fromNode.announcedAddress);
+                        confirmationReport.confirmations.push(node.announcedAddress);
                     } else {
-                        NRS.logConsole(fromNode.announcedAddress + " response defers from " + requestRemoteNode.announcedAddress + " response for " + requestType);
+                        NRS.logConsole(node.announcedAddress + " response defers from " + requestRemoteNode.announcedAddress + " response for " + type);
                         NRS.logConsole("Expected Response: " + expectedResponseStr);
                         NRS.logConsole("Actual   Response: " + responseStr);
-                        confirmationReport.rejections.push(fromNode.announcedAddress);
+                        confirmationReport.rejections.push(node.announcedAddress);
                     }
 
                     if (confirmationReport.processing.length == 0) {
-                        NRS.logConsole("Request " + requestType +
+                        NRS.logConsole("Request " + type +
                             " confirmations " + confirmationReport.confirmations.length +
                             " rejections " + confirmationReport.rejections.length);
                     }
+                } else {
+                    // Confirmation request received error
+                    NRS.logConsole("Confirm request error " + response.errorDescription);
                 }
             }
 
-            $.each(nodes, function (index, node) {
+            for (var i=0; i<nodes.length; i++) {
+                var node = nodes[i];
+                if (node.isBlacklisted()) {
+                    continue;
+                }
                 confirmationReport.processing.push(node.announcedAddress);
                 ignoredAddresses.push(node.address);
-                node.sendRequest(requestType, data, onConfirmation);
-            });
+                data["_extra"] = { node: node, requestType: requestType };
+                NRS.sendRequest(requestType, data, onConfirmation, true, true, node);
+            }
         }
     };
 

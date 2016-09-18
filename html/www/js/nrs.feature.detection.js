@@ -74,10 +74,8 @@ var NRS = (function (NRS) {
             NRS.logConsole("Remote node url: " + url);
             return url;
         } else {
-            NRS.logConsole("No available remote nodes, retry bootstrap nodes");
+            NRS.logConsole("No available remote nodes");
             $.growl($.t("no_available_remote_nodes"));
-            NRS.initRemoteNodesMgr(NRS.mobileSettings.is_testnet, true);
-            return NRS.getRemoteNodeUrl();
         }
     };
 
@@ -140,6 +138,10 @@ var NRS = (function (NRS) {
 
     NRS.isShufflingSupported = function() {
         return !NRS.isMobileApp() && !(NRS.state && NRS.state.apiProxy);
+    };
+
+    NRS.isConfirmResponse = function() {
+        return NRS.isMobileApp() || (NRS.state && NRS.state.apiProxy);
     };
 
     return NRS;

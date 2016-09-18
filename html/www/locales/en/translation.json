@@ -1827,5 +1827,6 @@
   "simulate_mobile_app": "Simulate Mobile App",
   "mobile_client": "Mobile Client",
   "mobile_client_description": "You are working as a mobile client. You are connected to remote node __url__",
-  "no_available_remote_nodes": "No available remote nodes"
+  "no_available_remote_nodes": "No available remote nodes",
+  "cannot_find_remote_nodes": "Mobile app stopped, cannot find remote nodes"
 }

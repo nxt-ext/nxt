@@ -138,9 +138,27 @@ var NRS = (function(NRS, $, undefined) {
         NRS.spinner.spin($("#center")[0]);
         NRS.loadMobileSettings();
         if (NRS.isMobileApp()) {
-            NRS.initRemoteNodesMgr(NRS.mobileSettings.is_testnet, true);
+            initMobile();
+        } else {
+            initImpl();
         }
-		NRS.loadServerConstants();
+    };
+
+    function initMobile() {
+        var promise = new Promise(function(resolve, reject) {
+            NRS.initRemoteNodesMgr(NRS.mobileSettings.is_testnet, resolve, reject);
+        });
+        promise.then(function() {
+            NRS.remoteNodesMgr.findMoreNodes(true);
+            initImpl();
+        }).catch(function() {
+            console.log("cannot_find_remote_nodes");
+            $.growl($.t("cannot_find_remote_nodes"));
+        })
+    }
+
+    function initImpl() {
+        NRS.loadServerConstants();
 
 		NRS.sendRequest("getState", {
 			"includeCounts": "false"
@@ -173,7 +191,7 @@ var NRS = (function(NRS, $, undefined) {
 			}
 
 			if (!NRS.isMobileApp()) {
-                NRS.initRemoteNodesMgr(isTestnet, false);
+                NRS.initRemoteNodesMgr(isTestnet);
             }
 
 
@@ -267,7 +285,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.getUrlParameter("account")){
 			NRS.login(false,NRS.getUrlParameter("account"));
 		}
-	};
+	}
 
 	function _fix() {
 		var height = $(window).height() - $("body > .header").height();

@@ -24,7 +24,7 @@ var NRS = (function (NRS, $, undefined) {
         _password = password;
     };
 
-    NRS.sendRequest = function (requestType, data, callback, isAsync, noProxy) {
+    NRS.sendRequest = function (requestType, data, callback, isAsync, noProxy, remoteNode) {
         if (requestType == undefined) {
             NRS.logConsole("Undefined request type");
             return;
@@ -199,10 +199,10 @@ var NRS = (function (NRS, $, undefined) {
                 });
             } else {
                 //ok, accountId matches..continue with the real request.
-                NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
+                NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy, remoteNode);
             }
         } else {
-            NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy);
+            NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy, remoteNode);
         }
     };
 
@@ -210,7 +210,7 @@ var NRS = (function (NRS, $, undefined) {
         return (!NRS.isLocalHost || doNotSign || NRS.state.apiProxy) && type == "POST" && !NRS.isSubmitPassphrase(requestType);
     }
 
-    NRS.processAjaxRequest = function (requestType, data, callback, isAsync, noProxy) {
+    NRS.processAjaxRequest = function (requestType, data, callback, isAsync, noProxy, remoteNode) {
         var extra = null;
         if (data["_extra"]) {
             extra = data["_extra"];
@@ -238,7 +238,12 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url = NRS.getRequestPath(noProxy);
+        var url;
+        if (remoteNode) {
+            url = remoteNode.getUrl() + "/nxt";
+        } else {
+            url = NRS.getRequestPath(noProxy);
+        }
         url += "?requestType=" + requestType;
 
         if (type == "GET") {
@@ -345,6 +350,7 @@ var NRS = (function (NRS, $, undefined) {
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
             processData = true;
         }
+        NRS.logConsole("Send request " + requestType + " to url " + url);
 
         $.ajax({
             url: url,
@@ -361,9 +367,10 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
-            if (!(response.errorCode || response.errorDescription || response.errorMessage || response.error)) {
+            if (!remoteNode && NRS.isConfirmResponse() &&
+                !(response.errorCode || response.errorDescription || response.errorMessage || response.error)) {
                 var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : {address: "localhost", announcedAddress: "localhost"}; //TODO unify getRemoteNode with apiProxyPeer
-                NRS.confirmRequest(requestType, data, response, requestRemoteNode);
+                NRS.confirmResponse(requestType, data, response, requestRemoteNode);
             }
             NRS.escapeResponseObjStrings(response);
             if (NRS.console) {
@@ -445,13 +452,12 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         }).fail(function (xhr, textStatus, error) {
-            NRS.logConsole("Node " + NRS.getRemoteNodeUrl() + " received an error for request type " + requestType +
+            NRS.logConsole("Node " + (remoteNode ? remoteNode.getUrl() : NRS.getRemoteNodeUrl()) + " received an error for request type " + requestType +
                 " status " + textStatus + " error " + error);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }
 
-            NRS.resetRemoteNode(true);
             if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
                 if (type == "POST") {
                     NRS.connectionError();
@@ -459,6 +465,11 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             if (error != "abort") {
+                if (remoteNode) {
+                    remoteNode.blacklist();
+                } else {
+                    NRS.resetRemoteNode(true);
+                }
                 if (error == "timeout") {
                     error = $.t("error_request_timeout");
                 }
