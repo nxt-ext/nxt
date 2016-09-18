@@ -42,19 +42,26 @@ function RemoteNodesManager(isTestnet) {
     this.init();
 }
 
+function isRemoteNodeServicesAvailable(node) {
+    if (node.services instanceof Array && (node.services.indexOf("API") >= 0)) {
+        if (!NRS.isRequireCors() || node.services.indexOf("CORS") >= 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
     var mgr = this;
     $.each(peersData, function(index, peerData) {
-        if (peerData.services instanceof Array && (peerData.services.indexOf("API") >= 0)) {
-            if (!NRS.isRequireCors() || peerData.services.indexOf("CORS") >= 0) {
-                var oldNode = mgr.nodes[peerData.address];
-                var newNode = new RemoteNode(peerData);
-                if (oldNode) {
-                    newNode.blacklistedUntil = oldNode.blacklistedUntil;
-                }
-                mgr.nodes[peerData.address] = newNode;
-                NRS.logConsole("Found remote node " + peerData.address + " blacklisted " + newNode.isBlacklisted());
+        if (isRemoteNodeServicesAvailable(peerData)) {
+            var oldNode = mgr.nodes[peerData.address];
+            var newNode = new RemoteNode(peerData);
+            if (oldNode) {
+                newNode.blacklistedUntil = oldNode.blacklistedUntil;
             }
+            mgr.nodes[peerData.address] = newNode;
+            NRS.logConsole("Found remote node " + peerData.address + " blacklisted " + newNode.isBlacklisted());
         }
     });
 };
@@ -67,6 +74,9 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (isTestnet, resolve, r
     peersData = NRS.getRandomPermutation(peersData);
     for (var i=0; i<peersData.length && i<6; i++) {
         var peerData = peersData[i];
+        if (!isRemoteNodeServicesAvailable(peerData)) {
+            continue;
+        }
         var node = new RemoteNode(peerData);
         data["_extra"] = node;
         NRS.logConsole("Connecting to bootstrap node " + node.address);
