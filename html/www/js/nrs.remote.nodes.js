@@ -17,7 +17,7 @@
 /**
  * @depends {nrs.js}
  */
-var NRS = (function(NRS, $) {
+var NRS = (function(NRS) {
     var requestConfirmations = [];
 
     NRS.updateRemoteNodes = function() {
@@ -33,10 +33,14 @@ var NRS = (function(NRS, $) {
         });
     };
 
-    NRS.initRemoteNodesMgr = function(isTestnet, resolve, reject) {
+    NRS.initRemoteNodesMgr = function (isTestnet, resolve, reject) {
         NRS.remoteNodesMgr = new RemoteNodesManager(isTestnet);
         if (NRS.isMobileApp()) {
-            NRS.remoteNodesMgr.addBootstrapNodes(isTestnet, resolve, reject);
+            if (NRS.mobileSettings.remote_node_address == "") {
+                NRS.remoteNodesMgr.addBootstrapNodes(resolve, reject);
+            } else {
+                NRS.remoteNodesMgr.addBootstrapNode(resolve, reject);
+            }
         } else {
             NRS.updateRemoteNodes();
         }
@@ -116,7 +120,7 @@ var NRS = (function(NRS, $) {
             if (requestRemoteNode) {
                 ignoredAddresses.push(requestRemoteNode.address);
             }
-            var nodes = NRS.remoteNodesMgr.getRandomNodes(3, ignoredAddresses);
+            var nodes = NRS.remoteNodesMgr.getRandomNodes(NRS.mobileSettings.validators_count, ignoredAddresses);
             var confirmationReport = {processing: [], confirmations: [], rejections: []};
             requestConfirmations.unshift(confirmationReport);
             if (requestConfirmations.length > 10) {

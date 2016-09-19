@@ -1828,5 +1828,10 @@
   "mobile_client": "Mobile Client",
   "mobile_client_description": "You are working as a mobile client. You are connected to remote node __url__",
   "no_available_remote_nodes": "No available remote nodes",
-  "cannot_find_remote_nodes": "Mobile app stopped, cannot find remote nodes"
+  "cannot_find_remote_nodes": "Mobile app stopped, cannot find remote nodes",
+  "remote_node_address": "Remote Node Address",
+  "validators_count": "Number of Data Validators",
+  "bootstrap_nodes_count": "Number of Bootstrap Nodes",
+  "remote_node_port": "Remote Node Port",
+  "is_remote_node_ssl": "Use Https"
 }

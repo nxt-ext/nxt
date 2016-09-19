@@ -26,11 +26,31 @@
                     <div class="callout callout-info info_message"></div>
                     <div class="input-group">
                         <input type="checkbox" id="mobile_is_simulate_app"/>
-                        <label for="mobile_is_simulate_app" tabindex="1" data-i18n="simulate_mobile_app">SIMULATE MOBILE APP</label>
+                        <label for="mobile_is_simulate_app" data-i18n="simulate_mobile_app">SIMULATE MOBILE APP</label>
                     </div>
                     <div class="input-group">
                         <input type="checkbox" id="mobile_is_testnet"/>
-                        <label for="mobile_is_testnet" tabindex="1" data-i18n="connect_to_testnet">CONNECT TO TESTNET</label>
+                        <label for="mobile_is_testnet" data-i18n="connect_to_testnet">CONNECT TO TESTNET</label>
+                    </div>
+                    <div class="input-group">
+                        <label for="mobile_remote_node_address" data-i18n="remote_node_address">Remote Node Address</label>
+                        <input type="text" id="mobile_remote_node_address" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <label for="mobile_remote_node_port" data-i18n="remote_node_port">Remote Node Port</label>
+                        <input type="text" id="mobile_remote_node_port" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <input type="checkbox" id="mobile_is_remote_node_ssl"/>
+                        <label for="mobile_is_remote_node_ssl" data-i18n="is_remote_node_ssl">Use Https</label>
+                    </div>
+                    <div class="input-group">
+                        <label for="mobile_validators_count" data-i18n="validators_count">Number of Data Validators</label>
+                        <input type="text" id="mobile_validators_count" class="form-control" />
+                    </div>
+                    <div class="input-group">
+                        <label for="mobile_bootstrap_nodes_count" data-i18n="bootstrap_nodes_count">Number of Bootstrap Nodes</label>
+                        <input type="text" id="mobile_bootstrap_nodes_count" class="form-control" />
                     </div>
                     <input type="hidden" name="request_type" value="setMobileSettings"/>
                 </form>

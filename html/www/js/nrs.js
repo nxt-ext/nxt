@@ -57,7 +57,15 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.peerConnect = false;
 
 	NRS.settings = {};
-	NRS.mobileSettings = { is_simulate_app: false, is_testnet: false };
+	NRS.mobileSettings = {
+	    is_simulate_app: false,
+        is_testnet: false,
+        remote_node_address: "",
+        remote_node_port: 7876,
+        is_remote_node_ssl: false,
+        validators_count: 3,
+        bootstrap_nodes_count: 5
+    };
 	NRS.contacts = {};
 
 	NRS.isTestNet = false;
@@ -103,7 +111,12 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		var mobileSettings = NRS.getJSONItem("mobile_settings");
 		if (mobileSettings) {
-			NRS.mobileSettings = mobileSettings;
+            for (var setting in mobileSettings) {
+                if (!mobileSettings.hasOwnProperty(setting)) {
+                    continue;
+                }
+                NRS.mobileSettings[setting] = mobileSettings[setting];
+            }
 		}
 	};
 

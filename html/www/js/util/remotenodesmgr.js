@@ -18,12 +18,13 @@ function RemoteNode(peerData) {
     this.address = peerData.address;
     this.announcedAddress = peerData.announcedAddress;
     this.port = peerData.apiPort;
+    this.isSsl = peerData.isSsl ? true : false; // For now only nodes specified by the user can use SSL since we need trusted certificate
     this.blacklistedUntil = 0;
     this.connectionTime = new Date();
 }
 
 RemoteNode.prototype.getUrl = function () {
-    return "http://" + this.address + ":" + this.port;
+    return (this.isSsl ? "https://" : "http://") + this.address + ":" + this.port;
 };
 
 RemoteNode.prototype.isBlacklisted = function () {
@@ -66,13 +67,40 @@ RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
     });
 };
 
-RemoteNodesManager.prototype.addBootstrapNodes = function (isTestnet, resolve, reject) {
+RemoteNodesManager.prototype.addBootstrapNode = function (resolve, reject) {
+    var node = new RemoteNode({
+        address: NRS.mobileSettings.remote_node_address,
+        announcedAddress: NRS.mobileSettings.remote_node_address,
+        apiPort: NRS.mobileSettings.remote_node_port,
+        isSsl: NRS.mobileSettings.is_remote_node_ssl
+    });
+    var mgr = this;
+    NRS.logConsole("Connecting to address specified by user " + node.address);
+    NRS.sendRequest("getState", { "_extra": node }, function(response, data) {
+        if (response.errorCode || !isRemoteNodeServicesAvailable(response)) {
+            if (response.errorCode) {
+                NRS.logConsole("Bootstrap node cannot be used " + response.errorDescription);
+            } else {
+                NRS.logConsole("Bootstrap node does not provide the required services");
+            }
+            $.growl("Cannot connect to configured node, connecting to a random node");
+            NRS.remoteNodesMgr.addBootstrapNodes(resolve, reject);
+            return;
+        }
+        NRS.logConsole("Adding bootstrap node " + response.address);
+        var node = data["_extra"];
+        mgr.nodes[node.address] = node;
+        resolve();
+    }, true, true, node);
+};
+
+RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
     var peersData = this.REMOTE_NODES_BOOTSTRAP;
     var mgr = this;
     var data = {state: "CONNECTED", includePeerInfo: true};
     var rejections = 0;
     peersData = NRS.getRandomPermutation(peersData);
-    for (var i=0; i<peersData.length && i<6; i++) {
+    for (var i=0; i < peersData.length && i < NRS.mobileSettings.bootstrap_nodes_count; i++) {
         var peerData = peersData[i];
         if (!isRemoteNodeServicesAvailable(peerData)) {
             continue;
@@ -92,7 +120,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (isTestnet, resolve, r
             var responseNode = data["_extra"];
             NRS.logConsole("Adding bootstrap node " + responseNode.address + " response time " + (new Date() - responseNode.connectionTime) + " ms");
             mgr.nodes[responseNode.address] = responseNode;
-            if (isTestnet && Object.keys(mgr.nodes).length == 1 || Object.keys(mgr.nodes).length == 3) {
+            if (NRS.mobileSettings.is_testnet && Object.keys(mgr.nodes).length == 1 || Object.keys(mgr.nodes).length == 3) {
                 resolve();
             }
         }, true, true, node);
