@@ -1,0 +1,12 @@
+Added ShapeShift support to the desktop wallet by using a proxy servlet on the
+local node.
+
+The security manager which is automatically enabled when add-ons are in use now
+allows add-on network connections.
+
+Added nxt.disableSecurityPolicy property to disable the security manager even
+when add-ons are in use, in order to improve performance, default false.
+
+Added nxt.keyStoreType property to configure the keystore type used, default
+is JKS.
+
