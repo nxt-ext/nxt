@@ -27,9 +27,11 @@ var NRS = (function(NRS) {
                 NRS.remoteNodesMgr.nodes = {};
                 NRS.remoteNodesMgr.addRemoteNodes(response.peers);
             }
-            setTimeout(function () {
-                NRS.updateRemoteNodes();
-            }, 30000);
+            if (NRS.isUpdateRemoteNodes()) {
+                setTimeout(function () {
+                    NRS.updateRemoteNodes();
+                }, 30000);
+            }
         });
     };
 
@@ -41,7 +43,7 @@ var NRS = (function(NRS) {
             } else {
                 NRS.remoteNodesMgr.addBootstrapNode(resolve, reject);
             }
-        } else {
+        } else if (NRS.isUpdateRemoteNodes()) {
             NRS.updateRemoteNodes();
         }
     };

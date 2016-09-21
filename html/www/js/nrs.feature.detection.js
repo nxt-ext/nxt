@@ -49,6 +49,10 @@ var NRS = (function (NRS) {
         return !isDesktopApplication || NRS.state && NRS.state.apiProxy;
     };
 
+    NRS.isUpdateRemoteNodes = function() {
+        return NRS.state && NRS.state.apiProxy;
+    };
+
     NRS.isExportContactsAvailable = function() {
         return !isDesktopApplication; // When using JavaFX you cannot export the contact list
     };
