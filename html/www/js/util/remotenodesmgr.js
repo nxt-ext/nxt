@@ -43,8 +43,8 @@ function RemoteNodesManager(isTestnet) {
     this.init();
 }
 
-function isRemoteNodeServicesAvailable(node) {
-    if (node.services instanceof Array && (node.services.indexOf("API") >= 0)) {
+function isRemoteNodeServicesAvailable(node, isSslAllowed) {
+    if (node.services instanceof Array && (node.services.indexOf("API") >= 0 || (isSslAllowed && node.services.indexOf("API_SSL") >= 0))) {
         if (!NRS.isRequireCors() || node.services.indexOf("CORS") >= 0) {
             return true;
         }
@@ -75,9 +75,9 @@ RemoteNodesManager.prototype.addBootstrapNode = function (resolve, reject) {
         isSsl: NRS.mobileSettings.is_remote_node_ssl
     });
     var mgr = this;
-    NRS.logConsole("Connecting to address specified by user " + node.address);
+    NRS.logConsole("Connecting to configured address " + node.address + " on port " + node.port + " using ssl " + node.isSsl);
     NRS.sendRequest("getState", { "_extra": node }, function(response, data) {
-        if (response.errorCode || !isRemoteNodeServicesAvailable(response)) {
+        if (response.errorCode || !isRemoteNodeServicesAvailable(response, true)) {
             if (response.errorCode) {
                 NRS.logConsole("Bootstrap node cannot be used " + response.errorDescription);
             } else {
@@ -87,8 +87,8 @@ RemoteNodesManager.prototype.addBootstrapNode = function (resolve, reject) {
             NRS.remoteNodesMgr.addBootstrapNodes(resolve, reject);
             return;
         }
-        NRS.logConsole("Adding bootstrap node " + response.address);
         var node = data["_extra"];
+        NRS.logConsole("Adding bootstrap node " + node.address);
         mgr.nodes[node.address] = node;
         resolve();
     }, true, true, node);
