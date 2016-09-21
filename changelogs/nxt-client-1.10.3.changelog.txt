@@ -10,3 +10,6 @@ when add-ons are in use, in order to improve performance, default false.
 Added nxt.keyStoreType property to configure the keystore type used, default
 is JKS.
 
+Updated Jetty to version 9.3.12 and Bouncy Castle to version 1.55, delete the
+old lib folder before unpacking on top.
+
