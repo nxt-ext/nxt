@@ -1625,6 +1625,7 @@ NRS.addPagination = function () {
         NRS.logProperty("navigator.cookieEnabled");
         NRS.logProperty("navigator.onLine");
 		if (window["cordova"]) {
+			NRS.logProperty("device.model");
 			NRS.logProperty("device.platform");
 			NRS.logProperty("device.version");
 		}
