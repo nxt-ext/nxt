@@ -24,7 +24,10 @@ var NRS = (function (NRS, $, undefined) {
         _password = password;
     };
 
-    NRS.sendRequest = function (requestType, data, callback, isAsync, noProxy, remoteNode) {
+    NRS.sendRequest = function (requestType, data, callback, options) {
+        if (!options) {
+            options = {};
+        }
         if (requestType == undefined) {
             NRS.logConsole("Undefined request type");
             return;
@@ -199,10 +202,10 @@ var NRS = (function (NRS, $, undefined) {
                 });
             } else {
                 //ok, accountId matches..continue with the real request.
-                NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy, remoteNode);
+                NRS.processAjaxRequest(requestType, data, callback, options);
             }
         } else {
-            NRS.processAjaxRequest(requestType, data, callback, isAsync, noProxy, remoteNode);
+            NRS.processAjaxRequest(requestType, data, callback, options);
         }
     };
 
@@ -210,7 +213,7 @@ var NRS = (function (NRS, $, undefined) {
         return (!NRS.isLocalHost || doNotSign || NRS.state.apiProxy) && type == "POST" && !NRS.isSubmitPassphrase(requestType);
     }
 
-    NRS.processAjaxRequest = function (requestType, data, callback, isAsync, noProxy, remoteNode) {
+    NRS.processAjaxRequest = function (requestType, data, callback, options) {
         var extra = null;
         if (data["_extra"]) {
             extra = data["_extra"];
@@ -239,10 +242,10 @@ var NRS = (function (NRS, $, undefined) {
 
         var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
         var url;
-        if (remoteNode) {
-            url = remoteNode.getUrl() + "/nxt";
+        if (options.remoteNode) {
+            url = options.remoteNode.getUrl() + "/nxt";
         } else {
-            url = NRS.getRequestPath(noProxy);
+            url = NRS.getRequestPath(options.noProxy);
         }
         url += "?requestType=" + requestType;
 
@@ -358,7 +361,7 @@ var NRS = (function (NRS, $, undefined) {
             dataType: "json",
             type: type,
             timeout: 30000,
-            async: (isAsync === undefined ? true : isAsync),
+            async: (options.isAsync === undefined ? true : options.isAsync),
             currentPage: currentPage,
             currentSubPage: currentSubPage,
             shouldRetry: (type == "GET" ? 2 : undefined),
@@ -367,12 +370,14 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
-            if (!remoteNode && NRS.isConfirmResponse() &&
+            if (!options.remoteNode && NRS.isConfirmResponse() &&
                 !(response.errorCode || response.errorDescription || response.errorMessage || response.error)) {
                 var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : {address: "localhost", announcedAddress: "localhost"}; //TODO unify getRemoteNode with apiProxyPeer
                 NRS.confirmResponse(requestType, data, response, requestRemoteNode);
             }
-            NRS.escapeResponseObjStrings(response);
+            if (!options.doNotEscape) {
+                NRS.escapeResponseObjStrings(response);
+            }
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
@@ -452,7 +457,7 @@ var NRS = (function (NRS, $, undefined) {
                 }
             }
         }).fail(function (xhr, textStatus, error) {
-            NRS.logConsole("Node " + (remoteNode ? remoteNode.getUrl() : NRS.getRemoteNodeUrl()) + " received an error for request type " + requestType +
+            NRS.logConsole("Node " + (options.remoteNode ? options.remoteNode.getUrl() : NRS.getRemoteNodeUrl()) + " received an error for request type " + requestType +
                 " status " + textStatus + " error " + error);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
@@ -465,8 +470,8 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             if (error != "abort") {
-                if (remoteNode) {
-                    remoteNode.blacklist();
+                if (options.remoteNode) {
+                    options.remoteNode.blacklist();
                 } else {
                     NRS.resetRemoteNode(true);
                 }
@@ -1561,8 +1566,7 @@ var NRS = (function (NRS, $, undefined) {
                         $("<img src='data:image/jpeg;base64,"+response.qrCodeBase64+"'>")
                     );
                 }
-            },
-            true
+            }
         );
     };
 

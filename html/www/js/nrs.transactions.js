@@ -80,7 +80,7 @@ var NRS = (function(NRS, $, undefined) {
 						return 0;
 					}
 				});
-				
+
 				for (var i = 0; i < response.unconfirmedTransactions.length; i++) {
 					var unconfirmedTransaction = response.unconfirmedTransactions[i];
 					unconfirmedTransaction.confirmed = false;
@@ -332,10 +332,10 @@ var NRS = (function(NRS, $, undefined) {
 						if (finished) {
 							if (responsePoll.approved) {
 								state = "success";
-								color = "#00a65a";	
+								color = "#00a65a";
 							} else {
 								state = "danger";
-								color = "#f56954";							
+								color = "#f56954";
 							}
 						} else {
 							state = "warning";
@@ -394,7 +394,7 @@ var NRS = (function(NRS, $, undefined) {
 						phasingDiv += '<div class="show_popover" style="display:inline-block;min-width:94px;text-align:left;border:1px solid #e2e2e2;background-color:#fff;padding:3px;" ';
 	 				 	phasingDiv += 'data-toggle="popover" data-container="body">';
 						phasingDiv += "<div class='label label-" + state + "' style='display:inline-block;margin-right:5px;'>" + icon + "</div>";
-						
+
 						if (vm == -1) {
 							phasingDiv += '<span style="color:' + color + '">' + $.t("none") + '</span>';
 						} else if (vm == 0) {
@@ -450,7 +450,7 @@ var NRS = (function(NRS, $, undefined) {
 										}
 									}
 								}
-							}, false);
+							}, { isAsync: false });
 						}
 						if (vm == 3 || mbModel == 3) {
 							NRS.sendRequest("getCurrency", {
@@ -471,13 +471,13 @@ var NRS = (function(NRS, $, undefined) {
 										}
 									}
 								}
-							}, false);
+							}, { isAsync: false });
 						}
 					});
 				} else {
 					$tdPhasing.html("&nbsp;");
 				}
-			}, false);
+			}, { isAsync: false });
 		} else {
 			$tdPhasing.html("&nbsp;");
 		}
@@ -602,7 +602,7 @@ var NRS = (function(NRS, $, undefined) {
                 change = NRS.formatQuantity(change, response.decimals, false, decimalParams.holdingChangeDecimals);
                 balance = NRS.formatQuantity(balance, response.decimals, false, decimalParams.holdingBalanceDecimals);
                 holdingIcon = "<i class='fa fa-signal'></i> ";
-            }, false);
+            }, { isAsync: false });
         } else if (/CURRENCY_BALANCE/i.test(entry.holdingType)) {
             NRS.sendRequest("getCurrency", {"currency": entry.holding}, function (response) {
                 balanceType = "currency";
@@ -610,7 +610,7 @@ var NRS = (function(NRS, $, undefined) {
                 change = NRS.formatQuantity(change, response.decimals, false, decimalParams.holdingChangeDecimals);
                 balance = NRS.formatQuantity(balance, response.decimals, false, decimalParams.holdingBalanceDecimals);
                 holdingIcon =  "<i class='fa fa-bank'></i> ";
-            }, false);
+            }, { isAsync: false });
         } else {
             change = NRS.formatAmount(change, false, false, decimalParams.changeDecimals);
             balance = NRS.formatAmount(balance, false, false, decimalParams.balanceDecimals);
@@ -676,7 +676,7 @@ var NRS = (function(NRS, $, undefined) {
 		html += 'data-toggle="popover" data-placement="top" data-content="Unconfirmed (Account)" data-container="body" data-i18n="[data-content]unconfirmed_account">';
 		html += '<i class="fa fa-circle-o"></i>&nbsp; <span data-i18n="unconfirmed">Unconfirmed</span></a></li>';
 		typeNavi.append(html);
-		
+
 		html  = '<li role="presentation"><a href="#" data-transaction-type="phasing" ';
 		html += 'data-toggle="popover" data-placement="top" data-content="Phasing (Pending)" data-container="body" data-i18n="[data-content]phasing_pending">';
 		html += '<i class="fa fa-gavel"></i>&nbsp; <span data-i18n="phasing">Phasing</span></a></li>';
@@ -740,7 +740,6 @@ var NRS = (function(NRS, $, undefined) {
 		};
 		NRS.sendRequest("getAccountPhasedTransactions", params, function(response) {
 			var rows = "";
-
 			if (response.transactions && response.transactions.length) {
 				var decimals = NRS.getTransactionsAmountDecimals(response.transactions);
 				for (var i = 0; i < response.transactions.length; i++) {
@@ -753,7 +752,6 @@ var NRS = (function(NRS, $, undefined) {
 			} else {
 				NRS.dataLoaded(rows);
 			}
-			
 		});
 	};
 

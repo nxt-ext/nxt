@@ -303,7 +303,7 @@ var NRS = (function (NRS, $, undefined) {
                     $modal.find("input[name=amountNXT]").val(NRS.convertToNXT(response.priceNQT)).prop("readonly", true);
                 }
             }
-        }, false);
+        }, { isAsync: false });
     });
 
     NRS.forms.buyAliasError = function () {
@@ -358,7 +358,7 @@ var NRS = (function (NRS, $, undefined) {
                     $("#register_alias_alias_noneditable").html(alias.escapeHTML()).show();
                     $("#register_alias_alias_update").val(1);
                 }
-            }, false);
+            }, { isAsync: false });
         } else {
             registerAliasModal.find("h4.modal-title").html($.t("register_alias"));
             registerAliasModal.find(".btn-primary").html($.t("register"));
@@ -522,7 +522,7 @@ var NRS = (function (NRS, $, undefined) {
 
                     $("#register_alias_modal").find(".error_message").html(errorDescription + ". " + message);
                 }
-            }, false);
+            }, { isAsync: false });
         }
     };
 

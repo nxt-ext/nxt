@@ -965,7 +965,7 @@ var NRS = (function (NRS, $, undefined) {
 				unconfirmedTransaction.buyerRS = unconfirmedTransaction.senderRS;
 				unconfirmedTransaction.seller = response.seller;
 				unconfirmedTransaction.sellerRS = response.sellerRS;
-			}, false);
+			}, { isAsync: false });
 		} else if (unconfirmedTransaction.type == 3 && unconfirmedTransaction.subtype == 0) {
 			unconfirmedTransaction.goods = unconfirmedTransaction.transaction;
 		}

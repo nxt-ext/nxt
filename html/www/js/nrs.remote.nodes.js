@@ -92,6 +92,7 @@ var NRS = (function(NRS) {
 
     NRS.getComparableResponse = function(origResponse, requestType) {
         delete origResponse.requestProcessingTime;
+        delete origResponse.confirmations;
         if (requestType == "getBlock") {
             delete origResponse.nextBlock;
         } else if (origResponse.transactions) {
@@ -167,7 +168,7 @@ var NRS = (function(NRS) {
                 confirmationReport.processing.push(node.announcedAddress);
                 ignoredAddresses.push(node.address);
                 data["_extra"] = { node: node, requestType: requestType };
-                NRS.sendRequest(requestType, data, onConfirmation, true, true, node);
+                NRS.sendRequest(requestType, data, onConfirmation, { noProxy: true, remoteNode: node, doNotEscape: true });
             }
         }
     };

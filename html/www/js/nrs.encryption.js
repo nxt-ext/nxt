@@ -59,7 +59,7 @@ var NRS = (function (NRS, $) {
 				} else {
 					publicKey = response.publicKey;
 				}
-			}, false);
+			}, { isAsync: false });
 
 			return publicKey;
 		} else {
@@ -758,7 +758,7 @@ var NRS = (function (NRS, $) {
 
 		var iv = converters.byteArrayToWordArray(ivCiphertext.slice(0, 16));
 		var ciphertext = converters.byteArrayToWordArray(ivCiphertext.slice(16));
-		
+
 		// shared key is use for two different purposes here
 		// (1) if nonce exists, shared key represents the shared secret between the private and public keys
 		// (2) if nonce does not exists, shared key is the specific key needed for decryption already xored
@@ -790,8 +790,8 @@ var NRS = (function (NRS, $) {
 			iv: iv
 		});
 
-		return { 
-            decrypted: converters.wordArrayToByteArray(decrypted), 
+		return {
+            decrypted: converters.wordArrayToByteArray(decrypted),
             sharedKey: converters.wordArrayToByteArray(key)
 		};
 	}
@@ -832,7 +832,7 @@ var NRS = (function (NRS, $) {
 	NRS.decryptDataRoof = function(data, options) {
 		return decryptData(data, options);
 	};
-	
+
 	function decryptData(data, options) {
 		if (!options.sharedKey) {
 			options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);

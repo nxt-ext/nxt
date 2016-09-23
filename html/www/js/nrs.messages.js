@@ -300,7 +300,7 @@ var NRS = (function(NRS, $) {
                     message.attachment.encryptedMessage = response.encryptedMessage;
                     decoded = getMessage(message);
                 }
-			}, false);
+			}, { isAsync: false });
         } else {
             decoded.message = $.t("message_empty");
         }
@@ -626,12 +626,12 @@ var NRS = (function(NRS, $) {
 			sendMessageMessage.prop('readonly', false);
 		}
 	});
-	
+
 	NRS.isTextMessage = function(transaction) {
 		return transaction.attachment.messageIsText ||
 			(transaction.attachment.encryptedMessage && transaction.attachment.encryptedMessage.isText) ||
 			(transaction.attachment.encryptToSelfMessage && transaction.attachment.encryptToSelfMessage.isText);
 	};
-    
+
 	return NRS;
 }(NRS || {}, jQuery));

@@ -91,7 +91,7 @@ RemoteNodesManager.prototype.addBootstrapNode = function (resolve, reject) {
         NRS.logConsole("Adding bootstrap node " + node.address);
         mgr.nodes[node.address] = node;
         resolve();
-    }, true, true, node);
+    }, { noProxy: true, remoteNode: node });
 };
 
 RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
@@ -100,7 +100,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
     var data = {state: "CONNECTED", includePeerInfo: true};
     var rejections = 0;
     peersData = NRS.getRandomPermutation(peersData);
-    for (var i=0; i < peersData.length && i < NRS.mobileSettings.bootstrap_nodes_count; i++) {
+    for (var i=0; i < peersData.length; i++) {
         var peerData = peersData[i];
         if (!isRemoteNodeServicesAvailable(peerData)) {
             continue;
@@ -123,7 +123,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
             if (NRS.mobileSettings.is_testnet && Object.keys(mgr.nodes).length == 1 || Object.keys(mgr.nodes).length == 3) {
                 resolve();
             }
-        }, true, true, node);
+        }, { noProxy: true, remoteNode: node });
     }
 };
 
@@ -185,7 +185,7 @@ RemoteNodesManager.prototype.findMoreNodes = function (isReschedule) {
                 nodesMgr.findMoreNodes(true);
             }, 30000);
         }
-    }, true, true, node);
+    }, { noProxy: true, remoteNode: node });
 };
 
 RemoteNodesManager.prototype.init = function () {

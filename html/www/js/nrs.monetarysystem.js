@@ -121,7 +121,6 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     callback(null);
                 });
-
             },
             function(callback) {
                 NRS.sendRequest("getAccountCurrencies+", {
@@ -177,7 +176,7 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 NRS.dataLoaded();
             }
-        }, false);
+        }, { isAsync: false });
     });
 
     NRS.getCurrencyRows = function (response) {
@@ -1210,7 +1209,7 @@ var NRS = (function (NRS, $, undefined) {
             "code": code
         }, function (response) {
             currency = response;
-        }, false);
+        }, { isAsync: false });
         NRS.sendRequest("getCurrencyAccounts", {
             "currency": currency.currency
         }, function (response) {

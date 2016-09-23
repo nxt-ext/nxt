@@ -42,7 +42,7 @@ var NRS = (function(NRS, $, undefined) {
             if (response.height > data.height) {
                 isDividendHeightBeforeAssetHeight = true;
             }
-        }, false);
+        }, { isAsync: false });
         if (isDividendHeightBeforeAssetHeight) {
             return {
                 "error": $.t("dividend_height_asset_height")

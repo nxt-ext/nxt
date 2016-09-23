@@ -188,7 +188,7 @@ var NRS = (function(NRS, $) {
                     status = NRS.constants.UNKNOWN;
                     tooltip = NRS.escapeRespStr(response.errorDescription);
                 }
-            }, false);
+            }, { isAsync: false });
         }
         setForgingIndicatorStatus(status);
         if (status == NRS.constants.NOT_FORGING) {

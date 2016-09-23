@@ -286,7 +286,7 @@ var NRS = (function(NRS, $) {
 			} else {
                 $("#tagged_data_content").val(NRS.unescapeRespStr(response.data));
 			}
-		}, false);
+		}, { isAsync: false });
 		NRS.getDownloadLink(NRS.getRequestPath() + "?requestType=downloadTaggedData&transaction=" + transaction + "&retrieve=true", $("#tagged_data_download"));
     });
 

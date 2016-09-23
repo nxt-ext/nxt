@@ -141,7 +141,7 @@ var NRS = (function(NRS, $) {
 					};
 				}
 			}
-		}, false);
+		}, { isAsync: false });
 
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal], .ignore)");
 
@@ -286,7 +286,7 @@ var NRS = (function(NRS, $) {
 					};
 				}
 			}
-		}, false);
+		}, { isAsync: false });
 
 		var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
 		NRS.storageSelect("contacts", [{

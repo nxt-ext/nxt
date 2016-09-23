@@ -35,7 +35,7 @@ var NRS = (function(NRS, $) {
 					callback(response);
 				}
 			}
-		}, true, true);
+		}, { noProxy: true });
 	};
 
 	NRS.handleInitialBlocks = function(response) {
@@ -89,7 +89,7 @@ var NRS = (function(NRS, $) {
 			}
 		}
 
-		//we have all blocks 	
+		//we have all blocks
 		if (response.height - 1 == NRS.lastBlockHeight || NRS.tempBlocks.length == 99) {
 			var newBlocks = [];
 
@@ -239,7 +239,7 @@ var NRS = (function(NRS, $) {
 		} else {
 			$("#forged_fees_total_box, #forged_blocks_total_box").hide();
 			$("#blocks_transactions_per_hour_box, #blocks_generation_time_box").show();
-			
+
 			NRS.sendRequest("getBlocks+", {
 				"firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
 				"lastIndex": NRS.pageNumber * NRS.itemsPerPage

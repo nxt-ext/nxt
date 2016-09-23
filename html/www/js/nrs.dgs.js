@@ -176,7 +176,7 @@ var NRS = (function(NRS, $) {
 				$('#dgs_tag_list').html(content);
 				NRS.pageLoaded();
 			}
-      );
+        );
 	};
 
 	NRS.dgs_search_seller = function(seller) {
@@ -644,7 +644,7 @@ var NRS = (function(NRS, $) {
 			} else {
 				data.seller = response.seller;
 			}
-		}, false);
+		}, { isAsync: false });
 
 		data.deliveryDeadlineTimestamp = String(NRS.toEpochTime() + 60 * 60 * data.deliveryDeadlineTimestamp);
 
@@ -1005,9 +1005,9 @@ var NRS = (function(NRS, $) {
 							}
 						}
 					}
-				},false);
+				}, { isAsync: false });
 			}
-		}, false);
+		}, { isAsync: false });
 	}).on("hidden.bs.modal", function() {
 		var type = $(this).attr("id");
 		NRS.removeDecryptionForm($(this));
@@ -1101,7 +1101,7 @@ var NRS = (function(NRS, $) {
 					}
 				});
 			}
-		},false);
+		}, { isAsync: false });
 	}).on("hidden.bs.modal", function() {
 		$("#dgs_purchase_quantity").off("change");
 

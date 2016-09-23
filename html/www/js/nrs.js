@@ -64,7 +64,7 @@ var NRS = (function(NRS, $, undefined) {
         remote_node_port: 7876,
         is_remote_node_ssl: false,
         validators_count: 3,
-        bootstrap_nodes_count: 5
+        bootstrap_nodes_count: 10
     };
 	NRS.contacts = {};
 
@@ -441,7 +441,7 @@ var NRS = (function(NRS, $, undefined) {
 							NRS.handleBlockchainStatus(response, callback);
                             NRS.updateDashboardMessage();
 						}
-					}, false);
+					}, { isAsync: false });
 				} else {
 					var hostName = window.location.hostname.toLowerCase();
 					NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
@@ -1394,23 +1394,18 @@ NRS.addPagination = function () {
 					if (response.minDuration) {
 						data.minimum_duration_short = response.minDuration;
 					}
-
 					if (response.maxDuration) {
 						data.maximum_duration_short = response.maxDuration;
 					}
-
 					if (response.maxFees) {
 						data.maximum_fees = NRS.convertToNXT(response.maxFees);
 					}
-
 					infoTable.find("tbody").append(NRS.createInfoTable(data));
 					infoTable.show();
 				} else {
 					onNoPhasingOnly();
 				}
-
 			});
-
 		} else {
 			onNoPhasingOnly();
 		}

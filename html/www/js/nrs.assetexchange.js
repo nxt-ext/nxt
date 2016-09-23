@@ -50,7 +50,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     function loadAssetFromURL() {
-        var page = NRS.getUrlParameter("page"); 
+        var page = NRS.getUrlParameter("page");
         var asset = NRS.getUrlParameter("asset");
         if (!page || page != "asset_exchange") {
             return;
@@ -75,7 +75,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         });
     }
-    
+
     NRS.pages.asset_exchange = function (callback) {
         $(".content.content-stretch:visible").width($(".page:visible").width());
         assets = [];
@@ -1165,7 +1165,7 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 success(response);
             }
-        }, false);
+        }, { isAsync: false });
     };
 
     $("#asset_exchange_sidebar_group_context").on("click", "a", function (e) {

@@ -74,14 +74,14 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.sendRequest("getAsset", { "asset": phasingParams.phasingHolding }, function(response) {
                     phasingDetails.quorum = NRS.convertToQNTf(phasingParams.phasingQuorum, response.decimals);
                     phasingDetails.minBalance = NRS.convertToQNTf(phasingParams.phasingMinBalance, response.decimals);
-                }, false);
+                }, { isAsync: false });
                 break;
             case 'CURRENCY':
                 NRS.sendRequest("getCurrency", { "currency": phasingParams.phasingHolding }, function(response) {
                     phasingDetails.quorum = NRS.convertToQNTf(phasingParams.phasingQuorum, response.decimals);
                     phasingDetails.minBalance = NRS.convertToQNTf(phasingParams.phasingMinBalance, response.decimals);
-                }, false);
-                break;              
+                }, { isAsync: false });
+                break;
             default:
                 phasingDetails.quorum = phasingParams.phasingQuorum;
                 phasingDetails.minBalance = phasingParams.phasingMinBalance;
@@ -469,7 +469,7 @@ var NRS = (function (NRS, $, undefined) {
                                         message = $.t("error_alias_sale_different_account");
                                     }
                                 }
-                            }, false);
+                            }, { isAsync: false });
 
                             if (message) {
                                 $("#transaction_info_bottom").html("<div class='callout callout-bottom callout-" + messageStyle + "'>" + message + "</div>").show();
@@ -631,7 +631,6 @@ var NRS = (function (NRS, $, undefined) {
                                 NRS.fetchingModalData = false;
                             }
                         });
-
                         break;
                     case 5:
                         async = true;
@@ -661,7 +660,6 @@ var NRS = (function (NRS, $, undefined) {
                                 NRS.fetchingModalData = false;
                             }
                         });
-
                         break;
                     case 6:
                         async = true;
@@ -712,7 +710,6 @@ var NRS = (function (NRS, $, undefined) {
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
                         });
-
                         break;
                     default:
                         incorrect = true;
@@ -736,7 +733,6 @@ var NRS = (function (NRS, $, undefined) {
                         break;
                     case 1:
                         async = true;
-
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
@@ -752,11 +748,9 @@ var NRS = (function (NRS, $, undefined) {
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
                         });
-
                         break;
                     case 2:
                         async = true;
-
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
@@ -773,11 +767,9 @@ var NRS = (function (NRS, $, undefined) {
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
                         });
-
                         break;
                     case 3:
                         async = true;
-
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
@@ -794,11 +786,9 @@ var NRS = (function (NRS, $, undefined) {
                             $("#transaction_info_modal").modal("show");
                             NRS.fetchingModalData = false;
                         });
-
                         break;
                     case 4:
                         async = true;
-
                         NRS.sendRequest("getDGSGood", {
                             "goods": transaction.attachment.goods
                         }, function (goods) {
@@ -818,7 +808,6 @@ var NRS = (function (NRS, $, undefined) {
                                 "purchase": transaction.transaction
                             }, function (purchase) {
                                 var callout = "";
-
                                 if (purchase.errorCode) {
                                     if (purchase.errorCode == 4) {
                                         if (transactionDetails.block == "unconfirmed") {
@@ -846,20 +835,16 @@ var NRS = (function (NRS, $, undefined) {
                                         }
                                     }
                                 }
-
                                 if (callout) {
                                     $("#transaction_info_bottom").html("<div class='callout " + (purchase.errorCode ? "callout-danger" : "callout-info") + " callout-bottom'>" + callout + "</div>").show();
                                 }
-
                                 $("#transaction_info_modal").modal("show");
                                 NRS.fetchingModalData = false;
                             });
                         });
-
                         break;
                     case 5:
                         async = true;
-
                         NRS.sendRequest("getDGSPurchase", {
                             "purchase": transaction.attachment.purchase
                         }, function (purchase) {
@@ -918,11 +903,9 @@ var NRS = (function (NRS, $, undefined) {
                                 NRS.fetchingModalData = false;
                             });
                         });
-
                         break;
                     case 6:
                         async = true;
-
                         NRS.sendRequest("getDGSPurchase", {
                             "purchase": transaction.attachment.purchase
                         }, function (purchase) {
@@ -944,7 +927,6 @@ var NRS = (function (NRS, $, undefined) {
                                         "purchase": transaction.attachment.purchase
                                     }, function (purchase) {
                                         var callout;
-
                                         if (purchase.buyer == NRS.account) {
                                             if (purchase.refundNQT) {
                                                 callout = $.t("purchase_refunded");
@@ -956,26 +938,21 @@ var NRS = (function (NRS, $, undefined) {
                                                 callout = $.t("purchase_refunded");
                                             }
                                         }
-
                                         if (callout) {
                                             $("#transaction_info_bottom").append("<div class='callout callout-info callout-bottom'>" + callout + "</div>").show();
                                         }
-
                                         $("#transaction_info_modal").modal("show");
                                         NRS.fetchingModalData = false;
                                     });
-
                                 } else {
                                     $("#transaction_info_modal").modal("show");
                                     NRS.fetchingModalData = false;
                                 }
                             });
                         });
-
                         break;
                     case 7:
                         async = true;
-
                         NRS.sendRequest("getDGSPurchase", {
                             "purchase": transaction.attachment.purchase
                         }, function (purchase) {
@@ -986,24 +963,17 @@ var NRS = (function (NRS, $, undefined) {
                                     "type": $.t("marketplace_refund"),
                                     "item_name": goods.name
                                 };
-
                                 var orderTotal = new BigInteger(String(purchase.quantity)).multiply(new BigInteger(String(purchase.priceNQT)));
-
                                 data["order_total_formatted_html"] = NRS.formatAmount(orderTotal) + " NXT";
-
                                 data["refund"] = transaction.attachment.refundNQT;
-
                                 data["buyer"] = NRS.getAccountFormatted(purchase, "buyer");
                                 data["seller"] = NRS.getAccountFormatted(purchase, "seller");
-
                                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                                 infoTable.show();
-
                                 $("#transaction_info_modal").modal("show");
                                 NRS.fetchingModalData = false;
                             });
                         });
-
                         break;
                     default:
                         incorrect = true;
@@ -1049,7 +1019,7 @@ var NRS = (function (NRS, $, undefined) {
                     if (!response.errorCode) {
                         currency = response;
                     }
-                }, null, false);
+                }, { isAsync: false });
 
                 switch (transaction.subtype) {
                     case 0:
@@ -1225,7 +1195,7 @@ var NRS = (function (NRS, $, undefined) {
                     NRS.sendRequest(requestType, {"currency": transaction.attachment.holding, "asset": transaction.attachment.holding}, function (response) {
                         data.holding_formatted_html = NRS.getTransactionLink(transaction.attachment.holding);
                         data.amount_formatted_html = NRS.convertToQNTf(transaction.attachment.amount, response.decimals);
-                    }, false);
+                    }, { isAsync: false });
                 } else {
                     data.amount = transaction.attachment.amount;
                 }
@@ -1247,7 +1217,7 @@ var NRS = (function (NRS, $, undefined) {
                     } else {
                         data["participants"] = $.t("no_matching_participants");
                     }
-                }, false);
+                }, { isAsync: false });
                 NRS.sendRequest("getShufflers", {
                     "shufflingFullHash": transaction.fullHash,
                     "account": NRS.accountRS,
@@ -1268,7 +1238,7 @@ var NRS = (function (NRS, $, undefined) {
                             data["shuffler"] = $.t("not_started");
                         }
                     }
-                }, false);
+                }, { isAsync: false });
                 NRS.sendRequest("getShuffling", {
                     "shuffling": transaction.transaction
                 }, function (response) {
@@ -1285,7 +1255,7 @@ var NRS = (function (NRS, $, undefined) {
                             data["recipients_formatted_html"] = listPublicKeys(response.recipientPublicKeys);
                         }
                     }
-                }, false);
+                }, { isAsync: false });
                 infoTable.find("tbody").append(NRS.createInfoTable(data));
                 infoTable.show();
             } else if (NRS.isOfType(transaction, "ShufflingRegistration")) {
@@ -1435,7 +1405,7 @@ var NRS = (function (NRS, $, undefined) {
             }
             data["quantity_traded"] = [tradeQuantity, asset.decimals];
             data["total_traded"] = NRS.formatAmount(tradeTotal, false, true) + " NXT";
-        }, null, false);
+        }, { isAsync: false });
 
         var infoTable = $("#transaction_info_table");
         infoTable.find("tbody").append(NRS.createInfoTable(data));
@@ -1486,7 +1456,7 @@ var NRS = (function (NRS, $, undefined) {
             }
             data["units_exchanged"] = [exchangedUnits, currency.decimals];
             data["total_exchanged"] = NRS.formatAmount(exchangedTotal, false, true) + " [NXT]";
-        }, null, false);
+        }, { isAsync: false });
         return data;
     };
 
@@ -1499,7 +1469,7 @@ var NRS = (function (NRS, $, undefined) {
         }, function (response) {
             buyOffer = response.buyOffer;
             sellOffer = response.sellOffer;
-        }, null, false);
+        }, { isAsync: false });
         var data = {};
         if (buyOffer && sellOffer) {
             data = {
@@ -1554,7 +1524,7 @@ var NRS = (function (NRS, $, undefined) {
             }
             data["units_exchanged"] = [exchangedUnits, currency.decimals];
             data["total_exchanged"] = NRS.formatAmount(exchangedTotal, false, true) + " [NXT]";
-        }, null, false);
+        }, { isAsync: false });
         return data;
     };
 
