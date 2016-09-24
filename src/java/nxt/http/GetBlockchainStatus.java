@@ -70,6 +70,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
             response.put("apiProxy", false);
         }
         response.put("isLightClient", Constants.isLightClient);
+        response.put("blockchainState", Peers.getMyBlockchainState());
         return response;
     }
 
