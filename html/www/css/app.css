@@ -9,10 +9,10 @@
 	margin-left: -10px !important;
 }
 
-/*! 
+/*!
  *   AdminLTE v1.0
  *   Author: AlmsaeedStudio.com
- *   License: Please visit http://wrapbootstrap.com for information about 
+ *   License: Please visit http://wrapbootstrap.com for information about
  *            this theme's license
 !*/
 /*
@@ -109,7 +109,7 @@ body > .header {
 }
 /*
     By default the layout is not fixed but if you add the class .fixed to the body element
-    the sidebar and the navbar will automatically become poisitioned fixed
+    the sidebar and the navbar will automatically become positioned fixed
 */
 body.fixed > .header,
 body.fixed .left-side,
@@ -519,8 +519,8 @@ body > .header .logo .icon {
   }
 }
 
-/* DELETE ME 20150715 
-  
+/* DELETE ME 20150715
+
 @media screen and (max-width: 560px) {
   body > .header {
     position: relative;
@@ -630,7 +630,7 @@ body > .header .logo .icon {
 }
 #forging_indicator {
 	font-size: 14px;
-} 
+}
 .user-panel > .info > p {
   margin-bottom: 9px;
 }
@@ -686,7 +686,7 @@ body > .header .logo .icon {
     left: 0px;
   }
 }
-/* 
+/*
     Dropdown menus
 ----------------------------
 */
@@ -1069,7 +1069,7 @@ body > .header .logo .icon {
     left: auto;
   }
 }
-/* 
+/*
    All form elements including input, select, textarea etc.
 -----------------------------------------------------------------
 */
@@ -1119,7 +1119,7 @@ body > .header .logo .icon {
 .radio {
   padding-left: 0;
 }
-/* 
+/*
     Compenent: Progress bars
 --------------------------------
 */
@@ -1729,7 +1729,7 @@ body > .header .logo .icon {
   outline: none;
 }
 
-/* 
+/*
     Component: callout
 ------------------------
 */
@@ -1770,7 +1770,7 @@ body > .header .logo .icon {
 .callout.callout-info h4 {
   color: #3A87AD;
 }
-/* 
+/*
     Component: alert
 ------------------------
 */
@@ -2000,17 +2000,17 @@ body > .header .logo .icon {
 }
 
 #login_panel #remember_password_container label,
-#login_panel #remember_account_container label, 
+#login_panel #remember_account_container label,
 #lockscreen_active_plugins_warning label
 { opacity: 0.53; }
 
 #login_panel #remember_password_container label:hover,
 #login_panel #remember_account_container label:hover,
-#lockscreen_active_plugins_warning label:hover 
+#lockscreen_active_plugins_warning label:hover
 { opacity: 1.0; }
 
-/* 
-    skin-blue 
+/*
+    skin-blue
     ---------
 */
 /* skin-blue navbar */
@@ -2072,7 +2072,7 @@ body > .header .logo .icon {
 	border-top: 1px solid #dbdbdb;
 }
 
-.left-side .sidebar > .sidebar-menu > li > a { 
+.left-side .sidebar > .sidebar-menu > li > a {
   border-top: 1px solid #fff;
   border-bottom: 1px solid #dbdbdb;
 }
@@ -2081,7 +2081,7 @@ body > .header .logo .icon {
 .sidebar-default {
   border-bottom: 1px solid #fff;
 }
-								
+
 .sidebar-default > .sidebar-menu > li {
   border-top: 1px solid #fff;
   border-bottom: 1px solid #dbdbdb;
@@ -2182,8 +2182,8 @@ body > .header .logo .icon {
 
 /*http://sugoi-admin.herokuapp.com/index.html
 http://wrapbootstrap.com/preview/WB0907F35 */
-/* 
-    skin-blue 
+/*
+    skin-blue
     ---------
 */
 .skin-blue .navbar .navbar-right > .nav {
@@ -2325,11 +2325,11 @@ http://wrapbootstrap.com/preview/WB0907F35 */
 	-webkit-box-shadow: 0px 2px 10px rgba(50, 50, 50, 0.5);
 	-moz-box-shadow: 0px 2px 10px rgba(50, 50, 50, 0.5);
 	box-shadow: 0px 2px 10px rgba(50, 50, 50, 0.5);
-	
+
 }
 
 body {
-	
+
 	color: black !important;
 }
 
@@ -2351,7 +2351,7 @@ a.list-group-item:hover {
 }
 
 .content-no-padding {
-	
+
 	padding: 0 !important;
 	margin-top: 2px;
 }
@@ -2396,7 +2396,7 @@ a.list-group-item:hover {
 	-webkit-box-sizing: content-box !important;
 	-moz-box-sizing: content-box !important;
 	box-sizing: content-box !important;
-	
+
 }
 .chat p {
 	-webkit-font-smoothing:  subpixel-antialiased;
@@ -2487,7 +2487,7 @@ a.list-group-item:hover {
 	bottom: 0;
 	width: 40%;
 }
-		
+
 .content-splitter-sidebar-inner {
 	position: absolute;
 	padding-bottom: 120px;
@@ -2559,7 +2559,7 @@ a.list-group-item:hover {
 	bottom:155px;
 	padding-bottom:0;
 }
-	
+
 .content-splitter-right .box-solid {
 	margin-bottom: 15px !important;
 }
@@ -2575,12 +2575,12 @@ a.list-group-item:hover {
 .table.table-assets > tbody > tr >td {
 	/* background-color: #FCFBEF !important; */
 }
-	
+
 .table.table-assets td, .table.table-assets th {
 	border-top: none !important;
 	padding:5px;
 }
-	
+
 #asset_exchange_bid_orders_table tr:hover td, #asset_exchange_ask_orders_table tr:hover td {
 	background-color: #FEFFBC !important;
 	cursor: pointer;
@@ -2692,7 +2692,7 @@ tr.tentative-crossed td , tr.tentative-crossed td a {
 }
 
 .loading_dots {
-    text-align: center; 
+    text-align: center;
     margin: 100px 0 0 0;
 }
 
@@ -2704,11 +2704,11 @@ tr.tentative-crossed td , tr.tentative-crossed td a {
     -moz-animation-name: opacity;
     -moz-animation-duration: 1s;
     -moz-animation-iteration-count: infinite;
-    
+
     -o-animation-name: opacity;
     -o-animation-duration: 1s;
     -o-animation-iteration-count: infinite;
-    
+
    	animation-name: opacity;
     animation-duration: 1s;
     animation-iteration-count: infinite;
@@ -2775,7 +2775,7 @@ tr.tentative-crossed td , tr.tentative-crossed td a {
 }
 
 .unselectable {
-	-webkit-user-select: none; /* Chrome/Safari */        
+	-webkit-user-select: none; /* Chrome/Safari */
 	-moz-user-select: none; /* Firefox */
 	-ms-user-select: none; /* IE10+ */
 	-o-user-select: none;
@@ -2843,7 +2843,7 @@ a.list-group-item-header:hover {
 }
 #nrs_update_hash_progress {
     height:15px;
-    background:#48874A;  
+    background:#48874A;
     display:none;
     margin-top:20px;
 }
@@ -2870,7 +2870,7 @@ a.list-group-item-header:hover {
     display:none;
     margin-top:20px;
 }
-    
+
 #nrs_update_hashes table {
     border-collapse:collapse;
     border:1px solid #bbb;
@@ -2913,7 +2913,7 @@ a.list-group-item-header:hover {
     height: 10px
 }
 
-.box { 
+.box {
 	overflow:hidden;
 }
 
@@ -3213,7 +3213,7 @@ hr {
     border:none !important;
 }
 
-#asset_exchange_page.no_assets .content-splitter-sidebar { 
+#asset_exchange_page.no_assets .content-splitter-sidebar {
   display: none !important;
 }
 #asset_exchange_page.no_assets .content-splitter-right {
@@ -3363,7 +3363,7 @@ input.masked {
   text-transform:none !important;
 }
 
-.navbar-right > .nav > .dropdown > a { 
+.navbar-right > .nav > .dropdown > a {
   font-weight:bold;
 }
 
@@ -3381,7 +3381,7 @@ input.masked {
 
 .modal-body {
   padding-bottom:8px;
-} 
+}
 
 .modal-backdrop {
   height: 1500px !important;
@@ -3403,14 +3403,14 @@ input.masked {
   display: none;
 }
 
-#loginButtons {
+.lockscreen-widget {
   margin: 10px 0;
   vertical-align: top;
 }
 
 #alias_count_heading{
-	position: absolute; 
-	left: 105px; 
+	position: absolute;
+	left: 105px;
 	top: 17px;
 }
 
@@ -3418,25 +3418,25 @@ input.masked {
 /*
  * @duckx 20150715 - Header  */
 
-body > .header .navbar { 
-  height: 50px; 
+body > .header .navbar {
+  height: 50px;
 }
 
 @media (max-width: 965px) {
 
   /*Shorten width of send containers to wrap on 2 lines*/
-  .navbar-right > .nav.sends > .dropdown > a { 
-    width: 91px; 
-    text-align: center; 
-    padding: 5px 15px; 
+  .navbar-right > .nav.sends > .dropdown > a {
+    width: 91px;
+    text-align: center;
+    padding: 5px 15px;
   }
 
   body > .header .logo {
-    width: 155px; 
+    width: 155px;
   }
 
   body > .header .navbar {
-    margin-left: 150px; 
+    margin-left: 150px;
     padding-right: 9px;
   }
 
@@ -3450,21 +3450,21 @@ body > .header .navbar {
 @media (max-width: 800px) {
 
   .sidebar,
-  body.fixed .wrapper { 
+  body.fixed .wrapper {
     margin-top: 76px;
   }
 
-  body > .header .logo { 
+  body > .header .logo {
     position: relative;
     z-index: 9999;
-    width: 160px; 
-    margin: 0 0 0 40px; 
-    background: transparent; 
+    width: 160px;
+    margin: 0 0 0 40px;
+    background: transparent;
   }
 
   body > .header .navbar {
-    margin: 0; 
-    height: 75px; 
+    margin: 0;
+    height: 75px;
   }
 
   .navbar .navbar-right > .nav.sends {
@@ -3478,12 +3478,12 @@ body > .header .navbar {
 
   .navbar .navbar-right > .nav.sends li {
     display: inline;
-    float:none; 
+    float:none;
   }
 
   .navbar .navbar-right > .nav.sends a {
     display: inline;
-    padding: 0 25px; 
+    padding: 0 25px;
   }
 
 }/* @media min-width: 800px */
@@ -3491,11 +3491,11 @@ body > .header .navbar {
 
 @media (max-width: 767px) {
   .navbar .navbar-nav > li {
-    position: static; 
+    position: static;
   }
 
   .navbar-nav .open .dropdown-menu {
-    background: #fff; 
+    background: #fff;
     margin-top: -30px;
     position: absolute;
     width: 100%;
@@ -3504,16 +3504,16 @@ body > .header .navbar {
 
   .navbar .nav > li > a:focus,
   .navbar .nav > li > a:hover,
-  .navbar .nav > li > a:hover .badge 
+  .navbar .nav > li > a:hover .badge,
   .navbar .nav .open > a:hover {
     background: none !important;
     color: #bbb;
   }
 
   .navbar-right > .nav > .dropdown > a,
-  .navbar .nav .open > a, 
+  .navbar .nav .open > a,
   .navbar .nav a {
-    background: none; 
+    background: none;
   }
 
 }/* @media min-width: 767px */
@@ -3522,16 +3522,16 @@ body > .header .navbar {
 @media (max-width: 550px) {
 
   .sidebar,
-  body.fixed .wrapper { 
+  body.fixed .wrapper {
     margin-top: 76px;
   }
 
   body > .header .logo {
-    padding: 0 342px 0 5px; 
-    width: 100%; 
-    background: 0; 
+    padding: 0 342px 0 5px;
+    width: 100%;
+    background: 0;
     margin: 0;
-    display: none; 
+    display: none;
   }
 
   body > .header .navbar .sidebar-toggle {
@@ -3549,7 +3549,7 @@ body > .header .navbar {
   }
 
     .navbar .navbar-right > .nav.sends + .nav {
-      margin: 0; 
+      margin: 0;
       display: -webkit-flex;
       display: flex;
       float: none;
@@ -3558,11 +3558,11 @@ body > .header .navbar {
       justify-content: space-between;
     }
     .navbar .navbar-right > .nav.sends + .nav > li > a {
-      padding: 13px; 
+      padding: 13px;
     }
 
-    .navbar .navbar-right > .nav.sends { 
-      height: 31px; 
+    .navbar .navbar-right > .nav.sends {
+      height: 31px;
       display: -webkit-flex;
       display: flex;
       -webkit-justify-content: space-around;
@@ -3571,17 +3571,17 @@ body > .header .navbar {
     }
 
       .navbar .navbar-right > .nav.sends li {
-        width: 60px; 
+        width: 60px;
       }
 
-      .navbar .navbar-right > .nav.sends a { 
+      .navbar .navbar-right > .nav.sends a {
         padding: 0;
         display: block;
-        width: 100%; 
-        line-height: 13px; 
+        width: 100%;
+        line-height: 13px;
         font-weight: normal;
       }
-  
+
 }/* @media min-width: 550px */
 
 .numeric {
