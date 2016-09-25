@@ -27,7 +27,7 @@ var NRS = (function(NRS, $) {
         }
     }
 
-    $(window).load(function() {
+    $(window).on('load', function() {
         widgetVisibility($("#header_send_money"), { apis: [NRS.constants.REQUEST_TYPES.sendMoney] });
         widgetVisibility($("#header_transfer_currency"), { apis: [NRS.constants.REQUEST_TYPES.transferCurrency] });
         widgetVisibility($("#header_send_message"), { apis: [NRS.constants.REQUEST_TYPES.sendMessage] });
