@@ -38,14 +38,16 @@
                     <div class="lockscreen-credentials">
                     	<div class="input-group" id="login_account_container" style="display:table;height:34px;width: 100%;">
                             <div class="dropdown" style="width: 100%;">
-							  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true" style="width: 100%;">
-								<span data-i18n="select_account_to_login">Select an Account to Login with</span>
-								<span class="caret"></span>
-							  </button>
-							  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1" id="login_account">
+                                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1"
+                                        data-toggle="dropdown" aria-expanded="true" style="width: 100%;">
+                                    <span data-i18n="select_account_to_login">Select an Account to Login with</span>
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1"
+                                    id="login_account">
 
-							  </ul>
-							</div>
+                                </ul>
+                            </div>
                         </div>
                         <input type="hidden" name="check_password_length" id="login_check_password_length" value="1" />
                         <div class="input-group" id="login_account_container_other">
@@ -62,6 +64,9 @@
                         </div>
                     </div>
                 </div>
+
+                <a href="mobile.html" class="lockscreen-widget mobile-only fa fa-mobile btn btn-primary" style="display:none;"></a>
+                <a href="#" class="lockscreen-widget mobile-only fa fa-navicon btn btn-primary" data-toggle="modal" data-target="#mobile_settings_modal" style="display:none;"></a>
 
                 <div id="remem-wrap" class="remem-pass-hide">
                     <div id="remember_account_container">

@@ -53,6 +53,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.isCodeScanningEnabled()) {
             $("#scanQRCode").show();
         }
+		if (NRS.isMobileApp()) {
+            $(".mobile-only").show();
+        }
 		$("#login_panel").show();
 		setTimeout(function() {
 			$("#login_password").focus()
