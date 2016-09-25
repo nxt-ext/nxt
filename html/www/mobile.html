@@ -15,7 +15,7 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<html>
+<html class="lockscreen">
     <head>
         <meta charset="UTF-8">
         <title data-i18n="app_title">NXT Wallet</title>
@@ -35,8 +35,7 @@
         <!-- cordova script (this will be missing unless deployed as a mobile application) -->
         <script src="cordova.js"></script>
     </head>
-    <body>
-	<div class="nrsApp">
+    <body class="lockscreen fixed">
         <div id="page" class="wrapper row-offcanvas row-offcanvas-left">
             <aside id="sidebar" class="left-side sidebar-offcanvas">
                 <!-- Sidebar moved to html/sidebar.html -->
@@ -74,7 +73,8 @@
                 $("[data-i18n]").i18n();
             });
         </script>
-        <script src="js/3rdparty/ajaxretry.js"></script>
+		<script src="js/3rdparty/es6-shim.min.js"></script>
+		<script src="js/3rdparty/ajaxretry.js"></script>
         <script src="js/3rdparty/spin.min.js"></script>
 		<script src="js/3rdparty/jquery.rss.js" type="text/javascript"></script>
         <script src="js/3rdparty/webdb.js" type="text/javascript"></script>
@@ -94,13 +94,24 @@
         <script src="js/nrs.constants.js" type="text/javascript"></script>
         <script src="js/nrs.sitebuild.js" type="text/javascript"></script>
         <script src="js/nrs.simpleview.js" type="text/javascript"></script>
-        <script src="js/nrs.feature.detection.js" type="text/javascript"></script>
+		
+		<script src="js/util/extensions.js" type="text/javascript"></script>
+		<script src="js/util/converters.js" type="text/javascript"></script>
+		<script src="js/util/nxtaddress.js" type="text/javascript"></script>
+		<script src="js/util/decodeqrcode.js" type="text/javascript"></script>
+		<script> NRS.ionic = true; </script>
+		<script src="js/nrs.js" type="text/javascript"></script>
+		<script src="js/nrs.settings.js" type="text/javascript"></script>
+		<script src="js/util/locale.js" type="text/javascript"></script>
+		<script src="js/util/remotenodesmgr.js" type="text/javascript"></script>
+		<script src="js/nrs.localstorage.js" type="text/javascript"></script>
+		<script src="js/nrs.feature.detection.js" type="text/javascript"></script>
+		<script src="js/nrs.javabridge.js" type="text/javascript"></script>
 
         <script type="text/javascript">
-            NRS.initWebUI = function() {
-			if(!NRS.isMobileApp()) {
+
+            NRS.initWebUI = function() { //Delay loading html and JS files
 				NRS.loadLockscreenHTML("html/lockscreen.html");
-			}
 				NRS.loadHeaderHTML("html/header.html");
 				NRS.loadSidebarHTML("html/sidebar.html");
 				NRS.loadSidebarContextHTML("html/sidebar_context.html");
@@ -149,79 +160,73 @@
 				NRS.preloadModalUIElements();
 			}
 			
-			if(NRS.isMobileApp()) {
-				document.querySelector('.nrsApp').style.visibility = "hidden"; //hide application by default unless user switches into webUI
+			NRS.loadJSFiles = function(showWelcomeScreen) {
+				jQuery.ajaxSetup({ async: false });
+				$.getScript("js/crypto/curve25519.js");
+				$.getScript("js/crypto/curve25519_.js");
+				$.getScript("js/crypto/3rdparty/cryptojs/aes.js");
+				$.getScript("js/crypto/3rdparty/cryptojs/sha256.js");
+
+				$.getScript("js/nrs.remote.nodes.js");
+				$.getScript("js/nrs.server.js");
+				$.getScript("js/nrs.forms.js");
+				$.getScript("js/nrs.plugins.js");
+				$.getScript("js/nrs.feature.detection.js");
+				$.getScript("js/nrs.login.js");
+				$.getScript("js/nrs.update.js");
+				$.getScript("js/nrs.recipient.js");
+				$.getScript("js/nrs.assetexchange.js");
+				$.getScript("js/nrs.monetarysystem.js");
+				$.getScript("js/nrs.dgs.js");
+				$.getScript("js/nrs.messages.js");
+				$.getScript("js/nrs.aliases.js");
+				$.getScript("js/nrs.polls.js");
+				$.getScript("js/nrs.blocks.js");
+				$.getScript("js/nrs.transactions.types.js");
+				$.getScript("js/nrs.transactions.js");
+				$.getScript("js/nrs.notifications.js");
+				$.getScript("js/nrs.peers.js");
+				$.getScript("js/nrs.contacts.js");
+				$.getScript("js/nrs.accountcontrol.js");
+				$.getScript("js/nrs.news.js");
+				$.getScript("js/nrs.sidebar.js");
+				$.getScript("js/nrs.encryption.js");
+				$.getScript("js/nrs.modals.js");
+				$.getScript("js/nrs.modals.uielements.js");
+				$.getScript("js/nrs.modals.account.js");
+				$.getScript("js/nrs.modals.accountdetails.js");
+				$.getScript("js/nrs.modals.block.js");
+				$.getScript("js/nrs.modals.forging.js");
+				$.getScript("js/nrs.modals.info.js");
+				$.getScript("js/nrs.modals.token.js");
+				$.getScript("js/nrs.modals.hallmark.js");
+				$.getScript("js/nrs.modals.hash.js");
+				$.getScript("js/nrs.modals.transaction.js");
+				$.getScript("js/nrs.modals.accountinfo.js");
+				$.getScript("js/nrs.modals.balanceleasing.js");
+				$.getScript("js/nrs.modals.advanced.js");
+				$.getScript("js/nrs.modals.dividendpayment.js");
+				$.getScript("js/nrs.modals.ledger.js");
+				$.getScript("js/nrs.modals.peer.js");
+				$.getScript("js/nrs.console.js");
+				$.getScript("js/nrs.util.js");
+				$.getScript("js/nrs.shape.shift.js");
+				$.getScript("js/nrs.shuffling.js");
+				$.getScript("js/nrs.accountproperties.js");
+				$.getScript("js/nrs.taggeddata.js");
+				$.getScript("js/nrs.header.js");
+				$.getScript("js/nrs.monitors.js");
+				$.getScript("js/nrs.mobile.js");
+
+				jQuery.ajaxSetup({async: true});
+				
+				if(showWelcomeScreen) {
+					$("body, html").addClass("lockscreen");
+					$("#lockscreen").show();
+				}
+				NRS.init();
 			}
         </script>
-
-        <script src="js/util/extensions.js" type="text/javascript"></script>
-        <script src="js/util/converters.js" type="text/javascript"></script>
-        <script src="js/util/nxtaddress.js" type="text/javascript"></script>
-        <script src="js/util/decodeqrcode.js" type="text/javascript"></script>
-        <script src="js/util/locale.js" type="text/javascript"></script>
-        <script src="js/util/remotenodesmgr.js" type="text/javascript"></script>
-
-        <script src="js/crypto/curve25519.js" type="text/javascript"></script>
-        <script src="js/crypto/curve25519_.js" type="text/javascript"></script>
-        <script src="js/crypto/3rdparty/cryptojs/aes.js" type="text/javascript"></script>
-        <script src="js/crypto/3rdparty/cryptojs/sha256.js" type="text/javascript"></script>
-
-        <script src="js/nrs.js" type="text/javascript"></script>
-        <script src="js/nrs.remote.nodes.js" type="text/javascript"></script>
-        <script src="js/nrs.server.js" type="text/javascript"></script>
-        <script src="js/nrs.forms.js" type="text/javascript"></script>
-        <script src="js/nrs.plugins.js" type="text/javascript"></script>
-        <script src="js/nrs.login.js" type="text/javascript"></script>
-        <script src="js/nrs.update.js" type="text/javascript"></script>
-        <script src="js/nrs.recipient.js" type="text/javascript"></script>
-        <script src="js/nrs.assetexchange.js" type="text/javascript"></script>
-        <script src="js/nrs.monetarysystem.js" type="text/javascript"></script>
-        <script src="js/nrs.dgs.js" type="text/javascript"></script>
-        <script src="js/nrs.messages.js" type="text/javascript"></script>
-        <script src="js/nrs.aliases.js" type="text/javascript"></script>
-        <script src="js/nrs.polls.js" type="text/javascript"></script>
-        <script src="js/nrs.blocks.js" type="text/javascript"></script>
-        <script src="js/nrs.transactions.types.js" type="text/javascript"></script>
-        <script src="js/nrs.transactions.js" type="text/javascript"></script>
-        <script src="js/nrs.notifications.js" type="text/javascript"></script>
-        <script src="js/nrs.peers.js" type="text/javascript"></script>
-        <script src="js/nrs.contacts.js" type="text/javascript"></script>
-        <script src="js/nrs.accountcontrol.js" type="text/javascript"></script>
-        <script src="js/nrs.news.js" type="text/javascript"></script>
-        <script src="js/nrs.settings.js" type="text/javascript"></script>
-        <script src="js/nrs.sidebar.js" type="text/javascript"></script>
-        <script src="js/nrs.encryption.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.uielements.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.account.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.accountdetails.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.block.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.forging.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.info.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.token.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.hallmark.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.hash.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.transaction.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.accountinfo.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.balanceleasing.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.advanced.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.dividendpayment.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.ledger.js" type="text/javascript"></script>
-        <script src="js/nrs.modals.peer.js" type="text/javascript"></script>
-        <script src="js/nrs.console.js" type="text/javascript"></script>
-        <script src="js/nrs.util.js" type="text/javascript"></script>
-        <script src="js/nrs.shape.shift.js" type="text/javascript"></script>
-        <script src="js/nrs.shuffling.js" type="text/javascript"></script>
-        <script src="js/nrs.accountproperties.js" type="text/javascript"></script>
-        <script src="js/nrs.taggeddata.js" type="text/javascript"></script>
-        <script src="js/nrs.header.js" type="text/javascript"></script>
-        <script src="js/nrs.localstorage.js" type="text/javascript"></script>
-        <script src="js/nrs.javabridge.js" type="text/javascript"></script>
-        <script src="js/nrs.monitors.js" type="text/javascript"></script>
-        <script src="js/nrs.mobile.js" type="text/javascript"></script>
-        <script src="js/3rdparty/moment-with-locales.min.js" type="text/javascript"></script>
-        <script src="js/3rdparty/qrcode.js" type="text/javascript"></script>
-		</div>
 
 		<div>
 			<!-- SkyNxt mobile application code -->
@@ -237,6 +242,5 @@
 			NRS.settings["language"] = i18nGlobal.lng();
 		</script>
 		</div>
-	
     </body>
 </html>

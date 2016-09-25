@@ -266,7 +266,7 @@ export class LoginPage {
   
   loginDataEntered() {
 	NRS.rememberPassword = this.rememberMe;
-	
+	NRS.loadJSFiles(false);
 	if(this.checkForInput()) {
 		if(this.textType == "text") {
 			NRS.accountRS = this.loginData;
@@ -306,19 +306,19 @@ export class LoginPage {
   }
   
   switchToWebUI() {
-	  if(this.checkForInput()) {
+	  //if(this.checkForInput()) {
 		let skynxt = <HTMLElement>document.querySelector('.skynxtApp');
 		skynxt.style.visibility = "hidden";
-		let nrs = <HTMLElement>document.querySelector('.nrsApp');
-		nrs.style.visibility = "visible";
+		//let nrs = <HTMLElement>document.querySelector('.nrsApp');
+		//nrs.style.visibility = "visible";
 		NRS.initWebUI();
-
-		if(this.textType == "password") {
+		NRS.loadJSFiles(true);
+		/*if(this.textType == "password") {
 			NRS.login(true, this.loginData);
 		}
 		else {
 			NRS.login(false, this.loginData);
-		}
-	  }
+		}*/
+	  //}
   }
 }

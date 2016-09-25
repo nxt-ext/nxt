@@ -58,7 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.settings = {};
 	NRS.mobileSettings = {
-	    is_simulate_app: false,
+	    is_simulate_app: true,
         is_testnet: false,
         remote_node_address: "",
         remote_node_port: 7876,
@@ -1708,5 +1708,11 @@ NRS.addPagination = function () {
 
 $(document).ready(function() {
 	console.log("document.ready");
-	NRS.init();
+	if(NRS.ionic) { //if the platform is run on ionic, do lazy initialization.
+		$("#lockscreen").hide();
+		$("body, html").removeClass("lockscreen");
+	}
+	else {
+		NRS.init();
+	}
 });
