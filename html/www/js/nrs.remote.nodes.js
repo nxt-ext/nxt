@@ -167,6 +167,9 @@ var NRS = (function(NRS) {
                 }
                 confirmationReport.processing.push(node.announcedAddress);
                 ignoredAddresses.push(node.address);
+                if (typeof data == "string") {
+                    data = { "querystring": data };
+                }
                 data["_extra"] = { node: node, requestType: requestType };
                 NRS.sendRequest(requestType, data, onConfirmation, { noProxy: true, remoteNode: node, doNotEscape: true });
             }

@@ -301,7 +301,9 @@ var NRS = (function (NRS, $, undefined) {
 
         $.support.cors = true;
         // Used for passing row query string which is too long for a GET request
+        var extra;
         if (data.querystring) {
+            extra = data["_extra"];
             data = data.querystring;
             type = "POST";
         }
@@ -370,6 +372,12 @@ var NRS = (function (NRS, $, undefined) {
             contentType: contentType,
             processData: processData
         }).done(function (response) {
+            if (typeof data == "string") {
+                data = { "querystring": data };
+                if (extra) {
+                    data["_extra"] = extra;
+                }
+            }
             if (!options.remoteNode && NRS.isConfirmResponse() &&
                 !(response.errorCode || response.errorDescription || response.errorMessage || response.error)) {
                 var requestRemoteNode = NRS.isMobileApp() ? NRS.getRemoteNode() : {address: "localhost", announcedAddress: "localhost"}; //TODO unify getRemoteNode with apiProxyPeer
