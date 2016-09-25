@@ -1901,6 +1901,12 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation) transaction.getAttachment();
+                return TransactionType.isDuplicate(ColoredCoins.ASK_ORDER_CANCELLATION, Long.toUnsignedString(attachment.getOrderId()), duplicates, true);
+            }
+
+            @Override
             public final boolean canHaveRecipient() {
                 return false;
             }
