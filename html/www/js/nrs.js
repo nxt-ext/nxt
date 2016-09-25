@@ -58,7 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.settings = {};
 	NRS.mobileSettings = {
-	    is_simulate_app: true,
+	    is_simulate_app: false,
         is_testnet: false,
         remote_node_address: "",
         remote_node_port: 7876,
