@@ -153,6 +153,11 @@ var NRS = (function(NRS) {
                         NRS.logConsole("Request " + type +
                             " confirmations " + confirmationReport.confirmations.length +
                             " rejections " + confirmationReport.rejections.length);
+                        if (confirmationReport.rejections.length > 0) {
+                            $.growl($.t("warning_request_confirmation_rejection",
+                                { type: type, confirmations: confirmationReport.confirmations.length, rejections: confirmationReport.rejections.length }
+                            ))
+                        }
                     }
                 } else {
                     // Confirmation request received error
