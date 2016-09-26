@@ -120,8 +120,8 @@ var NRS = (function (NRS) {
         }
     };
 
-    NRS.isCodeScanningEnabled = function () {
-        return NRS.isMobileApp();
+    NRS.isCordovaScanningEnabled = function () {
+        return isMobileDevice;
     };
 
     NRS.getShapeShiftUrl = function() {

@@ -131,10 +131,10 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.initAdvancedModalFormValues($(this));
 		$(this).find(".pas_contact_info").text(" ");
 		// Activating context help popovers
-		$(function () { 
+		$(function () {
             $("[data-toggle='popover']").popover({
             	"html": true
-            }); 
+            });
         });
         $(this).find("input[name=secretPhrase]").prop("disabled", false);
 	});
@@ -149,7 +149,9 @@ var NRS = (function(NRS, $, undefined) {
 	modal.on("hidden.bs.modal", function() {
 		if(this.id === 'raw_transaction_modal') {
 			var reader = $('#raw_transaction_modal_signature_reader');
-			if(reader.data('stream')) reader.html5_qrcode_stop();
+			if (reader.data('stream')) {
+                reader.html5_qrcode_stop();
+            }
 		}
 		$(this).find("input[name=recipient], input[name=account_id]").not("[type=hidden]").trigger("unmask");
 		$(this).find(":input:not(button)").each(function() {

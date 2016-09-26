@@ -50,9 +50,6 @@ var NRS = (function(NRS, $, undefined) {
 		$("#account_phrase_custom_panel").find(":input:not(:button):not([type=submit])").val("");
 		$("#account_phrase_generator_panel").find(":input:not(:button):not([type=submit])").val("");
         $("#login_account_other").mask("NXT-****-****-****-*****");
-		if (NRS.isCodeScanningEnabled()) {
-            $("#scanQRCode").show();
-        }
 		if (NRS.isMobileApp()) {
             $(".mobile-only").show();
         }
@@ -596,7 +593,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
     $("#scanQRCode").on('click', function() {
-        NRS.scanQRCode(null, function(text) {
+        NRS.scanQRCode("account_data_reader", function(text) {
             NRS.login($("#loginButtons").data("login-type") == "password", text);
         });
     });

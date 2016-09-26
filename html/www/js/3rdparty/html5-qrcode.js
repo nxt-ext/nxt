@@ -24,17 +24,17 @@
                 var localMediaStream;
 
                 var scan = function() {
+                    if (!currentElem.is(":visible")) {
+                        return; // This stops the scan
+                    }
                     if (localMediaStream) {
                         context.drawImage(video, 0, 0, 307, 250);
-
                         try {
                             qrcode.decode();
                         } catch (e) {
                             qrcodeError(e, localMediaStream);
                         }
-
                         $.data(currentElem[0], "timeout", setTimeout(scan, 500));
-
                     } else {
                         $.data(currentElem[0], "timeout", setTimeout(scan, 500));
                     }
@@ -67,18 +67,23 @@
 
                 qrcode.callback = function (result) {
                     qrcodeSuccess(result, localMediaStream);
+                    $("#qr-canvas").remove(); // So that it won't save the result of the scan
                 };
             }); // end of html5_qrcode
         },
         html5_qrcode_stop: function() {
             return this.each(function() {
-                //stop the stream and cancel timeouts
+                //stop the stream
                 var currentElem = $(this);
                 var stream = $.data(currentElem[0], 'stream');
-                if (stream && stream.stop) {
-                    stream.stop();
+                if (stream) {
+                    var tracks = stream.getVideoTracks();
+                    if (tracks) {
+                        for (var i=0; i<tracks.length; i++) {
+                            tracks[i].stop();
+                        }
+                    }
                 }
-                clearTimeout($.data(currentElem[0], 'timeout'));
             });
         }
     });

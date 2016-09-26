@@ -91,40 +91,10 @@ var NRS = (function(NRS, $, undefined) {
         var id = $(this).attr("id");
         var readerId = id.substring(0, id.lastIndexOf("_"));
         var outputId = readerId.substring(0, readerId.lastIndexOf("_"));
-        NRS.readQRCode(readerId, outputId);
+        NRS.scanQRCode(readerId, function(data) {
+            $("#" + outputId).val(data);
+        });
     });
-
-    NRS.readQRCode = function(readerId, outputId) {
-        var reader = $("#" + readerId);
-        if (reader.is(':visible')) {
-            reader.hide();
-            if (reader.data('stream')) {
-                reader.html5_qrcode_stop();
-            }
-            return;
-        }
-        reader.empty();
-        reader.show();
-        reader.html5_qrcode(
-            function (data) {
-				NRS.logConsole(data);
-                $("#" + outputId).val(data);
-                reader.hide();
-                reader.html5_qrcode_stop();
-            },
-            function (error) {},
-            function (videoError, localMediaStream) {
-				NRS.logConsole(videoError);
-                reader.hide();
-				if (!localMediaStream) {
-					$.growl("video_not_supported");
-				}
-                if (reader.data('stream')) {
-                    reader.html5_qrcode_stop();
-                }
-            }
-        );
-    };
 
     $("#broadcast_transaction_json_file, #unsigned_transaction_json_file").change(function(e) {
         e.preventDefault();
@@ -392,7 +362,9 @@ var NRS = (function(NRS, $, undefined) {
 
     transactionJSONModal.on("hidden.bs.modal", function() {
 		var reader = $('#unsigned_transaction_bytes_reader');
-		if(reader.data('stream')) reader.html5_qrcode_stop();
+		if (reader.data('stream')) {
+		    reader.html5_qrcode_stop();
+        }
 		$(this).find(".tab_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$(this).find("ul.nav li:first").addClass("active");

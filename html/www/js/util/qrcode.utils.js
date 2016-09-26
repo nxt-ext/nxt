@@ -2,16 +2,16 @@ var NRS = (function (NRS) {
 
     NRS.scanQRCode = function(readerId, callback) {
         NRS.logConsole("request camera permission");
-        if (NRS.isMobileApp()) {
+        if (NRS.isCordovaScanningEnabled()) {
             cordova.plugins.permissions.hasPermission(cordova.plugins.permissions.CAMERA, function(status) {
-                checkCameraPermission(status, callback)
+                cordovaCheckCameraPermission(status, callback)
             }, null);
         } else {
-            // desktop scanning
+            html5Scan(readerId, callback);
         }
     };
 
-    function checkCameraPermission(status, callback) {
+    function cordovaCheckCameraPermission(status, callback) {
         if(!status.hasPermission) {
             var errorCallback = function() {
                 NRS.logConsole('Camera permission not granted');
@@ -24,19 +24,19 @@ var NRS = (function (NRS) {
                     errorCallback();
                     return;
                 }
-                scanImpl(callback);
+                cordovaScan(callback);
             }, errorCallback);
             return;
         }
         NRS.logConsole('Camera already has permission');
-        scanImpl(callback);
+        cordovaScan(callback);
     }
 
-    function scanImpl(callback) {
+    function cordovaScan(callback) {
         try {
             NRS.logConsole("before scan");
             cordova.plugins.barcodeScanner.scan(function(result) {
-                scanQRDone(result, callback)
+                cordovaScanQRDone(result, callback)
             }, function (error) {
                 NRS.logConsole(error);
             });
@@ -45,7 +45,7 @@ var NRS = (function (NRS) {
         }
     }
 
-    function scanQRDone(result, callback) {
+    function cordovaScanQRDone(result, callback) {
         NRS.logConsole("Scan result format: " + result.format);
         if (!result.cancelled && result.format == "QR_CODE") {
             NRS.logConsole("Scan complete, send result to callback");
@@ -53,6 +53,38 @@ var NRS = (function (NRS) {
         } else {
             NRS.logConsole("Scan cancelled");
         }
+    }
+
+    function html5Scan(readerId, callback) {
+        var reader = $("#" + readerId);
+        if (reader.is(':visible')) {
+            reader.hide();
+            if (reader.data('stream')) {
+                reader.html5_qrcode_stop();
+            }
+            return;
+        }
+        reader.empty();
+        reader.show();
+        reader.html5_qrcode(
+            function (data) {
+                NRS.logConsole(data);
+                callback(data);
+                reader.hide();
+                reader.html5_qrcode_stop();
+            },
+            function (error) {},
+            function (videoError, localMediaStream) {
+                NRS.logConsole(videoError);
+                reader.hide();
+                if (!localMediaStream) {
+                    $.growl("video_not_supported");
+                }
+                if (reader.data('stream')) {
+                    reader.html5_qrcode_stop();
+                }
+            }
+        );
     }
 
     return NRS;
