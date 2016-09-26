@@ -91,6 +91,10 @@ var NRS = (function(NRS, $, undefined) {
         var id = $(this).attr("id");
         var readerId = id.substring(0, id.lastIndexOf("_"));
         var outputId = readerId.substring(0, readerId.lastIndexOf("_"));
+        NRS.readQRCode(readerId, outputId);
+    });
+
+    NRS.readQRCode = function(readerId, outputId) {
         var reader = $("#" + readerId);
         if (reader.is(':visible')) {
             reader.hide();
@@ -113,14 +117,14 @@ var NRS = (function(NRS, $, undefined) {
 				NRS.logConsole(videoError);
                 reader.hide();
 				if (!localMediaStream) {
-					$(".qr_code_reader_link").hide(); // Video is not supported, disable all links
+					$.growl("video_not_supported");
 				}
                 if (reader.data('stream')) {
                     reader.html5_qrcode_stop();
                 }
             }
         );
-    });
+    };
 
     $("#broadcast_transaction_json_file, #unsigned_transaction_json_file").change(function(e) {
         e.preventDefault();

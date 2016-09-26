@@ -596,56 +596,10 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
     $("#scanQRCode").on('click', function() {
-        NRS.logConsole("request camera permission");
-        cordova.plugins.permissions.hasPermission(cordova.plugins.permissions.CAMERA, checkCameraPermission, null);
+        NRS.scanQRCode(null, function(text) {
+            NRS.login($("#loginButtons").data("login-type") == "password", text);
+        });
     });
-
-    function checkCameraPermission(status) {
-        if(!status.hasPermission) {
-            var errorCallback = function() {
-                NRS.logConsole('Camera permission not granted');
-            };
-
-            NRS.logConsole('Request camera permission');
-            cordova.plugins.permissions.requestPermission(cordova.plugins.permissions.CAMERA, function(status) {
-                if(!status.hasPermission) {
-                    NRS.logConsole('Camera status has no permission');
-                    errorCallback();
-                    return;
-                }
-                scanImpl();
-            }, errorCallback);
-            return;
-        }
-        NRS.logConsole('Camera already has permission');
-        scanImpl();
-    }
-
-    function scanImpl() {
-        try {
-            NRS.logConsole("before scan");
-            cordova.plugins.barcodeScanner.scan(scanQRDone, function (error) {
-                NRS.logConsole(error);
-            });
-        } catch (e) {
-            NRS.logConsole(e.message);
-        }
-    }
-
-    function scanQRDone(result) {
-        NRS.logConsole("Scan result format: " + result.format);
-        if (!result.cancelled && result.format == "QR_CODE") {
-            var input;
-            if ($("loginButtons").data("login-type") == "password") {
-                input = $("#login_password");
-            } else {
-                input = $("#login_account_other");
-            }
-            input.val(result.text);
-        } else {
-            NRS.logConsole("Scan cancelled");
-        }
-    }
 
     NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);
