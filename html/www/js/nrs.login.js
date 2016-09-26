@@ -223,6 +223,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.listAccounts();
 			$('#login_password').parent().hide();
 			$('#remem-wrap').addClass('remem-pass-hide');
+            $('#scanQRCode').prop('disabled', false);
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>');
 			$(this).data( "login-type","account");
 		} else {
@@ -230,6 +231,11 @@ var NRS = (function(NRS, $, undefined) {
 			$('#login_account_container_other').hide();
 			$('#login_password').parent().show();
 			$('#remem-wrap').removeClass('remem-pass-hide');
+            if (NRS.isDisablePassphraseScanning()) {
+                $('#scanQRCode').prop('disabled', true);
+            } else {
+                $('#scanQRCode').prop('disabled', false);
+            }
 			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="passwordLogin" autocomplete="off" /><i class="fa fa-key"></i>');
 			$(this).data( "login-type","password");
 		}

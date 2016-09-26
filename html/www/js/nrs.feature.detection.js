@@ -124,6 +124,10 @@ var NRS = (function (NRS) {
         return isMobileDevice;
     };
 
+    NRS.isDisablePassphraseScanning = function() {
+        return !(NRS.isMobileApp() || (NRS.isLocalHost && !(NRS.state && NRS.state.apiProxy)));
+    };
+
     NRS.getShapeShiftUrl = function() {
         if (isDesktopApplication) {
             return location.origin + "/shapeshift/";
