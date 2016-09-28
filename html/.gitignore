@@ -2,6 +2,21 @@
 # http://git-scm.com/docs/gitignore
 
 /node_modules/
-/platforms/
+
+/platforms/*
+!/platforms/android
+/platforms/android/*
+!/platforms/android/src
+/platforms/android/src/*
+!/platforms/android/src/org
+/platforms/android/src/org/*
+!/platforms/android/src/org/nxt
+/platforms/android/src/org/nxt/*
+!/platforms/android/src/org/nxt/mobile
+/platforms/android/src/org/nxt/mobile/*
+!/platforms/android/src/org/nxt/mobile/wallet
+/platforms/android/src/org/nxt/mobile/wallet/*
+!/platforms/android/src/org/nxt/mobile/wallet/MainActivity.java
+
 /plugins/
 .io-config.json
