@@ -151,6 +151,7 @@ var NRS = (function(NRS, $, undefined) {
         NRS.spinner.spin($("#center")[0]);
         NRS.loadMobileSettings();
         if (NRS.isMobileApp()) {
+            $('body').css('overflow-x', 'auto');
             initMobile();
         } else {
             initImpl();
