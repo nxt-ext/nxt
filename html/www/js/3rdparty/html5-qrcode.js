@@ -30,7 +30,7 @@
                     if (localMediaStream) {
                         context.drawImage(video, 0, 0, 307, 250);
                         try {
-                            qrcode.decode();
+                            qrcodeDecoder.decode();
                         } catch (e) {
                             qrcodeError(e, localMediaStream);
                         }

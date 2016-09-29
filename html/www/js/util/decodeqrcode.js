@@ -14,10 +14,10 @@
  *                                                                            *
  ******************************************************************************/
 
-qrcode = {};
-qrcode.callback = null;
+qrcodeDecoder = {};
+qrcodeDecoder.callback = null;
 
-qrcode.decode = function() {
+qrcodeDecoder.decode = function() {
     var canvasElem = $('#qr-canvas');
     var canvas = canvasElem[0];
     var dataurl = canvas.toDataURL('image/jpeg');
