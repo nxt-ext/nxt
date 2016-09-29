@@ -362,7 +362,7 @@ var NRS = (function(NRS, $) {
             }
         });
     }
-    
+
     NRS.pages.exchange = function() {
         var exchangeDisabled = $("#exchange_disabled");
         var exchangePageHeader = $("#exchange_page_header");
@@ -672,7 +672,7 @@ var NRS = (function(NRS, $) {
                     }
                     NRS.logConsole("shift request done, deposit address " + data.deposit);
                     $("#m_shape_shift_sell_deposit_address").html(data.deposit);
-                    NRS.sendRequestQRCode("#m_shape_shift_sell_qr_code", data.deposit, 125, 125);
+                    NRS.generateQRCode("#m_shape_shift_sell_qr_code", data.deposit);
                     callback(null);
                 })
             }
@@ -768,7 +768,7 @@ var NRS = (function(NRS, $) {
                 depositAddress.html(data.success.deposit);
                 expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
                 NRS.logConsole("sendamount request done, deposit address " + data.success.deposit);
-                NRS.sendRequestQRCode("#m_send_amount_sell_qr_code", "bitcoin:" + data.success.deposit + "?amount=" + data.success.depositAmount, 125, 125);
+                NRS.generateQRCode("#m_send_amount_sell_qr_code", "bitcoin:" + data.success.deposit + "?amount=" + data.success.depositAmount);
                 $("#m_send_amount_sell_done").prop('disabled', false);
             } finally {
                 modal.css('cursor', 'default');

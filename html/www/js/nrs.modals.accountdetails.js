@@ -21,7 +21,7 @@
 var NRS = (function(NRS, $, undefined) {
     var accountDetailsModal = $("#account_details_modal");
     accountDetailsModal.on("show.bs.modal", function(e) {
-        NRS.sendRequestQRCode("#account_details_modal_qr_code", NRS.accountRS, 125, 125);
+        NRS.generateQRCode("#account_details_modal_qr_code", NRS.accountRS);
 		$("#account_details_modal_balance").show();
 
         var accountBalanceWarning = $("#account_balance_warning");

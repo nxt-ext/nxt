@@ -22,7 +22,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.showRawTransactionModal = function(transaction) {
         if (transaction.unsignedTransactionBytes && !transaction.transactionBytes) {
             $("#raw_transaction_modal_unsigned_transaction_bytes").val(transaction.unsignedTransactionBytes);
-            NRS.sendRequestQRCode("#raw_transaction_modal_unsigned_bytes_qr_code", transaction.unsignedTransactionBytes, 400, 400);
+            NRS.generateQRCode("#raw_transaction_modal_unsigned_bytes_qr_code", transaction.unsignedTransactionBytes, 14);
             $("#raw_transaction_modal_unsigned_transaction_bytes_container").show();
             $("#raw_transaction_modal_unsigned_bytes_qr_code_container").show();
             $("#raw_transaction_broadcast").show();
@@ -440,7 +440,7 @@ var NRS = (function(NRS, $, undefined) {
         }
         $("#signed_json_output").show();
         $("#transaction_signature").val(response.transactionJSON.signature);
-        NRS.sendRequestQRCode("#transaction_signature_qr_code", response.transactionJSON.signature, 292, 292);
+        NRS.generateQRCode("#transaction_signature_qr_code", response.transactionJSON.signature, 8);
         $("#signature_output").show();
     };
 

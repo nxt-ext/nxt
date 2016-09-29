@@ -1559,23 +1559,22 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.sendRequestQRCode = function(target, qrCodeData, width, height) {
-        width = width || 0;
-        height = height || 0;
-        NRS.sendRequest("encodeQRCode",
-            {
-                "qrCodeData": qrCodeData,
-                "width": width,
-                "height": height
-            },
-            function(response) {
-                if('qrCodeBase64' in response) {
-                    $(target).empty().append(
-                        $("<img src='data:image/jpeg;base64,"+response.qrCodeBase64+"'>")
-                    );
-                }
+    NRS.generateQRCode = function(target, qrCodeData, minType) {
+        var type = minType ? minType : 2;
+        while (type <= 40) {
+            try {
+                var qr = qrcode(type, 'M');
+                qr.addData(qrCodeData);
+                qr.make();
+                var img = qr.createImgTag();
+                $(target).empty().append(img);
+                NRS.logConsole("Encoded QR code of type " + type);
+                return;
+            } catch (e) {
+                type++;
             }
-        );
+        }
+        $(target).empty().html($.t("cannot_encode_message", qrCodeData.length));
     };
 
     function addAddressData(data) {
