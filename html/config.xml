@@ -7,6 +7,7 @@
     <author email="support@nxt.org" href="http://nxt.org/">
         Riker
     </author>
+	<version>110.2.0</version>
     <content src="index.html"/>
     <access origin="*"/>
     <preference name="webviewbounce" value="false"/>
