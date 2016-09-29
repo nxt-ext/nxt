@@ -232,6 +232,7 @@ var NRS = (function (NRS, $) {
 			if (err.errorCode && err.errorCode < 3) {
 				throw err;
 			} else {
+			    NRS.logConsole(err.message);
 				throw {
 					"message": $.t("error_message_decryption"),
 					"errorCode": 3
