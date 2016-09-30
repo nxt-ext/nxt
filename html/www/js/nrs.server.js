@@ -301,9 +301,7 @@ var NRS = (function (NRS, $, undefined) {
 
         $.support.cors = true;
         // Used for passing row query string which is too long for a GET request
-        var extra;
         if (data.querystring) {
-            extra = data["_extra"];
             data = data.querystring;
             type = "POST";
         }
