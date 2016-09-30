@@ -40,6 +40,10 @@ var NRS = (function (NRS) {
         return isMobileDevice || NRS.mobileSettings.is_simulate_app;
     };
 
+    NRS.isEnableMobileAppSimulation = function () {
+        return !isMobileDevice;
+    };
+
     NRS.isRequireCors = function () {
         return !isMobileDevice;
     };

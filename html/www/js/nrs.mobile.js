@@ -21,10 +21,14 @@ var NRS = (function(NRS, $) {
 
     $("#mobile_settings_modal").on("show.bs.modal", function() {
         $(".info_message").html($.t("remote_node_url", { url: NRS.getRemoteNodeUrl() }));
-        if (NRS.mobileSettings.is_simulate_app) {
-            $("#mobile_is_simulate_app").prop('checked', true);
+        if (NRS.isEnableMobileAppSimulation()) {
+            if (NRS.mobileSettings.is_simulate_app) {
+                $("#mobile_is_simulate_app").prop('checked', true);
+            } else {
+                $("#mobile_is_simulate_app").prop('checked', false);
+            }
         } else {
-            $("#mobile_is_simulate_app").prop('checked', false);
+            $("#mobile_is_simulate_app_container").hide();
         }
         if (NRS.mobileSettings.is_testnet) {
             $("#mobile_is_testnet").prop('checked', true);
