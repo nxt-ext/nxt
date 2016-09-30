@@ -210,7 +210,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     function isVolatileRequest(doNotSign, type, requestType) {
-        return (!NRS.isLocalHost || doNotSign || NRS.state.apiProxy) && type == "POST" && !NRS.isSubmitPassphrase(requestType);
+        return (!NRS.isLocalHost || doNotSign || NRS.state.apiProxy || NRS.isMobileApp()) && type == "POST" && !NRS.isSubmitPassphrase(requestType);
     }
 
     NRS.processAjaxRequest = function (requestType, data, callback, options) {
