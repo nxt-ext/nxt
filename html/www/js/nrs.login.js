@@ -278,12 +278,14 @@ var NRS = (function(NRS, $, undefined) {
 					"type": "danger",
 					"offset": 10
 				});
+                NRS.spinner.stop();
 				return;
 			} else if (!NRS.isTestNet && id.length < 12 && loginCheckPasswordLength.val() == 1) {
 				loginCheckPasswordLength.val(0);
 				var loginError = $("#login_error");
 				loginError.find(".callout").html($.t("error_passphrase_login_length"));
 				loginError.show();
+                NRS.spinner.stop();
 				return;
 			}
 
@@ -294,6 +296,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
 			    NRS.connectionError(response.errorDescription);
+                NRS.spinner.stop();
 				return;
 			}
 
@@ -328,12 +331,14 @@ var NRS = (function(NRS, $, undefined) {
 						"type": "danger",
 						"offset": 10
 					});
+                    NRS.spinner.stop();
 					return;
 				} else if (!NRS.accountRS) {
 					$.growl($.t("error_generate_account_id"), {
 						"type": "danger",
 						"offset": 10
 					});
+                    NRS.spinner.stop();
 					return;
 				}
 
@@ -345,6 +350,7 @@ var NRS = (function(NRS, $, undefined) {
 							"type": "danger",
 							"offset": 10
 						});
+                        NRS.spinner.stop();
 						return;
 					}
 
