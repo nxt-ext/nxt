@@ -255,8 +255,21 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.listAccounts();
 	};
 
-	// id can be either account id or passphrase
-	NRS.login = function(isPassphraseLogin, id, callback, isAccountSwitch) {
+    function rememberAccount(account) {
+        var accountsStr = NRS.getStrItem("savedNxtAccounts");
+        if (!accountsStr) {
+            NRS.setStrItem("savedNxtAccounts", account + ";");
+            return;
+        }
+        var accounts = accountsStr.split(";");
+        if (accounts.indexOf(account) >= 0) {
+            return;
+        }
+        NRS.setStrItem("savedNxtAccounts", accountsStr + account + ";");
+    }
+
+    // id can be either account id or passphrase
+    NRS.login = function(isPassphraseLogin, id, callback, isAccountSwitch) {
         NRS.spinner.spin($("#center")[0]);
         if (isPassphraseLogin){
 			var loginCheckPasswordLength = $("#login_check_password_length");
@@ -441,23 +454,7 @@ var NRS = (function(NRS, $, undefined) {
 
 					var accounts;
 					if ($("#remember_account").is(":checked") || NRS.newlyCreatedAccount) {
-						var accountExists = 0;
-						if (NRS.getStrItem("savedNxtAccounts")) {
-							accounts = NRS.getStrItem("savedNxtAccounts").split(";");
-							$.each(accounts, function(index, account) {
-								if (account == NRS.accountRS) {
-									accountExists = 1;
-								}
-							});
-						}
-						if (!accountExists){
-							if (NRS.getStrItem("savedNxtAccounts") && NRS.getStrItem("savedNxtAccounts") != ""){
-								accounts = NRS.getStrItem("savedNxtAccounts") + NRS.accountRS + ";";
-								NRS.setStrItem("savedNxtAccounts", accounts);
-							} else {
-								NRS.setStrItem("savedNxtAccounts", NRS.accountRS + ";");
-							}
-						}
+						rememberAccount(NRS.accountRS);
 					}
 
 					$("[data-i18n]").i18n();
@@ -604,7 +601,15 @@ var NRS = (function(NRS, $, undefined) {
 
     $("#scanQRCode").on('click', function() {
         NRS.scanQRCode("account_data_reader", function(text) {
-            NRS.login($("#loginButtons").data("login-type") == "password", text);
+            var loginType = $("#loginButtons").data("login-type");
+            if (loginType == "password") {
+                NRS.login(true, text);
+            } else {
+                if (/NXT\-/i.test(text) && $("#remember_account").is(":checked")) {
+                    rememberAccount(text);
+                }
+                NRS.login(false, text);
+            }
         });
     });
 
