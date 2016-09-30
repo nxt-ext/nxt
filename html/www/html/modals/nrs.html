@@ -354,7 +354,22 @@
                                 <td style="font-weight: bold"><span data-i18n="public_key">Public Key</span>:</td><td><span id="account_balance_public_key" style="word-break:break-all;word-wrap: break-word;"></span></td>
                             </tr>
                             <tr>
-                                <td style="font-weight: bold"><span data-i18n="account_qr_code">Account QR Code</span>:</td><td><div id="account_details_modal_qr_code"></div></td>
+                                <td style="font-weight: bold"><span data-i18n="account_qr_code">Account QR Code</span>:</td>
+                                <td>
+                                    <div id="account_details_modal_account_display">
+                                        <button class="btn btn-default" data-i18n="show">SHOW</button>
+                                    </div>
+                                    <div id="account_details_modal_account_qr_code"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold"><span data-i18n="passphrase_qr_code">Passphrase QR Code</span>:</td>
+                                <td>
+                                    <div id="account_details_modal_passphrase_display">
+                                        <button class="btn btn-default" data-i18n="show">SHOW</button>
+                                    </div>
+                                    <div id="account_details_modal_passphrase_qr_code"></div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

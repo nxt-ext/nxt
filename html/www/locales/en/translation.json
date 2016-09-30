@@ -1835,5 +1835,8 @@
   "remote_node_port": "Remote Node Port",
   "is_remote_node_ssl": "Use Https",
   "warning_request_confirmation_rejection": "Warning: request __type__ received __confirmations__ confirmations and __rejections__ rejections. Data may not be consistent",
-  "video_not_supported": "Video Not Supported"
+  "video_not_supported": "Video Not Supported",
+  "passphrase_qr_code": "Passphrase QR Code",
+  "passphrase_not_specified": "Passphrase Not Specified",
+  "show": "Show"
 }

@@ -19,9 +19,19 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
+    var _password = null;
     var accountDetailsModal = $("#account_details_modal");
+
     accountDetailsModal.on("show.bs.modal", function(e) {
-        NRS.generateQRCode("#account_details_modal_qr_code", NRS.accountRS);
+        if (_password) {
+            $("#account_details_modal_account_display").show();
+            $("#account_details_modal_passphrase_display").show();
+        } else {
+            NRS.generateQRCode("#account_details_modal_account_qr_code", NRS.accountRS);
+            $("#account_details_modal_account_display").hide();
+            $("#account_details_modal_passphrase_display").hide();
+            $("#account_details_modal_passphrase_qr_code").html($.t("passphrase_not_specified"));
+        }
 		$("#account_details_modal_balance").show();
 
         var accountBalanceWarning = $("#account_balance_warning");
@@ -66,19 +76,14 @@ var NRS = (function(NRS, $, undefined) {
 		var tabListItem = $("#account_details_modal li[data-tab=" + tab + "]");
 		tabListItem.siblings().removeClass("active");
 		tabListItem.addClass("active");
-
 		$(".account_details_modal_content").hide();
-
 		var content = $("#account_details_modal_" + tab);
-
 		content.show();
 	}
 
 	accountDetailsModal.find("ul.nav li").click(function(e) {
 		e.preventDefault();
-
 		var tab = $(this).data("tab");
-
 		_showTab(tab);
 	});
 
@@ -86,8 +91,28 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find(".account_details_modal_content").hide();
 		$(this).find("ul.nav li.active").removeClass("active");
 		$("#account_details_balance_nav").addClass("active");
-		$("#account_details_modal_qr_code").empty();
+		$("#account_details_modal_account_qr_code").empty();
+		$("#account_details_modal_passphrase_qr_code").empty();
 	});
 
-	return NRS;
+    NRS.setAccountDetailsPassword = function(password) {
+        _password = password;
+    };
+
+    $("#account_details_modal_account_display").on("click", function() {
+        $("#account_details_modal_account_display").hide();
+        $("#account_details_modal_passphrase_display").show();
+        $("#account_details_modal_passphrase_qr_code").empty();
+        NRS.generateQRCode("#account_details_modal_account_qr_code", NRS.accountRS);
+        NRS.generateQRCode("#account_details_modal_account_qr_code", NRS.accountRS);
+    });
+
+    $("#account_details_modal_passphrase_display").on("click", function() {
+        $("#account_details_modal_passphrase_display").hide();
+        $("#account_details_modal_account_display").show();
+        $("#account_details_modal_account_qr_code").empty();
+        NRS.generateQRCode("#account_details_modal_passphrase_qr_code", _password);
+    });
+
+    return NRS;
 }(NRS || {}, jQuery));

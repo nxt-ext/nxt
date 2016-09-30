@@ -189,6 +189,7 @@ var NRS = (function(NRS, $, undefined) {
 		// Reset security related state
 		NRS.resetEncryptionState();
 		NRS.setServerPassword(null);
+		NRS.setAccountDetailsPassword(null);
 		NRS.rememberPassword = false;
 		NRS.account = "";
 		NRS.accountRS = "";
@@ -610,6 +611,7 @@ var NRS = (function(NRS, $, undefined) {
     NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
+        NRS.setAccountDetailsPassword(password);
 	};
 	return NRS;
 }(NRS || {}, jQuery));
