@@ -418,7 +418,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.errorCode) {
                 NRS.connectionError(response.errorDescription);
 			} else {
-				var clientOptionsLink = $("#header_client_options_link");
+				var clientOptionsLink = $("#header_client_options_link_text");
 				var clientOptions = $("#header_client_options");
                 if (NRS.isMobileApp()) {
                     clientOptionsLink.html($.t("mobile_client"));

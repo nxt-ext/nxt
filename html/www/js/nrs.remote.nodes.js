@@ -126,7 +126,7 @@ var NRS = (function(NRS) {
             var nodes = NRS.remoteNodesMgr.getRandomNodes(NRS.mobileSettings.validators_count, ignoredAddresses);
             var confirmationReport = {processing: [], confirmations: [], rejections: []};
             requestConfirmations.unshift(confirmationReport);
-            if (requestConfirmations.length > 10) {
+            if (requestConfirmations.length > 20) {
                 requestConfirmations.pop();
             }
             function onConfirmation(response) {
@@ -147,10 +147,11 @@ var NRS = (function(NRS) {
                         NRS.logConsole("Expected Response: " + expectedResponseStr);
                         NRS.logConsole("Actual   Response: " + responseStr);
                         confirmationReport.rejections.push(node.announcedAddress);
+                        NRS.updateConfirmationsIndicator();
                     }
 
                     if (confirmationReport.processing.length == 0) {
-                        NRS.logConsole("Request " + type +
+                        NRS.logConsole("onConfirmation:Request " + type +
                             " confirmations " + confirmationReport.confirmations.length +
                             " rejections " + confirmationReport.rejections.length);
                         if (confirmationReport.rejections.length > 0) {
@@ -158,6 +159,7 @@ var NRS = (function(NRS) {
                                 { type: type, confirmations: confirmationReport.confirmations.length, rejections: confirmationReport.rejections.length }
                             ))
                         }
+                        NRS.updateConfirmationsIndicator();
                     }
                 } else {
                     // Confirmation request received error
@@ -179,6 +181,34 @@ var NRS = (function(NRS) {
                 NRS.sendRequest(requestType, data, onConfirmation, { noProxy: true, remoteNode: node, doNotEscape: true });
             }
         }
+    };
+
+    NRS.updateConfirmationsIndicator = function () {
+        var color = '#3c763d';
+        var rejections = 0;
+        var confirmations = 0;
+        for (var i=0; i<requestConfirmations.length; i++) {
+            confirmations++; //the main remote node counts as 1 vote
+            confirmations += requestConfirmations[i].confirmations.length
+            rejections += requestConfirmations[i].rejections.length
+        }
+        if (confirmations > 0) {
+            var rejectionsRatio = rejections * 2 / confirmations; // It can't get worse than 1:1 ratio
+            if (rejectionsRatio > 1) {
+                rejectionsRatio = 1;
+            }
+            if (rejectionsRatio > 0) {
+                var gradientStart = 0xeccc31;
+                var gradientEnd = 0xa94442;
+                var red = (gradientStart >> 16) * (1 - rejectionsRatio) + (gradientEnd >> 16) * rejectionsRatio;
+                var green = ((gradientStart >> 8) & 0xff) * (1 - rejectionsRatio) + ((gradientEnd >> 8) & 0xff) * rejectionsRatio;
+                var blue = (gradientStart & 0xff) * (1 - rejectionsRatio) + (gradientEnd & 0xff) * rejectionsRatio;
+                var gradientColor = (red << 16) | (green << 8) | blue;
+                color = "#" + gradientColor.toString(16);
+            }
+        }
+
+        $("#confirmation_rate_indicator").css({'background-color': color})
     };
 
 	return NRS;
