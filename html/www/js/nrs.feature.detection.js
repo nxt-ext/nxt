@@ -156,5 +156,9 @@ var NRS = (function (NRS) {
         return NRS.isMobileApp() || (NRS.state && NRS.state.apiProxy);
     };
 
+    NRS.isDisplayOptionalDashboardTiles = function() {
+        return !NRS.isMobileApp();
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
