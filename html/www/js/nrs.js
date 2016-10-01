@@ -64,7 +64,7 @@ var NRS = (function(NRS, $, undefined) {
         remote_node_port: 7876,
         is_remote_node_ssl: false,
         validators_count: 3,
-        bootstrap_nodes_count: 10
+        bootstrap_nodes_count: 5
     };
 	NRS.contacts = {};
 
@@ -118,6 +118,12 @@ var NRS = (function(NRS, $, undefined) {
                 NRS.mobileSettings[setting] = mobileSettings[setting];
             }
 		}
+        for (setting in NRS.mobileSettings) {
+            if (!NRS.mobileSettings.hasOwnProperty(setting)) {
+                continue;
+            }
+            NRS.logConsole("NRS.mobileSettings." + setting + " = " + NRS.mobileSettings[setting]);
+        }
 	};
 
 	function initSpinner() {
@@ -166,8 +172,10 @@ var NRS = (function(NRS, $, undefined) {
             NRS.remoteNodesMgr.findMoreNodes(true);
             initImpl();
         }).catch(function() {
-            console.log("cannot_find_remote_nodes");
-            $.growl($.t("cannot_find_remote_nodes"));
+            var msg = $.t("cannot_find_remote_nodes");
+            console.log(msg);
+            $.growl(msg);
+            $('#mobile_settings_modal').modal("show");
         })
     }
 
