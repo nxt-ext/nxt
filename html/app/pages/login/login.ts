@@ -14,7 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 import {Component} from '@angular/core';
-import {ToastController, Page, ViewController, ModalController, NavController} from 'ionic-angular';
+import {ToastController, Page, ViewController, ModalController, NavController, LoadingController} from 'ionic-angular';
 import {TabsPage} from '../tabs/tabs';
 
 declare var i18nGlobal;
@@ -93,7 +93,7 @@ export class LoginPage {
   accounts : any;
   account : string = "";
 
-  constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController) {
+  constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController, private loadingCtrl: LoadingController) {
 	//NRS.removeItem("savedNxtAccounts");
 
 	this.supportedLanguages();
@@ -265,6 +265,11 @@ export class LoginPage {
   }
   
   loginDataEntered() {
+	let loading = this.loadingCtrl.create({
+		  content: "",
+		  duration: 4000
+		});	
+	loading.present();
 	NRS.rememberPassword = this.rememberMe;
 	NRS.loadJSFiles(false);
 	if(this.checkForInput()) {

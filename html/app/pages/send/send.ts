@@ -153,6 +153,14 @@ export class SendPage {
   onPageWillLeave() {
   }
   
+  onPageWillEnter() {
+	this.balanceUpdate();
+  }
+  
+  onPageDidEnter() {
+	this.balanceUpdate();
+  }
+
   balanceUpdate() {
   	  NRS.sendRequest("getAccount", {
 			"account": NRS.account
