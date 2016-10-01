@@ -3,9 +3,13 @@ var NRS = (function (NRS) {
     NRS.scanQRCode = function(readerId, callback) {
         NRS.logConsole("request camera permission");
         if (NRS.isCordovaScanningEnabled()) {
-            cordova.plugins.permissions.hasPermission(cordova.plugins.permissions.CAMERA, function(status) {
-                cordovaCheckCameraPermission(status, callback)
-            }, null);
+            if (NRS.isCameraPermissionRequired()) {
+                cordova.plugins.permissions.hasPermission(cordova.plugins.permissions.CAMERA, function(status) {
+                    cordovaCheckCameraPermission(status, callback)
+                }, null);
+            } else {
+                cordovaScan(callback);
+            }
         } else {
             html5Scan(readerId, callback);
         }

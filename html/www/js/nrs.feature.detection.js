@@ -128,6 +128,10 @@ var NRS = (function (NRS) {
         return isMobileDevice;
     };
 
+    NRS.isCameraPermissionRequired = function () {
+        return device && device.platform == "Android" && device.version >= "6.0.0";
+    };
+
     NRS.isDisablePassphraseScanning = function() {
         return !(NRS.isMobileApp() || (NRS.isLocalHost && !(NRS.state && NRS.state.apiProxy)));
     };
