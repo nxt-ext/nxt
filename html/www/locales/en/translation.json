@@ -1838,5 +1838,8 @@
   "video_not_supported": "Video Not Supported",
   "passphrase_qr_code": "Passphrase QR Code",
   "passphrase_not_specified": "Passphrase Not Specified",
-  "show": "Show"
+  "show": "Show",
+  "request_type": "Request Type",
+  "confirmed_by": "Confirmed by",
+  "rejected_by": "Rejected by"
 }

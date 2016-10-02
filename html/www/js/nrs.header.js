@@ -107,6 +107,7 @@ var NRS = (function(NRS, $) {
             $("#client_status_set_peer").prop('disabled', false);
             $("#client_status_blacklist_peer").prop('disabled', true);
         }
+        NRS.updateConfirmationsTable();
     });
 
     $("#client_status_remote_peer").keydown(function() {
