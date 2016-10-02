@@ -1839,7 +1839,7 @@
   "passphrase_qr_code": "Passphrase QR Code",
   "passphrase_not_specified": "Passphrase Not Specified",
   "show": "Show",
-  "request_type": "Request Type",
+  "request_type_date": "Request",
   "confirmed_by": "Confirmed by",
   "rejected_by": "Rejected by"
 }

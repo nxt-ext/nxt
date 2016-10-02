@@ -124,7 +124,8 @@ var NRS = (function(NRS) {
                 ignoredAddresses.push(requestRemoteNode.address);
             }
             var nodes = NRS.remoteNodesMgr.getRandomNodes(NRS.mobileSettings.validators_count, ignoredAddresses);
-            var confirmationReport = {processing: [], confirmingNodes: [], rejectingNodes: [], requestType: requestType};
+            var confirmationReport = {processing: [], confirmingNodes: [], rejectingNodes: [],
+                requestType: requestType, requestTime: new Date()};
             requestConfirmations.unshift(confirmationReport);
             if (requestConfirmations.length > 20) {
                 requestConfirmations.pop();
@@ -226,7 +227,7 @@ var NRS = (function(NRS) {
     NRS.printRemoteAddresses = function (nodesList) {
         var result = "";
         for (var i=0; i<nodesList.length; i++) {
-            result += '<a target="_blank" href="' + nodesList[i].getUrl() + '">' + nodesList[i].announcedAddress + '</a> ';
+            result += '<a target="_blank" href="' + nodesList[i].getUrl() + '">' + nodesList[i].announcedAddress + '</a><br/>';
         }
         return result;
     };
@@ -236,10 +237,12 @@ var NRS = (function(NRS) {
         var rows = "";
 
         for (var i=0; i<requestConfirmations.length; i++) {
+            var confirmation = requestConfirmations[i];
             rows += "<tr>" +
-                        "<td>" + String(requestConfirmations[i].requestType).escapeHTML() + "</td>" +
-                        "<td>" + NRS.printRemoteAddresses(requestConfirmations[i].confirmingNodes) + "</td>" +
-                        "<td>" + NRS.printRemoteAddresses(requestConfirmations[i].rejectingNodes) + "</td>" +
+                        "<td>" + NRS.formatTimestamp(confirmation.requestTime) + "<br/>"
+                            + String(confirmation.requestType).escapeHTML() + "</td>" +
+                        "<td>" + NRS.printRemoteAddresses(confirmation.confirmingNodes) + "</td>" +
+                        "<td>" + NRS.printRemoteAddresses(confirmation.rejectingNodes) + "</td>" +
                     "</tr>";
         }
         requestConfirmationsInfoTable.find("tbody").empty().append(rows);
