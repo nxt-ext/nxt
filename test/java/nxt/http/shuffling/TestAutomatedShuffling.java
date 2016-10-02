@@ -563,7 +563,7 @@ public class TestAutomatedShuffling extends BlockchainTest {
         Assert.assertEquals(-Constants.ONE_NXT, CHUCK.getBalanceDiff());
         Assert.assertEquals(-Constants.ONE_NXT, CHUCK.getUnconfirmedBalanceDiff());
         Assert.assertEquals(0, DAVE.getBalanceDiff());
-        Assert.assertEquals(-(defaultShufflingAmount + Constants.ONE_NXT), DAVE.getUnconfirmedBalanceDiff());
+        Assert.assertEquals(0, DAVE.getUnconfirmedBalanceDiff());
         Assert.assertEquals(3 * Constants.ONE_NXT + Constants.SHUFFLING_DEPOSIT_NQT, FORGY.getBalanceDiff());
         Assert.assertEquals(3 * Constants.ONE_NXT + Constants.SHUFFLING_DEPOSIT_NQT, FORGY.getUnconfirmedBalanceDiff());
 
