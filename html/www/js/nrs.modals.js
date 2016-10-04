@@ -137,6 +137,13 @@ var NRS = (function(NRS, $, undefined) {
             });
         });
         $(this).find("input[name=secretPhrase]").prop("disabled", false);
+        var name = $(this).attr('id').replace('_modal', '');
+        var scanButton = $(this).find("#" + name + "_secret_phrase_scan");
+        if (NRS.isDisablePassphraseScanning()) {
+            scanButton.prop('disabled', true);
+        } else {
+            scanButton.prop('disabled', false);
+        }
 	});
 
 	modal.on("shown.bs.modal", function() {

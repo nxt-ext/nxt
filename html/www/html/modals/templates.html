@@ -71,7 +71,7 @@
     <div class="form-group secret_phrase">
         <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
         <div id="{{name}}_secret_phrase_reader" style="display:none;margin:auto;width:384px;height:384px;"></div>
-        <button type="button" data-reader="{{name}}_secret_phrase_reader" data-result="{{name}}_password" class="scan-qr-code btn btn-default btn-xs ">
+        <button id="{{name}}_secret_phrase_scan" type="button" data-reader="{{name}}_secret_phrase_reader" data-result="{{name}}_password" class="scan-qr-code btn btn-default btn-xs ">
             <i class="fa fa-qrcode"></i>
         </button>
         <input type="password" name="secretPhrase" id="{{name}}_password" class="scan-qr-code-data form-control" placeholder="" tabindex="111">
