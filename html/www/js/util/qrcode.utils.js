@@ -82,7 +82,7 @@ var NRS = (function (NRS) {
                 NRS.logConsole(videoError);
                 reader.hide();
                 if (!localMediaStream) {
-                    $.growl("video_not_supported");
+                    $.growl($.t("video_not_supported"));
                 }
                 if (reader.data('stream')) {
                     reader.html5_qrcode_stop();
