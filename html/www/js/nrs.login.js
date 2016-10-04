@@ -606,7 +606,8 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
     $("#scanQRCode").on('click', function() {
-        NRS.scanQRCode("account_data_reader", function(text) {
+        var data = $(this).data();
+        NRS.scanQRCode(data.reader, function(text) {
             var loginType = $("#loginButtons").data("login-type");
             if (loginType == "password") {
                 NRS.login(true, text);

@@ -31,9 +31,16 @@ var NRS = (function(NRS, $) {
 		}
 	});
 
-	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true]),button.btn-calculate-fee").click(function() {
+	$(".modal button.btn-primary:not([data-dismiss=modal]):not([data-ignore=true]),button.btn-calculate-fee,button.scan-qr-code").click(function() {
 		var $btn = $(this);
 		var $modal = $(this).closest(".modal");
+        if ($btn.hasClass("scan-qr-code")) {
+            var data = $btn.data();
+            NRS.scanQRCode(data.reader, function(text) {
+                $modal.find("#" + data.result).val(text);
+            });
+            return;
+        }
 		try {
 			NRS.submitForm($modal, $btn);
 		} catch(e) {

@@ -17,6 +17,10 @@
 <div id="recipient_modal_template">
     <div class="form-group">
         <label for="{{name}}_recipient" data-i18n="recipient">RECIPIENT</label>
+        <div id="{{name}}_account_id_reader" style="display:none;margin:auto;width:384px;height:384px;"></div>
+        <button type="button" data-reader="{{name}}_account_id_reader" data-result="{{name}}_recipient" class="scan-qr-code btn btn-default btn-xs">
+            <i class="fa fa-qrcode"></i>
+        </button>
         <div class="input-group">
             <input type="text" class="form-control" name="recipient" id="{{name}}_recipient" placeholder="Recipient Account" data-i18n="[placeholder]recipient_account" autofocus tabindex="1" />
             <span class="input-group-btn btn-group recipient_selector">
@@ -63,14 +67,16 @@
     </div>
 </div>
 
-
 <div id="secret_phrase_modal_template">
     <div class="form-group secret_phrase">
         <label for="{{name}}_password" data-i18n="passphrase">PASSPHRASE</label>
-        <input type="password" name="secretPhrase" id="{{name}}_password" class="form-control" placeholder="" tabindex="111">
+        <div id="{{name}}_secret_phrase_reader" style="display:none;margin:auto;width:384px;height:384px;"></div>
+        <button type="button" data-reader="{{name}}_secret_phrase_reader" data-result="{{name}}_password" class="scan-qr-code btn btn-default btn-xs ">
+            <i class="fa fa-qrcode"></i>
+        </button>
+        <input type="password" name="secretPhrase" id="{{name}}_password" class="scan-qr-code-data form-control" placeholder="" tabindex="111">
     </div>
 </div>
-
 
 <div id="admin_password_modal_template">
     <div class="form-group">
@@ -139,7 +145,7 @@
                 </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by a certain number of accounts" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_account_tab_help">
                     <a href="#{{name}}_approve_tab_accounts" aria-controls="{{name}}_approve_tab_accounts" class="at_accounts" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-group"></i></span></a>
-                </li>    
+                </li>
                 <li role="presentation" class="show_popover" data-toggle="popover" data-placement="top" data-content="Transaction has to be approved by accounts holding a certain amount of NXT" data-container="#{{name}}_approve_modal" data-i18n="[data-content]approve_modal_by_balance_tab_help">
                     <a href="#{{name}}_approve_tab_balance" aria-controls="{{name}}_approve_tab_balance" class="at_balance" role="tab" data-toggle="tab"><span class="label label-warning"><i class="fa fa-money"></i></span></a>
                 </li>
