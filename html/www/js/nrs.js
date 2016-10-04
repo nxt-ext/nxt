@@ -419,10 +419,8 @@ var NRS = (function(NRS, $, undefined) {
                 NRS.connectionError(response.errorDescription);
 			} else {
 				var clientOptionsLink = $("#header_client_options_link_text");
-				var clientOptions = $("#header_client_options");
                 if (NRS.isMobileApp()) {
                     clientOptionsLink.html($.t("mobile_client"));
-                    clientOptions.show();
                 }
 				if (response.apiProxy) {
 					NRS.isLocalHost = false;
@@ -432,7 +430,6 @@ var NRS = (function(NRS, $, undefined) {
                         } else {
                             clientOptionsLink.html($.t("roaming_client"));
                         }
-                        clientOptions.show();
                     }
 					NRS.sendRequest("getBlocks", {
 						"firstIndex": 0, "lastIndex": 0
@@ -457,6 +454,12 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.handleBlockchainStatus(response, callback);
                     NRS.updateDashboardMessage();
 				}
+                var clientOptions = $("#header_client_options");
+                if (NRS.isShowClientOptionsLink()) {
+                    clientOptions.show();
+                } else {
+                    clientOptions.hide();
+                }
 				if (!NRS.isLocalHost) {
 					$(".remote_warning").show();
 				}
