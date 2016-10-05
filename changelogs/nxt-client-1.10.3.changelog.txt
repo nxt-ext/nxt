@@ -18,6 +18,7 @@ Important copyright change:
 
 The copyright of all GPLv2 code contributed by the Nxt Core Developers to the
 Nxt Reference Software now belongs to Jelurida IP B.V., a private company
-registered in the Netherlands. Please contact Jelurida for commercial licensing
-options if the GPLv2 license does not fit your private blockchain needs.
+registered in the Netherlands. Please contact info@jelurida.com for commercial
+licensing options if the GPLv2 license does not fit your private blockchain
+needs.
 
