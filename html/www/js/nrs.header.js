@@ -155,5 +155,14 @@ var NRS = (function(NRS, $) {
         NRS.updateDashboardMessage();
     };
 
+    $(".external-link").on('click', function(e) {
+        if (!NRS.isMobileApp()) {
+            return;
+        }
+        e.preventDefault();
+        window.open($(this).attr('href'), '_system');
+        return false;
+    });
+
     return NRS;
 }(NRS || {}, jQuery));
