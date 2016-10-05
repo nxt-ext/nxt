@@ -452,7 +452,6 @@ var NRS = (function(NRS, $, undefined) {
 					var hostName = window.location.hostname.toLowerCase();
 					NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
 					NRS.handleBlockchainStatus(response, callback);
-                    NRS.updateDashboardMessage();
 				}
                 var clientOptions = $("#header_client_options");
                 if (NRS.isShowClientOptionsLink()) {
