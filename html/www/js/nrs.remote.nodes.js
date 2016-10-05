@@ -155,11 +155,6 @@ var NRS = (function(NRS) {
                         NRS.logConsole("onConfirmation:Request " + type +
                             " confirmations " + confirmationReport.confirmingNodes.length +
                             " rejections " + confirmationReport.rejectingNodes.length);
-                        if (confirmationReport.rejectingNodes.length > 0) {
-                            $.growl($.t("warning_request_confirmation_rejection",
-                                { type: type, confirmations: confirmationReport.confirmingNodes.length, rejections: confirmationReport.rejectingNodes.length }
-                            ))
-                        }
                         NRS.updateConfirmationsIndicator();
                     }
                 } else {
