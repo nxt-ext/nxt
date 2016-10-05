@@ -204,7 +204,8 @@ var NRS = (function(NRS) {
                 hasRejections = true;
             }
         }
-        var indicatorIcon = $("#confirmation_rate_indicator i");
+        var indicator = $("#confirmation_rate_indicator");
+        var indicatorIcon = indicator.find("i");
         if (hasRejections) {
             indicatorIcon.removeClass('fa-bolt');
             indicatorIcon.addClass('fa-exclamation');
@@ -212,11 +213,8 @@ var NRS = (function(NRS) {
             indicatorIcon.addClass('fa-bolt');
             indicatorIcon.removeClass('fa-exclamation');
         }
-
-        $("#confirmation_rate_indicator").css({'background-color': "#" + color.toString(16)});
-
+        indicator.css({'background-color': "#" + color.toString(16)});
         NRS.updateConfirmationsTable();
-
     };
 
     NRS.printRemoteAddresses = function (nodesList) {
