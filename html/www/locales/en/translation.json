@@ -1840,5 +1840,7 @@
   "show": "Show",
   "request_type_date": "Request",
   "confirmed_by": "Confirmed by",
-  "rejected_by": "Rejected by"
+  "rejected_by": "Rejected by",
+  "generators": "Generators",
+  "no_generators": "No Generators"
 }
