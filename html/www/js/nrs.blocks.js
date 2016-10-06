@@ -355,12 +355,5 @@ var NRS = (function(NRS, $) {
 		NRS.loadPage("blocks");
 	});
 
-	$("#goto_forged_blocks").click(function(e) {
-		e.preventDefault();
-		$("#blocks_page_type").find(".btn:last").button("toggle");
-		NRS.blocksPageType = "forged_blocks";
-		NRS.goToPage("blocks");
-	});
-
 	return NRS;
 }(NRS || {}, jQuery));
