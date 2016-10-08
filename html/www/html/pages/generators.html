@@ -30,6 +30,26 @@
                     <div class="small-box-footer"></div>
                 </div>
             </div>
+            <div class="col-lg-3 col-xs-6">
+                <div class="small-box bg-aqua">
+                    <div class="inner inner-smaller">
+                        <h3><span class="loading_dots">{{{heightFormatted}}}</span></h3>
+                        <p data-i18n="height">Height</p>
+                    </div>
+                    <div class="icon-smaller"><i class="fa fa-code"></i></div>
+                    <div class="small-box-footer"></div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-xs-6">
+                <div class="small-box bg-aqua">
+                    <div class="inner inner-smaller">
+                        <h3><span class="loading_dots">{{{activeCount}}}</span></h3>
+                        <p data-i18n="active_forgers">Active Forgers</p>
+                    </div>
+                    <div class="icon-smaller"><i class="fa fa-arrow-up"></i></div>
+                    <div class="small-box-footer"></div>
+                </div>
+            </div>
         </div>
 
         <section class="content">
@@ -42,7 +62,9 @@
                     <tr>
                         <th>{{i18n "account"}}</th>
                         <th class="numeric">{{i18n "effective_balance"}}</th>
-                        <th>{{i18n "deadline"}}</th>
+                        <th>{{i18n "hit_time"}}</th>
+                        <th class="numeric">{{i18n "deadline"}}</th>
+                        <th class="numeric">{{i18n "remaining"}}</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -50,7 +72,9 @@
                     <tr>
                         <td>{{{accountFormatted}}}</td>
                         <td class="numeric">{{{balanceFormatted}}}</td>
-                        <td>{{{deadlineFormatted}}}</td>
+                        <td>{{{hitTimeFormatted}}}</td>
+                        <td class="numeric">{{deadline}}</td>
+                        <td class="numeric">{{{remaining}}}</td>
                     </tr>
                     {{/each}}
                     </tbody>

@@ -1842,5 +1842,7 @@
   "confirmed_by": "Confirmed by",
   "rejected_by": "Rejected by",
   "generators": "Generators",
-  "no_generators": "No Generators"
+  "no_generators": "No Generators",
+  "hit_time": "Hit Time",
+  "remaining": "Remaining"
 }
