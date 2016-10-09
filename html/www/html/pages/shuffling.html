@@ -21,7 +21,7 @@
     <section class="content">
         <div id="active_shufflings">
             <script type="text/x-handlebars-template">
-                <div class="alert alert-danger" role="alert">{{i18n "shuffling_node_running_warning"}}</div>
+                <div class="alert alert-info" role="alert">{{i18n "shuffling_node_running_warning"}}</div>
                 {{#if errorMessage}}
                     <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
                 {{/if}}
@@ -114,7 +114,7 @@
             </div>
         </section>
         <section class="content">
-            <div class="alert alert-danger" role="alert">{{i18n "shuffling_node_running_warning"}}</div>
+            <div class="alert alert-info" role="alert">{{i18n "shuffling_node_running_warning"}}</div>
             {{#if errorMessage}}
             <div class="alert alert-danger" role="alert">{{ errorMessage }}</div>
             {{/if}}
@@ -157,7 +157,7 @@
                         <span data-i18n="no_shufflings">There are no shufflings</span>.
                     </p>
                 </div>
-                <div class="data-pagination"></div>                
+                <div class="data-pagination"></div>
             </div>
         </section>
     </script>
