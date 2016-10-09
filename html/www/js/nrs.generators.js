@@ -70,6 +70,13 @@ var NRS = (function(NRS) {
             function(response) {
                 view.generators.length = 0;
                 lastBlockTime = response.timestamp;
+                if (!response.generators) {
+                    view.render({
+                        isLoading: false,
+                        isEmpty: true
+                    });
+                    return;
+                }
                 response.generators.forEach(
                     function(generatorsJson) {
                         view.generators.push(NRS.jsondata.generators(generatorsJson));
