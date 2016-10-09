@@ -28,7 +28,7 @@ rm -f sources.tmp
 find addons/src/ -name "*.java" > addons.tmp
 if [ -s addons.tmp ]; then
     echo "compiling add-ons..."
-    javac -encoding utf8 -sourcepath "${SP}:addons/src" -classpath "${CP}:addons/classes" -d addons/classes @addons.tmp || exit 1
+    javac -encoding utf8 -sourcepath "${SP}:addons/src" -classpath "${CP}:addons/classes:addons/lib/*" -d addons/classes @addons.tmp || exit 1
     echo "add-ons compiled successfully"
     rm -f addons.tmp
 else
