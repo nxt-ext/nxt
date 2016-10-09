@@ -1,18 +1,18 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt;
 
@@ -155,7 +155,7 @@ public final class Constants {
     public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_19;
     public static final int LAST_KNOWN_BLOCK = isTestnet ? 847000 : 907000;
 
-    public static final int[] MIN_VERSION = Constants.isTestnet ? new int[] {1, 9} : new int[] {1, 7};
+    public static final int[] MIN_VERSION = Constants.isTestnet ? new int[] {1, 10} : new int[] {1, 7};
     public static final int[] MIN_PROXY_VERSION = new int[] {1, 10, 1};
 
     static final long UNCONFIRMED_POOL_DEPOSIT_NQT = (isTestnet ? 50 : 100) * ONE_NXT;

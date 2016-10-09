@@ -1802,5 +1802,22 @@
   "next_balance_update": "Next Balance Update",
   "error_forging_light_client": "Forging is disabled when running as light client",
   "ec_block_id": "EC Block Id",
-  "ec_block_height": "EC Block Height"
+  "ec_block_height": "EC Block Height",
+  "min_number_of_options": "Min Number of Options",
+  "max_number_of_options": "Max Number of Options",
+  "min_range_value": "Min Range Value",
+  "max_range_value": "Max Range Value",
+  "transaction_index": "Transaction Index",
+  "unconfirmed_nxt_balance": "Available Balance",
+  "option_0": "Option 0",
+  "option_1": "Option 1",
+  "option_2": "Option 2",
+  "option_3": "Option 3",
+  "option_4": "Option 4",
+  "option_5": "Option 5",
+  "option_6": "Option 6",
+  "option_7": "Option 7",
+  "option_8": "Option 8",
+  "option_9": "Option 9",
+  "please_enter_withdrawal_amount": "To generate QR code, please enter withdrawal amount"
 }
