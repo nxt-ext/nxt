@@ -1071,7 +1071,7 @@ NRS.addPagination = function () {
                     }
 
                     var i;
-                    if (response.assetBalances) {
+                    if ((firstRun || isAccountSwitch) && response.assetBalances) {
                         var assets = [];
                         var assetBalances = response.assetBalances;
                         var assetBalancesMap = {};
@@ -1098,8 +1098,10 @@ NRS.addPagination = function () {
                             }
                         });
                     } else {
-                        $("#account_assets_balance").html(0);
-                        $("#account_nr_assets").html(0);
+                        if (!response.assetBalances) {
+                            $("#account_assets_balance").html(0);
+                            $("#account_nr_assets").html(0);
+                        }
                     }
 
                     if (response.accountCurrencies) {
