@@ -22,10 +22,6 @@ var NRS = (function(NRS, $) {
         return response.errorCode || response.errorDescription || response.errorMessage || response.error;
     }
 
-    function getErrorMessage(response) {
-        return response.errorDescription || response.errorMessage || response.error;
-    }
-
     NRS.jsondata = NRS.jsondata||{};
 
     NRS.jsondata.shuffling = function (response, shufflers, amountDecimals) {
@@ -258,7 +254,7 @@ var NRS = (function(NRS, $) {
                     function (response) {
                         if (isErrorResponse(response)) {
                             view.render({
-                                errorMessage: getErrorMessage(response),
+                                errorMessage: NRS.getErrorMessage(response),
                                 isLoading: false,
                                 isEmpty: false
                             });
@@ -318,7 +314,7 @@ var NRS = (function(NRS, $) {
                     function(response) {
                         if (isErrorResponse(response)) {
                             view.render({
-                                errorMessage: getErrorMessage(response),
+                                errorMessage: NRS.getErrorMessage(response),
                                 isLoading: false,
                                 isEmpty: false
                             });
@@ -474,7 +470,7 @@ var NRS = (function(NRS, $) {
                     function (response) {
                         if (isErrorResponse(response)) {
                             view.render({
-                                errorMessage: getErrorMessage(response),
+                                errorMessage: NRS.getErrorMessage(response),
                                 isLoading: false,
                                 isEmpty: false
                             });

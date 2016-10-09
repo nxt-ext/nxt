@@ -1686,5 +1686,9 @@ var NRS = (function (NRS, $, undefined) {
         return array;
     };
 
+    NRS.getErrorMessage = function(response) {
+        return response.errorDescription || response.errorMessage || response.error;
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

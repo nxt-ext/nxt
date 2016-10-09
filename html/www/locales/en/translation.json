@@ -1844,5 +1844,7 @@
   "generators": "Generators",
   "no_generators": "No Generators",
   "hit_time": "Hit Time",
-  "remaining": "Remaining"
+  "remaining": "Remaining",
+  "generator_timing_accuracy_warning": "Information in this table is delayed by up to 30 seconds, use the desktop wallet for more up to date information",
+  "last_block_time": "Last Block Time"
 }

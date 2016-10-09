@@ -41,6 +41,7 @@ var NRS = (function(NRS) {
             );
             view = NRS.simpleview.get('generators_page', {
                 errorMessage: null,
+                infoMessage: NRS.getGeneratorAccuracyWarning(),
                 isLoading: false,
                 isEmpty: false,
                 generators: generators,
@@ -58,6 +59,7 @@ var NRS = (function(NRS) {
         NRS.hasMorePages = false;
         view = NRS.simpleview.get('generators_page', {
             errorMessage: null,
+            infoMessage: NRS.getGeneratorAccuracyWarning(),
             isLoading: true,
             isEmpty: false,
             generators: [],
@@ -73,7 +75,8 @@ var NRS = (function(NRS) {
                 if (!response.generators) {
                     view.render({
                         isLoading: false,
-                        isEmpty: true
+                        isEmpty: true,
+                        errorMessage: NRS.getErrorMessage(response)
                     });
                     return;
                 }

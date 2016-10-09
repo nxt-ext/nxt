@@ -168,5 +168,12 @@ var NRS = (function (NRS) {
         return NRS.isMobileApp() || (NRS.state && NRS.state.apiProxy);
     };
 
+    NRS.getGeneratorAccuracyWarning = function() {
+        if (isDesktopApplication) {
+            return "";
+        }
+        return $.t("generator_timing_accuracy_warning");
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
