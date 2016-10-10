@@ -63,7 +63,10 @@ var NRS = (function(NRS) {
             isLoading: true,
             isEmpty: false,
             generators: [],
-            timeFormatted: ""
+            timeFormatted: "<span>.</span><span>.</span><span>.</span></span>",
+            heightFormatted: "<span>.</span><span>.</span><span>.</span></span>",
+            activeCount: "<span>.</span><span>.</span><span>.</span></span>",
+            loadingDotsClass: "loading_dots"
         });
         var params = {
             "limit": 10
@@ -93,7 +96,8 @@ var NRS = (function(NRS) {
                     isEmpty: view.generators.length == 0,
                     timeFormatted: timeFormatted,
                     heightFormatted: heightFormatted,
-                    activeCount: activeCount
+                    activeCount: activeCount,
+                    loadingDotsClass: ""
                 });
                 NRS.pageLoaded();
                 if (NRS.currentPage == "generators") {
