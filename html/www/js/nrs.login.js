@@ -54,9 +54,9 @@ var NRS = (function(NRS, $, undefined) {
             $(".mobile-only").show();
         }
         if (NRS.isEnablePassphraseScanning()) {
-            $(".qrcode-scanner").prop("disabled", "false");
+            $(".scan-qr-code").prop("disabled", "false");
         } else {
-            $(".qrcode-scanner").prop("disabled", "true");
+            $(".scan-qr-code").prop("disabled", "true");
         }
         $("#login_panel").show();
 	};

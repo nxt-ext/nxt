@@ -138,11 +138,11 @@ var NRS = (function(NRS, $, undefined) {
         });
         $(this).find("input[name=secretPhrase]").prop("disabled", false);
         var name = $(this).attr('id').replace('_modal', '');
-        var scanButton = $(this).find("#" + name + "_secret_phrase_scan");
+        var scanButtons = $(this).find(".scan-qr-code");
         if (NRS.isEnablePassphraseScanning()) {
-            scanButton.prop('disabled', false);
+            scanButtons.prop('disabled', false);
         } else {
-            scanButton.prop('disabled', true);
+            scanButtons.prop('disabled', true);
         }
 	});
 
@@ -152,8 +152,19 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.showedFormWarning = false; //maybe not the best place... we assume forms are only in modals?
 	});
 
-	//Reset form to initial state when modal is closed
-	modal.on("hidden.bs.modal", function() {
+	modal.on("hide.bs.modal", function() {
+        // Turn off scanner when cancelling the modal during scan
+        $(this).find(".scan-qr-code-reader").each(function() {
+            var id = $(this)[0].id;
+            var reader = $("#" + id);
+            if (reader.is(':visible')) {
+                NRS.scanQRCode(id, function() {});
+            }
+        });
+    });
+
+    //Reset form to initial state when modal is closed
+    modal.on("hidden.bs.modal", function() {
 		if(this.id === 'raw_transaction_modal') {
 			var reader = $('#raw_transaction_modal_signature_reader');
 			if (reader.data('stream')) {
