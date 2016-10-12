@@ -62,14 +62,14 @@ var NRS = (function (NRS) {
     function html5Scan(readerId, callback) {
         var reader = $("#" + readerId);
         if (reader.is(':visible')) {
-            reader.hide();
+            reader.fadeOut();
             if (reader.data('stream')) {
                 reader.html5_qrcode_stop();
             }
             return;
         }
         reader.empty();
-        reader.show();
+        reader.fadeIn();
         reader.html5_qrcode(
             function (data) {
                 NRS.logConsole(data);
