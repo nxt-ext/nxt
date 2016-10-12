@@ -256,8 +256,9 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.createLegacyDatabase();
 		}
 
+		// TODO this is probably not working since 1.5 when we move to settings per account
 		if (NRS.getStrItem("remember_passphrase")) {
-			$("#remember_password").prop("checked", true);
+			$("#remember_me").prop("checked", true);
 		}
 		NRS.getSettings(false);
 

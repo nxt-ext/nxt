@@ -197,7 +197,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.accountRS = "";
 		NRS.publicKey = "";
 		NRS.accountInfo = {};
-		$("#remember_password").prop("checked", false);
+		$("#remember_me").prop("checked", false);
 
 		// Reset other functional state
 		$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
@@ -234,17 +234,15 @@ var NRS = (function(NRS, $, undefined) {
         if (type == "account") {
             NRS.listAccounts();
             $('#login_password').parent().hide();
-            $('#remem-wrap').addClass('remem-pass-hide');
         } else if (type == "password") {
             $('#login_account_container').hide();
             $('#login_account_container_other').hide();
             $('#login_password').parent().show();
-            $('#remem-wrap').removeClass('remem-pass-hide');
         } else if (type == "scan" && !reader.is(':visible')) {
             NRS.scanQRCode(readerId, function(text) {
                 var nxtAddress = new NxtAddress();
                 if (nxtAddress.set(text)) {
-                    if ($("#remember_account").is(":checked")) {
+                    if ($("#remember_me").is(":checked")) {
                         rememberAccount(text);
                     }
                     NRS.login(false, text);
@@ -364,10 +362,10 @@ var NRS = (function(NRS, $, undefined) {
 						return;
 					}
 
-					var rememberPassword = $("#remember_password");
-					if (rememberPassword.is(":checked") && isPassphraseLogin) {
+					var rememberMe = $("#remember_me");
+					if (rememberMe.is(":checked") && isPassphraseLogin) {
 						NRS.rememberPassword = true;
-						rememberPassword.prop("checked", false);
+						rememberMe.prop("checked", false);
 						NRS.setPassword(id);
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
@@ -469,7 +467,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#dashboard_link').find('a').addClass("ignore").click();
 
 					var accounts;
-					if ($("#remember_account").is(":checked") || NRS.newlyCreatedAccount) {
+					if ($("#remember_me").is(":checked") || NRS.newlyCreatedAccount) {
 						rememberAccount(NRS.accountRS);
 					}
 
@@ -607,7 +605,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.removeItem("logged_in");
 		NRS.removeItem("savedNxtAccounts");
 		NRS.removeItem("language");
-		NRS.removeItem("remember_passphrase");
 		NRS.localStorageDrop("data");
 		NRS.localStorageDrop("polls");
 		NRS.localStorageDrop("contacts");

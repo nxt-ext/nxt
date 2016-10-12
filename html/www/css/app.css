@@ -2015,13 +2015,11 @@ body > .header .logo .icon {
   text-decoration: none;
 }
 
-#login_panel #remember_password_container label,
-#login_panel #remember_account_container label,
+#login_panel #remember_me_container label,
 #lockscreen_active_plugins_warning label
 { opacity: 0.53; }
 
-#login_panel #remember_password_container label:hover,
-#login_panel #remember_account_container label:hover,
+#login_panel #remember_me_container label:hover,
 #lockscreen_active_plugins_warning label:hover
 { opacity: 1.0; }
 
@@ -2981,16 +2979,8 @@ label .popover-content {
     text-align: left;
 }
 
-#remem-wrap.remem-pass-hide {
-    text-align: center;
-}
-
-#remem-wrap.remem-pass-hide #remember_account_container {
+#remember_me_container {
     width: auto;
-}
-
-#remem-wrap.remem-pass-hide #remember_password_container {
-    display: none;
 }
 
 #remem-wrap input,
@@ -3000,12 +2990,12 @@ label .popover-content {
     margin: 0;
 }
 
-#remember_password_container, #remember_account_container {
+#remember_me_container {
     color: #fff;
     width: 260px;
 }
 
-#remember_password_container label,#remember_account_container label {
+#remember_me_container label {
 	font-weight:normal;
 }
 .popover {
