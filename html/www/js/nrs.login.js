@@ -53,10 +53,12 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.isMobileApp()) {
             $(".mobile-only").show();
         }
-		$("#login_panel").show();
-		setTimeout(function() {
-			$("#login_password").focus()
-		}, 10);
+        if (NRS.isEnablePassphraseScanning()) {
+            $(".qrcode-scanner").prop("disabled", "false");
+        } else {
+            $(".qrcode-scanner").prop("disabled", "true");
+        }
+        $("#login_panel").show();
 	};
 
 	NRS.showWelcomeScreen = function() {
@@ -221,29 +223,37 @@ var NRS = (function(NRS, $, undefined) {
         }, true);
 	};
 
-	$("#loginButtons").on('click',function(e) {
-		e.preventDefault();
-		if ($(this).data( "login-type" ) == "password") {
-			NRS.listAccounts();
-			$('#login_password').parent().hide();
-			$('#remem-wrap').addClass('remem-pass-hide');
-            $('#scanQRCode').prop('disabled', false);
-			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" /><i class="fa fa-male"></i>');
-			$(this).data( "login-type","account");
-		} else {
-			$('#login_account_container').hide();
-			$('#login_account_container_other').hide();
-			$('#login_password').parent().show();
-			$('#remem-wrap').removeClass('remem-pass-hide');
-            if (NRS.isDisablePassphraseScanning()) {
-                $('#scanQRCode').prop('disabled', true);
-            } else {
-                $('#scanQRCode').prop('disabled', false);
-            }
-			$(this).html('<input type="hidden" name="loginType" id="accountLogin" value="passwordLogin" autocomplete="off" /><i class="fa fa-key"></i>');
-			$(this).data( "login-type","password");
-		}
-	});
+    $("#loginButtons").find(".btn").click(function (e) {
+        e.preventDefault();
+        var type = $(this).data("login-type");
+        var readerId = $(this).data("reader");
+        var reader = $("#" + readerId);
+        if (reader.is(':visible') && type != "scan") {
+            NRS.scanQRCode(readerId, function() {}); // turn off scanning
+        }
+        if (type == "account") {
+            NRS.listAccounts();
+            $('#login_password').parent().hide();
+            $('#remem-wrap').addClass('remem-pass-hide');
+        } else if (type == "password") {
+            $('#login_account_container').hide();
+            $('#login_account_container_other').hide();
+            $('#login_password').parent().show();
+            $('#remem-wrap').removeClass('remem-pass-hide');
+        } else if (type == "scan" && !reader.is(':visible')) {
+            NRS.scanQRCode(readerId, function(text) {
+                var nxtAddress = new NxtAddress();
+                if (nxtAddress.set(text)) {
+                    if ($("#remember_account").is(":checked")) {
+                        rememberAccount(text);
+                    }
+                    NRS.login(false, text);
+                } else {
+                    NRS.login(true, text);
+                }
+            });
+        }
+    });
 
 	NRS.removeAccount = function(account) {
 		var accounts = NRS.getStrItem("savedNxtAccounts").replace(account+';','');
@@ -604,21 +614,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.localStorageDrop("assets");
 		NRS.logout();
 	});
-
-    $("#scanQRCode").on('click', function() {
-        var data = $(this).data();
-        NRS.scanQRCode(data.reader, function(text) {
-            var loginType = $("#loginButtons").data("login-type");
-            if (loginType == "password") {
-                NRS.login(true, text);
-            } else {
-                if (/NXT\-/i.test(text) && $("#remember_account").is(":checked")) {
-                    rememberAccount(text);
-                }
-                NRS.login(false, text);
-            }
-        });
-    });
 
     NRS.setPassword = function(password) {
 		NRS.setEncryptionPassword(password);

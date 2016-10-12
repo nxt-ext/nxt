@@ -22,7 +22,11 @@ var NRS = (function (NRS) {
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
     var isMobileDevice = window["cordova"] !== undefined;
-    var remoteNode = null;
+    var isLocalHost = false;
+    if (window.location && window.location.hostname) {
+        var hostName = window.location.hostname.toLowerCase();
+        isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
+    }
 
     NRS.isIndexedDBSupported = function() {
         return window.indexedDB !== undefined;
@@ -132,8 +136,17 @@ var NRS = (function (NRS) {
         return device && device.platform == "Android" && device.version >= "6.0.0";
     };
 
-    NRS.isDisablePassphraseScanning = function() {
-        return !(NRS.isMobileApp() || (NRS.isLocalHost && !(NRS.state && NRS.state.apiProxy)));
+    NRS.isEnablePassphraseScanning = function() {
+        if (isDesktopApplication) {
+            return false; // Java FX does not support camera access
+        }
+        if (NRS.isMobileApp()) {
+            return true; // mobile app scanning never send data to the server
+        }
+        if (isLocalHost) {
+            return true; // server is local so no problem to use it to decode QR code
+        }
+        return false;
     };
 
     NRS.getShapeShiftUrl = function() {

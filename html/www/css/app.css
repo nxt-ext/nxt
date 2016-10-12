@@ -3420,7 +3420,8 @@ input.masked {
 }
 
 .lockscreen-widget {
-  margin: 10px 0;
+  margin: 5px 0;
+  border: 0;
   vertical-align: top;
 }
 

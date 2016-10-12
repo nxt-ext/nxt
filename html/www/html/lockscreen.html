@@ -27,14 +27,18 @@
                 </div>
 
                 <div id="account_data_reader" style="display:none;margin:auto;width:384px;height:384px;"></div>
-                <button type="button" id="scanQRCode" data-reader="account_data_reader" class="lockscreen-widget btn btn-primary" style="min-width:40px;" aria-pressed="false">
-                    <i class="fa fa-qrcode"></i>
-                </button>
-                <button type="button" id="loginButtons" class="lockscreen-widget btn btn-primary" data-toggle="button" data-login-type="account" style="min-width:40px;">
-    				<input type="hidden" name="loginType" id="accountLogin" value="account" autocomplete="off" />
-                    <i class="fa fa-male"></i>
-                </button>
 
+                <div class="lockscreen-widget btn-group" data-toggle="buttons" id="loginButtons">
+                    <label class="lockscreen-widget btn btn-primary btn-lg active" data-login-type="account" data-reader="account_data_reader">
+                        <input type="radio" name="loginButtons"><i class="fa fa-male"></i>
+                    </label>
+                    <label class="lockscreen-widget btn btn-primary btn-lg" data-login-type="password" data-reader="account_data_reader">
+                        <input type="radio" name="loginButtons"><i class="fa fa-key"></i>
+                    </label>
+                    <label class="lockscreen-widget btn btn-primary btn-lg qrcode-scanner" data-login-type="scan" data-reader="account_data_reader">
+                        <input type="radio" name="loginButtons"><i class="fa fa-qrcode"></i>
+                    </label>
+                </div>
                 <div class="lockscreen-item">
                     <div class="lockscreen-credentials">
                     	<div class="input-group" id="login_account_container" style="display:table;height:34px;width: 100%;">
