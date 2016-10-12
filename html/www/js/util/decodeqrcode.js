@@ -36,6 +36,6 @@ qrcodeDecoder.decode = function() {
                 qrcode.callback(response.qrCodeData);
             }
         },
-        { isAsync: false }
+        { isAsync: false, doNotEscape: true }
     );
 };
