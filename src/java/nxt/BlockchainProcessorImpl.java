@@ -140,8 +140,8 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             };
     private static final byte[] CHECKSUM_20 = Constants.isTestnet ?
             new byte[] {
-                    106, 113, 109, -37, -38, -20, 89, 56, -106, 77, -34, 127, -78, 18, 54, 62,
-                    97, 75, -27, 78, 9, 87, -103, 82, 81, -124, -4, -69, 102, 119, 89, 21
+                    33, -16, 85, -127, -102, 97, 22, -52, -13, 24, 102, -53, -106, 35, 20, 33,
+                    78, 37, -43, 63, 21, -59, -20, 120, 5, 80, 93, 71, -98, -58, 78, 95
             }
             :
             new byte[] {
