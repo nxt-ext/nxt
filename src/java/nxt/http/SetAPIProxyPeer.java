@@ -41,6 +41,9 @@ public class SetAPIProxyPeer extends APIServlet.APIRequestHandler {
         String peerAddress = Convert.emptyToNull(request.getParameter("peer"));
         if (peerAddress == null) {
             Peer peer = APIProxy.getInstance().setForcedPeer(null);
+            if (peer == null) {
+                return UNKNOWN_PEER;
+            }
             return JSONData.peer(peer);
         }
         Peer peer = Peers.findOrCreatePeer(peerAddress, false);
