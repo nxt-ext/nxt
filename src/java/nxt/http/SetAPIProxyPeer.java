@@ -24,6 +24,7 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static nxt.http.JSONResponses.API_PROXY_NO_OPEN_API_PEERS;
 import static nxt.http.JSONResponses.PEER_NOT_CONNECTED;
 import static nxt.http.JSONResponses.PEER_NOT_OPEN_API;
 import static nxt.http.JSONResponses.UNKNOWN_PEER;
@@ -42,7 +43,7 @@ public class SetAPIProxyPeer extends APIServlet.APIRequestHandler {
         if (peerAddress == null) {
             Peer peer = APIProxy.getInstance().setForcedPeer(null);
             if (peer == null) {
-                return UNKNOWN_PEER;
+                return API_PROXY_NO_OPEN_API_PEERS;
             }
             return JSONData.peer(peer);
         }
