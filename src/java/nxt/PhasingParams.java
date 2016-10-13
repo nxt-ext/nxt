@@ -148,6 +148,10 @@ public final class PhasingParams {
 
         voteWeighting.validate();
 
+        if (Constants.isTestnet && Nxt.getBlockchain().getHeight() < Constants.FXT_BLOCK) {
+            return;
+        }
+
         if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY) {
             Currency currency = Currency.getCurrency(voteWeighting.getHoldingId());
             if (currency == null) {
