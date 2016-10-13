@@ -78,39 +78,6 @@ public final class FxtDistribution implements Listener<Block> {
         Nxt.getBlockchainProcessor().addListener(new FxtDistribution(), BlockchainProcessor.Event.AFTER_BLOCK_ACCEPT);
     }
 
-    public static long getConfirmedFxtQuantity(long accountId) {
-        try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmtSelect = con.prepareStatement("SELECT balance FROM account_fxt WHERE id = ? ORDER BY height DESC LIMIT 1")) {
-            pstmtSelect.setLong(1, accountId);
-            try (ResultSet rs = pstmtSelect.executeQuery()) {
-                if (!rs.next()) {
-                    return 0;
-                }
-                return new BigInteger(rs.getBytes("balance")).divide(BALANCE_DIVIDER).longValueExact();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e.toString(), e);
-        }
-    }
-
-    public static long getRemainingFxtQuantity(long accountId) {
-        Account account = Account.getAccount(accountId);
-        if (account == null) {
-            return 0;
-        }
-        long balance = account.getBalanceNQT();
-        int height = Nxt.getBlockchain().getHeight();
-        if (height >= DISTRIBUTION_END) {
-            return 0;
-        }
-        if (height < DISTRIBUTION_START) {
-            return balance / 10000L;
-        }
-        int done = (height - DISTRIBUTION_START) / DISTRIBUTION_FREQUENCY;
-        int total = (DISTRIBUTION_END - DISTRIBUTION_START) / DISTRIBUTION_FREQUENCY;
-        return (balance * (total - done)) / (total * 10000L);
-    }
-
     @Override
     public void notify(Block block) {
 
@@ -269,7 +236,7 @@ public final class FxtDistribution implements Listener<Block> {
                 if (issuerAssetBalance > 0) {
                     snapshotMap.put(Long.toUnsignedString(FXT_ISSUER_ID), issuerAssetBalance);
                 } else {
-                    snapshotMap.remove(FXT_ISSUER_ID);
+                    snapshotMap.remove(Long.toUnsignedString(FXT_ISSUER_ID));
                 }
                 Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
                 Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
