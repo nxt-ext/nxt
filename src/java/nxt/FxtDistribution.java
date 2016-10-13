@@ -236,7 +236,7 @@ public final class FxtDistribution implements Listener<Block> {
                 if (issuerAssetBalance > 0) {
                     snapshotMap.put(Long.toUnsignedString(FXT_ISSUER_ID), issuerAssetBalance);
                 } else {
-                    snapshotMap.remove(FXT_ISSUER_ID);
+                    snapshotMap.remove(Long.toUnsignedString(FXT_ISSUER_ID));
                 }
                 Asset.deleteAsset(TransactionDb.findTransaction(FXT_ASSET_ID), FXT_ASSET_ID, excessFxtQuantity);
                 Logger.logDebugMessage("Deleted " + excessFxtQuantity + " excess QNT");
