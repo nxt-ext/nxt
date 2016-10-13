@@ -148,7 +148,7 @@ public final class PhasingParams {
 
         voteWeighting.validate();
 
-        if (Nxt.getBlockchain().getHeight() < Constants.FXT_BLOCK) {
+        if (Constants.isTestnet && Nxt.getBlockchain().getHeight() < Constants.FXT_BLOCK) {
             return;
         }
 
@@ -197,9 +197,6 @@ public final class PhasingParams {
     }
 
     void checkApprovable() throws NxtException.NotCurrentlyValidException {
-        if (Nxt.getBlockchain().getHeight() < Constants.FXT_BLOCK) {
-            return;
-        }
         if (voteWeighting.getVotingModel() == VoteWeighting.VotingModel.CURRENCY
                 && Currency.getCurrency(voteWeighting.getHoldingId()) == null) {
             throw new NxtException.NotCurrentlyValidException("Currency " + Long.toUnsignedString(voteWeighting.getHoldingId()) + " not found");

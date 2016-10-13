@@ -393,6 +393,7 @@ public final class Nxt {
                 Logger.logMessage("Initialization took " + (currentTime - startTime) / 1000 + " seconds");
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
                 Logger.logMessage("Copyright © 2013-2016 The Nxt Core Developers.");
+                Logger.logMessage("Copyright © 2016 Jelurida IP B.V.");
                 Logger.logMessage("Distributed under GPLv2, with ABSOLUTELY NO WARRANTY.");
                 if (API.getWelcomePageUri() != null) {
                     Logger.logMessage("Client UI is at " + API.getWelcomePageUri());
