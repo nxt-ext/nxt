@@ -154,6 +154,7 @@ public final class Constants {
     public static final int CHECKSUM_BLOCK_20 = isTestnet ? 944000 : 1000100;
 
     public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_20;
+    // LAST_KNOWN_BLOCK must also be set in html/ui/js/nrs.constants.js
     public static final int LAST_KNOWN_BLOCK = CHECKSUM_BLOCK_20;
 
     public static final int[] MIN_VERSION = new int[] {1, 10, 1};
