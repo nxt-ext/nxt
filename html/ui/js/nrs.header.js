@@ -1,14 +1,14 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
+ * Copyright © 2016 Jelurida IP B.V.                                          *
  *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
+ * See the LICENSE.txt file at the top-level directory of this distribution   *
+ * for licensing information.                                                 *
  *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,*
+ * no part of the Nxt software, including this file, may be copied, modified, *
+ * propagated, or distributed except according to the terms contained in the  *
+ * LICENSE.txt file.                                                          *
  *                                                                            *
  * Removal or modification of this copyright notice is prohibited.            *
  *                                                                            *
@@ -31,9 +31,6 @@ var NRS = (function(NRS, $) {
         widgetVisibility($("#header_send_money"), { apis: [NRS.constants.REQUEST_TYPES.sendMoney] });
         widgetVisibility($("#header_transfer_currency"), { apis: [NRS.constants.REQUEST_TYPES.transferCurrency] });
         widgetVisibility($("#header_send_message"), { apis: [NRS.constants.REQUEST_TYPES.sendMessage] });
-        if (!NRS.isCoinExchangePageAvailable()) {
-            $("#exchange_menu_li").remove();
-        }
         if (!NRS.isExternalLinkVisible()) {
             $("#web_wallet_li").remove();
             $("#api_console_li").hide();
@@ -57,33 +54,6 @@ var NRS = (function(NRS, $) {
         if (java) {
             java.openBrowser(NRS.accountRS);
         }
-    });
-
-    $("#ardor_distribution_modal").on("show.bs.modal", function() {
-        NRS.sendRequest("getFxtQuantity", {
-            "account": NRS.account
-        }, function (response) {
-            $("#ardor_distribution_start_height").html(response.distributionStart);
-            $("#ardor_distribution_start_time").html(NRS.getBlockHeightTimeEstimate(response.distributionStart));
-            $("#ardor_distribution_end_height").html(response.distributionEnd);
-            $("#ardor_distribution_end_time").html(NRS.getBlockHeightTimeEstimate(response.distributionEnd));
-            $("#ardor_distribution_current_balance").html(NRS.formatQuantity(response.quantityQNT, 4));
-            $("#ardor_distribution_expected_balance").html(NRS.formatQuantity(response.totalExpectedQuantityQNT, 4));
-            var now = moment();
-            var nextSnapshot = NRS.lastBlockHeight + response.distributionStep - ((NRS.lastBlockHeight - response.distributionStart) % response.distributionStep);
-            $("#ardor_distribution_next_snapshot").html(moment.duration(NRS.getBlockHeightMoment(nextSnapshot).diff(now)).humanize());
-            var nextUpdate = NRS.lastBlockHeight + response.distributionFrequency - ((NRS.lastBlockHeight - response.distributionStart) % response.distributionFrequency);
-            $("#ardor_distribution_next_balance_update").html(moment.duration(NRS.getBlockHeightMoment(nextUpdate).diff(now)).humanize());
-
-            var duration;
-            if (response.distributionStart > NRS.lastBlockHeight) {
-                duration = moment.duration(NRS.getBlockHeightMoment(response.distributionStart).diff(now));
-                $("#ardor_distribution_modal").find(".fomo_message").html($.t("distribution_starts_in", { interval: duration.humanize() }));
-            } else {
-                duration = moment.duration(NRS.getBlockHeightMoment(response.distributionEnd).diff(now));
-                $("#ardor_distribution_modal").find(".fomo_message").html($.t("distribution_ends_in", {interval: duration.humanize()}));
-            }
-        });
     });
 
     $("#client_status_modal").on("show.bs.modal", function() {

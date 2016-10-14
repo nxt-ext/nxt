@@ -1,18 +1,18 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt;
 
@@ -1901,6 +1901,12 @@ public abstract class TransactionType {
             }
 
             @Override
+            boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation) transaction.getAttachment();
+                return TransactionType.isDuplicate(ColoredCoins.ASK_ORDER_CANCELLATION, Long.toUnsignedString(attachment.getOrderId()), duplicates, true);
+            }
+
+            @Override
             public final boolean canHaveRecipient() {
                 return false;
             }
@@ -2224,17 +2230,15 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
-                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
-                    Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
-                    if (prunablePlainMessage != null) {
-                        byte[] image = prunablePlainMessage.getMessage();
-                        if (image != null) {
-                            Tika tika = new Tika();
-                            String mediaTypeName = tika.detect(image);
-                            MediaType mediaType = MediaType.parse(mediaTypeName);
-                            if (mediaType == null || !"image".equals(mediaType.getType())) {
-                                throw new NxtException.NotValidException("Only image attachments allowed for DGS listing, media type is " + mediaType);
-                            }
+                Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
+                if (prunablePlainMessage != null) {
+                    byte[] image = prunablePlainMessage.getMessage();
+                    if (image != null) {
+                        Tika tika = new Tika();
+                        String mediaTypeName = tika.detect(image);
+                        MediaType mediaType = MediaType.parse(mediaTypeName);
+                        if (mediaType == null || !"image".equals(mediaType.getType())) {
+                            throw new NxtException.NotValidException("Only image attachments allowed for DGS listing, media type is " + mediaType);
                         }
                     }
                 }
@@ -3130,11 +3134,9 @@ public abstract class TransactionType {
                                 + " upload hash: " + Convert.toHexString(taggedDataUpload.getHash()));
                     }
                 }
-                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
-                    TaggedData taggedData = TaggedData.getData(attachment.getTaggedDataId());
-                    if (taggedData != null && taggedData.getTransactionTimestamp() > Nxt.getEpochTime() + 6 * Constants.MIN_PRUNABLE_LIFETIME) {
-                        throw new NxtException.NotCurrentlyValidException("Data already extended, timestamp is " + taggedData.getTransactionTimestamp());
-                    }
+                TaggedData taggedData = TaggedData.getData(attachment.getTaggedDataId());
+                if (taggedData != null && taggedData.getTransactionTimestamp() > Nxt.getEpochTime() + 6 * Constants.MIN_PRUNABLE_LIFETIME) {
+                    throw new NxtException.NotCurrentlyValidException("Data already extended, timestamp is " + taggedData.getTransactionTimestamp());
                 }
             }
 

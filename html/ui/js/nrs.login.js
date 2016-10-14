@@ -1,14 +1,14 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
+ * Copyright © 2016 Jelurida IP B.V.                                          *
  *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
+ * See the LICENSE.txt file at the top-level directory of this distribution   *
+ * for licensing information.                                                 *
  *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,*
+ * no part of the Nxt software, including this file, may be copied, modified, *
+ * propagated, or distributed except according to the terms contained in the  *
+ * LICENSE.txt file.                                                          *
  *                                                                            *
  * Removal or modification of this copyright notice is prohibited.            *
  *                                                                            *
@@ -341,13 +341,6 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.disablePluginsDuringSession = $("#disable_all_plugins").is(":checked");
 					$("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
 					$("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-default btn-xs"));
-					NRS.sendRequest("getFxtQuantity", {
-						"account": NRS.account
-					}, function(fxt) {
-						if (fxt.distributionEnd && fxt.distributionEnd < NRS.lastBlockHeight) {
-							$("#sidebar_asset_distribution").hide();
-						}
-					});
 					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
 						NRS.checkBlockHeight(NRS.state.numberOfBlocks - 1);
 					}
