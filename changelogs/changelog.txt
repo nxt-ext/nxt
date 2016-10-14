@@ -1,3 +1,43 @@
+nxt-client-1.10.3:
+
+Removed old code, the Ardor distribution UI, and the getFxtQuantity API, as the
+Ardor distribution is now complete.
+
+Blacklist peers of version older than 1.10.1.
+
+As a performance optimization, the ARDR asset distribution data is now loaded
+from the conf/fxt.json for production and conf/fxt-testnet.json files for
+testnet, instead of being recalculated during blockchain download. If those
+files are missing, and a rescan or redownload is performed, snapshot data will
+be calculated again and saved as the corresponding json file in the nxt folder,
+thus allowing independent validation of the hardcoded distribution data.
+
+Added ShapeShift support to the desktop wallet by using a proxy servlet on the
+local node.
+
+The security manager which is automatically enabled when add-ons are in use now
+allows add-on network connections.
+
+Added nxt.disableSecurityPolicy property to disable the security manager even
+when add-ons are in use, in order to improve performance, default false.
+
+Added nxt.keyStoreType property to configure the keystore type used, default
+is JKS.
+
+Updated Jetty to version 9.3.12 and Bouncy Castle to version 1.55, delete the
+old lib folder before unpacking on top.
+
+
+Important copyright change:
+
+The copyright of all GPLv2 code contributed by the Nxt Core Developers to the
+Nxt Reference Software now belongs to Jelurida IP B.V., a private company
+registered in the Netherlands. Please contact info@jelurida.com for commercial
+licensing options if the GPLv2 license does not fit your private blockchain
+needs.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.10.2:
 
 Changed default setting of nxt.apiServerCORS to true in nxt-default.properties,
