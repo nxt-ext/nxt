@@ -30,7 +30,6 @@ var NRS = (function(NRS, $) {
 		"asset_transfer_warning": "10000",
 		"currency_transfer_warning": "10000",
 		"24_hour_format": "1",
-		"remember_passphrase": "0",
 		"language": "en",
 		"regional_format": "default",
 		"enable_plugins": "0",
@@ -593,13 +592,6 @@ var NRS = (function(NRS, $) {
 			});
 		}
 
-		if (!key || key == "remember_passphrase") {
-			if (NRS.settings["remember_passphrase"] == "1") {
-				NRS.setStrItem("remember_passphrase", 1);
-			} else {
-				NRS.removeItem("remember_passphrase");
-			}
-		}
 		if (!key || key == "admin_password") {
 			if (NRS.settings["admin_password"] != "") {
 				NRS.updateForgingStatus();
