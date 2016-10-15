@@ -16,7 +16,11 @@
 
 package nxt.http;
 
-import java.util.*;
+import java.util.Base64;
+import java.util.BitSet;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 public enum APIEnum {
     //To preserve compatibility, please add new APIs to the end of the enum.
@@ -274,7 +278,6 @@ public enum APIEnum {
     GET_SHARED_KEY("getSharedKey", GetSharedKey.instance),
     SET_API_PROXY_PEER("setAPIProxyPeer", SetAPIProxyPeer.instance),
     SEND_TRANSACTION("sendTransaction", SendTransaction.instance),
-    GET_FXT_QUANTITY("getFxtQuantity", GetFxtQuantity.instance),
     GET_ASSET_DIVIDENDS("getAssetDividends", GetAssetDividends.instance),
     BLACKLIST_API_PROXY_PEER("blacklistAPIProxyPeer", BlacklistAPIProxyPeer.instance),
     GET_NEXT_BLOCK_GENERATORS("getNextBlockGenerators", GetNextBlockGeneratorsTemp.instance);

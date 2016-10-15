@@ -373,13 +373,6 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.disablePluginsDuringSession = $("#disable_all_plugins").is(":checked");
 					$("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
 					$("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-default btn-xs"));
-					NRS.sendRequest("getFxtQuantity", {
-						"account": NRS.account
-					}, function(fxt) {
-						if (fxt.distributionEnd && fxt.distributionEnd < NRS.lastBlockHeight) {
-							$("#sidebar_asset_distribution").hide();
-						}
-					});
 					if (NRS.lastBlockHeight == 0 && NRS.state.numberOfBlocks) {
 						NRS.checkBlockHeight(NRS.state.numberOfBlocks - 1);
 					}

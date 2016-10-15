@@ -1211,7 +1211,8 @@ var NRS = (function (NRS, $, undefined) {
             currency = response;
         }, { isAsync: false });
         NRS.sendRequest("getCurrencyAccounts", {
-            "currency": currency.currency
+            "currency": currency.currency,
+            "lastIndex": NRS.state.maxAPIRecords
         }, function (response) {
             var rows = "";
 

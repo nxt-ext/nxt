@@ -15,8 +15,8 @@ along with this program in the file COPYING.txt. If not, see
 <https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt>.
 
 
-Please contact Jelurida B.V. for commercial licensing options if the GPLv2
-license does not fit your private blockchain needs.
+Please contact Jelurida B.V. at info@jelurida.com for commercial licensing
+options if the GPLv2 license does not fit your private blockchain needs.
 
 The client UI component of this software, located under /html/ui, is distributed
 under the MIT license, a copy of which is available under /html/ui/LICENSE.txt.

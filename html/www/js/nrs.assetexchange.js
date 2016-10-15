@@ -1629,7 +1629,8 @@ var NRS = (function (NRS, $, undefined) {
         var $invoker = $(e.relatedTarget);
         var assetId = $invoker.data("asset");
         NRS.sendRequest("getAssetAccounts", {
-            "asset": assetId
+            "asset": assetId,
+            "lastIndex": NRS.state.maxAPIRecords
         }, function (response) {
             var rows = "";
             if (response.accountAssets) {
