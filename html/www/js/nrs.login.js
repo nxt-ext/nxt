@@ -197,7 +197,6 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.accountRS = "";
 		NRS.publicKey = "";
 		NRS.accountInfo = {};
-		$("#remember_me").prop("checked", false);
 
 		// Reset other functional state
 		$("#account_balance, #account_balance_sidebar, #account_nr_assets, #account_assets_balance, #account_currencies_balance, #account_nr_currencies, #account_purchase_count, #account_pending_sale_count, #account_completed_sale_count, #account_message_count, #account_alias_count").html("0");
@@ -365,11 +364,15 @@ var NRS = (function(NRS, $, undefined) {
 					var rememberMe = $("#remember_me");
 					if (rememberMe.is(":checked") && isPassphraseLogin) {
 						NRS.rememberPassword = true;
-						rememberMe.prop("checked", false);
 						NRS.setPassword(id);
 						$(".secret_phrase, .show_secret_phrase").hide();
 						$(".hide_secret_phrase").show();
-					}
+					} else {
+                        NRS.rememberPassword = false;
+                        NRS.setPassword("");
+                        $(".secret_phrase, .show_secret_phrase").show();
+                        $(".hide_secret_phrase").hide();
+                    }
 					NRS.disablePluginsDuringSession = $("#disable_all_plugins").is(":checked");
 					$("#sidebar_account_id").html(String(NRS.accountRS).escapeHTML());
 					$("#sidebar_account_link").html(NRS.getAccountLink(NRS, "account", NRS.accountRS, "details", false, "btn btn-default btn-xs"));
@@ -598,6 +601,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.removeItem("logged_in");
 		NRS.removeItem("savedNxtAccounts");
 		NRS.removeItem("language");
+        NRS.removeItem("savedPassphrase");
 		NRS.localStorageDrop("data");
 		NRS.localStorageDrop("polls");
 		NRS.localStorageDrop("contacts");
@@ -609,6 +613,7 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
         NRS.setAccountDetailsPassword(password);
+        NRS.setStrItem("savedPassphrase", password);
 	};
 	return NRS;
 }(NRS || {}, jQuery));

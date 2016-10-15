@@ -274,7 +274,10 @@ var NRS = (function(NRS, $, undefined) {
 			"trigger": "hover"
 		});
 
-		NRS.showLockscreen();
+        var savedPassphrase = NRS.getStrItem("savedPassphrase");
+		if (!savedPassphrase) {
+            NRS.showLockscreen();
+        }
 		NRS.setStateInterval(30);
 
 		setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
@@ -306,8 +309,10 @@ var NRS = (function(NRS, $, undefined) {
 		$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
 
 		if (NRS.getUrlParameter("account")){
-			NRS.login(false,NRS.getUrlParameter("account"));
-		}
+			NRS.login(false, NRS.getUrlParameter("account"));
+		} else if (savedPassphrase) {
+            NRS.login(true, savedPassphrase);
+        }
 	}
 
 	function _fix() {
