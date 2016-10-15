@@ -1227,35 +1227,33 @@ public final class Peers {
         return myServices;
     }
 
-    private static void checkBlockchainState(boolean isGenerateJson) {
+    private static void checkBlockchainState() {
         Peer.BlockchainState state = Constants.isLightClient ? Peer.BlockchainState.LIGHT_CLIENT :
                 (Nxt.getBlockchainProcessor().isDownloading() || Nxt.getBlockchain().getLastBlockTimestamp() < Nxt.getEpochTime() - 600) ? Peer.BlockchainState.DOWNLOADING :
                         (Nxt.getBlockchain().getLastBlock().getBaseTarget() / Constants.INITIAL_BASE_TARGET > 10 && !Constants.isTestnet) ? Peer.BlockchainState.FORK :
                         Peer.BlockchainState.UP_TO_DATE;
         if (state != currentBlockchainState) {
-            if (isGenerateJson) {
-                JSONObject json = new JSONObject(myPeerInfo);
-                json.put("blockchainState", state.ordinal());
-                myPeerInfoResponse = JSON.prepare(json);
-                json.put("requestType", "getInfo");
-                myPeerInfoRequest = JSON.prepareRequest(json);
-            }
+            JSONObject json = new JSONObject(myPeerInfo);
+            json.put("blockchainState", state.ordinal());
+            myPeerInfoResponse = JSON.prepare(json);
+            json.put("requestType", "getInfo");
+            myPeerInfoRequest = JSON.prepareRequest(json);
             currentBlockchainState = state;
         }
     }
 
     public static JSONStreamAware getMyPeerInfoRequest() {
-        checkBlockchainState(true);
+        checkBlockchainState();
         return myPeerInfoRequest;
     }
 
     public static JSONStreamAware getMyPeerInfoResponse() {
-        checkBlockchainState(true);
+        checkBlockchainState();
         return myPeerInfoResponse;
     }
 
     public static Peer.BlockchainState getMyBlockchainState() {
-        checkBlockchainState(false);
+        checkBlockchainState();
         return currentBlockchainState;
     }
 
