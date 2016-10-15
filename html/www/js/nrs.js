@@ -58,6 +58,7 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.settings = {};
 	NRS.mobileSettings = {
+	    is_check_remember_me: false,
 	    is_simulate_app: false,
         is_testnet: false,
         remote_node_address: "",
@@ -256,8 +257,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.createLegacyDatabase();
 		}
 
-		// TODO implement remember me setting
-		if (NRS.getStrItem("remember_me")) {
+		if (NRS.mobileSettings.is_check_remember_me) {
 			$("#remember_me").prop("checked", true);
 		}
 		NRS.getSettings(false);

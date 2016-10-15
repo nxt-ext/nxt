@@ -1834,5 +1834,6 @@
   "remaining": "Remaining",
   "generator_timing_accuracy_warning": "Information in this table is delayed by up to 30 seconds, use the desktop wallet for more up to date information",
   "last_block_time": "Last Block Time",
-  "remember_me": "Remember Me"
+  "remember_me": "Remember Me",
+  "is_check_remember_me": "Check Remember Me Checkbox"
 }
