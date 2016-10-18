@@ -23,6 +23,8 @@ var NRS = (function (NRS) {
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
     var isMobileDevice = window["cordova"] !== undefined;
     var isLocalHost = false;
+    var remoteNode = null;
+
     if (window.location && window.location.hostname) {
         var hostName = window.location.hostname.toLowerCase();
         isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);

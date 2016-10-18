@@ -51,10 +51,22 @@ function RemoteNodesManager(isTestnet) {
     this.init();
 }
 
-function isRemoteNodeServicesAvailable(node, isSslAllowed) {
-    if (node.services instanceof Array && (node.services.indexOf("API") >= 0 || (isSslAllowed && node.services.indexOf("API_SSL") >= 0))) {
-        if (!NRS.isRequireCors() || node.services.indexOf("CORS") >= 0) {
+function isOldVersion(version) {
+    var parts = String(version).split(".");
+    if (parts.length == 3) {
+        if (parseInt(parts[0], 10) < 1) {
             return true;
+        }
+        return parseInt(parts[1], 10) < 10;
+    } else {
+        return true;
+    }
+}
+
+function isRemoteNodeConnectable(nodeData, isSslAllowed) {
+    if (nodeData.services instanceof Array && (nodeData.services.indexOf("API") >= 0 || (isSslAllowed && nodeData.services.indexOf("API_SSL") >= 0))) {
+        if (!NRS.isRequireCors() || nodeData.services.indexOf("CORS") >= 0) {
+            return !isOldVersion(nodeData.version);
         }
     }
     return false;
@@ -63,7 +75,7 @@ function isRemoteNodeServicesAvailable(node, isSslAllowed) {
 RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
     var mgr = this;
     $.each(peersData, function(index, peerData) {
-        if (isRemoteNodeServicesAvailable(peerData)) {
+        if (isRemoteNodeConnectable(peerData)) {
             var oldNode = mgr.nodes[peerData.address];
             var newNode = new RemoteNode(peerData);
             if (oldNode) {
@@ -85,17 +97,17 @@ RemoteNodesManager.prototype.addBootstrapNode = function (resolve, reject) {
     var mgr = this;
     NRS.logConsole("Connecting to configured address " + node.address + " on port " + node.port + " using ssl " + node.isSsl);
     NRS.sendRequest("getBlockchainStatus", { "_extra": node }, function(response, data) {
-        if (response.blockchainState && response.blockchainState != "UP_TO_DATE") {
+        if (response.blockchainState && response.blockchainState != "UP_TO_DATE" || response.isDownloading) {
             NRS.logConsole("Warning: Bootstrap node blockchain state is " + response.blockchainState);
         }
-        if (response.errorCode || !isRemoteNodeServicesAvailable(response, true)) {
+        if (response.errorCode || !isRemoteNodeConnectable(response, true)) {
             if (response.errorCode) {
                 NRS.logConsole("Bootstrap node cannot be used " + response.errorDescription);
             } else {
                 NRS.logConsole("Bootstrap node does not provide the required services");
             }
             $.growl("Cannot connect to configured node, connecting to a random node");
-            NRS.remoteNodesMgr.addBootstrapNodes(resolve, reject);
+            mgr.addBootstrapNodes(resolve, reject);
             return;
         }
         var node = data["_extra"];
@@ -120,7 +132,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
 
     for (var i=0; i < mgr.bc.limit; i++) {
         var peerData = peersData[i];
-        if (!isRemoteNodeServicesAvailable(peerData, false)) {
+        if (!isRemoteNodeConnectable(peerData, false)) {
             NRS.logConsole("Reject: bootstrap node " + peerData.address + " required services not available" +
                 (peerData.services ? ", node services " + peerData.services : ""));
             if (countRejections()) {
@@ -140,7 +152,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
         }
         data["_extra"] = node;
         NRS.logConsole("Connecting to bootstrap node " + node.address + " port " + node.port);
-        NRS.sendRequest("getPeers", data, function(response, data) {
+        NRS.sendRequest("getBlockchainStatus", data, function(response, data) {
             mgr.bc.counter ++;
             if (mgr.bc.success >= mgr.bc.target) {
                 NRS.logConsole("Ignore: already have enough nodes, bootstrap node not added");
@@ -155,14 +167,14 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
                 return;
             }
             var responseNode = data["_extra"];
-            if (response.blockchainState && response.blockchainState != "UP_TO_DATE") {
+            if (response.blockchainState && response.blockchainState != "UP_TO_DATE" || response.isDownloading) {
                 NRS.logConsole("Reject: bootstrap node " + responseNode.address + " blockchain state is " + response.blockchainState);
                 if (countRejections()) {
                     reject();
                 }
                 return;
             }
-            if (isRemoteNodeServicesAvailable(responseNode, false)) {
+            if (!isRemoteNodeConnectable(response, false)) {
                 NRS.logConsole("Reject: bootstrap node " + responseNode.address + " required service not available, node services " + responseNode.services);
                 if (countRejections()) {
                     reject();
