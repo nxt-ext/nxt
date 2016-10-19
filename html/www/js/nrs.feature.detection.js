@@ -190,5 +190,9 @@ var NRS = (function (NRS) {
         return $.t("generator_timing_accuracy_warning");
     };
 
+    NRS.isInitializePlugins = function() {
+        return !NRS.isMobileApp();
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

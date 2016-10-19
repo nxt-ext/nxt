@@ -229,7 +229,9 @@ var NRS = (function(NRS, $, undefined) {
 				$(".testnet_only, #testnet_login, #testnet_warning").show();
 			}
 
-			NRS.initializePlugins();
+			if (NRS.isInitializePlugins()) {
+                NRS.initializePlugins();
+            }
             NRS.printEnvInfo();
             NRS.spinner.stop();
 		});
