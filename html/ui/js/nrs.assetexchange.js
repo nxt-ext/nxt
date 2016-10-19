@@ -1668,7 +1668,6 @@ var NRS = (function (NRS, $, undefined) {
         $("#transfer_asset_action").val(action);
         $("#transfer_asset_name, #transfer_asset_quantity_name").html(String(assetName).escapeHTML());
         $("#transfer_asset_title").html($.t(action));
-        $("#transfer_asset_button").html($.t(action));
         if (action == "transfer_asset") {
             $("#transfer_asset_recipient_container").show();
             $("#transfer_asset_request_type").val("transferAsset");
