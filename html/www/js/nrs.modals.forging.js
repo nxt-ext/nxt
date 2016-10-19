@@ -146,7 +146,7 @@ var NRS = (function(NRS, $) {
         } else if (NRS.state.isScanning) {
             status = NRS.constants.NOT_FORGING;
             tooltip = $.t("error_forging_blockchain_rescanning");
-        } else if (NRS.needsAdminPassword && NRS.getAdminPassword() == "" && (!secretPhrase || !NRS.isLocalHost)) {
+        } else if (NRS.needsAdminPassword && NRS.getAdminPassword() == "" && (!secretPhrase || !NRS.isForgingSafe())) {
             // do not change forging status
         } else {
             var params = {};

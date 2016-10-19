@@ -70,7 +70,6 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.contacts = {};
 
 	NRS.isTestNet = false;
-	NRS.isLocalHost = false;
 	NRS.forgingStatus = NRS.constants.UNKNOWN;
 	NRS.isAccountForging = false;
 	NRS.isLeased = false;
@@ -431,7 +430,6 @@ var NRS = (function(NRS, $, undefined) {
                     clientOptionsLink.html($.t("mobile_client"));
                 }
 				if (response.apiProxy) {
-					NRS.isLocalHost = false;
                     if (!NRS.isMobileApp()) {
                         if (response.isLightClient) {
                             clientOptionsLink.html($.t("light_client"));
@@ -457,8 +455,6 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}, { isAsync: false });
 				} else {
-					var hostName = window.location.hostname.toLowerCase();
-					NRS.isLocalHost = hostName == "localhost" || hostName == "127.0.0.1" || NRS.isPrivateIP(hostName);
 					NRS.handleBlockchainStatus(response, callback);
 				}
                 var clientOptions = $("#header_client_options");
@@ -467,7 +463,7 @@ var NRS = (function(NRS, $, undefined) {
                 } else {
                     clientOptions.hide();
                 }
-				if (!NRS.isLocalHost) {
+				if (NRS.isShowRemoteWarning()) {
 					$(".remote_warning").show();
 				}
 			}

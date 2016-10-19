@@ -194,5 +194,17 @@ var NRS = (function (NRS) {
         return !NRS.isMobileApp();
     };
 
+    NRS.isShowRemoteWarning = function() {
+        return !isLocalHost;
+    };
+
+    NRS.isForgingSafe = function() {
+        return isLocalHost;
+    };
+
+    NRS.isPassphraseAtRisk = function() {
+        return !isLocalHost || NRS.state && NRS.state.apiProxy || NRS.isMobileApp();
+    };
+
     return NRS;
 }(NRS || {}, jQuery));
