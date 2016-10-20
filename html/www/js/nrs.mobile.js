@@ -59,22 +59,30 @@ var NRS = (function(NRS, $) {
 
         var remoteNodePort = $("#mobile_remote_node_port").val();
         if (!$.isNumeric(remoteNodePort)) {
-            return { error: $.t("remote_node_port") + " is not numeric" };
+            return { error: $.t("remote_node_port") + " " + $.t("is_not_numeric") };
         }
         NRS.mobileSettings.remote_node_port = parseInt(remoteNodePort);
         NRS.mobileSettings.is_remote_node_ssl = $("#mobile_is_remote_node_ssl").prop('checked');
 
         var validatorsCount = $("#mobile_validators_count").val();
         if (!$.isNumeric(validatorsCount)) {
-            return { error: $.t("validators_count") + " is not numeric" };
+            return { error: $.t("validators_count") + " " + $.t("is_not_numeric") };
         }
-        NRS.mobileSettings.validators_count = parseInt(validatorsCount);
+        var count = parseInt(validatorsCount);
+        if (count < 0 || count > 3) {
+            return { error: $.t("validators_count") + " " + $.t("is_not_in_the_range", { from: 0, to: 3 }) };
+        }
+        NRS.mobileSettings.validators_count = count;
 
         var bootstrapNodesCount = $("#mobile_bootstrap_nodes_count").val();
         if (!$.isNumeric(bootstrapNodesCount)) {
-            return { error: $.t("bootstrap_nodes_count") + " is not numeric" };
+            return { error: $.t("bootstrap_nodes_count") + " " + $.t("is_not_numeric") };
         }
-        NRS.mobileSettings.bootstrap_nodes_count = parseInt(bootstrapNodesCount);
+        count = parseInt(bootstrapNodesCount);
+        if (count < 0 || count > 5) {
+            return { error: $.t("bootstrap_nodes_count") + " " + $.t("is_not_in_the_range", { from: 0, to: 5 }) };
+        }
+        NRS.mobileSettings.bootstrap_nodes_count = count;
         NRS.setJSONItem("mobile_settings", NRS.mobileSettings);
         return { stop: true };
     };
