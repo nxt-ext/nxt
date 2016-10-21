@@ -18,8 +18,8 @@ along with this program in the file COPYING.txt. If not, see
 Please contact Jelurida B.V. at info@jelurida.com for commercial licensing
 options if the GPLv2 license does not fit your private blockchain needs.
 
-The client UI component of this software, located under /html/ui, is distributed
-under the MIT license, a copy of which is available under /html/ui/LICENSE.txt.
+The client UI component of this software, located under /html/www, is distributed
+under the MIT license, a copy of which is available under /html/www/LICENSE.txt.
 
 This software uses third party libraries, distributed under licenses described
 in 3RD-PARTY-LICENSES.txt.
