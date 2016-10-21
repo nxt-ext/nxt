@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright © 2016 The Nxt Core Developers.                                  *
+ * Copyright Â© 2016 The Nxt Core Developers.                                  *
  *                                                                            *
  * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
  * the top-level directory of this distribution for the individual copyright  *
@@ -44,27 +44,27 @@ declare var cordova;
 })
 export class AccountQRCodeModal {
 	qrCode:any;
-	
+
     constructor(private nav:NavController, private viewCtrl:ViewController) {
 		var qr = qrcode(3, 'M');
 		var text = NRS.accountRS.replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
 		qr.addData(text);
 		qr.make();
-		this.qrCode = qr.createImgTag(6);	
+		this.qrCode = qr.createImgTag(6);
     }
-	
+
 	accountQRCodeTxt() {
 		return i18nGlobal.t("account_qr_code");
 	}
-	
+
 	accountRS() {
 		return NRS.accountRS;
 	}
-	
+
 	closeTxt() {
 		return i18nGlobal.t("close");
 	}
-	
+
     close() {
 		this.viewCtrl.dismiss();
     }
@@ -74,7 +74,7 @@ export class AccountQRCodeModal {
   templateUrl: 'build/pages/send/send.html'
 })
 export class SendPage {
-  
+
   balance : string = "";
   address : string = "";
   amount : string = "";
@@ -82,7 +82,7 @@ export class SendPage {
   balance_disp_spin : any = false;
   loading : any;
   secret : string = "";
-  
+
   constructor(private navController: NavController, private toastCtrl: ToastController, private modalCtrl: ModalController, private loadingCtrl: LoadingController, public alertCtrl: AlertController) {
 
   }
@@ -107,14 +107,14 @@ export class SendPage {
 
 	  toast.present();
   }
-  
+
   publicKeyCallBack = (response) => {
 	NRS.accountInfo = {
 		"publickey" : response.publicKey
 	};
 	this.balanceUpdate();
   }
-  
+
   onPageLoaded() {
 	  let passphraseRow = <HTMLElement>document.getElementsByTagName("ion-row")[5];
 	  if(NRS.isPassphraseLogin) {
@@ -125,7 +125,7 @@ export class SendPage {
 	  }
 	  let nxtAddress = new NxtAddress();
 	  if(NRS.isPassphraseLogin) {
-		  NRS.account = NRS.getAccountId(NRS.secret);  
+		  NRS.account = NRS.getAccountId(NRS.secret);
 		  if (nxtAddress.set(NRS.account)) {
 			NRS.accountRS = this.accountRS = nxtAddress.toString();
 		  }
@@ -149,14 +149,14 @@ export class SendPage {
 		  }
 	  }
   }
-  
+
   onPageWillLeave() {
   }
-  
+
   onPageWillEnter() {
 	this.balanceUpdate();
   }
-  
+
   onPageDidEnter() {
 	this.balanceUpdate();
   }
@@ -166,12 +166,12 @@ export class SendPage {
 			"account": NRS.account
 		}, this.balanceCallBack);
   }
-  
+
   showQRCode() {
 	let qrModal = this.modalCtrl.create(AccountQRCodeModal);
 	qrModal.present();
   }
-  
+
   loadingTxt() {
 	return i18nGlobal.t("loading_please_wait");
   }
@@ -179,7 +179,7 @@ export class SendPage {
   passphraseTxt() {
 	return i18nGlobal.t("passphrase");
   }
-  
+
   balanceCallBack = (response) => {
   	this.balance_disp_spin = true;
 	if (!response.errorCode) {
@@ -204,15 +204,15 @@ export class SendPage {
   accountTxt() {
 	return i18nGlobal.t("account");
   }
-  
+
   balanceTxt() {
 	return i18nGlobal.t("balance");
   }
-  
+
   amountTxt() {
 	return i18nGlobal.t("amount");
   }
-  
+
   sendNxtTxt() {
 	return i18nGlobal.t("send_nxt");
   }
@@ -233,15 +233,15 @@ export class SendPage {
 
   scan(callBack) {
 	try {
-		cordova.plugins.barcodeScanner.scan( callBack, 
+		cordova.plugins.barcodeScanner.scan( callBack,
 			function (error) {
 			}
 		);
-	} 
+	}
 	catch (e) {
 	}
   }
-  
+
   scanQRDone = (result) => {
 	if(result.cancelled == false && result.format == "QR_CODE") {
 		this.address = result.text;
@@ -251,7 +251,7 @@ export class SendPage {
   scanQR() {
 	this.scan(this.scanQRDone);
   }
-  
+
   scanPassphraseDone = (result) => {
 	if(result.cancelled == false && result.format == "QR_CODE") {
 		this.secret = result.text;
@@ -263,14 +263,14 @@ export class SendPage {
   }
 
   onSendNxt = (response) => {
-	this.loading.dismiss();	
+	this.loading.dismiss();
 	this.showToast(response);
   }
 
   onSendNxtClick() {
 	  let secret = "";
 	  let msg = { errorCode: 1, errorDescription:""};
-	  if(this.address == "" || this.amount == "" || (!NRS.isPassphraseLogin && this.secret == "")) {	    
+	  if(this.address == "" || this.amount == "" || (!NRS.isPassphraseLogin && this.secret == "")) {
 		msg.errorDescription = i18nGlobal.t("error_invalid_input");
 		this.showToast(msg);
 		return;
@@ -286,18 +286,18 @@ export class SendPage {
 		this.showToast(msg);
 		return;
 	  }
-	  
+
 	if(NRS.rememberPassword) {
 		secret = NRS.secret;
 	}
 	else {
 		secret = this.secret;
 	}
-	  
+
 	this.loading = this.loadingCtrl.create({
 		  content: "",
 		  duration: 5000
-		});	
+		});
 	this.loading.present();
 
 	NRS.sendRequest("sendMoney", {
@@ -307,6 +307,6 @@ export class SendPage {
 		"secretPhrase": secret,
 		"deadline": "1440",
 		"feeNQT": NRS.convertToNQT(1)
-	}, this.onSendNxt);  
+	}, this.onSendNxt);
   }
 }
