@@ -38,10 +38,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 

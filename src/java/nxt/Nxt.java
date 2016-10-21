@@ -467,18 +467,14 @@ public final class Nxt {
     }
 
     private static Thread initSecureRandom() {
-        Thread secureRandomInitThread = new Thread(() -> {
-            Crypto.getSecureRandom().nextBytes(new byte[1024]);
-        });
+        Thread secureRandomInitThread = new Thread(() -> Crypto.getSecureRandom().nextBytes(new byte[1024]));
         secureRandomInitThread.setDaemon(true);
         secureRandomInitThread.start();
         return secureRandomInitThread;
     }
 
     private static void testSecureRandom() {
-        Thread thread = new Thread(() -> {
-            Crypto.getSecureRandom().nextBytes(new byte[1024]);
-        });
+        Thread thread = new Thread(() -> Crypto.getSecureRandom().nextBytes(new byte[1024]));
         thread.setDaemon(true);
         thread.start();
         try {

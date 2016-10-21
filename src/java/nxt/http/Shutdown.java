@@ -37,9 +37,7 @@ public final class Shutdown extends APIServlet.APIRequestHandler {
         if (scan) {
             Nxt.getBlockchainProcessor().fullScanWithShutdown();
         } else {
-            new Thread(() -> {
-                System.exit(0);
-            }).start();
+            new Thread(() -> System.exit(0)).start();
         }
         response.put("shutdown", true);
         return response;

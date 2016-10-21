@@ -131,14 +131,10 @@ public class DesktopApplication extends Application {
 
         // Invoked by the webEngine popup handler
         // The invisible webView does not show the link, instead it opens a browser window
-        invisible.getEngine().locationProperty().addListener((observable, oldValue, newValue) -> {
-            popupHandlerURLChange(newValue);
-        });
+        invisible.getEngine().locationProperty().addListener((observable, oldValue, newValue) -> popupHandlerURLChange(newValue));
 
         // Invoked when changing the document.location property, when issuing a download request
-        webEngine.locationProperty().addListener((observable, oldValue, newValue) -> {
-            webViewURLChange(newValue);
-        });
+        webEngine.locationProperty().addListener((observable, oldValue, newValue) -> webViewURLChange(newValue));
 
         // Invoked when clicking a link to external site like Help or API console
         webEngine.setCreatePopupHandler(
