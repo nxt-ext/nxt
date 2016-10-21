@@ -26,11 +26,15 @@ import nxt.util.ThreadPool;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class APIProxy {
+    public static final Set<String> NOT_FORWARDED_REQUESTS;
+
     private static final APIProxy instance = new APIProxy();
 
     static final boolean enableAPIProxy = Constants.isLightClient ||
@@ -43,6 +47,23 @@ public class APIProxy {
     private volatile String mainPeerAnnouncedAddress;
 
     private final ConcurrentHashMap<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
+
+    static {
+        Set<String> requests = new HashSet<>();
+        requests.add("getBlockchainStatus");
+        requests.add("getState");
+
+        final EnumSet<APITag> notForwardedTags = EnumSet.of(APITag.DEBUG, APITag.NETWORK);
+
+        for (APIEnum api : APIEnum.values()) {
+            APIServlet.APIRequestHandler handler = api.getHandler();
+            if (handler.requireBlockchain() && !Collections.disjoint(handler.getAPITags(), notForwardedTags)) {
+                requests.add(api.getName());
+            }
+        }
+
+        NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
+    }
 
     private static final Runnable peersUpdateThread = () -> {
         int curTime = Nxt.getEpochTime();

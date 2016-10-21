@@ -71,6 +71,7 @@ public final class GetBlockchainStatus extends APIServlet.APIRequestHandler {
         }
         response.put("isLightClient", Constants.isLightClient);
         response.put("maxAPIRecords", API.maxRecords);
+        response.put("blockchainState", Peers.getMyBlockchainState());
         return response;
     }
 

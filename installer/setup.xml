@@ -85,7 +85,7 @@
     <resources>
         <res id="InfoPanel.info" src="changelogs/nxt-client-@{runtime.nxt.version}.changelog.txt" parse="yes"/>
         <res id="LicencePanel.licence" src="LICENSE.txt"/>
-        <res id="Installer.image" src="html/ui/img/installer_left_pane.png"/>
+        <res id="Installer.image" src="html/www/img/installer_left_pane.png"/>
         <res id="shortcutSpec.xml" src="../installer/shortcutSpec.xml"/>
         <res id="Unix_shortcutSpec.xml" src="../installer/Unix_shortcutSpec.xml"/>
         <res id="RegistrySpec.xml" src="../installer/RegistrySpec.xml"/>
@@ -140,7 +140,7 @@
                 <include name="lib/**" />
                 <include name="classes/**" />
                 <include name="html/**" />
-                <exclude name="html/ui/plugins/**" />
+                <exclude name="html/www/plugins/**" />
             </updatecheck>
         </pack>
 
