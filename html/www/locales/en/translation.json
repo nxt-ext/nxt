@@ -1837,5 +1837,6 @@
   "remember_me": "Remember Me",
   "is_check_remember_me": "Check Remember Me Checkbox",
   "is_not_numeric": "is not numeric",
-  "is_not_in_the_range": "is not in the range __from__-__to__"
+  "is_not_in_the_range": "is not in the range __from__-__to__",
+  "scanning_not_allowed": "Scanning not allowed when connected to remote node"
 }

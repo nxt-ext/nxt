@@ -142,21 +142,12 @@ var NRS = (function (NRS) {
         return isMobileDevice;
     };
 
-    NRS.isCameraPermissionRequired = function () {
-        return device && device.platform == "Android" && device.version >= "6.0.0";
+    NRS.isScanningAllowed = function () {
+        return isMobileDevice || isLocalHost;
     };
 
-    NRS.isEnablePassphraseScanning = function() {
-        if (isDesktopApplication) {
-            return false; // Java FX does not support camera access
-        }
-        if (NRS.isMobileApp()) {
-            return true; // mobile app scanning never send data to the server
-        }
-        if (isLocalHost) {
-            return true; // server is local so no problem to use it to decode QR code
-        }
-        return false;
+    NRS.isCameraPermissionRequired = function () {
+        return device && device.platform == "Android" && device.version >= "6.0.0";
     };
 
     NRS.getShapeShiftUrl = function() {

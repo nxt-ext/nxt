@@ -17,16 +17,22 @@
 var NRS = (function (NRS) {
 
     NRS.scanQRCode = function(readerId, callback) {
-        NRS.logConsole("request camera permission");
+        if (!NRS.isScanningAllowed()) {
+            $.growl($.t("scanning_not_allowed"));
+            return;
+        }
         if (NRS.isCordovaScanningEnabled()) {
             if (NRS.isCameraPermissionRequired()) {
+                NRS.logConsole("request camera permission");
                 cordova.plugins.permissions.hasPermission(cordova.plugins.permissions.CAMERA, function(status) {
                     cordovaCheckCameraPermission(status, callback)
                 }, null);
             } else {
+                NRS.logConsole("scan without requesting camera permission");
                 cordovaScan(callback);
             }
         } else {
+            NRS.logConsole("scan using desktop browser");
             html5Scan(readerId, callback);
         }
     };

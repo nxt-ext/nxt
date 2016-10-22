@@ -139,11 +139,6 @@ var NRS = (function(NRS, $, undefined) {
         $(this).find("input[name=secretPhrase]").prop("disabled", false);
         var name = $(this).attr('id').replace('_modal', '');
         var scanButtons = $(this).find(".scan-qr-code");
-        if (NRS.isEnablePassphraseScanning()) {
-            scanButtons.prop('disabled', false);
-        } else {
-            scanButtons.prop('disabled', true);
-        }
 	});
 
 	modal.on("shown.bs.modal", function() {
