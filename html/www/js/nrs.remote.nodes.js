@@ -124,10 +124,28 @@ var NRS = (function(NRS) {
                 ignoredAddresses.push(requestRemoteNode.address);
             }
             var nodes = NRS.remoteNodesMgr.getRandomNodes(NRS.mobileSettings.validators_count, ignoredAddresses);
+            var now = new Date();
             var confirmationReport = {processing: [], confirmingNodes: [], rejectingNodes: [],
-                requestType: requestType, requestTime: new Date()};
+                requestType: requestType, requestTime: now};
+
             requestConfirmations.unshift(confirmationReport);
-            if (requestConfirmations.length > 20) {
+
+            var minRequestTime = new Date(now);
+            //keep history since 1 minute and 15 seconds ago
+            minRequestTime.setMinutes(minRequestTime.getMinutes() - 1);
+            minRequestTime.setSeconds(minRequestTime.getSeconds() - 15);
+
+            var idx = requestConfirmations.length - 1;
+            while (idx > 0){
+                if (minRequestTime > requestConfirmations[idx].requestTime) {
+                    requestConfirmations.pop();
+                } else {
+                    break;
+                }
+                idx--;
+            }
+
+            if (requestConfirmations.length > 50) {
                 requestConfirmations.pop();
             }
             function onConfirmation(response) {
