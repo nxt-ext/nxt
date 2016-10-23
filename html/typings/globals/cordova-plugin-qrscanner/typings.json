@@ -1,8 +1,0 @@
-{
-  "resolution": "main",
-  "tree": {
-    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/f6c0685e8e8578edc43e2e5989f720effcad8754/cordova-plugin-qrscanner/cordova-plugin-qrscanner.d.ts",
-    "raw": "registry:dt/cordova-plugin-qrscanner#1.0.0+20160125021527",
-    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/f6c0685e8e8578edc43e2e5989f720effcad8754/cordova-plugin-qrscanner/cordova-plugin-qrscanner.d.ts"
-  }
-}
