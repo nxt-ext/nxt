@@ -149,72 +149,18 @@ For providing new translation strings on the platform for the community to trans
 
 ### Mobile App ###
 
-The NXT wallet can run as a mobile app composed of two main modules:
-1. The existing web wallet deployed as a mobile app
-2. The SkyNxt application based on ionic 2.0 and AnjularJS developed in TypeScript under the /html/app folder
+The NXT wallet UI run as a mobile app.
 
 To build the Android APK application follow these steps (Tested on Windows 7 64 bit):
-1. Install node.js (tested with Node 4.4.7 and npm 2.15.8), Apache Cordova (tested with Cordova 6.3.1), ionic 2.0 beta (tested with ionic 2.0.0-beta.37) - useful link https://ionicframework.com/getting-started/
-2. Install Android SDK Manager (tested with version 25.2.2) - follow the guidelines regarding necessary USB device drivers and modules to install. 
-3. Make sure the commands: node, npm, cordova and ionic are available from the command prompt. 
-4. On Windows make sure the adb.exe is in your search path (c:\Users\lyaf\AppData\Local\Android\sdk\platform-tools), probably also required on Linux
+1. Install node.js (tested with Node 4.4.7 and npm 2.15.8), Apache Cordova (tested with Cordova 6.3.1) - see https://cordova.apache.org/
+2. Install Android SDK Manager (tested with version 25.2.2) - follow the guidelines regarding necessary USB device drivers and modules to install
+3. Make sure the commands: node, npm and cordova are available from the command prompt
+4. On Windows make sure the adb.exe is in your search path (c:\Users\<Username>\AppData\Local\Android\sdk\platform-tools), probably also required on Linux
 5. Special care should be taken in order to work without root privileges on Linux and Mac (the current procedure assumes Windows administrator permissions), we recommend that you work with root privileges initially.
-6. From a temporary folder not under the git source tree, create a new ionic application named "html" using the command: ionic start html
-Make sure the process completes without errors.
-Test this sample application and see that you can deploy it to your Android mobile device
-7. Copy the node_modules and plugins folders from your sample application to the <NXT Root>/html folder
-8. From the <NXT Root>/html install additional ionic dependencies:
-npm install gulp-watch
-npm install del
-npm install run-sequence
-npm install ionic-gulp-browserify-typescript
-npm install ionic-gulp-sass-build
-npm install ionic-gulp-html-copy
-npm install ionic-gulp-fonts-copy
-npm install ionic-gulp-scripts-copy
-npm install ionic-gulp-tslint
-npm install ionic-angular
-npm install ionic-native
-npm install ionicons
-npm install -g typings
-typings install dt~cordova/plugins/filesystem --global
-typings install dt~cordova-plugin-qrscanner --global
+6. Under the <NXTRoot>\mobile\app folder execute the command:
+createapp.bat
+See that the process completes without errors and that a default Cordova application is deployed to your connected mobile device or the Android emulator
 
-9. Add the android platform:
-Temporarely rename the existing platforms folder to platforms.backup
-Issue the commnad:
-ionic platform add android
-Copy the source files in the platforms.backup to the newly created platforms folder and delete the platforms.backup folder
+7. To run the app invoke runapp.bat and to update the app resources after making changes to the web wallet use the updateapp.bat
 
-10. Add the missing cordova plugins:
-cordova plugin add cordova-plugin-file
-cordova plugin add phonegap-plugin-barcodescanner
-cordova plugin add cordova-plugin-android-permissions
-cordova plugin add cordova-plugin-inappbrowser
-cordova plugin add cordova.plugins.diagnostic
-
-At the end of the process your plugin list should look like this when issuing the cordova plugins command:
-cordova-plugin-android-permissions 0.10.0 "Permissions"
-cordova-plugin-compat 1.0.0 "Compat"
-cordova-plugin-console 1.0.4 "Console"
-cordova-plugin-device 1.1.3 "Device"
-cordova-plugin-file 4.3.0 "File"
-cordova-plugin-inappbrowser 1.5.0 "InAppBrowser"
-cordova-plugin-splashscreen 4.0.0 "Splashscreen"
-cordova-plugin-statusbar 2.2.0 "StatusBar"
-cordova-plugin-whitelist 1.3.0 "Whitelist"
-cordova.plugins.diagnostic 3.2.2 "Diagnostic"
-ionic-plugin-keyboard 2.2.1 "Keyboard"
-phonegap-plugin-barcodescanner 6.0.3 "BarcodeScanner"
-
-11. Build the apk file using the command:
-ionic build android
-Pay attention to any errors and warnings and fix them usually by installing a missing dependency
-
-12. Deploy the application to the Android emulator
-ionic emulate android
-
-13. Deploy the application to a connected android device
-ionic run android
-
-14. Debug the application on the device or emulator using Chrome desktop development tools, open the options menu, more tools --> Inspect Devices choose the device and click inspect
+8. Debug the application on the device or emulator using Chrome desktop development tools, open the options menu, more tools --> Inspect Devices choose the device and click inspect
