@@ -16,17 +16,14 @@
 
 <ion-header>
     <ion-buttons end>
-<!--       <button clear (click)='switchToWebUI()'>
-        <ion-icon name="ios-swap-outline"></ion-icon>
-      </button>
- -->      <button clear (click)='logoff()'>
+      <button ion-button clear (click)='logoff()'>
         <ion-icon name="ios-power-outline"></ion-icon>
       </button>
     </ion-buttons>
 </ion-header>
 <ion-content>
 <ion-tabs class="skyNxtTabs" [hidden]="sky_nxt_tabs">
-  <ion-tab [root]="tab1Root" tabTitle="{{tabsendNxtTxt()}}" tabIcon="ios-send"></ion-tab>
-  <ion-tab [root]="tab2Root" tabTitle="{{transactionsTxt()}}" tabIcon="ios-swap"></ion-tab>
+  <ion-tab [root]="tab1Root" tabTitle="{{tabsendNxtTxt()}}" tabIcon=""></ion-tab>
+  <ion-tab [root]="tab2Root" tabTitle="{{transactionsTxt()}}" tabIcon=""></ion-tab>
 </ion-tabs>
 </ion-content>

@@ -14,30 +14,56 @@
  *                                                                            *
  ******************************************************************************/
 import {Component} from '@angular/core';
-import {NavController, Platform, ionicBootstrap} from 'ionic-angular';
-import {StatusBar} from 'ionic-native';
-import {LoginPage} from './pages/login/login';
-import {SendPage} from './pages/send/send';
+import {NavController} from 'ionic-angular';
+import {SendPage} from '../send/send';
+import {TransactionPage} from '../transaction/transaction';
+import {LoginPage} from '../login/login';
 
-declare var cordova;
+declare var i18nGlobal;
 declare var NRS;
 
 @Component({
-  template: '<ion-nav [root]="rootPage"></ion-nav>'
+  templateUrl: 'tabs.html'
 })
-export class MyApp {
-  private rootPage: any;
-  private backPressed: Boolean = false;
+export class TabsPage {
 
-  constructor(private platform: Platform) {
-    this.rootPage = LoginPage;
+  private tab1Root: any;
+  private tab2Root: any;
+  sky_nxt_tabs : any = false;
 
-    platform.ready().then(() => {	
-		StatusBar.styleDefault();
-	  
-    });
+  constructor(private navController: NavController) {
+    // this tells the tabs component which Pages
+    // should be each tab's root Page
+    this.tab1Root = SendPage;
+    this.tab2Root = TransactionPage;
+  }
+  
+  onPageDidLeave() {
+	this.sky_nxt_tabs = true;
+  }
+  
+  logoff() {
+	NRS.secret = "";
+	NRS.account = "";
+	NRS.accountRS = "";
+	NRS.accountInfo = {};
+	this.navController.setRoot(LoginPage);
+  }
+  
+  transactionsTxt() {
+	return i18nGlobal.t("transaction");
+  }
+  
+  tabsendNxtTxt() {
+	return i18nGlobal.t("send_nxt");
   }
 
+  switchToWebUI() {
+	let skynxt = <HTMLElement>document.querySelector('.skynxtApp');
+	skynxt.style.visibility = "hidden";
+	let nrs = <HTMLElement>document.querySelector('.nrsApp');
+	nrs.style.visibility = "visible";
+	NRS.initWebUI();
+	NRS.login(NRS.loginType, NRS.loginData);
+  }  
 }
-
-ionicBootstrap(MyApp);

@@ -25,7 +25,7 @@
 				</ion-card-title>
 			</ion-col>
 			<ion-col width-20>
-				<button light (click)='showQRCode()'><ion-icon name="ios-barcode-outline"></ion-icon></button>
+				<button ion-button color="light" (click)='showQRCode()'><ion-icon name="ios-barcode-outline"></ion-icon></button>
 			</ion-col>
 		</ion-row>
 		<p>
@@ -41,7 +41,7 @@
 			<ion-input type="text" [(ngModel)]='address' placeholder="{{addressTxt()}}"></ion-input>
 		</ion-col>
 		<ion-col width-10>
-			<button light (click)='scanQR()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
+			<button ion-button color="light" (click)='scanQR()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
 		</ion-col>
 	</ion-row>
 	<ion-row padding>
@@ -54,11 +54,11 @@
 			<ion-input type="password" [(ngModel)]='secret' placeholder="{{passphraseTxt()}}"></ion-input>
 		</ion-col>
 		<ion-col width-10>
-			<button light (click)='scanPassphrase()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
+			<button ion-button color="light" (click)='scanPassphrase()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
 		</ion-col>
 	</ion-row>
 	<p></p>
 </ion-list>
 
-<button full (click)='onSendNxtClick()'>{{sendNxtTxt()}}<ion-icon name="ios-send"></ion-icon></button>
+<button ion-button full (click)='onSendNxtClick()'>{{sendNxtTxt()}}<ion-icon name=""></ion-icon></button>
 </ion-content>

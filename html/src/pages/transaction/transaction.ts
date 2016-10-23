@@ -22,7 +22,7 @@ declare var NxtAddress;
 declare var moment;
 
 @Component({
-  templateUrl: 'build/pages/transaction/transaction.html'
+  templateUrl: 'transaction.html'
 })
 export class TransactionPage {
   transactions:any;
@@ -53,8 +53,6 @@ export class TransactionPage {
 		for (let i = 0; i < response.transactions.length; i++) {
 			let transaction = response.transactions[i];
 
-			let fromAdd = "";
-			let toAddr = "";
 			let addressSenderStr;
 			let addressRecipientStr;
 			

@@ -21,10 +21,9 @@
 
 <ion-content padding class="login">
 <ion-list >
-
 	<ion-row>
 		<ion-col width-10>
-			<button light (click)='switchInputType()'><ion-icon name="{{iconType}}"></ion-icon></button>
+			<button ion-button color="light" (click)='switchInputType()'><ion-icon name="{{iconType}}"></ion-icon></button>
 		</ion-col>
 		<ion-col width-80 [hidden]='!saved_accounts'>
 		  <ion-item>
@@ -37,7 +36,7 @@
 			<ion-input type="{{textType}}" [(ngModel)]="loginData" placeholder="{{loginTxt()}}"><ion-icon name="ios-person-outline"></ion-icon></ion-input>
 		</ion-col>
 		<ion-col width-10>
-			<button light (click)='scanQRCode()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
+			<button ion-button color="light" (click)='scanQRCode()'><ion-icon name="ios-qr-scanner-outline"></ion-icon></button>
 		</ion-col>
 	</ion-row>
 
@@ -50,10 +49,10 @@
 <span>Login to</span>
 <ion-row>
  <ion-col>
-<button (click)='loginDataEntered()'><ion-icon name="ios-arrow-forward-outline"></ion-icon>SkyNxt</button>
+<button ion-button (click)='loginDataEntered()'><ion-icon name="ios-arrow-forward-outline"></ion-icon>SkyNxt</button>
  </ion-col>
 <ion-col>
-<button (click)='switchToWebUI()'>Full features</button>
+<button ion-button (click)='switchToWebUI()'>Full features</button>
 </ion-col>
 </ion-row>
 
@@ -63,5 +62,5 @@
     </ion-select>
   </ion-item>
 
-<button full light (click)='generatePassphrase()'><ion-icon name="ios-lock-outline"></ion-icon></button>
+<button ion-button full color="light" (click)='generatePassphrase()'><ion-icon name="ios-lock-outline"></ion-icon></button>
 </ion-content>

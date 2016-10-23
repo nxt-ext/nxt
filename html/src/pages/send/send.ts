@@ -14,7 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 import {Component} from '@angular/core';
-import {Page, ViewController, AlertController, ModalController, LoadingController, ToastController, NavController} from 'ionic-angular';
+import {/*Page,*/ ViewController, AlertController, ModalController, LoadingController, ToastController, NavController} from 'ionic-angular';
 
 declare var i18nGlobal;
 declare var NxtAddress;
@@ -23,25 +23,25 @@ declare var converters;
 declare var qrcode;
 declare var cordova;
 
-@Page({
-    template: `
-    <ion-header>
-	<ion-navbar>
-        <ion-title>{{accountQRCodeTxt()}}</ion-title>
-		<ion-buttons end>
-        <button nav-pop>
-            <ion-icon [name]="'close'"></ion-icon>
-        </button>
-		</ion-buttons>
-	</ion-navbar>
-    </ion-header>
-  <ion-content padding text-center>
-  <strong>{{accountRS()}}</strong>
-	<div [innerHTML]="qrCode">
-	</div>
-    <button (click)="close()">{{closeTxt()}}</button>
-  </ion-content>`
-})
+// @Page({
+    // template: `
+    // <ion-header>
+	// <ion-navbar>
+        // <ion-title>{{accountQRCodeTxt()}}</ion-title>
+		// <ion-buttons end>
+        // <button nav-pop>
+            // <ion-icon [name]="'close'"></ion-icon>
+        // </button>
+		// </ion-buttons>
+	// </ion-navbar>
+    // </ion-header>
+  // <ion-content padding text-center>
+  // <strong>{{accountRS()}}</strong>
+	// <div [innerHTML]="qrCode">
+	// </div>
+    // <button (click)="close()">{{closeTxt()}}</button>
+  // </ion-content>`
+// })
 export class AccountQRCodeModal {
 	qrCode:any;
 
@@ -71,7 +71,7 @@ export class AccountQRCodeModal {
 }
 
 @Component({
-  templateUrl: 'build/pages/send/send.html'
+  templateUrl: 'send.html'
 })
 export class SendPage {
 
@@ -188,8 +188,9 @@ export class SendPage {
 		}
 		else {
 			this.balance = NRS.formatAmount(response.unconfirmedBalanceNQT, false, true).split(".");
-			if(this.balance[1] != undefined)
+			/*if(this.balance[1] != undefined) {
 				this.balance[0] = this.balance[0] + ".";
+			}*/
 		}
 	}
 	else {

@@ -14,7 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 import {Component} from '@angular/core';
-import {ToastController, Page, ViewController, ModalController, NavController, LoadingController} from 'ionic-angular';
+import {ToastController, /*Page,*/ ViewController, ModalController, NavController, LoadingController} from 'ionic-angular';
 import {TabsPage} from '../tabs/tabs';
 
 declare var i18nGlobal;
@@ -24,7 +24,7 @@ declare var PassPhraseGenerator;
 declare var cordova;
 declare var NxtAddress;
 
-@Page({
+/*@Page({
     template: `
     <ion-header>
 	<ion-navbar>
@@ -43,7 +43,7 @@ declare var NxtAddress;
   <div>{{memorizeTxt()}}</div>
     <button danger (click)="close()">{{closeTxt()}}</button>
   </ion-content>`
-})
+})*/
 export class PassPhraseGeneratorModal {
 	autoPassPhrase:any;
 	
@@ -79,7 +79,7 @@ export class PassPhraseGeneratorModal {
 }
 
 @Component({
-  templateUrl: 'build/pages/login/login.html'
+  templateUrl: 'login.html'
 })
 export class LoginPage {
   loginData : string = "";
