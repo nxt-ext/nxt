@@ -425,7 +425,7 @@ var NRS = (function(NRS, $, undefined) {
 			if (response.errorCode) {
                 NRS.connectionError(response.errorDescription);
 			} else {
-				var clientOptionsLink = $("#header_client_options_link_text");
+				var clientOptionsLink = $("#header_client_options_link");
                 if (NRS.isMobileApp()) {
                     clientOptionsLink.html($.t("mobile_client"));
                 }
@@ -457,7 +457,7 @@ var NRS = (function(NRS, $, undefined) {
 				} else {
 					NRS.handleBlockchainStatus(response, callback);
 				}
-                var clientOptions = $("#header_client_options");
+                var clientOptions = $(".client_options");
                 if (NRS.isShowClientOptionsLink()) {
                     clientOptions.show();
                 } else {

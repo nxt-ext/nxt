@@ -526,9 +526,9 @@ body > .header .logo .icon {
     float: left;
   }
   .navbar-nav > li > a {
-    padding-top: 15px;
-    padding-bottom: 15px;
-    line-height: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    line-height: 16px;
   }
   .navbar .navbar-right {
     float: right;
