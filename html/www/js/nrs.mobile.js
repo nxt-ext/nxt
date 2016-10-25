@@ -84,7 +84,7 @@ var NRS = (function(NRS, $) {
         }
         NRS.mobileSettings.bootstrap_nodes_count = count;
         NRS.setJSONItem("mobile_settings", NRS.mobileSettings);
-        return { stop: true };
+        return { reload: true, forceGet: false };
     };
 
     return NRS;

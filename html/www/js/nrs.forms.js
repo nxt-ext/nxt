@@ -367,6 +367,10 @@ var NRS = (function(NRS, $) {
 					NRS.unlockForm($modal, $btn, true);
 					return;
 				}
+				if (output.reload) {
+					window.location.reload(output.forceGet);
+					return;
+				}
 			}
 		}
 
