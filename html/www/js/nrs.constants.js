@@ -258,7 +258,7 @@ var NRS = (function (NRS, $) {
         var tags = depends.tags;
         if (tags) {
             for (var i=0; i < tags.length; i++) {
-                if (!tags[i].enabled) {
+                if (tags[i] && !tags[i].enabled) {
                     return false;
                 }
             }
