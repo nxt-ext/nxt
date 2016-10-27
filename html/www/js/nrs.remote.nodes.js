@@ -122,7 +122,6 @@ var NRS = (function(NRS) {
         if (requestType == "getBlockchainStatus") {
             var response = {
                 application: origResponse.application,
-                time: origResponse.time,
                 isTestnet: origResponse.isTestnet
             };
             return JSON.stringify(response);
