@@ -90,7 +90,43 @@ var NRS = (function(NRS) {
         }
     }
 
+    NRS.isPeerListSimilar = function(peers1, peers2) {
+        if (!peers1.peers && !peers2.peers) {
+            return true;
+        }
+        if (!peers1.peers) {
+            return false;
+        }
+        if (!peers2.peers) {
+            return false;
+        }
+        var sharedPeers = NRS.countCommonElements(peers1.peers, peers2.peers);
+        return 100*sharedPeers / Math.min(peers1.peers.length, peers2.peers.length) > 70;
+    };
+
+    NRS.countCommonElements = function(a1, a2) {
+        var count = 0;
+        for (var i = 0; i < a1.length; i++) {
+            if (a2.indexOf(a1[i]) >= 0) {
+                count++;
+            }
+        }
+        return count;
+    };
+
     NRS.getComparableResponse = function(origResponse, requestType) {
+        if (requestType == "getBlockchainStatus") {
+            var response = {
+                application: origResponse.application,
+                time: origResponse.time,
+                isTestnet: origResponse.isTestnet
+            };
+            return JSON.stringify(response);
+        }
+        if (requestType == "getState") {
+            return requestType; // no point to compare getState responses
+        }
+
         delete origResponse.requestProcessingTime;
         delete origResponse.confirmations;
         if (requestType == "getBlock") {
@@ -159,7 +195,7 @@ var NRS = (function(NRS) {
                     var type = data["_extra"].requestType;
                     NRS.logConsole("Confirm request " + type + " with node " + node.announcedAddress);
                     var responseStr = NRS.getComparableResponse(response, type);
-                    if (responseStr == expectedResponseStr) {
+                    if (responseStr == expectedResponseStr || (type == "getPeers" && NRS.isPeerListSimilar())) {
                         confirmationReport.confirmingNodes.push(node);
                     } else {
                         NRS.logConsole(node.announcedAddress + " response defers from " + requestRemoteNode.announcedAddress + " response for " + type);
