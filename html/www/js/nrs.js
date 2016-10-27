@@ -312,6 +312,7 @@ var NRS = (function(NRS, $, undefined) {
 		if (NRS.getUrlParameter("account")){
 			NRS.login(false, NRS.getUrlParameter("account"));
 		} else if (savedPassphrase) {
+			$("#remember_me").prop("checked", true);
             NRS.login(true, savedPassphrase);
         }
 	}
