@@ -24,6 +24,7 @@ var NRS = (function (NRS) {
     var isMobileDevice = window["cordova"] !== undefined;
     var isLocalHost = false;
     var remoteNode = null;
+    var isLoadedOverHttps = ("https:" == window.location.protocol);
 
     NRS.isPrivateIP = function (ip) {
         if (!/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
@@ -69,6 +70,14 @@ var NRS = (function (NRS) {
 
     NRS.isUpdateRemoteNodes = function() {
         return NRS.state && NRS.state.apiProxy;
+    };
+
+    NRS.isRemoteNodeConnectionAllowed = function() {
+        // The client always connects to remote nodes over Http since most Https nodes use a test certificate and
+        // therefore cannot be used.
+        // However, if the client itself is loaded over Https, it cannot connect to nodes over Http since this will
+        // result in a mixed content error.
+        return !isLoadedOverHttps;
     };
 
     NRS.isExportContactsAvailable = function() {

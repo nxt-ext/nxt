@@ -75,7 +75,7 @@ function isRemoteNodeConnectable(nodeData, isSslAllowed) {
 RemoteNodesManager.prototype.addRemoteNodes = function (peersData) {
     var mgr = this;
     $.each(peersData, function(index, peerData) {
-        if (isRemoteNodeConnectable(peerData)) {
+        if (isRemoteNodeConnectable(peerData, false)) {
             var oldNode = mgr.nodes[peerData.address];
             var newNode = new RemoteNode(peerData);
             if (oldNode) {
@@ -118,6 +118,12 @@ RemoteNodesManager.prototype.addBootstrapNode = function (resolve, reject) {
 };
 
 RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
+    NRS.logConsole("addBootstrapNodes: client protocol is '" + window.location.protocol + "'");
+    if (!NRS.isRemoteNodeConnectionAllowed()) {
+        NRS.logConsole($.t("https_client_cannot_connect_remote_nodes"));
+        $.growl($.t("https_client_cannot_connect_remote_nodes"));
+        return false;
+    }
     var peersData = this.REMOTE_NODES_BOOTSTRAP.peers;
     peersData = NRS.getRandomPermutation(peersData);
     var mgr = this;

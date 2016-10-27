@@ -44,7 +44,11 @@ var NRS = (function(NRS) {
                 NRS.remoteNodesMgr.addBootstrapNode(resolve, reject);
             }
         } else if (NRS.isUpdateRemoteNodes()) {
-            NRS.updateRemoteNodes();
+            if (NRS.isRemoteNodeConnectionAllowed()) {
+                NRS.updateRemoteNodes();
+            } else {
+                $.growl($.t("https_client_cannot_connect_remote_nodes"));
+            }
         }
     };
 
@@ -195,7 +199,7 @@ var NRS = (function(NRS) {
                     var type = data["_extra"].requestType;
                     NRS.logConsole("Confirm request " + type + " with node " + node.announcedAddress);
                     var responseStr = NRS.getComparableResponse(response, type);
-                    if (responseStr == expectedResponseStr || (type == "getPeers" && NRS.isPeerListSimilar())) {
+                    if (responseStr == expectedResponseStr || (type == "getPeers" && NRS.isPeerListSimilar(response, expectedResponse))) {
                         confirmationReport.confirmingNodes.push(node);
                     } else {
                         NRS.logConsole(node.announcedAddress + " response defers from " + requestRemoteNode.announcedAddress + " response for " + type);
