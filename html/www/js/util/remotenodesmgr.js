@@ -118,7 +118,7 @@ RemoteNodesManager.prototype.addBootstrapNode = function (resolve, reject) {
 };
 
 RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
-    var peersData = this.REMOTE_NODES_BOOTSTRAP;
+    var peersData = this.REMOTE_NODES_BOOTSTRAP.peers;
     peersData = NRS.getRandomPermutation(peersData);
     var mgr = this;
     mgr.bc.target = NRS.mobileSettings.is_testnet ? 2 : NRS.mobileSettings.bootstrap_nodes_count;

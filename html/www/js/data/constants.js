@@ -14,7 +14,8 @@
  *                                                                            *
  ******************************************************************************/
 
-NRS.constants.SERVER = {
+NRS.constants.SERVER =
+{
     "transactionSubTypes": {
         "ReserveClaim": {
             "isPhasable": true,
@@ -450,6 +451,7 @@ NRS.constants.SERVER = {
         }
     },
     "genesisAccountId": "1739068987193023818",
+    "genesisBlockId": "2680262203532249785",
     "transactionTypes": {
         "0": {
             "subtypes": {
@@ -916,44 +918,27 @@ NRS.constants.SERVER = {
             }
         }
     },
-    "votingModels": {"NQT": 1, "CURRENCY": 3, "ACCOUNT": 0, "ASSET": 2, "TRANSACTION": 4, "NONE": -1, "HASH": 5},
-    "holdingTypes": {"CURRENCY": 2, "ASSET": 1, "NXT": 0},
-    "maxPrunableMessageLength": 43008,
-    "shufflingParticipantStates": {"CANCELLED": 3, "REGISTERED": 0, "PROCESSED": 1, "VERIFIED": 2},
-    "disabledAPITags": [],
-    "maxBlockPayloadLength": 44880,
-    "maxPhasingDuration": 20160,
-    "proxyNotForwardedRequests": ["getState", "getMyInfo", "getBlockchainStatus", "getPeer", "getPeers", "retrievePrunedData", "getInboundPeers"],
-    "mintingHashAlgorithms": {"SHA256": 2, "SHA3": 3, "SCRYPT": 5, "Keccak25": 25},
-    "maxArbitraryMessageLength": 160,
-    "apiTags": {
-        "NETWORK": {"name": "Networking", "enabled": true},
-        "FORGING": {"name": "Forging", "enabled": true},
-        "AE": {"name": "Asset Exchange", "enabled": true},
-        "UTILS": {"name": "Utils", "enabled": true},
-        "ACCOUNTS": {"name": "Accounts", "enabled": true},
-        "SEARCH": {"name": "Search", "enabled": true},
-        "MS": {"name": "Monetary System", "enabled": true},
-        "TOKENS": {"name": "Tokens", "enabled": true},
-        "INFO": {"name": "Server Info", "enabled": true},
-        "TRANSACTIONS": {"name": "Transactions", "enabled": true},
-        "DEBUG": {"name": "Debug", "enabled": true},
-        "CREATE_TRANSACTION": {"name": "Create Transaction", "enabled": true},
-        "DGS": {"name": "Digital Goods Store", "enabled": true},
-        "SHUFFLING": {"name": "Shuffling", "enabled": true},
-        "PHASING": {"name": "Phasing", "enabled": true},
-        "BLOCKS": {"name": "Blocks", "enabled": true},
-        "DATA": {"name": "Tagged Data", "enabled": true},
-        "ALIASES": {"name": "Aliases", "enabled": true},
-        "MESSAGES": {"name": "Messages", "enabled": true},
-        "ADDONS": {"name": "Add-ons", "enabled": true},
-        "VS": {"name": "Voting System", "enabled": true},
-        "ACCOUNT_CONTROL": {"name": "Account Control", "enabled": true}
+    "votingModels": {
+        "NQT": 1,
+        "CURRENCY": 3,
+        "ACCOUNT": 0,
+        "ASSET": 2,
+        "TRANSACTION": 4,
+        "NONE": -1,
+        "HASH": 5
     },
-    "maxTaggedDataDataLength": 43008,
-    "shufflingStages": {"CANCELLED": 4, "DONE": 5, "PROCESSING": 1, "BLAME": 3, "REGISTRATION": 0, "VERIFICATION": 2},
-    "disabledAPIs": [[]],
-    "genesisBlockId": "2680262203532249785",
+    "holdingTypes": {
+        "CURRENCY": 2,
+        "ASSET": 1,
+        "NXT": 0
+    },
+    "maxPrunableMessageLength": 43008,
+    "shufflingParticipantStates": {
+        "CANCELLED": 3,
+        "REGISTERED": 0,
+        "PROCESSED": 1,
+        "VERIFIED": 2
+    },
     "currencyTypes": {
         "EXCHANGEABLE": 1,
         "CLAIMABLE": 8,
@@ -962,11 +947,143 @@ NRS.constants.SERVER = {
         "RESERVABLE": 4,
         "NON_SHUFFLEABLE": 32
     },
-    "peerStates": {"DISCONNECTED": 2, "NON_CONNECTED": 0, "CONNECTED": 1},
+    "disabledAPITags": [],
+    "maxBlockPayloadLength": 44880,
+    "maxPhasingDuration": 20160,
+    "mintingHashAlgorithms": {
+        "SHA256": 2,
+        "SHA3": 3,
+        "SCRYPT": 5,
+        "Keccak25": 25
+    },
+    "peerStates": {
+        "DISCONNECTED": 2,
+        "NON_CONNECTED": 0,
+        "CONNECTED": 1
+    },
     "epochBeginning": 1385294400000,
-    "minBalanceModels": {"NQT": 1, "CURRENCY": 3, "ASSET": 2, "NONE": 0},
-    "phasingHashAlgorithms": {"SHA256": 2, "RIPEMD160": 6, "RIPEMD160_SHA256": 62},
-    "hashAlgorithms": {"SHA256": 2, "SHA3": 3, "SCRYPT": 5, "RIPEMD160": 6, "Keccak25": 25, "RIPEMD160_SHA256": 62},
+    "maxArbitraryMessageLength": 160,
+    "apiTags": {
+        "NETWORK": {
+            "name": "Networking",
+            "enabled": true
+        },
+        "FORGING": {
+            "name": "Forging",
+            "enabled": true
+        },
+        "AE": {
+            "name": "Asset Exchange",
+            "enabled": true
+        },
+        "UTILS": {
+            "name": "Utils",
+            "enabled": true
+        },
+        "ACCOUNTS": {
+            "name": "Accounts",
+            "enabled": true
+        },
+        "SEARCH": {
+            "name": "Search",
+            "enabled": true
+        },
+        "MS": {
+            "name": "Monetary System",
+            "enabled": true
+        },
+        "TOKENS": {
+            "name": "Tokens",
+            "enabled": true
+        },
+        "INFO": {
+            "name": "Server Info",
+            "enabled": true
+        },
+        "TRANSACTIONS": {
+            "name": "Transactions",
+            "enabled": true
+        },
+        "DEBUG": {
+            "name": "Debug",
+            "enabled": true
+        },
+        "CREATE_TRANSACTION": {
+            "name": "Create Transaction",
+            "enabled": true
+        },
+        "DGS": {
+            "name": "Digital Goods Store",
+            "enabled": true
+        },
+        "SHUFFLING": {
+            "name": "Shuffling",
+            "enabled": true
+        },
+        "PHASING": {
+            "name": "Phasing",
+            "enabled": true
+        },
+        "BLOCKS": {
+            "name": "Blocks",
+            "enabled": true
+        },
+        "DATA": {
+            "name": "Tagged Data",
+            "enabled": true
+        },
+        "ALIASES": {
+            "name": "Aliases",
+            "enabled": true
+        },
+        "MESSAGES": {
+            "name": "Messages",
+            "enabled": true
+        },
+        "ADDONS": {
+            "name": "Add-ons",
+            "enabled": true
+        },
+        "VS": {
+            "name": "Voting System",
+            "enabled": true
+        },
+        "ACCOUNT_CONTROL": {
+            "name": "Account Control",
+            "enabled": true
+        }
+    },
+    "maxTaggedDataDataLength": 43008,
+    "minBalanceModels": {
+        "NQT": 1,
+        "CURRENCY": 3,
+        "ASSET": 2,
+        "NONE": 0
+    },
+    "phasingHashAlgorithms": {
+        "SHA256": 2,
+        "RIPEMD160": 6,
+        "RIPEMD160_SHA256": 62
+    },
+    "shufflingStages": {
+        "CANCELLED": 4,
+        "DONE": 5,
+        "PROCESSING": 1,
+        "BLAME": 3,
+        "REGISTRATION": 0,
+        "VERIFICATION": 2
+    },
+    "hashAlgorithms": {
+        "SHA256": 2,
+        "SHA3": 3,
+        "SCRYPT": 5,
+        "RIPEMD160": 6,
+        "Keccak25": 25,
+        "RIPEMD160_SHA256": 62
+    },
+    "disabledAPIs": [
+        []
+    ],
     "requestTypes": {
         "getLastExchanges": {
             "allowRequiredBlockParameters": true,
@@ -1964,14 +2081,6 @@ NRS.constants.SERVER = {
             "requirePassword": false,
             "requireBlockchain": true,
             "requirePost": true,
-            "enabled": true
-        },
-        "getFxtQuantity": {
-            "allowRequiredBlockParameters": true,
-            "requireFullClient": false,
-            "requirePassword": false,
-            "requireBlockchain": true,
-            "requirePost": false,
             "enabled": true
         },
         "setAccountProperty": {
