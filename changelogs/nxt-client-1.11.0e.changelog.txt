@@ -1,6 +1,11 @@
 Added Generators page (under the cogwheel menu), showing the predicted next
 block generators.
 
+When working as a roaming or light client, data returned by the remote node is 
+validated against other remote nodes. In case of a difference a visual 
+indication is displayed on the toolbar to warn the user that the data returned 
+by the remote node may not be consistent.
+
 The user interface files are now located under html/www instead of html/ui,
 as this is the path required by the Apache Cordova framework used by the
 mobile wallet.
