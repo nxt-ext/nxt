@@ -1,13 +1,34 @@
 Added Generators page (under the cogwheel menu), showing the predicted next
 block generators.
 
-Save passphrase in local storage when using passphrase login with "remember me"
-checked. Choosing logout will clear this data.
-
 The user interface files are now located under html/www instead of html/ui,
 as this is the path required by the Apache Cordova framework used by the
 mobile wallet.
 
+The lockup screen now displays a button group of "by account", "by passphrase", 
+"by QR code" login options side by side above the credentials entry field, 
+instead of the old "By Account" / "By Password" toggle button.
+
+Scanning a QR code for login, has been implemented by clicking the QR code icon
+on the lockup screen. When the value scanned matches an NXT account format it
+will be treated as account login, otherwise the value scanned will be treated
+as the account passphrase.
+
+The old "Remember Account" and "Remember Passphrase" checkboxes were merged 
+into a single "Remember Me" checkbox.
+
+Save passphrase in local storage when using passphrase login with "Remember Me"
+checked. Choosing logout will clear this data.
+
+Account and passphrase entry fields on modal dialogs now support scanning the
+value from a QR code by clicking the QR link above the field.
+
+When logging in with passphrase and the "Remember Me" checkbox checked, the 
+"Account Details" modal will display the QR code for the account passphrase 
+in addition to the QR code for the account id.
+
+Experimental support for running the client wallet as a mobile app has been 
+added. See specific documentation at https://nxtwiki.org/wiki/Mobile_App
+
 Updated Jetty to version 9.3.13, delete the old lib folder before unpacking on
 top.
-
