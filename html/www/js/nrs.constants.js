@@ -87,7 +87,7 @@ var NRS = (function (NRS, $) {
         }
     };
 
-    NRS.loadServerConstants = function () {
+    NRS.loadServerConstants = function(resolve) {
         function processConstants(response) {
             if (response.genesisAccountId) {
                 NRS.constants.SERVER = response;
@@ -110,6 +110,8 @@ var NRS = (function (NRS, $) {
                 NRS.constants.PEER_STATES = response.peerStates;
                 NRS.loadTransactionTypeConstants(response);
                 NRS.constants.PROXY_NOT_FORWARDED_REQUESTS = response.proxyNotForwardedRequests;
+                console.log("done loading server constants");
+                resolve();
             }
         }
         if (NRS.isMobileApp()) {

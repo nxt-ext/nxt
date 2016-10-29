@@ -180,141 +180,153 @@ var NRS = (function(NRS, $, undefined) {
     }
 
     function initImpl() {
-        NRS.loadServerConstants();
-
-		NRS.sendRequest("getState", {
-			"includeCounts": "false"
-		}, function (response) {
-			var isTestnet = false;
-			var isOffline = false;
-			var peerPort = 0;
-			for (var key in response) {
-                if (!response.hasOwnProperty(key)) {
-                    continue;
-                }
-				if (key == "isTestnet") {
-					isTestnet = response[key];
-				}
-				if (key == "isOffline") {
-					isOffline = response[key];
-				}
-				if (key == "peerPort") {
-					peerPort = response[key];
-				}
-				if (key == "needsAdminPassword") {
-					NRS.needsAdminPassword = response[key];
-				}
-				if (key == "upnpExternalAddress") {
-                    NRS.upnpExternalAddress = response[key];
-				}
-				if (key == "version") {
-					NRS.appVersion = response[key];
-				}
-			}
-
-			if (!NRS.isMobileApp()) {
-                NRS.initRemoteNodesMgr(isTestnet);
-            }
-
-
-			if (!isTestnet) {
-				$(".testnet_only").hide();
-			} else {
-				NRS.isTestNet = true;
-				var testnetWarningDiv = $("#testnet_warning");
-				var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
-                NRS.logConsole(warningText);
-				testnetWarningDiv.text(warningText);
-				$(".testnet_only, #testnet_login, #testnet_warning").show();
-			}
-
-			if (NRS.isInitializePlugins()) {
-                NRS.initializePlugins();
-            }
-            NRS.printEnvInfo();
-            NRS.spinner.stop();
+		var loadConstantsPromise = new Promise(function(resolve) {
+			console.log("load server constants");
+			NRS.loadServerConstants(resolve);
 		});
+		loadConstantsPromise.then(function() {
+			var getStatePromise = new Promise(function(resolve) {
+				console.log("calling getState");
+				NRS.sendRequest("getState", {
+					"includeCounts": "false"
+				}, function (response) {
+					console.log("getState response received");
+					var isTestnet = false;
+					var isOffline = false;
+					var peerPort = 0;
+					for (var key in response) {
+						if (!response.hasOwnProperty(key)) {
+							continue;
+						}
+						if (key == "isTestnet") {
+							isTestnet = response[key];
+						}
+						if (key == "isOffline") {
+							isOffline = response[key];
+						}
+						if (key == "peerPort") {
+							peerPort = response[key];
+						}
+						if (key == "needsAdminPassword") {
+							NRS.needsAdminPassword = response[key];
+						}
+						if (key == "upnpExternalAddress") {
+							NRS.upnpExternalAddress = response[key];
+						}
+						if (key == "version") {
+							NRS.appVersion = response[key];
+						}
+					}
 
-		var hasLocalStorage = false;
-		try {
-			//noinspection BadExpressionStatementJS
-            window.localStorage && localStorage;
-			hasLocalStorage = checkLocalStorage();
-		} catch (err) {
-			NRS.logConsole("localStorage is disabled, error " + err.message);
-			hasLocalStorage = false;
-		}
+					if (!NRS.isMobileApp()) {
+						NRS.initRemoteNodesMgr(isTestnet);
+					}
 
-		if (!hasLocalStorage) {
-			NRS.logConsole("localStorage is disabled, cannot load wallet");
-			// TODO add visible warning
-			return; // do not load client if local storage is disabled
-		}
+					if (!isTestnet) {
+						$(".testnet_only").hide();
+					} else {
+						NRS.isTestNet = true;
+						var testnetWarningDiv = $("#testnet_warning");
+						var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
+						NRS.logConsole(warningText);
+						testnetWarningDiv.text(warningText);
+						$(".testnet_only, #testnet_login, #testnet_warning").show();
+					}
 
-		if(!(navigator.userAgent.indexOf('Safari') != -1 &&
-			navigator.userAgent.indexOf('Chrome') == -1) &&
-			navigator.userAgent.indexOf('JavaFX') == -1) {
-			// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
-			NRS.createLegacyDatabase();
-		}
+					if (NRS.isInitializePlugins()) {
+						NRS.initializePlugins();
+					}
+					NRS.printEnvInfo();
+					NRS.spinner.stop();
+					console.log("getState response processed");
+					resolve();
+				});
+			});
 
-		if (NRS.mobileSettings.is_check_remember_me) {
-			$("#remember_me").prop("checked", true);
-		}
-		NRS.getSettings(false);
+			getStatePromise.then(function() {
+				console.log("continue initialization");
+				var hasLocalStorage = false;
+				try {
+					//noinspection BadExpressionStatementJS
+					window.localStorage && localStorage;
+					hasLocalStorage = checkLocalStorage();
+				} catch (err) {
+					NRS.logConsole("localStorage is disabled, error " + err.message);
+					hasLocalStorage = false;
+				}
 
-		NRS.getState(function() {
-			setTimeout(function() {
-				NRS.checkAliasVersions();
-			}, 5000);
+				if (!hasLocalStorage) {
+					NRS.logConsole("localStorage is disabled, cannot load wallet");
+					// TODO add visible warning
+					return; // do not load client if local storage is disabled
+				}
+
+				if (!(navigator.userAgent.indexOf('Safari') != -1 &&
+					navigator.userAgent.indexOf('Chrome') == -1) &&
+					navigator.userAgent.indexOf('JavaFX') == -1) {
+					// Don't use account based DB in Safari due to a buggy indexedDB implementation (2015-02-24)
+					NRS.createLegacyDatabase();
+				}
+
+				if (NRS.mobileSettings.is_check_remember_me) {
+					$("#remember_me").prop("checked", true);
+				}
+				NRS.getSettings(false);
+
+				NRS.getState(function () {
+					setTimeout(function () {
+						NRS.checkAliasVersions();
+					}, 5000);
+				});
+
+				$("body").popover({
+					"selector": ".show_popover",
+					"html": true,
+					"trigger": "hover"
+				});
+
+				var savedPassphrase = NRS.getStrItem("savedPassphrase");
+				if (!savedPassphrase) {
+					NRS.showLockscreen();
+				}
+				NRS.setStateInterval(30);
+
+				setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
+
+				NRS.allowLoginViaEnter();
+				NRS.automaticallyCheckRecipient();
+
+				$("#dashboard_table, #transactions_table").on("mouseenter", "td.confirmations", function () {
+					$(this).popover("show");
+				}).on("mouseleave", "td.confirmations", function () {
+					$(this).popover("destroy");
+					$(".popover").remove();
+				});
+
+				_fix();
+
+				$(window).on("resize", function () {
+					_fix();
+
+					if (NRS.currentPage == "asset_exchange") {
+						NRS.positionAssetSidebar();
+					}
+				});
+				// Enable all static tooltip components
+				// tooltip components generated dynamically (for tables cells for example)
+				// has to be enabled by activating this code on the specific widget
+				$("[data-toggle='tooltip']").tooltip();
+
+				$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
+				console.log("done initialization");
+				if (NRS.getUrlParameter("account")) {
+					NRS.login(false, NRS.getUrlParameter("account"));
+				} else if (savedPassphrase) {
+					$("#remember_me").prop("checked", true);
+					NRS.login(true, savedPassphrase);
+				}
+			});
 		});
-
-		$("body").popover({
-			"selector": ".show_popover",
-			"html": true,
-			"trigger": "hover"
-		});
-
-        var savedPassphrase = NRS.getStrItem("savedPassphrase");
-		if (!savedPassphrase) {
-            NRS.showLockscreen();
-        }
-		NRS.setStateInterval(30);
-
-		setInterval(NRS.checkAliasVersions, 1000 * 60 * 60);
-
-		NRS.allowLoginViaEnter();
-		NRS.automaticallyCheckRecipient();
-
-		$("#dashboard_table, #transactions_table").on("mouseenter", "td.confirmations", function() {
-			$(this).popover("show");
-		}).on("mouseleave", "td.confirmations", function() {
-			$(this).popover("destroy");
-			$(".popover").remove();
-		});
-
-		_fix();
-
-		$(window).on("resize", function() {
-			_fix();
-
-			if (NRS.currentPage == "asset_exchange") {
-				NRS.positionAssetSidebar();
-			}
-		});
-		// Enable all static tooltip components
-		// tooltip components generated dynamically (for tables cells for example)
-		// has to be enabled by activating this code on the specific widget
-		$("[data-toggle='tooltip']").tooltip();
-
-		$("#dgs_search_account_center").mask("NXT-****-****-****-*****");
-
-		if (NRS.getUrlParameter("account")){
-			NRS.login(false, NRS.getUrlParameter("account"));
-		} else if (savedPassphrase) {
-			$("#remember_me").prop("checked", true);
-            NRS.login(true, savedPassphrase);
-        }
 	}
 
 	function _fix() {
