@@ -20,12 +20,16 @@
 var NRS = (function(NRS) {
     var requestConfirmations = [];
 
-    NRS.updateRemoteNodes = function() {
+    NRS.updateRemoteNodes = function(resolve) {
         var data = {state: "CONNECTED", includePeerInfo: true};
         NRS.sendRequest("getPeers", data, function (response) {
             if (response.peers) {
                 NRS.remoteNodesMgr.nodes = {};
                 NRS.remoteNodesMgr.addRemoteNodes(response.peers);
+            }
+            console.log("remote nodes updated");
+            if (resolve) {
+                resolve();
             }
             if (NRS.isUpdateRemoteNodes()) {
                 setTimeout(function () {
@@ -45,10 +49,13 @@ var NRS = (function(NRS) {
             }
         } else if (NRS.isUpdateRemoteNodes()) {
             if (NRS.isRemoteNodeConnectionAllowed()) {
-                NRS.updateRemoteNodes();
+                NRS.updateRemoteNodes(resolve);
             } else {
                 $.growl($.t("https_client_cannot_connect_remote_nodes"));
+                resolve();
             }
+        } else {
+            resolve();
         }
     };
 
