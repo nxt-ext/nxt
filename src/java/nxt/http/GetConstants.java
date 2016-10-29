@@ -212,4 +212,7 @@ public final class GetConstants extends APIServlet.APIRequestHandler {
         return false;
     }
 
+    public static JSONStreamAware getConstants() {
+        return Holder.CONSTANTS;
+    }
 }
