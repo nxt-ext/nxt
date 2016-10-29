@@ -162,6 +162,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
             mgr.bc.counter ++;
             if (mgr.bc.success >= mgr.bc.target) {
                 NRS.logConsole("Ignore: already have enough nodes, bootstrap node not added");
+                resolve();
                 return;
             }
             if (response.errorCode) {
