@@ -271,10 +271,12 @@ var NRS = (function(NRS, $, undefined) {
     }
 
     // id can be either account id or passphrase
-    NRS.login = function(isPassphraseLogin, id, callback, isAccountSwitch) {
-		console.log("login isPassphraseLogin = " + isPassphraseLogin + ", isAccountSwitch = " + isAccountSwitch);
+    NRS.login = function(isPassphraseLogin, id, callback, isAccountSwitch, isSavedPassphrase) {
+		console.log("login isPassphraseLogin = " + isPassphraseLogin +
+			", isAccountSwitch = " + isAccountSwitch +
+			", isSavedPassphrase = " + isSavedPassphrase);
         NRS.spinner.spin($("#center")[0]);
-        if (isPassphraseLogin){
+        if (isPassphraseLogin && !isSavedPassphrase){
 			var loginCheckPasswordLength = $("#login_check_password_length");
 			if (!id.length) {
 				$.growl($.t("error_passphrase_required_login"), {

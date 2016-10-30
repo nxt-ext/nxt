@@ -150,6 +150,7 @@ var NRS = (function(NRS, $, undefined) {
             , position: 'absolute' // Element positioning
         };
         NRS.spinner = new Spinner(opts);
+		console.log("Spinner initialized");
     }
 
     NRS.init = function() {
@@ -330,7 +331,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.login(false, NRS.getUrlParameter("account"));
 				} else if (savedPassphrase) {
 					$("#remember_me").prop("checked", true);
-					NRS.login(true, savedPassphrase);
+					NRS.login(true, savedPassphrase, null, false, true);
 				}
 			});
 		});
