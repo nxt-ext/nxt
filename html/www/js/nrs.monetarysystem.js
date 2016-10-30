@@ -993,7 +993,7 @@ var NRS = (function (NRS, $, undefined) {
                     transfers[i].units = new BigInteger(transfers[i].units);
                     var type = (transfers[i].recipientRS == NRS.accountRS ? "receive" : "send");
                     rows += "<tr>" +
-                    "<td>" + NRS.getTransactionLink(transfers[i].transfer, transfers[i].currency) + "</td>" +
+                    "<td>" + NRS.getTransactionLink(transfers[i].transfer) + "</td>" +
                     "<td><a href='#' data-goto-currency='" + NRS.escapeRespStr(transfers[i].code) + "'>" + NRS.escapeRespStr(transfers[i].name) + "</a></td>" +
                     "<td>" + NRS.formatTimestamp(transfers[i].timestamp) + "</td>" +
                     "<td style='" + (type == "receive" ? "color:green" : "color:red") + "' class='numeric'>" + NRS.formatQuantity(transfers[i].units, transfers[i].decimals, false, quantityDecimals) + "</td>" +
