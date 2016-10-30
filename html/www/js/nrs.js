@@ -219,35 +219,24 @@ var NRS = (function(NRS, $, undefined) {
 						}
 					}
 
-					var initRemoteNodesPromise = new Promise(function(resolveRemoteNodes, rejectRemoteNodes) {
-						if (!NRS.isMobileApp()) {
-							console.log("init remote nodes");
-							NRS.initRemoteNodesMgr(isTestnet, resolveRemoteNodes, rejectRemoteNodes);
-						} else {
-							resolveRemoteNodes();
-						}
-					});
-					initRemoteNodesPromise.then(function() {
-						console.log("continue getState processing");
-						if (!isTestnet) {
-							$(".testnet_only").hide();
-						} else {
-							NRS.isTestNet = true;
-							var testnetWarningDiv = $("#testnet_warning");
-							var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
-							NRS.logConsole(warningText);
-							testnetWarningDiv.text(warningText);
-							$(".testnet_only, #testnet_login, #testnet_warning").show();
-						}
+					if (!isTestnet) {
+						$(".testnet_only").hide();
+					} else {
+						NRS.isTestNet = true;
+						var testnetWarningDiv = $("#testnet_warning");
+						var warningText = testnetWarningDiv.text() + " The testnet peer port is " + peerPort + (isOffline ? ", the peer is working offline." : ".");
+						NRS.logConsole(warningText);
+						testnetWarningDiv.text(warningText);
+						$(".testnet_only, #testnet_login, #testnet_warning").show();
+					}
 
-						if (NRS.isInitializePlugins()) {
-							NRS.initializePlugins();
-						}
-						NRS.printEnvInfo();
-						NRS.spinner.stop();
-						console.log("getState response processed");
-						resolve();
-					});
+					if (NRS.isInitializePlugins()) {
+						NRS.initializePlugins();
+					}
+					NRS.printEnvInfo();
+					NRS.spinner.stop();
+					console.log("getState response processed");
+					resolve();
 				});
 			});
 
@@ -477,6 +466,10 @@ var NRS = (function(NRS, $, undefined) {
 					}, { isAsync: false });
 				} else {
 					NRS.handleBlockchainStatus(response, callback);
+				}
+				if (!NRS.isMobileApp()) {
+					console.log("look for remote confirmation nodes");
+					NRS.initRemoteNodesMgr(NRS.isTestnet);
 				}
                 var clientOptions = $(".client_options");
                 if (NRS.isShowClientOptionsLink()) {
