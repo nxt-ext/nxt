@@ -26,6 +26,11 @@ var NRS = (function(NRS, $) {
         } else {
             $("#mobile_is_check_remember_me").prop('checked', false);
         }
+        if (NRS.mobileSettings.is_store_remembered_passphrase) {
+            $("#mobile_is_store_remembered_passphrase").prop('checked', true);
+        } else {
+            $("#mobile_is_store_remembered_passphrase").prop('checked', false);
+        }
         if (NRS.isEnableMobileAppSimulation()) {
             if (NRS.mobileSettings.is_simulate_app) {
                 $("#mobile_is_simulate_app").prop('checked', true);
@@ -53,6 +58,7 @@ var NRS = (function(NRS, $) {
 
     NRS.forms.setMobileSettings = function() {
         NRS.mobileSettings.is_check_remember_me = $("#mobile_is_check_remember_me").prop('checked');
+        NRS.mobileSettings.is_store_remembered_passphrase = $("#mobile_is_store_remembered_passphrase").prop('checked');
         NRS.mobileSettings.is_simulate_app = $("#mobile_is_simulate_app").prop('checked');
         NRS.mobileSettings.is_testnet = $("#mobile_is_testnet").prop('checked');
         NRS.mobileSettings.remote_node_address = $("#mobile_remote_node_address").val();

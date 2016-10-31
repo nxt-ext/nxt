@@ -1790,7 +1790,6 @@
   "remote_node_url": "Remote Node URL __url__",
   "connect_to_testnet": "Connect to Testnet",
   "encrypt_communication": "Encrypt Communication",
-  "mobile_settings": "Mobile Settings",
   "ec_block_id": "EC Block Id",
   "ec_block_height": "EC Block Height",
   "error_server_connect": "Cannot connect to __url__",
@@ -1839,5 +1838,8 @@
   "is_not_numeric": "is not numeric",
   "is_not_in_the_range": "is not in the range __from__-__to__",
   "scanning_not_allowed": "Scanning not allowed when connected to remote node",
-  "https_client_cannot_connect_remote_nodes": "Https client cannot to connect to remote nodes over Http"
+  "https_client_cannot_connect_remote_nodes": "Https client cannot to connect to remote nodes over Http",
+  "account_settings": "Account Settings",
+  "device_settings": "Device Settings",
+  "is_store_remembered_passphrase": "Store Remembered Passphrase"
 }

@@ -59,6 +59,7 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.settings = {};
 	NRS.mobileSettings = {
 	    is_check_remember_me: false,
+		is_store_remembered_passphrase: (window["cordova"] !== undefined), // too early to use feature detection
 	    is_simulate_app: false,
         is_testnet: false,
         remote_node_address: "",

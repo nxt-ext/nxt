@@ -615,7 +615,11 @@ var NRS = (function(NRS, $, undefined) {
 		NRS.setEncryptionPassword(password);
 		NRS.setServerPassword(password);
         NRS.setAccountDetailsPassword(password);
-        NRS.setStrItem("savedPassphrase", password);
+		if (NRS.mobileSettings.is_store_remembered_passphrase) {
+			NRS.setStrItem("savedPassphrase", password);
+		} else {
+			NRS.setStrItem("savedPassphrase", "");
+		}
 	};
 	return NRS;
 }(NRS || {}, jQuery));
