@@ -122,6 +122,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
     if (!NRS.isRemoteNodeConnectionAllowed()) {
         NRS.logConsole($.t("https_client_cannot_connect_remote_nodes"));
         $.growl($.t("https_client_cannot_connect_remote_nodes"));
+        $('#mobile_settings_modal').modal("show");
         return false;
     }
     var peersData = this.REMOTE_NODES_BOOTSTRAP.peers;
