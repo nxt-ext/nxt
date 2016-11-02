@@ -16,7 +16,30 @@
 
 /**
  * @depends {3rdparty/jquery-2.1.0.js}
+ * @depends {3rdparty/i18next.js}
  */
+
+i18next.use(i18nextXHRBackend)
+    .use(i18nextLocalStorageCache)
+    .use(i18nextBrowserLanguageDetector)
+    .use(i18nextSprintfPostProcessor)
+    .init({
+        fallbackLng: "en",
+        fallbackOnEmpty: true,
+        lowerCaseLng: true,
+        detectLngFromLocalStorage: true,
+        resGetPath: "locales/__lng__/translation.json",
+        compatibilityJSON: 'v1',
+        compatibilityAPI: 'v1',
+        debug: true
+    }, function() {
+        jqueryI18next.init(i18next, $, {
+            handleName: "i18n"
+        });
+
+        $("[data-i18n]").i18n();
+    });
+
 var NRS = (function(NRS, $) {
 
     var _modalUIElements = null;
