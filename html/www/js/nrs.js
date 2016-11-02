@@ -465,12 +465,12 @@ var NRS = (function(NRS, $, undefined) {
                             NRS.updateDashboardMessage();
 						}
 					}, { isAsync: false });
+					if (!NRS.isMobileApp()) {
+						console.log("look for remote confirmation nodes");
+						NRS.initRemoteNodesMgr(NRS.isTestnet);
+					}
 				} else {
 					NRS.handleBlockchainStatus(response, callback);
-				}
-				if (!NRS.isMobileApp()) {
-					console.log("look for remote confirmation nodes");
-					NRS.initRemoteNodesMgr(NRS.isTestnet);
 				}
                 var clientOptions = $(".client_options");
                 if (NRS.isShowClientOptionsLink()) {
