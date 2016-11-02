@@ -1841,5 +1841,6 @@
   "https_client_cannot_connect_remote_nodes": "Https client cannot to connect to remote nodes over Http",
   "account_settings": "Account Settings",
   "device_settings": "Device Settings",
-  "is_store_remembered_passphrase": "Store Remembered Passphrase"
+  "is_store_remembered_passphrase": "Store Remembered Passphrase",
+  "error_signing_passphrase_required": "Your passphrase is required to sign this data."
 }

@@ -19,6 +19,12 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $, undefined) {
+	var _password;
+
+	NRS.setAdvancedModalPassword = function (password) {
+		_password = password;
+	};
+
 	NRS.showRawTransactionModal = function(transaction) {
         if (transaction.unsignedTransactionBytes && !transaction.transactionBytes) {
             $("#raw_transaction_modal_unsigned_transaction_bytes").val(transaction.unsignedTransactionBytes);
@@ -425,7 +431,13 @@ var NRS = (function(NRS, $, undefined) {
    		$("#transaction_json_modal").modal("hide");
    	};
 
-    NRS.forms.signTransactionComplete = function(response) {
+	function updateSignature(signature) {
+		$("#transaction_signature").val(signature);
+		NRS.generateQRCode("#transaction_signature_qr_code", signature, 8);
+		$("#signature_output").show();
+	}
+
+	NRS.forms.signTransactionComplete = function(response) {
         $("#sign_transaction_form").find(".error_message").hide();
         var signedTransactionJson = $("#signed_transaction_json");
         var jsonStr = JSON.stringify(response.transactionJSON);
@@ -439,13 +451,29 @@ var NRS = (function(NRS, $, undefined) {
             downloadLink.hide();
         }
         $("#signed_json_output").show();
-        $("#transaction_signature").val(response.transactionJSON.signature);
-        NRS.generateQRCode("#transaction_signature_qr_code", response.transactionJSON.signature, 8);
-        $("#signature_output").show();
+		updateSignature(response.transactionJSON.signature);
     };
 
     NRS.forms.signTransaction = function() {
         var data = NRS.getFormData($("#sign_transaction_form"));
+		if (data.unsignedTransactionBytes && !data.validate) {
+			NRS.logConsole("Sign transaction locally");
+			var output = {};
+			var secretPhrase = (NRS.rememberPassword ? _password : data.secretPhrase);
+			if (NRS.getAccountId(secretPhrase) == NRS.account) {
+				try {
+					var signature = NRS.signBytes(data.unsignedTransactionBytes, secretPhrase);
+					updateSignature(signature);
+				} catch (e) {
+					output.errorMessage = e.message;
+				}
+			} else {
+				output.errorMessage = $.t("error_passphrase_incorrect");
+			}
+			output.stop = true;
+			output.keepOpen = true;
+			return output;
+		}
         data.validate = (data.validate ? "true" : "false");
         return { data: data };
     };

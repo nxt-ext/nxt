@@ -284,7 +284,7 @@ var NRS = (function (NRS, $) {
 				secretPhrase = _password;
 			} else {
 				throw {
-					"message": $.t("error_encryption_passphrase_required"),
+					"message": $.t("error_signing_passphrase_required"),
 					"errorCode": 1
 				};
 			}

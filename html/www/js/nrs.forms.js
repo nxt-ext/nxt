@@ -364,7 +364,10 @@ var NRS = (function(NRS, $) {
 					errorMessage = output.errorMessage;
 				}
 				if (output.stop) {
-					NRS.unlockForm($modal, $btn, true);
+					if (errorMessage) {
+						$form.find(".error_message").html(errorMessage).show();
+					}
+					NRS.unlockForm($modal, $btn, !output.keepOpen);
 					return;
 				}
 				if (output.reload) {
