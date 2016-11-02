@@ -23,17 +23,17 @@ var NRS = (function(NRS, $) {
 	var trackBlockchain = false;
 	NRS.averageBlockGenerationTime = 60;
 
-	NRS.getBlock = function(blockID, callback, pageRequest) {
+	NRS.getBlock = function(id, callback, pageRequest) {
 		NRS.sendRequest("getBlock" + (pageRequest ? "+" : ""), {
-			"block": blockID
+			"block": id
 		}, function(response) {
-			if (response.errorCode && response.errorCode == -1 || !NRS.constants || NRS.constants.EPOCH_BEGINNING == 0) {
-				setTimeout(function (){ NRS.getBlock(blockID, callback, pageRequest); }, 2500);
+			if (response.errorCode && response.errorCode == -1) {
+				NRS.logConsole("getBlock request failed, setTimeout for retry");
+				setTimeout(function() {
+					NRS.getBlock(id, callback, pageRequest);
+				}, 2500);
 			} else {
-				if (callback) {
-					response.block = blockID;
-					callback(response);
-				}
+				callback(response);
 			}
 		}, { noProxy: true });
 	};
