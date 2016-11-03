@@ -1859,5 +1859,6 @@
   "client_status": "Client Status",
   "random": "Random",
   "add_monitored_account": "Add Monitored Account",
-  "add": "Add"
+  "add": "Add",
+  "connected": "Connected"
 }
