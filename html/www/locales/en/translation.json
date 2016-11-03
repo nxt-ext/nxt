@@ -1842,5 +1842,22 @@
   "account_settings": "Account Settings",
   "device_settings": "Device Settings",
   "is_store_remembered_passphrase": "Store Remembered Passphrase",
-  "error_signing_passphrase_required": "Your passphrase is required to sign this data."
+  "error_signing_passphrase_required": "Your passphrase is required to sign this data.",
+  "exchange_url": "Exchange Url",
+  "refresh_search_index": "Refresh Search Index",
+  "enable_marketplace_section": "Enable Marketplace Section",
+  "enable_exchange_section": "Enable Exchange Section",
+  "exchange_settings": "Exchange Settings",
+  "exchange_api_key": "Exchange Api Key",
+  "sum": "Sum",
+  "reset": "Reset",
+  "name_description_tag": "Name Description Tag",
+  "calculating": "Calculating",
+  "is_downloading": "Is Downloading",
+  "port": "Port",
+  "named": "Named",
+  "client_status": "Client Status",
+  "random": "Random",
+  "add_monitored_account": "Add Monitored Account",
+  "add": "Add"
 }
