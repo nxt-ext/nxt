@@ -533,8 +533,8 @@ var NRS = (function(NRS, $) {
 
 	NRS.applySettings = function(key) {
 	    if (!key || key == "language") {
-			if ($.i18n.lng() != NRS.settings["language"]) {
-				$.i18n.setLng(NRS.settings["language"], null, function() {
+			if ($.i18n.language != NRS.settings["language"]) {
+				$.i18n.changeLanguage(NRS.settings["language"], function() {
 					$("[data-i18n]").i18n();
 				});
 				if (key) {
