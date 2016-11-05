@@ -1742,11 +1742,5 @@ NRS.addPagination = function () {
 
 $(document).ready(function() {
 	console.log("document.ready");
-	if(NRS.ionic) { //if the platform is run on ionic, do lazy initialization.
-		$("#lockscreen").hide();
-		$("body, html").removeClass("lockscreen");
-	}
-	else {
-		NRS.init();
-	}
+	NRS.init();
 });
