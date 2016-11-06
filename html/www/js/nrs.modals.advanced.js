@@ -358,12 +358,18 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
     var transactionJSONModal = $("#transaction_json_modal");
-    transactionJSONModal.on("show.bs.modal", function() {
+    transactionJSONModal.on("show.bs.modal", function(e) {
 		$(this).find(".output").hide();
         $(this).find(".upload_container").hide();
 		$(this).find("#unsigned_transaction_bytes_reader").hide();
 		$(this).find(".tab_content:first").show();
         $("#transaction_json_modal_button").text($.t("sign_transaction")).data("resetText", $.t("sign_transaction")).data("form", "sign_transaction_form");
+		var $invoker = $(e.relatedTarget);
+		var isOffline = !!$invoker.data("offline");
+		if (isOffline) {
+			$(this).find("ul.nav li").hide();
+			$(this).find("ul.nav li:first").show();
+		}
 	});
 
     transactionJSONModal.on("hidden.bs.modal", function() {

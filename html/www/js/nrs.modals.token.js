@@ -20,12 +20,18 @@
  */
 var NRS = (function(NRS, $) {
     var tokenModal = $("#token_modal");
-    tokenModal.on("show.bs.modal", function() {
+    tokenModal.on("show.bs.modal", function(e) {
 		$("#generate_token_output, #decode_token_output").html("").hide();
 
 		$("#token_modal_generate_token").show();
 		$("#generate_token_button").show();
 		$("#validate_token_button").hide();
+		var $invoker = $(e.relatedTarget);
+		var isOffline = !!$invoker.data("offline");
+		if (isOffline) {
+			$(this).find("ul.nav li").hide();
+			$(this).find("ul.nav li:first").show();
+		}
 	});
 	
 	NRS.forms.decodeToken = function() {
