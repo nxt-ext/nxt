@@ -177,9 +177,15 @@ var NRS = (function(NRS, $, undefined) {
             var msg = $.t("cannot_find_remote_nodes");
             console.log(msg);
             $.growl(msg);
-			var mobileSettingsModal = $("#mobile_settings_modal");
-			mobileSettingsModal.find("input[name=is_offline]").val("true");
-            mobileSettingsModal.modal("show");
+			var loadConstantsPromise = new Promise(function(resolve) {
+				console.log("load server constants");
+				NRS.loadServerConstants(resolve);
+			});
+			loadConstantsPromise.then(function() {
+				var mobileSettingsModal = $("#mobile_settings_modal");
+				mobileSettingsModal.find("input[name=is_offline]").val("true");
+				mobileSettingsModal.modal("show");
+			});
         })
     }
 
