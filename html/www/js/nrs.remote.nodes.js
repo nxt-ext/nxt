@@ -138,6 +138,11 @@ var NRS = (function(NRS) {
                 delete transaction.confirmations;
                 normalizePrunableAttachment(transaction);
             }
+        } else if (requestType == "getAccountLedger") {
+            for (var i=0; i<origResponse.entries.length; i++) {
+                var entry = origResponse.entries[i];
+                delete entry.ledgerId;
+            }
         }
         return JSON.stringify(origResponse);
     };
