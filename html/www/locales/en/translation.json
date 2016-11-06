@@ -1860,5 +1860,6 @@
   "random": "Random",
   "add_monitored_account": "Add Monitored Account",
   "add": "Add",
-  "connected": "Connected"
+  "connected": "Connected",
+  "working_offline": "You are working offline"
 }

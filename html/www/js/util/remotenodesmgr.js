@@ -122,7 +122,9 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
     if (!NRS.isRemoteNodeConnectionAllowed()) {
         NRS.logConsole($.t("https_client_cannot_connect_remote_nodes"));
         $.growl($.t("https_client_cannot_connect_remote_nodes"));
-        $('#mobile_settings_modal').modal("show");
+        var mobileSettingsModal = $("#mobile_settings_modal");
+        mobileSettingsModal.find("input[name=is_offline]").val("true");
+        mobileSettingsModal.modal("show");
         return false;
     }
     var peersData = this.REMOTE_NODES_BOOTSTRAP.peers;
@@ -134,7 +136,7 @@ RemoteNodesManager.prototype.addBootstrapNodes = function (resolve, reject) {
 
     function countRejections() {
         mgr.bc.fail ++;
-        return mgr.bc.fail > peersData.length - mgr.bc.target;
+        return mgr.bc.fail >= mgr.bc.limit;
     }
 
     for (var i=0; i < mgr.bc.limit; i++) {

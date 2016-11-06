@@ -20,7 +20,12 @@
 var NRS = (function(NRS, $) {
 
     $("#mobile_settings_modal").on("show.bs.modal", function() {
-        $(".info_message").html($.t("remote_node_url", { url: NRS.getRemoteNodeUrl() }));
+        var isOffline = !!$("#mobile_settings_modal").find("input[name=is_offline]").val("true");
+        if (isOffline) {
+            $(".info_message").html($.t("working_offline"));
+        } else {
+            $(".info_message").html($.t("remote_node_url", {url: NRS.getRemoteNodeUrl()}));
+        }
         if (NRS.mobileSettings.is_check_remember_me) {
             $("#mobile_is_check_remember_me").prop('checked', true);
         } else {
