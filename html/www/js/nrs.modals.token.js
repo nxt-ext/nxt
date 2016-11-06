@@ -90,16 +90,17 @@ var NRS = (function(NRS, $) {
 	});
 
     $("#generate_token_button").click(function (e) {
-        var data = $.trim($("#generate_token_data").val());
+		var data = NRS.getFormData($("#generate_token_form"));
+        var website = data.website;
         var tokenOutput = $("#generate_token_output");
-        if (!data || data == "") {
+        if (!website || website == "") {
             tokenOutput.html($.t("data_required_field"));
             tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
             return;
         }
 		var isOffline = !!$("#generate_token_is_offline").val();
         if (!NRS.rememberPassword) {
-			var secretPhrase = $.trim($("#generate_token_password").val());
+			var secretPhrase = data.secretPhrase;
 			var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
 			if (publicKey != NRS.publicKey && !isOffline) {
 				tokenOutput.html($.t("error_incorrect_passphrase"));
@@ -107,7 +108,7 @@ var NRS = (function(NRS, $) {
 				return;
 			}
 		}
-        var token = NRS.generateToken(data, secretPhrase);
+        var token = NRS.generateToken(website, secretPhrase);
         tokenOutput.html($.t("generated_token_is") + "<br/><br/><textarea readonly style='width:100%' rows='3'>" + token + "</textarea>");
         tokenOutput.addClass("callout-info").removeClass("callout-danger").show();
         e.preventDefault();
