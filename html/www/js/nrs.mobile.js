@@ -20,7 +20,7 @@
 var NRS = (function(NRS, $) {
 
     $("#mobile_settings_modal").on("show.bs.modal", function() {
-        var isOffline = !!$("#mobile_settings_modal").find("input[name=is_offline]").val("true");
+        var isOffline = !!$("#mobile_settings_modal").find("input[name=is_offline]").val();
         if (isOffline) {
             $(".info_message").html($.t("working_offline"));
             $("#mobile_offline_links").show();
