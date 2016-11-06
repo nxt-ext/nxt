@@ -1861,5 +1861,6 @@
   "add_monitored_account": "Add Monitored Account",
   "add": "Add",
   "connected": "Connected",
-  "working_offline": "You are working offline"
+  "working_offline": "You are working offline",
+  "offline_actions": "Offline Actions"
 }

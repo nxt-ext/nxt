@@ -24,6 +24,25 @@
                 <form role="form" autocomplete="off">
                     <div class="callout callout-danger error_message" style="display:none"></div>
                     <div class="callout callout-info info_message"></div>
+                    <div class="input-group" id="mobile_offline_links">
+                        <label data-i18n="offline_actions">Offline Actions</label>
+                        <div>
+                            <a href="#" data-toggle="modal" data-target="#token_modal" data-offline="true">
+                                <i class="fa fa-code"></i>
+                                <span data-i18n="generate_token">Generate Token</span>
+                            </a>
+                        </div>
+                        <div>
+                            <a href="#" data-toggle="modal" data-target="#transaction_json_modal" data-offline="true">
+                                <i class="fa fa-asterisk"></i>
+                                <span data-i18n="sign_transaction">Sign Transaction</span>
+                            </a>
+                        </div>
+                        <p></p>
+                    </div>
+                    <row>
+                        <label data-i18n="settings"></label>
+                    </row>
                     <div class="input-group">
                         <input type="checkbox" id="mobile_is_check_remember_me"/>
                         <label for="mobile_is_check_remember_me" data-i18n="is_check_remember_me">Check Remember Me Checkbox</label>

@@ -23,8 +23,10 @@ var NRS = (function(NRS, $) {
         var isOffline = !!$("#mobile_settings_modal").find("input[name=is_offline]").val("true");
         if (isOffline) {
             $(".info_message").html($.t("working_offline"));
+            $("#mobile_offline_links").show();
         } else {
             $(".info_message").html($.t("remote_node_url", {url: NRS.getRemoteNodeUrl()}));
+            $("#mobile_offline_links").hide();
         }
         if (NRS.mobileSettings.is_check_remember_me) {
             $("#mobile_is_check_remember_me").prop('checked', true);
