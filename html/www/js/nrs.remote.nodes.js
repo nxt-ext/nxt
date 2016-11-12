@@ -105,6 +105,26 @@ var NRS = (function(NRS) {
         return 100*sharedPeers / Math.min(peers1.peers.length, peers2.peers.length) > 70;
     };
 
+    NRS.compareLedgerEntries = function(obj1, obj2) {
+        if (!obj1.entries && !obj2.entries) {
+            return true;
+        }
+        if (!obj1.entries || !obj2.entries) {
+            return false;
+        }
+        if (obj1.entries instanceof Array && obj2.entries instanceof Array) {
+            for (var i = 0; i < obj1.entries.length && i < obj2.entries.length; i++) {
+                var str1 = JSON.stringify(obj1.entries[i]);
+                var str2 = JSON.stringify(obj2.entries[i]);
+                if (str1 != str2) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    };
+
     NRS.countCommonElements = function(a1, a2) {
         var count = 0;
         for (var i = 0; i < a1.length; i++) {
@@ -200,7 +220,9 @@ var NRS = (function(NRS) {
                     var type = data["_extra"].requestType;
                     NRS.logConsole("Confirm request " + type + " with node " + node.announcedAddress);
                     var responseStr = NRS.getComparableResponse(response, type);
-                    if (responseStr == expectedResponseStr || (type == "getPeers" && NRS.isPeerListSimilar(response, expectedResponse))) {
+                    if (responseStr == expectedResponseStr
+                        || (type == "getPeers" && NRS.isPeerListSimilar(response, expectedResponse))
+                        || (type == "getAccountLedger" && NRS.compareLedgerEntries(response, expectedResponse))) {
                         confirmationReport.confirmingNodes.push(node);
                     } else {
                         NRS.logConsole(node.announcedAddress + " response defers from " + requestRemoteNode.announcedAddress + " response for " + type);
