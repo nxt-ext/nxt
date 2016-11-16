@@ -59,17 +59,16 @@ var NRS = (function(NRS, $) {
 	function checkForNewVersion() {
         var installVersusNormal, installVersusBeta;
         if (NRS.nrsVersion && NRS.nrsVersion.versionNr) {
-			installVersusNormal = NRS.versionCompare(NRS.state.version, NRS.nrsVersion.versionNr);
-		}
-		if (NRS.nrsBetaVersion && NRS.nrsBetaVersion.versionNr) {
-			installVersusBeta = NRS.versionCompare(NRS.state.version, NRS.nrsBetaVersion.versionNr);
-		}
+            installVersusNormal = NRS.versionCompare(NRS.state.version, NRS.nrsVersion.versionNr);
+            $(".nrs_new_version_nr").html(NRS.nrsVersion.versionNr).show();
+        }
+        if (NRS.nrsBetaVersion && NRS.nrsBetaVersion.versionNr) {
+            installVersusBeta = NRS.versionCompare(NRS.state.version, NRS.nrsBetaVersion.versionNr);
+            $(".nrs_beta_version_nr").html(NRS.nrsBetaVersion.versionNr).show();
+        }
 
 		$("#nrs_update_explanation").find("> span").hide();
 		$("#nrs_update_explanation_wait").attr("style", "display: none !important");
-		$(".nrs_new_version_nr").html(NRS.nrsVersion.versionNr).show();
-		$(".nrs_beta_version_nr").html(NRS.nrsBetaVersion.versionNr).show();
-
 		if (installVersusNormal == -1 && installVersusBeta == -1) {
 			NRS.isOutdated = true;
 			$("#nrs_update").html($.t("outdated")).show();
