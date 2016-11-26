@@ -1,0 +1,6 @@
+//TODO
+
+Implemented "Store Remembered Passphrase" setting in the device settings page.
+
+Updated Jetty to version 9.3.14 and H2 to version 1.4.193, delete the
+old lib folder before unpacking on top.
