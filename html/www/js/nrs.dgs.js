@@ -522,7 +522,7 @@ var NRS = (function(NRS, $) {
             reader.onload = function(output){
                 example.attr("src", output.target.result);
             };
-        reader.readAsDataURL(image);
+        	reader.readAsDataURL(image);
         }
     };
 

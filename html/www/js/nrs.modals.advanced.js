@@ -54,7 +54,12 @@ var NRS = (function(NRS, $, undefined) {
             if (window.URL) {
                 var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
                 downloadLink.prop('download', namePrefix + '.transaction.' + transaction.transactionJSON.timestamp + '.json');
-                downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
+                try {
+                    downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
+				} catch(e) {
+                    NRS.logConsole("Desktop Application in Java 8 does not support createObjectURL");
+                    downloadLink.hide();
+				}
             } else {
                 downloadLink.hide();
             }
@@ -454,7 +459,12 @@ var NRS = (function(NRS, $, undefined) {
         if (window.URL) {
             var jsonAsBlob = new Blob([jsonStr], {type: 'text/plain'});
             downloadLink.prop('download', 'signed.transaction.' + response.transactionJSON.timestamp + '.json');
-            downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
+            try {
+                downloadLink.prop('href', window.URL.createObjectURL(jsonAsBlob));
+			} catch(e) {
+            	NRS.logConsole("Desktop Application in Java 8 does not support createObjectURL");
+                downloadLink.hide();
+			}
         } else {
             downloadLink.hide();
         }
