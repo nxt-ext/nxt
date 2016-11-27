@@ -1,8 +1,3 @@
-Updated Jetty to version 9.3.14 and H2 to version 1.4.193, delete the
-old lib folder before unpacking on top.
-
-Updated localization component i18next to version 3.4.4
-
 Implemented "Store Remembered Passphrase" setting in the device settings page.
 When checked, the client stores the remembered passphrase in the local browser
 settings or mobile app settings so that the next time the client is launched
@@ -23,3 +18,8 @@ When the mobile device is offline, the device settings modal allows signing
 transactions and generating tokens to support cold storage functionality.
 
 Additional client side bug fixes and refactoring.
+
+Updated Jetty to version 9.3.14 and H2 to version 1.4.193, delete the old lib
+folder before unpacking on top.
+
+Updated localization component i18next to version 3.4.4
