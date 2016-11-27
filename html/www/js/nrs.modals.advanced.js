@@ -481,7 +481,7 @@ var NRS = (function(NRS, $, undefined) {
 			var isOffline = $("#sign_transaction_is_offline").val();
 			if (NRS.getAccountId(secretPhrase) == NRS.account || isOffline) {
 				try {
-					var signature = NRS.signBytes(data.unsignedTransactionBytes, secretPhrase);
+					var signature = NRS.signBytes(data.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 					updateSignature(signature);
 				} catch (e) {
 					output.errorMessage = e.message;
