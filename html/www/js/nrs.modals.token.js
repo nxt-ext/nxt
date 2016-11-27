@@ -31,7 +31,7 @@ var NRS = (function(NRS, $) {
 		if (isOffline) {
 			$(this).find("ul.nav li").hide();
 			$(this).find("ul.nav li:first").show();
-			$("#generate_token_is_offline").val("true");
+            $(this).find(".mobile-offline").val("true");
 		}
 	});
 	
@@ -98,7 +98,7 @@ var NRS = (function(NRS, $) {
             tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
             return;
         }
-		var isOffline = !!$("#generate_token_is_offline").val();
+		var isOffline = !!$(this).find(".mobile-offline").val();
         if (!NRS.rememberPassword) {
 			var secretPhrase = data.secretPhrase;
 			var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));

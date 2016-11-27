@@ -138,7 +138,6 @@ var NRS = (function(NRS, $, undefined) {
         });
         $(this).find("input[name=secretPhrase]").prop("disabled", false);
         var name = $(this).attr('id').replace('_modal', '');
-        var scanButtons = $(this).find(".scan-qr-code");
 	});
 
 	modal.on("shown.bs.modal", function() {
@@ -223,6 +222,10 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".tx-modal-approve").empty();
 		NRS.showedFormWarning = false;
+        var isOffline = !!$(this).find(".mobile-offline").val();
+        if (isOffline) {
+            $("#mobile_settings_modal").modal();
+		}
 	});
 
 	NRS.showModalError = function(errorMessage, $modal) {

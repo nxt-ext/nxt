@@ -375,7 +375,7 @@ var NRS = (function(NRS, $, undefined) {
 			$(this).find("ul.nav li").hide();
 			$(this).find("ul.nav li:first").show();
 			$("#validate_transaction").prop("disabled", "true");
-			$("#sign_transaction_is_offline").val("true");
+			$(".mobile-offline").val("true");
 		}
 	});
 
@@ -478,7 +478,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.logConsole("Sign transaction locally");
 			var output = {};
 			var secretPhrase = (NRS.rememberPassword ? _password : data.secretPhrase);
-			var isOffline = $("#sign_transaction_is_offline").val();
+			var isOffline = $(".mobile-offline").val();
 			if (NRS.getAccountId(secretPhrase) == NRS.account || isOffline) {
 				try {
 					var signature = NRS.signBytes(data.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
