@@ -2667,15 +2667,15 @@ tr.tentative-crossed td , tr.tentative-crossed td a {
 	display: none;
 }
 
-#dashboard_page .data-container.data-loading .data-loading-container {
+.data-container.data-loading .data-loading-container {
 	display: block;
 }
 
-#dashboard_page .data-container.data-empty .data-empty-container {
-	display: block;
+.data-container.data-empty .data-empty-container {
+  display: block;
 }
 
-#dashboard_page .data-container.data-empty table, .data-container.data-loading table {
+.data-container.data-empty table, .data-container.data-loading table {
 	display: none;
 }
 
