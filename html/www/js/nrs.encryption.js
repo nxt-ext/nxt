@@ -459,10 +459,11 @@ var NRS = (function (NRS, $) {
 			};
 			if (_encryptedNote.account) {
 				$("#decrypt_note_secret_phrase_div").show();
-			} else {
-				$("#decrypt_note_form_password").val("");
-				$("#decrypt_note_secret_phrase_div").hide();
-			}
+                $("#decrypt_note_form_container").find(".callout").hide();
+            } else {
+                $("#decrypt_note_form_password").val("");
+                $("#decrypt_note_secret_phrase_div").hide();
+            }
 			$("#decrypt_note_form_container").detach().appendTo(formEl);
 			$("#decrypt_note_form_container, " + formEl).show();
 		} else {
