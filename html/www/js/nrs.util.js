@@ -1431,13 +1431,13 @@ var NRS = (function (NRS, $, undefined) {
             return transaction.sender;
         }
         if (transaction[recipient] == NRS.account) {
-            return transaction.sender;
+            return transaction.sender || transaction[sender];
         }
         if (!sender && transaction.sender == NRS.account) {
             return transaction.recipient;
         }
         if (transaction[sender] == NRS.account) {
-            return transaction.recipient;
+            return transaction.recipient || transaction[recipient];
         }
         return null;
     };

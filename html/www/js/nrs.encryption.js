@@ -418,8 +418,12 @@ var NRS = (function (NRS, $) {
 								"account": account
 							};
 						}
-						decryptOptions.isText = transaction.attachment[key].isText;
-						decryptOptions.isCompressed = transaction.attachment[key].isCompressed;
+						if (transaction.goodsIsText) {
+                            decryptOptions.isText = transaction.goodsIsText;
+						} else {
+                            decryptOptions.isText = transaction.attachment[key].isText;
+                            decryptOptions.isCompressed = transaction.attachment[key].isCompressed;
+						}
                         data = NRS.decryptNote(encrypted, decryptOptions);
 					} catch (err) {
 						if (err.errorCode && err.errorCode == 1) {
@@ -577,8 +581,12 @@ var NRS = (function (NRS, $) {
 						options.nonce = nonce;
 						options.account = otherAccount;
                     }
-					options.isText = _encryptedNote.transaction.attachment[key].isText;
-					options.isCompressed = _encryptedNote.transaction.attachment[key].isCompressed;
+                    if (_encryptedNote.transaction.goodsIsText) {
+                        options.isText = _encryptedNote.transaction.goodsIsText;
+                    } else {
+                        options.isText = _encryptedNote.transaction.attachment[key].isText;
+                        options.isCompressed = _encryptedNote.transaction.attachment[key].isCompressed;
+                    }
                     data = NRS.decryptNote(encrypted, options, password);
 					decryptedFields[key] = data;
 				} catch (err) {
@@ -648,8 +656,12 @@ var NRS = (function (NRS, $) {
 						options.nonce = message.attachment.encryptedMessage.nonce;
 						options.account = otherUser;
                     }
-					options.isText = message.attachment.encryptedMessage.isText;
-					options.isCompressed = message.attachment.encryptedMessage.isCompressed;
+                    if (_encryptedNote.transaction.goodsIsText) {
+                        options.isText = message.goodsIsText;
+                    } else {
+                        options.isText = message.attachment.encryptedMessage.isText;
+                        options.isCompressed = message.attachment.encryptedMessage.isCompressed;
+                    }
                     var decoded = NRS.decryptNote(message.attachment.encryptedMessage.data, options, password);
 					_decryptedTransactions[message.transaction] = {
 						encryptedMessage: decoded
