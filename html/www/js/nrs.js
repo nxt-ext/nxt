@@ -155,6 +155,7 @@ var NRS = (function(NRS, $, undefined) {
     }
 
     NRS.init = function() {
+        NRS.initClipboard();
         initSpinner();
         NRS.spinner.spin($("#center")[0]);
         NRS.loadMobileSettings();
@@ -334,6 +335,17 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 	}
+
+    NRS.initClipboard = function() {
+        var clipboard = new Clipboard('#copy_account_id');
+        clipboard.on('success', function(e) {
+            console.info('Action:', e.action);
+            console.info('Text:', e.text);
+            console.info('Trigger:', e.trigger);
+
+            e.clearSelection();
+        });
+    };
 
 	function _fix() {
 		var height = $(window).height() - $("body > .header").height();
