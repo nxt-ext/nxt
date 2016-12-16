@@ -641,7 +641,7 @@ body > .header .logo .icon {
 }
 /* WESLEY */
 .user-panel > .info {
-	padding-left:  5px;
+	padding-left:  0;
 	padding-right: 0;
 }
 #forging_indicator {
