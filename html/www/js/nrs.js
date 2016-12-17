@@ -359,15 +359,27 @@ var NRS = (function(NRS, $, undefined) {
 
     NRS.initClipboard = function() {
         var clipboard = new Clipboard('#copy_account_id');
-        clipboard.on('success', function(e) {
+        function onCopySuccess(e) {
             NRS.logConsole('Action:' + e.action);
             NRS.logConsole('Text:' + e.text);
             NRS.logConsole('Trigger:' + e.trigger);
 
+            $.growl($.t("success_clipboard_copy"), {
+                "type": "success"
+            });
+
             e.clearSelection();
-        });
+        }
+        clipboard.on('success', onCopySuccess);
         clipboard.on('error', function(e) {
-            NRS.logConsole('Copy failed. Action: ' + e.action);
+            if (window.java) {
+                if (window.java.copyText(e.text)) {
+                    onCopySuccess(e);
+                    return;
+                }
+            }
+            NRS.logConsole('Copy failed. Action: ' + e.action + '; Text: ' + e.text);
+
         });
     };
 
