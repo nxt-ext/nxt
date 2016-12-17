@@ -16,6 +16,7 @@
 
 package nxtdesktop;
 
+import com.sun.javafx.scene.web.Debugger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;
@@ -38,6 +39,8 @@ import javax.net.ssl.HttpsURLConnection;
 import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -51,6 +54,7 @@ import java.util.stream.Collectors;
 public class DesktopApplication extends Application {
 
     private static final Set DOWNLOAD_REQUEST_TYPES = new HashSet<>(Arrays.asList("downloadTaggedData", "downloadPrunableMessage"));
+    public static final boolean ENABLE_JAVASCRIPT_DEBUGGER = false;
     private static volatile boolean isLaunched;
     private static volatile Stage stage;
     private static volatile WebEngine webEngine;
@@ -126,6 +130,28 @@ public class DesktopApplication extends Application {
                                 updateClientState(BlockchainProcessor.Event.AFTER_BLOCK_APPLY, block), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
                         Nxt.getTransactionProcessor().addListener((transaction) ->
                                 updateClientState(TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS, transaction), TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
+
+                        if (ENABLE_JAVASCRIPT_DEBUGGER) {
+                            try {
+                                //Reflection for
+                                //DevToolsDebuggerServer.startDebugServer(webEngine.impl_getDebugger(), 51742);
+                                //Add the javafx_webview_debugger lib to the classpath
+                                //For more details, check https://github.com/mohamnag/javafx_webview_debugger
+
+                                Class<?> aClass = Class.forName("com.mohamnag.fxwebview_debugger.DevToolsDebuggerServer");
+                                Debugger debugger = webEngine.impl_getDebugger();
+                                Method startDebugServer = aClass.getMethod("startDebugServer", Debugger.class, int.class);
+                                startDebugServer.invoke(null, debugger, 51742);
+                            } catch (ClassNotFoundException e) {
+                                e.printStackTrace();
+                            } catch (NoSuchMethodException e) {
+                                e.printStackTrace();
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            } catch (InvocationTargetException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 });
 

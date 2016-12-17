@@ -67,3 +67,10 @@ Apache Tika:
 
 Tika https://tika.apache.org/ is licensed under the
 Apache License 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+
+JavaFX WebView debugger:
+
+JavaFX WebView debugger https://github.com/mohamnag/javafx_webview_debugger
+is licensed under the MIT license:
+https://github.com/mohamnag/javafx_webview_debugger/blob/master/LICENCE

@@ -360,11 +360,14 @@ var NRS = (function(NRS, $, undefined) {
     NRS.initClipboard = function() {
         var clipboard = new Clipboard('#copy_account_id');
         clipboard.on('success', function(e) {
-            console.info('Action:', e.action);
-            console.info('Text:', e.text);
-            console.info('Trigger:', e.trigger);
+            NRS.logConsole('Action:' + e.action);
+            NRS.logConsole('Text:' + e.text);
+            NRS.logConsole('Trigger:' + e.trigger);
 
             e.clearSelection();
+        });
+        clipboard.on('error', function(e) {
+            NRS.logConsole('Copy failed. Action: ' + e.action);
         });
     };
 
