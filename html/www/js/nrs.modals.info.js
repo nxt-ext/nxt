@@ -20,13 +20,13 @@
  */
 var NRS = (function(NRS, $) {
 	var nrsModal = $("#nrs_modal");
-    nrsModal.on("show.bs.modal", function() {
+    nrsModal.on("shown.bs.modal", function() {
 		if (NRS.fetchingModalData) {
 			return;
 		}
 
 		NRS.fetchingModalData = true;
-
+        NRS.spinner.spin(nrsModal[0]);
 		NRS.sendRequest("getState", {
 			"includeCounts": true,
             "adminPassword": NRS.getAdminPassword()
@@ -51,7 +51,7 @@ var NRS = (function(NRS, $) {
 
 			$("#nrs_update_explanation").show();
 			$("#nrs_modal_state").show();
-
+            NRS.spinner.stop();
 			NRS.fetchingModalData = false;
 		});
 	});
