@@ -48,7 +48,7 @@ var NRS = (function (NRS) {
         if (NRS.isMobileApp()) {
             return false;
         }
-        return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
+        return !(isDesktopApplication && navigator.userAgent.indexOf("Linux") >= 0);
     };
 
     NRS.isMobileApp = function () {
