@@ -209,7 +209,10 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    function isVolatileRequest(doNotSign, type, requestType) {
+    function isVolatileRequest(doNotSign, type, requestType, secretPhrase) {
+        if (secretPhrase && NRS.isMobileApp()) {
+            return true;
+        }
         return (NRS.isPassphraseAtRisk() || doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType);
     }
 
@@ -276,7 +279,7 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        var isVolatile = isVolatileRequest(data.doNotSign, type, requestType);
+        var isVolatile = isVolatileRequest(data.doNotSign, type, requestType, data.secretPhrase);
         if (isVolatile) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
