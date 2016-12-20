@@ -51,6 +51,13 @@ var NRS = (function (NRS) {
         return !(isDesktopApplication && navigator.userAgent.indexOf("Linux") >= 0);
     };
 
+    NRS.isWebWalletLinkVisible = function() {
+        if (NRS.isMobileApp()) {
+            return false;
+        }
+        return isDesktopApplication && navigator.userAgent.indexOf("Linux") == -1;
+    };
+
     NRS.isMobileApp = function () {
         return isMobileDevice || NRS.mobileSettings.is_simulate_app;
     };

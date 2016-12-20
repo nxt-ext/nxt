@@ -35,9 +35,11 @@ var NRS = (function(NRS, $) {
             $("#funding_monitor_menu_item").hide();
         }
         if (!NRS.isExternalLinkVisible()) {
-            $("#web_wallet_li").remove();
             $("#api_console_li").hide();
             $("#database_shell_li").hide();
+        }
+        if (!NRS.isWebWalletLinkVisible()) {
+            $("#web_wallet_li").remove();
         }
     });
 
