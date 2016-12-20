@@ -311,14 +311,12 @@ var NRS = (function(NRS, $, undefined) {
 			var accountRequest;
 			var requestVariable;
 			if (isPassphraseLogin) {
-				accountRequest = "getAccountId";
+				accountRequest = "getAccountId"; // Processed locally, not submitted to server
 				requestVariable = {secretPhrase: id};
 			} else {
 				accountRequest = "getAccount";
 				requestVariable = {account: id};
 			}
-
-			//this is done locally..
 			console.log("calling " + accountRequest);
 			NRS.sendRequest(accountRequest, requestVariable, function(response, data) {
 				console.log(accountRequest + " response received");
