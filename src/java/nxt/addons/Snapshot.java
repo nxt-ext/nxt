@@ -61,6 +61,9 @@ public class Snapshot implements AddOn {
                                 while (rs.next()) {
                                     long accountId = rs.getLong("id");
                                     long balance = rs.getLong("balance");
+                                    if (balance <= 0) {
+                                        continue;
+                                    }
                                     String account = Long.toUnsignedString(accountId);
                                     snapshotMap.put(account, balance);
                                     btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 700);
@@ -83,13 +86,16 @@ public class Snapshot implements AddOn {
                                 while (rs.next()) {
                                     long accountId = rs.getLong("account_id");
                                     long balance = rs.getLong("quantity");
-                                    snapshotMap.put(Long.toUnsignedString(accountId), balance);
+                                    if (balance <= 0) {
+                                        continue;
+                                    }
+                                    snapshotMap.put(Long.toUnsignedString(accountId), balance * 10000);
                                 }
                             }
                         } catch (SQLException e) {
                             throw new RuntimeException(e.getMessage(), e);
                         }
-                        saveBalances(snapshotMap, "ARDOR.json");
+                        saveBalances(snapshotMap, "ARDR.json");
                     }
                 }
             }
