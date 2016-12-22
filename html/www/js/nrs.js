@@ -169,6 +169,8 @@ var NRS = (function(NRS, $, undefined) {
                 compatibilityAPI: 'v1',
                 debug: true
             }, function() {
+                NRS.initSettings();
+
                 jqueryI18next.init(i18next, $, {
                     handleName: "i18n"
                 });
