@@ -50,11 +50,14 @@ var NRS = (function(NRS) {
     };
 
     NRS.requestNeedsConfirmation = function (requestType) {
-        var plusIndex = requestType.indexOf("+");
-        if (plusIndex > 0) {
-            requestType = requestType.substring(0, plusIndex);
+        if (NRS.remoteNodesMgr) {
+            var plusIndex = requestType.indexOf("+");
+            if (plusIndex > 0) {
+                requestType = requestType.substring(0, plusIndex);
+            }
+            return !NRS.isRequirePost(requestType) && NRS.isRequestForwardable(requestType)
         }
-        return !NRS.isRequirePost(requestType) && NRS.isRequestForwardable(requestType)
+        return false;
     };
 
     var prunableAttachments = [
