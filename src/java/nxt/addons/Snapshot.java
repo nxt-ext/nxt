@@ -21,9 +21,11 @@ import nxt.Constants;
 import nxt.Db;
 import nxt.FxtDistribution;
 import nxt.Nxt;
+import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Logger;
+import org.json.simple.JSONArray;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
@@ -52,11 +54,31 @@ public class Snapshot implements AddOn {
             public void notify(Block block) {
                 if (block.getHeight() == snapshotHeight) {
                     {
+                        JSONArray publicKeys = new JSONArray();
+                        try (Connection con = Db.db.getConnection();
+                             PreparedStatement pstmt = con.prepareStatement("SELECT public_key FROM public_key WHERE public_key IS NOT NULL AND LATEST=true ORDER by account_id")) {
+                            try (ResultSet rs = pstmt.executeQuery()) {
+                                while (rs.next()) {
+                                    publicKeys.add(Convert.toHexString(rs.getBytes("public_key")));
+                                }
+                            }
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e.getMessage(), e);
+                        }
+                        Logger.logInfoMessage("Will save " + publicKeys.size() + " public keys");
+                        try (PrintWriter writer = new PrintWriter((new BufferedWriter( new OutputStreamWriter(new FileOutputStream("PUBLIC_KEY.json")))), true)) {
+                            JSON.writeJSONString(publicKeys, writer);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e.getMessage(), e);
+                        }
+                        Logger.logInfoMessage("Done");
+                    }
+                    {
                         SortedMap<String, Long> snapshotMap = new TreeMap<>();
                         SortedMap<String, Long> btcSnapshotMap = new TreeMap<>();
                         SortedMap<String, Long> usdSnapshotMap = new TreeMap<>();
                         try (Connection con = Db.db.getConnection();
-                             PreparedStatement pstmt = con.prepareStatement("SELECT id, balance FROM account where LATEST=true")) {
+                             PreparedStatement pstmt = con.prepareStatement("SELECT id, balance FROM account WHERE LATEST=true")) {
                             try (ResultSet rs = pstmt.executeQuery()) {
                                 while (rs.next()) {
                                     long accountId = rs.getLong("id");
@@ -80,7 +102,7 @@ public class Snapshot implements AddOn {
                     {
                         SortedMap<String, Long> snapshotMap = new TreeMap<>();
                         try (Connection con = Db.db.getConnection();
-                             PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset where asset_id = ? AND LATEST=true")) {
+                             PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
                             pstmt.setLong(1, FxtDistribution.FXT_ASSET_ID);
                             try (ResultSet rs = pstmt.executeQuery()) {
                                 while (rs.next()) {
