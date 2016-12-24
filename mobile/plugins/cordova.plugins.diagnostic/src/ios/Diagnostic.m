@@ -36,13 +36,15 @@ ABAddressBookRef _addressBook;
                              options:@{CBCentralManagerOptionShowPowerAlertKey: @(NO)}];
     [self centralManagerDidUpdateState:self.bluetoothManager]; // Show initial state
     self.contactStore = [[CNContactStore alloc] init];
+    self.motionManager = [[CMMotionActivityManager alloc] init];
+    self.motionActivityQueue = [[NSOperationQueue alloc] init];
 }
 
 /********************************/
 #pragma mark - Plugin API
 /********************************/
 
-// Location
+#pragma mark - Location
 - (void) isLocationAvailable: (CDVInvokedUrlCommand*)command
 {
     @try {
@@ -112,7 +114,7 @@ ABAddressBookRef _addressBook;
     [self sendPluginResult:pluginResult :command];
 }
 
-// Camera
+#pragma mark - Camera
 - (void) isCameraAvailable: (CDVInvokedUrlCommand*)command
 {
     @try {
@@ -210,7 +212,7 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Wifi
+#pragma mark -  Wifi
 - (void) isWifiAvailable: (CDVInvokedUrlCommand*)command
 {
     @try {
@@ -221,11 +223,19 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Bluetooth
+#pragma mark - Bluetooth
+
 - (void) isBluetoothAvailable: (CDVInvokedUrlCommand*)command
 {
     @try {
-        [self sendPluginResultBool:self.bluetoothEnabled :command];
+        NSString* state = [self getBluetoothState];
+        bool bluetoothEnabled;
+        if([state  isEqual: @"powered_on"]){
+            bluetoothEnabled = true;
+        }else{
+            bluetoothEnabled = false;
+        }
+        [self sendPluginResultBool:bluetoothEnabled :command];
     }
     @catch (NSException *exception) {
         [self handlePluginException:exception :command];
@@ -235,7 +245,7 @@ ABAddressBookRef _addressBook;
 - (void) getBluetoothState: (CDVInvokedUrlCommand*)command
 {
     @try {
-        NSString* state = self.bluetoothState;
+        NSString* state = [self getBluetoothState];
         NSLog(@"%@",[NSString stringWithFormat:@"Bluetooth state is: %@", state]);
         [self sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:state] :command];
     }
@@ -245,7 +255,29 @@ ABAddressBookRef _addressBook;
     
 }
 
-// Settings
+- (void) requestBluetoothAuthorization: (CDVInvokedUrlCommand*)command
+{
+    @try {
+        NSString* state = [self getBluetoothState];
+        
+        if([state isEqual: @"unauthorized"]){
+            /*
+             When the application requests to start scanning for bluetooth devices that is when the user is presented with a consent dialog.
+             */
+            NSLog(@"Requesting bluetooth authorization");
+            [self.bluetoothManager scanForPeripheralsWithServices:nil options:nil];
+            [self.bluetoothManager stopScan];
+        }else{
+            NSLog(@"Bluetooth authorization is already granted");
+        }
+        [self sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] :command];
+    }
+    @catch (NSException *exception) {
+        [self handlePluginException:exception :command];
+    }
+}
+
+#pragma mark -  Settings
 - (void) switchToSettings: (CDVInvokedUrlCommand*)command
 {
     @try {
@@ -273,7 +305,7 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Audio
+#pragma mark - Audio
 - (void) isMicrophoneAuthorized: (CDVInvokedUrlCommand*)command
 {
     CDVPluginResult* pluginResult;
@@ -339,7 +371,7 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Remote (Push) Notifications
+#pragma mark - Remote (Push) Notifications
 - (void) isRemoteNotificationsEnabled: (CDVInvokedUrlCommand*)command
 {
     @try {
@@ -470,7 +502,7 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Address Book (Contacts)
+#pragma mark - Address Book (Contacts)
 
 - (void) getAddressBookAuthorizationStatus: (CDVInvokedUrlCommand*)command
 {
@@ -549,7 +581,7 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Calendar Events
+#pragma mark - Calendar Events
 
 - (void) getCalendarAuthorizationStatus: (CDVInvokedUrlCommand*)command
 {
@@ -602,7 +634,7 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Reminder Events
+#pragma mark - Reminder Events
 
 - (void) getRemindersAuthorizationStatus: (CDVInvokedUrlCommand*)command
 {
@@ -655,7 +687,7 @@ ABAddressBookRef _addressBook;
     }
 }
 
-// Background refresh
+#pragma mark - Background refresh
 - (void) getBackgroundRefreshStatus: (CDVInvokedUrlCommand*)command
 {
     @try {
@@ -677,6 +709,77 @@ ABAddressBookRef _addressBook;
         [self handlePluginException:exception :command];
     }
 }
+
+#pragma mark - Motion methods
+
+- (void) isMotionAvailable:(CDVInvokedUrlCommand *)command
+{
+    @try {
+        
+        [self sendPluginResultBool:[self isMotionAvailable] :command];
+    }
+    @catch (NSException *exception) {
+        [self handlePluginException:exception :command];
+    }
+}
+
+- (void) isMotionRequestOutcomeAvailable:(CDVInvokedUrlCommand *)command
+{
+    @try {
+        
+        [self sendPluginResultBool:[self isMotionRequestOutcomeAvailable] :command];
+    }
+    @catch (NSException *exception) {
+        [self handlePluginException:exception :command];
+    }
+}
+
+
+- (void) requestAndCheckMotionAuthorization: (CDVInvokedUrlCommand*)command
+{
+    @try {
+        if([self isMotionAvailable]){
+            [self.motionManager startActivityUpdatesToQueue:self.motionActivityQueue withHandler:^(CMMotionActivity *activity) {
+                [self.motionManager stopActivityUpdates];
+                if([self isMotionRequestOutcomeAvailable]){
+                    CMPedometer* cmPedometer = [[CMPedometer alloc] init];
+                    [cmPedometer queryPedometerDataFromDate:[NSDate date]
+                         toDate:[NSDate date]
+                    withHandler:^(CMPedometerData* data, NSError *error) {
+                        NSString* status;
+                        if (error != nil && error.code == CMErrorMotionActivityNotAuthorized) {
+                            status = @"denied";
+                        }else if (error != nil && (
+                                                   error.code == CMErrorMotionActivityNotEntitled
+                                                   || error.code == CMErrorMotionActivityNotAvailable
+                                                   )) {
+                            status = @"restricted";
+                        }else{
+                            status = @"authorized";
+                        }
+                        
+                        NSLog(@"Motion access is %@", status);
+                        [self sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:status] :command];
+                        
+                    }];
+                }else{
+                    NSLog(@"Pedometer tracking not available on this device - cannot determine motion authorization status");
+                    [self sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"not_determined"] :command];
+                }
+            }];
+        }else{
+            NSString* errMsg = @"Activity tracking not available on this device";
+            NSLog(@"%@", errMsg);
+            [self sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errMsg] :command];
+        }
+        
+
+    }
+    @catch (NSException *exception) {
+        [self handlePluginException:exception :command];
+    }
+}
+        
 
 /********************************/
 #pragma mark - Send results
@@ -712,6 +815,17 @@ ABAddressBookRef _addressBook;
 /********************************/
 #pragma mark - utility functions
 /********************************/
+
+- (BOOL) isMotionAvailable
+{
+    return [CMMotionActivityManager isActivityAvailable];
+}
+
+- (BOOL) isMotionRequestOutcomeAvailable
+{
+    return [CMPedometer isPedometerEventTrackingAvailable];
+}
+
 
 - (NSString*) getLocationAuthorizationStatusAsString: (CLAuthorizationStatus)authStatus
 {
@@ -876,11 +990,7 @@ ABAddressBookRef _addressBook;
 }
 #endif
 
-/********************************/
-#pragma mark - CBCentralManagerDelegate
-/********************************/
-
-- (void) centralManagerDidUpdateState:(CBCentralManager *)central {
+- (NSString*)getBluetoothState{
     NSString* state;
     NSString* description;
     
@@ -938,13 +1048,17 @@ ABAddressBookRef _addressBook;
     }
     NSLog(@"Bluetooth state changed: %@",description);
     
-    self.bluetoothState = state;
-    if([state  isEqual: @"powered_on"]){
-        self.bluetoothEnabled = true;
-    }else{
-        self.bluetoothEnabled = false;
-    }
     
+    return state;
+}
+
+/********************************/
+#pragma mark - CBCentralManagerDelegate
+/********************************/
+
+- (void) centralManagerDidUpdateState:(CBCentralManager *)central {
+    
+    NSString* state = [self getBluetoothState];
     NSString* jsString = [NSString stringWithFormat:@"cordova.plugins.diagnostic._onBluetoothStateChange(\"%@\");", state];
     [self jsCallback:jsString];
 }

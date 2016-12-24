@@ -23,3 +23,9 @@ cordova-plugin-compat
 ------------------------
 
 This repo is for remaining backwards compatible with previous versions of Cordova.
+
+## USAGE
+
+Your plugin can depend on this plugin and use it to handle the new run time permissions Android 6.0.0 (cordova-android 5.0.0) introduced. 
+
+View [this commit](https://github.com/apache/cordova-plugin-camera/commit/a9c18710f23e86f5b7f8918dfab7c87a85064870) to see how to depend on `cordova-plugin-compat`. View [this file](https://github.com/apache/cordova-plugin-camera/blob/master/src/android/CameraLauncher.java) to see how `PermissionHelper` is being used to request and store permissions. Read more about Android permissions at http://cordova.apache.org/docs/en/latest/guide/platforms/android/plugin.html#android-permissions.
