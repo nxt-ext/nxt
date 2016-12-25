@@ -343,7 +343,7 @@ var NRS = (function(NRS, $) {
         apiCall('limit/nxt_btc', {}, 'GET', function (data) {
             NRS.logConsole("limit1 " + data.limit);
             if (data.limit) {
-                $('#shape_shift_status').html($.t('ok'));
+                $('#shape_shift_status').html('ok');
                 $('#shape_shift_nxt_avail').html(String(data.limit).escapeHTML());
             }
         });
