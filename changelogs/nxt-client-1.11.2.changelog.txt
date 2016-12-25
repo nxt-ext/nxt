@@ -1,1 +1,11 @@
-//TODO
+Added "Copy Account" button next to the account id header.
+
+Added again the API and DBShell links to the cogwheel menu.
+
+Minor bugfixes and UI improvements.
+
+Android App updated to use Apache Cordova 6.4.0
+
+Updated Jetty to version 9.3.15, delete the old lib folder before unpacking 
+on top.
+
