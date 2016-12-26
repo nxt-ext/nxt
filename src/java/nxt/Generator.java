@@ -390,9 +390,7 @@ public final class Generator implements Comparable<Generator> {
         synchronized(activeGenerators) {
             if (!generatorsInitialized) {
                 activeGeneratorIds.addAll(BlockDb.getBlockGenerators(Math.max(1, blockchain.getHeight() - 10000)));
-                for (Long activeGeneratorId : activeGeneratorIds) {
-                    activeGenerators.add(new ActiveGenerator(activeGeneratorId));
-                }
+                activeGeneratorIds.forEach(activeGeneratorId -> activeGenerators.add(new ActiveGenerator(activeGeneratorId)));
                 Logger.logDebugMessage(activeGeneratorIds.size() + " block generators found");
                 Nxt.getBlockchainProcessor().addListener(block -> {
                     long generatorId = block.getGeneratorId();

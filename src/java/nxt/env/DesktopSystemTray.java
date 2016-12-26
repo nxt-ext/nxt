@@ -56,8 +56,9 @@ public class DesktopSystemTray {
             Logger.logInfoMessage("SystemTray is not supported");
             return;
         }
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
         final PopupMenu popup = new PopupMenu();
-        imageIcon = new ImageIcon("html/ui/img/nxt-icon-32x32.png", "tray icon");
+        imageIcon = new ImageIcon("html/www/img/nxt-icon-32x32.png", "tray icon");
         trayIcon = new TrayIcon(imageIcon.getImage());
         trayIcon.setImageAutoSize(true);
         tray = SystemTray.getSystemTray();

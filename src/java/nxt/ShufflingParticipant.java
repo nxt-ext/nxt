@@ -14,9 +14,6 @@
  *
  */
 
-/**
- * Represents a single shuffling participant
- */
 package nxt;
 
 import nxt.db.DbClause;

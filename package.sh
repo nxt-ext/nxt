@@ -41,6 +41,6 @@ do
 	gzip -9c "$f" > "$f".gz
 done
 echo zip
-zip -q -X -r ${PACKAGE} nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.log \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties
+zip -q -X -r ${PACKAGE} nxt -x \*/.idea/\* \*/.gitignore \*/.git/\* \*/\*.log \*.iml nxt/conf/nxt.properties nxt/conf/logging.properties nxt/conf/localstorage/\*
 rm -rf nxt
 echo done

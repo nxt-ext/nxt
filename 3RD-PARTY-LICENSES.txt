@@ -2,7 +2,7 @@ This is a list of the third party components used by the server-side code,
 and distributed with this software inside the lib directory.
 
 The licenses for third party works used by the UI code are listed separately
-under /html/ui/3RD-PARTY-LICENSES.txt.
+under /html/www/3RD-PARTY-LICENSES.txt.
 
 
 H2:
@@ -67,3 +67,10 @@ Apache Tika:
 
 Tika https://tika.apache.org/ is licensed under the
 Apache License 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+
+JavaFX WebView debugger:
+
+JavaFX WebView debugger https://github.com/mohamnag/javafx_webview_debugger
+is licensed under the MIT license:
+https://github.com/mohamnag/javafx_webview_debugger/blob/master/LICENCE

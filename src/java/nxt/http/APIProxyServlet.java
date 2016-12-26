@@ -38,32 +38,15 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static nxt.http.JSONResponses.ERROR_NOT_ALLOWED;
 
 public final class APIProxyServlet extends AsyncMiddleManServlet {
-    private static final Set<String> NOT_FORWARDED_REQUESTS;
-    private static final Set<APITag> NOT_FORWARDED_TAGS;
+
     private static final String REMOTE_URL = APIProxyServlet.class.getName() + ".remoteUrl";
     private static final String REMOTE_SERVER_IDLE_TIMEOUT = APIProxyServlet.class.getName() + ".remoteServerIdleTimeout";
     static final int PROXY_IDLE_TIMEOUT_DELTA = 5000;
-
-    static {
-        Set<String> requests = new HashSet<>();
-        requests.add("getBlockchainStatus");
-        requests.add("getState");
-        NOT_FORWARDED_REQUESTS = Collections.unmodifiableSet(requests);
-
-        Set<APITag> tags = new HashSet<>();
-        tags.add(APITag.UTILS);
-        tags.add(APITag.DEBUG);
-        tags.add(APITag.NETWORK);
-        NOT_FORWARDED_TAGS = Collections.unmodifiableSet(tags);
-    }
 
     static void initClass() {}
 
@@ -208,13 +191,10 @@ public final class APIProxyServlet extends AsyncMiddleManServlet {
         if (apiRequestHandler.requireFullClient()) {
             return false;
         }
-        if (NOT_FORWARDED_REQUESTS.contains(requestType)) {
+        if (APIProxy.NOT_FORWARDED_REQUESTS.contains(requestType)) {
             return false;
         }
-        //noinspection RedundantIfStatement
-        if (!Collections.disjoint(apiRequestHandler.getAPITags(), NOT_FORWARDED_TAGS)) {
-            return false;
-        }
+
         return true;
     }
 

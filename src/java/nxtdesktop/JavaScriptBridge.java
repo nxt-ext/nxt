@@ -17,6 +17,8 @@
 package nxtdesktop;
 
 import javafx.application.Platform;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import nxt.Nxt;
 import nxt.http.API;
 import nxt.util.JSON;
@@ -37,6 +39,7 @@ import java.nio.file.Paths;
 public class JavaScriptBridge {
 
     DesktopApplication application;
+    private Clipboard clipboard;
 
     public JavaScriptBridge(DesktopApplication application) {
         this.application = application;
@@ -92,4 +95,18 @@ public class JavaScriptBridge {
     public void popupHandlerURLChange(String newValue) {
         application.popupHandlerURLChange(newValue);
     }
+
+    @SuppressWarnings("unused")
+    public boolean copyText(String text) {
+        if (clipboard == null) {
+            clipboard = Clipboard.getSystemClipboard();
+            if (clipboard == null) {
+                return false;
+            }
+        }
+        final ClipboardContent content = new ClipboardContent();
+        content.putString(text);
+        return clipboard.setContent(content);
+    }
+
 }

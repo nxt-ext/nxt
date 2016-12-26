@@ -22,6 +22,9 @@ import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import nxt.util.UPnP;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -39,6 +42,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import javax.servlet.Filter;
@@ -75,6 +79,7 @@ public final class API {
 
     public static final int TESTNET_API_PORT = 6876;
     public static final int TESTNET_API_SSLPORT = 6877;
+    private static final String[] DISABLED_HTTP_METHODS = {"TRACE", "OPTIONS", "HEAD"};
 
     public static final int openAPIPort;
     public static final int openAPISSLPort;
@@ -261,6 +266,7 @@ public final class API {
                 FilterHolder filterHolder = apiHandler.addFilter(XFrameOptionsFilter.class, "/*", null);
                 filterHolder.setAsyncSupported(true);
             }
+            disableHttpMethods(apiHandler);
 
             apiHandlers.addHandler(apiHandler);
             apiHandlers.addHandler(new DefaultHandler());
@@ -398,6 +404,42 @@ public final class API {
         }
         return false;
 
+    }
+
+    private static void disableHttpMethods(ServletContextHandler servletContext) {
+        SecurityHandler securityHandler = servletContext.getSecurityHandler();
+        if (securityHandler == null) {
+            securityHandler = new ConstraintSecurityHandler();
+            servletContext.setSecurityHandler(securityHandler);
+        }
+        disableHttpMethods(securityHandler);
+    }
+
+    private static void disableHttpMethods(SecurityHandler securityHandler) {
+        if (securityHandler instanceof ConstraintSecurityHandler) {
+            ConstraintSecurityHandler constraintSecurityHandler = (ConstraintSecurityHandler) securityHandler;
+            for (String method : DISABLED_HTTP_METHODS) {
+                disableHttpMethod(constraintSecurityHandler, method);
+            }
+            ConstraintMapping enableEverythingButTraceMapping = new ConstraintMapping();
+            Constraint enableEverythingButTraceConstraint = new Constraint();
+            enableEverythingButTraceConstraint.setName("Enable everything but TRACE");
+            enableEverythingButTraceMapping.setConstraint(enableEverythingButTraceConstraint);
+            enableEverythingButTraceMapping.setMethodOmissions(DISABLED_HTTP_METHODS);
+            enableEverythingButTraceMapping.setPathSpec("/");
+            constraintSecurityHandler.addConstraintMapping(enableEverythingButTraceMapping);
+        }
+    }
+
+    private static void disableHttpMethod(ConstraintSecurityHandler securityHandler, String httpMethod) {
+        ConstraintMapping mapping = new ConstraintMapping();
+        Constraint constraint = new Constraint();
+        constraint.setName("Disable " + httpMethod);
+        constraint.setAuthenticate(true);
+        mapping.setConstraint(constraint);
+        mapping.setPathSpec("/");
+        mapping.setMethod(httpMethod);
+        securityHandler.addConstraintMapping(mapping);
     }
 
     private static class NetworkAddress {

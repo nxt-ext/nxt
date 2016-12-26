@@ -1,3 +1,117 @@
+nxt-client-1.11.1e:
+
+Implemented "Store Remembered Passphrase" setting in the device settings page.
+When checked, the client stores the remembered passphrase in the local browser
+settings or mobile app settings so that the next time the client is launched
+it will login in automatically.
+For the mobile app this setting defaults to true. In other configurations it 
+defaults to false. The stored passphrase is deleted when logging out of the
+wallet.
+
+Desktop Application now supports request confirmations when running as light or
+roaming client.
+
+Sign Transaction modal now signs the transaction bytes on the client side.
+
+When the mobile app cannot connect to a randomly selected remote node, it will
+popup the device settings modal to allow the user to configure a specific node.
+
+When the mobile device is offline, the device settings modal allows signing
+transactions and generating tokens to support cold storage functionality.
+
+Additional client side bug fixes and refactoring.
+
+Updated Jetty to version 9.3.14 and H2 to version 1.4.193, delete the old lib
+folder before unpacking on top.
+
+Updated localization component i18next to version 3.4.4
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.11.0e:
+
+Added Generators page (under the cogwheel menu), showing the predicted next
+block generators.
+
+When working as a roaming or light client, data returned by the remote node is 
+validated against other remote nodes. In case of a difference a visual 
+indication is displayed on the toolbar to warn the user that the data returned 
+by the remote node may not be consistent.
+
+The user interface files are now located under html/www instead of html/ui,
+as this is the path required by the Apache Cordova framework used by the
+mobile wallet.
+
+The lockup screen now displays a button group of "by account", "by passphrase", 
+"by QR code" login options side by side above the credentials entry field, 
+instead of the old "By Account" / "By Password" toggle button.
+
+Scanning a QR code for login, has been implemented by clicking the QR code icon
+on the lockup screen. When the value scanned matches an NXT account format it
+will be treated as account login, otherwise the value scanned will be treated
+as the account passphrase.
+
+The old "Remember Account" and "Remember Passphrase" checkboxes were merged 
+into a single "Remember Me" checkbox.
+
+Save passphrase in local storage when using passphrase login with "Remember Me"
+checked. Choosing logout will clear this data.
+
+Account and passphrase entry fields on modal dialogs now support scanning the
+value from a QR code by clicking the QR link above the field.
+
+When logging in with passphrase and the "Remember Me" checkbox checked, the 
+"Account Details" modal will display the QR code for the account passphrase 
+in addition to the QR code for the account id.
+
+Experimental support for running the client wallet as a mobile app has been 
+added. See specific documentation at https://nxtwiki.org/wiki/Mobile_App
+
+Updated Jetty to version 9.3.13, delete the old lib folder before unpacking on
+top.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.10.3:
+
+Removed old code, the Ardor distribution UI, and the getFxtQuantity API, as the
+Ardor distribution is now complete.
+
+Blacklist peers of version older than 1.10.1.
+
+As a performance optimization, the ARDR asset distribution data is now loaded
+from the conf/fxt.json for production and conf/fxt-testnet.json files for
+testnet, instead of being recalculated during blockchain download. If those
+files are missing, and a rescan or redownload is performed, snapshot data will
+be calculated again and saved as the corresponding json file in the nxt folder,
+thus allowing independent validation of the hardcoded distribution data.
+
+Added ShapeShift support to the desktop wallet by using a proxy servlet on the
+local node.
+
+The security manager which is automatically enabled when add-ons are in use now
+allows add-on network connections.
+
+Added nxt.disableSecurityPolicy property to disable the security manager even
+when add-ons are in use, in order to improve performance, default false.
+
+Added nxt.keyStoreType property to configure the keystore type used, default
+is JKS.
+
+Updated Jetty to version 9.3.12 and Bouncy Castle to version 1.55, delete the
+old lib folder before unpacking on top.
+
+
+Important copyright change:
+
+The copyright of all GPLv2 code contributed by the Nxt Core Developers to the
+Nxt Reference Software now belongs to Jelurida IP B.V., a private company
+registered in the Netherlands. Please contact info@jelurida.com for commercial
+licensing options if the GPLv2 license does not fit your private blockchain
+needs.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.10.2:
 
 Changed default setting of nxt.apiServerCORS to true in nxt-default.properties,

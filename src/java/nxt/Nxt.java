@@ -51,7 +51,7 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.10.3";
+    public static final String VERSION = "1.11.2";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
@@ -319,6 +319,7 @@ public final class Nxt {
         Users.shutdown();
         FundingMonitor.shutdown();
         ThreadPool.shutdown();
+        BlockchainProcessorImpl.getInstance().shutdown();
         Peers.shutdown();
         Db.shutdown();
         Logger.logShutdownMessage("Nxt server " + VERSION + " stopped.");
@@ -467,18 +468,14 @@ public final class Nxt {
     }
 
     private static Thread initSecureRandom() {
-        Thread secureRandomInitThread = new Thread(() -> {
-            Crypto.getSecureRandom().nextBytes(new byte[1024]);
-        });
+        Thread secureRandomInitThread = new Thread(() -> Crypto.getSecureRandom().nextBytes(new byte[1024]));
         secureRandomInitThread.setDaemon(true);
         secureRandomInitThread.start();
         return secureRandomInitThread;
     }
 
     private static void testSecureRandom() {
-        Thread thread = new Thread(() -> {
-            Crypto.getSecureRandom().nextBytes(new byte[1024]);
-        });
+        Thread thread = new Thread(() -> Crypto.getSecureRandom().nextBytes(new byte[1024]));
         thread.setDaemon(true);
         thread.start();
         try {

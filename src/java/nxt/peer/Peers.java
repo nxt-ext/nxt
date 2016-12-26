@@ -1252,6 +1252,11 @@ public final class Peers {
         return myPeerInfoResponse;
     }
 
+    public static Peer.BlockchainState getMyBlockchainState() {
+        checkBlockchainState();
+        return currentBlockchainState;
+    }
+
     private Peers() {} // never
 
 }
