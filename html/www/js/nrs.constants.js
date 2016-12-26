@@ -278,3 +278,7 @@ var NRS = (function (NRS, $) {
 
     return NRS;
 }(NRS || {}, jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

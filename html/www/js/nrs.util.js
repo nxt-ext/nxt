@@ -1684,3 +1684,7 @@ var NRS = (function (NRS, $, undefined) {
 
     return NRS;
 }(NRS || {}, jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

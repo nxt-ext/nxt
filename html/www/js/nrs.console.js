@@ -26,7 +26,7 @@ var NRS = (function (NRS, $) {
             try {
                 var prefix = "";
                 if (!isDateIncluded) {
-                    prefix = new Date().format("isoDateTime") + " ";
+                    prefix = new Date().toISOString() + " ";
                 }
                 var postfix = "";
                 if (isDisplayTimeExact) {
@@ -42,6 +42,13 @@ var NRS = (function (NRS, $) {
                 // IE11 when running in compatibility mode
             }
 
+        }
+    };
+
+    NRS.logException = function(e) {
+        NRS.logConsole(e.message);
+        if (e.stack) {
+            NRS.logConsole(e.stack);
         }
     };
 
@@ -162,3 +169,7 @@ var NRS = (function (NRS, $) {
 
     return NRS;
 }(NRS || {}, jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

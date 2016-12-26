@@ -1796,9 +1796,13 @@ NRS.addPagination = function () {
 	}
 
 	return NRS;
-}(NRS || {}, jQuery));
+}(Object.assign(NRS || {}, isNode ? global.server : {}), jQuery));
 
-$(document).ready(function() {
-	console.log("document.ready");
-	NRS.init();
-});
+if (isNode) {
+    module.exports = NRS;
+} else {
+    $(document).ready(function() {
+        console.log("document.ready");
+        NRS.init();
+    });
+}
