@@ -25,7 +25,10 @@ exports.get = function(callback) {
             global.jQuery = require("jquery")(window);
             global.$ = global.jQuery;
             $.t = function(text) { return text; };
+            global.crypto = require("crypto");
             global.CryptoJS = require("crypto-js");
+            global.async = require("async");
+            global.pako = require("pako");
             global.window = window;
             window.console = console;
             global.document = {};
@@ -37,6 +40,7 @@ exports.get = function(callback) {
             global.BigInteger = jsbn.BigInteger;
             // require('./3rdparty/jsbn2');
             global.curve25519 = require('./crypto/curve25519');
+            global.curve25519_ = require('./crypto/curve25519_');
             require('./util/extensions');
             global.converters = require('./util/converters');
             global.server = {};

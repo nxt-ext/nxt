@@ -728,12 +728,7 @@ var NRS = (function (NRS, $) {
 	}
 
 	function aesEncrypt(plaintext, options) {
-		if (!window.crypto && !window.msCrypto) {
-			throw {
-				"errorCode": -1,
-				"message": $.t("error_encryption_browser_support")
-			};
-		}
+        var ivBytes = getRandomBytes(16);
 
 		// CryptoJS likes WordArray parameters
 		var text = converters.byteArrayToWordArray(plaintext);
@@ -747,17 +742,9 @@ var NRS = (function (NRS, $) {
 			sharedKey[i] ^= options.nonce[i];
 		}
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
-
-		var ivBytes = new Uint8Array(16);
-		if (window.crypto) {
-			window.crypto.getRandomValues(ivBytes);
-		} else {
-			window.msCrypto.getRandomValues(ivBytes);
-		}
 		var encrypted = CryptoJS.AES.encrypt(text, key, {
 			iv: converters.byteArrayToWordArray(ivBytes)
 		});
-
 		var ivOut = converters.wordArrayToByteArray(encrypted.iv);
 		var ciphertextOut = converters.wordArrayToByteArray(encrypted.ciphertext);
 		return ivOut.concat(ciphertextOut);
@@ -814,28 +801,12 @@ var NRS = (function (NRS, $) {
    		return encryptData(data, options);
    	};
 
-	function encryptData(plaintext, options) {
-		if (!window.crypto && !window.msCrypto) {
-			throw {
-				"errorCode": -1,
-				"message": $.t("error_encryption_browser_support")
-			};
-		}
-
-		if (!options.sharedKey) {
-			options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
-		}
-
-		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
-		options.nonce = new Uint8Array(32);
-		if (window.crypto) {
-			//noinspection JSUnresolvedFunction
-			window.crypto.getRandomValues(options.nonce);
-		} else {
-			//noinspection JSUnresolvedFunction
-			window.msCrypto.getRandomValues(options.nonce);
-		}
-
+    function encryptData(plaintext, options) {
+        options.nonce = getRandomBytes(32);
+        if (!options.sharedKey) {
+            options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
+        }
+        var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
 		var data = aesEncrypt(compressedPlaintext, options);
 		return {
 			"nonce": options.nonce,
@@ -900,7 +871,27 @@ var NRS = (function (NRS, $) {
 		r.readAsArrayBuffer(file);
 	};
 
-	return NRS;
+    function getRandomBytes(length) {
+        if (!window.crypto && !window.msCrypto && !crypto) {
+            throw {
+                "errorCode": -1,
+                "message": $.t("error_encryption_browser_support")
+            };
+        }
+        var bytes = new Uint8Array(length);
+        if (window.crypto) {
+            //noinspection JSUnresolvedFunction
+            window.crypto.getRandomValues(bytes);
+        } else if (window.msCrypto) {
+            //noinspection JSUnresolvedFunction
+            window.msCrypto.getRandomValues(bytes);
+        } else {
+            bytes = crypto.randomBytes(length);
+        }
+        return bytes;
+    }
+
+    return NRS;
 }(Object.assign(NRS || {}, isNode ? global.server : {}), jQuery));
 
 if (isNode) {
