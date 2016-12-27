@@ -170,29 +170,6 @@ var NRS = (function (NRS, $) {
 		}
 	};
 
-	NRS.decryptData = function(data, options, secretPhrase) {
-		try {
-			return NRS.decryptNote(message, options, secretPhrase);
-		} catch (err) {
-			if (err.errorCode && err.errorCode == 1) {
-				return false;
-			} else {
-				if (options.title) {
-					var translatedTitle = NRS.getTranslatedFieldName(options.title).toLowerCase();
-					if (!translatedTitle) {
-						translatedTitle = NRS.escapeRespStr(options.title).toLowerCase();
-					}
-
-					return $.t("error_could_not_decrypt_var", {
-						"var": translatedTitle
-					}).capitalize();
-				} else {
-					return $.t("error_could_not_decrypt");
-				}
-			}
-		}
-	};
-
 	NRS.decryptNote = function(message, options, secretPhrase) {
 		try {
 			if (!options.sharedKey) {
