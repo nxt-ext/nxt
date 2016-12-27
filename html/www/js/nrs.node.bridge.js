@@ -14,7 +14,7 @@ exports.init = function(params) {
     return this;
 };
 
-exports.get = function(callback) {
+exports.load = function(callback) {
     require("jsdom").env("", function(err, window) {
         try {
             if (err) {
@@ -75,4 +75,22 @@ exports.get = function(callback) {
             console.log(e.stack);
         }
     });
+};
+
+exports.encryptToSelf = function(NRS, text, secretPhrase) {
+    var encrypted = NRS.encryptNote(text, {
+        "publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(secretPhrase))
+    }, secretPhrase);
+    return {
+        encryptToSelfMessageData: encrypted.message,
+        encryptToSelfMessageNonce: encrypted.nonce,
+        messageToEncryptToSelfIsText: "true"
+    };
+};
+
+exports.getMandatoryParams = function() {
+    return {
+        feeNQT: "0",
+        deadline: "1440"
+    }
 };
