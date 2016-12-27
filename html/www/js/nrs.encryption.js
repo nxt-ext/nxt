@@ -901,4 +901,8 @@ var NRS = (function (NRS, $) {
 	};
 
 	return NRS;
-}(NRS || {}, jQuery));
+}(Object.assign(NRS || {}, isNode ? global.server : {}), jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

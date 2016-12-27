@@ -40,8 +40,8 @@ var NRS = (function(NRS, $, undefined) {
 	NRS.server = "";
 	NRS.state = {};
 	NRS.blocks = [];
-	NRS.account = "";
-	NRS.accountRS = "";
+	NRS.account = NRS.account ? NRS.account : "";
+	NRS.accountRS = NRS.accountRS ? NRS.accountRS : "";
 	NRS.publicKey = "";
 	NRS.accountInfo = {};
 
@@ -70,7 +70,7 @@ var NRS = (function(NRS, $, undefined) {
     };
 	NRS.contacts = {};
 
-	NRS.isTestNet = false;
+	NRS.isTestNet = NRS.isTestNet ? NRS.isTestNet : false;
 	NRS.forgingStatus = NRS.constants.UNKNOWN;
 	NRS.isAccountForging = false;
 	NRS.isLeased = false;

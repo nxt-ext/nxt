@@ -18,10 +18,6 @@
  * @depends {nrs.js}
  */
 var NRS = (function (NRS) {
-    if (!navigator) {
-        var navigator = {};
-        navigator.userAgent = "";
-    }
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
     var isMobileDevice = window["cordova"] !== undefined;
@@ -225,7 +221,7 @@ var NRS = (function (NRS) {
     };
 
     return NRS;
-}(NRS || {}, jQuery));
+}(Object.assign(NRS || {}, isNode ? global.server : {}), jQuery));
 
 if (isNode) {
     module.exports = NRS;
