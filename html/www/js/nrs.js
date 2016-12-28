@@ -37,7 +37,7 @@
 var NRS = (function(NRS, $, undefined) {
 	"use strict";
 
-	NRS.server = "";
+	NRS.client = "";
 	NRS.state = {};
 	NRS.blocks = [];
 	NRS.account = NRS.account ? NRS.account : "";
@@ -1796,7 +1796,7 @@ NRS.addPagination = function () {
 	}
 
 	return NRS;
-}(Object.assign(NRS || {}, isNode ? global.server : {}), jQuery));
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
 
 if (isNode) {
     module.exports = NRS;

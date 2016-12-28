@@ -121,7 +121,7 @@ var NRS = (function (NRS, $) {
             processConstants(NRS.constants.SERVER);
         } else {
             if (isNode) {
-                server.sendRequest("getConstants", {}, processConstants, false);
+                client.sendRequest("getConstants", {}, processConstants, false);
             } else {
                 NRS.sendRequest("getConstants", {}, processConstants, false);
             }
@@ -281,7 +281,7 @@ var NRS = (function (NRS, $) {
     };
 
     return NRS;
-}(Object.assign(NRS || {}, isNode ? global.server : {}), jQuery));
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
 
 if (isNode) {
     module.exports = NRS;

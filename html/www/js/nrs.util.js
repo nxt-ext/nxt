@@ -1673,7 +1673,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     return NRS;
-}(Object.assign(NRS || {}, isNode ? global.server : {}), jQuery));
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
 
 if (isNode) {
     module.exports = NRS;
