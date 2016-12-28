@@ -313,7 +313,7 @@ var NRS = (function (NRS, $, undefined) {
         var formData = null;
 
         var config = NRS.getFileUploadConfig(requestType, data);
-        if (config && $(config.selector)[0].files[0]) {
+        if (config && $(config.selector)[0] && $(config.selector)[0].files[0]) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;

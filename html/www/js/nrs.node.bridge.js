@@ -77,15 +77,23 @@ exports.load = function(callback) {
     });
 };
 
-exports.encryptToSelf = function(NRS, text, secretPhrase) {
+exports.encryptMessage = function(NRS, text, senderSecretPhrase, recipientPublicKey, isMessageToSelf) {
     var encrypted = NRS.encryptNote(text, {
-        "publicKey": converters.hexStringToByteArray(NRS.generatePublicKey(secretPhrase))
-    }, secretPhrase);
-    return {
-        encryptToSelfMessageData: encrypted.message,
-        encryptToSelfMessageNonce: encrypted.nonce,
-        messageToEncryptToSelfIsText: "true"
-    };
+        "publicKey": converters.hexStringToByteArray(recipientPublicKey)
+    }, senderSecretPhrase);
+    if (isMessageToSelf) {
+        return {
+            encryptToSelfMessageData: encrypted.message,
+            encryptToSelfMessageNonce: encrypted.nonce,
+            messageToEncryptToSelfIsText: "true"
+        }
+    } else {
+        return {
+            encryptedMessageData: encrypted.message,
+            encryptedMessageNonce: encrypted.nonce,
+            messageToEncryptIsText: "true"
+        }
+    }
 };
 
 exports.getMandatoryParams = function() {
