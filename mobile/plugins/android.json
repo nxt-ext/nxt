@@ -25,13 +25,13 @@
         "ionic-plugin-keyboard": {
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
         },
-        "cordova-plugin-file": {
-            "PACKAGE_NAME": "org.nxt.mobile.wallet"
-        },
-        "phonegap-plugin-barcodescanner": {
-            "PACKAGE_NAME": "org.nxt.mobile.wallet"
-        },
         "cordova-plugin-android-permissions": {
+            "PACKAGE_NAME": "org.nxt.mobile.wallet"
+        },
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "org.nxt.mobile.wallet"
+        },
+        "cordova-plugin-file": {
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
         },
         "cordova-plugin-inappbrowser": {
@@ -39,11 +39,10 @@
         },
         "cordova.plugins.diagnostic": {
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
-        }
-    },
-    "dependent_plugins": {
-        "cordova-plugin-compat": {
+        },
+        "phonegap-plugin-barcodescanner": {
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
         }
-    }
+    },
+    "dependent_plugins": {}
 }

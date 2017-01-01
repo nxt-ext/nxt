@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016 Jelurida IP B.V.
+ * Copyright © 2016-2017 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -148,6 +148,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     -31, 16, 18, -38, -86, 3, -111, -9, 3, -32, 87, 8, 70, 35, -33, -56, 91,
                     -72, -55, -96, -120, -127, -116, 2, -21, -89, -7, 56, -114, -66, 72, -49
             };
+    private static final byte[] CHECKSUM_21 = Constants.isTestnet ?
+            new byte[] {
+                    -63, -51, -56, -76, 13, 21, -47, 69, -108, -28, -124, 108, -17, 27, 30, -65,
+                    -95, 110, -9, 35, 59, 112, -20, 122, -44, -86, -54, 51, 46, 80, -13, -26
+            }
+            :
+            new byte[] {
+                    -26, -121, -115, -116, -62, -120, -99, -74, -52, -39, 9, 52, 20, 92, -42, 115,
+                    19, -67, 7, 51, 4, -100, -41, 41, 57, -102, 19, -128, -109, -52, -68, -15
+            };
+
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
 
@@ -969,41 +980,46 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
     }
 
     private final Listener<Block> checksumListener = block -> {
-        if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK
-                && ! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING, 0, Constants.TRANSPARENT_FORGING_BLOCK)) {
-            popOffTo(0);
-        }
-        if (block.getHeight() == Constants.NQT_BLOCK
-                && ! verifyChecksum(CHECKSUM_NQT_BLOCK, Constants.TRANSPARENT_FORGING_BLOCK, Constants.NQT_BLOCK)) {
-            popOffTo(Constants.TRANSPARENT_FORGING_BLOCK);
-        }
-        if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK
-                && ! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, Constants.NQT_BLOCK, Constants.MONETARY_SYSTEM_BLOCK)) {
-            popOffTo(Constants.NQT_BLOCK);
-        }
-        if (block.getHeight() == Constants.PHASING_BLOCK
-                && ! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
-            popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
-        }
-        if (block.getHeight() == Constants.CHECKSUM_BLOCK_16
-                && ! verifyChecksum(CHECKSUM_16, Constants.PHASING_BLOCK, Constants.CHECKSUM_BLOCK_16)) {
-            popOffTo(Constants.PHASING_BLOCK);
-        }
-        if (block.getHeight() == Constants.CHECKSUM_BLOCK_17
-                && ! verifyChecksum(CHECKSUM_17, Constants.CHECKSUM_BLOCK_16, Constants.CHECKSUM_BLOCK_17)) {
-            popOffTo(Constants.CHECKSUM_BLOCK_16);
-        }
-        if (block.getHeight() == Constants.CHECKSUM_BLOCK_18
-                && ! verifyChecksum(CHECKSUM_18, Constants.CHECKSUM_BLOCK_17, Constants.CHECKSUM_BLOCK_18)) {
-            popOffTo(Constants.CHECKSUM_BLOCK_17);
-        }
-        if (block.getHeight() == Constants.CHECKSUM_BLOCK_19
-                && ! verifyChecksum(CHECKSUM_19, Constants.CHECKSUM_BLOCK_18, Constants.CHECKSUM_BLOCK_19)) {
-            popOffTo(Constants.CHECKSUM_BLOCK_18);
-        }
-        if (block.getHeight() == Constants.CHECKSUM_BLOCK_20
-                && ! verifyChecksum(CHECKSUM_20, Constants.CHECKSUM_BLOCK_19, Constants.CHECKSUM_BLOCK_20)) {
-            popOffTo(Constants.CHECKSUM_BLOCK_19);
+        if (block.getHeight() == Constants.TRANSPARENT_FORGING_BLOCK) {
+            if (! verifyChecksum(CHECKSUM_TRANSPARENT_FORGING, 0, Constants.TRANSPARENT_FORGING_BLOCK)) {
+                popOffTo(0);
+            }
+        } else if (block.getHeight() == Constants.NQT_BLOCK) {
+            if (! verifyChecksum(CHECKSUM_NQT_BLOCK, Constants.TRANSPARENT_FORGING_BLOCK, Constants.NQT_BLOCK)) {
+                popOffTo(Constants.TRANSPARENT_FORGING_BLOCK);
+            }
+        } else if (block.getHeight() == Constants.MONETARY_SYSTEM_BLOCK) {
+            if (! verifyChecksum(CHECKSUM_MONETARY_SYSTEM_BLOCK, Constants.NQT_BLOCK, Constants.MONETARY_SYSTEM_BLOCK)) {
+                popOffTo(Constants.NQT_BLOCK);
+            }
+        } else if (block.getHeight() == Constants.PHASING_BLOCK) {
+            if (! verifyChecksum(CHECKSUM_PHASING_BLOCK, Constants.MONETARY_SYSTEM_BLOCK, Constants.PHASING_BLOCK)) {
+                popOffTo(Constants.MONETARY_SYSTEM_BLOCK);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_16) {
+            if (! verifyChecksum(CHECKSUM_16, Constants.PHASING_BLOCK, Constants.CHECKSUM_BLOCK_16)) {
+                popOffTo(Constants.PHASING_BLOCK);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_17) {
+            if (! verifyChecksum(CHECKSUM_17, Constants.CHECKSUM_BLOCK_16, Constants.CHECKSUM_BLOCK_17)) {
+                popOffTo(Constants.CHECKSUM_BLOCK_16);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_18) {
+            if (! verifyChecksum(CHECKSUM_18, Constants.CHECKSUM_BLOCK_17, Constants.CHECKSUM_BLOCK_18)) {
+                popOffTo(Constants.CHECKSUM_BLOCK_17);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_19) {
+            if (! verifyChecksum(CHECKSUM_19, Constants.CHECKSUM_BLOCK_18, Constants.CHECKSUM_BLOCK_19)) {
+                popOffTo(Constants.CHECKSUM_BLOCK_18);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_20) {
+            if (! verifyChecksum(CHECKSUM_20, Constants.CHECKSUM_BLOCK_19, Constants.CHECKSUM_BLOCK_20)) {
+                popOffTo(Constants.CHECKSUM_BLOCK_19);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_21) {
+            if (! verifyChecksum(CHECKSUM_21, Constants.CHECKSUM_BLOCK_20, Constants.CHECKSUM_BLOCK_21)) {
+                popOffTo(Constants.CHECKSUM_BLOCK_20);
+            }
         }
     };
 
@@ -1312,6 +1328,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             }
         }
         return null;
+    }
+
+    void shutdown() {
+        ThreadPool.shutdownExecutor("networkService", networkService, 5);
     }
 
     private void addBlock(BlockImpl block) {

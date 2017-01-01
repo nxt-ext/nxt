@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -343,7 +343,7 @@ var NRS = (function(NRS, $) {
         apiCall('limit/nxt_btc', {}, 'GET', function (data) {
             NRS.logConsole("limit1 " + data.limit);
             if (data.limit) {
-                $('#shape_shift_status').html($.t('ok'));
+                $('#shape_shift_status').html('ok');
                 $('#shape_shift_nxt_avail').html(String(data.limit).escapeHTML());
             }
         });

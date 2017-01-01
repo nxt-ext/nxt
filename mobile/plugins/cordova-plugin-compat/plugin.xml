@@ -21,7 +21,7 @@
 
 <plugin xmlns="http://cordova.apache.org/ns/plugins/1.0"
            id="cordova-plugin-compat"
-      version="1.0.0">
+      version="1.1.0">
     <name>Compat</name>
     <description>Cordova Compatibility Plugin</description>
     <license>Apache 2.0</license>
@@ -30,7 +30,8 @@
 
     <!-- android -->
     <platform name="android">
-        <source-file src="src/android/PermissionHelper.java" target-dir="src/org/apache/cordova" />
+      <source-file src="src/android/PermissionHelper.java" target-dir="src/org/apache/cordova" />
+      <source-file src="src/android/BuildHelper.java" target-dir="src/org/apache/cordova" />
     </platform>
 
 </plugin>

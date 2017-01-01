@@ -47,10 +47,10 @@
         "is_top_level": true,
         "variables": {}
     },
-    "cordova-plugin-file": {
+    "cordova-plugin-android-permissions": {
         "source": {
             "type": "registry",
-            "id": "cordova-plugin-file"
+            "id": "cordova-plugin-android-permissions"
         },
         "is_top_level": true,
         "variables": {}
@@ -60,21 +60,13 @@
             "type": "registry",
             "id": "cordova-plugin-compat"
         },
-        "is_top_level": false,
-        "variables": {}
-    },
-    "phonegap-plugin-barcodescanner": {
-        "source": {
-            "type": "registry",
-            "id": "phonegap-plugin-barcodescanner"
-        },
         "is_top_level": true,
         "variables": {}
     },
-    "cordova-plugin-android-permissions": {
+    "cordova-plugin-file": {
         "source": {
             "type": "registry",
-            "id": "cordova-plugin-android-permissions"
+            "id": "cordova-plugin-file"
         },
         "is_top_level": true,
         "variables": {}
@@ -82,7 +74,7 @@
     "cordova-plugin-inappbrowser": {
         "source": {
             "type": "registry",
-            "id": "cordova-plugin-inappbrowser@1.5.0"
+            "id": "cordova-plugin-inappbrowser@1.6.1"
         },
         "is_top_level": true,
         "variables": {}
@@ -91,6 +83,14 @@
         "source": {
             "type": "registry",
             "id": "cordova.plugins.diagnostic"
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "phonegap-plugin-barcodescanner": {
+        "source": {
+            "type": "registry",
+            "id": "phonegap-plugin-barcodescanner"
         },
         "is_top_level": true,
         "variables": {}

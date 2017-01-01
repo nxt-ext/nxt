@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -260,7 +260,8 @@ var NRS = (function (NRS, $, undefined) {
             }
         }
 
-        if (type == "POST" && NRS.isRequireBlockchain(requestType) && NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
+        if ((NRS.isRequirePost(requestType) || "secretPhrase" in data) &&
+            NRS.isRequireBlockchain(requestType) && NRS.accountInfo.errorCode && NRS.accountInfo.errorCode == 5) {
             callback({
                 "errorCode": 2,
                 "errorDescription": $.t("error_new_account")

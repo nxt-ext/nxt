@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -69,8 +69,8 @@ var NRS = (function (NRS, $) {
         'FORGING': 'forging',
         'NOT_FORGING': 'not_forging',
         'UNKNOWN': 'unknown',
-        'LAST_KNOWN_BLOCK': { id: "1322469910670826128", height: "1000100" },
-        'LAST_KNOWN_TESTNET_BLOCK': { id: "18340438781026624901", height: "944000" }
+        'LAST_KNOWN_BLOCK': { id: "504696459800754518", height: "1105000" },
+        'LAST_KNOWN_TESTNET_BLOCK': { id: "10261376443915405620", height: "1051000" }
     };
 
     NRS.loadAlgorithmList = function (algorithmSelect, isPhasingHash) {

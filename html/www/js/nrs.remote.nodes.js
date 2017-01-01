@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -50,11 +50,14 @@ var NRS = (function(NRS) {
     };
 
     NRS.requestNeedsConfirmation = function (requestType) {
-        var plusIndex = requestType.indexOf("+");
-        if (plusIndex > 0) {
-            requestType = requestType.substring(0, plusIndex);
+        if (NRS.remoteNodesMgr) {
+            var plusIndex = requestType.indexOf("+");
+            if (plusIndex > 0) {
+                requestType = requestType.substring(0, plusIndex);
+            }
+            return !NRS.isRequirePost(requestType) && NRS.isRequestForwardable(requestType)
         }
-        return !NRS.isRequirePost(requestType) && NRS.isRequestForwardable(requestType)
+        return false;
     };
 
     var prunableAttachments = [

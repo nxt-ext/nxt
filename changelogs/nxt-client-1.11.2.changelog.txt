@@ -1,0 +1,11 @@
+Added "Copy Account" button next to the account id header.
+
+Added again the API and DBShell links to the cogwheel menu.
+
+Minor bugfixes and UI improvements.
+
+Android App updated to use Apache Cordova 6.4.0.
+
+Updated Jetty to version 9.3.15, Bouncy Castle to 1.56, slf4j to 1.7.22, and
+zxing to 3.3.0, delete the old lib folder before unpacking on top.
+

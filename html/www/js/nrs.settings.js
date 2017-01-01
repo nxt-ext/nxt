@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -622,23 +622,25 @@ var NRS = (function(NRS, $) {
 		return NRS.settings.admin_password;
 	};
 
-	$("#settings_box select, #welcome_panel select[name='language'], #settings_admin_password").on("change", function(e) {
-		e.preventDefault();
-        NRS.updateSettings($(this).attr("name"), $(this).val());
-	});
+    NRS.initSettings = function() {
+        $("#settings_box select, #welcome_panel select[name='language'], #settings_admin_password").on("change", function(e) {
+            e.preventDefault();
+            NRS.updateSettings($(this).attr("name"), $(this).val());
+        });
 
-	$("#settings_box").find("input[type=text]").on("input", function() {
-		var key = $(this).attr("name");
-		var value = $(this).val();
-		if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
-			value = NRS.convertToNQT(value);
-		}
-		NRS.updateSettings(key, value);
-	});
+        $("#settings_box").find("input[type=text]").on("input", function() {
+            var key = $(this).attr("name");
+            var value = $(this).val();
+            if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
+                value = NRS.convertToNQT(value);
+            }
+            NRS.updateSettings(key, value);
+        });
 
-	$("#settings_form").submit(function(event) {
-		event.preventDefault();
-	});
+        $("#settings_form").submit(function(event) {
+            event.preventDefault();
+        });
+    };
 
 	return NRS;
 }(NRS || {}, jQuery));

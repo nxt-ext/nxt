@@ -12,6 +12,7 @@
 
 #import <CoreBluetooth/CoreBluetooth.h>
 #import <CoreLocation/CoreLocation.h>
+#import <CoreMotion/CoreMotion.h>
 #import <EventKit/EventKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Photos/Photos.h>
@@ -29,9 +30,9 @@
 @interface Diagnostic : CDVPlugin <CBCentralManagerDelegate, CLLocationManagerDelegate>
 
     @property (nonatomic, retain) CBCentralManager* bluetoothManager;
-    @property (nonatomic) BOOL bluetoothEnabled;
-    @property (nonatomic) NSString* bluetoothState;
     @property (strong, nonatomic) CLLocationManager* locationManager;
+    @property (strong, nonatomic) CMMotionActivityManager* motionManager;
+    @property (strong, nonatomic) NSOperationQueue* motionActivityQueue;
     @property (nonatomic, retain) NSString* locationRequestCallbackId;
     @property (nonatomic) EKEventStore *eventStore;
 
@@ -50,7 +51,10 @@
 - (void) getCameraRollAuthorizationStatus: (CDVInvokedUrlCommand*)command;
 
 - (void) isWifiAvailable: (CDVInvokedUrlCommand*)command;
+
 - (void) isBluetoothAvailable: (CDVInvokedUrlCommand*)command;
+- (void) getBluetoothState: (CDVInvokedUrlCommand*)command;
+- (void) requestBluetoothAuthorization: (CDVInvokedUrlCommand*)command;
 
 - (void) isRemoteNotificationsEnabled: (CDVInvokedUrlCommand*)command;
 - (void) getRemoteNotificationTypes: (CDVInvokedUrlCommand*)command;
@@ -74,4 +78,9 @@
 - (void) requestRemindersAuthorization: (CDVInvokedUrlCommand*)command;
 
 - (void) getBackgroundRefreshStatus: (CDVInvokedUrlCommand*)command;
+
+- (void) isMotionAvailable: (CDVInvokedUrlCommand*)command;
+- (void) isMotionRequestOutcomeAvailable: (CDVInvokedUrlCommand*)command;
+- (void) requestAndCheckMotionAuthorization: (CDVInvokedUrlCommand*)command;
+
 @end
