@@ -77,6 +77,7 @@ public class Snapshot implements AddOn {
                         SortedMap<String, Long> snapshotMap = new TreeMap<>();
                         SortedMap<String, Long> btcSnapshotMap = new TreeMap<>();
                         SortedMap<String, Long> usdSnapshotMap = new TreeMap<>();
+                        SortedMap<String, Long> eurSnapshotMap = new TreeMap<>();
                         try (Connection con = Db.db.getConnection();
                              PreparedStatement pstmt = con.prepareStatement("SELECT id, balance FROM account WHERE LATEST=true")) {
                             try (ResultSet rs = pstmt.executeQuery()) {
@@ -88,8 +89,9 @@ public class Snapshot implements AddOn {
                                     }
                                     String account = Long.toUnsignedString(accountId);
                                     snapshotMap.put(account, balance);
-                                    btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 700);
-                                    usdSnapshotMap.put(account, ((balance / 2) / Constants.ONE_NXT));
+                                    btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 600);
+                                    usdSnapshotMap.put(account, ((balance * 3 / 5) / Constants.ONE_NXT));
+                                    eurSnapshotMap.put(account, ((balance * 3 / 5) / Constants.ONE_NXT));
                                 }
                             }
                         } catch (SQLException e) {
@@ -98,6 +100,7 @@ public class Snapshot implements AddOn {
                         saveBalances(snapshotMap, "IGNIS.json");
                         saveBalances(btcSnapshotMap, "BTC.json");
                         saveBalances(usdSnapshotMap, "USD.json");
+                        saveBalances(eurSnapshotMap, "EUR.json");
                     }
                     {
                         SortedMap<String, Long> snapshotMap = new TreeMap<>();
