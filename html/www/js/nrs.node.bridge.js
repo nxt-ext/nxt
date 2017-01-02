@@ -15,7 +15,7 @@ exports.init = function(params) {
 };
 
 exports.load = function(callback) {
-    // jsdom is necessary to define the window object on when Jquery relies
+    // jsdom is necessary to define the window object on which jquery relies
     require("jsdom").env("", function(err, window) {
         try {
             if (err) {
@@ -78,22 +78,15 @@ exports.load = function(callback) {
             global.client = Object.assign(client, require('./nrs.constants'));
             global.client.constants = {};
 
-            // Now load the constants from the remote node and send the composed
-            // global object back to the invoker.
-            // this object will serve as the global NRS object
-            var loadConstants = new Promise(function(resolve) {
-                client.loadServerConstants(resolve);
-            });
-            loadConstants.then(function() {
-                callback(global.client);
-            }).catch(function(e) {
-                console.log("loadConstants failed");
-                console.log(e.message);
-                console.log(e.stack);
-            });
+            // Now load the constants locally since we cannot trust the remote node to
+            // return the correct constants.
+            var constants = require('./data/constants');
+            global.client.processConstants(constants);
+            callback(global.client);
         } catch (e) {
             console.log(e.message);
             console.log(e.stack);
+            throw e;
         }
     });
 };
