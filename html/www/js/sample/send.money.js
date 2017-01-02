@@ -31,9 +31,9 @@ bridge.load(function(NRS) {
     // Compose the request data
     data = Object.assign(
         data,
-        bridge.getMandatoryParams(),
-        bridge.encryptMessage(NRS, "note to myself", secretPhrase, NRS.getPublicKey(converters.stringToHexString(secretPhrase)), true),
-        bridge.encryptMessage(NRS, "message to recipient", secretPhrase, recipientPublicKey, false)
+        NRS.getMandatoryParams(),
+        NRS.encryptMessage(NRS, "note to myself", secretPhrase, NRS.getPublicKey(converters.stringToHexString(secretPhrase)), true),
+        NRS.encryptMessage(NRS, "message to recipient", secretPhrase, recipientPublicKey, false)
     );
     // Submit the request to the remote node using the standard client function which performs local signing for transactions
     // and validates the data returned from the server.

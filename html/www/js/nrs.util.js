@@ -1672,6 +1672,14 @@ var NRS = (function (NRS, $, undefined) {
         return response.errorDescription || response.errorMessage || response.error;
     };
 
+    NRS.getMandatoryParams = function() {
+        return {
+            feeNQT: "0",
+            deadline: "1440"
+        }
+    };
+
+
     return NRS;
 }(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
 

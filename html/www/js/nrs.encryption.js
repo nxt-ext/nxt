@@ -868,6 +868,25 @@ var NRS = (function (NRS, $) {
         return bytes;
     }
 
+    NRS.encryptMessage = function(NRS, text, senderSecretPhrase, recipientPublicKey, isMessageToSelf) {
+        var encrypted = NRS.encryptNote(text, {
+            "publicKey": converters.hexStringToByteArray(recipientPublicKey)
+        }, senderSecretPhrase);
+        if (isMessageToSelf) {
+            return {
+                encryptToSelfMessageData: encrypted.message,
+                encryptToSelfMessageNonce: encrypted.nonce,
+                messageToEncryptToSelfIsText: "true"
+            }
+        } else {
+            return {
+                encryptedMessageData: encrypted.message,
+                encryptedMessageNonce: encrypted.nonce,
+                messageToEncryptIsText: "true"
+            }
+        }
+    };
+
     return NRS;
 }(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
 

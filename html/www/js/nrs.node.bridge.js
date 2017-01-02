@@ -6,7 +6,7 @@ const options = {
 
 exports.init = function(params) {
     if (!params) {
-        return;
+        return this;
     }
     options.url = params.url;
     options.secretPhrase = params.secretPhrase;
@@ -89,30 +89,4 @@ exports.load = function(callback) {
             throw e;
         }
     });
-};
-
-exports.encryptMessage = function(NRS, text, senderSecretPhrase, recipientPublicKey, isMessageToSelf) {
-    var encrypted = NRS.encryptNote(text, {
-        "publicKey": converters.hexStringToByteArray(recipientPublicKey)
-    }, senderSecretPhrase);
-    if (isMessageToSelf) {
-        return {
-            encryptToSelfMessageData: encrypted.message,
-            encryptToSelfMessageNonce: encrypted.nonce,
-            messageToEncryptToSelfIsText: "true"
-        }
-    } else {
-        return {
-            encryptedMessageData: encrypted.message,
-            encryptedMessageNonce: encrypted.nonce,
-            messageToEncryptIsText: "true"
-        }
-    }
-};
-
-exports.getMandatoryParams = function() {
-    return {
-        feeNQT: "0",
-        deadline: "1440"
-    }
 };

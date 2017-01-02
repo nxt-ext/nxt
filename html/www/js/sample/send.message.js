@@ -28,8 +28,8 @@ bridge.load(function(NRS) {
     };
     data = Object.assign(
         data,
-        bridge.getMandatoryParams(),
-        bridge.encryptMessage(NRS, "hello world", secretPhrase, recipientPublicKey, false)
+        NRS.getMandatoryParams(),
+        NRS.encryptMessage(NRS, "message to recipient", secretPhrase, recipientPublicKey, false)
     );
     NRS.sendRequest("sendMessage", data, function (response) {
         NRS.logConsole(JSON.stringify(response));
