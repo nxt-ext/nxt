@@ -2,11 +2,16 @@ const url = "http://mclyaf03:6876";
 const secretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
 const recipientPublicKey = "0b4e505972149e7ceb51309edc76729795cabe1f2cc42d87688138d0966db436";
 
-var bridge = require("./../nrs.node.bridge.js"); // during development
+try {
+    var bridge = require("./../nrs.node.bridge.js"); // during development
+} catch(e) {
+    console.log("Release mode");
+}
+
 try {
     bridge = require("nxt-blockchain"); // when using the NPM module
 } catch(e) {
-    console.log(e.message);
+    console.log("Development mode");
 }
 
 bridge.init({
