@@ -1,39 +1,20 @@
-const url = "http://mclyaf03:6876";
-const secretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
-const recipientPublicKey = "0b4e505972149e7ceb51309edc76729795cabe1f2cc42d87688138d0966db436";
+var loader = require("./loader");
+var config = loader.config;
 
-try {
-    var bridge = require("./../nrs.node.bridge.js"); // during development
-} catch(e) {
-    console.log("Release mode");
-}
-
-try {
-    bridge = require("nxt-blockchain"); // when using the NPM module
-} catch(e) {
-    console.log("Development mode");
-}
-
-bridge.init({
-    url: url,
-    secretPhrase: secretPhrase,
-    isTestNet: true
-});
-
-bridge.load(function(NRS) {
+loader.load(function(NRS) {
     var data = {
-        recipient: NRS.getAccountIdFromPublicKey(recipientPublicKey), // public key to account id
-        recipientPublicKey: recipientPublicKey, // Optional - public key announcement to init a new account
+        recipient: NRS.getAccountIdFromPublicKey(config.recipientPublicKey), // public key to account id
+        recipientPublicKey: config.recipientPublicKey, // Optional - public key announcement to init a new account
         amountNQT: NRS.convertToNQT("1.234"), // NXT to NQT conversion
-        secretPhrase: secretPhrase,
+        secretPhrase: config.secretPhrase,
         encryptedMessageIsPrunable: "true" // Optional - make the attached message prunable
     };
     // Compose the request data
     data = Object.assign(
         data,
         NRS.getMandatoryParams(),
-        NRS.encryptMessage(NRS, "note to myself", secretPhrase, NRS.getPublicKey(converters.stringToHexString(secretPhrase)), true),
-        NRS.encryptMessage(NRS, "message to recipient", secretPhrase, recipientPublicKey, false)
+        NRS.encryptMessage(NRS, "note to myself", config.secretPhrase, NRS.getPublicKey(converters.stringToHexString(config.secretPhrase)), true),
+        NRS.encryptMessage(NRS, "message to recipient", config.secretPhrase, config.recipientPublicKey, false)
     );
     // Submit the request to the remote node using the standard client function which performs local signing for transactions
     // and validates the data returned from the server.
