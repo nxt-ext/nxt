@@ -120,7 +120,7 @@ var NRS = (function(NRS, $, undefined) {
     	for (i=0; i<mandatoryFiles.length; i++) {
 			$.ajax({
     			url: mandatoryFiles[i],
-    			type: 'HEAD',
+    			type: 'GET',
                 cache: false,
     			success: function(data) {
     				//nothing to do
