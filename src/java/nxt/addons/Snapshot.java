@@ -15,27 +15,35 @@
 
 package nxt.addons;
 
+import nxt.Account;
 import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Db;
 import nxt.FxtDistribution;
 import nxt.Nxt;
+import nxt.crypto.Crypto;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
 import nxt.util.Logger;
 import org.json.simple.JSONArray;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -49,6 +57,23 @@ public class Snapshot implements AddOn {
         if (snapshotHeight == 0) {
             return;
         }
+        List<byte[]> developerPublicKeys = new ArrayList<>();
+        if (Constants.isTestnet) {
+            InputStream is = ClassLoader.getSystemResourceAsStream("developerPasswords.txt");
+            if (is != null) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        developerPublicKeys.add(Crypto.getPublicKey(line));
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                developerPublicKeys.sort(Convert.byteArrayComparator);
+            } else {
+                Logger.logDebugMessage("No developerPasswords.txt file found");
+            }
+        }
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
             @Override
             public void notify(Block block) {
@@ -59,14 +84,20 @@ public class Snapshot implements AddOn {
                              PreparedStatement pstmt = con.prepareStatement("SELECT public_key FROM public_key WHERE public_key IS NOT NULL AND LATEST=true ORDER by account_id")) {
                             try (ResultSet rs = pstmt.executeQuery()) {
                                 while (rs.next()) {
+                                    byte[] publicKey = rs.getBytes("public_key");
+                                    if (Collections.binarySearch(developerPublicKeys, publicKey, Convert.byteArrayComparator) >= 0) {
+                                        throw new RuntimeException("Developer account " + Account.getId(publicKey) + " already exists");
+                                    }
                                     publicKeys.add(Convert.toHexString(rs.getBytes("public_key")));
                                 }
                             }
                         } catch (SQLException e) {
                             throw new RuntimeException(e.getMessage(), e);
                         }
+                        developerPublicKeys.forEach(publicKey -> publicKeys.add(Convert.toHexString(publicKey)));
                         Logger.logInfoMessage("Will save " + publicKeys.size() + " public keys");
-                        try (PrintWriter writer = new PrintWriter((new BufferedWriter( new OutputStreamWriter(new FileOutputStream("PUBLIC_KEY.json")))), true)) {
+                        try (PrintWriter writer = new PrintWriter((new BufferedWriter( new OutputStreamWriter(new FileOutputStream(
+                                Constants.isTestnet ? "PUBLIC_KEY-testnet.json" : "PUBLIC_KEY.json")))), true)) {
                             JSON.writeJSONString(publicKeys, writer);
                         } catch (IOException e) {
                             throw new RuntimeException(e.getMessage(), e);
@@ -87,6 +118,9 @@ public class Snapshot implements AddOn {
                                     if (balance <= 0) {
                                         continue;
                                     }
+                                    if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                                        balance = balance / 2;
+                                    }
                                     String account = Long.toUnsignedString(accountId);
                                     snapshotMap.put(account, balance);
                                     btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 600);
@@ -97,10 +131,20 @@ public class Snapshot implements AddOn {
                         } catch (SQLException e) {
                             throw new RuntimeException(e.getMessage(), e);
                         }
-                        saveBalances(snapshotMap, "IGNIS.json");
-                        saveBalances(btcSnapshotMap, "BTC.json");
-                        saveBalances(usdSnapshotMap, "USD.json");
-                        saveBalances(eurSnapshotMap, "EUR.json");
+                        if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                            final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
+                            developerPublicKeys.forEach(publicKey -> {
+                                String account = Long.toUnsignedString(Account.getId(publicKey));
+                                snapshotMap.put(account, developerBalance);
+                                btcSnapshotMap.put(account, (developerBalance / Constants.ONE_NXT) * 600);
+                                usdSnapshotMap.put(account, ((developerBalance * 3 / 5) / Constants.ONE_NXT));
+                                eurSnapshotMap.put(account, ((developerBalance * 3 / 5) / Constants.ONE_NXT));
+                            });
+                        }
+                        saveBalances(snapshotMap, Constants.isTestnet ? "IGNIS-testnet.json" : "IGNIS.json");
+                        saveBalances(btcSnapshotMap, Constants.isTestnet ? "BTC-testnet.json" : "BTC.json");
+                        saveBalances(usdSnapshotMap, Constants.isTestnet ? "USD-testnet.json" : "USD.json");
+                        saveBalances(eurSnapshotMap, Constants.isTestnet ? "EUR-testnet.json" : "EUR.json");
                     }
                     {
                         SortedMap<String, Long> snapshotMap = new TreeMap<>();
@@ -114,13 +158,23 @@ public class Snapshot implements AddOn {
                                     if (balance <= 0) {
                                         continue;
                                     }
+                                    if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                                        balance = balance / 2;
+                                    }
                                     snapshotMap.put(Long.toUnsignedString(accountId), balance * 10000);
                                 }
                             }
                         } catch (SQLException e) {
                             throw new RuntimeException(e.getMessage(), e);
                         }
-                        saveBalances(snapshotMap, "ARDR.json");
+                        if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                            final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
+                            developerPublicKeys.forEach(publicKey -> {
+                                String account = Long.toUnsignedString(Account.getId(publicKey));
+                                snapshotMap.put(account, developerBalance);
+                            });
+                        }
+                        saveBalances(snapshotMap, Constants.isTestnet ? "ARDR-testnet.json" : "ARDR.json");
                     }
                 }
             }
