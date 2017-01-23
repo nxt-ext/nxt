@@ -624,7 +624,7 @@ public final class ParameterParser {
             byte[] message = fileData.getData();
             String detectedMimeType = Search.detectMimeType(message);
             if (detectedMimeType != null) {
-                messageIsText = detectedMimeType.equals("text/plain");
+                messageIsText = detectedMimeType.startsWith("text/");
             }
             if (messageIsText && !Arrays.equals(message, Convert.toBytes(Convert.toString(message)))) {
                 messageIsText = false;
@@ -661,7 +661,7 @@ public final class ParameterParser {
                     plainMessageBytes = fileData.getData();
                     String detectedMimeType = Search.detectMimeType(plainMessageBytes);
                     if (detectedMimeType != null) {
-                        isText = detectedMimeType.equals("text/plain");
+                        isText = detectedMimeType.startsWith("text/");
                     }
                     if (isText && !Arrays.equals(plainMessageBytes, Convert.toBytes(Convert.toString(plainMessageBytes)))) {
                         isText = false;
@@ -742,7 +742,7 @@ public final class ParameterParser {
 
         String detectedMimeType = Search.detectMimeType(data, filename);
         if (detectedMimeType != null) {
-            isText = detectedMimeType.equals("text/plain");
+            isText = detectedMimeType.startsWith("text/");
             if (type.isEmpty()) {
                 type = detectedMimeType.substring(0, Math.min(detectedMimeType.length(), Constants.MAX_TAGGED_DATA_TYPE_LENGTH));
             }
