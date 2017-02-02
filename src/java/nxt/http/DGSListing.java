@@ -23,8 +23,7 @@ import nxt.Constants;
 import nxt.NxtException;
 import nxt.util.Convert;
 import nxt.util.JSON;
-import org.apache.tika.Tika;
-import org.apache.tika.mime.MediaType;
+import nxt.util.Search;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 
@@ -75,10 +74,8 @@ public final class DGSListing extends CreateTransaction {
                 return MESSAGE_NOT_BINARY;
             }
             byte[] image = prunablePlainMessage.getMessage();
-            Tika tika = new Tika();
-            String mediaTypeName = tika.detect(image);
-            MediaType mediaType = MediaType.parse(mediaTypeName);
-            if (mediaType == null || !mediaType.getType().equals("image")) {
+            String mediaType = Search.detectMimeType(image);
+            if (mediaType == null || !mediaType.startsWith("image/")) {
                 return MESSAGE_NOT_IMAGE;
             }
         }
