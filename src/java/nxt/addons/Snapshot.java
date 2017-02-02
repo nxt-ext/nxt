@@ -16,6 +16,7 @@
 package nxt.addons;
 
 import nxt.Account;
+import nxt.AssetTransfer;
 import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
@@ -23,6 +24,7 @@ import nxt.Db;
 import nxt.FxtDistribution;
 import nxt.Nxt;
 import nxt.crypto.Crypto;
+import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
@@ -158,6 +160,9 @@ public class Snapshot implements AddOn {
                                     if (balance <= 0) {
                                         continue;
                                     }
+                                    if (accountId == FxtDistribution.FXT_ISSUER_ID) {
+                                        continue;
+                                    }
                                     if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
                                         balance = balance / 2;
                                     }
@@ -166,6 +171,20 @@ public class Snapshot implements AddOn {
                             }
                         } catch (SQLException e) {
                             throw new RuntimeException(e.getMessage(), e);
+                        }
+                        try (DbIterator<AssetTransfer> transfers = AssetTransfer.getAccountAssetTransfers(FxtDistribution.FXT_ISSUER_ID, FxtDistribution.FXT_ASSET_ID, 0, -1)) {
+                            while (transfers.hasNext()) {
+                                AssetTransfer transfer = transfers.next();
+                                if (transfer.getRecipientId() != FxtDistribution.FXT_ISSUER_ID) {
+                                    continue;
+                                }
+                                String senderId = Long.toUnsignedString(transfer.getSenderId());
+                                long quantityQNT = transfer.getQuantityQNT();
+                                Logger.logDebugMessage("Will refund " + quantityQNT + " ARDR to " + Convert.rsAccount(transfer.getSenderId()));
+                                long balance = Convert.nullToZero(snapshotMap.get(senderId));
+                                balance += quantityQNT * 10000;
+                                snapshotMap.put(senderId, balance);
+                            }
                         }
                         if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
                             final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
