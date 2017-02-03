@@ -126,8 +126,8 @@ public class Snapshot implements AddOn {
                                     String account = Long.toUnsignedString(accountId);
                                     snapshotMap.put(account, balance);
                                     btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 600);
-                                    usdSnapshotMap.put(account, ((balance * 3 / 5) / Constants.ONE_NXT));
-                                    eurSnapshotMap.put(account, ((balance * 3 / 5) / Constants.ONE_NXT));
+                                    usdSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
+                                    eurSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
                                 }
                             }
                         } catch (SQLException e) {
@@ -139,8 +139,8 @@ public class Snapshot implements AddOn {
                                 String account = Long.toUnsignedString(Account.getId(publicKey));
                                 snapshotMap.put(account, developerBalance);
                                 btcSnapshotMap.put(account, (developerBalance / Constants.ONE_NXT) * 600);
-                                usdSnapshotMap.put(account, ((developerBalance * 3 / 5) / Constants.ONE_NXT));
-                                eurSnapshotMap.put(account, ((developerBalance * 3 / 5) / Constants.ONE_NXT));
+                                usdSnapshotMap.put(account, ((developerBalance * 300 / 5) / Constants.ONE_NXT));
+                                eurSnapshotMap.put(account, ((developerBalance * 300 / 5) / Constants.ONE_NXT));
                             });
                         }
                         saveBalances(snapshotMap, Constants.isTestnet ? "IGNIS-testnet.json" : "IGNIS.json");
