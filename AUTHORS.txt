@@ -64,7 +64,7 @@ GPG key fingerprint: 1263 D21F 482C 6BF8 4550  4451 D085 799A 9EF1 57F3
 Nxt account: NXT-NNGD-V8TN-3MZR-DWWBE
 
 Berzelius
-berzelius@countermail.com
+berzelius@mailbox.org
 GPG key fingerprint: 206B 409C FF4F BF25 6E03  9834 3C8E EB47 926A 7AC7
 Nxt account: NXT-XNBG-5TB4-SC4R-B73ZW
 

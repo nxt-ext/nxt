@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016 Jelurida IP B.V.
+ * Copyright © 2016-2017 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -16,6 +16,7 @@
 
 package nxt.db;
 
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.Logger;
 
@@ -60,8 +61,13 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public void checkAvailable(int height) {
-        if (multiversion && height < Nxt.getBlockchainProcessor().getMinRollbackHeight()) {
-            throw new IllegalArgumentException("Historical data as of height " + height +" not available.");
+        if (multiversion) {
+            int minRollBackHeight = isPersistent() && Nxt.getBlockchainProcessor().isScanning() ?
+                    Math.max(Nxt.getBlockchainProcessor().getInitialScanHeight() - Constants.MAX_ROLLBACK, 0)
+                    : Nxt.getBlockchainProcessor().getMinRollbackHeight();
+            if (height < minRollBackHeight) {
+                throw new IllegalArgumentException("Historical data as of height " + height + " not available.");
+            }
         }
         if (height > Nxt.getBlockchain().getHeight()) {
             throw new IllegalArgumentException("Height " + height + " exceeds blockchain height " + Nxt.getBlockchain().getHeight());
@@ -105,7 +111,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final T get(DbKey dbKey, int height) {
-        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+        if (height < 0 || doesNotExceed(height)) {
             return get(dbKey);
         }
         checkAvailable(height);
@@ -137,7 +143,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final T getBy(DbClause dbClause, int height) {
-        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+        if (height < 0 || doesNotExceed(height)) {
             return getBy(dbClause);
         }
         checkAvailable(height);
@@ -209,7 +215,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final DbIterator<T> getManyBy(DbClause dbClause, int height, int from, int to, String sort) {
-        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+        if (height < 0 || doesNotExceed(height)) {
             return getManyBy(dbClause, from, to, sort);
         }
         checkAvailable(height);
@@ -306,7 +312,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final DbIterator<T> getAll(int height, int from, int to, String sort) {
-        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+        if (height < 0 || doesNotExceed(height)) {
             return getAll(from, to, sort);
         }
         checkAvailable(height);
@@ -355,7 +361,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     }
 
     public final int getCount(DbClause dbClause, int height) {
-        if (height < 0 || height == Nxt.getBlockchain().getHeight()) {
+        if (height < 0 || doesNotExceed(height)) {
             return getCount(dbClause);
         }
         checkAvailable(height);
@@ -452,6 +458,10 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
             Logger.logDebugMessage("Creating search index on " + table + " (" + fullTextSearchColumns + ")");
             FullTextTrigger.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
         }
+    }
+
+    private boolean doesNotExceed(int height) {
+        return Nxt.getBlockchain().getHeight() <= height && ! (isPersistent() && Nxt.getBlockchainProcessor().isScanning());
     }
 
 }

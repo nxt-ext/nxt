@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -200,7 +200,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find("input[name=converted_account_id]").val("");
 
 		//Hide/Reset any possible error messages
-		$(this).find(".callout-danger:not(.never_hide), .error_message, .account_info").html("").hide();
+		$(this).find(".callout-danger:not(.never_hide, .remote_warning), .error_message, .account_info").html("").hide();
 		$(this).find(".advanced").hide();
 		$(this).find(".recipient_public_key").hide();
 		$(this).find(".optional_message, .optional_note, .optional_do_not_sign, .optional_public_key").hide();

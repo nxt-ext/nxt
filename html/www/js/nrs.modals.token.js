@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -19,6 +19,7 @@
  * @depends {nrs.modals.js}
  */
 var NRS = (function(NRS, $) {
+    var _password = null;
     var tokenModal = $("#token_modal");
     tokenModal.on("show.bs.modal", function(e) {
 		$("#generate_token_output, #decode_token_output, #generate_token_output_qr_code").html("").hide();
@@ -101,8 +102,9 @@ var NRS = (function(NRS, $) {
             return;
         }
 		var isOffline = !!$(this).find(".mobile-offline").val();
+        var secretPhrase;
         if (!NRS.rememberPassword) {
-			var secretPhrase = data.secretPhrase;
+            secretPhrase = data.secretPhrase;
 			var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
 			if (publicKey != NRS.publicKey && !isOffline) {
 				tokenOutput.html($.t("error_incorrect_passphrase"));
@@ -110,6 +112,8 @@ var NRS = (function(NRS, $) {
                 outputQrCodeContainer.hide();
 				return;
 			}
+		} else {
+        	secretPhrase = _password;
 		}
         var token = NRS.generateToken(website, secretPhrase);
         tokenOutput.html($.t("generated_token_is") + "<br/><br/><textarea readonly style='width:100%' rows='3'>" + token + "</textarea>");
@@ -119,5 +123,9 @@ var NRS = (function(NRS, $) {
         e.preventDefault();
     });
 
-	return NRS;
+    NRS.setTokenPassword = function(password) {
+        _password = password;
+    };
+
+    return NRS;
 }(NRS || {}, jQuery));
