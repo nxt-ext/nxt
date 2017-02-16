@@ -34,3 +34,6 @@ deploy.sh
 /addons/classes/
 /addons/src/*.java
 /out
+/ardor
+/ardor.exe
+/ardorservice.exe
