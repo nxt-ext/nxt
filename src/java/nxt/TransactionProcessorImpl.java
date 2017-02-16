@@ -550,6 +550,10 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         BlockchainImpl.getInstance().writeLock();
         try {
             for (Transaction transaction : transactions) {
+                BlockDb.transactionCache.remove(transaction.getId());
+                if (TransactionDb.hasTransaction(transaction.getId())) {
+                    continue;
+                }
                 ((TransactionImpl)transaction).unsetBlock();
                 waitingTransactions.add(new UnconfirmedTransaction((TransactionImpl)transaction, Math.min(currentTime, Convert.fromEpochTime(transaction.getTimestamp()))));
             }

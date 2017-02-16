@@ -170,29 +170,6 @@ var NRS = (function (NRS, $) {
 		}
 	};
 
-	NRS.decryptData = function(data, options, secretPhrase) {
-		try {
-			return NRS.decryptNote(message, options, secretPhrase);
-		} catch (err) {
-			if (err.errorCode && err.errorCode == 1) {
-				return false;
-			} else {
-				if (options.title) {
-					var translatedTitle = NRS.getTranslatedFieldName(options.title).toLowerCase();
-					if (!translatedTitle) {
-						translatedTitle = NRS.escapeRespStr(options.title).toLowerCase();
-					}
-
-					return $.t("error_could_not_decrypt_var", {
-						"var": translatedTitle
-					}).capitalize();
-				} else {
-					return $.t("error_could_not_decrypt");
-				}
-			}
-		}
-	};
-
 	NRS.decryptNote = function(message, options, secretPhrase) {
 		try {
 			if (!options.sharedKey) {
@@ -728,12 +705,7 @@ var NRS = (function (NRS, $) {
 	}
 
 	function aesEncrypt(plaintext, options) {
-		if (!window.crypto && !window.msCrypto) {
-			throw {
-				"errorCode": -1,
-				"message": $.t("error_encryption_browser_support")
-			};
-		}
+        var ivBytes = getRandomBytes(16);
 
 		// CryptoJS likes WordArray parameters
 		var text = converters.byteArrayToWordArray(plaintext);
@@ -747,17 +719,9 @@ var NRS = (function (NRS, $) {
 			sharedKey[i] ^= options.nonce[i];
 		}
 		var key = CryptoJS.SHA256(converters.byteArrayToWordArray(sharedKey));
-
-		var ivBytes = new Uint8Array(16);
-		if (window.crypto) {
-			window.crypto.getRandomValues(ivBytes);
-		} else {
-			window.msCrypto.getRandomValues(ivBytes);
-		}
 		var encrypted = CryptoJS.AES.encrypt(text, key, {
 			iv: converters.byteArrayToWordArray(ivBytes)
 		});
-
 		var ivOut = converters.wordArrayToByteArray(encrypted.iv);
 		var ciphertextOut = converters.wordArrayToByteArray(encrypted.ciphertext);
 		return ivOut.concat(ciphertextOut);
@@ -814,28 +778,12 @@ var NRS = (function (NRS, $) {
    		return encryptData(data, options);
    	};
 
-	function encryptData(plaintext, options) {
-		if (!window.crypto && !window.msCrypto) {
-			throw {
-				"errorCode": -1,
-				"message": $.t("error_encryption_browser_support")
-			};
-		}
-
-		if (!options.sharedKey) {
-			options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
-		}
-
-		var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
-		options.nonce = new Uint8Array(32);
-		if (window.crypto) {
-			//noinspection JSUnresolvedFunction
-			window.crypto.getRandomValues(options.nonce);
-		} else {
-			//noinspection JSUnresolvedFunction
-			window.msCrypto.getRandomValues(options.nonce);
-		}
-
+    function encryptData(plaintext, options) {
+        options.nonce = getRandomBytes(32);
+        if (!options.sharedKey) {
+            options.sharedKey = getSharedSecret(options.privateKey, options.publicKey);
+        }
+        var compressedPlaintext = pako.gzip(new Uint8Array(plaintext));
 		var data = aesEncrypt(compressedPlaintext, options);
 		return {
 			"nonce": options.nonce,
@@ -900,5 +848,48 @@ var NRS = (function (NRS, $) {
 		r.readAsArrayBuffer(file);
 	};
 
-	return NRS;
-}(NRS || {}, jQuery));
+    function getRandomBytes(length) {
+        if (!window.crypto && !window.msCrypto && !crypto) {
+            throw {
+                "errorCode": -1,
+                "message": $.t("error_encryption_browser_support")
+            };
+        }
+        var bytes = new Uint8Array(length);
+        if (window.crypto) {
+            //noinspection JSUnresolvedFunction
+            window.crypto.getRandomValues(bytes);
+        } else if (window.msCrypto) {
+            //noinspection JSUnresolvedFunction
+            window.msCrypto.getRandomValues(bytes);
+        } else {
+            bytes = crypto.randomBytes(length);
+        }
+        return bytes;
+    }
+
+    NRS.encryptMessage = function(NRS, text, senderSecretPhrase, recipientPublicKey, isMessageToSelf) {
+        var encrypted = NRS.encryptNote(text, {
+            "publicKey": converters.hexStringToByteArray(recipientPublicKey)
+        }, senderSecretPhrase);
+        if (isMessageToSelf) {
+            return {
+                encryptToSelfMessageData: encrypted.message,
+                encryptToSelfMessageNonce: encrypted.nonce,
+                messageToEncryptToSelfIsText: "true"
+            }
+        } else {
+            return {
+                encryptedMessageData: encrypted.message,
+                encryptedMessageNonce: encrypted.nonce,
+                messageToEncryptIsText: "true"
+            }
+        }
+    };
+
+    return NRS;
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

@@ -437,3 +437,7 @@ function NxtAddress() {
 		return d;
 	}
 }
+
+if (isNode) {
+    module.exports = NxtAddress;
+}

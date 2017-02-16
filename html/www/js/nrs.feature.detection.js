@@ -18,7 +18,6 @@
  * @depends {nrs.js}
  */
 var NRS = (function (NRS) {
-
     var isDesktopApplication = navigator.userAgent.indexOf("JavaFX") >= 0;
     var isPromiseSupported = (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1);
     var isMobileDevice = window["cordova"] !== undefined;
@@ -59,7 +58,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.isMobileApp = function () {
-        return isMobileDevice || NRS.mobileSettings.is_simulate_app;
+        return isMobileDevice || (NRS.mobileSettings && NRS.mobileSettings.is_simulate_app);
     };
 
     NRS.isEnableMobileAppSimulation = function () {
@@ -222,4 +221,8 @@ var NRS = (function (NRS) {
     };
 
     return NRS;
-}(NRS || {}, jQuery));
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

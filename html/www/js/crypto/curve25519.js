@@ -857,3 +857,7 @@ var curve25519 = function () {
         keygen: keygen
     };
 }();
+
+if (isNode) {
+    module.exports = curve25519;
+}

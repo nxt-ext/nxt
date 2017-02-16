@@ -628,17 +628,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.convertNumericToRSAccountFormat = function (account) {
-		if (/^NXT\-/i.test(account)) {
-			return String(account).escapeHTML();
-		} else {
-			var address = new NxtAddress();
-
-			if (address.set(account)) {
-				return address.toString().escapeHTML();
-			} else {
-				return "";
-			}
-		}
+		return converters.convertNumericToRSAccountFormat(account);
 	};
 
     NRS.getAccountLink = function (object, accountKey, accountRef, title, showAccountRS, clazz) {
@@ -1682,5 +1672,17 @@ var NRS = (function (NRS, $, undefined) {
         return response.errorDescription || response.errorMessage || response.error;
     };
 
+    NRS.getMandatoryParams = function() {
+        return {
+            feeNQT: "0",
+            deadline: "1440"
+        }
+    };
+
+
     return NRS;
-}(NRS || {}, jQuery));
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

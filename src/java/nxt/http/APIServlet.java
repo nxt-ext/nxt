@@ -190,12 +190,11 @@ public final class APIServlet extends HttpServlet {
         resp.setContentType("text/plain; charset=UTF-8");
 
         JSONStreamAware response = JSON.emptyJSON;
+        long startTime = System.currentTimeMillis();
 
         try {
 
-            long startTime = System.currentTimeMillis();
-
-            if (! API.isAllowed(req.getRemoteHost())) {
+            if (!API.isAllowed(req.getRemoteHost())) {
                 response = ERROR_NOT_ALLOWED;
                 return;
             }
@@ -221,69 +220,67 @@ public final class APIServlet extends HttpServlet {
                 return;
             }
 
-            if (enforcePost && apiRequestHandler.requirePost() && ! "POST".equals(req.getMethod())) {
+            if (enforcePost && apiRequestHandler.requirePost() && !"POST".equals(req.getMethod())) {
                 response = POST_REQUIRED;
                 return;
             }
 
+            if (apiRequestHandler.requirePassword()) {
+                API.verifyPassword(req);
+            }
+            final long requireBlockId = apiRequestHandler.allowRequiredBlockParameters() ?
+                    ParameterParser.getUnsignedLong(req, "requireBlock", false) : 0;
+            final long requireLastBlockId = apiRequestHandler.allowRequiredBlockParameters() ?
+                    ParameterParser.getUnsignedLong(req, "requireLastBlock", false) : 0;
+            if (requireBlockId != 0 || requireLastBlockId != 0) {
+                Nxt.getBlockchain().readLock();
+            }
             try {
-                if (apiRequestHandler.requirePassword()) {
-                    API.verifyPassword(req);
-                }
-                final long requireBlockId = apiRequestHandler.allowRequiredBlockParameters() ?
-                        ParameterParser.getUnsignedLong(req, "requireBlock", false) : 0;
-                final long requireLastBlockId = apiRequestHandler.allowRequiredBlockParameters() ?
-                        ParameterParser.getUnsignedLong(req, "requireLastBlock", false) : 0;
-                if (requireBlockId != 0 || requireLastBlockId != 0) {
-                    Nxt.getBlockchain().readLock();
-                }
                 try {
-                    try {
-                        if (apiRequestHandler.startDbTransaction()) {
-                            Db.db.beginTransaction();
-                        }
-                        if (requireBlockId != 0 && !Nxt.getBlockchain().hasBlock(requireBlockId)) {
-                            response = REQUIRED_BLOCK_NOT_FOUND;
-                            return;
-                        }
-                        if (requireLastBlockId != 0 && requireLastBlockId != Nxt.getBlockchain().getLastBlock().getId()) {
-                            response = REQUIRED_LAST_BLOCK_NOT_FOUND;
-                            return;
-                        }
-                        response = apiRequestHandler.processRequest(req, resp);
-                        if (requireLastBlockId == 0 && requireBlockId != 0 && response instanceof JSONObject) {
-                            ((JSONObject) response).put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
-                        }
-                    } finally {
-                        if (apiRequestHandler.startDbTransaction()) {
-                            Db.db.endTransaction();
-                        }
+                    if (apiRequestHandler.startDbTransaction()) {
+                        Db.db.beginTransaction();
+                    }
+                    if (requireBlockId != 0 && !Nxt.getBlockchain().hasBlock(requireBlockId)) {
+                        response = REQUIRED_BLOCK_NOT_FOUND;
+                        return;
+                    }
+                    if (requireLastBlockId != 0 && requireLastBlockId != Nxt.getBlockchain().getLastBlock().getId()) {
+                        response = REQUIRED_LAST_BLOCK_NOT_FOUND;
+                        return;
+                    }
+                    response = apiRequestHandler.processRequest(req, resp);
+                    if (requireLastBlockId == 0 && requireBlockId != 0 && response instanceof JSONObject) {
+                        ((JSONObject) response).put("lastBlock", Nxt.getBlockchain().getLastBlock().getStringId());
                     }
                 } finally {
-                    if (requireBlockId != 0 || requireLastBlockId != 0) {
-                        Nxt.getBlockchain().readUnlock();
+                    if (apiRequestHandler.startDbTransaction()) {
+                        Db.db.endTransaction();
                     }
                 }
-            } catch (ParameterException e) {
-                response = e.getErrorResponse();
-            } catch (NxtException |RuntimeException e) {
-                Logger.logDebugMessage("Error processing API request", e);
-                JSONObject json = new JSONObject();
-                JSONData.putException(json, e);
-                response = JSON.prepare(json);
-            } catch (ExceptionInInitializerError err) {
-                Logger.logErrorMessage("Initialization Error", err.getCause());
-                response = ERROR_INCORRECT_REQUEST;
+            } finally {
+                if (requireBlockId != 0 || requireLastBlockId != 0) {
+                    Nxt.getBlockchain().readUnlock();
+                }
             }
-            if (response != null && (response instanceof JSONObject)) {
-                ((JSONObject)response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
-            }
+        } catch (ParameterException e) {
+            response = e.getErrorResponse();
+        } catch (NxtException | RuntimeException e) {
+            Logger.logDebugMessage("Error processing API request", e);
+            JSONObject json = new JSONObject();
+            JSONData.putException(json, e);
+            response = JSON.prepare(json);
+        } catch (ExceptionInInitializerError err) {
+            Logger.logErrorMessage("Initialization Error", err.getCause());
+            response = ERROR_INCORRECT_REQUEST;
         } catch (Exception e) {
             Logger.logErrorMessage("Error processing request", e);
             response = ERROR_INCORRECT_REQUEST;
         } finally {
             // The response will be null if we created an asynchronous context
             if (response != null) {
+                if (response instanceof JSONObject) {
+                    ((JSONObject) response).put("requestProcessingTime", System.currentTimeMillis() - startTime);
+                }
                 try (Writer writer = resp.getWriter()) {
                     JSON.writeJSONString(response, writer);
                 }
