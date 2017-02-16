@@ -87,32 +87,38 @@ var NRS = (function (NRS, $) {
         }
     };
 
-    NRS.loadServerConstants = function(resolve) {
-        function processConstants(response) {
-            if (response.genesisAccountId) {
-                NRS.constants.SERVER = response;
-                NRS.constants.VOTING_MODELS = response.votingModels;
-                NRS.constants.MIN_BALANCE_MODELS = response.minBalanceModels;
-                NRS.constants.HASH_ALGORITHMS = response.hashAlgorithms;
-                NRS.constants.PHASING_HASH_ALGORITHMS = response.phasingHashAlgorithms;
-                NRS.constants.MINTING_HASH_ALGORITHMS = response.mintingHashAlgorithms;
-                NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
-                NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH = response.maxPrunableMessageLength;
-                NRS.constants.GENESIS = response.genesisAccountId;
-                NRS.constants.GENESIS_RS = NRS.convertNumericToRSAccountFormat(response.genesisAccountId);
-                NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
-                NRS.constants.REQUEST_TYPES = response.requestTypes;
-                NRS.constants.API_TAGS = response.apiTags;
-                NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
-                NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
-                NRS.constants.DISABLED_APIS = response.disabledAPIs;
-                NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
-                NRS.constants.PEER_STATES = response.peerStates;
-                NRS.loadTransactionTypeConstants(response);
-                NRS.constants.PROXY_NOT_FORWARDED_REQUESTS = response.proxyNotForwardedRequests;
-                console.log("done loading server constants");
+    NRS.processConstants = function(response, resolve) {
+        if (response.genesisAccountId) {
+            NRS.constants.SERVER = response;
+            NRS.constants.VOTING_MODELS = response.votingModels;
+            NRS.constants.MIN_BALANCE_MODELS = response.minBalanceModels;
+            NRS.constants.HASH_ALGORITHMS = response.hashAlgorithms;
+            NRS.constants.PHASING_HASH_ALGORITHMS = response.phasingHashAlgorithms;
+            NRS.constants.MINTING_HASH_ALGORITHMS = response.mintingHashAlgorithms;
+            NRS.constants.MAX_TAGGED_DATA_DATA_LENGTH = response.maxTaggedDataDataLength;
+            NRS.constants.MAX_PRUNABLE_MESSAGE_LENGTH = response.maxPrunableMessageLength;
+            NRS.constants.GENESIS = response.genesisAccountId;
+            NRS.constants.GENESIS_RS = converters.convertNumericToRSAccountFormat(response.genesisAccountId);
+            NRS.constants.EPOCH_BEGINNING = response.epochBeginning;
+            NRS.constants.REQUEST_TYPES = response.requestTypes;
+            NRS.constants.API_TAGS = response.apiTags;
+            NRS.constants.SHUFFLING_STAGES = response.shufflingStages;
+            NRS.constants.SHUFFLING_PARTICIPANTS_STATES = response.shufflingParticipantStates;
+            NRS.constants.DISABLED_APIS = response.disabledAPIs;
+            NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
+            NRS.constants.PEER_STATES = response.peerStates;
+            NRS.loadTransactionTypeConstants(response);
+            NRS.constants.PROXY_NOT_FORWARDED_REQUESTS = response.proxyNotForwardedRequests;
+            console.log("done loading server constants");
+            if (resolve) {
                 resolve();
             }
+        }
+    };
+
+    NRS.loadServerConstants = function(resolve) {
+        function processConstants(response) {
+            NRS.processConstants(response, resolve);
         }
         if (NRS.isMobileApp()) {
             jQuery.ajaxSetup({ async: false });
@@ -120,9 +126,12 @@ var NRS = (function (NRS, $) {
             jQuery.ajaxSetup({async: true});
             processConstants(NRS.constants.SERVER);
         } else {
-            NRS.sendRequest("getConstants", {}, processConstants, false);
+            if (isNode) {
+                client.sendRequest("getConstants", {}, processConstants, false);
+            } else {
+                NRS.sendRequest("getConstants", {}, processConstants, false);
+            }
         }
-
     };
 
     function getKeyByValue(map, value) {
@@ -277,4 +286,8 @@ var NRS = (function (NRS, $) {
     };
 
     return NRS;
-}(NRS || {}, jQuery));
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

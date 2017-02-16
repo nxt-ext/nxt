@@ -1325,7 +1325,9 @@ var NRS = (function (NRS, $, undefined) {
                         }
                         if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
                             fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
-                            account = transaction.sender;
+                            if (!account) {
+                                account = transaction.sender;
+                            }
                         }
                         NRS.tryToDecrypt(transaction, fieldsToDecrypt, account, {
                             "formEl": "#transaction_info_output_bottom",
