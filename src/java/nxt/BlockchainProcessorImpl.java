@@ -297,6 +297,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 final long commonBlockId = chainBlockIds.get(0);
                 final Block commonBlock = blockchain.getBlock(commonBlockId);
                 if (commonBlock == null || blockchain.getHeight() - commonBlock.getHeight() >= 720) {
+                    if (commonBlock != null) {
+                        Logger.logDebugMessage(peer + " advertised chain with better difficulty, but the last common block is at height " + commonBlock.getHeight());
+                    }
                     return;
                 }
                 if (simulateEndlessDownload) {
