@@ -1325,7 +1325,9 @@ var NRS = (function (NRS, $, undefined) {
                         }
                         if (transaction.attachment.encryptToSelfMessage && NRS.account == transaction.sender) {
                             fieldsToDecrypt.encryptToSelfMessage = $.t("note_to_self");
-                            account = transaction.sender;
+                            if (!account) {
+                                account = transaction.sender;
+                            }
                         }
                         NRS.tryToDecrypt(transaction, fieldsToDecrypt, account, {
                             "formEl": "#transaction_info_output_bottom",
@@ -1391,7 +1393,7 @@ var NRS = (function (NRS, $, undefined) {
                     tradeQuantity = tradeQuantity.add(new BigInteger(trade.quantityQNT));
                     tradeTotal = tradeTotal.add(new BigInteger(trade.quantityQNT).multiply(new BigInteger(trade.priceNQT)));
                     rows += "<tr>" +
-                    "<td>" + NRS.getTransactionLink(trade[transactionField], NRS.formatTimestamp(trade.timestamp)) + "<td>" +
+                    "<td>" + NRS.getTransactionLink(trade[transactionField], NRS.formatTimestamp(trade.timestamp)) + "</td>" +
                     "<td>" + NRS.formatQuantity(trade.quantityQNT, asset.decimals) + "</td>" +
                     "<td>" + NRS.calculateOrderPricePerWholeQNT(trade.priceNQT, asset.decimals) + "</td>" +
                     "<td>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(trade.quantityQNT, trade.priceNQT)) +

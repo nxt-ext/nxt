@@ -191,7 +191,6 @@ var NRS = (function (NRS, $, undefined) {
             });
             return;
         }
-
         //check to see if secretPhrase supplied matches logged in account, if not - show error.
         if ("secretPhrase" in data) {
             accountId = NRS.getAccountId(NRS.rememberPassword ? _password : data.secretPhrase);
@@ -314,7 +313,7 @@ var NRS = (function (NRS, $, undefined) {
         var formData = null;
 
         var config = NRS.getFileUploadConfig(requestType, data);
-        if (config && $(config.selector)[0].files[0]) {
+        if (config && $(config.selector)[0] && $(config.selector)[0].files[0]) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
@@ -1644,4 +1643,8 @@ var NRS = (function (NRS, $, undefined) {
     }
 
     return NRS;
-}(NRS || {}, jQuery));
+}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+
+if (isNode) {
+    module.exports = NRS;
+}

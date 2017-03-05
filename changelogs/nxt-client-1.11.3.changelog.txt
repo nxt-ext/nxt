@@ -1,9 +1,0 @@
-Fixed missing plugin files error in the client.
-
-Backported minor bugfixes from the Ardor branch.
-
-Treat all text/* media types as text, not just text/plain for the data cloud.
-
-Updated Jetty to version 9.3.16, delete the old lib folder before unpacking on
-top.
-

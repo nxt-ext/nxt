@@ -910,3 +910,7 @@ curve25519_verify = function(Y, v, h, P) {
 	var YY = curve25519_convertToByteArray(t1[1]);
 	curve25519_fillByteArray(YY, Y);
 }
+
+if (isNode) {
+    module.exports = curve25519_;
+}
