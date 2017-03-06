@@ -113,6 +113,11 @@ public class DesktopApplication extends Application {
         Worker<Void> loadWorker = webEngine.getLoadWorker();
         loadWorker.stateProperty().addListener(
                 (ov, oldState, newState) -> {
+                    Logger.logDebugMessage("loadWorker old state " + oldState + " new state " + newState);
+                    if (newState != Worker.State.SUCCEEDED) {
+                        Logger.logDebugMessage("loadWorker state change ignored");
+                        return;
+                    }
                     JSObject window = (JSObject)webEngine.executeScript("window");
                     window.setMember("java", new JavaScriptBridge(this));
                     Locale locale = Locale.getDefault();
@@ -120,31 +125,29 @@ public class DesktopApplication extends Application {
                     window.setMember("javaFxLanguage", language);
                     webEngine.executeScript("console.log = function(msg) { java.log(msg); };");
                     stage.setTitle("NXT Desktop - " + webEngine.getLocation());
-                    if (newState == Worker.State.SUCCEEDED) {
-                        nrs = (JSObject) webEngine.executeScript("NRS");
-                        updateClientState("Desktop Wallet started");
-                        BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
-                        blockchainProcessor.addListener((block) ->
-                                updateClientState(BlockchainProcessor.Event.BLOCK_PUSHED, block), BlockchainProcessor.Event.BLOCK_PUSHED);
-                        blockchainProcessor.addListener((block) ->
-                                updateClientState(BlockchainProcessor.Event.AFTER_BLOCK_APPLY, block), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-                        Nxt.getTransactionProcessor().addListener((transaction) ->
-                                updateClientState(TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS, transaction), TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
+                    nrs = (JSObject) webEngine.executeScript("NRS");
+                    updateClientState("Desktop Wallet started");
+                    BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
+                    blockchainProcessor.addListener((block) ->
+                            updateClientState(BlockchainProcessor.Event.BLOCK_PUSHED, block), BlockchainProcessor.Event.BLOCK_PUSHED);
+                    blockchainProcessor.addListener((block) ->
+                            updateClientState(BlockchainProcessor.Event.AFTER_BLOCK_APPLY, block), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
+                    Nxt.getTransactionProcessor().addListener((transaction) ->
+                            updateClientState(TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS, transaction), TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
 
-                        if (ENABLE_JAVASCRIPT_DEBUGGER) {
-                            try {
-                                // Add the javafx_webview_debugger lib to the classpath
-                                // For more details, check https://github.com/mohamnag/javafx_webview_debugger
-                                Class<?> aClass = Class.forName("com.mohamnag.fxwebview_debugger.DevToolsDebuggerServer");
-                                @SuppressWarnings("deprecation") Debugger debugger = webEngine.impl_getDebugger();
-                                Method startDebugServer = aClass.getMethod("startDebugServer", Debugger.class, int.class);
-                                startDebugServer.invoke(null, debugger, 51742);
-                            } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                Logger.logInfoMessage("Cannot start JavaFx debugger", e);
-                            }
+                    if (ENABLE_JAVASCRIPT_DEBUGGER) {
+                        try {
+                            // Add the javafx_webview_debugger lib to the classpath
+                            // For more details, check https://github.com/mohamnag/javafx_webview_debugger
+                            Class<?> aClass = Class.forName("com.mohamnag.fxwebview_debugger.DevToolsDebuggerServer");
+                            @SuppressWarnings("deprecation") Debugger debugger = webEngine.impl_getDebugger();
+                            Method startDebugServer = aClass.getMethod("startDebugServer", Debugger.class, int.class);
+                            startDebugServer.invoke(null, debugger, 51742);
+                        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                            Logger.logInfoMessage("Cannot start JavaFx debugger", e);
                         }
                     }
-                });
+               });
 
         // Invoked by the webEngine popup handler
         // The invisible webView does not show the link, instead it opens a browser window

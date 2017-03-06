@@ -1,0 +1,6 @@
+Added Node JS module, see html/www/js/README.
+
+Minor UI and desktop application bugfixes, ported from Ardor.
+
+Added About dialog.
+

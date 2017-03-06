@@ -158,6 +158,16 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                     -26, -121, -115, -116, -62, -120, -99, -74, -52, -39, 9, 52, 20, 92, -42, 115,
                     19, -67, 7, 51, 4, -100, -41, 41, 57, -102, 19, -128, -109, -52, -68, -15
             };
+    private static final byte[] CHECKSUM_22 = Constants.isTestnet ?
+            new byte[] {
+                    122, 81, 72, -91, -63, 124, -29, -79, -27, -85, 25, 24, 59, 12, 118, -63,
+                    118, 63, -71, 104, 103, 95, -107, -29, -48, 71, -59, 13, 71, -72, -82, -76
+            }
+            :
+            new byte[] {
+                    -77, 16, -52, 88, -21, -67, -119, 121, 121, 120, -70, 88, 44, -99, -9,
+                    -42, 48, -77, 28, 40, 106, -48, 13, 30, -22, -122, 35, 22, 29, 2, -93, 94
+            };
 
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
@@ -297,6 +307,9 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
                 final long commonBlockId = chainBlockIds.get(0);
                 final Block commonBlock = blockchain.getBlock(commonBlockId);
                 if (commonBlock == null || blockchain.getHeight() - commonBlock.getHeight() >= 720) {
+                    if (commonBlock != null) {
+                        Logger.logDebugMessage(peer + " advertised chain with better difficulty, but the last common block is at height " + commonBlock.getHeight());
+                    }
                     return;
                 }
                 if (simulateEndlessDownload) {
@@ -1019,6 +1032,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_21) {
             if (! verifyChecksum(CHECKSUM_21, Constants.CHECKSUM_BLOCK_20, Constants.CHECKSUM_BLOCK_21)) {
                 popOffTo(Constants.CHECKSUM_BLOCK_20);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_22) {
+            if (! verifyChecksum(CHECKSUM_22, Constants.CHECKSUM_BLOCK_21, Constants.CHECKSUM_BLOCK_22)) {
+                popOffTo(Constants.CHECKSUM_BLOCK_21);
             }
         }
     };
