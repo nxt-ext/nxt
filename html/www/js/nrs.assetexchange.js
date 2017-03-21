@@ -696,7 +696,7 @@ var NRS = (function (NRS, $, undefined) {
                 var className = (order.account == NRS.account ? "your-order" : "");
                 rows += "<tr class='" + className + "' data-transaction='" + NRS.escapeRespStr(order.order) + "' data-quantity='" + order.quantityQNT.toString().escapeHTML() + "' data-price='" + order.priceNQT.toString().escapeHTML() + "'>" +
                     "<td>" + NRS.getTransactionLink(order.order, statusIcon, true) + "</td>" +
-                    "<td>" + NRS.getAccountLink(order, "account", currentAsset.accountRS, "Asset Issuer") + "</td>" +
+                    "<td>" + NRS.getAccountLink(order, "account", currentAsset.accountRS, "asset_issuer") + "</td>" +
                     "<td class='numeric'>" + NRS.formatQuantity(order.quantityQNT, currentAsset.decimals, false, quantityDecimals) + "</td>" +
                     "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(order.priceNQT, currentAsset.decimals, priceDecimals) + "</td>" +
                     "<td class='numeric'>" + NRS.formatAmount(order.totalNQT, false, false, amountDecimals) + "</td>" +
@@ -850,8 +850,8 @@ var NRS = (function (NRS, $, undefined) {
                             rows += "black";
                         }
                     rows += "'>" + NRS.formatAmount(trade.totalNQT, false, false, amountDecimals) + "</td>" +
-                        "<td>" + NRS.getAccountLink(trade, "buyer", currentAsset.accountRS, "Asset Issuer") + "</td>" +
-                        "<td>" + NRS.getAccountLink(trade, "seller", currentAsset.accountRS, "Asset Issuer") + "</td>" +
+                        "<td>" + NRS.getAccountLink(trade, "buyer", currentAsset.accountRS, "asset_issuer") + "</td>" +
+                        "<td>" + NRS.getAccountLink(trade, "seller", currentAsset.accountRS, "asset_issuer") + "</td>" +
                     "</tr>";
                 }
                 exchangeTradeHistoryTable.find("tbody").empty().append(rows);
@@ -1641,7 +1641,7 @@ var NRS = (function (NRS, $, undefined) {
                 for (var i = 0; i < response.accountAssets.length; i++) {
                     var account = response.accountAssets[i];
                     var percentageAsset = NRS.calculatePercentage(account.quantityQNT, currentAsset.quantityQNT);
-                    rows += "<tr><td>" + NRS.getAccountLink(account, "account", currentAsset.accountRS, "Asset Issuer") + "</td><td>" + NRS.formatQuantity(account.quantityQNT, currentAsset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
+                    rows += "<tr><td>" + NRS.getAccountLink(account, "account", currentAsset.accountRS, "asset_issuer") + "</td><td>" + NRS.formatQuantity(account.quantityQNT, currentAsset.decimals) + "</td><td>" + percentageAsset + "%</td></tr>";
                 }
             }
             var assetDistributionTable = $("#asset_distribution_table");
