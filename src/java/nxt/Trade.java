@@ -88,7 +88,7 @@ public final class Trade {
 
     public static List<Trade> getLastTrades(long[] assetIds) {
         try (Connection con = Db.db.getConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE asset_id = ? ORDER BY height DESC, db_id DESC LIMIT 1")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM trade WHERE asset_id = ? ORDER BY asset_id, height DESC LIMIT 1")) {
             List<Trade> result = new ArrayList<>();
             for (long assetId : assetIds) {
                 pstmt.setLong(1, assetId);
