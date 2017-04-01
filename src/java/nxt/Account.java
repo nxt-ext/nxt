@@ -1431,7 +1431,7 @@ public final class Account {
         EnumSet<ControlType> newControls = EnumSet.copyOf(controls);
         newControls.remove(control);
         controls = Collections.unmodifiableSet(newControls);
-        accountTable.insert(this);
+        save();
     }
 
     void setProperty(Transaction transaction, Account setterAccount, String property, String value) {
