@@ -51,6 +51,7 @@
 - (void) getCameraRollAuthorizationStatus: (CDVInvokedUrlCommand*)command;
 
 - (void) isWifiAvailable: (CDVInvokedUrlCommand*)command;
+- (void) isWifiEnabled: (CDVInvokedUrlCommand*)command;
 
 - (void) isBluetoothAvailable: (CDVInvokedUrlCommand*)command;
 - (void) getBluetoothState: (CDVInvokedUrlCommand*)command;
