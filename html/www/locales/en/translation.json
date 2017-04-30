@@ -1843,12 +1843,10 @@
   "device_settings": "Device Settings",
   "is_store_remembered_passphrase": "Store Remembered Passphrase",
   "error_signing_passphrase_required": "Your passphrase is required to sign this data.",
-  "exchange_url": "Exchange Url",
   "refresh_search_index": "Refresh Search Index",
   "enable_marketplace_section": "Enable Marketplace Section",
   "enable_exchange_section": "Enable Exchange Section",
   "exchange_settings": "Exchange Settings",
-  "exchange_api_key": "Exchange Api Key",
   "sum": "Sum",
   "reset": "Reset",
   "name_description_tag": "Name Description Tag",
@@ -1864,5 +1862,7 @@
   "working_offline": "You are working offline",
   "offline_actions": "Offline Actions",
   "success_clipboard_copy": "Copied to the clipboard successfully.",
-  "about_nxt": "About Nxt"
+  "about_nxt": "About Nxt",
+  "shape_shift_url": "Shape Shift Url",
+  "shape_shift_api_key": "Shape Shift API Key"
 }
