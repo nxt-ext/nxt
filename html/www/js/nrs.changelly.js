@@ -22,14 +22,14 @@ var NRS = (function(NRS, $) {
     var SUPPORTED_COINS = {};
 
     var coinToPair = function (op, coin) {
-        return (op == "buy") ? "NXT_" + coin : coin + "_NXT";
+        return (op === "buy") ? "NXT_" + coin : coin + "_NXT";
     };
 
     var pairToCoin = function (pair) {
-        if (pair.indexOf("NXT_") == 0) {
+        if (pair.indexOf("NXT_") === 0) {
             return pair.substring("NXT_".length);
         }
-        if (pair.indexOf("_NXT") == pair.length - "_NXT".length) {
+        if (pair.indexOf("_NXT") === pair.length - "_NXT".length) {
             return pair.substring(0, pair.indexOf("_NXT"));
         }
         throw "illegal pair " + pair;
@@ -57,7 +57,7 @@ var NRS = (function(NRS, $) {
     var addDepositAddress = function(address, pair) {
         var json = localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS];
         var addresses;
-        if (json == undefined) {
+        if (json === undefined) {
             addresses = [];
         } else {
             addresses = JSON.parse(json);
@@ -95,7 +95,7 @@ var NRS = (function(NRS, $) {
             async: true,
             data: JSON.stringify(postData)
         }).done(function(response, status) {
-            if (status != "success") {
+            if (status !== "success") {
                 NRS.logConsole(method + ' status ' + status);
                 if (modal) {
                     NRS.showModalError(status, modal);
@@ -117,7 +117,7 @@ var NRS = (function(NRS, $) {
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
-                if (method.indexOf("txStat/") != 0 && method.indexOf("cancelpending") != 0) {
+                if (method.indexOf("txStat/") !== 0 && method.indexOf("cancelpending") !== 0) {
                     $("#changelly_status").html($.t("error"));
                 }
             }
@@ -151,7 +151,7 @@ var NRS = (function(NRS, $) {
                         },
                         function(marketInfoData, callback) {
                             var amount = 100;
-                            if (op == "buy") {
+                            if (op === "buy") {
                                 amount = amount * marketInfoData.rate;
                             }
                             apiCall("sendamount", {"amount": amount, "pair": pair}, function (data) {
@@ -175,13 +175,13 @@ var NRS = (function(NRS, $) {
                         "</td>";
                         row += "<td>" + coins[i] + "</td>";
                         var rate, quotedRate, diff;
-                        if (op == "sell") {
-                            if (parseFloat(data.rate) == 0) {
+                        if (op === "sell") {
+                            if (parseFloat(data.rate) === 0) {
                                 rate = "N/A";
                             } else {
                                 rate = invert(data.rate);
                             }
-                            if (parseFloat(data.quotedRate) == 0) {
+                            if (parseFloat(data.quotedRate) === 0) {
                                 quotedRate = "N/A";
                                 diff = "N/A";
                             } else {
@@ -190,7 +190,7 @@ var NRS = (function(NRS, $) {
                             }
                         } else {
                             rate = data.rate;
-                            if (parseFloat(data.quotedRate) == 0) {
+                            if (parseFloat(data.quotedRate) === 0) {
                                 quotedRate = "N/A";
                                 diff = "N/A";
                             } else {
@@ -235,20 +235,20 @@ var NRS = (function(NRS, $) {
     };
 
     var getAddressLink = function (address, coin) {
-        if (coin == "NXT") {
+        if (coin === "NXT") {
             return NRS.getAccountLink({ accountRS: address }, "account");
         }
-        if (coin == "BTC") {
+        if (coin === "BTC") {
             return "<a target='_blank' href='https://blockchain.info/address/" + address + "'>" + address + "</a>";
         }
         return address;
     };
 
     var getTransactionLink = function (transaction, coin) {
-        if (coin == "NXT") {
+        if (coin === "NXT") {
             return "<a href='#' class='show_transaction_modal_action' data-transaction='" + transaction + "'>" + transaction + "</a>";
         }
-        if (coin == "BTC") {
+        if (coin === "BTC") {
             return "<a target='_blank' href='https://blockchain.info/tx/" + transaction + "'>" + transaction + "</a>";
         }
         return transaction;
@@ -271,7 +271,7 @@ var NRS = (function(NRS, $) {
                         row += "<tr>";
                         row += "<td>" + NRS.formatTimestamp(depositAddresses[i].time, false, true) + "</td>";
                         row += "<td>" + data.status + "</td>";
-                        if (data.status == "failed") {
+                        if (data.status === "failed") {
                             row += "<td>" + data.error + "</td>";
                             row += empty + empty + empty + empty + empty + empty;
                             NRS.logConsole(row);
@@ -279,7 +279,7 @@ var NRS = (function(NRS, $) {
                             return;
                         }
                         row += "<td>" + getAddressLink(data.address, depositAddresses[i].pair.split('_')[0]) + "</td>";
-                        if (data.status == "no_deposits") {
+                        if (data.status === "no_deposits") {
                             row += empty + empty + empty + empty + empty + empty;
                             NRS.logConsole(row);
                             callback(null, row);
@@ -287,7 +287,7 @@ var NRS = (function(NRS, $) {
                         }
                         row += "<td>" + data.incomingCoin + "</td>";
                         row += "<td>" + data.incomingType + "</td>";
-                        if (data.status == "received") {
+                        if (data.status === "received") {
                             row += empty + empty + empty + empty;
                             NRS.logConsole(row);
                             callback(null, row);
@@ -305,7 +305,7 @@ var NRS = (function(NRS, $) {
         }
         NRS.logConsole(tasks.length + " tasks ready to run");
         var table = $("#p_changelly_my_table");
-        if (tasks.length == 0) {
+        if (tasks.length === 0) {
             table.find("tbody").empty();
             NRS.dataLoadFinished(table);
         }
@@ -334,7 +334,7 @@ var NRS = (function(NRS, $) {
             if (data) {
                 for (var i = 0; i < data.length; i++) {
                     var transaction = data[i];
-                    if (String(transaction.curIn).escapeHTML() != "NXT" && String(transaction.curOut).escapeHTML() != "NXT") {
+                    if (String(transaction.curIn).escapeHTML() !== "NXT" && String(transaction.curOut).escapeHTML() !== "NXT") {
                         continue;
                     }
                     rows += "<tr>";
@@ -397,7 +397,7 @@ var NRS = (function(NRS, $) {
         var exchangeDisabled = $("#exchange_disabled");
         var exchangePageHeader = $("#exchange_page_header");
         var exchangePageContent = $("#exchange_page_content");
-        if (NRS.settings.exchange != "1") {
+        if (NRS.settings.exchange !== "1") {
 			exchangeDisabled.show();
             exchangePageHeader.hide();
             exchangePageContent.hide();
@@ -418,8 +418,8 @@ var NRS = (function(NRS, $) {
     };
 
     refreshPage = function() {
-        if (NRS.currentPage == "exchange") {
-            NRS.pages.exchange();
+        if (NRS.currentPage === "exchange_changelly") {
+            NRS.pages.exchange_changelly();
         }
     };
 
@@ -494,19 +494,19 @@ var NRS = (function(NRS, $) {
             if (data.error) {
                 return;
             }
-            if (data.depositType != "NXT") {
+            if (data.depositType !== "NXT") {
                 msg = "incorrect deposit coin " + data.depositType;
                 NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
-            if (data.withdrawalType != pairToCoin(pair)) {
+            if (data.withdrawalType !== pairToCoin(pair)) {
                 msg = "incorrect withdrawal coin " + data.withdrawalType;
                 NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
             }
-            if (data.withdrawal != withdrawal) {
+            if (data.withdrawal !== withdrawal) {
                 msg = "incorrect withdrawal address " + data.withdrawal;
                 NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
@@ -554,7 +554,7 @@ var NRS = (function(NRS, $) {
         var pair = $("#m_send_amount_buy_pair").val();
         var buySubmit = $("#m_send_amount_buy_submit");
         buySubmit.prop('disabled', true);
-        if (amount == "" || withdrawal == "") {
+        if (amount === "" || withdrawal === "") {
             return;
         }
         modal.css('cursor','wait');
@@ -579,12 +579,12 @@ var NRS = (function(NRS, $) {
                     buySubmit.prop('disabled', true);
                     return;
                 }
-                if (amount != data.success.withdrawalAmount) {
+                if (amount !== data.success.withdrawalAmount) {
                     NRS.showModalError("amount returned from shapeshift " + data.success.withdrawalAmount +
                         " differs from requested amount " + amount, modal);
                     return;
                 }
-                if (withdrawal != data.success.withdrawal) {
+                if (withdrawal !== data.success.withdrawal) {
                     NRS.showModalError("withdrawal address returned from shapeshift " + data.success.withdrawal +
                         " differs from requested address " + withdrawal, modal);
                     return;
@@ -664,10 +664,10 @@ var NRS = (function(NRS, $) {
                 $("#m_changelly_sell_fee_coin").html("NXT");
                 $("#m_changelly_sell_pair").val(pair);
                 var publicKey = NRS.publicKey;
-                if (publicKey == "" && NRS.accountInfo) {
+                if (publicKey === "" && NRS.accountInfo) {
                     publicKey = NRS.accountInfo.publicKey;
                 }
-                if (!publicKey || publicKey == "") {
+                if (!publicKey || publicKey === "") {
                     NRS.showModalError("Account has no public key, please login using your passphrase", modal);
                     return;
                 }
@@ -679,21 +679,21 @@ var NRS = (function(NRS, $) {
                 }, function (data) {
                     NRS.logConsole("shift request done");
                     var msg;
-                    if (data.depositType != coin) {
+                    if (data.depositType !== coin) {
                         msg = "incorrect deposit coin " + data.depositType;
                         NRS.logConsole(msg);
                         NRS.showModalError(msg, modal);
                         callback(null);
                         return;
                     }
-                    if (data.withdrawalType != "NXT") {
+                    if (data.withdrawalType !== "NXT") {
                         msg = "incorrect withdrawal coin " + data.withdrawalType;
                         NRS.logConsole(msg);
                         NRS.showModalError(msg, modal);
                         callback(null);
                         return;
                     }
-                    if (data.withdrawal != NRS.accountRS) {
+                    if (data.withdrawal !== NRS.accountRS) {
                         msg = "incorrect withdrawal address " + data.withdrawal;
                         NRS.logConsole(msg);
                         NRS.showModalError(msg, modal);
@@ -715,7 +715,7 @@ var NRS = (function(NRS, $) {
         e.preventDefault();
         var pair = $("#m_changelly_sell_pair").val();
         var deposit = $("#m_changelly_sell_deposit_address").html();
-        if (deposit != "") {
+        if (deposit !== "") {
             addDepositAddress(deposit, pair);
             renderMyExchangesTable();
             $(this).closest(".modal").modal("hide");
@@ -725,7 +725,7 @@ var NRS = (function(NRS, $) {
     $("#m_changelly_sell_cancel").on("click", function(e) {
         e.preventDefault();
         var deposit = $("#m_changelly_sell_deposit_address").html();
-        if (deposit != "") {
+        if (deposit !== "") {
             apiCall('cancelpending', {address: deposit}, function (data) {
                 var msg = data.success ? data.success : data.err;
                 NRS.logConsole("sell cancelled response: " + msg);
@@ -756,10 +756,10 @@ var NRS = (function(NRS, $) {
         var pair = $('#m_send_amount_sell_pair').val();
         $("#m_send_amount_sell_done").prop('disabled', true);
         var publicKey = NRS.publicKey;
-        if (publicKey == "" && NRS.accountInfo) {
+        if (publicKey === "" && NRS.accountInfo) {
             publicKey = NRS.accountInfo.publicKey;
         }
-        if (!publicKey || publicKey == "") {
+        if (!publicKey || publicKey === "") {
             NRS.showModalError("Account has no public key, please login using your passphrase", modal);
             return;
         }
@@ -786,12 +786,12 @@ var NRS = (function(NRS, $) {
                     expiration.val("");
                     return;
                 }
-                if (amount != data.success.withdrawalAmount) {
+                if (amount !== data.success.withdrawalAmount) {
                     NRS.showModalError("amount returned from shapeshift " + data.success.withdrawalAmount +
                         " differs from requested amount " + amount, modal);
                     return;
                 }
-                if (NRS.accountRS != data.success.withdrawal) {
+                if (NRS.accountRS !== data.success.withdrawal) {
                     NRS.showModalError("withdrawal address returned from shapeshift " + data.success.withdrawal +
                         " differs from requested address " + NRS.accountRS, modal);
                     return;
@@ -815,7 +815,7 @@ var NRS = (function(NRS, $) {
         e.preventDefault();
         var pair = $("#m_send_amount_sell_pair").val();
         var deposit = $("#m_send_amount_sell_deposit_address").html();
-        if (deposit != "") {
+        if (deposit !== "") {
             addDepositAddress(deposit, pair);
             renderMyExchangesTable();
             $(this).closest(".modal").modal("hide");
@@ -825,7 +825,7 @@ var NRS = (function(NRS, $) {
     $("#m_send_amount_sell_cancel").on("click", function(e) {
         e.preventDefault();
         var deposit = $("#m_send_amount_sell_deposit_address").html();
-        if (deposit != "") {
+        if (deposit !== "") {
             apiCall('cancelpending', {address: deposit}, function (data) {
                 var msg = data.success ? data.success : data.err;
                 NRS.logConsole("sell cancelled response: " + msg);

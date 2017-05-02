@@ -404,8 +404,8 @@ var NRS = (function(NRS, $) {
     };
 
     refreshPage = function() {
-        if (NRS.currentPage == "exchange") {
-            NRS.pages.exchange();
+        if (NRS.currentPage == "exchange_shape_shift") {
+            NRS.pages.exchange_shape_shift();
         }
     };
 
