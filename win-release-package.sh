@@ -70,12 +70,10 @@ rm -rf nxt
 
 echo creating change log ${CHANGELOG}
 echo -e "Release $1\n" > ${CHANGELOG}
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.exe\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
+echo -e "https://www.jelurida.com/\n" >> ${CHANGELOG}
+echo -e "sha256 checksums:\n" >> ${CHANGELOG}
 sha256sum ${PACKAGE}.exe >> ${CHANGELOG}
 
-echo -e "https://bitbucket.org/JeanLucPicard/nxt/downloads/${PACKAGE}.jar\n" >> ${CHANGELOG}
-echo -e "sha256:\n" >> ${CHANGELOG}
 sha256sum ${PACKAGE}.jar >> ${CHANGELOG}
 
 if [ "${OBFUSCATE}" == "obfuscate" ];

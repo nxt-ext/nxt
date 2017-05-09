@@ -16,7 +16,7 @@ in such a way that no trusted third parties are required anymore.
 ----
 ## Get it! ##
 
-  - *pre-packaged* - `https://bitbucket.org/JeanLucPicard/nxt/downloads/nxt-client-{version}.zip`
+  - *pre-packaged* - `https://www.jelurida.com/`
 
   - *dependencies*:
     - *general* - Java 8
