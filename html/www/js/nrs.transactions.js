@@ -65,7 +65,9 @@ var NRS = (function(NRS, $, undefined) {
 
 	NRS.getUnconfirmedTransactions = function(callback) {
 		NRS.sendRequest("getUnconfirmedTransactions", {
-			"account": NRS.account
+			"account": NRS.account,
+            "firstIndex": 0,
+            "lastIndex": NRS.itemsPerPage
 		}, function(response) {
 			if (response.unconfirmedTransactions && response.unconfirmedTransactions.length) {
 				var unconfirmedTransactions = [];

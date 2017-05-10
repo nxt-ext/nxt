@@ -59,6 +59,8 @@ public class DesktopApplication extends Application {
     private static volatile Stage stage;
     private static volatile WebEngine webEngine;
     private JSObject nrs;
+    private volatile long updateTime;
+    private volatile List<Transaction> unconfirmedTransactionUpdates = new ArrayList<>();
 
     public static void launch() {
         if (!isLaunched) {
@@ -132,7 +134,7 @@ public class DesktopApplication extends Application {
                             updateClientState(BlockchainProcessor.Event.BLOCK_PUSHED, block), BlockchainProcessor.Event.BLOCK_PUSHED);
                     blockchainProcessor.addListener((block) ->
                             updateClientState(BlockchainProcessor.Event.AFTER_BLOCK_APPLY, block), BlockchainProcessor.Event.AFTER_BLOCK_APPLY);
-                    Nxt.getTransactionProcessor().addListener((transaction) ->
+                    Nxt.getTransactionProcessor().addListener(transaction ->
                             updateClientState(TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS, transaction), TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
 
                     if (ENABLE_JAVASCRIPT_DEBUGGER) {
@@ -199,9 +201,13 @@ public class DesktopApplication extends Application {
         if (transactions.size() == 0) {
             return;
         }
-        String msg = transactionEvent.toString() + " ids " +
-                transactions.stream().map(Transaction::getStringId).collect(Collectors.joining(","));
-        updateClientState(msg);
+        unconfirmedTransactionUpdates.addAll(transactions);
+        if (System.currentTimeMillis() - updateTime > 3000L) {
+            String msg = transactionEvent.toString() + " ids " + unconfirmedTransactionUpdates.stream().map(Transaction::getStringId).collect(Collectors.joining(","));
+            updateTime = System.currentTimeMillis();
+            unconfirmedTransactionUpdates = new ArrayList<>();
+            updateClientState(msg);
+        }
     }
 
     private void updateClientState(String msg) {

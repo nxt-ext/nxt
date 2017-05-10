@@ -22,6 +22,7 @@ import nxt.Attachment.AbstractAttachment;
 import nxt.NxtException.ValidationException;
 import nxt.VoteWeighting.VotingModel;
 import nxt.util.Convert;
+import nxt.util.Logger;
 import org.apache.tika.Tika;
 import org.apache.tika.mime.MediaType;
 import org.json.simple.JSONObject;
@@ -2235,8 +2236,13 @@ public abstract class TransactionType {
                     byte[] image = prunablePlainMessage.getMessage();
                     if (image != null) {
                         Tika tika = new Tika();
-                        String mediaTypeName = tika.detect(image);
-                        MediaType mediaType = MediaType.parse(mediaTypeName);
+                        MediaType mediaType = null;
+                        try {
+                            String mediaTypeName = tika.detect(image);
+                            mediaType = MediaType.parse(mediaTypeName);
+                        } catch (NoClassDefFoundError e) {
+                            Logger.logErrorMessage("Error running Tika parsers", e);
+                        }
                         if (mediaType == null || !"image".equals(mediaType.getType())) {
                             throw new NxtException.NotValidException("Only image attachments allowed for DGS listing, media type is " + mediaType);
                         }

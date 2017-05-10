@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="cordova.plugins.diagnostic"
-    version="3.3.2">
+    version="3.4.2">
 
     <name>Diagnostic</name>
     <description>Cordova/Phonegap plugin to check the state of Location/WiFi/Camera/Bluetooth device settings.</description>
@@ -104,6 +104,11 @@
                     android:name="cordova.plugins.Diagnostic$LocationProviderChangedReceiver">
                 <intent-filter>
                     <action android:name="android.location.PROVIDERS_CHANGED" />
+                </intent-filter>
+            </receiver>
+            <receiver android:name="cordova.plugins.Diagnostic$NFCStateChangedReceiver">
+                <intent-filter>
+                    <action android:name="android.nfc.action.ADAPTER_STATE_CHANGED" />
                 </intent-filter>
             </receiver>
         </config-file>

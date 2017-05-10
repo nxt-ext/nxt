@@ -63,8 +63,8 @@ testdruif@gmail.com
 GPG key fingerprint: 1263 D21F 482C 6BF8 4550  4451 D085 799A 9EF1 57F3
 Nxt account: NXT-NNGD-V8TN-3MZR-DWWBE
 
-Berzelius
-berzelius@mailbox.org
-GPG key fingerprint: 206B 409C FF4F BF25 6E03  9834 3C8E EB47 926A 7AC7
+Tomislav Gountchev
+tomislav.gountchev@jelurida.com
+GPG key fingerprint: 4554 EB0D 4B9D A419 7AE7  03DA 1B30 B078 D77E D3E5
 Nxt account: NXT-XNBG-5TB4-SC4R-B73ZW
 

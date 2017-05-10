@@ -158,7 +158,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.isScanningAllowed = function () {
-        return isMobileDevice || isLocalHost;
+        return isMobileDevice || isLocalHost || NRS.isTestNet;
     };
 
     NRS.isCameraPermissionRequired = function () {

@@ -59,7 +59,12 @@ public final class Search {
 
     public static String detectMimeType(byte[] data) {
         Tika tika = new Tika();
-        return tika.detect(data);
+        try {
+            return tika.detect(data);
+        } catch (NoClassDefFoundError e) {
+            Logger.logErrorMessage("Error running Tika parsers", e);
+            return null;
+        }
     }
 
     private Search() {}

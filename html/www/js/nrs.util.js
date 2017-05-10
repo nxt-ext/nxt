@@ -1318,7 +1318,7 @@ var NRS = (function (NRS, $, undefined) {
 			nameKey = nameKey.substring(1);
 		}
 
-		if ($.i18n.exists(nameKey)) {
+		if ($.i18n && $.i18n.exists(nameKey)) {
 			return $.t(nameKey).escapeHTML();
 		} else {
 			return nameKey.replace(/_/g, " ").escapeHTML();

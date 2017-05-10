@@ -344,8 +344,8 @@ var Diagnostic = (function(){
      ************/
 
     /**
-     * Checks if Wi-Fi connection exists.
-     * On iOS this returns true if the device is connected to a network by WiFi.
+     * Checks if Wi-Fi is connected.
+     * On iOS this returns true if the WiFi setting is set to enabled AND the device is connected to a network by WiFi.
      *
      * @param {Function} successCallback - The callback which will be called when operation is successful.
      * This callback function is passed a single boolean parameter which is TRUE if device is connected by WiFi.
@@ -357,6 +357,23 @@ var Diagnostic = (function(){
             errorCallback,
             'Diagnostic',
             'isWifiAvailable',
+            []);
+    };
+
+    /**
+     * Checks if Wifi is enabled.
+     * On iOS this returns true if the WiFi setting is set to enabled (regardless of whether it's connected to a network).
+     *
+     * @param {Function} successCallback -  The callback which will be called when the operation is successful.
+     * This callback function is passed a single boolean parameter which is TRUE if WiFi is enabled.
+     * @param {Function} errorCallback -  The callback which will be called when the operation encounters an error.
+     *  This callback function is passed a single string parameter containing the error message.
+     */
+    Diagnostic.isWifiEnabled = function(successCallback, errorCallback) {
+        return cordova.exec(successCallback,
+            errorCallback,
+            'Diagnostic',
+            'isWifiEnabled',
             []);
     };
 

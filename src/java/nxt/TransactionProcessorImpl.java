@@ -318,8 +318,18 @@ final class TransactionProcessorImpl implements TransactionProcessor {
     }
 
     @Override
+    public DbIterator<UnconfirmedTransaction> getAllUnconfirmedTransactions(int from, int to) {
+        return unconfirmedTransactionTable.getAll(from, to);
+    }
+
+    @Override
     public DbIterator<UnconfirmedTransaction> getAllUnconfirmedTransactions(String sort) {
         return unconfirmedTransactionTable.getAll(0, -1, sort);
+    }
+
+    @Override
+    public DbIterator<UnconfirmedTransaction> getAllUnconfirmedTransactions(int from, int to, String sort) {
+        return unconfirmedTransactionTable.getAll(from, to, sort);
     }
 
     @Override
