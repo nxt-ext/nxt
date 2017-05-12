@@ -166,11 +166,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.getShapeShiftUrl = function() {
-        if (isDesktopApplication) {
-            return location.origin + "/shapeshift/";
-        } else {
-            return NRS.settings.exchange_url;
-        }
+        return NRS.settings.exchange_url;
     };
 
     NRS.isForgingSupported = function() {
