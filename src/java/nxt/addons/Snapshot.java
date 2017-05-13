@@ -23,6 +23,8 @@ import nxt.Constants;
 import nxt.Db;
 import nxt.FxtDistribution;
 import nxt.Nxt;
+import nxt.Transaction;
+import nxt.TransactionType;
 import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
 import nxt.util.Convert;
@@ -116,6 +118,9 @@ public class Snapshot implements AddOn {
                             try (ResultSet rs = pstmt.executeQuery()) {
                                 while (rs.next()) {
                                     long accountId = rs.getLong("id");
+                                    if (accountId == FxtDistribution.FXT_ISSUER_ID) {
+                                        continue;
+                                    }
                                     long balance = rs.getLong("balance");
                                     if (balance <= 0) {
                                         continue;
@@ -132,6 +137,23 @@ public class Snapshot implements AddOn {
                             }
                         } catch (SQLException e) {
                             throw new RuntimeException(e.getMessage(), e);
+                        }
+                        try (DbIterator<? extends Transaction> transactions = Nxt.getBlockchain().getTransactions(
+                                FxtDistribution.FXT_ISSUER_ID, 0, TransactionType.Payment.ORDINARY.getType(),
+                                TransactionType.Payment.ORDINARY.getSubtype(), Nxt.getBlockchain().getBlockAtHeight(FxtDistribution.DISTRIBUTION_START).getTimestamp(),
+                                false, false, false, 0, -1, false, true)) {
+                            while (transactions.hasNext()) {
+                                Transaction transaction = transactions.next();
+                                if (transaction.getRecipientId() != FxtDistribution.FXT_ISSUER_ID) {
+                                    continue;
+                                }
+                                String senderId = Long.toUnsignedString(transaction.getSenderId());
+                                long amount = transaction.getAmountNQT() / 2;
+                                Logger.logDebugMessage("Will refund " + amount + " IGNIS to " + Convert.rsAccount(transaction.getSenderId()));
+                                long balance = Convert.nullToZero(snapshotMap.get(senderId));
+                                balance += amount;
+                                snapshotMap.put(senderId, balance);
+                            }
                         }
                         if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
                             final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
