@@ -93,6 +93,8 @@ public class Snapshot implements AddOn {
                     exportArdorBalances();
                     exportAliases();
                     exportCurrencies();
+                    exportAccountInfo();
+                    exportAccountProperties();
                 }
             }
 
@@ -274,6 +276,48 @@ public class Snapshot implements AddOn {
                     throw new RuntimeException(e.getMessage(), e);
                 }
                 saveMap(snapshotMap, Constants.isTestnet ? "IGNIS_CURRENCIES-testnet.json" : "IGNIS_CURRENCIES.json");
+            }
+
+            private void exportAccountInfo() {
+                SortedMap<String, Map<String, String>> snapshotMap = new TreeMap<>();
+                try (Connection con = Db.db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT account_id, name, description FROM account_info WHERE LATEST=true")) {
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            String accountName = rs.getString("name");
+                            String accountDescription = rs.getString("description");
+                            long accountId = rs.getLong("account_id");
+                            Map account = new TreeMap();
+                            account.put("name", accountName);
+                            account.put("description", accountDescription);
+                            snapshotMap.put(Long.toUnsignedString(accountId), account);
+                        }
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                saveMap(snapshotMap, Constants.isTestnet ? "ACCOUNT_INFO-testnet.json" : "ACCOUNT_INFO.json");
+            }
+
+            private void exportAccountProperties() {
+                SortedMap<String, Map<String, Map<String, String>>> snapshotMap = new TreeMap<>();
+                try (Connection con = Db.db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT recipient_id, setter_id, property, value FROM account_property WHERE LATEST=true")) {
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            String property = rs.getString("property");
+                            String value = rs.getString("value");
+                            String recipientId = Long.toUnsignedString(rs.getLong("recipient_id"));
+                            String setterId = Long.toUnsignedString(rs.getLong("setter_id"));
+                            Map<String, Map<String, String>> account = snapshotMap.computeIfAbsent(recipientId, k -> new TreeMap());
+                            Map<String, String> properties = account.computeIfAbsent(setterId, k -> new TreeMap<>());
+                            properties.put(property, value);
+                        }
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                saveMap(snapshotMap, Constants.isTestnet ? "ACCOUNT_PROPERTIES-testnet.json" : "ACCOUNT_PROPERTIES.json");
             }
 
             private void saveMap(Map<String, ? extends Object> snapshotMap, String file) {
