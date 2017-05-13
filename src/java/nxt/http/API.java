@@ -72,8 +72,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
-import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 import static nxt.http.JSONResponses.LOCKED_ADMIN_PASSWORD;
+import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 
 public final class API {
 
@@ -83,6 +83,7 @@ public final class API {
 
     public static final int openAPIPort;
     public static final int openAPISSLPort;
+    public static final boolean isOpenAPI;
 
     public static final List<String> disabledAPIs;
     public static final List<APITag> disabledAPITags;
@@ -204,6 +205,7 @@ public final class API {
             }
             openAPIPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
             openAPISSLPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
+            isOpenAPI = openAPIPort > 0 || openAPISSLPort > 0;
 
             HandlerList apiHandlers = new HandlerList();
 
@@ -241,10 +243,9 @@ public final class API {
                     "" + Math.max(apiServerIdleTimeout - APIProxyServlet.PROXY_IDLE_TIMEOUT_DELTA, 0)));
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
-            apiHandler.addServlet(ShapeShiftProxyServlet.class, ShapeShiftProxyServlet.SHAPESHIFT_TARGET + "/*");
 
             GzipHandler gzipHandler = new GzipHandler();
-            if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
+            if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter", isOpenAPI)) {
                 gzipHandler.setExcludedPaths("/nxt", "/nxt-proxy");
             }
             gzipHandler.setIncludedMethods("GET", "POST");
@@ -304,6 +305,7 @@ public final class API {
             disableAdminPassword = false;
             openAPIPort = 0;
             openAPISSLPort = 0;
+            isOpenAPI = false;
             Logger.logMessage("API server not enabled");
         }
 

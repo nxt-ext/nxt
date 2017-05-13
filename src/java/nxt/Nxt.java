@@ -244,7 +244,11 @@ public final class Nxt {
         return result;
     }
 
-    public static Boolean getBooleanProperty(String name) {
+    public static boolean getBooleanProperty(String name) {
+        return getBooleanProperty(name, false);
+    }
+
+    public static boolean getBooleanProperty(String name, boolean defaultValue) {
         String value = properties.getProperty(name);
         if (Boolean.TRUE.toString().equals(value)) {
             Logger.logMessage(name + " = \"true\"");
@@ -253,8 +257,8 @@ public final class Nxt {
             Logger.logMessage(name + " = \"false\"");
             return false;
         }
-        Logger.logMessage(name + " not defined, assuming false");
-        return false;
+        Logger.logMessage(name + " not defined, using default " + defaultValue);
+        return defaultValue;
     }
 
     public static Blockchain getBlockchain() {
