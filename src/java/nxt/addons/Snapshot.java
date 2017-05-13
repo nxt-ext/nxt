@@ -27,6 +27,7 @@ import nxt.Transaction;
 import nxt.TransactionType;
 import nxt.crypto.Crypto;
 import nxt.db.DbIterator;
+import nxt.db.DbUtils;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
@@ -46,6 +47,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +97,7 @@ public class Snapshot implements AddOn {
                     exportCurrencies();
                     exportAccountInfo();
                     exportAccountProperties();
+                    exportAccountControl();
                 }
             }
 
@@ -318,6 +321,32 @@ public class Snapshot implements AddOn {
                     throw new RuntimeException(e.getMessage(), e);
                 }
                 saveMap(snapshotMap, Constants.isTestnet ? "ACCOUNT_PROPERTIES-testnet.json" : "ACCOUNT_PROPERTIES.json");
+            }
+
+            private void exportAccountControl() {
+                SortedMap<String, Map<String, Object>> snapshotMap = new TreeMap<>();
+                try (Connection con = Db.db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT account_id, whitelist, quorum, max_fees, min_duration, max_duration "
+                             + "FROM account_control_phasing WHERE voting_model = 0 AND min_balance IS NULL AND whitelist IS NOT NULL AND LATEST=true")) {
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            String accountId = Long.toUnsignedString(rs.getLong("account_id"));
+                            Map<String, Object> accountControl = new TreeMap();
+                            Long[] whitelist = DbUtils.getArray(rs, "whitelist", Long[].class);
+                            JSONArray whitelistJSON = new JSONArray();
+                            whitelistJSON.addAll(Arrays.asList(whitelist));
+                            accountControl.put("whitelist", whitelistJSON);
+                            accountControl.put("quorum", rs.getInt("quorum"));
+                            accountControl.put("maxFees", rs.getLong("max_fees"));
+                            accountControl.put("minDuration", rs.getInt("min_duration"));
+                            accountControl.put("maxDuration", rs.getInt("max_duration"));
+                            snapshotMap.put(accountId, accountControl);
+                        }
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                saveMap(snapshotMap, Constants.isTestnet ? "ACCOUNT_CONTROL-testnet.json" : "ACCOUNT_CONTROL.json");
             }
 
             private void saveMap(Map<String, ? extends Object> snapshotMap, String file) {
