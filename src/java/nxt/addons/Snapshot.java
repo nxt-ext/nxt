@@ -92,6 +92,7 @@ public class Snapshot implements AddOn {
                     exportIgnisBalances();
                     exportArdorBalances();
                     exportAliases();
+                    exportCurrencies();
                 }
             }
 
@@ -252,6 +253,27 @@ public class Snapshot implements AddOn {
                     throw new RuntimeException(e.getMessage(), e);
                 }
                 saveMap(snapshotMap, Constants.isTestnet ? "IGNIS_ALIASES-testnet.json" : "IGNIS_ALIASES.json");
+            }
+
+            private void exportCurrencies() {
+                SortedMap<String, Map<String, String>> snapshotMap = new TreeMap<>();
+                try (Connection con = Db.db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT account_id, name, code FROM currency WHERE LATEST=true")) {
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            String currencyName = rs.getString("name");
+                            String currencyCode = rs.getString("code");
+                            long accountId = rs.getLong("account_id");
+                            Map currency = new TreeMap();
+                            currency.put("account", Long.toUnsignedString(accountId));
+                            currency.put("name", currencyName);
+                            snapshotMap.put(currencyCode, currency);
+                        }
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                saveMap(snapshotMap, Constants.isTestnet ? "IGNIS_CURRENCIES-testnet.json" : "IGNIS_CURRENCIES.json");
             }
 
             private void saveMap(Map<String, ? extends Object> snapshotMap, String file) {
