@@ -1,0 +1,58 @@
+<div id="ignis_page" class="page">
+    <section class="content-header">
+        <h1 data-i18n="buy_ignis">Buy Ignis</h1>
+    </section>
+    <section class="content">
+        <div class="col-md-12">
+            <div class="col-md-8">
+                <div class="box box-solid box-info">
+                    <div class="alert-info alert-no-icon" id="ignis_message"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="col-md-4">
+                <div class="box box-solid box-info">
+                    <div class="box-body">
+                        <form role="form" autocomplete="off">
+                            <div class="form-group">
+                                <label for="buy_ignis_units" class="col-sm-3 control-label" data-i18n="units">Units</label>
+                                <div class="input-group">
+                                    <input id="buy_ignis_units" type="text" name="buy_currency_units" class="form-control currency_units" data-type="ignis" />
+                                    <span class="input-group-addon"><span class="currency_code"></span></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="buy_ignis_rate" class="col-sm-3 control-label" data-i18n="rate">Rate</label>
+                                <div class="input-group">
+                                    <input id="buy_ignis_rate" type="text" value="0" name="buy_currency_rate" class="form-control" data-type="ignis" readonly/>
+                                    <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
+                                </div>
+                            </div>
+                            <div class="form-group" style="display: none">
+                                <label for="buy_ignis_effective_rate" class="col-sm-3 control-label" data-i18n="effective_rate">Effective Rate</label>
+                                <div class="input-group">
+                                    <input id="buy_ignis_effective_rate" type="text" value="0" name="buy_currency_effective_rate" class="form-control" data-type="ignis" readonly/>
+                                    <span class="input-group-addon"><span class="currency_code"></span> / NXT</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="buy_ignis_total" class="col-sm-3 control-label" data-i18n="total">Total</label>
+                                <div class="input-group">
+                                    <input type="text" id="buy_ignis_total" name="buy_currency_total" readonly value="0" class="form-control disabled" />
+                                    <span class="input-group-addon">NXT</span>
+                                </div>
+                            </div>
+                            <div class="form-group form-group-last">
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-primary btn-lg btn-block" id="buy_ignis_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="buy"><span data-i18n="buy_ignis">Buy Ignis</span></button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="buy_ignis_currency" name="currency" value=""/>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

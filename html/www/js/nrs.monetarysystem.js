@@ -239,7 +239,7 @@ var NRS = (function (NRS, $, undefined) {
         currenciesTable.find('[data-i18n="units"]').hide();
     };
 
-    function processOffers(offers, type, refresh) {
+    function processOffers(offers, type, refresh, isIgnis) {
         if (offers && offers.length > NRS.itemsPerPage) {
             NRS.hasMorePages = true;
             offers.pop();
@@ -261,7 +261,8 @@ var NRS = (function (NRS, $, undefined) {
                 var offer = offers[i];
                 var rateNQT = offer.rateNQT;
                 if (i == 0 && !refresh) {
-                    $("#" + (type == "sell" ? "buy" : "sell") + "_currency_rate").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
+                    var entity = (isIgnis ? "ignis" : "currency");
+                    $("#" + (type == "sell" ? "buy" : "sell") + "_" + entity + "_rate").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
                 }
                 rows += "<tr>" +
                     "<td>" + NRS.getTransactionLink(offer.offer, NRS.getTransactionStatusIcon(offer), true) + "</td>" +
@@ -278,7 +279,7 @@ var NRS = (function (NRS, $, undefined) {
         NRS.dataLoadFinished(offersTable, !refresh);
     }
 
-    NRS.loadCurrencyOffers = function (type, currencyId, refresh) {
+    NRS.loadCurrencyOffers = function (type, currencyId, refresh, isIgnis) {
         async.parallel([
             function(callback) {
                 NRS.sendRequest("get" + type.capitalize() + "Offers+", {
@@ -320,7 +321,7 @@ var NRS = (function (NRS, $, undefined) {
                     return b.rateNQT - a.rateNQT;
                 }
             });
-            processOffers(offers, type, refresh);
+            processOffers(offers, type, refresh, isIgnis);
         });
     };
 
@@ -672,7 +673,7 @@ var NRS = (function (NRS, $, undefined) {
         return NRS.validateDecimals(maxFractionLength, charCode, $(this).val(), e);
     });
 
-    var unitFields = $("#buy_currency_units, #sell_currency_units");
+    var unitFields = $(".currency_units");
     unitFields.keydown(function (e) {
         var decimals = parseInt($("#currency_decimals").html(), 10);
 
@@ -686,18 +687,21 @@ var NRS = (function (NRS, $, undefined) {
     });
 
     unitFields.on("change", function() {
-        var orderType = $(this).data("type").toLowerCase();
         var decimals = parseInt($("#currency_decimals").text(), 10);
-        var units = NRS.convertToQNT(String($("#" + orderType + "_currency_units").val()), decimals);
+        var type = $(this).data("type").toLowerCase();
+        var orderType = (type == "ignis" ? "buy" : type);
+        var entity = (type == "ignis" ? type : "currency");
+        var units_field = "#" + orderType + "_" + entity + "_units";
+        var units = NRS.convertToQNT(String($(units_field).val()), decimals);
         NRS.sendRequest("getAvailableTo" + NRS.initialCaps(orderType), {
             "currency": $("#currency_id").text(),
             "units": units
         }, function (response) {
-            var submitButton = $("#" + orderType + "_currency_button");
-            var unitsField = $("#" + orderType + "_currency_units");
-            var rateField = $("#" + orderType + "_currency_rate");
-            var totalField = $("#" + orderType + "_currency_total");
-            var effectiveRateField = $("#" + orderType + "_currency_effective_rate");
+            var submitButton = $("#" + orderType + "_" + entity + "_button");
+            var unitsField = $("#" + orderType + "_" + entity + "_units");
+            var rateField = $("#" + orderType + "_" + entity + "_rate");
+            var totalField = $("#" + orderType + "_" + entity + "_total");
+            var effectiveRateField = $("#" + orderType + "_" + entity + "_effective_rate");
             if (response.errorCode) {
                 unitsField.val("0");
                 rateField.val("0");
@@ -1462,6 +1466,21 @@ var NRS = (function (NRS, $, undefined) {
         return {
             "data": data
         };
+    };
+
+    NRS.pages.ignis = function() {
+        NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
+            $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3"));
+            $(".currency_code").html(response.code);
+            $("#currency_id").text(response.currency);
+            $("#buy_ignis_currency").val(response.currency);
+            $("#currency_decimals").text(response.decimals);
+            var buyIgnisButton = $("#buy_ignis_button");
+            buyIgnisButton.data("currency", response.currency);
+            buyIgnisButton.data("decimals", response.decimals);
+            NRS.loadCurrencyOffers("sell", response.currency, false, true);
+            NRS.dataLoaded();
+        });
     };
 
     return NRS;

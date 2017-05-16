@@ -1864,5 +1864,9 @@
   "working_offline": "You are working offline",
   "offline_actions": "Offline Actions",
   "success_clipboard_copy": "Copied to the clipboard successfully.",
-  "about_nxt": "About Nxt"
+  "about_nxt": "About Nxt",
+  "buy_ignis": "Buy Ignis",
+  "ignis_message_1": "Ignis is the first child chain token of the Ardor platform. This token will be used for all functions currently implemented on top of NXT.",
+  "ignis_message_2": "Existing NXT holders are already entitled to receive 0.5 IGNIS token per 1 NXT at the time of the Ardor mainnet launch.",
+  "ignis_message_3": "Use this promotion to buy IGNIS tokens at a discounted rate now, these tokens will be distributed automatically during the Ardor launch."
 }
