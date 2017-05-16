@@ -349,15 +349,7 @@ var NRS = (function(NRS, $) {
         });
     }
 
-    function loadCoins() {
-        var inputFields = [];
-        inputFields.push($('#shape_shift_coin_0'));
-        inputFields.push($('#shape_shift_coin_1'));
-        inputFields.push($('#shape_shift_coin_2'));
-        var selectedCoins = [];
-        selectedCoins.push(NRS.settings.exchange_coin0);
-        selectedCoins.push(NRS.settings.exchange_coin1);
-        selectedCoins.push(NRS.settings.exchange_coin2);
+    NRS.selectCoins = function(inputFields, selectedCoins) {
         apiCall('getcoins', {}, 'GET', function (data) {
             SUPPORTED_COINS = data;
             for (var i = 0; i < inputFields.length; i++) {
@@ -377,6 +369,18 @@ var NRS = (function(NRS, $) {
                 }
             }
         });
+    };
+
+    function loadCoins() {
+        var inputFields = [];
+        inputFields.push($('#shape_shift_coin_0'));
+        inputFields.push($('#shape_shift_coin_1'));
+        inputFields.push($('#shape_shift_coin_2'));
+        var selectedCoins = [];
+        selectedCoins.push(NRS.settings.exchange_coin0);
+        selectedCoins.push(NRS.settings.exchange_coin1);
+        selectedCoins.push(NRS.settings.exchange_coin2);
+        NRS.selectCoins(inputFields, selectedCoins);
     }
 
     NRS.pages.exchange = function() {

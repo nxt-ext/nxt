@@ -1,12 +1,28 @@
 <div id="ignis_page" class="page">
     <section class="content-header">
-        <h1 data-i18n="buy_ignis">Buy Ignis</h1>
+        <h1 data-i18n="ignis_token_sale"></h1>
     </section>
     <section class="content">
         <div class="col-md-12">
             <div class="col-md-8">
                 <div class="box box-solid box-info">
-                    <div class="alert-info alert-no-icon" id="ignis_message"></div>
+                    <div class="box-body">
+                        <div class="alert-no-icon" id="ignis_message"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="col-md-8">
+                <div class="box box-solid box-info">
+                    <div class="box-body">
+                        <div class="alert-no-icon">
+                            <h4>
+                                <span data-i18n="ignis_available"></span>
+                                <span id="sell_ignis_supply"></span>
+                            </h4>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -14,6 +30,11 @@
             <div class="col-md-4">
                 <div class="box box-solid box-info">
                     <div class="box-body">
+                        <div class="box box-solid box-info">
+                            <div class="box-body">
+                                <h4><span data-i18n="buy_ignis_with_nxt"></span></h4>
+                            </div>
+                        </div>
                         <form role="form" autocomplete="off">
                             <div class="form-group">
                                 <label for="buy_ignis_units" class="col-sm-3 control-label" data-i18n="units">Units</label>
@@ -43,13 +64,35 @@
                                     <span class="input-group-addon">NXT</span>
                                 </div>
                             </div>
-                            <div class="form-group form-group-last">
+                            <div class="form-group">
                                 <div class="input-group">
-                                    <button type="button" class="btn btn-primary btn-lg btn-block" id="buy_ignis_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="buy"><span data-i18n="buy_ignis">Buy Ignis</span></button>
+                                    <button type="button" class="btn btn-primary" id="buy_ignis_button" data-toggle="modal" data-target="#currency_order_modal" data-currency="" data-decimals="" data-type="buy"><span data-i18n="buy_ignis">Buy Ignis</span></button>
                                 </div>
                             </div>
                             <input type="hidden" id="buy_ignis_currency" name="currency" value=""/>
                         </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="box box-solid box-info">
+                    <div class="box-body">
+                        <div class="box box-solid box-info">
+                            <div class="box-body">
+                                <h4><span data-i18n="exchange_to_nxt"></span></h4>
+                            </div>
+                        </div>
+                        <div>
+                            <form>
+                                <div class="form-group">
+                                    <label for="ignis_shape_shift_coin" data-i18n="coin">Coin</label>
+                                    <div class="input-group">
+                                        <select id="ignis_shape_shift_coin" class="form-control"></select>
+                                        <button type="button" id="ignis_shape_shift_button" class="btn btn-primary" data-toggle="modal" data-target="#m_send_amount_sell_modal" data-pair=""><span data-i18n="exchange">Exchange</span></button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

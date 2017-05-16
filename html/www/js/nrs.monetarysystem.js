@@ -263,6 +263,7 @@ var NRS = (function (NRS, $, undefined) {
                 if (i == 0 && !refresh) {
                     var entity = (isIgnis ? "ignis" : "currency");
                     $("#" + (type == "sell" ? "buy" : "sell") + "_" + entity + "_rate").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
+                    $("#" + type + "_" + entity + "_supply").text(NRS.formatQuantity(offer.supply, decimals));
                 }
                 rows += "<tr>" +
                     "<td>" + NRS.getTransactionLink(offer.offer, NRS.getTransactionStatusIcon(offer), true) + "</td>" +
@@ -1479,9 +1480,22 @@ var NRS = (function (NRS, $, undefined) {
             buyIgnisButton.data("currency", response.currency);
             buyIgnisButton.data("decimals", response.decimals);
             NRS.loadCurrencyOffers("sell", response.currency, false, true);
+
+            var inputFields = [];
+            inputFields.push($('#ignis_shape_shift_coin'));
+            var selectedCoins = [];
+            selectedCoins.push("BTC");
+            NRS.selectCoins(inputFields, selectedCoins);
+            $("#ignis_shape_shift_button").data("pair", "BTC_NXT");
             NRS.dataLoaded();
         });
     };
+
+    $('#ignis_shape_shift_coin').change(function() {
+        var button = $("#ignis_shape_shift_button");
+        button.data("pair", $("#ignis_shape_shift_coin").val() + "_NXT");
+    });
+
 
     return NRS;
 }(NRS || {}, jQuery));
