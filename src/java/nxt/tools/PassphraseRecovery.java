@@ -48,6 +48,8 @@ public final class PassphraseRecovery {
                 Logger.logInfoMessage("Specify in the recoveryWildcard setting, an approximate passphrase as close as possible to the real passphrase");
                 return;
             }
+            int[] passphraseChars = wildcard.chars().toArray();
+            Logger.logInfoMessage("wildcard=" + wildcard + ", wildcard chars=" + Arrays.toString(passphraseChars));
             String positionsStr = Nxt.getStringProperty("recoveryPositions", "");
             int[] positions;
             try {
@@ -190,8 +192,10 @@ public final class PassphraseRecovery {
             if (this == NO_SOLUTION) {
                 return "Not Found";
             }
+            int[] passphraseChars = passphrase.chars().toArray();
             return "Solution{" +
-                    "passphrase='" + passphrase + '\'' +
+                    "passphrase=" + passphrase +
+                    ", passphraseChars=" + Arrays.toString(passphraseChars) +
                     ", publicKey=" + Convert.toHexString(publicKey) +
                     ", accountId=" + accountId +
                     ", rsAccount=" + rsAccount +
