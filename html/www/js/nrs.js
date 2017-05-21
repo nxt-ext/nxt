@@ -813,6 +813,7 @@ NRS.addPagination = function () {
 		NRS.updateNotifications();
 		NRS.setUnconfirmedNotifications();
 		NRS.setPhasingNotifications();
+        NRS.setShufflingNotifications();
 		var page = NRS.getUrlParameter("page");
 		if (page) {
 			page = page.escapeHTML();

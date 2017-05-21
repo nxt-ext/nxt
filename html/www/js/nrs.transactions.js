@@ -60,6 +60,7 @@ var NRS = (function(NRS, $, undefined) {
 			NRS.incoming['messages'](transactions);
 			NRS.updateNotifications();
 			NRS.setPhasingNotifications();
+            NRS.setShufflingNotifications();
 		}
 	};
 
