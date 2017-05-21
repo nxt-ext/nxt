@@ -227,6 +227,7 @@ var NRS = (function(NRS, $, undefined) {
 					console.log("getState response received");
 					var isTestnet = false;
 					var isOffline = false;
+                    var customLoginWarning;
 					var peerPort = 0;
 					for (var key in response) {
 						if (!response.hasOwnProperty(key)) {
@@ -237,6 +238,9 @@ var NRS = (function(NRS, $, undefined) {
 						}
 						if (key == "isOffline") {
 							isOffline = response[key];
+						}
+						if (key == "customLoginWarning") {
+                            customLoginWarning = response[key];
 						}
 						if (key == "peerPort") {
 							peerPort = response[key];
@@ -261,6 +265,13 @@ var NRS = (function(NRS, $, undefined) {
 						NRS.logConsole(warningText);
 						testnetWarningDiv.text(warningText);
 						$(".testnet_only, #testnet_login, #testnet_warning").show();
+					}
+                    var customLoginWarningDiv = $("#custom_login_warning");
+                    if (customLoginWarning) {
+                        customLoginWarningDiv.text(customLoginWarning);
+                        customLoginWarningDiv.show();
+					} else {
+						customLoginWarningDiv.hide();
 					}
 
 					if (NRS.isInitializePlugins()) {
