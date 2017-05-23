@@ -235,11 +235,10 @@ public final class Nxt {
             return value;
         }
         try {
-            new String(value.getBytes("ISO-8859-1"), "UTF-8");
+            return new String(value.getBytes("ISO-8859-1"), encoding);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
-        return value;
     }
 
     public static List<String> getStringListProperty(String name) {
