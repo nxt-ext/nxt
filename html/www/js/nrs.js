@@ -266,7 +266,7 @@ var NRS = (function(NRS, $, undefined) {
 						testnetWarningDiv.text(warningText);
 						$(".testnet_only, #testnet_login, #testnet_warning").show();
 					}
-                    var customLoginWarningDiv = $("#custom_login_warning");
+                    var customLoginWarningDiv = $(".custom_login_warning");
                     if (customLoginWarning) {
                         customLoginWarningDiv.text(customLoginWarning);
                         customLoginWarningDiv.show();

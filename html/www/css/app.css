@@ -3142,7 +3142,7 @@ hr {
   text-align:left;
 }
 
-#custom_login_warning {
+.custom_login_warning {
     display: none;
     text-align: center;
     margin: auto auto 0px auto;
