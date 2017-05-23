@@ -76,7 +76,7 @@ public final class PassphraseRecovery {
         Db.init();
         Map<Long, byte[]> publicKeys = new HashMap<>();
         try (Connection con = Db.db.getConnection();
-             PreparedStatement selectBlocks = con.prepareStatement("SELECT * FROM public_key");
+             PreparedStatement selectBlocks = con.prepareStatement("SELECT * FROM public_key WHERE latest=TRUE");
              ResultSet rs = selectBlocks.executeQuery()) {
             while (rs.next()) {
                 long accountId = rs.getLong("account_id");
