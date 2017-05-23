@@ -99,6 +99,7 @@ public final class GetState extends APIServlet.APIRequestHandler {
         response.put("peerPort", Peers.getDefaultPeerPort());
         response.put("isOffline", Constants.isOffline);
         response.put("needsAdminPassword", !API.disableAdminPassword);
+        response.put("customLoginWarning", Constants.customLoginWarning);
         InetAddress externalAddress = UPnP.getExternalAddress();
         if (externalAddress != null) {
             response.put("upnpExternalAddress", externalAddress.getHostAddress());
