@@ -1767,7 +1767,7 @@ body > .header .logo .icon {
 .callout.callout-danger {
   background-color: #fcf2f2;
   border-color: #dFb5b4;
-  word-break: break-all;
+  word-break: normal;
 }
 .callout.callout-warning {
   background-color: #fefbed;
