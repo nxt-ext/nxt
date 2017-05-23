@@ -1767,7 +1767,7 @@ body > .header .logo .icon {
 .callout.callout-danger {
   background-color: #fcf2f2;
   border-color: #dFb5b4;
-  word-break: break-all;
+  word-break: normal;
 }
 .callout.callout-warning {
   background-color: #fefbed;
@@ -3140,6 +3140,14 @@ hr {
 
 #center .panel-heading, #center .panel-body {
   text-align:left;
+}
+
+.custom_login_warning {
+    display: none;
+    text-align: center;
+    margin: auto auto 0px auto;
+    width: 100%;
+    max-width: 400px;
 }
 
 #testnet_login {

@@ -45,45 +45,47 @@
             <ul class="nav navbar-nav">
                 <li>
                     <a class="client_options" href="#" data-toggle="modal" data-target="#client_status_modal">
-                        <span class="badge nm_outer2" style="background-color: #fff;padding:2px;">
-                            <span id="confirmation_rate_indicator" class="badge nm_inner_subtype" style="background-color: #a94442;">
-                                <span style="color: #fff;">
-                                    &nbsp;<i class="fa fa-bolt" style="font-size: 14px;"></i>&nbsp;
-                                </span>
+                        <span id="confirmation_rate_indicator" class="badge nm_inner_subtype" style="background-color: #a94442;">
+                            <span style="color: #fff;">
+                                &nbsp;<i class="fa fa-bolt"></i>&nbsp;
                             </span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="shuffling_notification_menu" class="goto-page" data-page="active_shufflings" style="display:none;">
+                        <span class="badge nm_inner_subtype" style="background-color: #fff;">
+                            <span style="color:#337ab7;">
+                                <i class="fa fa-random"></i>&nbsp;
+                            </span>
+                            <span style="color:#444;" id="shuffling_notification_counter"></span>
                         </span>
                     </a>
                 </li>
                 <li>
                     <a href="#" id="unconfirmed_notification_menu" class="goto-page" data-page="transactions" data-subpage="unconfirmed" style="display:none;">
-                        <span class="badge nm_outer2" style="background-color: #fff;padding:3px;">
-                            <span class="badge nm_inner_subtype" style="background-color: #fff;">
-                                <span style="color:#337ab7;">
-                                    <i class="fa fa-circle-o"></i>&nbsp;
-                                </span>
-                                <span style="color:#666;" id="unconfirmed_notification_counter"></span>
+                        <span class="badge nm_inner_subtype" style="background-color: #fff;">
+                            <span style="color:#337ab7;">
+                                <i class="fa fa-circle-o"></i>&nbsp;
                             </span>
+                            <span style="color:#666;" id="unconfirmed_notification_counter"></span>
                         </span>
                     </a>
                 </li>
                 <li style="display:none;">
                     <a href="#" id="phasing_notification_menu" class="goto-page" data-page="transactions" data-subpage="phasing">
-                        <span class="badge nm_outer2" style="background-color: #fff;padding:3px;">
-                            <span class="badge nm_inner_subtype" style="background-color: #fff;">
-                                <span style="color:#337ab7;">
-                                    <i class="fa fa-gavel"></i>&nbsp
-                                </span>
-                                <span style="color:#666;" id="phasing_notification_counter"></span>
+                        <span class="badge nm_inner_subtype" style="background-color: #fff;">
+                            <span style="color:#337ab7;">
+                                <i class="fa fa-gavel"></i>&nbsp
                             </span>
+                            <span style="color:#666;" id="phasing_notification_counter"></span>
                         </span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" id="notification_menu" data-toggle="popover" data-placement="bottom" data-content="" style="display:none;">
-                        <span class="badge nm_outer" style="background-color: #fff;padding:3px;">
-                            <span class="badge nm_inner_subtype"></span>
-                            <span class="badge nm_inner_total"></span>
-                        </span>
+                    <a href="#" id="notification_menu" data-toggle="popover" data-placement="bottom" data-content="">
+                        <span class="badge nm_inner_subtype"></span>
+                        <span class="badge nm_inner_total"></span>
                     </a>
                 </li>
                 <li id="contacts_menu_li" role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="CONTACTS" data-container="#header_right" data-i18n="[data-content]contacts">

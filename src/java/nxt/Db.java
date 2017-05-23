@@ -36,7 +36,7 @@ public final class Db {
             .maxMemoryRows(Nxt.getIntProperty("nxt.dbMaxMemoryRows"))
     );
 
-    static void init() {
+    public static void init() {
         db.init(new NxtDbVersion());
     }
 
