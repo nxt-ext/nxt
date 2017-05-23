@@ -27,8 +27,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -43,7 +50,7 @@ public final class PassphraseRecovery {
     private void recover() {
         try {
             Map<Long, byte[]> publicKeys = getPublicKeys();
-            String wildcard = new String(Nxt.getStringProperty("recoveryWildcard", "").getBytes("ISO-8859-1"), "UTF-8"); // support UTF8 chars
+            String wildcard = Nxt.getStringProperty("recoveryWildcard", "", false, "UTF-8"); // support UTF8 chars
             if ("".equals(wildcard)) {
                 Logger.logInfoMessage("Specify in the recoveryWildcard setting, an approximate passphrase as close as possible to the real passphrase");
                 return;
