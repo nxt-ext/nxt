@@ -369,17 +369,20 @@ public final class API {
         String remoteHost = req.getRemoteHost();
         synchronized(incorrectPasswords) {
             PasswordCount passwordCount = incorrectPasswords.get(remoteHost);
-            if (passwordCount != null && passwordCount.count >= 3 && now - passwordCount.time < 60*60) {
+            if (passwordCount != null && passwordCount.count >= 25 && now - passwordCount.time < 60*60) {
                 Logger.logWarningMessage("Too many incorrect admin password attempts from " + remoteHost);
                 throw new ParameterException(LOCKED_ADMIN_PASSWORD);
             }
-            if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
-                if (passwordCount == null) {
-                    passwordCount = new PasswordCount();
-                    incorrectPasswords.put(remoteHost, passwordCount);
+            String adminPassword = Convert.nullToEmpty(req.getParameter("adminPassword"));
+            if (!API.adminPassword.equals(adminPassword)) {
+                if (adminPassword.length() > 0) {
+                    if (passwordCount == null) {
+                        passwordCount = new PasswordCount();
+                        incorrectPasswords.put(remoteHost, passwordCount);
+                    }
+                    passwordCount.count++;
+                    passwordCount.time = now;
                 }
-                passwordCount.count++;
-                passwordCount.time = now;
                 Logger.logWarningMessage("Incorrect adminPassword from " + remoteHost);
                 throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
             }
