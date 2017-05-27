@@ -156,7 +156,7 @@ var ATS = (function(ATS, $, undefined) {
         if (form.encoding == "multipart/form-data") {
             uploadField = $('#' + fileParameter + params["requestType"]);
         }
-        if (params["requestType"] == "downloadTaggedData" || params["requestType"] == "downloadPrunableMessage") {
+        if (params["requestType"].startsWith("download")) {
             url += "?";
             for (key in params) {
                 if (!params.hasOwnProperty(key)) {
