@@ -1024,11 +1024,20 @@ var NRS = (function (NRS, $, undefined) {
                 switch (transaction.subtype) {
                     case 0:
                         var minReservePerUnitNQT = new BigInteger(transaction.attachment.minReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, transaction.attachment.decimals)));
+                        var currency_types = "";
+                        for (var currencyType in NRS.constants.CURRENCY_TYPES) {
+                            if (!NRS.constants.CURRENCY_TYPES.hasOwnProperty(currencyType)) {
+                                continue;
+                            }
+                            if (transaction.attachment.type & NRS.constants.CURRENCY_TYPES[currencyType]) {
+                                currency_types += currencyType + ",";
+                            }
+                        }
                         data = {
                             "type": $.t("currency_issuance"),
                             "name": transaction.attachment.name,
                             "code": transaction.attachment.code,
-                            "currency_type": transaction.attachment.type,
+                            "currency_type": transaction.attachment.type + ":" + currency_types.slice(0, -1),
                             "description_formatted_html": transaction.attachment.description.autoLink(),
                             "initial_units": [transaction.attachment.initialSupply, transaction.attachment.decimals],
                             "reserve_units": [transaction.attachment.reserveSupply, transaction.attachment.decimals],

@@ -20,35 +20,28 @@
  */
 var NRS = (function (NRS, $, undefined) {
 
-    var EXCHANGEABLE = 0x01;
-    var CONTROLLABLE = 0x02;
-    var RESERVABLE = 0x04;
-    var CLAIMABLE = 0x08;
-    var MINTABLE = 0x10;
-    var NON_SHUFFLEABLE = 0x20;
-
     NRS.isExchangeable = function (type) {
-        return type & EXCHANGEABLE;
+        return type & NRS.constants.CURRENCY_TYPES["EXCHANGEABLE"];
     };
 
     NRS.isControllable = function (type) {
-        return type & CONTROLLABLE;
+        return type & NRS.constants.CURRENCY_TYPES["CONTROLLABLE"];
     };
 
     NRS.isReservable = function (type) {
-        return type & RESERVABLE;
+        return type & NRS.constants.CURRENCY_TYPES["RESERVABLE"];
     };
 
     NRS.isClaimable = function (type) {
-        return type & CLAIMABLE;
+        return type & NRS.constants.CURRENCY_TYPES["CLAIMABLE"];
     };
 
     NRS.isMintable = function (type) {
-        return type & MINTABLE;
+        return type & NRS.constants.CURRENCY_TYPES["MINTABLE"];
     };
 
     NRS.isNonShuffleable = function (type) {
-        return type & NON_SHUFFLEABLE;
+        return type & NRS.constants.CURRENCY_TYPES["NON_SHUFFLEABLE"];
     };
 
     /* MONETARY SYSTEM PAGE */
