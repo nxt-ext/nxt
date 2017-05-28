@@ -657,6 +657,7 @@ var NRS = (function (NRS, $, undefined) {
         var $invoker = $(e.relatedTarget);
         var exchangeType = $invoker.data("type");
         var currencyId = $invoker.data("currency");
+        var currencyCode = $invoker.data("code") || $("#currency_code").html();
         var currencyDecimals = parseInt($invoker.data("decimals"), 10);
         var unitsQNT = $invoker.data("units");
         var units = String($("#" + exchangeType + "_currency_units").val());
@@ -677,11 +678,12 @@ var NRS = (function (NRS, $, undefined) {
 
         var description;
         var tooltipTitle;
+
         if (exchangeType == "buy") {
             description = $.t("buy_currency_description", {
                 "total": totalNXT,
                 "quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
-                "currency_code": $("#currency_code").html().escapeHTML(),
+                "currency_code": currencyCode.escapeHTML(),
                 "rate": effectiveRate
             });
             tooltipTitle = $.t("buy_currency_description_help", {
@@ -692,7 +694,7 @@ var NRS = (function (NRS, $, undefined) {
             description = $.t("sell_currency_description", {
                 "total": totalNXT,
                 "quantity": NRS.formatQuantity(unitsQNT, currencyDecimals, true),
-                "currency_code": $("#currency_code").html().escapeHTML(),
+                "currency_code": currencyCode.escapeHTML(),
                 "rate": effectiveRate
             });
             tooltipTitle = $.t("sell_currency_description_help", {
@@ -1520,6 +1522,7 @@ var NRS = (function (NRS, $, undefined) {
             );
             var buyIgnisButton = $("#buy_ignis_button");
             buyIgnisButton.data("currency", response.currency);
+            buyIgnisButton.data("code", response.code);
             buyIgnisButton.data("decimals", response.decimals);
             NRS.loadCurrencyOffers("sell", response.currency, false, true);
 
