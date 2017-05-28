@@ -1515,6 +1515,9 @@ var NRS = (function (NRS, $, undefined) {
             $("#currency_id").text(response.currency);
             $("#buy_ignis_currency").val(response.currency);
             $("#currency_decimals").text(response.decimals);
+            $("#your_nxt_balance_message").html(
+                $.t("ignis_message_11", { balance: $("#account_balance_sidebar").text() })
+            );
             var buyIgnisButton = $("#buy_ignis_button");
             buyIgnisButton.data("currency", response.currency);
             buyIgnisButton.data("decimals", response.decimals);

@@ -1873,5 +1873,6 @@
   "ignis_message_3": "Use this promotion to buy IGNIS tokens at a discounted rate now, these tokens will be distributed automatically during the Ardor launch.",
   "ignis_token_sale": "Ignis Token Sale",
   "exchange_to_nxt": "Exchange To NXT",
-  "ignis_available": "Ignis Available"
+  "ignis_available": "Ignis available for sale",
+  "ignis_message_11": "Your available NXT balance __balance__"
 }
