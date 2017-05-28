@@ -18,6 +18,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.ParseException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -37,7 +38,7 @@ import java.util.TreeMap;
 public final class JPLSnapshot implements AddOn {
 
     public APIServlet.APIRequestHandler getAPIRequestHandler() {
-        return new JPLSnapshotAPI("file", new APITag[] {APITag.ADDONS}, "height");
+        return new JPLSnapshotAPI("newGenesisAccounts", new APITag[] {APITag.ADDONS}, "height");
     }
 
     public String getAPIRequestType() {
@@ -54,19 +55,20 @@ public final class JPLSnapshot implements AddOn {
         @Override
         protected JSONStreamAware processRequest(HttpServletRequest request, HttpServletResponse response) throws NxtException {
             int height = ParameterParser.getHeight(request);
-            if (height <= 0) {
+            if (height <= 0 || height > Nxt.getBlockchain().getHeight()) {
                 return JSONResponses.INCORRECT_HEIGHT;
             }
-            JSONObject inputJSON;
+            JSONObject inputJSON = new JSONObject();
             try {
-                Part part = request.getPart("file");
+                Part part = request.getPart("newGenesisAccounts");
                 if (part != null) {
                     ParameterParser.FileData fileData = new ParameterParser.FileData(part).invoke();
-                    inputJSON = (JSONObject)JSONValue.parse(Convert.toString(fileData.getData()));
-                } else {
-                    inputJSON = new JSONObject();
+                    String input = Convert.toString(fileData.getData());
+                    if (input != null && !input.trim().isEmpty()) {
+                        inputJSON = (JSONObject) JSONValue.parseWithException(input);
+                    }
                 }
-            } catch (IOException | ServletException e) {
+            } catch (IOException | ServletException | ParseException e) {
                 return JSONResponses.INCORRECT_FILE;
             }
             JPLSnapshotListener listener = new JPLSnapshotListener(height, inputJSON);
@@ -105,6 +107,12 @@ public final class JPLSnapshot implements AddOn {
         protected boolean requireFullClient() {
             return true;
         }
+
+        @Override
+        protected boolean allowRequiredBlockParameters() {
+            return false;
+        }
+
     }
 
     private static class JPLSnapshotListener implements Listener<Block> {
