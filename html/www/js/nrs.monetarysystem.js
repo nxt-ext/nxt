@@ -20,35 +20,28 @@
  */
 var NRS = (function (NRS, $, undefined) {
 
-    var EXCHANGEABLE = 0x01;
-    var CONTROLLABLE = 0x02;
-    var RESERVABLE = 0x04;
-    var CLAIMABLE = 0x08;
-    var MINTABLE = 0x10;
-    var NON_SHUFFLEABLE = 0x20;
-
     NRS.isExchangeable = function (type) {
-        return type & EXCHANGEABLE;
+        return type & NRS.constants.CURRENCY_TYPES["EXCHANGEABLE"];
     };
 
     NRS.isControllable = function (type) {
-        return type & CONTROLLABLE;
+        return type & NRS.constants.CURRENCY_TYPES["CONTROLLABLE"];
     };
 
     NRS.isReservable = function (type) {
-        return type & RESERVABLE;
+        return type & NRS.constants.CURRENCY_TYPES["RESERVABLE"];
     };
 
     NRS.isClaimable = function (type) {
-        return type & CLAIMABLE;
+        return type & NRS.constants.CURRENCY_TYPES["CLAIMABLE"];
     };
 
     NRS.isMintable = function (type) {
-        return type & MINTABLE;
+        return type & NRS.constants.CURRENCY_TYPES["MINTABLE"];
     };
 
     NRS.isNonShuffleable = function (type) {
-        return type & NON_SHUFFLEABLE;
+        return type & NRS.constants.CURRENCY_TYPES["NON_SHUFFLEABLE"];
     };
 
     /* MONETARY SYSTEM PAGE */
@@ -156,22 +149,60 @@ var NRS = (function (NRS, $, undefined) {
     $("#currencies_search").on("submit", function (e) {
         e.preventDefault();
         NRS.pageNumber = 1;
-        var requestAPI = "searchCurrencies+";
-        var query = $.trim($("#currencies_search").find("input[name=searchquery]").val());
-        if (query == "") requestAPI = "getAllCurrencies+";
-        NRS.sendRequest(requestAPI, {
-            "query": query,
+        var params = {
             "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
             "lastIndex": NRS.pageNumber * NRS.itemsPerPage
-        }, function (response) {
+        };
+        var requestType;
+        var query = $.trim($("#currencies_search").find("input[name=searchquery]").val());
+        if (query == "") {
+            if (NRS.currenciesPageType == "my_currencies") {
+                requestType = "getAccountCurrencies+";
+                params["account"] = NRS.accountRS;
+                params["includeCurrencyInfo"] = true;
+            } else {
+                requestType = "getAllCurrencies+";
+            }
+        } else {
+            requestType = "searchCurrencies+";
+            params["query"] = query;
+        }
+        NRS.sendRequest(requestType, params, function (response) {
             NRS.hasMorePages = false;
-            if (response.currencies && response.currencies.length) {
-                if (response.currencies.length > NRS.itemsPerPage) {
-                    NRS.hasMorePages = true;
-                    response.currencies.pop();
+            if (response.currencies && response.currencies.length || response.accountCurrencies && response.accountCurrencies.length) {
+                if (response.currencies && response.currencies.length) {
+                    if (response.currencies.length > NRS.itemsPerPage) {
+                        NRS.hasMorePages = true;
+                        response.currencies.pop();
+                    }
+                } else {
+                    if (response.accountCurrencies.length > NRS.itemsPerPage) {
+                        NRS.hasMorePages = true;
+                        response.accountCurrencies.pop();
+                    }
                 }
-                var rows = NRS.getCurrencyRows(response);
-                NRS.currenciesTableLayout();
+                var rows;
+                if (NRS.currenciesPageType == "my_currencies") {
+                    if (requestType == "searchCurrencies+") {
+                        // The response is in currency format but we need accountCurrency format
+                        NRS.sendRequest("getAccountCurrencies+", {
+                            account: NRS.accountRS,
+                            currency: response.currencies[0].currency,
+                            includeCurrencyInfo: true
+                        }, function (response) {
+                            // Now we have a single currency but we need an array of accountCurrencies
+                            if (response.currency) {
+                                response["accountCurrencies"] = [];
+                                response["accountCurrencies"].push(response);
+                                rows = getAccountCurrenciesRows(response);
+                            }
+                        }, { isAsync: false });
+                    } else {
+                        rows = getAccountCurrenciesRows(response);
+                    }
+                } else {
+                    rows = getAllCurrenciesRows(response);
+                }
                 NRS.dataLoaded(rows);
             } else {
                 NRS.dataLoaded();
@@ -179,7 +210,7 @@ var NRS = (function (NRS, $, undefined) {
         }, { isAsync: false });
     });
 
-    NRS.getCurrencyRows = function (response) {
+    function getAllCurrenciesRows(response) {
         var rows = "";
         var currentSupplyDecimals = NRS.getNumberOfDecimals(response.currencies, "currentSupply", function(currency) {
             return NRS.formatQuantity(currency.currentSupply, currency.decimals);
@@ -208,8 +239,48 @@ var NRS = (function (NRS, $, undefined) {
             rows += "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#reserve_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-ressupply='" + resSupply + "' data-decimals='" + decimals + "' data-minreserve='" + minReserve + "' " + (currency.issuanceHeight > NRS.lastBlockHeight && NRS.isReservable(currency.type) ? "" : "disabled") + " >" + $.t("reserve") + "</a> ";
             rows += "</td></tr>";
         }
+        var currenciesTable = $('#currencies_table');
+        currenciesTable.find('[data-i18n="type"]').show();
+        currenciesTable.find('[data-i18n="supply"]').show();
+        currenciesTable.find('[data-i18n="max_supply"]').show();
+        currenciesTable.find('[data-i18n="units"]').hide();
         return rows;
-    };
+    }
+
+    function getAccountCurrenciesRows(response) {
+        var rows = "";
+        var unitsDecimals = NRS.getNumberOfDecimals(response.accountCurrencies, "unconfirmedUnits", function (accountCurrency) {
+            return NRS.formatQuantity(accountCurrency.unconfirmedUnits, accountCurrency.decimals);
+        });
+        for (var i = 0; i < response.accountCurrencies.length; i++) {
+            var currency = response.accountCurrencies[i];
+            var currencyId = NRS.escapeRespStr(currency.currency);
+            var code = NRS.escapeRespStr(currency.code);
+            var name = NRS.escapeRespStr(currency.name);
+            var decimals = NRS.escapeRespStr(currency.decimals);
+            var typeIcons = NRS.getTypeIcons(currency.type);
+            var isOfferEnabled = NRS.isExchangeable(currency.type) && (!NRS.isControllable(currency.type) || NRS.account == currency.issuerAccount);
+            //noinspection HtmlUnknownAttribute,BadExpressionStatementJS
+            rows += "<tr>" +
+                "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
+                "<td>" + currency.name + "</td>" +
+                "<td>" + typeIcons + "</td>" +
+                "<td class = 'numeric'>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals, false, unitsDecimals) + "</td>" +
+                "<td>" +
+                "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> " +
+                "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + NRS.escapeRespStr(currency.currency) + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
+                "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + NRS.escapeRespStr(currency.currency) + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (isOfferEnabled ? "" : "disabled") + " >" + $.t("offer") + "</a> " +
+                "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type) ? "" : "disabled") + " >" + $.t("claim") + "</a> " +
+                "</td>" +
+                "</tr>";
+        }
+        var currenciesTable = $('#currencies_table');
+        currenciesTable.find('[data-i18n="type"]').show();
+        currenciesTable.find('[data-i18n="supply"]').hide();
+        currenciesTable.find('[data-i18n="max_supply"]').hide();
+        currenciesTable.find('[data-i18n="units"]').show();
+        return rows;
+    }
 
     NRS.getTypeIcons = function (type) {
         var typeIcons = "";
@@ -727,7 +798,6 @@ var NRS = (function (NRS, $, undefined) {
         })
    	});
 
-    /* CURRENCIES PAGE */
     NRS.pages.currencies = function () {
         if (NRS.currenciesPageType == "my_currencies") {
             NRS.sendRequest("getAccountCurrencies+", {
@@ -741,37 +811,7 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.hasMorePages = true;
                         response.accountCurrencies.pop();
                     }
-                    var rows = "";
-                    var unitsDecimals = NRS.getNumberOfDecimals(response.accountCurrencies, "unconfirmedUnits", function(accountCurrency) {
-                        return NRS.formatQuantity(accountCurrency.unconfirmedUnits, accountCurrency.decimals);
-                    });
-                    for (var i = 0; i < response.accountCurrencies.length; i++) {
-                        var currency = response.accountCurrencies[i];
-                        var currencyId = NRS.escapeRespStr(currency.currency);
-                        var code = NRS.escapeRespStr(currency.code);
-                        var name = NRS.escapeRespStr(currency.name);
-                        var decimals = NRS.escapeRespStr(currency.decimals);
-                        var typeIcons = NRS.getTypeIcons(currency.type);
-                        var isOfferEnabled = NRS.isExchangeable(currency.type) && (!NRS.isControllable(currency.type) || NRS.account == currency.issuerAccount);
-                        //noinspection HtmlUnknownAttribute,BadExpressionStatementJS
-                        rows += "<tr>" +
-                        "<td>" + NRS.getTransactionLink(currencyId, code) + "</td>" +
-                        "<td>" + currency.name + "</td>" +
-                        "<td>" + typeIcons + "</td>" +
-                        "<td class = 'numeric'>" + NRS.formatQuantity(currency.unconfirmedUnits, currency.decimals, false, unitsDecimals) + "</td>" +
-                        "<td>" +
-                        "<a href='#' class='btn btn-xs btn-default' onClick='NRS.goToCurrency(&quot;" + code + "&quot;)' " + (!NRS.isExchangeable(currency.type) ? "disabled" : "") + ">" + $.t("exchange") + "</a> " +
-                        "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#transfer_currency_modal' data-currency='" + NRS.escapeRespStr(currency.currency) + "' data-code='" + code + "' data-decimals='" + decimals + "'>" + $.t("transfer") + "</a> " +
-                        "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#publish_exchange_offer_modal' data-currency='" + NRS.escapeRespStr(currency.currency) + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (isOfferEnabled ? "" : "disabled") + " >" + $.t("offer") + "</a> " +
-                        "<a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#claim_currency_modal' data-currency='" + currencyId + "' data-name='" + name + "' data-code='" + code + "' data-decimals='" + decimals + "' " + (currency.issuanceHeight <= NRS.lastBlockHeight && NRS.isClaimable(currency.type) ? "" : "disabled") + " >" + $.t("claim") + "</a> " +
-                        "</td>" +
-                        "</tr>";
-                    }
-                    var currenciesTable = $('#currencies_table');
-                    currenciesTable.find('[data-i18n="type"]').show();
-                    currenciesTable.find('[data-i18n="supply"]').hide();
-                    currenciesTable.find('[data-i18n="max_supply"]').hide();
-                    currenciesTable.find('[data-i18n="units"]').show();
+                    var rows = getAccountCurrenciesRows(response);
                     NRS.dataLoaded(rows);
                 } else {
                     NRS.dataLoaded();
@@ -787,8 +827,7 @@ var NRS = (function (NRS, $, undefined) {
                         NRS.hasMorePages = true;
                         response.currencies.pop();
                     }
-                    var rows = NRS.getCurrencyRows(response);
-                    NRS.currenciesTableLayout();
+                    var rows = getAllCurrenciesRows(response);
                     NRS.dataLoaded(rows);
                 } else {
                     NRS.dataLoaded();
