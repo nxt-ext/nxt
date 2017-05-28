@@ -46,7 +46,49 @@ public final class JPLSnapshot implements AddOn {
     }
 
 
-    private static class JPLSnapshotAPI extends APIServlet.APIRequestHandler {
+    /**
+     * <p>The downloadJPLSnapshot API can be used to generate a genesis block JSON for a clone to satisfy the JPL 10% sharedrop
+     * requirement to existing NXT holders.</p>
+     *
+     * <p>This utility takes a snapshot of account balances and public keys on the Nxt blockchain as of the specified height,
+     * scales down the balance of each account proportionately so that the total of balances of sharedrop accounts is equal
+     * to 10% of the total of all balances, and merges this data with the supplied new genesis accounts and balances.</p>
+     *
+     * <p>Note that using a height more than 800 blocks in the past will normally require a blockchain rescan, which takes a
+     * few hours to complete. Do not interrupt this process.</p>
+     *
+     * <p>Request parameters</p>
+     * <ul><li>newGenesisAccounts - a JSON formatted file containing all new account public keys and balances to be included
+     * in the clone genesis block</li>
+     * <li>height - the Nxt blockchain height at which to take the snapshot</li>
+     * </ul>
+     *
+     * <p>Response</p>
+     * <ul><li>A JSON formatted file, genesisAccounts.json, containing all public keys, new accounts and sharedrop accounts,
+     * and their initial balances, which should be placed in the data/conf directory of the clone blockchain.</li>
+     * </ul>
+     *
+     * <p>Input file format</p>
+     * The input file should contain a map of account numbers to coin balances, and a list of account public keys. Account
+     * numbers can be specified in either numeric or RS format. Supplying the public key for each account is optional, but
+     * recommended. Here is an example input file, which allocates 300M each to the accounts with passwords "0", "1" and "2",
+     * for a total of 900M to new accounts, resulting in 100M automatically allocated to existing NXT holders:
+     * <pre>
+     * {
+     *     "balances": {
+     *         "NXT-NZKH-MZRE-2CTT-98NPZ": 30000000000000000,
+     *         "NXT-X5JH-TJKJ-DVGC-5T2V8": 30000000000000000,
+     *         "NXT-LTR8-GMHB-YG56-4NWSE": 30000000000000000
+     *     },
+     *     "publicKeys": [
+     *         "bf0ced0472d8ba3df9e21808e98e61b34404aad737e2bae1778cebc698b40f37",
+     *         "39dc2e813bb45ff063a376e316b10cd0addd7306555ca0dd2890194d37960152",
+     *         "011889a0988ccbed7f488878c62c020587de23ebbbae9ba56dd67fd9f432f808"
+     *     ]
+     * }
+     * </pre>
+     */
+    public static class JPLSnapshotAPI extends APIServlet.APIRequestHandler {
 
         private JPLSnapshotAPI(String fileParameter, APITag[] apiTags, String... origParameters) {
             super(fileParameter, apiTags, origParameters);
