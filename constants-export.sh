@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 PATHSEP=":" 
-if [[ $OSTYPE == "cygwin" ]] ; then
+if [ "$OSTYPE" = "cygwin" ] ; then
 PATHSEP=";" 
 fi
 
