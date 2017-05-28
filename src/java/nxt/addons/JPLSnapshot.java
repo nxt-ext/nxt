@@ -65,7 +65,7 @@ public final class JPLSnapshot implements AddOn {
      *
      * <p>Response</p>
      * <ul><li>A JSON formatted file, genesisAccounts.json, containing all public keys, new accounts and sharedrop accounts,
-     * and their initial balances, which should be placed in the data/conf directory of the clone blockchain.</li>
+     * and their initial balances, which should be placed in the conf/data directory of the clone blockchain.</li>
      * </ul>
      *
      * <p>Input file format</p>
