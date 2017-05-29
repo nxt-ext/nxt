@@ -19,7 +19,6 @@ package nxt;
 import nxt.util.Logger;
 import nxt.util.Time;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
@@ -44,7 +43,6 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
     private static final String daveSecretPhrase = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
     protected static boolean isNxtInitialized = false;
-    protected static boolean needShutdownAfterClass = false;
 
     public static void initNxt() {
         if (!isNxtInitialized) {
@@ -67,9 +65,7 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
     
     @BeforeClass
     public static void init() {
-        needShutdownAfterClass = !isNxtInitialized;
         initNxt();
-        
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
@@ -80,18 +76,10 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         DAVE = new Tester(daveSecretPhrase);
     }
 
-    @AfterClass
-    public static void shutdown() {
-        if (needShutdownAfterClass) {
-            Nxt.shutdown();
-        }
-    }
-
     @After
     public void destroy() {
         TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions();
         blockchainProcessor.popOffTo(baseHeight);
-        shutdown();
     }
 
     public static void generateBlock() {
