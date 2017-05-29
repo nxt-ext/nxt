@@ -21,7 +21,7 @@ public class PassphraseRecoveryTest {
 
     @Test
     public void searchAnyPassphrase() {
-        char[] wildcard = BlockchainTest.secretPhrase1.toCharArray();
+        char[] wildcard = BlockchainTest.aliceSecretPhrase.toCharArray();
         int[] positions = {9, 18};
         for (Integer position : positions) {
             wildcard[position] = '*';
@@ -33,7 +33,7 @@ public class PassphraseRecoveryTest {
 
     @Test
     public void searchSpecificPassphrase() {
-        char[] wildcard = BlockchainTest.secretPhrase1.toCharArray();
+        char[] wildcard = BlockchainTest.aliceSecretPhrase.toCharArray();
         int[] positions = {27, 9};
         for (Integer position : positions) {
             wildcard[position] = '*';

@@ -14,6 +14,7 @@ import nxt.http.ParameterParser;
 import nxt.util.Convert;
 import nxt.util.JSON;
 import nxt.util.Listener;
+import nxt.util.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -106,7 +107,7 @@ public final class JPLSnapshot implements AddOn {
                 if (part != null) {
                     ParameterParser.FileData fileData = new ParameterParser.FileData(part).invoke();
                     String input = Convert.toString(fileData.getData());
-                    if (input != null && !input.trim().isEmpty()) {
+                    if (!input.trim().isEmpty()) {
                         inputJSON = (JSONObject) JSONValue.parseWithException(input);
                     }
                 }
@@ -240,10 +241,14 @@ public final class JPLSnapshot implements AddOn {
                     while (rs.next()) {
                         long accountId = rs.getLong("id");
                         if (accountId == FxtDistribution.FXT_ISSUER_ID) {
+                            Logger.logInfoMessage("Skip FXT issuer balance of " + rs.getLong("balance"));
                             continue;
                         }
                         long balance = rs.getLong("balance");
                         if (balance <= 0) {
+                            if (balance < 0) {
+                                Logger.logInfoMessage("Skip negative balance of " + balance);
+                            }
                             continue;
                         }
                         String account = Long.toUnsignedString(accountId);
