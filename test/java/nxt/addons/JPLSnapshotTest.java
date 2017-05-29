@@ -3,15 +3,21 @@ package nxt.addons;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
+import nxt.util.Convert;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class JPLSnapshotTest extends BlockchainTest {
 
-    public static final String INPUT_JSON_STR =
+    private static final String INPUT_JSON_STR =
             "{\n" +
             "    \"balances\": {\n" +
             "        \"NXT-NZKH-MZRE-2CTT-98NPZ\": 30000000000000000,\n" +
@@ -42,7 +48,7 @@ public class JPLSnapshotTest extends BlockchainTest {
             }
         }
         Assert.assertEquals(aliceCurrentBalance, aliceSnapshotBalance);
-        Assert.assertEquals(Constants.MAX_BALANCE_NQT, total);
+        Assert.assertTrue(total > Constants.MAX_BALANCE_NQT - 100000 * Constants.ONE_NXT); // some funds were sent to genesis or are locked in claimable currency
     }
 
     @Test
@@ -62,7 +68,27 @@ public class JPLSnapshotTest extends BlockchainTest {
                 aliceSnapshotBalance = entry.getValue();
             }
         }
-        Assert.assertEquals(aliceCurrentBalance, 10 * aliceSnapshotBalance );
-        Assert.assertEquals(Constants.MAX_BALANCE_NQT, total);
+        Assert.assertTrue(Constants.MAX_BALANCE_NQT - total < 10000);
+        Assert.assertTrue(BigInteger.valueOf(aliceCurrentBalance).divide(BigInteger.valueOf(10)).subtract(BigInteger.valueOf(aliceSnapshotBalance)).longValueExact() < Constants.ONE_NXT);
+        JSONObject inputGenesis = (JSONObject)JSONValue.parse(INPUT_JSON_STR);
+        JSONObject inputBalances = (JSONObject) inputGenesis.get("balances");
+        for (Map.Entry<String, Long> entry : ((Map<String, Long>)inputBalances).entrySet()) {
+            long newBalance = (long)(Long)balances.get(Long.toUnsignedString(Convert.parseAccountId(entry.getKey())));
+            if (entry.getValue() != newBalance) {
+                Assert.fail("Balances differ for key " + entry.getKey());
+            }
+        }
+        JSONArray publicKeys = (JSONArray)response.get("publicKeys");
+        Set<String> publicKeysSet = new HashSet<>();
+        for (Object publicKey : publicKeys) {
+            publicKeysSet.add((String) publicKey);
+        }
+        JSONArray inputPublicKeys = (JSONArray)inputGenesis.get("publicKeys");
+        Set<String> inputPublicKeysSet = new HashSet<>();
+        for (Object inputPublicKey : inputPublicKeys) {
+            inputPublicKeysSet.add((String) inputPublicKey);
+        }
+        publicKeysSet.retainAll(inputPublicKeysSet);
+        Assert.assertEquals(inputPublicKeysSet.size(), publicKeysSet.size());
     }
 }
