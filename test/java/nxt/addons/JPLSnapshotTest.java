@@ -62,7 +62,7 @@ public class JPLSnapshotTest extends BlockchainTest {
                 aliceSnapshotBalance = entry.getValue();
             }
         }
-        Assert.assertEquals(aliceCurrentBalance, aliceSnapshotBalance);
+        Assert.assertEquals(aliceCurrentBalance, 10 * aliceSnapshotBalance );
         Assert.assertEquals(Constants.MAX_BALANCE_NQT, total);
     }
 }
