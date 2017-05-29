@@ -3,7 +3,6 @@ package nxt.addons;
 import nxt.BlockchainTest;
 import nxt.Constants;
 import nxt.http.APICall;
-import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
