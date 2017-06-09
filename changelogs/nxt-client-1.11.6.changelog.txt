@@ -17,6 +17,6 @@ explicitly disabled in nxt.enableAPIServerGZIPFilter.
 
 Updated mobile app to latest Cordova Android platform.
 
-Updated H2 to version 1.4.195, bouncy castle to 1.57, and jetty to 9.3.19.
+Updated H2 to version 1.4.195, bouncy castle to 1.57, and jetty to 9.3.20.
 Delete the old lib folder first if unpacking on top.
 
