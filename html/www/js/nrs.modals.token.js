@@ -105,8 +105,8 @@ var NRS = (function(NRS, $) {
         var secretPhrase;
         if (!NRS.rememberPassword) {
             secretPhrase = data.secretPhrase;
-			var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
-			if (publicKey != NRS.publicKey && !isOffline) {
+			var accountId = NRS.getAccountId(secretPhrase);
+			if (accountId != NRS.account && !isOffline) {
 				tokenOutput.html($.t("error_incorrect_passphrase"));
 				tokenOutput.addClass("callout-danger").removeClass("callout-info").show();
                 outputQrCodeContainer.hide();
