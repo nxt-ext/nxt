@@ -22,6 +22,7 @@ import nxt.BlockchainProcessor;
 import nxt.Constants;
 import nxt.Db;
 import nxt.FxtDistribution;
+import nxt.Genesis;
 import nxt.Nxt;
 import nxt.Transaction;
 import nxt.TransactionType;
@@ -246,7 +247,7 @@ public class Snapshot implements AddOn {
                     try (ResultSet rs = pstmt.executeQuery()) {
                         while (rs.next()) {
                             String aliasName = rs.getString("alias_name");
-                            String aliasURI = rs.getString("alias_uri");
+                            String aliasURI = Convert.nullToEmpty(rs.getString("alias_uri"));
                             long accountId = rs.getLong("account_id");
                             Map alias = new TreeMap();
                             alias.put("account", Long.toUnsignedString(accountId));
@@ -268,6 +269,10 @@ public class Snapshot implements AddOn {
                         while (rs.next()) {
                             String currencyName = rs.getString("name");
                             String currencyCode = rs.getString("code");
+                            if (invalidCurrency(currencyCode, currencyName.toLowerCase())) {
+                                Logger.logDebugMessage("Skipping currency " + currencyCode + " " + currencyName);
+                                continue;
+                            }
                             long accountId = rs.getLong("account_id");
                             Map currency = new TreeMap();
                             currency.put("account", Long.toUnsignedString(accountId));
@@ -281,14 +286,28 @@ public class Snapshot implements AddOn {
                 saveMap(snapshotMap, Constants.isTestnet ? "IGNIS_CURRENCIES-testnet.json" : "IGNIS_CURRENCIES.json");
             }
 
+            private boolean invalidCurrency(String code, String normalizedName) {
+                if (code.equals("ARDOR") || code.contains("ARDR") || "ardor".equals(normalizedName) || "ardr".equals(normalizedName)) {
+                    return true;
+                }
+                if (code.contains("NXT") || code.contains("NEXT") || "nxt".equals(normalizedName) || "next".equals(normalizedName)) {
+                    return true;
+                }
+                if (code.equals("IGNIS") || "ignis".equals(normalizedName)) {
+                    return true;
+                }
+                //TODO: add production child chain names, when known
+                return false;
+            }
+
             private void exportAccountInfo() {
                 SortedMap<String, Map<String, String>> snapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT account_id, name, description FROM account_info WHERE LATEST=true")) {
                     try (ResultSet rs = pstmt.executeQuery()) {
                         while (rs.next()) {
-                            String accountName = rs.getString("name");
-                            String accountDescription = rs.getString("description");
+                            String accountName = Convert.nullToEmpty(rs.getString("name"));
+                            String accountDescription = Convert.nullToEmpty(rs.getString("description"));
                             long accountId = rs.getLong("account_id");
                             Map account = new TreeMap();
                             account.put("name", accountName);
@@ -309,7 +328,7 @@ public class Snapshot implements AddOn {
                     try (ResultSet rs = pstmt.executeQuery()) {
                         while (rs.next()) {
                             String property = rs.getString("property");
-                            String value = rs.getString("value");
+                            String value = Convert.nullToEmpty(rs.getString("value"));
                             String recipientId = Long.toUnsignedString(rs.getLong("recipient_id"));
                             String setterId = Long.toUnsignedString(rs.getLong("setter_id"));
                             Map<String, Map<String, String>> account = snapshotMap.computeIfAbsent(recipientId, k -> new TreeMap());
@@ -333,6 +352,11 @@ public class Snapshot implements AddOn {
                             String accountId = Long.toUnsignedString(rs.getLong("account_id"));
                             Map<String, Object> accountControl = new TreeMap();
                             Long[] whitelist = DbUtils.getArray(rs, "whitelist", Long[].class);
+                            for (int i = 0; i < whitelist.length; i++) {
+                                if (whitelist[i] == Genesis.CREATOR_ID) {
+                                    whitelist[i] = 0L;
+                                }
+                            }
                             JSONArray whitelistJSON = new JSONArray();
                             whitelistJSON.addAll(Arrays.asList(whitelist));
                             accountControl.put("whitelist", whitelistJSON);
