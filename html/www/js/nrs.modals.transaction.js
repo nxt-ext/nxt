@@ -1024,11 +1024,33 @@ var NRS = (function (NRS, $, undefined) {
                 switch (transaction.subtype) {
                     case 0:
                         var minReservePerUnitNQT = new BigInteger(transaction.attachment.minReservePerUnitNQT).multiply(new BigInteger("" + Math.pow(10, transaction.attachment.decimals)));
+                        var currencyTypes = "";
+                        for (var currencyType in NRS.constants.CURRENCY_TYPES) {
+                            if (!NRS.constants.CURRENCY_TYPES.hasOwnProperty(currencyType)) {
+                                continue;
+                            }
+                            //noinspection JSBitwiseOperatorUsage
+                            if (transaction.attachment.type & NRS.constants.CURRENCY_TYPES[currencyType]) {
+                                currencyTypes += currencyType + ",";
+                            }
+                        }
+                        currencyTypes = transaction.attachment.type + ":" + currencyTypes.slice(0, -1);
+                        var hashAlgorithm = transaction.attachment.algorithm;
+                        for (var algorithm in NRS.constants.MINTING_HASH_ALGORITHMS) {
+                            if (!NRS.constants.MINTING_HASH_ALGORITHMS.hasOwnProperty(algorithm)) {
+                                continue;
+                            }
+                            if (transaction.attachment.algorithm == NRS.constants.MINTING_HASH_ALGORITHMS[algorithm]) {
+                                hashAlgorithm = hashAlgorithm + ":" + algorithm;
+                                break;
+                            }
+                        }
+
                         data = {
                             "type": $.t("currency_issuance"),
                             "name": transaction.attachment.name,
                             "code": transaction.attachment.code,
-                            "currency_type": transaction.attachment.type,
+                            "currency_type": currencyTypes,
                             "description_formatted_html": transaction.attachment.description.autoLink(),
                             "initial_units": [transaction.attachment.initialSupply, transaction.attachment.decimals],
                             "reserve_units": [transaction.attachment.reserveSupply, transaction.attachment.decimals],
@@ -1038,7 +1060,7 @@ var NRS = (function (NRS, $, undefined) {
                             "min_reserve_per_unit_formatted_html": NRS.formatAmount(minReservePerUnitNQT) + " NXT",
                             "minDifficulty": transaction.attachment.minDifficulty,
                             "maxDifficulty": transaction.attachment.maxDifficulty,
-                            "algorithm": transaction.attachment.algorithm
+                            "algorithm": hashAlgorithm
                         };
                         if (currency) {
                             data["current_units"] = NRS.convertToQNTf(currency.currentSupply, currency.decimals);

@@ -107,8 +107,9 @@ var NRS = (function (NRS, $) {
             NRS.constants.DISABLED_APIS = response.disabledAPIs;
             NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
             NRS.constants.PEER_STATES = response.peerStates;
-            NRS.loadTransactionTypeConstants(response);
+            NRS.constants.CURRENCY_TYPES = response.currencyTypes;
             NRS.constants.PROXY_NOT_FORWARDED_REQUESTS = response.proxyNotForwardedRequests;
+            NRS.loadTransactionTypeConstants(response);
             console.log("done loading server constants");
             if (resolve) {
                 resolve();
