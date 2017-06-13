@@ -57,13 +57,8 @@ import java.util.TreeMap;
 
 public class Snapshot implements AddOn {
 
-    private static final int snapshotHeight = Nxt.getIntProperty("nxt.snapshotHeight");
-
     @Override
     public void init() {
-        if (snapshotHeight == 0) {
-            return;
-        }
 
         Nxt.getBlockchainProcessor().addListener(new Listener<Block>() {
 
@@ -90,7 +85,7 @@ public class Snapshot implements AddOn {
 
             @Override
             public void notify(Block block) {
-                if (block.getHeight() == snapshotHeight) {
+                if (block.getHeight() == Constants.IGNIS_BLOCK) {
                     exportPublicKeys();
                     exportIgnisBalances();
                     exportArdorBalances();

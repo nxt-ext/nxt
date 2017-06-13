@@ -1656,6 +1656,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
+                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset transfer of ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
+                }
             }
 
             @Override
@@ -1738,6 +1741,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
+                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset delete of ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
+                }
             }
 
             @Override
@@ -1768,6 +1774,9 @@ public abstract class TransactionType {
                 if (asset == null) {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
+                }
+                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset order placements for ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
                 }
             }
 
