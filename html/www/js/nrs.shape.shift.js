@@ -548,6 +548,7 @@ var NRS = (function(NRS, $) {
             amount: amount,
             withdrawal: withdrawal,
             pair: pair,
+            returnAddress: NRS.accountRS,
             apiKey: NRS.settings.shape_shift_api_key
         }, "POST", function(data) {
             try {

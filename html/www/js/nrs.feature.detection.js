@@ -158,7 +158,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.isScanningAllowed = function () {
-        return isMobileDevice || isLocalHost;
+        return isMobileDevice || isLocalHost || NRS.isTestNet;
     };
 
     NRS.isCameraPermissionRequired = function () {
@@ -166,11 +166,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.getShapeShiftUrl = function() {
-        if (isDesktopApplication) {
-            return location.origin + "/shapeshift/";
-        } else {
-            return NRS.settings.shape_shift_url;
-        }
+        return NRS.settings.exchange_url;
     };
 
     NRS.getChangellyUrl = function() {

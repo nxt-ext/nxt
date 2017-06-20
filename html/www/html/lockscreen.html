@@ -22,7 +22,9 @@
             <img src="img/nxt_logo.png" alt="Nxt" id="logo-nxt-img" />
 
             <div id="login_panel">
-                <div class="callout callout-danger" id="testnet_login" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">
+                <div class="callout callout-danger custom_login_warning"></div>
+                <div class="callout callout-danger" id="testnet_login" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div>
+                <div id="login_error" style="max-width:400px;min-width:400px;display:none">
                     <div class="callout callout-danger"></div>
                 </div>
 
@@ -114,6 +116,7 @@
 
             <div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
                 <div class="panel-heading">
+                    <div class="callout custom_login_warning"></div>
                     <div style="float:right;">
                         <select name="language" class="form-control" style="width:150px">
                         </select>

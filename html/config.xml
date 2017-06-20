@@ -38,7 +38,7 @@
         <splash density="port-mdpi" src="icons/screen/android/splash-port-mdpi.png" />
         <splash density="port-xhdpi" src="icons/screen/android/splash-port-xhdpi.png" />
     </platform>
-    <engine name="android" spec="~6.1.2" />
+    <engine name="android" />
     <plugin name="cordova-plugin-android-permissions" spec="~0.10.0" />
     <plugin name="cordova-plugin-compat" spec="~1.1.0" />
     <plugin name="cordova-plugin-console" spec="~1.0.6" />
