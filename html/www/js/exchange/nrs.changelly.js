@@ -105,7 +105,7 @@ var NRS = (function(NRS, $) {
                 var error = response.error;
                 var msg;
                 if (error.code) {
-                    msg = ' code ' + error.code + ' errno ' + error.errno + ' syscall ' + error.syscall;
+                    msg = ' code ' + error.code + ' message ' + error.message;
                     NRS.logConsole(method + msg);
                 } else {
                     msg = error;
@@ -117,6 +117,7 @@ var NRS = (function(NRS, $) {
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
+                // TODO adapt for changelly
                 if (method.indexOf("txStat/") !== 0 && method.indexOf("cancelpending") !== 0) {
                     $("#changelly_status").html($.t("error"));
                 }
@@ -352,16 +353,6 @@ var NRS = (function(NRS, $) {
         });
     }
 
-    function renderNxtLimit() {
-        apiCall('limit/nxt_btc', {}, function (data) {
-            NRS.logConsole("limit1 " + data.limit);
-            if (data.limit) {
-                $('#changelly_status').html('ok');
-                $('#changelly_nxt_avail').html(String(data.limit).escapeHTML());
-            }
-        });
-    }
-
     function loadCoins() {
         var inputFields = [];
         inputFields.push($('#changelly_coin_0'));
@@ -390,6 +381,7 @@ var NRS = (function(NRS, $) {
                     inputFields[i].val(selectedCoins[i]);
                 }
             }
+            $('#changelly_status').html('ok');
         });
     }
 
@@ -408,7 +400,6 @@ var NRS = (function(NRS, $) {
         exchangePageContent.show();
         NRS.pageLoading();
         loadCoins();
-        renderNxtLimit();
         renderExchangeTable("buy");
         renderExchangeTable("sell");
         renderMyExchangesTable();
