@@ -394,9 +394,9 @@ var NRS = (function(NRS, $) {
     }
 
     NRS.pages.exchange_changelly = function() {
-        var exchangeDisabled = $("#exchange_disabled");
-        var exchangePageHeader = $("#exchange_page_header");
-        var exchangePageContent = $("#exchange_page_content");
+        var exchangeDisabled = $(".exchange_disabled");
+        var exchangePageHeader = $(".exchange_page_header");
+        var exchangePageContent = $(".exchange_page_content");
         if (NRS.settings.exchange !== "1") {
 			exchangeDisabled.show();
             exchangePageHeader.hide();
@@ -423,7 +423,7 @@ var NRS = (function(NRS, $) {
         }
     };
 
-    $("#accept_exchange_link").on("click", function(e) {
+    $("#changelly_accept_exchange_link").on("click", function(e) {
    		e.preventDefault();
    		NRS.updateSettings("exchange", "1");
         NRS.pages.exchange_changelly();
