@@ -140,75 +140,47 @@ var NRS = (function(NRS, $) {
         for (var i = 0; i < coins.length; i++) {
             tasks.push((function (i) {
                 return function (callback) {
-                    NRS.logConsole("marketinfo iteration " + i);
-                    var pair = coinToPair(op, coins[i]);
-                    var counterPair = reversePair(pair);
-                    NRS.logConsole("counterPair " + counterPair);
+                    var from, to;
+                    if (op == "buy") {
+                        from = "NXT";
+                        to = coins[i];
+                    } else {
+                        from = coins[i];
+                        to = "NXT";
+                    }
                     async.waterfall([
                         function(callback) {
-                            apiCall("marketinfo/" + pair, {}, function (data) {
-                                callback(data.error, data);
+                            apiCall("getMinAmount", { from: from, to: to }, function (response) {
+                                callback(response.error, response);
                             })
                         },
-                        function(marketInfoData, callback) {
-                            var amount = 100;
-                            if (op === "buy") {
-                                amount = amount * marketInfoData.rate;
-                            }
-                            apiCall("sendamount", {"amount": amount, "pair": pair}, function (data) {
-                                if (data.success && data.success.quotedRate) {
-                                    marketInfoData.quotedRate = data.success.quotedRate;
-                                } else {
-                                    marketInfoData.quotedRate = 0;
-                                }
-                                callback(null, marketInfoData);
+                        function(minAmount, callback) {
+                            apiCall("getExchangeAmount", { from: from, to: to, amount: "1" }, function (response) {
+                                response.minAmount = minAmount.result;
+                                response.rate = response.result;
+                                delete response.result;
+                                callback(null, response);
                             })
                         }
-                    ], function(err, data){
+                    ], function(err, response){
                         if (err) {
                             callback(err, err);
                             return;
                         }
-                        var row = "";
-                        row += "<tr>";
-                        row += "<td>" + SUPPORTED_COINS[coins[i]].name + " " +
-                            "<img src='" + SUPPORTED_COINS[coins[i]].image + "' width='16px' height='16px'/>" +
-                        "</td>";
-                        row += "<td>" + coins[i] + "</td>";
-                        var rate, quotedRate, diff;
+                        var rate;
+                        var symbol;
                         if (op === "sell") {
-                            if (parseFloat(data.rate) === 0) {
-                                rate = "N/A";
-                            } else {
-                                rate = invert(data.rate);
-                            }
-                            if (parseFloat(data.quotedRate) === 0) {
-                                quotedRate = "N/A";
-                                diff = "N/A";
-                            } else {
-                                quotedRate = invert(data.quotedRate);
-                                diff = -100 * (quotedRate - rate) / rate;
-                            }
+                            rate = invert(response.rate);
+                            symbol = coins[i];
                         } else {
-                            rate = data.rate;
-                            if (parseFloat(data.quotedRate) === 0) {
-                                quotedRate = "N/A";
-                                diff = "N/A";
-                            } else {
-                                quotedRate = data.quotedRate;
-                                diff = 100 * (quotedRate - rate) / rate;
-                            }
+                            rate = response.rate;
+                            symbol = "NXT";
                         }
+                        var row = "<tr><td>" + coins[i] + "</td>";
+                        row += "<td><span>" + String(response.minAmount).escapeHTML() + "</span>&nbsp<span>" + symbol + "</span></td>";
                         row += "<td>" + String(rate).escapeHTML() + "</td>";
-                        row += "<td>" + String(quotedRate).escapeHTML() + "</td>";
-                        row += "<td>" + NRS.formatAmount(diff, 2) + "%</td>";
-                        row += "<td><a href='#' class='btn btn-xs btn-default' data-18n='shift' data-toggle='modal' data-target='#m_changelly_" + op + "_modal' " +
-                            "data-pair='" + pair + "' data-rate='" + data.rate + "' data-min='" + data.minimum + "' data-max='" + data.limit +
-                            "' data-fee='" + data.minerFee + "'>Shift</a>";
-                        row += "<a href='#' class='btn btn-xs btn-default' data-18n='send_amount' data-toggle='modal' data-target='#m_send_amount_" + op + "_modal' " +
-                            "data-pair='" + pair + "' data-rate='" + data.rate + "' data-min='" + data.minimum + "' data-max='" + data.limit +
-                            "' data-fee='" + data.minerFee + "'>Send Amount</a></td>";
-                        row += "</tr>";
+                        row += "<td><a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_changelly_" + op + "_modal' " +
+                            "data-from='" + from + "' data-to='" + to + "' data-min='" + response.minAmount + "'>" + $.t(op) + "</a>";
                         NRS.logConsole(row);
                         callback(null, row);
                     });
