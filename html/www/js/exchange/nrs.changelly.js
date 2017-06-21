@@ -68,7 +68,6 @@ var NRS = (function(NRS, $) {
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
-                doneCallback(null);
             }
             doneCallback(response);
         }).fail(function (xhr, textStatus, error) {
