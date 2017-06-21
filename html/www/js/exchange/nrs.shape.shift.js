@@ -40,34 +40,9 @@ var NRS = (function(NRS, $) {
         return pairParts[1] + '_' + pairParts[0];
     };
 
-    var getCoins = function() {
-        var coins = [];
-        for (var i=0; i<3; i++) {
-            coins.push(NRS.settings["exchange_coin" + i]);
-        }
-        return coins;
-    };
-
-    var setCoins = function(coins) {
-        for (var i=0; i<coins.length; i++) {
-            NRS.updateSettings("exchange_coin" + i, coins[i]);
-        }
-    };
-
     var addDepositAddress = function(address, pair) {
-        var json = localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS];
-        var addresses;
-        if (json == undefined) {
-            addresses = [];
-        } else {
-            addresses = JSON.parse(json);
-            if (addresses.length > 5) {
-                addresses.splice(5, addresses.length - 5);
-            }
-        }
-        addresses.splice(0, 0, { address: address, pair: pair, time: Date.now() });
-        NRS.logConsole("deposit address " + address + " pair " + pair + " added");
-        localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS] = JSON.stringify(addresses);
+        var pairParts = pair.split('_');
+        NRS.addDepositAddress(address, pairParts[0], pairParts[1], DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
     };
 
     var apiCall = function(action, requestData, method, doneCallback, ignoreError, modal) {
@@ -116,12 +91,8 @@ var NRS = (function(NRS, $) {
         })
     };
 
-    function invert(rate) {
-        return Math.round(100000000 / parseFloat(rate)) / 100000000;
-    }
-
     var renderExchangeTable = function (op) {
-        var coins = getCoins();
+        var coins = NRS.getCoins();
         var tasks = [];
         for (var i = 0; i < coins.length; i++) {
             tasks.push((function (i) {
@@ -166,13 +137,13 @@ var NRS = (function(NRS, $) {
                             if (parseFloat(data.rate) == 0) {
                                 rate = "N/A";
                             } else {
-                                rate = invert(data.rate);
+                                rate = NRS.invert(data.rate);
                             }
                             if (parseFloat(data.quotedRate) == 0) {
                                 quotedRate = "N/A";
                                 diff = "N/A";
                             } else {
-                                quotedRate = invert(data.quotedRate);
+                                quotedRate = NRS.invert(data.quotedRate);
                                 diff = -100 * (quotedRate - rate) / rate;
                             }
                         } else {
@@ -221,26 +192,6 @@ var NRS = (function(NRS, $) {
         });
     };
 
-    var getAddressLink = function (address, coin) {
-        if (coin == "NXT") {
-            return NRS.getAccountLink({ accountRS: address }, "account");
-        }
-        if (coin == "BTC") {
-            return "<a target='_blank' href='https://blockchain.info/address/" + address + "'>" + address + "</a>";
-        }
-        return address;
-    };
-
-    var getTransactionLink = function (transaction, coin) {
-        if (coin == "NXT") {
-            return "<a href='#' class='show_transaction_modal_action' data-transaction='" + transaction + "'>" + transaction + "</a>";
-        }
-        if (coin == "BTC") {
-            return "<a target='_blank' href='https://blockchain.info/tx/" + transaction + "'>" + transaction + "</a>";
-        }
-        return transaction;
-    };
-
     var renderMyExchangesTable = function () {
         var depositAddressesJSON = localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS];
         var depositAddresses = [];
@@ -265,7 +216,13 @@ var NRS = (function(NRS, $) {
                             callback(null, row);
                             return;
                         }
-                        row += "<td>" + getAddressLink(data.address, depositAddresses[i].pair.split('_')[0]) + "</td>";
+                        if (depositAddresses[i].pair) {
+                            // To protect against old data already stored in local storage
+                            var pairTokens = depositAddresses[i].pair.split("_");
+                            depositAddresses[i].from = pairTokens[0];
+                            depositAddresses[i].to = pairTokens[1];
+                        }
+                        row += "<td>" + NRS.getExchangeAddressLink(data.address, depositAddresses[i].from) + "</td>";
                         if (data.status == "no_deposits") {
                             row += empty + empty + empty + empty + empty + empty;
                             NRS.logConsole(row);
@@ -280,10 +237,10 @@ var NRS = (function(NRS, $) {
                             callback(null, row);
                             return;
                         }
-                        row += "<td>" + getAddressLink(data.withdraw, depositAddresses[i].pair.split('_')[1]) + "</td>";
+                        row += "<td>" + NRS.getExchangeAddressLink(data.withdraw, depositAddresses[i].to) + "</td>";
                         row += "<td>" + data.outgoingCoin + "</td>";
                         row += "<td>" + data.outgoingType + "</td>";
-                        row += "<td>" + getTransactionLink(data.transaction, depositAddresses[i].pair.split('_')[1]) + "</td>";
+                        row += "<td>" + NRS.getExchangeTransactionLink(data.transaction, depositAddresses[i].to) + "</td>";
                         NRS.logConsole(row);
                         callback(null, row);
                     }, true);
@@ -433,9 +390,9 @@ var NRS = (function(NRS, $) {
 
     $('.coin-select').change(function() {
         var id = $(this).attr('id');
-        var coins = getCoins();
+        var coins = NRS.getCoins();
         coins[parseInt(id.slice(-1))] = $(this).val();
-        setCoins(coins);
+        NRS.setCoins(coins);
         renderExchangeTable('buy');
         renderExchangeTable('sell');
     });
@@ -779,7 +736,7 @@ var NRS = (function(NRS, $) {
                     return;
                 }
                 modal.find(".error_message").html("").hide();
-                rate.val(invert(data.success.quotedRate));
+                rate.val(NRS.invert(data.success.quotedRate));
                 fee.val(data.success.minerFee);
                 depositAmount.val(parseFloat(data.success.depositAmount));
                 depositAddress.html(data.success.deposit);

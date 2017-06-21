@@ -21,36 +21,6 @@ var NRS = (function(NRS, $) {
     var DEPOSIT_ADDRESSES_KEY = "changelly.depositAddresses.";
     var SUPPORTED_COINS = {};
 
-    var getCoins = function() {
-        var coins = [];
-        for (var i=0; i<3; i++) {
-            coins.push(NRS.settings["exchange_coin" + i]);
-        }
-        return coins;
-    };
-
-    var setCoins = function(coins) {
-        for (var i=0; i<coins.length; i++) {
-            NRS.updateSettings("exchange_coin" + i, coins[i]);
-        }
-    };
-
-    var addDepositAddress = function(address, from, to) {
-        var json = localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS];
-        var addresses;
-        if (json === undefined) {
-            addresses = [];
-        } else {
-            addresses = JSON.parse(json);
-            if (addresses.length > 5) {
-                addresses.splice(5, addresses.length - 5);
-            }
-        }
-        addresses.splice(0, 0, { address: address, from: from, to: to, time: Date.now() });
-        NRS.logConsole("deposit address " + address + " from " + from + " to " + to + " added");
-        localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS] = JSON.stringify(addresses);
-    };
-
     var apiCall = function (method, params, doneCallback, ignoreError, modal) {
         var postData = {};
         postData.method = method;
@@ -87,7 +57,7 @@ var NRS = (function(NRS, $) {
                 var msg;
                 if (error.code) {
                     msg = ' code ' + error.code + ' message ' + error.message;
-                    NRS.logConsole(method + msg);
+                    NRS.logConsole(method + msg + " params:" + JSON.stringify(params));
                 } else {
                     msg = error;
                     NRS.logConsole(method + ' error ' + error);
@@ -98,25 +68,18 @@ var NRS = (function(NRS, $) {
                 if (modal) {
                     NRS.showModalError(msg, modal);
                 }
-                // TODO adapt for changelly
-                if (method.indexOf("txStat/") !== 0 && method.indexOf("cancelpending") !== 0) {
-                    $("#changelly_status").html($.t("error"));
-                }
+                doneCallback(null);
             }
             doneCallback(response);
         }).fail(function (xhr, textStatus, error) {
-            var message = "Request failed, action " + method + " method " + method + " status " + textStatus + " error " + error;
+            var message = "Request failed, method " + method + " status " + textStatus + " error " + error;
             NRS.logConsole(message);
             throw message;
         })
     };
 
-    function invert(rate) {
-        return Math.round(100000000 / parseFloat(rate)) / 100000000;
-    }
-
     var renderExchangeTable = function (op) {
-        var coins = getCoins();
+        var coins = NRS.getCoins();
         var tasks = [];
         for (var i = 0; i < coins.length; i++) {
             tasks.push((function (i) {
@@ -151,7 +114,7 @@ var NRS = (function(NRS, $) {
                         var rate;
                         var symbol;
                         if (op === "sell") {
-                            rate = invert(response.rate);
+                            rate = NRS.invert(response.rate);
                             symbol = coins[i];
                         } else {
                             rate = response.rate;
@@ -188,26 +151,6 @@ var NRS = (function(NRS, $) {
         });
     };
 
-    var getAddressLink = function (address, coin) {
-        if (coin.toUpperCase() === "NXT") {
-            return NRS.getAccountLink({ accountRS: address }, "account");
-        }
-        if (coin.toUpperCase() === "BTC") {
-            return "<a target='_blank' href='https://blockchain.info/address/" + address + "'>" + address + "</a>";
-        }
-        return address;
-    };
-
-    var getTransactionLink = function (transaction, coin) {
-        if (coin.toUpperCase() === "NXT") {
-            return "<a href='#' class='show_transaction_modal_action' data-transaction='" + transaction + "'>" + transaction + "</a>";
-        }
-        if (coin.toUpperCase() === "BTC") {
-            return "<a target='_blank' href='https://blockchain.info/tx/" + transaction + "'>" + transaction + "</a>";
-        }
-        return transaction;
-    };
-
     var renderMyExchangesTable = function () {
         var depositAddressesJSON = localStorage[DEPOSIT_ADDRESSES_KEY + NRS.accountRS];
         var depositAddresses = [];
@@ -219,28 +162,29 @@ var NRS = (function(NRS, $) {
         for (var i = 0; i < depositAddresses.length; i++) {
             tasks.push((function (i) {
                 return function (callback) {
-                    NRS.logConsole("my exchanges iteration " + i);
                     apiCall("getTransactions", {address: depositAddresses[i].address}, function(response) {
+                        NRS.logConsole("my exchanges iteration " + i + " address " + depositAddresses[i].address);
                         var rows = "";
                         for (var j=0; j < response.result.length; j++) {
                             var transaction = response.result[j];
                             var row = "";
                             row += "<tr>";
-                            row += "<td>" + NRS.formatTimestamp(transaction.createdAt, false, true) + "</td>";
+                            var date = parseInt(transaction.createdAt) * 1000;
+                            row += "<td>" + NRS.formatTimestamp(date, false, true) + "</td>";
                             row += "<td>" + transaction.status + "</td>";
-                            if (transaction.status === "failed") {
-                                row += "<td>" + "Print Error Here" + "</td>"; // TODO
-                                row += empty + empty + empty + empty + empty + empty;
-                                NRS.logConsole(row);
-                                continue;
-                            }
-                            row += "<td>" + getAddressLink(transaction.payinAddress, transaction.currencyFrom) + "</td>";
+                            row += "<td>" + NRS.getExchangeAddressLink(transaction.payinAddress, transaction.currencyFrom) + "</td>";
                             row += "<td>" + transaction.amountFrom + "</td>";
                             row += "<td>" + transaction.currencyFrom + "</td>";
-                            row += "<td>" + getAddressLink(transaction.payoutAddress, transaction.currencyTo) + "</td>";
+                            row += "<td>" + NRS.getExchangeAddressLink(transaction.payoutAddress, transaction.currencyTo) + "</td>";
                             row += "<td>" + transaction.amountTo + "</td>";
                             row += "<td>" + transaction.currencyTo + "</td>";
-                            row += "<td>" + getTransactionLink(transaction.payoutHash, transaction.currencyTo) + "</td>";
+                            var transactionLink;
+                            if (transaction.payoutHash) {
+                                transactionLink = NRS.getExchangeTransactionLink(transaction.payoutHash, transaction.currencyTo);
+                            } else {
+                                transactionLink = "N/A";
+                            }
+                            row += "<td>" + transactionLink + "</td>";
                             NRS.logConsole(row);
                             rows += row;
                         }
@@ -358,9 +302,9 @@ var NRS = (function(NRS, $) {
 
     $('.coin-select').change(function() {
         var id = $(this).attr('id');
-        var coins = getCoins();
+        var coins = NRS.getCoins();
         coins[parseInt(id.slice(-1))] = $(this).val();
-        setCoins(coins);
+        NRS.setCoins(coins);
         renderExchangeTable('buy');
         renderExchangeTable('sell');
     });
@@ -433,7 +377,7 @@ var NRS = (function(NRS, $) {
                     NRS.showModalError(NRS.translateServerError(response), modal);
                     return;
                 }
-                addDepositAddress(depositAddress, from, to);
+                NRS.addDepositAddress(depositAddress, from, to, DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
                 renderMyExchangesTable();
                 $("#m_changelly_buy_passpharse").val("");
                 modal.modal("hide");
@@ -496,7 +440,7 @@ var NRS = (function(NRS, $) {
         var to = $("#m_changelly_sell_to").val();
         var deposit = $("#m_changelly_sell_deposit_address").html();
         if (deposit !== "") {
-            addDepositAddress(deposit, from, to);
+            NRS.addDepositAddress(deposit, from, to, DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
             renderMyExchangesTable();
             $(this).closest(".modal").modal("hide");
         }
