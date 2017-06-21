@@ -21,25 +21,6 @@ var NRS = (function(NRS, $) {
     var DEPOSIT_ADDRESSES_KEY = "changelly.depositAddresses.";
     var SUPPORTED_COINS = {};
 
-    var coinToPair = function (op, coin) {
-        return (op === "buy") ? "NXT_" + coin : coin + "_NXT";
-    };
-
-    var pairToCoin = function (pair) {
-        if (pair.indexOf("NXT_") === 0) {
-            return pair.substring("NXT_".length);
-        }
-        if (pair.indexOf("_NXT") === pair.length - "_NXT".length) {
-            return pair.substring(0, pair.indexOf("_NXT"));
-        }
-        throw "illegal pair " + pair;
-    };
-
-    var reversePair = function (pair) {
-        var pairParts = pair.split('_');
-        return pairParts[1] + '_' + pairParts[0];
-    };
-
     var getCoins = function() {
         var coins = [];
         for (var i=0; i<3; i++) {
@@ -463,129 +444,19 @@ var NRS = (function(NRS, $) {
     $("#m_changelly_sell_modal").on("show.bs.modal", function (e) {
         var invoker = $(e.relatedTarget);
         var modal = $(this).closest(".modal");
-        var pair = invoker.data("pair");
-        var coin = pairToCoin(pair);
-        NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
-        $("#m_changelly_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: coin }));
+        var from = invoker.data("from");
+        var to = invoker.data("to");
+        var rate = invoker.data("rate");
+        var min = invoker.data("min");
+        NRS.logConsole("sell modal exchange from " + from + " to " + to);
+        $("#m_changelly_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: from }));
         $("#m_changelly_sell_qr_code").html("");
-        var data = invoker.data;
-        modal.css('cursor','wait');
-        async.waterfall([
-            function(callback) {
-                if (data.rate) {
-                    callback(null);
-                } else {
-                    apiCall("marketinfo/" + pair, {}, function (response) {
-                        data.rate = response.rate;
-                        data.min = response.minimum;
-                        data.max = response.limit;
-                        data.fee = response.minerFee;
-                        callback(null);
-                    })
-                }
-            },
-            function(callback) {
-                $("#m_changelly_sell_min").val(data.min);
-                $("#m_changelly_sell_min_coin").html(coin);
-                $("#m_changelly_sell_max").val(data.max);
-                $("#m_changelly_sell_max_coin").html(coin);
-                $("#m_changelly_sell_rate").val(data.rate);
-                $("#m_changelly_sell_rate_text").html(coin + "/NXT");
-                $("#m_changelly_sell_fee").val(data.fee);
-                $("#m_changelly_sell_fee_coin").html("NXT");
-                $("#m_changelly_sell_pair").val(pair);
-                var publicKey = NRS.publicKey;
-                if (publicKey === "" && NRS.accountInfo) {
-                    publicKey = NRS.accountInfo.publicKey;
-                }
-                if (!publicKey || publicKey === "") {
-                    NRS.showModalError("Account has no public key, please login using your passphrase", modal);
-                    return;
-                }
-                apiCall('shift', {
-                    withdrawal: NRS.accountRS,
-                    rsAddress: publicKey,
-                    pair: pair,
-                    apiKey: NRS.settings.exchange_api_key
-                }, function (data) {
-                    NRS.logConsole("shift request done");
-                    var msg;
-                    if (data.depositType !== coin) {
-                        msg = "incorrect deposit coin " + data.depositType;
-                        NRS.logConsole(msg);
-                        NRS.showModalError(msg, modal);
-                        callback(null);
-                        return;
-                    }
-                    if (data.withdrawalType !== "NXT") {
-                        msg = "incorrect withdrawal coin " + data.withdrawalType;
-                        NRS.logConsole(msg);
-                        NRS.showModalError(msg, modal);
-                        callback(null);
-                        return;
-                    }
-                    if (data.withdrawal !== NRS.accountRS) {
-                        msg = "incorrect withdrawal address " + data.withdrawal;
-                        NRS.logConsole(msg);
-                        NRS.showModalError(msg, modal);
-                        callback(null);
-                        return;
-                    }
-                    NRS.logConsole("shift request done, deposit address " + data.deposit);
-                    $("#m_changelly_sell_deposit_address").html(data.deposit);
-                    NRS.generateQRCode("#m_changelly_sell_qr_code", data.deposit);
-                    callback(null);
-                })
-            }
-        ], function (err, result) {
-            modal.css('cursor', 'default');
-        })
-    });
-
-    $("#m_changelly_sell_done").on("click", function(e) {
-        e.preventDefault();
-        var pair = $("#m_changelly_sell_pair").val();
-        var deposit = $("#m_changelly_sell_deposit_address").html();
-        if (deposit !== "") {
-            addDepositAddress(deposit, pair);
-            renderMyExchangesTable();
-            $(this).closest(".modal").modal("hide");
-        }
-    });
-
-    $("#m_changelly_sell_cancel").on("click", function(e) {
-        e.preventDefault();
-        var deposit = $("#m_changelly_sell_deposit_address").html();
-        if (deposit !== "") {
-            apiCall('cancelpending', {address: deposit}, function (data) {
-                var msg = data.success ? data.success : data.err;
-                NRS.logConsole("sell cancelled response: " + msg);
-            })
-        }
-    });
-
-    $("#m_send_amount_sell_modal").on("show.bs.modal", function (e) {
-        var invoker = $(e.relatedTarget);
-        var modal = $(this).closest(".modal");
-        var pair = invoker.data("pair");
-        var coin = pairToCoin(pair);
-        NRS.logConsole("modal invoked pair " + pair + " coin " + coin);
-        $("#m_send_amount_sell_title").html($.t("exchange_coin_to_nxt_send_amount", { coin: coin }));
-        $("#m_send_amount_sell_rate_text").html("NXT/" + coin);
-        $("#m_send_amount_sell_fee_coin").html("NXT");
-        $("#m_send_amount_sell_withdrawal_amount_coin").html("NXT");
-        $("#m_send_amount_sell_deposit_amount_coin").html(coin);
-        $("#m_send_amount_sell_deposit_address").html("");
-        $("#m_send_amount_sell_qr_code").html("<span style='color: blue'>" + $.t("please_enter_withdrawal_amount") + "</span>");
-        $("#m_send_amount_sell_pair").val(pair);
-        $("#m_send_amount_sell_done").prop('disabled', true);
-    });
-
-    $('#m_send_amount_sell_withdrawal_amount').change(function () {
-        var modal = $(this).closest(".modal");
-        var amount = $('#m_send_amount_sell_withdrawal_amount').val();
-        var pair = $('#m_send_amount_sell_pair').val();
-        $("#m_send_amount_sell_done").prop('disabled', true);
+        $("#m_changelly_sell_min").val(min);
+        $("#m_changelly_sell_min_coin").html(from);
+        $("#m_changelly_sell_rate").val(rate);
+        $("#m_changelly_sell_rate_text").html(from + "/NXT");
+        $("#m_changelly_sell_from").val(from);
+        $("#m_changelly_sell_to").val(to);
         var publicKey = NRS.publicKey;
         if (publicKey === "" && NRS.accountInfo) {
             publicKey = NRS.accountInfo.publicKey;
@@ -594,73 +465,40 @@ var NRS = (function(NRS, $) {
             NRS.showModalError("Account has no public key, please login using your passphrase", modal);
             return;
         }
-        $("#m_send_amount_sell_qr_code").html("<span style='color: blue'>" + $.t("please_enter_withdrawal_amount") + "</span>");
         modal.css('cursor','wait');
-        apiCall('sendamount', {
-            amount: amount,
-            withdrawal: NRS.accountRS,
-            pubKey: publicKey,
-            pair: pair,
-            apiKey: NRS.settings.exchange_api_key
+        apiCall('generateAddress', {
+            from: from,
+            to: to,
+            address: NRS.accountRS,
+            extraId: publicKey
         }, function (data) {
-            try {
-                var rate = $("#m_send_amount_sell_rate");
-                var fee = $("#m_send_amount_sell_fee");
-                var depositAmount = $("#m_send_amount_sell_deposit_amount");
-                var depositAddress = $("#m_send_amount_sell_deposit_address");
-                var expiration = $("#m_send_amount_sell_expiration");
-                if (data.error) {
-                    rate.val("");
-                    fee.val("");
-                    depositAmount.val("");
-                    depositAddress.html("");
-                    expiration.val("");
-                    return;
-                }
-                if (amount !== data.success.withdrawalAmount) {
-                    NRS.showModalError("amount returned from shapeshift " + data.success.withdrawalAmount +
-                        " differs from requested amount " + amount, modal);
-                    return;
-                }
-                if (NRS.accountRS !== data.success.withdrawal) {
-                    NRS.showModalError("withdrawal address returned from shapeshift " + data.success.withdrawal +
-                        " differs from requested address " + NRS.accountRS, modal);
-                    return;
-                }
-                modal.find(".error_message").html("").hide();
-                rate.val(invert(data.success.quotedRate));
-                fee.val(data.success.minerFee);
-                depositAmount.val(parseFloat(data.success.depositAmount));
-                depositAddress.html(data.success.deposit);
-                expiration.val(NRS.formatTimestamp(data.success.expiration, false, true));
-                NRS.logConsole("sendamount request done, deposit address " + data.success.deposit);
-                NRS.generateQRCode("#m_send_amount_sell_qr_code", "bitcoin:" + data.success.deposit + "?amount=" + data.success.depositAmount);
-                $("#m_send_amount_sell_done").prop('disabled', false);
-            } finally {
-                modal.css('cursor', 'default');
+            modal.css('cursor', 'default');
+            if (data.error) {
+                NRS.logConsole("Changelly generateAddress error " + data.error.code + " " + data.error.message);
+                return;
             }
-        }, true, modal)
+            var depositAddress = data.result.address;
+            if (!depositAddress) {
+                msg = "changelly did not return a deposit address for id " + data.id;
+                NRS.logConsole(msg);
+                NRS.showModalError(msg, modal);
+                return;
+            }
+            NRS.logConsole(from + " deposit address " + depositAddress);
+            $("#m_changelly_sell_deposit_address").html(depositAddress);
+            NRS.generateQRCode("#m_changelly_sell_qr_code", depositAddress);
+        })
     });
 
-    $("#m_send_amount_sell_done").on("click", function(e) {
+    $("#m_changelly_sell_done").on("click", function(e) {
         e.preventDefault();
-        var pair = $("#m_send_amount_sell_pair").val();
-        var deposit = $("#m_send_amount_sell_deposit_address").html();
+        var from = $("#m_changelly_sell_from").val();
+        var to = $("#m_changelly_sell_to").val();
+        var deposit = $("#m_changelly_sell_deposit_address").html();
         if (deposit !== "") {
-            addDepositAddress(deposit, pair);
+            addDepositAddress(deposit, from, to);
             renderMyExchangesTable();
             $(this).closest(".modal").modal("hide");
-        }
-    });
-
-    $("#m_send_amount_sell_cancel").on("click", function(e) {
-        e.preventDefault();
-        var deposit = $("#m_send_amount_sell_deposit_address").html();
-        if (deposit !== "") {
-            apiCall('cancelpending', {address: deposit}, function (data) {
-                var msg = data.success ? data.success : data.err;
-                NRS.logConsole("sell cancelled response: " + msg);
-            })
         }
     });
 
