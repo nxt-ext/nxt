@@ -18,6 +18,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
+    var EXCHANGE_NAME = "shape_shift";
     var DEPOSIT_ADDRESSES_KEY = "shapeshift.depositAddresses.";
     var SUPPORTED_COINS = {};
 
@@ -92,7 +93,7 @@ var NRS = (function(NRS, $) {
     };
 
     var renderExchangeTable = function (op) {
-        var coins = NRS.getCoins();
+        var coins = NRS.getCoins(EXCHANGE_NAME);
         var tasks = [];
         for (var i = 0; i < coins.length; i++) {
             tasks.push((function (i) {
@@ -307,14 +308,17 @@ var NRS = (function(NRS, $) {
     }
 
     function loadCoins() {
+        var coin0 = EXCHANGE_NAME + "_coin0";
+        var coin1 = EXCHANGE_NAME + "_coin1";
+        var coin2 = EXCHANGE_NAME + "_coin2";
         var inputFields = [];
-        inputFields.push($('#shape_shift_coin_0'));
-        inputFields.push($('#shape_shift_coin_1'));
-        inputFields.push($('#shape_shift_coin_2'));
+        inputFields.push($('#' + coin0));
+        inputFields.push($('#' + coin1));
+        inputFields.push($('#' + coin2));
         var selectedCoins = [];
-        selectedCoins.push(NRS.settings.exchange_coin0);
-        selectedCoins.push(NRS.settings.exchange_coin1);
-        selectedCoins.push(NRS.settings.exchange_coin2);
+        selectedCoins.push(NRS.settings[coin0]);
+        selectedCoins.push(NRS.settings[coin1]);
+        selectedCoins.push(NRS.settings[coin2]);
         apiCall('getcoins', {}, 'GET', function (data) {
             SUPPORTED_COINS = data;
             for (var i = 0; i < inputFields.length; i++) {
@@ -388,11 +392,11 @@ var NRS = (function(NRS, $) {
             "data-pair='BTC_NXT'>" + $.t("fund_account_message") + "</a>";
     };
 
-    $('.coin-select').change(function() {
+    $('.coin-select.shape-shift ').change(function() {
         var id = $(this).attr('id');
-        var coins = NRS.getCoins();
+        var coins = NRS.getCoins(EXCHANGE_NAME);
         coins[parseInt(id.slice(-1))] = $(this).val();
-        NRS.setCoins(coins);
+        NRS.setCoins(EXCHANGE_NAME, coins);
         renderExchangeTable('buy');
         renderExchangeTable('sell');
     });

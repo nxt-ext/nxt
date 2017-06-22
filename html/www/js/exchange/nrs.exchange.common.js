@@ -23,17 +23,17 @@ var NRS = (function(NRS, $) {
         return Math.round(100000000 / parseFloat(rate)) / 100000000;
     };
 
-    NRS.getCoins = function() {
+    NRS.getCoins = function(exchange) {
         var coins = [];
         for (var i=0; i<3; i++) {
-            coins.push(NRS.settings["exchange_coin" + i]);
+            coins.push(NRS.settings[exchange + "_coin" + i]);
         }
         return coins;
     };
 
-    NRS.setCoins = function(coins) {
+    NRS.setCoins = function(exchange, coins) {
         for (var i=0; i<coins.length; i++) {
-            NRS.updateSettings("exchange_coin" + i, coins[i]);
+            NRS.updateSettings(exchange + "_coin" + i, coins[i]);
         }
     };
 
