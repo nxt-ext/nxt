@@ -295,6 +295,7 @@ var NRS = (function(NRS, $) {
         renderMyExchangesTable();
    	});
 
+    // TODO enable for changelly
     NRS.getFundAccountLink = function() {
         return "<div class='callout callout-danger'>" +
             "<span>" + $.t("fund_account_warning_1") + "</span><br>" +
@@ -332,6 +333,8 @@ var NRS = (function(NRS, $) {
         $("#changelly_buy_min_coin").html("NXT");
         $("#changelly_buy_rate").val(invoker.data("rate"));
         $("#changelly_buy_rate_text").html("NXT/" + to);
+        $('#changelly_buy_estimated_amount').val("");
+        $("#changelly_buy_estimated_amount_text").html(to);
         $("#changelly_withdrawal_address_coin").html(to);
     });
 
@@ -390,6 +393,32 @@ var NRS = (function(NRS, $) {
         }, true, modal);
     });
 
+    $('#changelly_buy_amount').change(function () {
+        var $modal = $(this).closest(".modal");
+        var amount = $('#changelly_buy_amount').val();
+        var from = $('#changelly_buy_from').val();
+        var to = $('#changelly_buy_to').val();
+        var $estimatedAmount = $('#changelly_buy_estimated_amount');
+        if (!amount) {
+            $estimatedAmount.val("");
+            return;
+        }
+        $modal.css('cursor', 'wait');
+        apiCall('getExchangeAmount', {
+            amount: amount,
+            from: from,
+            to: to
+        }, function (response) {
+            if (response.error) {
+                $estimatedAmount.val("");
+                $modal.css('cursor', 'default');
+                return;
+            }
+            $estimatedAmount.val(response.result);
+            $modal.css('cursor', 'default');
+        })
+    });
+
     $("#changelly_sell_modal").on("show.bs.modal", function (e) {
         var invoker = $(e.relatedTarget);
         var modal = $(this).closest(".modal");
@@ -398,12 +427,14 @@ var NRS = (function(NRS, $) {
         var rate = invoker.data("rate");
         var min = invoker.data("min");
         NRS.logConsole("sell modal exchange from " + from + " to " + to);
-        $("#changelly_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: from }));
+        $("#changelly_sell_title").html($.t("exchange_coin_to_nxt_changelly", { coin: from }));
         $("#changelly_sell_qr_code").html("");
         $("#changelly_sell_min").val(min);
         $("#changelly_sell_min_coin").html(from);
         $("#changelly_sell_rate").val(rate);
         $("#changelly_sell_rate_text").html(from + "/NXT");
+        $("#changelly_sell_amount_text").html(from);
+        $("#changelly_sell_estimated_amount").val("");
         $("#changelly_sell_from").val(from);
         $("#changelly_sell_to").val(to);
         var publicKey = NRS.publicKey;
@@ -436,6 +467,36 @@ var NRS = (function(NRS, $) {
             NRS.logConsole(from + " deposit address " + depositAddress);
             $("#changelly_sell_deposit_address").html(depositAddress);
             NRS.generateQRCode("#changelly_sell_qr_code", depositAddress);
+        })
+    });
+
+    $('#changelly_sell_amount').change(function () {
+        var $modal = $(this).closest(".modal");
+        var amount = $('#changelly_sell_amount').val();
+        var from = $('#changelly_sell_from').val();
+        var to = $('#changelly_sell_to').val();
+        var $estimatedAmount = $('#changelly_sell_estimated_amount');
+        var depositAddress = $("#changelly_sell_deposit_address").html();
+        if (!amount) {
+            $estimatedAmount.val("");
+            NRS.generateQRCode("#changelly_sell_qr_code", depositAddress);
+            return;
+        }
+        $modal.css('cursor', 'wait');
+        apiCall('getExchangeAmount', {
+            amount: amount,
+            from: from,
+            to: to
+        }, function (response) {
+            if (response.error) {
+                $estimatedAmount.val("");
+                NRS.generateQRCode("#changelly_sell_qr_code", depositAddress);
+                $modal.css('cursor', 'default');
+                return;
+            }
+            $estimatedAmount.val(response.result);
+            NRS.generateQRCode("#changelly_sell_qr_code", "bitcoin:" + depositAddress + "?amount=" + amount);
+            $modal.css('cursor', 'default');
         })
     });
 
