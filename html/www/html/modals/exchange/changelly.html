@@ -14,12 +14,12 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div class="modal fade" id="m_changelly_buy_modal" data-type="buy" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="changelly_buy_modal" data-type="buy" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-700">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="m_changelly_buy_title"></h4>
+                <h4 class="modal-title" id="changelly_buy_title"></h4>
             </div>
             <div class="modal-body">
                 <form role="form" autocomplete="off">
@@ -27,10 +27,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_changelly_buy_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
+                                <label for="changelly_buy_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
                                 <div class="input-group">
-                                    <input id="m_changelly_buy_min" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_changelly_buy_min_coin"></span>
+                                    <input id="changelly_buy_min" class="form-control" readonly>
+                                    <span class="input-group-addon" id="changelly_buy_min_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -38,10 +38,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_changelly_buy_rate" data-i18n="rate">RATE</label>
+                                <label for="changelly_buy_rate" data-i18n="rate">RATE</label>
                                 <div class="input-group">
-                                    <input id="m_changelly_buy_rate" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_changelly_buy_rate_text"></span>
+                                    <input id="changelly_buy_rate" class="form-control" readonly>
+                                    <span class="input-group-addon" id="changelly_buy_rate_text"></span>
                                 </div>
                             </div>
                         </div>
@@ -49,9 +49,9 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_changelly_buy_amount" data-i18n="amount">AMOUNT</label>
+                                <label for="changelly_buy_amount" data-i18n="amount">AMOUNT</label>
                                 <div class="input-group">
-                                    <input type="text" name="amountNXT" id="m_changelly_buy_amount" step="any" min="0" class="form-control" placeholder="Amount" data-i18n="[placeholder]amount" tabindex="1">
+                                    <input type="text" name="amountNXT" id="changelly_buy_amount" step="any" min="0" class="form-control" placeholder="Amount" data-i18n="[placeholder]amount" tabindex="1">
                                     <span class="input-group-addon">NXT</span>
                                 </div>
                             </div>
@@ -60,33 +60,33 @@
                     <div class="row">
                         <div class="col-xs-16 col-sm-8 col-md-8">
                             <div class="form-group">
-                                <label for="m_changelly_buy_withdrawal_address" data-i18n="withdrawal_address">WITHDRAWAL ADDRESS</label>
+                                <label for="changelly_buy_withdrawal_address" data-i18n="withdrawal_address">WITHDRAWAL ADDRESS</label>
                                 <div class="input-group">
-                                    <input type="text" id="m_changelly_buy_withdrawal_address" class="form-control" tabindex="2">
-                                    <span class="input-group-addon" id="m_changelly_withdrawal_address_coin"></span>
+                                    <input type="text" id="changelly_buy_withdrawal_address" class="form-control" tabindex="2">
+                                    <span class="input-group-addon" id="changelly_withdrawal_address_coin"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <input type="hidden" id="m_changelly_buy_from" value="" />
-                    <input type="hidden" id="m_changelly_buy_to" value="" />
+                    <input type="hidden" id="changelly_buy_from" value="" />
+                    <input type="hidden" id="changelly_buy_to" value="" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn" id="m_changelly_buy_submit" data-loading-text="Submitting..." data-i18n="send_nxt;[data-loading-text]submitting">Send NXT</button>
+                <button type="button" class="btn" id="changelly_buy_submit" data-loading-text="Submitting..." data-i18n="send_nxt;[data-loading-text]submitting">Send NXT</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="m_changelly_sell_modal" data-type="sell" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="changelly_sell_modal" data-type="sell" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-700">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="m_changelly_sell_title"></h4>
+                <h4 class="modal-title" id="changelly_sell_title"></h4>
             </div>
             <div class="modal-body">
                 <form role="form" autocomplete="off">
@@ -94,10 +94,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_changelly_sell_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
+                                <label for="changelly_sell_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
                                 <div class="input-group">
-                                    <input id="m_changelly_sell_min" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_changelly_sell_min_coin"></span>
+                                    <input id="changelly_sell_min" class="form-control" readonly>
+                                    <span class="input-group-addon" id="changelly_sell_min_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -105,10 +105,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_changelly_sell_rate" data-i18n="rate">RATE</label>
+                                <label for="changelly_sell_rate" data-i18n="rate">RATE</label>
                                 <div class="input-group">
-                                    <input id="m_changelly_sell_rate" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_changelly_sell_rate_text"></span>
+                                    <input id="changelly_sell_rate" class="form-control" readonly>
+                                    <span class="input-group-addon" id="changelly_sell_rate_text"></span>
                                 </div>
                             </div>
                         </div>
@@ -116,9 +116,9 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_changelly_sell_deposit_address" data-i18n="deposit_address">DEPOSIT ADDRESS</label>
+                                <label for="changelly_sell_deposit_address" data-i18n="deposit_address">DEPOSIT ADDRESS</label>
                                 <div class="input-group">
-                                    <span id="m_changelly_sell_deposit_address"></span>
+                                    <span id="changelly_sell_deposit_address"></span>
                                 </div>
                             </div>
                         </div>
@@ -126,9 +126,9 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_changelly_sell_qr_code" data-i18n="deposit_qr_code">Deposit QR Code</label>
+                                <label for="changelly_sell_qr_code" data-i18n="deposit_qr_code">Deposit QR Code</label>
                                 <div class="input-group">
-                                    <div id="m_changelly_sell_qr_code"></div>
+                                    <div id="changelly_sell_qr_code"></div>
                                 </div>
                             </div>
                         </div>
@@ -146,13 +146,39 @@
                         </div>
                     </div>
 
-                    <input type="hidden" id="m_changelly_sell_from" value="" />
-                    <input type="hidden" id="m_changelly_sell_to" value="" />
+                    <input type="hidden" id="changelly_sell_from" value="" />
+                    <input type="hidden" id="changelly_sell_to" value="" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <button type="button" class="btn btn-default" id="m_changelly_sell_cancel" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn" id="m_changelly_sell_done" data-loading-text="Submitting..." data-i18n="done;[data-loading-text]submitting">Done</button>
+                <button type="button" class="btn btn-default" id="changelly_sell_cancel" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn" id="changelly_sell_done" data-loading-text="Submitting..." data-i18n="done;[data-loading-text]submitting">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="changelly_view_transaction" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" data-i18n="view_changelly_transaction">View Changelly Transaction</h4>
+            </div>
+            <div class="modal-body">
+                <form role="form" autocomplete="off">
+                    <div class="form-group">
+                        <label for="changelly_identifier" data-i18n="id"></label>
+                        <input type="text" class="form-control" id="changelly_identifier" readonly/>
+                    </div>
+                    <div class="form-group">
+                        <label for="changelly_view_content" data-i18n="content"></label>
+                        <textarea class="form-control" id="changelly_view_content" rows="20" readonly></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="margin-top:0;">
+                <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="close">Close</button>
             </div>
         </div>
     </div>

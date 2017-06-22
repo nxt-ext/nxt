@@ -122,7 +122,7 @@ var NRS = (function(NRS, $) {
                         var row = "<tr><td>" + coins[i] + "</td>";
                         row += "<td><span>" + String(response.minAmount).escapeHTML() + "</span>&nbsp<span>" + symbol + "</span></td>";
                         row += "<td>" + String(rate).escapeHTML() + "</td>";
-                        row += "<td><a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#m_changelly_" + op + "_modal' " +
+                        row += "<td><a href='#' class='btn btn-xs btn-default' data-toggle='modal' data-target='#changelly_" + op + "_modal' " +
                             "data-from='" + from + "' data-to='" + to + "' data-rate='" + response.rate + "' data-min='" + response.minAmount + "'>" + $.t(op) + "</a>";
                         NRS.logConsole(row);
                         callback(null, row);
@@ -184,6 +184,8 @@ var NRS = (function(NRS, $) {
                                 transactionLink = "N/A";
                             }
                             row += "<td>" + transactionLink + "</td>";
+                            row += "<td><a class='btn btn-xs btn-default' href='#' data-toggle='modal' data-target='#changelly_view_transaction' " +
+                                "data-id='" + transaction.id + "' data-content='" + JSON.stringify(transaction) + "'>" + $.t("view") + "</a></td>";
                             NRS.logConsole(row);
                             rows += row;
                         }
@@ -312,28 +314,28 @@ var NRS = (function(NRS, $) {
         // Do not implement connection to a 3rd party site here to prevent privacy leak
     };
 
-    $("#m_changelly_buy_modal").on("show.bs.modal", function (e) {
+    $("#changelly_buy_modal").on("show.bs.modal", function (e) {
         var invoker = $(e.relatedTarget);
         var pair = invoker.data("pair");
         var from = invoker.data("from");
         var to = invoker.data("to");
         var min = invoker.data("min");
-        $("#m_changelly_buy_from").val(from);
-        $("#m_changelly_buy_to").val(to);
+        $("#changelly_buy_from").val(from);
+        $("#changelly_buy_to").val(to);
         NRS.logConsole("modal invoked from " + from + " to " + to);
-        $("#m_changelly_buy_title").html($.t("exchange_nxt_to_coin", { coin: to }));
-        $("#m_changelly_buy_min").val(invoker.data("min"));
-        $("#m_changelly_buy_min_coin").html("NXT");
-        $("#m_changelly_buy_rate").val(invoker.data("rate"));
-        $("#m_changelly_buy_rate_text").html("NXT/" + to);
-        $("#m_changelly_withdrawal_address_coin").html(to);
+        $("#changelly_buy_title").html($.t("exchange_nxt_to_coin", { coin: to }));
+        $("#changelly_buy_min").val(invoker.data("min"));
+        $("#changelly_buy_min_coin").html("NXT");
+        $("#changelly_buy_rate").val(invoker.data("rate"));
+        $("#changelly_buy_rate_text").html("NXT/" + to);
+        $("#changelly_withdrawal_address_coin").html(to);
     });
 
-    $("#m_changelly_buy_submit").on("click", function(e) {
+    $("#changelly_buy_submit").on("click", function(e) {
         e.preventDefault();
         var modal = $(this).closest(".modal");
-        var amountNXT = $("#m_changelly_buy_amount").val();
-        var minAmount = $("#m_changelly_buy_min").val();
+        var amountNXT = $("#changelly_buy_amount").val();
+        var minAmount = $("#changelly_buy_min").val();
         if (parseFloat(amountNXT) <= parseFloat(minAmount)) {
             msg = "amount is lower tham minimum amount " + minAmount;
             NRS.logConsole(msg);
@@ -341,9 +343,9 @@ var NRS = (function(NRS, $) {
             return;
         }
         var amountNQT = NRS.convertToNQT(amountNXT);
-        var withdrawal = $("#m_changelly_buy_withdrawal_address").val();
-        var from = $("#m_changelly_buy_from").val();
-        var to = $("#m_changelly_buy_to").val();
+        var withdrawal = $("#changelly_buy_withdrawal_address").val();
+        var from = $("#changelly_buy_from").val();
+        var to = $("#changelly_buy_to").val();
         NRS.logConsole('changelly withdrawal to address ' + withdrawal + " coin " + to);
         apiCall('generateAddress', {
             from: from,
@@ -367,7 +369,7 @@ var NRS = (function(NRS, $) {
             NRS.sendRequest("sendMoney", {
                 "recipient": depositAddress,
                 "amountNQT": amountNQT,
-                "secretPhrase": $("#m_changelly_buy_password").val(),
+                "secretPhrase": $("#changelly_buy_password").val(),
                 "deadline": "1440",
                 "feeNQT": NRS.convertToNQT(1)
             }, function (response) {
@@ -378,13 +380,13 @@ var NRS = (function(NRS, $) {
                 }
                 NRS.addDepositAddress(depositAddress, from, to, DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
                 renderMyExchangesTable();
-                $("#m_changelly_buy_passpharse").val("");
+                $("#changelly_buy_passpharse").val("");
                 modal.modal("hide");
             })
         }, true, modal);
     });
 
-    $("#m_changelly_sell_modal").on("show.bs.modal", function (e) {
+    $("#changelly_sell_modal").on("show.bs.modal", function (e) {
         var invoker = $(e.relatedTarget);
         var modal = $(this).closest(".modal");
         var from = invoker.data("from");
@@ -392,14 +394,14 @@ var NRS = (function(NRS, $) {
         var rate = invoker.data("rate");
         var min = invoker.data("min");
         NRS.logConsole("sell modal exchange from " + from + " to " + to);
-        $("#m_changelly_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: from }));
-        $("#m_changelly_sell_qr_code").html("");
-        $("#m_changelly_sell_min").val(min);
-        $("#m_changelly_sell_min_coin").html(from);
-        $("#m_changelly_sell_rate").val(rate);
-        $("#m_changelly_sell_rate_text").html(from + "/NXT");
-        $("#m_changelly_sell_from").val(from);
-        $("#m_changelly_sell_to").val(to);
+        $("#changelly_sell_title").html($.t("exchange_coin_to_nxt_shift", { coin: from }));
+        $("#changelly_sell_qr_code").html("");
+        $("#changelly_sell_min").val(min);
+        $("#changelly_sell_min_coin").html(from);
+        $("#changelly_sell_rate").val(rate);
+        $("#changelly_sell_rate_text").html(from + "/NXT");
+        $("#changelly_sell_from").val(from);
+        $("#changelly_sell_to").val(to);
         var publicKey = NRS.publicKey;
         if (publicKey === "" && NRS.accountInfo) {
             publicKey = NRS.accountInfo.publicKey;
@@ -428,16 +430,16 @@ var NRS = (function(NRS, $) {
                 return;
             }
             NRS.logConsole(from + " deposit address " + depositAddress);
-            $("#m_changelly_sell_deposit_address").html(depositAddress);
-            NRS.generateQRCode("#m_changelly_sell_qr_code", depositAddress);
+            $("#changelly_sell_deposit_address").html(depositAddress);
+            NRS.generateQRCode("#changelly_sell_qr_code", depositAddress);
         })
     });
 
-    $("#m_changelly_sell_done").on("click", function(e) {
+    $("#changelly_sell_done").on("click", function(e) {
         e.preventDefault();
-        var from = $("#m_changelly_sell_from").val();
-        var to = $("#m_changelly_sell_to").val();
-        var deposit = $("#m_changelly_sell_deposit_address").html();
+        var from = $("#changelly_sell_from").val();
+        var to = $("#changelly_sell_to").val();
+        var deposit = $("#changelly_sell_deposit_address").html();
         if (deposit !== "") {
             NRS.addDepositAddress(deposit, from, to, DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
             renderMyExchangesTable();
@@ -445,5 +447,13 @@ var NRS = (function(NRS, $) {
         }
     });
 
-	return NRS;
+    $("#changelly_view_transaction").on("show.bs.modal", function(e) {
+        var $invoker = $(e.relatedTarget);
+        var id = $invoker.data("id");
+        var content = $invoker.data("content");
+        $("#changelly_identifier").val(id);
+        $("#changelly_view_content").val(JSON.stringify(content, null, 2));
+    });
+
+    return NRS;
 }(NRS || {}, jQuery));
