@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -61,11 +62,29 @@ public final class PassphraseRecovery {
             int[] positions;
             try {
                 positions = Arrays.stream(positionsStr.split(",")).map(String::trim).mapToInt(Integer::parseInt).map(i -> i - 1).toArray();
+                List<Integer> list = IntStream.of(positions).boxed().collect(Collectors.toList());
+                String s = list.stream().map(p -> Character.toString(wildcard.charAt(p))).collect(Collectors.joining(" "));
+                Logger.logInfoMessage("Recovering chars: " + s);
             } catch (NumberFormatException e) {
                 Logger.logInfoMessage("Specify in the recoveryPositions setting, a comma separated list of numeric positions pointing to the recoveryWildcard unknown characters (first position is 1)");
                 return;
             }
-            char[] dictionary = Nxt.getStringProperty("recoveryDictionary", new String(getDefaultDictionary())).toCharArray();
+            String dictionaryStr = Nxt.getStringProperty("recoveryDictionary", "");
+            char[] dictionary;
+            switch(dictionaryStr.toLowerCase()) {
+                case "":
+                case "ascii":
+                    dictionary = getDictionary(32, 127);
+                    break;
+                case "asciiall":
+                    dictionary = getDictionary(0, (int)(Math.pow(2, 8) - 1));
+                    break;
+                case "unicode":
+                    dictionary = getDictionary(0, (int)(Math.pow(2, 16) - 1));
+                    break;
+                default:
+                    dictionary = dictionaryStr.toCharArray();
+            }
             Logger.logMessage(String.format("Wildcard %s positions %s dictionary %s", wildcard, Arrays.toString(positions), Arrays.toString(dictionary)));
             Scanner scanner = new Scanner(publicKeys, positions, wildcard.toCharArray(), dictionary);
             Solution solution = scanner.scan();
@@ -76,7 +95,11 @@ public final class PassphraseRecovery {
     }
 
     static char[] getDefaultDictionary() {
-        return IntStream.rangeClosed(32, 127).mapToObj(c -> "" + (char) c).collect(Collectors.joining()).toCharArray();
+        return getDictionary(27, 132);
+    }
+
+    static char[] getDictionary(int from, int to) {
+        return IntStream.rangeClosed(from, to).mapToObj(c -> "" + (char) c).collect(Collectors.joining()).toCharArray();
     }
 
     static Map<Long, byte[]> getPublicKeys() {
