@@ -1877,5 +1877,6 @@
   "view_changelly_transaction": "View Changelly Transaction",
   "estimated_amount": "Estimated Amount",
   "exchange_coin_to_nxt_changelly": "Exchange __coin__ to NXT",
-  "deposit_amount_optional": "Deposit Amount (optional)"
+  "deposit_amount_optional": "Deposit Amount (optional)",
+  "poll": "Poll"
 }
