@@ -30,6 +30,14 @@
     <section class="exchange_page_content content">
         <div style="color:#838383;margin-bottom:5px">
             <p data-i18n="exchange_using_changelly">Exchange coins using Changelly</p>
+            <div style="float:right;padding:5px;border:1px solid #ccc;border-radius:3px">
+                <select id="changelly_search_key">
+                    <option value="currency" data-i18n="source_currency"></option>
+                    <option value="address" data-i18n="sender_address"></option>
+                </select>
+                <input id="changelly_search_id">
+                <button id="changelly_search">Search</button>
+            </div>
             <strong data-i18n="status">STATUS</strong>: <span id="changelly_status"></span>
         </div>
         <div class="form-inline">

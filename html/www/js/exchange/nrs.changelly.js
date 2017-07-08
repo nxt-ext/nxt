@@ -508,5 +508,19 @@ var NRS = (function(NRS, $) {
         $("#changelly_view_content").val(JSON.stringify(content, null, 2));
     });
 
+    $("#changelly_search").on("click", function(e) {
+        e.preventDefault();
+        var key = $("#changelly_search_key").val();
+        var id = $("#changelly_search_id").val();
+        var params = {};
+        params[key] = id;
+        apiCall("getTransactions", params, function(response) {
+            $(this).data("id", id);
+            $(this).data("content", response);
+            $("#changelly_view_transaction").modal({}, $(this));
+        });
+    });
+
+
     return NRS;
 }(NRS || {}, jQuery));

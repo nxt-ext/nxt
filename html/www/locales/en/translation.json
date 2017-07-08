@@ -1878,5 +1878,7 @@
   "estimated_amount": "Estimated Amount",
   "exchange_coin_to_nxt_changelly": "Exchange __coin__ to NXT",
   "deposit_amount_optional": "Deposit Amount (optional)",
-  "poll": "Poll"
+  "poll": "Poll",
+  "source_currency": "Source Currency",
+  "sender_address": "Sender Address"
 }
