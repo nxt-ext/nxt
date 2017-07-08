@@ -505,7 +505,9 @@ var NRS = (function(NRS, $) {
         var id = $invoker.data("id");
         var content = $invoker.data("content");
         $("#changelly_identifier").val(id);
-        $("#changelly_view_content").val(JSON.stringify(content, null, 2));
+        var viewContent = $("#changelly_view_content");
+        viewContent.html(JSON.stringify(content, null, 2));
+        hljs.highlightBlock(viewContent[0]);
     });
 
     $("#changelly_search").on("click", function(e) {
