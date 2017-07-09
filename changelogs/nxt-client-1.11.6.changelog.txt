@@ -1,3 +1,7 @@
+Added Ignis ICO token sale page.
+
+Added support for the Changelly cryptocurrency exchange.
+
 Added password recovery tool for brute forcing partially forgotten or mistyped
 passphrases. Use the passwordRecovery.sh or passwordRecovery.bat script to run,
 after first setting the known password text fragments and guesses dictionary in
@@ -14,6 +18,8 @@ Monetary System UI improvements and bugfixes.
 
 API gzip filter is now automatically enabled for open API nodes, unless
 explicitly disabled in nxt.enableAPIServerGZIPFilter.
+
+Support running Nxt as a Windows service.
 
 Updated mobile app to latest Cordova Android platform.
 
