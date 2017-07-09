@@ -108,7 +108,7 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         Fee getBaselineFee(Transaction transaction) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-            if (Nxt.getBlockchain().getHeight() < Constants.IGNIS_BLOCK && (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName()) != null
+            if (Nxt.getBlockchain().getHeight() < Nxt.getHardForkHeight() && (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName()) != null
                     || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null)) {
                 return FIVE_LETTER_CURRENCY_ISSUANCE_FEE;
             }

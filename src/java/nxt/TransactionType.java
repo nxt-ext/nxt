@@ -1656,8 +1656,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
-                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset transfer of ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
+                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset transfer of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
                 }
             }
 
@@ -1741,8 +1741,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
-                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset delete of ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
+                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset delete of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
                 }
             }
 
@@ -1775,8 +1775,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
-                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
-                    throw new NxtException.NotCurrentlyValidException("Asset order placements for ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
+                if (attachment.getAssetId() == FxtDistribution.FXT_ASSET_ID && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset order placements for ARDR asset not allowed after height " + Nxt.getHardForkHeight());
                 }
             }
 

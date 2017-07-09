@@ -305,6 +305,21 @@ public final class Nxt {
         return time.getTime();
     }
 
+    public static int getHardForkHeight() {
+        if (getBlockchain().getHeight() < Constants.LAST_KNOWN_BLOCK) {
+            return Integer.MAX_VALUE;
+        }
+        Alias hardforkAlias = Alias.getAlias(Constants.HARDFORK_ALIAS);
+        if (hardforkAlias == null) {
+            return Integer.MAX_VALUE;
+        }
+        try {
+            return Integer.parseInt(hardforkAlias.getAliasURI());
+        } catch (NumberFormatException e) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
     static void setTime(Time time) {
         Nxt.time = time;
     }

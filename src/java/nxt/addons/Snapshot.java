@@ -85,7 +85,7 @@ public class Snapshot implements AddOn {
 
             @Override
             public void notify(Block block) {
-                if (block.getHeight() == Constants.IGNIS_BLOCK) {
+                if (block.getHeight() == Nxt.getHardForkHeight()) {
                     exportPublicKeys();
                     exportIgnisBalances();
                     exportArdorBalances();
