@@ -187,6 +187,7 @@ var NRS = (function(NRS, $, undefined) {
 
                 $("[data-i18n]").i18n();
                 NRS.initClipboard();
+                hljs.initHighlightingOnLoad();
             });
     };
 

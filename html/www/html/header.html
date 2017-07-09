@@ -29,6 +29,9 @@
         </a>
         <div id="header_right" class="navbar-right">
             <ul class="nav navbar-nav sends">
+                <li id="header_buy_ignis" class="dropdown">
+                    <a href="#" class="goto-page" data-page="ignis" data-i18n="ignis_token_sale"></a>
+                </li>
                 <li id="header_send_money" class="dropdown">
                     <a href="#" data-toggle="modal" data-target="#send_money_modal" data-i18n="send_nxt">Send NXT</a>
                 </li>
@@ -91,9 +94,13 @@
                     </a>
                 </li>
                 <li id="exchange_menu_li" role="presentation" class="active show_popover" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="EXCHANGE" data-container="#header_right" data-i18n="[data-content]exchange">
-                    <a href="#" class="goto-page" data-page="exchange">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-exchange"></i>
                     </a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a role="menuitem" tabindex="-1" href="#" class="goto-page" data-page="exchange_shape_shift">Shape Shift</a></li>
+                        <li><a role="menuitem" tabindex="-1" href="#" class="goto-page" data-page="exchange_changelly">Changelly</a></li>
+                    </ul>
                 </li>
                 <li class="dropdown show_popover" role="presentation" data-toggle="popover" data-delay="250" data-placement="bottom" data-content="SETTINGS" data-container="#header_right" data-i18n="[data-content]settings">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
