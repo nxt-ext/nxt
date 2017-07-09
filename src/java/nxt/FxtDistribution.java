@@ -99,26 +99,40 @@ public final class FxtDistribution implements Listener<Block> {
 
         final int currentHeight = block.getHeight();
         if (currentHeight == Constants.IGNIS_BLOCK) {
-            int count = 0;
-            try (DbIterator<Order.Ask> askOrders = Order.Ask.getAskOrdersByAsset(FXT_ASSET_ID, 0, -1)) {
-                while (askOrders.hasNext()) {
-                    Order order = askOrders.next();
-                    Order.Ask.removeOrder(order.getId());
-                    Account.getAccount(order.getAccountId()).addToUnconfirmedAssetBalanceQNT(null, 0, FXT_ASSET_ID, order.getQuantityQNT());
-                    count += 1;
+            boolean wasInTransaction = Db.db.isInTransaction();
+            if (!wasInTransaction) {
+                Db.db.beginTransaction();
+            }
+            try {
+                int count = 0;
+                try (DbIterator<Order.Ask> askOrders = Order.Ask.getAskOrdersByAsset(FXT_ASSET_ID, 0, -1)) {
+                    while (askOrders.hasNext()) {
+                        Order order = askOrders.next();
+                        Order.Ask.removeOrder(order.getId());
+                        Account.getAccount(order.getAccountId()).addToUnconfirmedAssetBalanceQNT(null, 0, FXT_ASSET_ID, order.getQuantityQNT());
+                        count += 1;
+                    }
+                }
+                Logger.logDebugMessage("Deleted " + count + " FXT ask orders");
+                count = 0;
+                try (DbIterator<Order.Bid> bidOrders = Order.Bid.getBidOrdersByAsset(FXT_ASSET_ID, 0, -1)) {
+                    while (bidOrders.hasNext()) {
+                        Order order = bidOrders.next();
+                        Order.Bid.removeOrder(order.getId());
+                        Account.getAccount(order.getAccountId()).addToUnconfirmedBalanceNQT(null, 0, Math.multiplyExact(order.getQuantityQNT(), order.getPriceNQT()));
+                        count += 1;
+                    }
+                }
+                Logger.logDebugMessage("Deleted " + count + " FXT bid orders");
+                Db.db.commitTransaction();
+            } catch (Exception e) {
+                Db.db.rollbackTransaction();
+                throw new RuntimeException(e.toString(), e);
+            } finally {
+                if (!wasInTransaction) {
+                    Db.db.endTransaction();
                 }
             }
-            Logger.logDebugMessage("Deleted " + count + " FXT ask orders");
-            count = 0;
-            try (DbIterator<Order.Bid> bidOrders = Order.Bid.getBidOrdersByAsset(FXT_ASSET_ID, 0, -1)) {
-                while (bidOrders.hasNext()) {
-                    Order order = bidOrders.next();
-                    Order.Bid.removeOrder(order.getId());
-                    Account.getAccount(order.getAccountId()).addToUnconfirmedBalanceNQT(null, 0, Math.multiplyExact(order.getQuantityQNT(), order.getPriceNQT()));
-                    count += 1;
-                }
-            }
-            Logger.logDebugMessage("Deleted " + count + " FXT bid orders");
             return;
         }
         if (hasSnapshot) {
