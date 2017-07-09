@@ -124,6 +124,8 @@ public final class FxtDistribution implements Listener<Block> {
                     }
                 }
                 Logger.logDebugMessage("Deleted " + count + " FXT bid orders");
+                Account issuerAccount = Account.getAccount(FXT_ISSUER_ID);
+                AccountRestrictions.PhasingOnly.unset(issuerAccount);
                 Db.db.commitTransaction();
             } catch (Exception e) {
                 Db.db.rollbackTransaction();
