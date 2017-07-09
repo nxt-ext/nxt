@@ -1527,20 +1527,25 @@ var NRS = (function (NRS, $, undefined) {
             NRS.loadCurrencyOffers("sell", response.currency, false, true);
 
             var inputFields = [];
-            inputFields.push($('#ignis_shape_shift_coin'));
+            inputFields.push($('#ignis_select_coin'));
             var selectedCoins = [];
             selectedCoins.push("BTC");
             NRS.selectCoins(inputFields, selectedCoins);
             $("#ignis_shape_shift_button").data("pair", "BTC_NXT");
+            var changellyShiftButton = $("#ignis_changelly_button");
+            changellyShiftButton.data("from", "BTC");
+            changellyShiftButton.data("to", "NXT");
             NRS.dataLoaded();
         });
     };
 
-    $('#ignis_shape_shift_coin').change(function() {
-        var button = $("#ignis_shape_shift_button");
-        button.data("pair", $("#ignis_shape_shift_coin").val() + "_NXT");
+    $('#ignis_select_coin').change(function() {
+        var ignisSelectCoin = $("#ignis_select_coin");
+        var shapeShiftButton = $("#ignis_shape_shift_button");
+        shapeShiftButton.data("pair", ignisSelectCoin.val() + "_NXT");
+        var changellyButton = $("#ignis_changelly_button");
+        changellyButton.data("from", ignisSelectCoin.val());
     });
-
 
     return NRS;
 }(NRS || {}, jQuery));
