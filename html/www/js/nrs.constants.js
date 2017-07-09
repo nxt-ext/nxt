@@ -71,7 +71,7 @@ var NRS = (function (NRS, $) {
         'UNKNOWN': 'unknown',
         'LAST_KNOWN_BLOCK': { id: "4936781828829390790", height: "1204000" },
         'LAST_KNOWN_TESTNET_BLOCK': { id: "5448152106691693909", height: "1152000" },
-        'IGNIS_CURRENCY_CODE': "ZHOJT"
+        'IGNIS_CURRENCY_CODE': "JLRDA"
     };
 
     NRS.loadAlgorithmList = function (algorithmSelect, isPhasingHash) {
