@@ -441,13 +441,16 @@ var NRS = (function(NRS, $) {
             extraId: publicKey
         }, function (data) {
             modal.css('cursor', 'default');
+            var msg;
             if (data.error) {
-                NRS.logConsole("Changelly generateAddress error " + data.error.code + " " + data.error.message);
+                msg = "Changelly generateAddress error " + data.error.code + " " + data.error.message;
+                NRS.logConsole(msg);
+                NRS.showModalError(msg, modal);
                 return;
             }
             var depositAddress = data.result.address;
             if (!depositAddress) {
-                var msg = "changelly did not return a deposit address for id " + data.id;
+                msg = "changelly did not return a deposit address for id " + data.id;
                 NRS.logConsole(msg);
                 NRS.showModalError(msg, modal);
                 return;
@@ -523,6 +526,20 @@ var NRS = (function(NRS, $) {
         });
     });
 
+    $("#ignis_changelly_button").on("click", function(e) {
+        e.preventDefault();
+        var from = $(this).data("from");
+        var to = $(this).data("to");
+        apiCall("getMinAmount", { from: from, to: to }, function (response) {
+            $(this).data("min", response.result);
+            apiCall("getExchangeAmount", { from: from, to: to, amount: "1" }, function (response) {
+                $(this).data("from", from); // It's unclear why this line is necessary but the value is not passed without it
+                $(this).data("to", to); // It's unclear why this line is necessary but the value is not passed without it
+                $(this).data("rate", response.result);
+                $("#changelly_sell_modal").modal({}, $(this));
+            })
+        })
+    });
 
     return NRS;
 }(NRS || {}, jQuery));
