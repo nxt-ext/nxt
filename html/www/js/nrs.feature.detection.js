@@ -166,7 +166,11 @@ var NRS = (function (NRS) {
     };
 
     NRS.getShapeShiftUrl = function() {
-        return NRS.settings.exchange_url;
+        return NRS.settings.shape_shift_url;
+    };
+
+    NRS.getChangellyUrl = function() {
+        return NRS.settings.changelly_url;
     };
 
     NRS.isForgingSupported = function() {
