@@ -1880,5 +1880,13 @@
   "deposit_amount_optional": "Deposit Amount (optional)",
   "poll": "Poll",
   "source_currency": "Source Currency",
-  "sender_address": "Sender Address"
+  "sender_address": "Sender Address",
+  "buy_ignis_with_nxt": "Buy Ignis with NXT",
+  "ignis_message_1": "Ignis is the first child chain token of the Ardor platform. This token will be used for all functions currently implemented on top of NXT.",
+  "ignis_message_2": "Existing NXT holders are already entitled to receive 0.5 IGNIS token per 1 NXT at the time of the Ardor mainnet launch.",
+  "ignis_message_3": "Use this promotion to buy IGNIS tokens at a discounted rate now, these tokens will be distributed automatically during the Ardor launch.",
+  "ignis_token_sale": "Ignis Token Sale",
+  "exchange_to_nxt": "Exchange To NXT",
+  "ignis_available": "Ignis available for sale",
+  "ignis_message_11": "Your available NXT balance __balance__"
 }

@@ -307,18 +307,7 @@ var NRS = (function(NRS, $) {
         });
     }
 
-    function loadCoins() {
-        var coin0 = EXCHANGE_NAME + "_coin0";
-        var coin1 = EXCHANGE_NAME + "_coin1";
-        var coin2 = EXCHANGE_NAME + "_coin2";
-        var inputFields = [];
-        inputFields.push($('#' + coin0));
-        inputFields.push($('#' + coin1));
-        inputFields.push($('#' + coin2));
-        var selectedCoins = [];
-        selectedCoins.push(NRS.settings[coin0]);
-        selectedCoins.push(NRS.settings[coin1]);
-        selectedCoins.push(NRS.settings[coin2]);
+    NRS.selectCoins = function(inputFields, selectedCoins) {
         apiCall('getcoins', {}, 'GET', function (data) {
             SUPPORTED_COINS = data;
             for (var i = 0; i < inputFields.length; i++) {
@@ -338,6 +327,21 @@ var NRS = (function(NRS, $) {
                 }
             }
         });
+    };
+
+    function loadCoins() {
+        var coin0 = EXCHANGE_NAME + "_coin0";
+        var coin1 = EXCHANGE_NAME + "_coin1";
+        var coin2 = EXCHANGE_NAME + "_coin2";
+        var inputFields = [];
+        inputFields.push($('#' + coin0));
+        inputFields.push($('#' + coin1));
+        inputFields.push($('#' + coin2));
+        var selectedCoins = [];
+        selectedCoins.push(NRS.settings[coin0]);
+        selectedCoins.push(NRS.settings[coin1]);
+        selectedCoins.push(NRS.settings[coin2]);
+        NRS.selectCoins(inputFields, selectedCoins);
     }
 
     NRS.pages.exchange_shape_shift = function() {
