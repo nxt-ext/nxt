@@ -14,12 +14,12 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div class="modal fade" id="m_shape_shift_buy_modal" data-type="buy" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="shape_shift_buy_modal" data-type="buy" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-700">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="m_shape_shift_buy_title"></h4>
+                <h4 class="modal-title" id="shape_shift_buy_title"></h4>
             </div>
             <div class="modal-body">
                 <form role="form" autocomplete="off">
@@ -27,10 +27,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_buy_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
+                                <label for="shape_shift_buy_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_buy_min" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_buy_min_coin"></span>
+                                    <input id="shape_shift_buy_min" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_buy_min_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -38,10 +38,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_buy_max" data-i18n="max_deposit_amount">MAXIMUM DEPOSIT AMOUNT</label>
+                                <label for="shape_shift_buy_max" data-i18n="max_deposit_amount">MAXIMUM DEPOSIT AMOUNT</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_buy_max" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_buy_max_coin"></span>
+                                    <input id="shape_shift_buy_max" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_buy_max_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -49,10 +49,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_buy_rate" data-i18n="rate">RATE</label>
+                                <label for="shape_shift_buy_rate" data-i18n="rate">RATE</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_buy_rate" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_buy_rate_text"></span>
+                                    <input id="shape_shift_buy_rate" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_buy_rate_text"></span>
                                 </div>
                             </div>
                         </div>
@@ -60,10 +60,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_buy_fee" data-i18n="fee">FEE</label>
+                                <label for="shape_shift_buy_fee" data-i18n="fee">FEE</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_buy_fee" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_buy_fee_coin"></span>
+                                    <input id="shape_shift_buy_fee" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_buy_fee_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -71,9 +71,9 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_buy_amount" data-i18n="amount">AMOUNT</label>
+                                <label for="shape_shift_buy_amount" data-i18n="amount">AMOUNT</label>
                                 <div class="input-group">
-                                    <input type="text" name="amountNXT" id="m_shape_shift_buy_amount" step="any" min="0" class="form-control" placeholder="Amount" data-i18n="[placeholder]amount" tabindex="1">
+                                    <input type="text" name="amountNXT" id="shape_shift_buy_amount" step="any" min="0" class="form-control" placeholder="Amount" data-i18n="[placeholder]amount" tabindex="1">
                                     <span class="input-group-addon">NXT</span>
                                 </div>
                             </div>
@@ -82,21 +82,21 @@
                     <div class="row">
                         <div class="col-xs-16 col-sm-8 col-md-8">
                             <div class="form-group">
-                                <label for="m_shape_shift_buy_withdrawal_address" data-i18n="withdrawal_address">WITHDRAWAL ADDRESS</label>
+                                <label for="shape_shift_buy_withdrawal_address" data-i18n="withdrawal_address">WITHDRAWAL ADDRESS</label>
                                 <div class="input-group">
-                                    <input type="text" id="m_shape_shift_buy_withdrawal_address" class="form-control" tabindex="2">
-                                    <span class="input-group-addon" id="m_shape_shift_withdrawal_address_coin"></span>
+                                    <input type="text" id="shape_shift_buy_withdrawal_address" class="form-control" tabindex="2">
+                                    <span class="input-group-addon" id="shape_shift_withdrawal_address_coin"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div data-replace-with-modal-template="secret_phrase_modal_template"></div>
-                    <input type="hidden" id="m_shape_shift_buy_pair" value="" />
+                    <input type="hidden" id="shape_shift_buy_pair" value="" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
                 <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn" id="m_shape_shift_buy_submit" data-loading-text="Submitting..." data-i18n="send_nxt;[data-loading-text]submitting">Send NXT</button>
+                <button type="button" class="btn" id="shape_shift_buy_submit" data-loading-text="Submitting..." data-i18n="send_nxt;[data-loading-text]submitting">Send NXT</button>
             </div>
         </div>
     </div>
@@ -190,12 +190,12 @@
     </div>
 </div>
 
-<div class="modal fade" id="m_shape_shift_sell_modal" data-type="sell" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="shape_shift_sell_modal" data-type="sell" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-700">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" id="m_shape_shift_sell_title"></h4>
+                <h4 class="modal-title" id="shape_shift_sell_title"></h4>
             </div>
             <div class="modal-body">
                 <form role="form" autocomplete="off">
@@ -203,10 +203,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_sell_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
+                                <label for="shape_shift_sell_min" data-i18n="min_deposit_amount">MINIMUM DEPOSIT AMOUNT</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_sell_min" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_sell_min_coin"></span>
+                                    <input id="shape_shift_sell_min" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_sell_min_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -214,10 +214,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_sell_max" data-i18n="max_deposit_amount">MAXIMUM DEPOSIT AMOUNT</label>
+                                <label for="shape_shift_sell_max" data-i18n="max_deposit_amount">MAXIMUM DEPOSIT AMOUNT</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_sell_max" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_sell_max_coin"></span>
+                                    <input id="shape_shift_sell_max" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_sell_max_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -225,10 +225,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_sell_rate" data-i18n="rate">RATE</label>
+                                <label for="shape_shift_sell_rate" data-i18n="rate">RATE</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_sell_rate" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_sell_rate_text"></span>
+                                    <input id="shape_shift_sell_rate" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_sell_rate_text"></span>
                                 </div>
                             </div>
                         </div>
@@ -236,10 +236,10 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_sell_fee" data-i18n="fee">FEE</label>
+                                <label for="shape_shift_sell_fee" data-i18n="fee">FEE</label>
                                 <div class="input-group">
-                                    <input id="m_shape_shift_sell_fee" class="form-control" readonly>
-                                    <span class="input-group-addon" id="m_shape_shift_sell_fee_coin"></span>
+                                    <input id="shape_shift_sell_fee" class="form-control" readonly>
+                                    <span class="input-group-addon" id="shape_shift_sell_fee_coin"></span>
                                 </div>
                             </div>
                         </div>
@@ -247,9 +247,9 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_sell_deposit_address" data-i18n="deposit_address">DEPOSIT ADDRESS</label>
+                                <label for="shape_shift_sell_deposit_address" data-i18n="deposit_address">DEPOSIT ADDRESS</label>
                                 <div class="input-group">
-                                    <span id="m_shape_shift_sell_deposit_address"></span>
+                                    <span id="shape_shift_sell_deposit_address"></span>
                                 </div>
                             </div>
                         </div>
@@ -257,9 +257,9 @@
                     <div class="row">
                         <div class="col-xs-12 col-sm-6 col-md-6">
                             <div class="form-group">
-                                <label for="m_shape_shift_sell_qr_code" data-i18n="deposit_qr_code">Deposit QR Code</label>
+                                <label for="shape_shift_sell_qr_code" data-i18n="deposit_qr_code">Deposit QR Code</label>
                                 <div class="input-group">
-                                    <div id="m_shape_shift_sell_qr_code"></div>
+                                    <div id="shape_shift_sell_qr_code"></div>
                                 </div>
                             </div>
                         </div>
@@ -278,12 +278,12 @@
                         </div>
                     </div>
 
-                    <input type="hidden" id="m_shape_shift_sell_pair" value="" />
+                    <input type="hidden" id="shape_shift_sell_pair" value="" />
                 </form>
             </div>
             <div class="modal-footer" style="margin-top:0;">
-                <button type="button" class="btn btn-default" id="m_shape_shift_sell_cancel" data-dismiss="modal" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn" id="m_shape_shift_sell_done" data-loading-text="Submitting..." data-i18n="done;[data-loading-text]submitting">Done</button>
+                <button type="button" class="btn btn-default" id="shape_shift_sell_cancel" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn" id="shape_shift_sell_done" data-loading-text="Submitting..." data-i18n="done;[data-loading-text]submitting">Done</button>
             </div>
         </div>
     </div>
