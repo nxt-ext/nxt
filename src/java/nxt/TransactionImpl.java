@@ -27,7 +27,11 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 final class TransactionImpl implements Transaction {
 
@@ -1011,9 +1015,8 @@ final class TransactionImpl implements Transaction {
         if (getFullSize() > Constants.MAX_PAYLOAD_LENGTH) {
             throw new NxtException.NotValidException("Transaction size " + getFullSize() + " exceeds maximum payload size");
         }
-
+        int blockchainHeight = Nxt.getBlockchain().getHeight();
         if (!validatingAtFinish) {
-            int blockchainHeight = Nxt.getBlockchain().getHeight();
             long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
             if (feeNQT < minimumFeeNQT) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
@@ -1031,7 +1034,9 @@ final class TransactionImpl implements Transaction {
                 }
             }
         }
-        AccountRestrictions.checkTransaction(this, validatingAtFinish);
+        if (blockchainHeight < Constants.IGNIS_BLOCK || !validatingAtFinish) {
+            AccountRestrictions.checkTransaction(this, validatingAtFinish);
+        }
     }
 
     // returns false iff double spending
