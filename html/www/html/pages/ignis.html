@@ -7,7 +7,11 @@
             <div class="col-md-8">
                 <div class="box box-solid box-info">
                     <div class="box-body">
-                        <div class="alert-no-icon" id="ignis_message"></div>
+                        <div class="alert-no-icon">
+                            <span id="ignis_message"></span>
+                            <br>
+                            <a href="https://www.jelurida.com/ico" target="_blank" data-i18n="latest_updates"></a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -25,6 +29,36 @@
                         <span id="sell_ignis_supply"></span>
                         <p></p>
                         <span id="your_nxt_balance_message"></span>
+                        <p></p>
+                        <span id="your_ingis_balance_message"></span>
+                        <p></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="box box-solid box-info">
+                    <div class="box-body">
+                        <div class="box box-solid box-info">
+                            <div class="box-body">
+                                <h4><span data-i18n="exchange_to_nxt"></span></h4>
+                            </div>
+                        </div>
+                        <div>
+                            <form>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label" for="ignis_select_coin" data-i18n="coin">Coin</label>
+                                    <div class="input-group">
+                                        <select id="ignis_select_coin" class="form-control"></select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="modal-footer">
+                                        <button type="button" id="ignis_shape_shift_button" class="btn btn-primary" data-toggle="modal" data-target="#m_send_amount_sell_modal" data-pair=""><span>Shape Shift</span></button>
+                                        <button type="button" id="ignis_changelly_button" class="btn btn-primary" data-from="" data-to="" data-min="" data-rate=""><span>Changelly</span></button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -77,31 +111,33 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-12">
-            <div class="col-md-4">
+            <div class="col-md-8">
                 <div class="box box-solid box-info">
                     <div class="box-body">
                         <div class="box box-solid box-info">
                             <div class="box-body">
-                                <h4><span data-i18n="exchange_to_nxt"></span></h4>
+                                <h4><span data-i18n="ignis_exchange_history"></span></h4>
                             </div>
                         </div>
-                        <div>
-                            <form>
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label" for="ignis_select_coin" data-i18n="coin">Coin</label>
-                                    <div class="input-group">
-                                        <select id="ignis_select_coin" class="form-control"></select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <div class="modal-footer">
-                                        <button type="button" id="ignis_shape_shift_button" class="btn btn-primary" data-toggle="modal" data-target="#m_send_amount_sell_modal" data-pair=""><span>Shape Shift</span></button>
-                                        <button type="button" id="ignis_changelly_button" class="btn btn-primary" data-from="" data-to="" data-min="" data-rate=""><span>Changelly</span></button>
-                                    </div>
-                                </div>
-                            </form>
+                        <div class="box-body no-padding">
+                            <div class="data-container data-loading" data-no-padding="true">
+                                <table class="table table-striped" id="ignis_exchange_history_table">
+                                    <thead>
+                                    <tr>
+                                        <th data-i18n="date">Date</th>
+                                        <th data-i18n="account">Account</th>
+                                        <th data-i18n="units" class='numeric'>Units</th>
+                                        <th data-i18n="rate" class='numeric'>Rate</th>
+                                        <th data-i18n="total" class='numeric'>Total</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                                <div class="data-empty-container"><p data-i18n="no_exchanges">No exchanges.</p></div>
+                            </div>
                         </div>
                     </div>
                 </div>

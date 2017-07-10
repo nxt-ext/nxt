@@ -1888,5 +1888,8 @@
   "ignis_token_sale": "Ignis Token Sale",
   "exchange_to_nxt": "Exchange To NXT",
   "ignis_available": "Ignis available for sale",
-  "ignis_message_11": "Your available NXT balance __balance__"
+  "ignis_message_11": "Your available NXT balance __balance__",
+  "ignis_message_12": "Your Ignis balance __balance__",
+  "ignis_exchange_history": "Ignis Exchange History",
+  "latest_updates": "Latest Updates"
 }

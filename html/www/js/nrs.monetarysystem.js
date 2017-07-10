@@ -466,8 +466,8 @@ var NRS = (function (NRS, $, undefined) {
         foundersTable.parent().addClass("data-loading");
     });
 
-    NRS.getExchangeHistory = function (currencyId, refresh) {
-        if (NRS.currenciesTradeHistoryType == "my_exchanges") {
+    NRS.getExchangeHistory = function (currencyId, refresh, tableName) {
+        if (NRS.currenciesTradeHistoryType == "my_exchanges" || tableName) {
             NRS.sendRequest("getExchanges+", {
                 "currency": currencyId,
                 "account": NRS.accountRS,
@@ -475,7 +475,12 @@ var NRS = (function (NRS, $, undefined) {
                 "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
                 "lastIndex": NRS.pageNumber * NRS.itemsPerPage
             }, function (response) {
-                var historyTable = $("#ms_exchanges_history_table");
+                var historyTable;
+                if (tableName) {
+                    historyTable = $("#" + tableName);
+                } else {
+                    historyTable = $("#ms_exchanges_history_table");
+                }
                 if (response.exchanges && response.exchanges.length) {
                     if (response.exchanges.length > NRS.itemsPerPage) {
                         NRS.hasMorePages = true;
@@ -495,12 +500,14 @@ var NRS = (function (NRS, $, undefined) {
                     for (var i = 0; i < response.exchanges.length; i++) {
                         var exchange = response.exchanges[i];
                         rows += "<tr>" +
-                        "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
-                        "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>" +
-                        "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>" +
-                        "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false, quantityDecimals) + "</td>" +
-                        "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals, rateNQTDecimals) + "</td>" +
-                        "<td class='numeric'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT), false, false, totalNQTDecimals) + "</td>" +
+                            "<td>" + NRS.getTransactionLink(exchange.transaction, NRS.formatTimestamp(exchange.timestamp)) + "</td>" +
+                            "<td>" + NRS.getAccountLink(exchange, "seller") + "</td>";
+                        if (!tableName) {
+                            rows += "<td>" + NRS.getAccountLink(exchange, "buyer") + "</td>";
+                        }
+                        rows += "<td class='numeric'>" + NRS.formatQuantity(exchange.units, exchange.decimals, false, quantityDecimals) + "</td>" +
+                            "<td class='numeric'>" + NRS.formatOrderPricePerWholeQNT(exchange.rateNQT, exchange.decimals, rateNQTDecimals) + "</td>" +
+                            "<td class='numeric'>" + NRS.formatAmount(NRS.calculateOrderTotalNQT(exchange.units, exchange.rateNQT), false, false, totalNQTDecimals) + "</td>" +
                         "</tr>";
                     }
                     historyTable.find("tbody").empty().append(rows);
@@ -1520,11 +1527,20 @@ var NRS = (function (NRS, $, undefined) {
             $("#your_nxt_balance_message").html(
                 $.t("ignis_message_11", { balance: $("#account_balance_sidebar").text() })
             );
+            NRS.sendRequest("getAccountCurrencies", {
+                "account": NRS.accountRS,
+                "currency": response.currency
+            }, function (balance) {
+                $("#your_ingis_balance_message").html(
+                    $.t("ignis_message_12", { balance: NRS.formatQuantity(balance.unconfirmedUnits, response.decimals) })
+                );
+            });
             var buyIgnisButton = $("#buy_ignis_button");
             buyIgnisButton.data("currency", response.currency);
             buyIgnisButton.data("code", response.code);
             buyIgnisButton.data("decimals", response.decimals);
             NRS.loadCurrencyOffers("sell", response.currency, false, true);
+            NRS.getExchangeHistory(response.currency, false, "ignis_exchange_history_table");
 
             var inputFields = [];
             inputFields.push($('#ignis_select_coin'));
