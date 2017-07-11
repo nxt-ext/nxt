@@ -380,7 +380,7 @@ var NRS = (function(NRS, $) {
         NRS.pages.exchange_shape_shift();
    	});
 
-    $("#clear_my_exchanges").on("click", function(e) {
+    $("#shape_shift_clear_my_exchanges").on("click", function(e) {
    		e.preventDefault();
    		localStorage.removeItem(DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
         renderMyExchangesTable();

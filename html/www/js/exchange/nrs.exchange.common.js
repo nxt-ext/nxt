@@ -45,11 +45,17 @@ var NRS = (function(NRS, $) {
             addresses = [];
         } else {
             addresses = JSON.parse(json);
-            if (addresses.length > 5) {
-                addresses.splice(5, addresses.length - 5);
+            if (addresses.length > 10) {
+                addresses.splice(10, addresses.length - 10);
             }
         }
-        addresses.splice(0, 0, { address: address, from: from, to: to, time: Date.now() });
+        var item = { address: address, from: from, to: to, time: Date.now() };
+        for (var i=0; i < addresses.length; i++) {
+            if (item.address == addresses[i].address && item.from == addresses[i].from && item.to == addresses[i].to) {
+                NRS.logConsole("deposit address " + item.address + " from " + item.from + " to " + item.to + " already exists");
+            }
+        }
+        addresses.splice(0, 0, item);
         NRS.logConsole("deposit address " + address + " from " + from + " to " + to + " added");
         localStorage[key] = JSON.stringify(addresses);
     };

@@ -288,7 +288,7 @@ var NRS = (function(NRS, $) {
         NRS.pages.exchange_changelly();
    	});
 
-    $("#clear_my_exchanges").on("click", function(e) {
+    $("#changelly_clear_my_exchanges").on("click", function(e) {
    		e.preventDefault();
    		localStorage.removeItem(DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
         renderMyExchangesTable();
