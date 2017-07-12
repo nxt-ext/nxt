@@ -15,7 +15,7 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<html class="lockscreen">
+<html class="lockscreen loading">
     <head>
         <meta charset="UTF-8">
         <title data-i18n="app_title">NXT Wallet</title>
@@ -33,7 +33,13 @@
         <!-- cordova script (this will be missing unless deployed as a mobile application) -->
         <script src="cordova.js"></script>
     </head>
-    <body class="lockscreen fixed">
+    <body class="lockscreen fixed loading">
+        <div id="progress-container">
+            <img src="/img/nxt-load-progress-logo-circle.png">
+            <div id="progress" style="width: 0%" data-total="45" data-done="0">
+                <div id="img-wrapper"><img src="/img/nxt-load-progress-logo-full.png"></div>
+            </div>
+        </div>
         <div id="page" class="wrapper row-offcanvas row-offcanvas-left">
             <aside id="sidebar" class="left-side sidebar-offcanvas">
                 <!-- Sidebar moved to html/sidebar.html -->
@@ -62,10 +68,10 @@
         <script src="js/3rdparty/i18nextSprintfPostProcessor.js" type="text/javascript"></script>
         <script src="js/3rdparty/i18nextXHRBackend.js" type="text/javascript"></script>
         <script src="js/3rdparty/jquery-i18next.js" type="text/javascript"></script>
-		<script src="js/3rdparty/es6-shim.min.js"></script>
-		<script src="js/3rdparty/ajaxretry.js"></script>
+        <script src="js/3rdparty/es6-shim.min.js"></script>
+        <script src="js/3rdparty/ajaxretry.js"></script>
         <script src="js/3rdparty/spin.min.js"></script>
-		<script src="js/3rdparty/jquery.rss.js" type="text/javascript"></script>
+        <script src="js/3rdparty/jquery.rss.js" type="text/javascript"></script>
         <script src="js/3rdparty/webdb.js" type="text/javascript"></script>
         <script src="js/3rdparty/growl.js" type="text/javascript"></script>
         <script src="js/3rdparty/jsbn.js" type="text/javascript"></script>
@@ -88,58 +94,58 @@
         <script src="js/nrs.sitebuild.js" type="text/javascript"></script>
         <script src="js/nrs.simpleview.js" type="text/javascript"></script>
 
-        <script type="text/javascript">
-            NRS.loadLockscreenHTML("html/lockscreen.html");
-            NRS.loadHeaderHTML("html/header.html");
-            NRS.loadSidebarHTML("html/sidebar.html");
-            NRS.loadSidebarContextHTML("html/sidebar_context.html");
-
-            NRS.loadPageHTML("html/pages/dashboard.html");
-            NRS.loadPageHTML("html/pages/settings.html");
-            NRS.loadPageHTML("html/pages/plugins.html");
-            NRS.loadPageHTML("html/pages/transactions.html");
-            NRS.loadPageHTML("html/pages/asset_exchange.html");
-            NRS.loadPageHTML("html/pages/monetary_system.html");
-            NRS.loadPageHTML("html/pages/dgs.html");
-            NRS.loadPageHTML("html/pages/voting_system.html");
-            NRS.loadPageHTML("html/pages/contacts.html");
-            NRS.loadPageHTML("html/pages/messages.html");
-            NRS.loadPageHTML("html/pages/aliases.html");
-            NRS.loadPageHTML("html/pages/blocks.html");
-            NRS.loadPageHTML("html/pages/peers.html");
-            NRS.loadPageHTML("html/pages/news.html");
-            NRS.loadPageHTML("html/pages/exchange/shape_shift.html");
-            NRS.loadPageHTML("html/pages/exchange/changelly.html");
-            NRS.loadPageHTML("html/pages/shuffling.html");
-            NRS.loadPageHTML("html/pages/account_properties.html");
-            NRS.loadPageHTML("html/pages/tagged_data.html");
-            NRS.loadPageHTML("html/pages/monitors.html");
-            NRS.loadPageHTML("html/pages/generators.html");
-            NRS.loadPageHTML("html/pages/ignis.html");
-            NRS.loadPageHTMLTemplates();
-
-            NRS.loadModalHTML("html/modals/nrs.html");
-            NRS.loadModalHTML("html/modals/transactions.html");
-            NRS.loadModalHTML("html/modals/balanceleasing.html");
-            NRS.loadModalHTML("html/modals/forging.html");
-            NRS.loadModalHTML("html/modals/asset_exchange.html");
-            NRS.loadModalHTML("html/modals/monetary_system.html");
-            NRS.loadModalHTML("html/modals/dgs.html");
-            NRS.loadModalHTML("html/modals/voting_system.html");
-            NRS.loadModalHTML("html/modals/contacts.html");
-            NRS.loadModalHTML("html/modals/messages.html");
-            NRS.loadModalHTML("html/modals/aliases.html");
-            NRS.loadModalHTML("html/modals/peers.html");
-            NRS.loadModalHTML("html/modals/exchange/shape_shift.html");
-            NRS.loadModalHTML("html/modals/exchange/changelly.html");
-            NRS.loadModalHTML("html/modals/account_control.html");
-            NRS.loadModalHTML("html/modals/shuffling.html");
-            NRS.loadModalHTML("html/modals/account_properties.html");
-            NRS.loadModalHTML("html/modals/tagged_data.html");
-            NRS.loadModalHTML("html/modals/monitors.html");
-            NRS.loadModalHTML("html/modals/mobile.html");
-            NRS.loadModalHTMLTemplates();
-            NRS.preloadModalUIElements();
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadLockscreenHTML" data-path="html/lockscreen.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadHeaderHTML" data-path="html/header.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadSidebarHTML" data-path="html/sidebar.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadSidebarContextHTML" data-path="html/sidebar_context.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/dashboard.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/settings.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/plugins.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/transactions.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/asset_exchange.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/monetary_system.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/dgs.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/voting_system.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/contacts.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/messages.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/aliases.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/blocks.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/peers.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/news.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/shape_shift.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/changelly.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/shuffling.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/account_properties.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/tagged_data.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/monitors.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/generators.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTML" data-path="html/pages/ignis.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadPageHTMLTemplates"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/nrs.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/transactions.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/balanceleasing.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/forging.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/asset_exchange.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/monetary_system.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/dgs.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/voting_system.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/contacts.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/messages.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/aliases.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/peers.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/shape_shift.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/changelly.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/account_control.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/shuffling.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/account_properties.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/tagged_data.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/monitors.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTML" data-path="html/modals/mobile.html"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="loadModalHTMLTemplates"></script>
+        <script class="sitebuild" src="js/nrs.sitebuild.helper.js" type="text/javascript" data-action="preloadModalUIElements"></script>
+        <script>
+            $('#progress-container').hide();
+            $('html, body, #lockscreen').removeClass('loading');
         </script>
 
         <script src="js/util/extensions.js" type="text/javascript"></script>
