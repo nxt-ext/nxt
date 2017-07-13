@@ -760,6 +760,17 @@ var NRS = (function(NRS, $) {
 		}
 	}
 
+    NRS.lockForm = function($modal) {
+        $modal.find("button").prop("disabled", true);
+        var $btn = $modal.find("button.btn-primary:not([data-dismiss=modal])");
+        if ($btn) {
+            $btn.button("loading");
+        }
+        $modal.modal("lock");
+        return $btn;
+    };
+
+
 	NRS.unlockForm = function($modal, $btn, hide) {
 		$modal.find("button").prop("disabled", false);
 		if ($btn) {
