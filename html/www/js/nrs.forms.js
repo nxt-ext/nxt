@@ -646,6 +646,14 @@ var NRS = (function(NRS, $) {
             }
 		}
 		if (data.messageFile && data.encrypt_message) {
+			if (!NRS.isFileEncryptionSupported()) {
+                $form.find(".error_message").html($.t("file_encryption_not_supported")).show();
+                if (formErrorFunction) {
+                    formErrorFunction(false, data);
+                }
+                NRS.unlockForm($modal, $btn);
+                return;
+            }
 			try {
 				NRS.encryptFile(data.messageFile, data.encryptionKeys, function(encrypted) {
 					data.messageFile = encrypted.file;
