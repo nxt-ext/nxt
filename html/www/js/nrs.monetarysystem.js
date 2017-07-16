@@ -1530,9 +1530,10 @@ var NRS = (function (NRS, $, undefined) {
             NRS.sendRequest("getAccountCurrencies", {
                 "account": NRS.accountRS,
                 "currency": response.currency
-            }, function (balance) {
+            }, function (response) {
+                var balance = response.unconfirmedUnits ? NRS.formatQuantity(response.unconfirmedUnits, response.decimals) : "0";
                 $("#your_ingis_balance_message").html(
-                    $.t("ignis_message_12", { balance: NRS.formatQuantity(balance.unconfirmedUnits, response.decimals) })
+                    $.t("ignis_message_12", { balance: balance })
                 );
             });
             var buyIgnisButton = $("#buy_ignis_button");
