@@ -213,9 +213,13 @@
                                         Don't ever disclose your passphrase. If you lose it you lose access to your account!
                                     </span>
                                 </div>
+                                <div id="confirm_passphrase_warning_container">
+                                    <input type="checkbox" id="confirm_passphrase_warning" value="0"/> <span></span>
+                                    <label for="confirm_passphrase_warning" data-i18n="confirm_passphrase_warning">I will not forget my passphrase and I will never disclose it</label>
+                                </div>
 
                                 <div style="text-align:right">
-                                    <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />
+                                    <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="NRS.createPassphraseToConfirmPassphrase()" />
                                     &nbsp;&nbsp;
                                     <button class="btn btn-sm btn-default" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
                                 </div>
