@@ -1529,7 +1529,8 @@ var NRS = (function (NRS, $, undefined) {
             );
             NRS.sendRequest("getAccountCurrencies", {
                 "account": NRS.accountRS,
-                "currency": response.currency
+                "currency": response.currency,
+                "includeCurrencyInfo": true
             }, function (response) {
                 var balance = response.unconfirmedUnits ? NRS.formatQuantity(response.unconfirmedUnits, response.decimals) : "0";
                 $("#your_ingis_balance_message").html(
