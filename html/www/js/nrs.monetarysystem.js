@@ -797,6 +797,15 @@ var NRS = (function (NRS, $, undefined) {
             rateField.val(rate);
             var amount = NRS.convertToNXT(response.amountNQT);
             totalField.val(amount);
+            NRS.sendRequest("getBalance", {
+                "account": NRS.accountRS
+            }, function (balance) {
+                if (parseInt(response.amountNQT) > parseInt(balance.unconfirmedBalanceNQT - 1)) {
+                    totalField.css("background-color", "red");
+                } else {
+                    totalField.css("background-color", "");
+                }
+            });
             var effectiveRate = units == "0" ? "0" : NRS.amountToPrecision(amount / units, 8 - decimals);
             effectiveRateField.val(effectiveRate);
             submitButton.data("units", response.units);
@@ -1527,6 +1536,7 @@ var NRS = (function (NRS, $, undefined) {
             $("#your_nxt_balance_message").html(
                 $.t("ignis_message_11", { balance: $("#account_balance_sidebar").text() })
             );
+
             NRS.sendRequest("getAccountCurrencies", {
                 "account": NRS.accountRS,
                 "currency": response.currency,
