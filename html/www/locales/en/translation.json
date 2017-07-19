@@ -1441,7 +1441,7 @@
   "deposit": "Deposit",
   "deposit_address": "Deposit Address",
   "deposit_qr_code": "Deposit QR Code",
-  "min_deposit_amount": "Minimum Deposit Amount",
+  "min_deposit_amount": "Minimum Deposit Amount (Excluding Transaction Fee)",
   "max_deposit_amount": "Maximum Deposit Amount",
   "deposit_instructions_shift": "Copy the deposit address or scan the QR code from your coin wallet and deposit your funds. Do not deposit less than the minimum amount or more than the maximum amount, since this will cause your transaction to be rejected by ShapeShift. Once you completed your deposit click the 'Done' button. To cancel your deposit click the 'Cancel' button.",
   "deposit_instructions_sendamount": "Copy the deposit address or scan the QR code from your coin wallet and deposit your funds. Deposit the exact amount. Once you completed your deposit click the 'Done' button. To cancel your deposit click the 'Cancel' button.",
