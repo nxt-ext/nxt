@@ -316,6 +316,9 @@ var NRS = (function (NRS, $, undefined) {
             offers.pop();
         }
         var offersTable = $("#ms_open_" + type + "_orders_table");
+        var entity = (isIgnis ? "ignis" : "currency");
+        var rate = $("#" + (type == "sell" ? "buy" : "sell") + "_" + entity + "_rate");
+        var supply = $("#" + type + "_" + entity + "_supply");
         if (offers && offers.length) {
             var rows = "";
             var decimals = parseInt($("#currency_decimals").text(), 10);
@@ -332,9 +335,8 @@ var NRS = (function (NRS, $, undefined) {
                 var offer = offers[i];
                 var rateNQT = offer.rateNQT;
                 if (i == 0 && !refresh) {
-                    var entity = (isIgnis ? "ignis" : "currency");
-                    $("#" + (type == "sell" ? "buy" : "sell") + "_" + entity + "_rate").val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
-                    $("#" + type + "_" + entity + "_supply").text(NRS.formatQuantity(offer.supply, decimals));
+                    rate.val(NRS.calculateOrderPricePerWholeQNT(rateNQT, decimals));
+                    supply.text(NRS.formatQuantity(offer.supply, decimals));
                 }
                 rows += "<tr>" +
                     "<td>" + NRS.getTransactionLink(offer.offer, NRS.getTransactionStatusIcon(offer), true) + "</td>" +
@@ -346,6 +348,8 @@ var NRS = (function (NRS, $, undefined) {
             }
             offersTable.find("tbody").empty().append(rows);
         } else {
+            rate.val("0");
+            supply.text("0");
             offersTable.find("tbody").empty();
         }
         NRS.dataLoadFinished(offersTable, !refresh);
