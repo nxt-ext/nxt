@@ -328,13 +328,14 @@ var NRS = (function(NRS, $) {
 
     $("#changelly_buy_submit").on("click", function(e) {
         e.preventDefault();
-        var modal = $(this).closest(".modal");
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var amountNXT = $("#changelly_buy_amount").val();
         var minAmount = $("#changelly_buy_min").val();
         if (parseFloat(amountNXT) <= parseFloat(minAmount)) {
             var msg = "amount is lower tham minimum amount " + minAmount;
             NRS.logConsole(msg);
-            NRS.showModalError(msg, modal);
+            NRS.showModalError(msg, $modal);
             return;
         }
         var amountNQT = NRS.convertToNQT(amountNXT);
@@ -356,7 +357,7 @@ var NRS = (function(NRS, $) {
             if (!depositAddress) {
                 msg = "changelly did not return a deposit address for id " + data.id;
                 NRS.logConsole(msg);
-                NRS.showModalError(msg, modal);
+                NRS.showModalError(msg, $modal);
                 return;
             }
 
@@ -370,15 +371,15 @@ var NRS = (function(NRS, $) {
             }, function (response) {
                 if (response.errorCode) {
                     NRS.logConsole("sendMoney response " + response.errorCode + " " + response.errorDescription.escapeHTML());
-                    NRS.showModalError(NRS.translateServerError(response), modal);
+                    NRS.showModalError(NRS.translateServerError(response), $modal);
                     return;
                 }
                 NRS.addDepositAddress(depositAddress, from, to, DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
                 renderMyExchangesTable();
                 $("#changelly_buy_passpharse").val("");
-                modal.modal("hide");
+                NRS.unlockForm($modal, $btn, true);
             })
-        }, true, modal);
+        }, true, $modal);
     });
 
     $('#changelly_buy_amount').change(function () {
@@ -493,13 +494,15 @@ var NRS = (function(NRS, $) {
 
     $("#changelly_sell_done").on("click", function(e) {
         e.preventDefault();
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var from = $("#changelly_sell_from").val();
         var to = $("#changelly_sell_to").val();
         var deposit = $("#changelly_sell_deposit_address").html();
         if (deposit !== "") {
             NRS.addDepositAddress(deposit, from, to, DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
             renderMyExchangesTable();
-            $(this).closest(".modal").modal("hide");
+            NRS.unlockForm($modal, $btn, true);
         }
     });
 

@@ -53,6 +53,7 @@ var NRS = (function(NRS, $) {
         for (var i=0; i < addresses.length; i++) {
             if (item.address == addresses[i].address && item.from == addresses[i].from && item.to == addresses[i].to) {
                 NRS.logConsole("deposit address " + item.address + " from " + item.from + " to " + item.to + " already exists");
+                return;
             }
         }
         addresses.splice(0, 0, item);

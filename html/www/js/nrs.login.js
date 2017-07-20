@@ -64,6 +64,14 @@ var NRS = (function(NRS, $, undefined) {
 		$("#welcome_panel").show();
 	};
 
+    NRS.createPassphraseToConfirmPassphrase = function() {
+        if ($("#confirm_passphrase_warning").is(":checked")) {
+            $('.step_2').hide();$('.step_3').show();
+        } else {
+            $("#confirm_passphrase_warning_container").css("background-color", "red");
+		}
+    };
+
 	NRS.registerUserDefinedAccount = function() {
 		$("#account_phrase_generator_panel, #login_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#account_phrase_generator_panel").find(":input:not(:button):not([type=submit])").val("");
