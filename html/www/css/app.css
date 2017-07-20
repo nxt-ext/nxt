@@ -44,6 +44,13 @@ body {
   background: #f9f9f9;
   color: black !important;
 }
+/* preload images or they will flicker */
+body::after{
+  position:absolute; width:0; height:0; overflow:hidden; z-index:-1;
+  content:url(../img/client_background.png)
+  url(../img/nxt-load-progress-logo-circle.png)
+  url(../img/nxt-load-progress-logo-circle.png);
+}
 html.lockscreen, html.lockscreen body {
   height:100%;
   overflow-x:auto;
@@ -3128,10 +3135,57 @@ hr {
   margin-bottom:10px;
 }
 
-
 #lockscreen {
   height:100%;
   overflow:auto;
+}
+
+/**
+ * Initial progress indicator component
+ */
+
+#lockscreen.loading {
+  height:99%;
+  overflow:hidden;
+  position:relative;
+}
+
+html.loading, body.loading {
+  overflow:hidden;
+}
+
+#progress-container {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  left: 50%;
+  top: 50%;
+}
+
+#progress-container > img {
+  position: absolute;
+  left: -50%;
+  top: -50%;
+}
+
+#progress {
+  position: absolute;
+  height:100%;
+  overflow: hidden;
+  left: -50%;
+  top: -50%;
+}
+
+#progress > #img-wrapper {
+  position: relative;
+  height: 100%;
+  width: 220px;
+}
+
+#progress > #img-wrapper > img {
+  position: absolute;
+  left:0;
+  top:0;
 }
 
 #center .panel {
