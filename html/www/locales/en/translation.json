@@ -1892,5 +1892,6 @@
   "ignis_exchange_history": "IGNIS Exchange History",
   "latest_updates": "Latest Updates",
   "file_encryption_not_supported": "File encryption not supported in desktop wallet, use web wallet instead",
-  "confirm_passphrase_warning": "I will not forget my passphrase and I will never disclose it"
+  "confirm_passphrase_warning": "I will not forget my passphrase and I will never disclose it",
+  "deposit_coin": "Deposit Coin"
 }

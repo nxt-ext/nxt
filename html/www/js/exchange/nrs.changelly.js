@@ -231,12 +231,16 @@ var NRS = (function(NRS, $) {
         selectedCoins.push(NRS.settings[coin0]);
         selectedCoins.push(NRS.settings[coin1]);
         selectedCoins.push(NRS.settings[coin2]);
+        NRS.changellySelectCoins(inputFields, selectedCoins);
+    }
+
+    NRS.changellySelectCoins = function(inputFields, selectedCoins) {
         apiCall('getCurrencies', {}, function (data) {
             SUPPORTED_COINS = data.result;
             for (var i = 0; i < inputFields.length; i++) {
                 inputFields[i].empty();
                 var isSelectionAvailable = false;
-                for (var j=0; j < data.result.length; j++) {
+                for (var j = 0; j < data.result.length; j++) {
                     var code = String(data.result[j]).toUpperCase();
                     if (code !== 'NXT') {
                         inputFields[i].append('<option value="' + code + '">' + code + '</option>');
@@ -252,7 +256,7 @@ var NRS = (function(NRS, $) {
             }
             $('#changelly_status').html('ok');
         });
-    }
+    };
 
     NRS.pages.exchange_changelly = function() {
         var exchangeDisabled = $(".exchange_disabled");

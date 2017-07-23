@@ -307,7 +307,7 @@ var NRS = (function(NRS, $) {
         });
     }
 
-    NRS.selectCoins = function(inputFields, selectedCoins) {
+    NRS.shapeShiftSelectCoins = function(inputFields, selectedCoins) {
         apiCall('getcoins', {}, 'GET', function (data) {
             SUPPORTED_COINS = data;
             for (var i = 0; i < inputFields.length; i++) {
@@ -341,7 +341,7 @@ var NRS = (function(NRS, $) {
         selectedCoins.push(NRS.settings[coin0]);
         selectedCoins.push(NRS.settings[coin1]);
         selectedCoins.push(NRS.settings[coin2]);
-        NRS.selectCoins(inputFields, selectedCoins);
+        NRS.shapeShiftSelectCoins(inputFields, selectedCoins);
     }
 
     NRS.pages.exchange_shape_shift = function() {

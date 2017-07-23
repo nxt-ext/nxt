@@ -1561,11 +1561,14 @@ var NRS = (function (NRS, $, undefined) {
             NRS.getExchangeHistory(response.currency, false, "ignis_exchange_history_table");
 
             var inputFields = [];
-            inputFields.push($('#ignis_select_coin'));
+            inputFields.push($('#ignis_shape_shift_select_coin'));
             var selectedCoins = [];
             selectedCoins.push("BTC");
-            NRS.selectCoins(inputFields, selectedCoins);
+            NRS.shapeShiftSelectCoins(inputFields, selectedCoins);
             $("#ignis_shape_shift_button").data("pair", "BTC_NXT");
+            inputFields = [];
+            inputFields.push($('#ignis_changelly_select_coin'));
+            NRS.changellySelectCoins(inputFields, selectedCoins);
             var changellyShiftButton = $("#ignis_changelly_button");
             changellyShiftButton.data("from", "BTC");
             changellyShiftButton.data("to", "NXT");
@@ -1573,10 +1576,14 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    $('#ignis_select_coin').change(function() {
-        var ignisSelectCoin = $("#ignis_select_coin");
+    $('#ignis_shape_shift_select_coin').change(function() {
+        var ignisSelectCoin = $("#ignis_shape_shift_select_coin");
         var shapeShiftButton = $("#ignis_shape_shift_button");
         shapeShiftButton.data("pair", ignisSelectCoin.val() + "_NXT");
+    });
+
+    $('#ignis_changelly_select_coin').change(function() {
+        var ignisSelectCoin = $("#ignis_changelly_select_coin");
         var changellyButton = $("#ignis_changelly_button");
         changellyButton.data("from", ignisSelectCoin.val());
     });
