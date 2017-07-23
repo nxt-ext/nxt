@@ -16,10 +16,12 @@
 package nxt.addons;
 
 import nxt.Account;
+import nxt.Asset;
 import nxt.AssetTransfer;
 import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
+import nxt.Currency;
 import nxt.Db;
 import nxt.FxtDistribution;
 import nxt.Genesis;
@@ -43,6 +45,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -93,7 +96,8 @@ public class Snapshot implements AddOn {
             public void notify(Block block) {
                 if (block.getHeight() == Nxt.getHardForkHeight()) {
                     exportPublicKeys();
-                    exportIgnisBalances();
+                    Map ignisBalances = exportIgnisBalances();
+                    exportBitswiftBalances(ignisBalances);
                     exportArdorBalances();
                     exportAssetBalances();
                     exportAliases();
@@ -131,7 +135,7 @@ public class Snapshot implements AddOn {
                 Logger.logInfoMessage("Done");
             }
 
-            private void exportIgnisBalances() {
+            private Map<String, Long> exportIgnisBalances() {
                 SortedMap<String, Long> snapshotMap = new TreeMap<>();
                 SortedMap<String, Long> btcSnapshotMap = new TreeMap<>();
                 SortedMap<String, Long> usdSnapshotMap = new TreeMap<>();
@@ -148,14 +152,19 @@ public class Snapshot implements AddOn {
                             if (balance <= 0) {
                                 continue;
                             }
+                            if (!Constants.isTestnet) {
+                                balance = balance / 2;
+                            }
                             if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
                                 balance = balance / 2;
                             }
                             String account = Long.toUnsignedString(accountId);
                             snapshotMap.put(account, balance);
-                            btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 600);
-                            usdSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
-                            eurSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
+                            if (Constants.isTestnet) {
+                                btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 600);
+                                usdSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
+                                eurSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
+                            }
                         }
                     }
                 } catch (SQLException e) {
@@ -178,6 +187,27 @@ public class Snapshot implements AddOn {
                         snapshotMap.put(senderId, balance);
                     }
                 }
+                if (!Constants.isTestnet) {
+                    try (Connection con = Db.db.getConnection();
+                    PreparedStatement pstmt = con.prepareStatement("SELECT account_id, units FROM account_currency WHERE currency_id = ? AND LATEST=true")) {
+                        pstmt.setLong(1, Currency.getCurrencyByCode("JLRDA").getId());
+                        try (ResultSet rs = pstmt.executeQuery()) {
+                            while (rs.next()) {
+                                String accountId = Long.toUnsignedString(rs.getLong("account_id"));
+                                long units = rs.getLong("units");
+                                if (units <= 0) {
+                                    continue;
+                                }
+                                long balance = Convert.nullToZero(snapshotMap.get(accountId));
+                                balance += units * 10000;
+                                snapshotMap.put(accountId, balance);
+                            }
+                        }
+
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e.getMessage(), e);
+                    }
+                }
                 if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
                     final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
                     developerPublicKeys.forEach(publicKey -> {
@@ -189,9 +219,12 @@ public class Snapshot implements AddOn {
                     });
                 }
                 saveMap(snapshotMap, Constants.isTestnet ? "IGNIS-testnet.json" : "IGNIS.json");
-                saveMap(btcSnapshotMap, Constants.isTestnet ? "BTC-testnet.json" : "BTC.json");
-                saveMap(usdSnapshotMap, Constants.isTestnet ? "USD-testnet.json" : "USD.json");
-                saveMap(eurSnapshotMap, Constants.isTestnet ? "EUR-testnet.json" : "EUR.json");
+                if (Constants.isTestnet) {
+                    saveMap(btcSnapshotMap, "BTC-testnet.json");
+                    saveMap(usdSnapshotMap, "USD-testnet.json");
+                    saveMap(eurSnapshotMap, "EUR-testnet.json");
+                }
+                return Collections.unmodifiableMap(snapshotMap);
             }
 
             private void exportArdorBalances() {
@@ -242,14 +275,45 @@ public class Snapshot implements AddOn {
                 saveMap(snapshotMap, Constants.isTestnet ? "ARDR-testnet.json" : "ARDR.json");
             }
 
+            private void exportBitswiftBalances(Map<String,Long> ignisBalances) {
+                Asset bitswiftAsset = Asset.getAsset(BITSWIFT_ASSET_ID);
+                BigInteger totalQuantity = BigInteger.valueOf(bitswiftAsset.getQuantityQNT());
+                BigInteger totalIgnisBalance = BigInteger.valueOf(ignisBalances.values().stream().mapToLong(Long::longValue).sum());
+                SortedMap<String, Long> snapshotMap = new TreeMap<>();
+                try (Connection con = Db.db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
+                    pstmt.setLong(1, BITSWIFT_ASSET_ID);
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            long quantity = rs.getLong("quantity");
+                            if (quantity <= 0) {
+                                continue;
+                            }
+                            String accountId = Long.toUnsignedString(rs.getLong("account_id"));
+                            long ignisBalance = ignisBalances.get(accountId);
+                            quantity += totalQuantity.multiply(BigInteger.valueOf(ignisBalance)).divide(totalIgnisBalance).divide(BigInteger.TEN).longValueExact();
+                            snapshotMap.put(accountId, quantity);
+                        }
+                    }
+                    //TODO: is the Bitswift sharedrop coming from asset issuer account?
+                    String bitswiftSharedropAccount = Long.toUnsignedString(bitswiftAsset.getAccountId());
+                    long bitswiftIssuerBalance = snapshotMap.get(bitswiftSharedropAccount);
+                    bitswiftIssuerBalance -= totalQuantity.divide(BigInteger.TEN).longValueExact();
+                    if (bitswiftIssuerBalance < 0) {
+                        throw new RuntimeException("Not enough Bitswift available for sharedrop");
+                    }
+                    snapshotMap.put(bitswiftSharedropAccount, bitswiftIssuerBalance);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                saveMap(snapshotMap, Constants.isTestnet ? "BITSWIFT-testnet.json" : "BITSWIFT.json");
+            }
+
             private void exportAssetBalances() {
                 SortedMap<String, Map<String, Long>> snapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
-                    for (long assetId : ardorSnapshotAssets) {
-                        if (assetId == FxtDistribution.FXT_ASSET_ID) {
-                            continue;
-                        }
+                    for (long assetId : new long[] {JANUS_ASSET_ID}) { //TODO: others?
                         SortedMap<String, Long> asset = new TreeMap<>();
                         pstmt.setLong(1, assetId);
                         try (ResultSet rs = pstmt.executeQuery()) {
@@ -259,7 +323,7 @@ public class Snapshot implements AddOn {
                                 if (balance <= 0) {
                                     continue;
                                 }
-                                asset.put(Long.toUnsignedString(accountId), balance * 10000);
+                                asset.put(Long.toUnsignedString(accountId), balance);
                             }
                         }
                         snapshotMap.put(Long.toUnsignedString(assetId), asset);
