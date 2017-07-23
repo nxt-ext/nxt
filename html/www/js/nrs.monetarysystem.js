@@ -1531,6 +1531,10 @@ var NRS = (function (NRS, $, undefined) {
         };
     };
 
+    NRS.incoming.ignis = function () {
+        NRS.pages.ignis();
+    };
+
     NRS.pages.ignis = function() {
         NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
             $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3"));
