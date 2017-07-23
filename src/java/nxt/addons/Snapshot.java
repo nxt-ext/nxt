@@ -52,10 +52,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class Snapshot implements AddOn {
+
+    private static final long BITSWIFT_ASSET_ID = 0; //TODO
+    private static final long JANUS_ASSET_ID = 0; //TODO
+    public static final Set<Long> ardorSnapshotAssets = Collections.unmodifiableSet(
+            Convert.toSet(new long[] {FxtDistribution.FXT_ASSET_ID, BITSWIFT_ASSET_ID, JANUS_ASSET_ID}));
 
     @Override
     public void init() {
@@ -89,6 +95,7 @@ public class Snapshot implements AddOn {
                     exportPublicKeys();
                     exportIgnisBalances();
                     exportArdorBalances();
+                    exportAssetBalances();
                     exportAliases();
                     exportCurrencies();
                     exportAccountInfo();
@@ -233,6 +240,34 @@ public class Snapshot implements AddOn {
                     });
                 }
                 saveMap(snapshotMap, Constants.isTestnet ? "ARDR-testnet.json" : "ARDR.json");
+            }
+
+            private void exportAssetBalances() {
+                SortedMap<String, Map<String, Long>> snapshotMap = new TreeMap<>();
+                try (Connection con = Db.db.getConnection();
+                     PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
+                    for (long assetId : ardorSnapshotAssets) {
+                        if (assetId == FxtDistribution.FXT_ASSET_ID) {
+                            continue;
+                        }
+                        SortedMap<String, Long> asset = new TreeMap<>();
+                        pstmt.setLong(1, assetId);
+                        try (ResultSet rs = pstmt.executeQuery()) {
+                            while (rs.next()) {
+                                long accountId = rs.getLong("account_id");
+                                long balance = rs.getLong("quantity");
+                                if (balance <= 0) {
+                                    continue;
+                                }
+                                asset.put(Long.toUnsignedString(accountId), balance * 10000);
+                            }
+                        }
+                        snapshotMap.put(Long.toUnsignedString(assetId), asset);
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+                saveMap(snapshotMap, Constants.isTestnet ? "ASSETS-testnet.json" : "ASSETS.json");
             }
 
             private void exportAliases() {
