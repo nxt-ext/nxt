@@ -774,8 +774,12 @@ public final class ParameterParser {
             throw new ParameterException(INCORRECT_TAGGED_DATA_CHANNEL);
         }
 
-        if (data.length == 0 || data.length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
-            throw new ParameterException(INCORRECT_DATA);
+        if (data.length == 0) {
+            throw new ParameterException(INCORRECT_DATA_ZERO_LENGTH);
+        }
+
+        if (data.length > Constants.MAX_TAGGED_DATA_DATA_LENGTH) {
+            throw new ParameterException(INCORRECT_DATA_TOO_LONG);
         }
 
         if (filename.length() > Constants.MAX_TAGGED_DATA_FILENAME_LENGTH) {

@@ -90,6 +90,10 @@ var NRS = (function (NRS) {
         return !isDesktopApplication; // When using JavaFX you cannot export the contact list
     };
 
+    NRS.isFileEncryptionSupported = function() {
+        return !isDesktopApplication; // When using JavaFX you cannot read the file to encrypt
+    };
+
     NRS.isShowDummyCheckbox = function() {
         return isDesktopApplication && navigator.userAgent.indexOf("Linux") >= 0; // Correct rendering problem of checkboxes on Linux
     };
@@ -218,6 +222,10 @@ var NRS = (function (NRS) {
 
     NRS.isPassphraseAtRisk = function() {
         return !isLocalHost || NRS.state && NRS.state.apiProxy || NRS.isMobileApp();
+    };
+
+    NRS.isWindowPrintSupported = function() {
+        return !isDesktopApplication;
     };
 
     return NRS;

@@ -1566,17 +1566,19 @@ var NRS = (function (NRS, $, undefined) {
         });
     };
 
-    NRS.generateQRCode = function(target, qrCodeData, minType) {
+    NRS.generateQRCode = function(target, qrCodeData, minType, cellSize) {
         var type = minType ? minType : 2;
         while (type <= 40) {
             try {
                 var qr = qrcode(type, 'M');
                 qr.addData(qrCodeData);
                 qr.make();
-                var img = qr.createImgTag();
-                $(target).empty().append(img);
+                var img = qr.createImgTag(cellSize);
                 NRS.logConsole("Encoded QR code of type " + type);
-                return;
+                if (target) {
+                    $(target).empty().append(img);
+                }
+                return img;
             } catch (e) {
                 type++;
             }

@@ -307,7 +307,7 @@ var NRS = (function(NRS, $) {
         });
     }
 
-    NRS.selectCoins = function(inputFields, selectedCoins) {
+    NRS.shapeShiftSelectCoins = function(inputFields, selectedCoins) {
         apiCall('getcoins', {}, 'GET', function (data) {
             SUPPORTED_COINS = data;
             for (var i = 0; i < inputFields.length; i++) {
@@ -341,7 +341,7 @@ var NRS = (function(NRS, $) {
         selectedCoins.push(NRS.settings[coin0]);
         selectedCoins.push(NRS.settings[coin1]);
         selectedCoins.push(NRS.settings[coin2]);
-        NRS.selectCoins(inputFields, selectedCoins);
+        NRS.shapeShiftSelectCoins(inputFields, selectedCoins);
     }
 
     NRS.pages.exchange_shape_shift = function() {
@@ -380,7 +380,7 @@ var NRS = (function(NRS, $) {
         NRS.pages.exchange_shape_shift();
    	});
 
-    $("#clear_my_exchanges").on("click", function(e) {
+    $("#shape_shift_clear_my_exchanges").on("click", function(e) {
    		e.preventDefault();
    		localStorage.removeItem(DEPOSIT_ADDRESSES_KEY + NRS.accountRS);
         renderMyExchangesTable();
@@ -429,7 +429,8 @@ var NRS = (function(NRS, $) {
 
     $("#shape_shift_buy_submit").on("click", function(e) {
         e.preventDefault();
-        var modal = $(this).closest(".modal");
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var amountNQT = NRS.convertToNQT($("#shape_shift_buy_amount").val());
         var withdrawal = $("#shape_shift_buy_withdrawal_address").val();
         var pair = $("#shape_shift_buy_pair").val();
@@ -448,19 +449,19 @@ var NRS = (function(NRS, $) {
             if (data.depositType != "NXT") {
                 msg = "incorrect deposit coin " + data.depositType;
                 NRS.logConsole(msg);
-                NRS.showModalError(msg, modal);
+                NRS.showModalError(msg, $modal);
                 return;
             }
             if (data.withdrawalType != pairToCoin(pair)) {
                 msg = "incorrect withdrawal coin " + data.withdrawalType;
                 NRS.logConsole(msg);
-                NRS.showModalError(msg, modal);
+                NRS.showModalError(msg, $modal);
                 return;
             }
             if (data.withdrawal != withdrawal) {
                 msg = "incorrect withdrawal address " + data.withdrawal;
                 NRS.logConsole(msg);
-                NRS.showModalError(msg, modal);
+                NRS.showModalError(msg, $modal);
                 return;
             }
             NRS.logConsole("shift request done, deposit address " + data.deposit);
@@ -473,15 +474,15 @@ var NRS = (function(NRS, $) {
             }, function (response) {
                 if (response.errorCode) {
                     NRS.logConsole("sendMoney response " + response.errorCode + " " + response.errorDescription.escapeHTML());
-                    NRS.showModalError(NRS.translateServerError(response), modal);
+                    NRS.showModalError(NRS.translateServerError(response), $modal);
                     return;
                 }
                 addDepositAddress(data.deposit, pair);
                 renderMyExchangesTable();
                 $("#shape_shift_buy_passpharse").val("");
-                modal.modal("hide");
+                NRS.unlockForm($modal, $btn, true);
             })
-        }, true, modal);
+        }, true, $modal);
     });
 
     $("#m_send_amount_buy_modal").on("show.bs.modal", function (e) {
@@ -557,7 +558,8 @@ var NRS = (function(NRS, $) {
 
     $("#m_send_amount_buy_submit").on("click", function(e) {
         e.preventDefault();
-        var modal = $(this).closest(".modal");
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var pair = $("#m_send_amount_buy_pair").val();
         var depositAddress = $("#m_send_amount_buy_deposit_address").val();
         NRS.logConsole("pay request submitted, deposit address " + depositAddress);
@@ -571,13 +573,13 @@ var NRS = (function(NRS, $) {
         }, function (response) {
             if (response.errorCode) {
                 NRS.logConsole('sendMoney error ' + response.errorDescription.escapeHTML());
-                NRS.showModalError(response.errorDescription.escapeHTML(), modal);
+                NRS.showModalError(response.errorDescription.escapeHTML(), $modal);
                 return;
             }
             addDepositAddress(depositAddress, pair);
             renderMyExchangesTable();
             $("#m_send_amount_buy_passpharse").val("");
-            modal.modal("hide");
+            NRS.unlockForm($modal, $btn, true);
         });
     });
 
@@ -665,23 +667,30 @@ var NRS = (function(NRS, $) {
 
     $("#shape_shift_sell_done").on("click", function(e) {
         e.preventDefault();
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var pair = $("#shape_shift_sell_pair").val();
         var deposit = $("#shape_shift_sell_deposit_address").html();
         if (deposit != "") {
             addDepositAddress(deposit, pair);
             renderMyExchangesTable();
-            $(this).closest(".modal").modal("hide");
         }
+        NRS.unlockForm($modal, $btn, true);
     });
 
     $("#shape_shift_sell_cancel").on("click", function(e) {
         e.preventDefault();
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var deposit = $("#shape_shift_sell_deposit_address").html();
         if (deposit != "") {
             apiCall('cancelpending', { address: deposit }, 'POST', function(data) {
                 var msg = data.success ? data.success : data.err;
                 NRS.logConsole("sell cancelled response: " + msg);
+                NRS.unlockForm($modal, $btn, true);
             })
+        } else {
+            NRS.unlockForm($modal, $btn, true);
         }
     });
 
@@ -760,23 +769,30 @@ var NRS = (function(NRS, $) {
 
     $("#m_send_amount_sell_done").on("click", function(e) {
         e.preventDefault();
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var pair = $("#m_send_amount_sell_pair").val();
         var deposit = $("#m_send_amount_sell_deposit_address").html();
         if (deposit != "") {
             addDepositAddress(deposit, pair);
             renderMyExchangesTable();
-            $(this).closest(".modal").modal("hide");
         }
+        NRS.unlockForm($modal, $btn, true);
     });
 
     $("#m_send_amount_sell_cancel").on("click", function(e) {
         e.preventDefault();
+        var $modal = $(this).closest(".modal");
+        var $btn = NRS.lockForm($modal);
         var deposit = $("#m_send_amount_sell_deposit_address").html();
         if (deposit != "") {
             apiCall('cancelpending', { address: deposit }, 'POST', function(data) {
                 var msg = data.success ? data.success : data.err;
                 NRS.logConsole("sell cancelled response: " + msg);
+                NRS.unlockForm($modal, $btn, true);
             })
+        } else {
+            NRS.unlockForm($modal, $btn, true);
         }
     });
 

@@ -1679,6 +1679,29 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
+    NRS.printPaperWallet = function(passphrase) {
+        var $pageHeader = $("<h2 data-i18n='nxt_ardor_paper_wallet'>NXT and Ardor Paper Wallet</h2>");
+        var $passphraseHeader = $("<h3 data-i18n='passphrase'>Passphrase</h3>");
+        var $passphraseText = $("<div></div>");
+        $passphraseText.html(passphrase);
+        var passphraseImg = NRS.generateQRCode(null, passphrase, 2, 4);
+        $(passphraseImg).load(function() {
+            var account = NRS.getAccountId(passphrase, true);
+            var $accountHeader = $("<h3 data-i18n='account'>Account</h3>");
+            var $accountText = $("<div></div>");
+            $accountText.html(account);
+            var accountImg = NRS.generateQRCode(null, account, 2, 4);
+            $(accountImg).load(function() {
+                $("<iframe>", { name: "paperWalletFrame", class: "printFrame"}).appendTo("body").contents().find("body")
+                    .append($pageHeader).append($passphraseHeader).append($passphraseText).append(passphraseImg).append($accountHeader).append($accountText).append(accountImg);
+                window.frames['paperWalletFrame'].focus();
+                window.frames['paperWalletFrame'].print();
+                setTimeout(function () {
+                    $(".printFrame").remove();
+                }, 1000);
+            });
+        });
+    };
 
     return NRS;
 }(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));

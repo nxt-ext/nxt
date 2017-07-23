@@ -26,11 +26,15 @@ var NRS = (function(NRS, $, undefined) {
         if (_password) {
             $("#account_details_modal_account_display").show();
             $("#account_details_modal_passphrase_display").show();
+            if (NRS.isWindowPrintSupported()) {
+                $("#account_details_modal_paper_wallet_link").prop("disabled", false);
+            }
         } else {
             NRS.generateQRCode("#account_details_modal_account_qr_code", NRS.accountRS);
             $("#account_details_modal_account_display").hide();
             $("#account_details_modal_passphrase_display").hide();
-            $("#account_details_modal_passphrase_qr_code").html($.t("passphrase_not_specified"));
+            $("#account_details_modal_passphrase_qr_code").html($.t("passphrase_not_available"));
+            $("#account_details_modal_paper_wallet_na").html($.t("passphrase_not_available"));
         }
 		$("#account_details_modal_balance").show();
 
@@ -73,7 +77,7 @@ var NRS = (function(NRS, $, undefined) {
 	});
 
 	function _showTab(tab){
-		var tabListItem = $("#account_details_modal li[data-tab=" + tab + "]");
+		var tabListItem = $("#account_details_modal").find("li[data-tab=" + tab + "]");
 		tabListItem.siblings().removeClass("active");
 		tabListItem.addClass("active");
 		$(".account_details_modal_content").hide();
@@ -104,7 +108,6 @@ var NRS = (function(NRS, $, undefined) {
         $("#account_details_modal_passphrase_display").show();
         $("#account_details_modal_passphrase_qr_code").empty();
         NRS.generateQRCode("#account_details_modal_account_qr_code", NRS.accountRS);
-        NRS.generateQRCode("#account_details_modal_account_qr_code", NRS.accountRS);
     });
 
     $("#account_details_modal_passphrase_display").on("click", function() {
@@ -112,6 +115,10 @@ var NRS = (function(NRS, $, undefined) {
         $("#account_details_modal_account_display").show();
         $("#account_details_modal_account_qr_code").empty();
         NRS.generateQRCode("#account_details_modal_passphrase_qr_code", _password);
+    });
+
+    $("#account_details_modal_paper_wallet_link").on("click", function() {
+		NRS.printPaperWallet(_password);
     });
 
     return NRS;

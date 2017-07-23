@@ -23,6 +23,17 @@ Support running Nxt as a Windows service.
 
 Updated mobile app to latest Cordova Android platform.
 
+Added IntelliJ IDE project files to folder ./ide/intellij/project, developers 
+working on the source code should copy the content of folder 
+./ide/intellij/project to the root folder of the project and open the project 
+from inside IntelliJ using File-Open for the project root folder. 
+The IntelliJ project is pre-configured with the necessary dependencies to build 
+and run the Java source code.
+To copy the IntelliJ files to the project root folder, open a command prompt
+at the project root folder and issue the following command:
+Windows: xcopy /e/k/s/h ide\intellij\project .
+Linux: cp -r ide/intellij/project/. .
+
 Updated H2 to version 1.4.196, bouncy castle to 1.57, and jetty to 9.3.20.
 Delete the old lib folder first if unpacking on top.
 
