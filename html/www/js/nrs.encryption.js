@@ -74,28 +74,18 @@ var NRS = (function (NRS, $) {
         return converters.shortArrayToHexString(curve25519_clamp(converters.byteArrayToShortArray(bytes)));
 	};
 
-	NRS.getAccountId = function(secretPhrase) {
-		return NRS.getAccountIdFromPublicKey(NRS.getPublicKey(converters.stringToHexString(secretPhrase)));
+	NRS.getAccountId = function(secretPhrase, isRsFormat) {
+		return NRS.getAccountIdFromPublicKey(NRS.getPublicKey(converters.stringToHexString(secretPhrase)), isRsFormat);
 	};
 
-	NRS.getAccountIdFromPublicKey = function(publicKey, RSFormat) {
+	NRS.getAccountIdFromPublicKey = function(publicKey, isRsFormat) {
 		var hex = converters.hexStringToByteArray(publicKey);
 		var account = simpleHash(hex);
-
 		account = converters.byteArrayToHexString(account);
-
 		var slice = (converters.hexStringToByteArray(account)).slice(0, 8);
-
 		var accountId = byteArrayToBigInteger(slice).toString();
-
-		if (RSFormat) {
-			var address = new NxtAddress();
-
-			if (address.set(accountId)) {
-				return address.toString();
-			} else {
-				return "";
-			}
+		if (isRsFormat) {
+			return NRS.convertNumericToRSAccountFormat(accountId);
 		} else {
 			return accountId;
 		}

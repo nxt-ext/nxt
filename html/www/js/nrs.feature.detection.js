@@ -224,6 +224,10 @@ var NRS = (function (NRS) {
         return !isLocalHost || NRS.state && NRS.state.apiProxy || NRS.isMobileApp();
     };
 
+    NRS.isWindowPrintSupported = function() {
+        return !isDesktopApplication;
+    };
+
     return NRS;
 }(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
 

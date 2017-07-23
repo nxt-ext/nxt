@@ -1821,7 +1821,7 @@
   "is_remote_node_ssl": "Use Https",
   "video_not_supported": "Video Not Supported",
   "passphrase_qr_code": "Passphrase QR Code",
-  "passphrase_not_specified": "Passphrase Not Specified",
+  "passphrase_not_available": "Passphrase Not Available",
   "show": "Show",
   "request_type_date": "Request",
   "confirmed_by": "Confirmed by",
@@ -1893,5 +1893,9 @@
   "latest_updates": "Latest Updates",
   "file_encryption_not_supported": "File encryption not supported in desktop wallet, use web wallet instead",
   "confirm_passphrase_warning": "I will not forget my passphrase and I will never disclose it",
-  "deposit_coin": "Deposit Coin"
+  "deposit_coin": "Deposit Coin",
+  "print_paper_wallet": "Print Paper Wallet",
+  "paper_wallet": "Paper Wallet",
+  "print": "Print",
+  "nxt_ardor_paper_wallet": "NXT and Ardor Paper Wallet"
 }
