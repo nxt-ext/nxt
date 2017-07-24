@@ -61,8 +61,8 @@ import java.util.TreeMap;
 
 public class Snapshot implements AddOn {
 
-    private static final long BITSWIFT_ASSET_ID = 0; //TODO
-    private static final long JANUS_ASSET_ID = 0; //TODO
+    private static final long BITSWIFT_ASSET_ID = Long.parseUnsignedLong("12034575542068240440"); //TODO
+    private static final long JANUS_ASSET_ID = Long.parseUnsignedLong("4348103880042995903"); //TODO
     public static final Set<Long> ardorSnapshotAssets = Collections.unmodifiableSet(
             Convert.toSet(new long[] {FxtDistribution.FXT_ASSET_ID, BITSWIFT_ASSET_ID, JANUS_ASSET_ID}));
 
@@ -277,6 +277,9 @@ public class Snapshot implements AddOn {
 
             private void exportBitswiftBalances(Map<String,Long> ignisBalances) {
                 Asset bitswiftAsset = Asset.getAsset(BITSWIFT_ASSET_ID);
+                if (bitswiftAsset == null) {
+                    return;
+                }
                 BigInteger totalQuantity = BigInteger.valueOf(bitswiftAsset.getQuantityQNT());
                 BigInteger totalIgnisBalance = BigInteger.valueOf(ignisBalances.values().stream().mapToLong(Long::longValue).sum());
                 SortedMap<String, Long> snapshotMap = new TreeMap<>();
