@@ -120,6 +120,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_OFFER = missing("offer");
     public static final JSONStreamAware UNKNOWN_OFFER = unknown("offer");
     public static final JSONStreamAware INCORRECT_OFFER = incorrect("offer");
+    public static final JSONStreamAware MISSING_ADMIN_PASSWORD = missing("adminPassword");
     public static final JSONStreamAware INCORRECT_ADMIN_PASSWORD = incorrect("adminPassword", "(the specified password does not match nxt.adminPassword)");
     public static final JSONStreamAware LOCKED_ADMIN_PASSWORD = incorrect("adminPassword", "(locked for 1 hour, too many incorrect password attempts)");
     public static final JSONStreamAware OVERFLOW = error("overflow");
