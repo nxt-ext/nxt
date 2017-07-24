@@ -45,25 +45,21 @@ var NRS = (function (NRS, $) {
 		return NRS.getPublicKey(converters.stringToHexString(secretPhrase));
 	};
 
-	NRS.getPublicKey = function(secretPhrase, isAccountNumber) {
-		if (isAccountNumber) {
-			var accountNumber = secretPhrase;
-			var publicKey = "";
-
-			//synchronous!
+	NRS.getPublicKey = function(id, isAccountId) {
+		if (isAccountId) {
+            var publicKey = "";
 			NRS.sendRequest("getAccountPublicKey", {
-				"account": accountNumber
+				"account": id
 			}, function(response) {
 				if (!response.publicKey) {
 					throw $.t("error_no_public_key");
 				} else {
 					publicKey = response.publicKey;
 				}
-			}, { isAsync: false });
-
-			return publicKey;
+			}, { isAsync: false }); //synchronous!
+            return publicKey;
 		} else {
-			var secretPhraseBytes = converters.hexStringToByteArray(secretPhrase);
+			var secretPhraseBytes = converters.hexStringToByteArray(id);
 			var digest = simpleHash(secretPhraseBytes);
 			return converters.byteArrayToHexString(curve25519.keygen(digest).p);
 		}
