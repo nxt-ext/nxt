@@ -1,7 +1,6 @@
 .lock
 /.idea/
 /.idea/dictionaries
-/html/ui/.idea
 /nxt.iml
 /nxt_db
 /webapps/
@@ -34,3 +33,7 @@ deploy.sh
 *.patch
 /addons/classes/
 /addons/src/*.java
+/out
+/ardor
+/ardor.exe
+/ardorservice.exe

@@ -1,24 +1,27 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt.http;
 
 import nxt.Db;
 import nxt.util.Convert;
+import nxt.util.JSON;
 import org.h2.tools.Shell;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -71,7 +74,7 @@ public final class DbShellServlet extends HttpServlet {
                     "</html>\n";
 
     private static final String form =
-            "<form action=\"/dbshell\" method=\"POST\" onsubmit=\"return submitForm(this" + 
+            "<form action=\"/dbshell\" method=\"POST\" onsubmit=\"return submitForm(this" +
                     (API.disableAdminPassword ? "" : ", '{adminPassword}'") + ");\">" +
                     "<table class=\"table\" style=\"width:90%;\">" +
                     "<tr><td><pre class=\"result\" style=\"float:top;width:90%;\">" +
@@ -88,8 +91,8 @@ public final class DbShellServlet extends HttpServlet {
     private static final String passwordFormTemplate =
             "<form action=\"/dbshell\" method=\"POST\">" +
                     "<table class=\"table\">" +
-                    "<tr><td colspan=\"3\">%s</td></tr>" + 
-                    "<tr>" + 
+                    "<tr><td colspan=\"3\">%s</td></tr>" +
+                    "<tr>" +
                     "<td>Password:</td>" +
                     "<td><input type=\"password\" name=\"adminPassword\"/>" +
                     "<input type=\"submit\" value=\"Go!\"/></td>" +
@@ -98,13 +101,10 @@ public final class DbShellServlet extends HttpServlet {
                     "<input type=\"hidden\" name=\"showShell\" value=\"true\"/>" +
                     "</form>";
 
-    private static final String passwordForm = String.format(passwordFormTemplate, 
+    private static final String passwordForm = String.format(passwordFormTemplate,
             "<p>This page is password-protected. Please enter the administrator's password</p>");
 
-    private static final String passwordFormWrongPassword = String.format(passwordFormTemplate, 
-            "<p style=\"color:red\">The provided password does not match the value of nxt.adminPassword. Please try again!</p>");
 
-    
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
@@ -125,7 +125,7 @@ public final class DbShellServlet extends HttpServlet {
                 body = passwordForm;
             }
         }
-        
+
         try (PrintStream out = new PrintStream(resp.getOutputStream())) {
             out.print(header);
             out.print(body);
@@ -148,17 +148,18 @@ public final class DbShellServlet extends HttpServlet {
             if (API.adminPassword.isEmpty()) {
                 body = errorNoPasswordIsConfigured;
             } else {
-                String adminPassword = req.getParameter("adminPassword");
-                if (API.adminPassword.equals(adminPassword)) {
+                try {
+                    API.verifyPassword(req);
                     if ("true".equals(req.getParameter("showShell"))) {
-                        body = form.replace("{adminPassword}", URLEncoder.encode(adminPassword, "UTF-8") );
+                        body = form.replace("{adminPassword}", URLEncoder.encode(req.getParameter("adminPassword"), "UTF-8") );
                     }
-                } else {
-                    body = passwordFormWrongPassword;
+                } catch (ParameterException exc) {
+                    String desc = (String)((JSONObject)JSONValue.parse(JSON.toString(exc.getErrorResponse()))).get("errorDescription");
+                    body = String.format(passwordFormTemplate, "<p style=\"color:red\">" + desc + "</p>");
                 }
             }
         }
-        
+
         if (body != null) {
             try (PrintStream out = new PrintStream(resp.getOutputStream())) {
                 out.print(header);
@@ -167,7 +168,7 @@ public final class DbShellServlet extends HttpServlet {
             }
             return;
         }
-        
+
         String line = Convert.nullToEmpty(req.getParameter("line"));
         try (PrintStream out = new PrintStream(resp.getOutputStream())) {
             out.println("\n> " + line);

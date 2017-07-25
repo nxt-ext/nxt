@@ -1,18 +1,18 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt;
 
@@ -24,6 +24,7 @@ import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.VersionedEntityDbTable;
 import nxt.util.Convert;
+import nxt.util.Logger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -51,9 +52,7 @@ public final class AccountRestrictions {
             PhasingParams phasingParams = attachment.getPhasingParams();
             if (phasingParams.getVoteWeighting().getVotingModel() == VotingModel.NONE) {
                 //no voting - remove the control
-                senderAccount.removeControl(ControlType.PHASING_ONLY);
-                PhasingOnly phasingOnly = get(senderAccount.getId());
-                phasingControlTable.delete(phasingOnly);
+                unset(senderAccount);
             } else {
                 senderAccount.addControl(ControlType.PHASING_ONLY);
                 PhasingOnly phasingOnly = get(senderAccount.getId());
@@ -68,6 +67,12 @@ public final class AccountRestrictions {
                 }
                 phasingControlTable.insert(phasingOnly);
             }
+        }
+
+        static void unset(Account account) {
+            account.removeControl(ControlType.PHASING_ONLY);
+            PhasingOnly phasingOnly = get(account.getId());
+            phasingControlTable.delete(phasingOnly);
         }
 
         private final DbKey dbKey;
@@ -126,6 +131,12 @@ public final class AccountRestrictions {
                 throw new AccountControlException(String.format("Maximum total fees limit of %f NXT exceeded", ((double)maxFees)/Constants.ONE_NXT));
             }
             if (transaction.getType() == TransactionType.Messaging.PHASING_VOTE_CASTING) {
+                return;
+            }
+            try {
+                phasingParams.checkApprovable();
+            } catch (NxtException.NotCurrentlyValidException e) {
+                Logger.logDebugMessage("Account control no longer valid: " + e.getMessage());
                 return;
             }
             Appendix.Phasing phasingAppendix = transaction.getPhasing();

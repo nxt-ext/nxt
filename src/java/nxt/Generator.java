@@ -1,18 +1,18 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt;
 
@@ -29,8 +29,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -68,8 +70,26 @@ public final class Generator implements Comparable<Generator> {
                         if (lastBlock == null || lastBlock.getHeight() < Constants.LAST_KNOWN_BLOCK) {
                             return;
                         }
+                        final int generationLimit = Nxt.getEpochTime() - delayTime;
                         if (lastBlock.getId() != lastBlockId || sortedForgers == null) {
                             lastBlockId = lastBlock.getId();
+                            if (lastBlock.getTimestamp() > Nxt.getEpochTime() - 600) {
+                                Block previousBlock = Nxt.getBlockchain().getBlock(lastBlock.getPreviousBlockId());
+                                for (Generator generator : generators.values()) {
+                                    generator.setLastBlock(previousBlock);
+                                    int timestamp = generator.getTimestamp(generationLimit);
+                                    if (timestamp != generationLimit && generator.getHitTime() > 0 && timestamp < lastBlock.getTimestamp()) {
+                                        Logger.logDebugMessage("Pop off: " + generator.toString() + " will pop off last block " + lastBlock.getStringId());
+                                        List<BlockImpl> poppedOffBlock = BlockchainProcessorImpl.getInstance().popOffTo(previousBlock);
+                                        for (BlockImpl block : poppedOffBlock) {
+                                            TransactionProcessorImpl.getInstance().processLater(block.getTransactions());
+                                        }
+                                        lastBlock = previousBlock;
+                                        lastBlockId = previousBlock.getId();
+                                        break;
+                                    }
+                                }
+                            }
                             List<Generator> forgers = new ArrayList<>();
                             for (Generator generator : generators.values()) {
                                 generator.setLastBlock(lastBlock);
@@ -81,7 +101,6 @@ public final class Generator implements Comparable<Generator> {
                             sortedForgers = Collections.unmodifiableList(forgers);
                             logged = false;
                         }
-                        int generationLimit = Nxt.getEpochTime() - delayTime;
                         if (!logged) {
                             for (Generator generator : sortedForgers) {
                                 if (generator.getHitTime() - generationLimit > 60) {
@@ -113,7 +132,9 @@ public final class Generator implements Comparable<Generator> {
     };
 
     static {
-        ThreadPool.scheduleThread("GenerateBlocks", generateBlocksThread, 500, TimeUnit.MILLISECONDS);
+        if (!Constants.isLightClient) {
+            ThreadPool.scheduleThread("GenerateBlocks", generateBlocksThread, 500, TimeUnit.MILLISECONDS);
+        }
     }
 
     static void init() {}
@@ -255,16 +276,17 @@ public final class Generator implements Comparable<Generator> {
     private volatile long hitTime;
     private volatile BigInteger hit;
     private volatile BigInteger effectiveBalance;
+    private volatile long deadline;
 
     private Generator(String secretPhrase) {
         this.secretPhrase = secretPhrase;
         this.publicKey = Crypto.getPublicKey(secretPhrase);
         this.accountId = Account.getId(publicKey);
-        if (Nxt.getBlockchain().getHeight() >= Constants.LAST_KNOWN_BLOCK) {
-            setLastBlock(Nxt.getBlockchain().getLastBlock());
-        }
         Nxt.getBlockchain().updateLock();
         try {
+            if (Nxt.getBlockchain().getHeight() >= Constants.LAST_KNOWN_BLOCK) {
+                setLastBlock(Nxt.getBlockchain().getLastBlock());
+            }
             sortedForgers = null;
         } finally {
             Nxt.getBlockchain().updateUnlock();
@@ -280,7 +302,7 @@ public final class Generator implements Comparable<Generator> {
     }
 
     public long getDeadline() {
-        return Math.max(hitTime - Nxt.getBlockchain().getLastBlock().getTimestamp(), 0);
+        return deadline;
     }
 
     public long getHitTime() {
@@ -302,20 +324,28 @@ public final class Generator implements Comparable<Generator> {
     }
 
     private void setLastBlock(Block lastBlock) {
-        Account account = Account.getAccount(accountId);
-        effectiveBalance = BigInteger.valueOf(account == null || account.getEffectiveBalanceNXT() <= 0 ? 0 : account.getEffectiveBalanceNXT());
+        int height = lastBlock.getHeight();
+        Account account = Account.getAccount(accountId, height);
+        if (account == null) {
+            effectiveBalance = BigInteger.ZERO;
+        } else {
+            effectiveBalance = BigInteger.valueOf(Math.max(account.getEffectiveBalanceNXT(height), 0));
+        }
         if (effectiveBalance.signum() == 0) {
+            hitTime = 0;
+            hit = BigInteger.ZERO;
             return;
         }
         hit = getHit(publicKey, lastBlock);
         hitTime = getHitTime(effectiveBalance, hit, lastBlock);
+        deadline = Math.max(hitTime - lastBlock.getTimestamp(), 0);
         listeners.notify(this, Event.GENERATION_DEADLINE);
     }
 
     boolean forge(Block lastBlock, int generationLimit) throws BlockchainProcessor.BlockNotAcceptedException {
-        int timestamp = (generationLimit - hitTime > 3600) ? generationLimit : (int)hitTime + 1;
+        int timestamp = getTimestamp(generationLimit);
         if (!verifyHit(hit, effectiveBalance, lastBlock, timestamp)) {
-            Logger.logDebugMessage(this.toString() + " failed to forge at " + timestamp);
+            Logger.logDebugMessage(this.toString() + " failed to forge at " + timestamp + " height " + lastBlock.getHeight() + " last timestamp " + lastBlock.getTimestamp());
             return false;
         }
         int start = Nxt.getEpochTime();
@@ -333,4 +363,124 @@ public final class Generator implements Comparable<Generator> {
         }
     }
 
+    private int getTimestamp(int generationLimit) {
+        return (generationLimit - hitTime > 3600) ? generationLimit : (int)hitTime + 1;
+    }
+
+    /** Active block generators */
+    private static final Set<Long> activeGeneratorIds = new HashSet<>();
+
+    /** Active block identifier */
+    private static long activeBlockId;
+
+    /** Sorted list of generators for the next block */
+    private static final List<ActiveGenerator> activeGenerators = new ArrayList<>();
+
+    /** Generator list has been initialized */
+    private static boolean generatorsInitialized = false;
+
+    /**
+     * Return a list of generators for the next block.  The caller must hold the blockchain
+     * read lock to ensure the integrity of the returned list.
+     *
+     * @return                      List of generator account identifiers
+     */
+    public static List<ActiveGenerator> getNextGenerators() {
+        List<ActiveGenerator> generatorList;
+        Blockchain blockchain = Nxt.getBlockchain();
+        synchronized(activeGenerators) {
+            if (!generatorsInitialized) {
+                activeGeneratorIds.addAll(BlockDb.getBlockGenerators(Math.max(1, blockchain.getHeight() - 10000)));
+                activeGeneratorIds.forEach(activeGeneratorId -> activeGenerators.add(new ActiveGenerator(activeGeneratorId)));
+                Logger.logDebugMessage(activeGeneratorIds.size() + " block generators found");
+                Nxt.getBlockchainProcessor().addListener(block -> {
+                    long generatorId = block.getGeneratorId();
+                    synchronized(activeGenerators) {
+                        if (!activeGeneratorIds.contains(generatorId)) {
+                            activeGeneratorIds.add(generatorId);
+                            activeGenerators.add(new ActiveGenerator(generatorId));
+                        }
+                    }
+                }, BlockchainProcessor.Event.BLOCK_PUSHED);
+                generatorsInitialized = true;
+            }
+            long blockId = blockchain.getLastBlock().getId();
+            if (blockId != activeBlockId) {
+                activeBlockId = blockId;
+                Block lastBlock = blockchain.getLastBlock();
+                for (ActiveGenerator generator : activeGenerators) {
+                    generator.setLastBlock(lastBlock);
+                }
+                Collections.sort(activeGenerators);
+            }
+            generatorList = new ArrayList<>(activeGenerators);
+        }
+        return generatorList;
+    }
+
+    /**
+     * Active generator
+     */
+    public static class ActiveGenerator implements Comparable<ActiveGenerator> {
+        private final long accountId;
+        private long hitTime;
+        private long effectiveBalanceNXT;
+        private byte[] publicKey;
+
+        public ActiveGenerator(long accountId) {
+            this.accountId = accountId;
+            this.hitTime = Long.MAX_VALUE;
+        }
+
+        public long getAccountId() {
+            return accountId;
+        }
+
+        public long getEffectiveBalance() {
+            return effectiveBalanceNXT;
+        }
+
+        public long getHitTime() {
+            return hitTime;
+        }
+
+        private void setLastBlock(Block lastBlock) {
+            if (publicKey == null) {
+                publicKey = Account.getPublicKey(accountId);
+                if (publicKey == null) {
+                    hitTime = Long.MAX_VALUE;
+                    return;
+                }
+            }
+            int height = lastBlock.getHeight();
+            Account account = Account.getAccount(accountId, height);
+            if (account == null) {
+                hitTime = Long.MAX_VALUE;
+                return;
+            }
+            effectiveBalanceNXT = Math.max(account.getEffectiveBalanceNXT(height), 0);
+            if (effectiveBalanceNXT == 0) {
+                hitTime = Long.MAX_VALUE;
+                return;
+            }
+            BigInteger effectiveBalance = BigInteger.valueOf(effectiveBalanceNXT);
+            BigInteger hit = Generator.getHit(publicKey, lastBlock);
+            hitTime = Generator.getHitTime(effectiveBalance, hit, lastBlock);
+        }
+
+        @Override
+        public int hashCode() {
+            return Long.hashCode(accountId);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (obj != null && (obj instanceof ActiveGenerator) && accountId == ((ActiveGenerator)obj).accountId);
+        }
+
+        @Override
+        public int compareTo(ActiveGenerator obj) {
+            return (hitTime < obj.hitTime ? -1 : (hitTime > obj.hitTime ? 1 : 0));
+        }
+    }
 }

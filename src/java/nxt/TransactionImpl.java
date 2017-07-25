@@ -1,18 +1,18 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt;
 
@@ -84,7 +84,7 @@ final class TransactionImpl implements Transaction {
                 timestamp = Nxt.getEpochTime();
             }
             if (!ecBlockSet) {
-                Block ecBlock = EconomicClustering.getECBlock(timestamp);
+                Block ecBlock = BlockchainImpl.getInstance().getECBlock(timestamp);
                 this.ecBlockHeight = ecBlock.getHeight();
                 this.ecBlockId = ecBlock.getId();
             }
@@ -1015,15 +1015,28 @@ final class TransactionImpl implements Transaction {
         if (getFullSize() > Constants.MAX_PAYLOAD_LENGTH) {
             throw new NxtException.NotValidException("Transaction size " + getFullSize() + " exceeds maximum payload size");
         }
-
+        int blockchainHeight = Nxt.getBlockchain().getHeight();
         if (!validatingAtFinish) {
-            long minimumFeeNQT = getMinimumFeeNQT(Nxt.getBlockchain().getHeight());
+            long minimumFeeNQT = getMinimumFeeNQT(blockchainHeight);
             if (feeNQT < minimumFeeNQT) {
                 throw new NxtException.NotCurrentlyValidException(String.format("Transaction fee %f NXT less than minimum fee %f NXT at height %d",
-                        ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, Nxt.getBlockchain().getHeight()));
+                        ((double) feeNQT) / Constants.ONE_NXT, ((double) minimumFeeNQT) / Constants.ONE_NXT, blockchainHeight));
+            }
+            if (blockchainHeight > Constants.FXT_BLOCK && ecBlockId != 0) {
+                if (blockchainHeight < ecBlockHeight) {
+                    throw new NxtException.NotCurrentlyValidException("ecBlockHeight " + ecBlockHeight
+                            + " exceeds blockchain height " + blockchainHeight);
+                }
+                if (BlockDb.findBlockIdAtHeight(ecBlockHeight) != ecBlockId) {
+                    throw new NxtException.NotCurrentlyValidException("ecBlockHeight " + ecBlockHeight
+                            + " does not match ecBlockId " + Long.toUnsignedString(ecBlockId)
+                            + ", transaction was generated on a fork");
+                }
             }
         }
-        AccountRestrictions.checkTransaction(this, validatingAtFinish);
+        if (blockchainHeight < Nxt.getHardForkHeight() || !validatingAtFinish) {
+            AccountRestrictions.checkTransaction(this, validatingAtFinish);
+        }
     }
 
     // returns false iff double spending

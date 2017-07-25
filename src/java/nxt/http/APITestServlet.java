@@ -1,21 +1,22 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt.http;
 
+import nxt.Constants;
 import nxt.util.Convert;
 
 import javax.servlet.ServletException;
@@ -62,7 +63,11 @@ public class APITestServlet extends HttpServlet {
             "       </div>\n" +
             "       <div class='navbar-collapse collapse'>\n" +
             "           <ul class='nav navbar-nav navbar-right'>\n" +
-            "               <li><input type='text' class='form-control' id='search' " + 
+            "               <li><input type='text' class='form-control' id='nodeType' " +
+            "                    readonly style='margin-top:8px;'></li>\n" +
+            "               <li><input type='text' class='form-control' id='servletPath' " +
+            "                    readonly style='margin-top:8px;'></li>\n" +
+            "               <li><input type='text' class='form-control' id='search' " +
             "                    placeholder='Search' style='margin-top:8px;'></li>\n" +
             "               <li><a href='https://nxtwiki.org/wiki/The_Nxt_API' target='_blank' style='margin-left:20px;'>Wiki Docs</a></li>\n" +
             "           </ul>\n" +
@@ -185,6 +190,14 @@ public class APITestServlet extends HttpServlet {
             String requestType = Convert.nullToEmpty(req.getParameter("requestType"));
             APIServlet.APIRequestHandler requestHandler = APIServlet.apiRequestHandlers.get(requestType);
             StringBuilder bufJSCalls = new StringBuilder();
+            String nodeType = "Full Node";
+            if (Constants.isLightClient) {
+                nodeType = "Light Client";
+            } else if (APIProxy.enableAPIProxy) {
+                nodeType = "Roaming Client";
+            }
+            bufJSCalls.append("    $('#nodeType').val('").append(nodeType).append("');");
+            bufJSCalls.append("    $('#servletPath').val('").append(req.getServletPath()).append("');");
             if (requestHandler != null) {
                 writer.print(form(req, requestType, true, requestHandler));
                 bufJSCalls.append("    ATS.apiCalls.push('").append(requestType).append("');\n");
@@ -255,7 +268,9 @@ public class APITestServlet extends HttpServlet {
         }
         buf.append("'>\n");
         buf.append("<div class='panel-body'>\n");
-        buf.append("<form action='/nxt' method='POST' ");
+        String path = req.getServletPath();
+        String formAction = "/test-proxy".equals(path) ? "/nxt-proxy" : "/nxt";
+        buf.append("<form action='").append(formAction).append("' method='POST' ");
         if (fileParameter != null) {
             buf.append("enctype='multipart/form-data' ");
         }
@@ -264,6 +279,7 @@ public class APITestServlet extends HttpServlet {
             buf.append(", \"").append(fileParameter).append("\"");
         }
         buf.append(")'>\n");
+        buf.append("<input type='hidden' id='formAction' value='").append(formAction).append("'/>\n");
         buf.append("<input type='hidden' name='requestType' value='").append(requestType).append("'/>\n");
         buf.append("<div class='col-xs-12 col-lg-6' style='min-width: 40%;'>\n");
         buf.append("<table class='table'>\n");
@@ -277,13 +293,22 @@ public class APITestServlet extends HttpServlet {
         for (String parameter : parameters) {
             buf.append("<tr class='api-call-input-tr'>\n");
             buf.append("<td>").append(parameter).append(":</td>\n");
-            buf.append("<td><input type='").append(isPassword(parameter) ? "password" : "text").append("' ");
+            if (isTextArea(parameter)) {
+                buf.append("<td><textarea ");
+            } else {
+                buf.append("<td><input type='").append(isPassword(parameter) ? "password" : "text").append("' ");
+            }
             buf.append("name='").append(parameter).append("' ");
             String value = Convert.emptyToNull(req.getParameter(parameter));
             if (value != null) {
                 buf.append("value='").append(value.replace("'", "&quot;")).append("' ");
             }
-            buf.append("style='width:100%;min-width:200px;'/></td>\n");
+            buf.append("style='width:100%;min-width:200px;'");
+            if (isTextArea(parameter)) {
+                buf.append("></textarea></td>\n");
+            } else {
+                buf.append("/></td>\n");
+            }
             buf.append("</tr>\n");
         }
         buf.append("<tr>\n");
@@ -311,6 +336,10 @@ public class APITestServlet extends HttpServlet {
 
     private static boolean isPassword(String parameter) {
         return "secretPhrase".equals(parameter) || "adminPassword".equals(parameter) || "recipientSecretPhrase".equals(parameter);
+    }
+
+    private static boolean isTextArea(String parameter) {
+        return "website".equals(parameter);
     }
 
     private static void appendWikiLink(String className, StringBuilder buf) {

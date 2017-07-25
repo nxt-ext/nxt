@@ -23,6 +23,9 @@
 -keep class * extends nxt.env.DirProvider
 -keep class * extends nxt.addons.AddOn
 -keep class nxt.addons.AddOn
+-keep,includedescriptorclasses class nxtdesktop.JavaScriptBridge, nxtdesktop.DesktopApplication, nxtdesktop.WalletContextMenu {
+    <methods>;
+}
 -keepclassmembers class nxt.env.RuntimeEnvironment {
     static boolean isHeadless();
 }

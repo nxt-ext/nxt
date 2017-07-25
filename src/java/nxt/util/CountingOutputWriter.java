@@ -1,18 +1,18 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt.util;
 
@@ -50,18 +50,6 @@ public class CountingOutputWriter extends FilterWriter {
     }
 
     /**
-     * Write an array of characters
-     *
-     * @param   cbuf                Characters to be written
-     * @throws  IOException         I/O error occurred
-     */
-    @Override
-    public void write(char[] cbuf) throws IOException {
-        super.write(cbuf);
-        count += cbuf.length;
-    }
-
-    /**
      * Write an array of characters starting at the specified offset
      *
      * @param   cbuf                Characters to be written
@@ -73,18 +61,6 @@ public class CountingOutputWriter extends FilterWriter {
     public void write(char[] cbuf, int off, int len) throws IOException {
         super.write(cbuf, off, len);
         count += len;
-    }
-
-    /**
-     * Write a string
-     *
-     * @param   s                   String to be written
-     * @throws  IOException         I/O error occurred
-     */
-    @Override
-    public void write(String s) throws IOException {
-        super.write(s);
-        count += s.length();
     }
 
     /**

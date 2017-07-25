@@ -1,23 +1,26 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt.peer;
 
+import nxt.http.APIEnum;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
+
+import java.util.Set;
 
 public interface Peer extends Comparable<Peer> {
 
@@ -29,7 +32,8 @@ public interface Peer extends Comparable<Peer> {
         HALLMARK(1),                    // Hallmarked node
         PRUNABLE(2),                    // Stores expired prunable messages
         API(4),                         // Provides open API access over http
-        API_SSL(8);                     // Provides open API access over https
+        API_SSL(8),                     // Provides open API access over https
+        CORS(16);                       // API CORS enabled
 
         private final long code;        // Service code - must be a power of 2
 
@@ -40,6 +44,13 @@ public interface Peer extends Comparable<Peer> {
         public long getCode() {
             return code;
         }
+    }
+
+    enum BlockchainState {
+        UP_TO_DATE,
+        DOWNLOADING,
+        LIGHT_CLIENT,
+        FORK
     }
 
     boolean providesService(Service service);
@@ -65,6 +76,12 @@ public interface Peer extends Comparable<Peer> {
     int getApiPort();
 
     int getApiSSLPort();
+
+    Set<APIEnum> getDisabledAPIs();
+
+    int getApiServerIdleTimeout();
+
+    BlockchainState getBlockchainState();
 
     Hallmark getHallmark();
 
@@ -97,6 +114,12 @@ public interface Peer extends Comparable<Peer> {
     boolean isInboundWebSocket();
 
     boolean isOutboundWebSocket();
+
+    boolean isOpenAPI();
+
+    boolean isApiConnectable();
+
+    StringBuilder getPeerApiUri();
 
     String getBlacklistingCause();
 

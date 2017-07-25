@@ -1,26 +1,30 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt.http;
 
 import nxt.Constants;
 import nxt.Nxt;
+import nxt.util.Convert;
 import nxt.util.Logger;
 import nxt.util.ThreadPool;
 import nxt.util.UPnP;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -38,6 +42,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import javax.servlet.Filter;
@@ -60,37 +65,47 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
+import static nxt.http.JSONResponses.MISSING_ADMIN_PASSWORD;
 import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
+import static nxt.http.JSONResponses.LOCKED_ADMIN_PASSWORD;
 import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 
 public final class API {
 
     public static final int TESTNET_API_PORT = 6876;
     public static final int TESTNET_API_SSLPORT = 6877;
+    private static final String[] DISABLED_HTTP_METHODS = {"TRACE", "OPTIONS", "HEAD"};
 
     public static final int openAPIPort;
     public static final int openAPISSLPort;
+    public static final boolean isOpenAPI;
 
     public static final List<String> disabledAPIs;
     public static final List<APITag> disabledAPITags;
 
     private static final Set<String> allowedBotHosts;
     private static final List<NetworkAddress> allowedBotNets;
+    private static final Map<String, PasswordCount> incorrectPasswords = new HashMap<>();
     public static final String adminPassword = Nxt.getStringProperty("nxt.adminPassword", "", true);
     static final boolean disableAdminPassword;
     static final int maxRecords = Nxt.getIntProperty("nxt.maxAPIRecords");
     static final boolean enableAPIUPnP = Nxt.getBooleanProperty("nxt.enableAPIUPnP");
+    public static final int apiServerIdleTimeout = Nxt.getIntProperty("nxt.apiServerIdleTimeout");
+    public static final boolean apiServerCORS = Nxt.getBooleanProperty("nxt.apiServerCORS");
 
     private static final Server apiServer;
     private static URI welcomePageUri;
     private static URI serverRootUri;
 
     static {
-        List<String> disabled = Nxt.getStringListProperty("nxt.disabledAPIs");
+        List<String> disabled = new ArrayList<>(Nxt.getStringListProperty("nxt.disabledAPIs"));
         Collections.sort(disabled);
         disabledAPIs = Collections.unmodifiableList(disabled);
         disabled = Nxt.getStringListProperty("nxt.disabledAPITags");
@@ -135,10 +150,14 @@ public final class API {
             // Create the HTTP connector
             //
             if (!enableSSL || port != sslPort) {
-                connector = new ServerConnector(apiServer);
+                HttpConfiguration configuration = new HttpConfiguration();
+                configuration.setSendDateHeader(false);
+                configuration.setSendServerVersion(false);
+
+                connector = new ServerConnector(apiServer, new HttpConnectionFactory(configuration));
                 connector.setPort(port);
                 connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setIdleTimeout(apiServerIdleTimeout);
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTP port " + port);
@@ -149,6 +168,8 @@ public final class API {
             final SslContextFactory sslContextFactory;
             if (enableSSL) {
                 HttpConfiguration https_config = new HttpConfiguration();
+                https_config.setSendDateHeader(false);
+                https_config.setSendServerVersion(false);
                 https_config.setSecureScheme("https");
                 https_config.setSecurePort(sslPort);
                 https_config.addCustomizer(new SecureRequestCustomizer());
@@ -161,6 +182,7 @@ public final class API {
                         "SSL_DHE_DSS_WITH_DES_CBC_SHA", "SSL_RSA_EXPORT_WITH_RC4_40_MD5", "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
                         "SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA", "SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA");
                 sslContextFactory.addExcludeProtocols("SSLv3");
+                sslContextFactory.setKeyStoreType(Nxt.getStringProperty("nxt.keyStoreType"));
                 List<String> ciphers = Nxt.getStringListProperty("nxt.apiSSLCiphers");
                 if (!ciphers.isEmpty()) {
                     sslContextFactory.setIncludeCipherSuites(ciphers.toArray(new String[ciphers.size()]));
@@ -169,7 +191,7 @@ public final class API {
                         new HttpConnectionFactory(https_config));
                 connector.setPort(sslPort);
                 connector.setHost(host);
-                connector.setIdleTimeout(Nxt.getIntProperty("nxt.apiServerIdleTimeout"));
+                connector.setIdleTimeout(apiServerIdleTimeout);
                 connector.setReuseAddress(true);
                 apiServer.addConnector(connector);
                 Logger.logMessage("API server using HTTPS port " + sslPort);
@@ -183,8 +205,9 @@ public final class API {
             } catch (URISyntaxException e) {
                 Logger.logInfoMessage("Cannot resolve browser URI", e);
             }
-            openAPIPort = "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
-            openAPISSLPort = "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
+            openAPIPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
+            openAPISSLPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
+            isOpenAPI = openAPIPort > 0 || openAPISSLPort > 0;
 
             HandlerList apiHandlers = new HandlerList();
 
@@ -217,19 +240,26 @@ public final class API {
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
 
+            servletHolder = apiHandler.addServlet(APIProxyServlet.class, "/nxt-proxy");
+            servletHolder.setInitParameters(Collections.singletonMap("idleTimeout",
+                    "" + Math.max(apiServerIdleTimeout - APIProxyServlet.PROXY_IDLE_TIMEOUT_DELTA, 0)));
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
+                    null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
+
             GzipHandler gzipHandler = new GzipHandler();
-            if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
-                gzipHandler.setExcludedPaths("/nxt");
+            if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter", isOpenAPI)) {
+                gzipHandler.setExcludedPaths("/nxt", "/nxt-proxy");
             }
             gzipHandler.setIncludedMethods("GET", "POST");
             gzipHandler.setMinGzipSize(nxt.peer.Peers.MIN_COMPRESS_SIZE);
             apiHandler.setGzipHandler(gzipHandler);
 
             apiHandler.addServlet(APITestServlet.class, "/test");
+            apiHandler.addServlet(APITestServlet.class, "/test-proxy");
 
             apiHandler.addServlet(DbShellServlet.class, "/dbshell");
 
-            if (Nxt.getBooleanProperty("nxt.apiServerCORS")) {
+            if (apiServerCORS) {
                 FilterHolder filterHolder = apiHandler.addFilter(CrossOriginFilter.class, "/*", null);
                 filterHolder.setInitParameter("allowedHeaders", "*");
                 filterHolder.setAsyncSupported(true);
@@ -239,6 +269,7 @@ public final class API {
                 FilterHolder filterHolder = apiHandler.addFilter(XFrameOptionsFilter.class, "/*", null);
                 filterHolder.setAsyncSupported(true);
             }
+            disableHttpMethods(apiHandler);
 
             apiHandlers.addHandler(apiHandler);
             apiHandlers.addHandler(new DefaultHandler());
@@ -256,6 +287,7 @@ public final class API {
                         }
                     }
                     APIServlet.initClass();
+                    APIProxyServlet.initClass();
                     APITestServlet.initClass();
                     apiServer.start();
                     if (sslContextFactory != null) {
@@ -275,6 +307,7 @@ public final class API {
             disableAdminPassword = false;
             openAPIPort = 0;
             openAPISSLPort = 0;
+            isOpenAPI = false;
             Logger.logMessage("API server not enabled");
         }
 
@@ -305,14 +338,68 @@ public final class API {
         }
         if (API.adminPassword.isEmpty()) {
             throw new ParameterException(NO_PASSWORD_IN_CONFIG);
-        } else if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
-            Logger.logWarningMessage("Incorrect adminPassword");
-            throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
         }
+        checkOrLockPassword(req);
     }
 
     public static boolean checkPassword(HttpServletRequest req) {
-        return (API.disableAdminPassword || (!API.adminPassword.isEmpty() && API.adminPassword.equals(req.getParameter("adminPassword"))));
+        if (API.disableAdminPassword) {
+            return true;
+        }
+        if (API.adminPassword.isEmpty()) {
+            return false;
+        }
+        if (Convert.emptyToNull(req.getParameter("adminPassword")) == null) {
+            return false;
+        }
+        try {
+            checkOrLockPassword(req);
+            return true;
+        } catch (ParameterException e) {
+            return false;
+        }
+    }
+
+
+    private static class PasswordCount {
+        private int count;
+        private int time;
+    }
+
+    private static void checkOrLockPassword(HttpServletRequest req) throws ParameterException {
+        int now = Nxt.getEpochTime();
+        String remoteHost = req.getRemoteHost();
+        synchronized(incorrectPasswords) {
+            PasswordCount passwordCount = incorrectPasswords.get(remoteHost);
+            if (passwordCount != null && passwordCount.count >= 25 && now - passwordCount.time < 60*60) {
+                Logger.logWarningMessage("Too many incorrect admin password attempts from " + remoteHost);
+                throw new ParameterException(LOCKED_ADMIN_PASSWORD);
+            }
+            String adminPassword = Convert.nullToEmpty(req.getParameter("adminPassword"));
+            if (!API.adminPassword.equals(adminPassword)) {
+                if (adminPassword.length() > 0) {
+                    if (passwordCount == null) {
+                        passwordCount = new PasswordCount();
+                        incorrectPasswords.put(remoteHost, passwordCount);
+                        if (incorrectPasswords.size() > 1000) {
+                            // Remove one of the locked hosts at random to prevent unlimited growth of the map
+                            List<String> remoteHosts = new ArrayList<>(incorrectPasswords.keySet());
+                            Random r = new Random();
+                            incorrectPasswords.remove(remoteHosts.get(r.nextInt(remoteHosts.size())));
+                        }
+                    }
+                    passwordCount.count++;
+                    passwordCount.time = now;
+                    Logger.logWarningMessage("Incorrect adminPassword from " + remoteHost);
+                    throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
+                } else {
+                    throw new ParameterException(MISSING_ADMIN_PASSWORD);
+                }
+            }
+            if (passwordCount != null) {
+                incorrectPasswords.remove(remoteHost);
+            }
+        }
     }
 
     static boolean isAllowed(String remoteHost) {
@@ -332,6 +419,42 @@ public final class API {
         }
         return false;
 
+    }
+
+    private static void disableHttpMethods(ServletContextHandler servletContext) {
+        SecurityHandler securityHandler = servletContext.getSecurityHandler();
+        if (securityHandler == null) {
+            securityHandler = new ConstraintSecurityHandler();
+            servletContext.setSecurityHandler(securityHandler);
+        }
+        disableHttpMethods(securityHandler);
+    }
+
+    private static void disableHttpMethods(SecurityHandler securityHandler) {
+        if (securityHandler instanceof ConstraintSecurityHandler) {
+            ConstraintSecurityHandler constraintSecurityHandler = (ConstraintSecurityHandler) securityHandler;
+            for (String method : DISABLED_HTTP_METHODS) {
+                disableHttpMethod(constraintSecurityHandler, method);
+            }
+            ConstraintMapping enableEverythingButTraceMapping = new ConstraintMapping();
+            Constraint enableEverythingButTraceConstraint = new Constraint();
+            enableEverythingButTraceConstraint.setName("Enable everything but TRACE");
+            enableEverythingButTraceMapping.setConstraint(enableEverythingButTraceConstraint);
+            enableEverythingButTraceMapping.setMethodOmissions(DISABLED_HTTP_METHODS);
+            enableEverythingButTraceMapping.setPathSpec("/");
+            constraintSecurityHandler.addConstraintMapping(enableEverythingButTraceMapping);
+        }
+    }
+
+    private static void disableHttpMethod(ConstraintSecurityHandler securityHandler, String httpMethod) {
+        ConstraintMapping mapping = new ConstraintMapping();
+        Constraint constraint = new Constraint();
+        constraint.setName("Disable " + httpMethod);
+        constraint.setAuthenticate(true);
+        mapping.setConstraint(constraint);
+        mapping.setPathSpec("/");
+        mapping.setMethod(httpMethod);
+        securityHandler.addConstraintMapping(mapping);
     }
 
     private static class NetworkAddress {

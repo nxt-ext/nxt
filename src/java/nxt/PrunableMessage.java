@@ -1,26 +1,28 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt;
 
+import nxt.crypto.Crypto;
 import nxt.crypto.EncryptedData;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
 import nxt.db.PrunableDbTable;
+import nxt.util.Convert;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -231,6 +233,26 @@ public final class PrunableMessage {
 
     public int getHeight() {
         return height;
+    }
+
+    public byte[] decrypt(String secretPhrase) {
+        if (encryptedData == null) {
+            return null;
+        }
+        byte[] publicKey = senderId == Account.getId(Crypto.getPublicKey(secretPhrase))
+                ? Account.getPublicKey(recipientId) : Account.getPublicKey(senderId);
+        return Account.decryptFrom(publicKey, encryptedData, secretPhrase, isCompressed);
+    }
+
+    public byte[] decrypt(byte[] sharedKey) {
+        if (encryptedData == null) {
+            return null;
+        }
+        byte[] data = Crypto.aesDecrypt(encryptedData.getData(), sharedKey);
+        if (isCompressed) {
+            data = Convert.uncompress(data);
+        }
+        return data;
     }
 
     static void add(TransactionImpl transaction, Appendix.PrunablePlainMessage appendix) {

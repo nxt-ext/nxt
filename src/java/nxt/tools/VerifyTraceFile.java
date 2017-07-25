@@ -1,21 +1,22 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt.tools;
 
+import nxt.Constants;
 import nxt.Genesis;
 import nxt.util.Convert;
 
@@ -184,6 +185,7 @@ public final class VerifyTraceFile {
                 }
             }
 
+            final String fxtAssetId = Constants.isTestnet ? "861080501219231688" : "12422608354438203866";
             Set<String> failed = new HashSet<>();
             for (Map.Entry<String,Map<String,Long>> mapEntry : totals.entrySet()) {
                 String accountId = mapEntry.getKey();
@@ -208,6 +210,9 @@ public final class VerifyTraceFile {
                 Map<String,Map<String,Long>> accountAssetMap = accountAssetTotals.get(accountId);
                 for (Map.Entry<String,Map<String,Long>> assetMapEntry : accountAssetMap.entrySet()) {
                     String assetId = assetMapEntry.getKey();
+                    if (assetId.equals(fxtAssetId)) {
+                        continue;
+                    }
                     Map<String,Long> assetValues = assetMapEntry.getValue();
                     System.out.println("asset: " + assetId);
                     for (Map.Entry<String,Long> assetValueEntry : assetValues.entrySet()) {
@@ -254,6 +259,9 @@ public final class VerifyTraceFile {
             Set<String> failedAssets = new HashSet<>();
             for (Map.Entry<String,Long> assetEntry : issuedAssetQuantities.entrySet()) {
                 String assetId = assetEntry.getKey();
+                if (assetId.equals(fxtAssetId)) {
+                    continue;
+                }
                 long issuedAssetQuantity = assetEntry.getValue();
                 if (issuedAssetQuantity != nullToZero(accountAssetQuantities.get(assetId))) {
                     System.out.println("ERROR: asset " + assetId + " balances don't match, issued: "

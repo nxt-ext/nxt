@@ -1,3 +1,379 @@
+nxt-client-1.11.5:
+
+Added firstIndex, lastIndex parameters to the getUnconfirmedTransactions and
+getUnconfirmedTransactionIds APIs to support pagination.
+
+Minor performance optimizations and UI improvements.
+
+Updated H2 to version 1.4.194 and jetty to 9.3.17.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.11.4:
+
+Added Node JS module, see html/www/js/README.
+
+Minor UI and desktop application bugfixes, ported from Ardor.
+
+Added About dialog.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.11.3:
+
+Fixed missing plugin files error in the client.
+
+Backported minor bugfixes from the Ardor branch.
+
+Treat all text/* media types as text, not just text/plain for the data cloud.
+
+Updated Jetty to version 9.3.16, delete the old lib folder before unpacking on
+top.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.11.2:
+
+Added "Copy Account" button next to the account id header.
+
+Added again the API and DBShell links to the cogwheel menu.
+
+Minor bugfixes and UI improvements.
+
+Android App updated to use Apache Cordova 6.4.0.
+
+Updated Jetty to version 9.3.15, Bouncy Castle to 1.56, slf4j to 1.7.22, and
+zxing to 3.3.0, delete the old lib folder before unpacking on top.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.11.1e:
+
+Implemented "Store Remembered Passphrase" setting in the device settings page.
+When checked, the client stores the remembered passphrase in the local browser
+settings or mobile app settings so that the next time the client is launched
+it will login in automatically.
+For the mobile app this setting defaults to true. In other configurations it 
+defaults to false. The stored passphrase is deleted when logging out of the
+wallet.
+
+Desktop Application now supports request confirmations when running as light or
+roaming client.
+
+Sign Transaction modal now signs the transaction bytes on the client side.
+
+When the mobile app cannot connect to a randomly selected remote node, it will
+popup the device settings modal to allow the user to configure a specific node.
+
+When the mobile device is offline, the device settings modal allows signing
+transactions and generating tokens to support cold storage functionality.
+
+Additional client side bug fixes and refactoring.
+
+Updated Jetty to version 9.3.14 and H2 to version 1.4.193, delete the old lib
+folder before unpacking on top.
+
+Updated localization component i18next to version 3.4.4
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.11.0e:
+
+Added Generators page (under the cogwheel menu), showing the predicted next
+block generators.
+
+When working as a roaming or light client, data returned by the remote node is 
+validated against other remote nodes. In case of a difference a visual 
+indication is displayed on the toolbar to warn the user that the data returned 
+by the remote node may not be consistent.
+
+The user interface files are now located under html/www instead of html/ui,
+as this is the path required by the Apache Cordova framework used by the
+mobile wallet.
+
+The lockup screen now displays a button group of "by account", "by passphrase", 
+"by QR code" login options side by side above the credentials entry field, 
+instead of the old "By Account" / "By Password" toggle button.
+
+Scanning a QR code for login, has been implemented by clicking the QR code icon
+on the lockup screen. When the value scanned matches an NXT account format it
+will be treated as account login, otherwise the value scanned will be treated
+as the account passphrase.
+
+The old "Remember Account" and "Remember Passphrase" checkboxes were merged 
+into a single "Remember Me" checkbox.
+
+Save passphrase in local storage when using passphrase login with "Remember Me"
+checked. Choosing logout will clear this data.
+
+Account and passphrase entry fields on modal dialogs now support scanning the
+value from a QR code by clicking the QR link above the field.
+
+When logging in with passphrase and the "Remember Me" checkbox checked, the 
+"Account Details" modal will display the QR code for the account passphrase 
+in addition to the QR code for the account id.
+
+Experimental support for running the client wallet as a mobile app has been 
+added. See specific documentation at https://nxtwiki.org/wiki/Mobile_App
+
+Updated Jetty to version 9.3.13, delete the old lib folder before unpacking on
+top.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.10.3:
+
+Removed old code, the Ardor distribution UI, and the getFxtQuantity API, as the
+Ardor distribution is now complete.
+
+Blacklist peers of version older than 1.10.1.
+
+As a performance optimization, the ARDR asset distribution data is now loaded
+from the conf/fxt.json for production and conf/fxt-testnet.json files for
+testnet, instead of being recalculated during blockchain download. If those
+files are missing, and a rescan or redownload is performed, snapshot data will
+be calculated again and saved as the corresponding json file in the nxt folder,
+thus allowing independent validation of the hardcoded distribution data.
+
+Added ShapeShift support to the desktop wallet by using a proxy servlet on the
+local node.
+
+The security manager which is automatically enabled when add-ons are in use now
+allows add-on network connections.
+
+Added nxt.disableSecurityPolicy property to disable the security manager even
+when add-ons are in use, in order to improve performance, default false.
+
+Added nxt.keyStoreType property to configure the keystore type used, default
+is JKS.
+
+Updated Jetty to version 9.3.12 and Bouncy Castle to version 1.55, delete the
+old lib folder before unpacking on top.
+
+
+Important copyright change:
+
+The copyright of all GPLv2 code contributed by the Nxt Core Developers to the
+Nxt Reference Software now belongs to Jelurida IP B.V., a private company
+registered in the Netherlands. Please contact info@jelurida.com for commercial
+licensing options if the GPLv2 license does not fit your private blockchain
+needs.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.10.2:
+
+Changed default setting of nxt.apiServerCORS to true in nxt-default.properties,
+to enable cross origin filter on the API server by default.
+
+Added CORS peer service field, showing whether CORS is enabled for open API
+nodes.
+
+Recalculate NRS.isLocalhost when api proxy is enabled and blockchain download
+has finished. Fixed starting funding monitor when running on remote host.
+
+To protect against brute force attacks on the admin password of public nodes,
+after 3 unsuccessful login attempts the remote host is blacklisted for 1 h.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.10.1:
+
+This release adds transaction replay protection, to be enabled at the hard fork
+scheduled for block 1,000,000. Upgrading to 1.10.1 or later before that block
+is mandatory for all.
+
+The ecBlockId and ecBlockHeight transaction fields, previously populated but
+not used, will begin to be used for enforcing that a transaction submitted on
+one blockchain or fork will not be accepted on another blockchain or fork that
+shares the same code. These fields by default will be set to a block 720 blocks
+behind the last block at the time the transaction is created, and transactions
+will only be accepted if their ecBlockId and ecBlockHeight values point to an
+existing block when they are included in the blockchain. This default setting
+provides protection against replaying the transaction on a hard fork that has
+diverged more than 720 blocks from the one where the transaction was created.
+
+Light clients that have no way of verifying the ecBlock values returned by a
+remote node will use hardcoded values, to be updated manually at some releases.
+Transactions from legacy light clients that leave eBlockId and height set to 0
+will still be accepted, but cannot benefit from such replay protection.
+
+All CreateTransaction APIs now accept additional ecBlockId and ecBlockHeight
+parameters, allowing the default values to be overridden by the client.
+
+Minor bugfixes and UI improvements.
+
+Updated Jetty to version 9.3.11, delete the old lib folder before unpacking on
+top.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.10.0e:
+
+This is an experimental release introducing the new light client and roaming
+client features.
+
+The roaming client feature, enabled by default, makes the client immediately
+usable by forwarding API requests that need the full blockchain to a randomly
+chosen peer (remote node), selected to provide the openAPI service. As all html
+and javascript files are still served locally and not from the remote host,
+this is considerably safer than just using a remote node. Outgoing transactions
+are also signed locally, never sending the secret phrase to the remote peer.
+
+This roaming client (API Proxy) mode is used automatically while the blockchain
+is still downloading, with a switch to full client mode once the download is
+complete.
+It can be disabled by setting nxt.enableAPIProxy=false in nxt.properties.
+For openAPI nodes, the API proxy remains disabled, ignoring this setting. For
+light clients, the API proxy is always enabled.
+
+The light client feature, disabled by default, makes the node run in roaming
+mode permanently, without downloading the blockchain at all. It can be enabled
+by setting nxt.isLightClient=true.
+Light clients are not advertised as providing openAPI service even if they do
+have their API publicly accessible.
+
+The remote node to use when in roaming and light client modes is selected
+randomly, but can be changed manually in the UI, or using the new
+setAPIProxyPeer API, or forced to a specific peer using the
+nxt.forceAPIProxyServerURL property.
+
+Remote nodes can be blacklisted from the UI, or using the blacklistAPIProxyPeer
+API. This blacklisting is independent from peer blacklisting. The API proxy
+blacklisting period can be set using the nxt.apiProxyBlacklistingPeriod
+property (default 1800000 milliseconds).
+
+API requests that require sending the secret phrase, shared key, or admin
+password to the server, for features like forging, shuffling, or running a
+funding monitor, are disabled when in roaming or light client mode.
+
+While a remote node cannot steal your secret phrase, and data returned by such
+nodes is escaped to prevent javascript injection attacks, users must be aware
+that the validity of such data cannot be verified. For example, a rogue remote
+node can still return fake asset exchange recent trades or open orders prices,
+or modified voting system poll options and descriptions.
+
+To force using a remote node for testing APIs, the /test-proxy URL can be used
+instead of /test for the API test page, i.e. http://localhost:7876/test-proxy.
+
+A new sendTransaction API has been added, similar to broadcastTransaction but
+without validating the transaction, without re-broadcasting the transaction and
+without adding it locally as unconfirmed transaction. This API is mostly useful
+for light or roaming clients that cannot validate or accept locally unconfirmed
+transactions, but must nevertheless be able to send such to peers.
+
+A new getNextBlockGenerators API has been added, returning the next block
+generators ordered by hit time. The list of currently active forgers is first
+initialized using the block generators with at least 2 blocks generated within
+the previous 10,000 blocks, excluding accounts without a public key. The list
+is updated as new blocks are processed. The results are not 100% correct since
+previously active generators may no longer be running and new generators won't
+be known until they generate a block.
+
+Added a peer info modal. Minor other UI improvements and bugfixes.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.9.2:
+
+This is the first stable release in the 1.9 series. Update to this release on
+mainnet is optional up until block 1000000 (Oct 12), however users are advised
+to do it earlier, as after July 14th updating will trigger a blockchain rescan.
+
+The main new feature in 1.9 is the distribution of ARDR assets. See the 1.9.0e
+changelog for details.
+
+Performance optimizations for blockchain rescans and for snapshot balance
+calculations. Added nxt.dbMaxMemoryRows property to allow setting the H2
+MAX_MEMORY_ROWS parameter.
+
+Updated Jetty to version 9.3.10, delete the old lib folder before unpacking on
+top.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.9.1e:
+
+Fixed a client UI bug affecting some form submission.
+
+
+--------------------------------------------------------------------------------
+nxt-client-1.9.0e:
+
+This is an experimental release. It is a required update for all testnet nodes,
+optional for main net.
+
+This release enables taking multiple snapshots of accounts NXT balances, every
+60 blocks, for a period of 90 days, and distributing an ARDR token based on the
+average of those balances, at the end of the snapshot, to be used for the Ardor
+consensus chain token distribution in Nxt 2.0.
+
+On testnet, the snapshot will start at block 649400 and end at block 779000
+(June 24).
+On mainnet, the snapshot will start at block 870400 (expected July 14) and end
+at block 1000000 (Oct 12).
+
+Since on testnet the starting block is in the past, on upgrade to this release
+a blockchain rescan will be performed automatically in order to calculate past
+account balances. Those who delay upgrading their mainnet nodes until after
+block 870400 will also experience such a rescan. However, the hard fork block
+is set at the end of the snapshot, so the final deadline for upgrading to 1.9
+is at blocks 779000 and 1000000 respectively.
+
+To get your ARDR tokens, it is essential that you keep your NXT balance in your
+own account. There is no need to run a node or forge. It is the confirmed NXT
+balance that is used for the snapshot, not the unconfirmed (available) balance,
+so having some NXT locked in open AE bid orders, shufflings, etc, will not
+affect your ARDR distribution. For balances on exchange accounts, it will be up
+to each exchange to handle the re-distribution of the ARDR tokens that will get
+automatically sent to the exchange account at snapshot end.
+
+A new getFxtQuantity API has been added, which allows retrieving the already
+accumulated ARDR quantity for each account during the snapshot, and an estimate
+for the quantity yet to be obtained. While snapshots are done every 60 blocks,
+the numbers that this API returns are updated once every 720 blocks only.
+
+Snapshot balances used for the ARDR distribution for a specific account can be
+recorded in the log by setting the nxt.logFxtBalance property to that account
+number, and performing a rescan if the snapshot has already started.
+
+Added some additional transaction bytes validation, and phasing parameters
+validation, to take effect after the hardfork.
+
+Added getAssetDividends API, to retrieve the dividend payment history for an
+asset. It can be viewed in the client by clicking on the new "View Asset
+Dividends" link on the asset exchange page. Dividend payments made before a
+node is updated to 1.9.0e will not show in this history, unless a blockchain
+rescan is forced manually.
+
+After the hardfork block, asset dividend payment transactions will be limited
+to not more than one per asset every 60 blocks.
+
+Added a new Messages table in the client UI. Allowed uploading a file as a
+message attachment, plain or encrypted, and downloading such messages as files.
+All create transaction APIs that support prunable message attachments now also
+optionally accept multipart file uploads as messageFile or messageToEncryptFile
+parameters, or when using client-side encrypted data the data part can also be
+uploaded using encryptedMessageFile parameter. As the test API page does not
+support multiple file upload parameters, upload buttons for those are not
+currently available there.
+
+Accept sharedKey parameter in downloadPrunableMessage and getPrunableMessage
+APIs.
+
+Added client UI support for decrypting messages using a shared key, to allow
+disclosing the shared key for a specific encrypted message to a third party in
+order to decrypt it without having to reveal the account passphrase.
+
+Forging optimization to reduce block skipping when switching forks.
+
+Minor other bugfixes and UI improvements.
+
+Updated H2 library to version 1.4.192, tika to 1.13, and slf4j to 1.7.21. If
+installing manually, make sure to delete the old lib folder first.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.8.3:
 
 This release contains a number of improvements and bugfixes.

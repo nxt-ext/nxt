@@ -1,22 +1,23 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt.peer;
 
 import nxt.BlockchainProcessor;
+import nxt.Constants;
 import nxt.Nxt;
 import nxt.util.CountingInputReader;
 import nxt.util.CountingOutputWriter;
@@ -109,6 +110,13 @@ public final class PeerServlet extends WebSocketServlet {
         JSONObject response = new JSONObject();
         response.put("error", Errors.DOWNLOADING);
         DOWNLOADING = JSON.prepare(response);
+    }
+
+    private static final JSONStreamAware LIGHT_CLIENT;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("error", Errors.LIGHT_CLIENT);
+        LIGHT_CLIENT = JSON.prepare(response);
     }
 
     private static final BlockchainProcessor blockchainProcessor = Nxt.getBlockchainProcessor();
@@ -271,8 +279,13 @@ public final class PeerServlet extends WebSocketServlet {
                 Peers.notifyListeners(peer, Peers.Event.ADD_INBOUND);
             }
             peer.setLastInboundRequest(Nxt.getEpochTime());
-            if (peerRequestHandler.rejectWhileDownloading() && blockchainProcessor.isDownloading()) {
-                return DOWNLOADING;
+            if (peerRequestHandler.rejectWhileDownloading()) {
+                if (blockchainProcessor.isDownloading()) {
+                    return DOWNLOADING;
+                }
+                if (Constants.isLightClient) {
+                    return LIGHT_CLIENT;
+                }
             }
             return peerRequestHandler.processRequest(request, peer);
         } catch (RuntimeException|ParseException|IOException e) {

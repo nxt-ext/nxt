@@ -1,0 +1,39 @@
+Added Ignis ICO token sale page.
+
+Added support for the Changelly cryptocurrency exchange.
+
+Added password recovery tool for brute forcing partially forgotten or mistyped
+passphrases. Use the passwordRecovery.sh or passwordRecovery.bat script to run,
+after first setting the known password text fragments and guesses dictionary in
+nxt.properties. See nxt-default.properties for configuration details.
+
+Added ability to display a custom warning message on the login screen,
+configurable as nxt.customLoginWarning.
+
+Added active shufflings notification in the header bar.
+
+Performance optimizations when under higher transaction load.
+
+Monetary System UI improvements and bugfixes.
+
+API gzip filter is now automatically enabled for open API nodes, unless
+explicitly disabled in nxt.enableAPIServerGZIPFilter.
+
+Support running Nxt as a Windows service.
+
+Updated mobile app to latest Cordova Android platform.
+
+Added IntelliJ IDE project files to folder ./ide/intellij/project, developers 
+working on the source code should copy the content of folder 
+./ide/intellij/project to the root folder of the project and open the project 
+from inside IntelliJ using File-Open for the project root folder. 
+The IntelliJ project is pre-configured with the necessary dependencies to build 
+and run the Java source code.
+To copy the IntelliJ files to the project root folder, open a command prompt
+at the project root folder and issue the following command:
+Windows: xcopy /e/k/s/h ide\intellij\project .
+Linux: cp -r ide/intellij/project/. .
+
+Updated H2 to version 1.4.196, bouncy castle to 1.57, and jetty to 9.3.20.
+Delete the old lib folder first if unpacking on top.
+

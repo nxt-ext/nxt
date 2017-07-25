@@ -1,18 +1,18 @@
-/******************************************************************************
- * Copyright © 2013-2016 The Nxt Core Developers.                             *
- *                                                                            *
- * See the AUTHORS.txt, DEVELOPER-AGREEMENT.txt and LICENSE.txt files at      *
- * the top-level directory of this distribution for the individual copyright  *
- * holder information and the developer policies on copyright and licensing.  *
- *                                                                            *
- * Unless otherwise agreed in a custom licensing agreement, no part of the    *
- * Nxt software, including this file, may be copied, modified, propagated,    *
- * or distributed except according to the terms contained in the LICENSE.txt  *
- * file.                                                                      *
- *                                                                            *
- * Removal or modification of this copyright notice is prohibited.            *
- *                                                                            *
- ******************************************************************************/
+/*
+ * Copyright © 2013-2016 The Nxt Core Developers.
+ * Copyright © 2016-2017 Jelurida IP B.V.
+ *
+ * See the LICENSE.txt file at the top-level directory of this distribution
+ * for licensing information.
+ *
+ * Unless otherwise agreed in a custom licensing agreement with Jelurida B.V.,
+ * no part of the Nxt software, including this file, may be copied, modified,
+ * propagated, or distributed except according to the terms contained in the
+ * LICENSE.txt file.
+ *
+ * Removal or modification of this copyright notice is prohibited.
+ *
+ */
 
 package nxt;
 
@@ -21,7 +21,11 @@ import nxt.AccountLedger.LedgerEvent;
 import nxt.Attachment.AbstractAttachment;
 import nxt.NxtException.ValidationException;
 import nxt.VoteWeighting.VotingModel;
+import nxt.addons.Snapshot;
 import nxt.util.Convert;
+import nxt.util.Logger;
+import org.apache.tika.Tika;
+import org.apache.tika.mime.MediaType;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
@@ -1653,6 +1657,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
+                if (Snapshot.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset transfer of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
+                }
             }
 
             @Override
@@ -1735,6 +1742,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
+                if (Snapshot.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset delete of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
+                }
             }
 
             @Override
@@ -1765,6 +1775,9 @@ public abstract class TransactionType {
                 if (asset == null) {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
+                }
+                if (Snapshot.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset order placements for ARDR asset not allowed after height " + Nxt.getHardForkHeight());
                 }
             }
 
@@ -1896,6 +1909,12 @@ public abstract class TransactionType {
 
             @Override
             final void undoAttachmentUnconfirmed(Transaction transaction, Account senderAccount) {
+            }
+
+            @Override
+            boolean isUnconfirmedDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                Attachment.ColoredCoinsOrderCancellation attachment = (Attachment.ColoredCoinsOrderCancellation) transaction.getAttachment();
+                return TransactionType.isDuplicate(ColoredCoins.ASK_ORDER_CANCELLATION, Long.toUnsignedString(attachment.getOrderId()), duplicates, true);
             }
 
             @Override
@@ -2063,8 +2082,7 @@ public abstract class TransactionType {
             @Override
             void applyAttachment(Transaction transaction, Account senderAccount, Account recipientAccount) {
                 Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment)transaction.getAttachment();
-                senderAccount.payDividends(transaction.getId(), attachment.getAssetId(), attachment.getHeight(),
-                        attachment.getAmountNQTPerQNT());
+                senderAccount.payDividends(transaction.getId(), attachment);
             }
 
             @Override
@@ -2105,6 +2123,21 @@ public abstract class TransactionType {
                 if (asset.getAccountId() != transaction.getSenderId() || attachment.getAmountNQTPerQNT() <= 0) {
                     throw new NxtException.NotValidException("Invalid dividend payment sender or amount " + attachment.getJSONObject());
                 }
+                if (Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK) {
+                    AssetDividend lastDividend = AssetDividend.getLastDividend(attachment.getAssetId());
+                    if (lastDividend != null && lastDividend.getHeight() > Nxt.getBlockchain().getHeight() - 60) {
+                        throw new NxtException.NotCurrentlyValidException("Last dividend payment for asset " + Long.toUnsignedString(attachment.getAssetId())
+                                + " was less than 60 blocks ago at " + lastDividend.getHeight() + ", current height is " + Nxt.getBlockchain().getHeight()
+                                + ", limit is one dividend per 60 blocks");
+                    }
+                }
+            }
+
+            @Override
+            boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
+                Attachment.ColoredCoinsDividendPayment attachment = (Attachment.ColoredCoinsDividendPayment) transaction.getAttachment();
+                return Nxt.getBlockchain().getHeight() > Constants.FXT_BLOCK &&
+                        isDuplicate(ColoredCoins.DIVIDEND_PAYMENT, Long.toUnsignedString(attachment.getAssetId()), duplicates, true);
             }
 
             @Override
@@ -2114,7 +2147,7 @@ public abstract class TransactionType {
 
             @Override
             public boolean isPhasingSafe() {
-                return true;
+                return false;
             }
 
         };
@@ -2208,7 +2241,23 @@ public abstract class TransactionType {
                         || attachment.getPriceNQT() <= 0 || attachment.getPriceNQT() > Constants.MAX_BALANCE_NQT) {
                     throw new NxtException.NotValidException("Invalid digital goods listing: " + attachment.getJSONObject());
                 }
-                //TODO: at next hard fork, add validation that only prunable, binary, image message attachments are allowed
+                Appendix.PrunablePlainMessage prunablePlainMessage = transaction.getPrunablePlainMessage();
+                if (prunablePlainMessage != null) {
+                    byte[] image = prunablePlainMessage.getMessage();
+                    if (image != null) {
+                        Tika tika = new Tika();
+                        MediaType mediaType = null;
+                        try {
+                            String mediaTypeName = tika.detect(image);
+                            mediaType = MediaType.parse(mediaTypeName);
+                        } catch (NoClassDefFoundError e) {
+                            Logger.logErrorMessage("Error running Tika parsers", e);
+                        }
+                        if (mediaType == null || !"image".equals(mediaType.getType())) {
+                            throw new NxtException.NotValidException("Only image attachments allowed for DGS listing, media type is " + mediaType);
+                        }
+                    }
+                }
             }
 
             @Override
@@ -2837,7 +2886,7 @@ public abstract class TransactionType {
                 }
                 byte[] recipientPublicKey = Account.getPublicKey(transaction.getRecipientId());
                 if (recipientPublicKey == null && Nxt.getBlockchain().getHeight() > Constants.PHASING_BLOCK) {
-                    throw new NxtException.NotValidException("Invalid effective balance leasing: "
+                    throw new NxtException.NotCurrentlyValidException("Invalid effective balance leasing: "
                             + " recipient account " + Long.toUnsignedString(transaction.getRecipientId()) + " not found or no public key published");
                 }
                 if (transaction.getRecipientId() == Genesis.CREATOR_ID) {
@@ -3100,6 +3149,10 @@ public abstract class TransactionType {
                         throw new NxtException.NotValidException("Hashes don't match! Extend hash: " + Convert.toHexString(attachment.getHash())
                                 + " upload hash: " + Convert.toHexString(taggedDataUpload.getHash()));
                     }
+                }
+                TaggedData taggedData = TaggedData.getData(attachment.getTaggedDataId());
+                if (taggedData != null && taggedData.getTransactionTimestamp() > Nxt.getEpochTime() + 6 * Constants.MIN_PRUNABLE_LIFETIME) {
+                    throw new NxtException.NotCurrentlyValidException("Data already extended, timestamp is " + taggedData.getTransactionTimestamp());
                 }
             }
 
