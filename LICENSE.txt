@@ -464,9 +464,9 @@ IP B.V.
 Article 1. The sharedrop requirement of Article 3.4.1 of the General Conditions,
 as related to the Nxt Reference Software (NRS) is the following:
 
-1.1 The NXT holders from the original Nxt Public Blockchain Platform must be
-allocated at least 10% (ten percent) of the forging tokens in the new DLT
-Instance, proportional to their NXT holdings,
+1.1 The NXT holders from the original Nxt Public Blockchain Platform as
+maintained by Jelurida Swiss SA must be allocated at least 10% (ten percent) of
+the forging tokens in the new DLT Instance, proportional to their NXT holdings,
 
 OR
 
