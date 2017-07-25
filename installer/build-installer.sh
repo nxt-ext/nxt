@@ -17,3 +17,6 @@ jar cf0 $JAR -C $CLASSDIR nxt
 
 # package the installer
 java -Xmx512m -cp "../installer/lib/*:$JAR" com.izforge.izpack.compiler.bootstrap.CompilerLauncher ../installer/setup.xml -o $1.jar > ../installer/build-installer.log 2>&1
+
+# cleanup
+rm -rf $CLASSDIR
