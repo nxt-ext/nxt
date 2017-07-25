@@ -63,8 +63,10 @@ public class Snapshot implements AddOn {
 
     private static final long BITSWIFT_ASSET_ID = Long.parseUnsignedLong("12034575542068240440"); //TODO
     private static final long JANUS_ASSET_ID = Long.parseUnsignedLong("4348103880042995903"); //TODO
+    private static final long JANUSXT_ASSET_ID = Long.parseUnsignedLong("14572747084550678873"); //TODO
+    private static final long COMJNSXT_ASSET_ID = Long.parseUnsignedLong("13363533560620557665"); //TODO
     public static final Set<Long> ardorSnapshotAssets = Collections.unmodifiableSet(
-            Convert.toSet(new long[] {FxtDistribution.FXT_ASSET_ID, BITSWIFT_ASSET_ID, JANUS_ASSET_ID}));
+            Convert.toSet(new long[] {FxtDistribution.FXT_ASSET_ID, BITSWIFT_ASSET_ID, JANUS_ASSET_ID, JANUSXT_ASSET_ID, COMJNSXT_ASSET_ID}));
 
     @Override
     public void init() {
@@ -316,7 +318,7 @@ public class Snapshot implements AddOn {
                 SortedMap<String, Map<String, Long>> snapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
-                    for (long assetId : new long[] {JANUS_ASSET_ID}) { //TODO: others?
+                    for (long assetId : new long[] {JANUS_ASSET_ID, JANUSXT_ASSET_ID, COMJNSXT_ASSET_ID}) { //TODO: others?
                         SortedMap<String, Long> asset = new TreeMap<>();
                         pstmt.setLong(1, assetId);
                         try (ResultSet rs = pstmt.executeQuery()) {
