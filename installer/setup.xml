@@ -6,7 +6,7 @@
     <info>
         <appname>NXT</appname>
         <appversion>@{runtime.nxt.version}</appversion>
-        <url>https://nxt.org</url>
+        <url>https://www.jelurida.com/</url>
         <run-privileged condition="izpack.windowsinstall"/>
     </info>
 
@@ -84,7 +84,7 @@
 
     <resources>
         <res id="InfoPanel.info" src="changelogs/nxt-client-@{runtime.nxt.version}.changelog.txt" parse="yes"/>
-        <res id="LicencePanel.licence" src="LICENSE.txt"/>
+        <res id="LicencePanel.licence" src="JPL-NRS.txt"/>
         <res id="Installer.image" src="html/www/img/installer_left_pane.png"/>
         <res id="shortcutSpec.xml" src="../installer/shortcutSpec.xml"/>
         <res id="Unix_shortcutSpec.xml" src="../installer/Unix_shortcutSpec.xml"/>
@@ -115,8 +115,8 @@
             <file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="3RD-PARTY-LICENSES.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="AUTHORS.txt" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="COPYING.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="LICENSE.txt" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="JPL-NRS.pdf" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="DEVELOPERS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="OPERATORS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="README.md" targetdir="${INSTALL_PATH}" override="true"/>
