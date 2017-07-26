@@ -1,6 +1,35 @@
-Added Ignis ICO token sale page.
+IMPORTANT LICENSING CHANGE:
+
+The Nxt software is now distributed under the Jelurida Public License (JPL)
+version 1.0 for the Nxt Public Blockchain Platform. The full text of the JPL
+is in the LICENSE.txt file (use JPL-NRS.pdf for a printable version).
+
+The client UI remains under the MIT license.
+
+
+Added IGNIS Token Sale page.
 
 Added support for the Changelly cryptocurrency exchange.
+
+Added code to disable trading or transferring of assets that will be migrated
+to Ardor after the Ardor Genesis Snapshot, and delete open ask/bid orders for
+them at that time. Currently such assets and their ids are:
+
+ARDR: 12422608354438203866
+Bitswift: 12034575542068240440
+Janus: 4348103880042995903
+JanusXT: 14572747084550678873
+ComJNSXT: 13363533560620557665
+
+Added support for printing a "paper wallet" when creating a new account and
+from the account details modal.
+
+Added a custom installer panel that allows to: shutdown NXT server if it is
+running; remove existing installation; customize conf/nxt.properties by
+choosing from a fixed set of settings.
+
+The pre-defined installer settings are taken from property files under
+conf/examples. The installer makes sure no settings are in conflict.
 
 Added password recovery tool for brute forcing partially forgotten or mistyped
 passphrases. Use the passwordRecovery.sh or passwordRecovery.bat script to run,
@@ -11,6 +40,8 @@ Added ability to display a custom warning message on the login screen,
 configurable as nxt.customLoginWarning.
 
 Added active shufflings notification in the header bar.
+
+Added image loading progress bar to the lock screen.
 
 Performance optimizations when under higher transaction load.
 
