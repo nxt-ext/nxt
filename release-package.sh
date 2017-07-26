@@ -82,8 +82,8 @@ unix2dos changelog-full.txt
 #echo signing zip package
 #../jarsigner.sh ${PACKAGE}.zip
 
-echo signing jar package
-../jarsigner.sh ${PACKAGE}.jar
+#echo signing jar package
+#../jarsigner.sh ${PACKAGE}.jar
 
 echo creating sh package
 echo "#!/bin/sh\nexec java -jar \"\${0}\"\n\n" > ${PACKAGE}.sh
@@ -105,7 +105,7 @@ sha256sum ${PACKAGE}.sh >> ${CHANGELOG}
 
 echo >> ${CHANGELOG}
 
-echo "The exe, dmg, and sh packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
+echo "The exe and dmg packages must have a digital signature by \"Stichting NXT\"." >> ${CHANGELOG}
 
 if [ "${OBFUSCATE}" = "obfuscate" ];
 then
@@ -133,6 +133,6 @@ gpgv ${PACKAGE}.sh.asc ${PACKAGE}.sh
 gpgv ${CHANGELOG}.asc
 sha256sum -c ${CHANGELOG}.asc
 #jarsigner -verify ${PACKAGE}.zip
-jarsigner -verify ${PACKAGE}.sh
+#jarsigner -verify ${PACKAGE}.sh
 
 
