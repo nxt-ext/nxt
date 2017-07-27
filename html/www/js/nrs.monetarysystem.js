@@ -1549,7 +1549,7 @@ var NRS = (function (NRS, $, undefined) {
             $ignisContent.show();
         }
         NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
-            $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3"));
+            $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3") + "<br>" + $.t("ignis_message_4"));
             $(".currency_code").html(response.code);
             $("#currency_id").text(response.currency);
             $("#buy_ignis_currency").val(response.currency);
