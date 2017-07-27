@@ -1897,5 +1897,6 @@
   "print_paper_wallet": "Print Paper Wallet",
   "paper_wallet": "Paper Wallet",
   "print": "Print",
-  "nxt_ardor_paper_wallet": "NXT and Ardor Paper Wallet"
+  "nxt_ardor_paper_wallet": "NXT and Ardor Paper Wallet",
+  "accept": "Accept"
 }

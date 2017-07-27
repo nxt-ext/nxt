@@ -46,7 +46,8 @@ var NRS = (function(NRS, $) {
         "changelly_coin0": "BTC",
         "changelly_coin1": "ARDR",
         "changelly_coin2": "ETH",
-		"max_nxt_decimals": "2"
+		"max_nxt_decimals": "2",
+		"ignis_tc_accepted": "-1"
 	};
 
 	NRS.defaultColors = {

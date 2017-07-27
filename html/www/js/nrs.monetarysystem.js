@@ -1536,6 +1536,18 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.pages.ignis = function() {
+        var $ignisDisabled = $("#ignis_disabled");
+        var $ignisContent = $("#ignis_content");
+        var $ignisTcContainer = $("#ignis_tc_container");
+        if (NRS.settings.ignis_tc_accepted != "1") {
+            $ignisTcContainer.html($("#ignis_tc").html());
+            $ignisDisabled.show();
+            $ignisContent.hide();
+            return;
+        } else {
+            $ignisDisabled.hide();
+            $ignisContent.show();
+        }
         NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
             $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3"));
             $(".currency_code").html(response.code);
@@ -1579,6 +1591,12 @@ var NRS = (function (NRS, $, undefined) {
             NRS.dataLoaded();
         });
     };
+
+    $("#accept_ignis_tc_link").on("click", function(e) {
+        e.preventDefault();
+        NRS.updateSettings("ignis_tc_accepted", "1");
+        NRS.pages.ignis();
+    });
 
     $('#ignis_shape_shift_select_coin').change(function() {
         var ignisSelectCoin = $("#ignis_shape_shift_select_coin");
