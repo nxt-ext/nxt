@@ -402,7 +402,7 @@ their Covered Work is released.
 Article 10. Every Copyright Holder is permitted to use the text of the Jelurida
 Public License for their own Covered Work provided that they: (i) keep the name
 Jelurida Public License (you can append the name of the specific DLT Instance,
-e.g. "Jelurida Public License version 1.0 for the Ardor Public Blockchain"),
+e.g. "Jelurida Public License version 1.0 for the Nxt Public Blockchain"),
 (ii) remove the Preamble and (iii) do not change the General Conditions. Every
 Copyright Holder is permitted to adapt the Special Conditions to their specific
 case under (i), (ii) and (iii) above to the extent that they do not contradict
