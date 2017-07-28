@@ -1,6 +1,6 @@
 {
   "name": "nxt-blockchain",
-  "version": "1.0.5",
+  "version": "1.11.6",
   "description": "Client API library for the NXT Blockchain",
   "main": "nrs.node.bridge.js",
   "directories": {
