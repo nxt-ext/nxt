@@ -6,8 +6,13 @@ is in the LICENSE.txt file (use JPL-NRS.pdf for a printable version).
 
 The client UI remains under the MIT license.
 
+This release is a mandatory upgrade. A hard fork will be scheduled at the
+Ardor Genesis Snapshot block, expected to be set some time after the end of
+the IGNIS token sale. At that time, nodes running 1.11.5 or older will be left
+on a fork.
 
-Added IGNIS Token Sale page.
+Added IGNIS Token Sale page. See https://www.jelurida.com/ico for latest token
+sale terms and schedule.
 
 Added support for the Changelly cryptocurrency exchange.
 
