@@ -14,20 +14,20 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div id="exchange_page" class="page" xmlns="http://www.w3.org/1999/html">
-    <section id="exchange_disabled" class="content">
+<div id="exchange_shape_shift_page" class="page" xmlns="http://www.w3.org/1999/html">
+    <section class="exchange_disabled content">
         <h2 data-i18n="exchange_welcome">Welcome to the Coin Exchange</h2>
         <div data-i18n="exchange_greeting_1">The coin exchange functionality is based on a 3rd party service.</div>
         <div data-i18n="exchange_greeting_2">Using it may reveal your client IP to this service.</div>
         <br>
-        <a href="#" id="accept_exchange_link" data-i18n="accept_exchange">Accept</a>
+        <a href="#" id="shape_shift_accept_exchange_link" data-i18n="accept_exchange">Accept</a>
     </section>
 
-    <section id="exchange_page_header" class="content-header">
+    <section class="exchange_page_header content-header">
         <h1><img src="img/shapeshift_logo.png" height="32px"><span> </span><span data-i18n="coin_exchange">COIN EXCHANGE</span></h1>
     </section>
 
-    <section id="exchange_page_content" class="content">
+    <section class="exchange_page_content content">
         <div style="color:#838383;margin-bottom:5px">
             <p data-i18n="exchange_using_shape_shift">Exchange coins using Shape Shift</p>
             <strong data-i18n="status">STATUS</strong>: <span id="shape_shift_status"></span>
@@ -36,9 +36,9 @@
         <div class="form-inline">
             <div class="form-group col-lg-12">
                 <label data-i18n="coins">COINS</label>
-                <select id="shape_shift_coin_0" class="form-control coin-select"></select>
-                <select id="shape_shift_coin_1" class="form-control coin-select"></select>
-                <select id="shape_shift_coin_2" class="form-control coin-select"></select>
+                <select id="shape_shift_coin0" class="form-control coin-select shape-shift"></select>
+                <select id="shape_shift_coin1" class="form-control coin-select shape-shift"></select>
+                <select id="shape_shift_coin2" class="form-control coin-select shape-shift"></select>
             </div>
         </div>
         <div class="box box-primary">
@@ -94,7 +94,7 @@
 
         <div class="box box-primary">
             <div class="box-header"><h3 class="box-title" data-i18n="my_exchanges">My Exchanges</h3></div>
-            <a href="#" id="clear_my_exchanges" data-i18n="clear_results">CLEAR RESULTS</a>
+            <a href="#" id="shape_shift_clear_my_exchanges" data-i18n="clear_results">CLEAR RESULTS</a>
             <div class="box-body no-padding">
                 <div class="data-container data-loading">
                     <table class="table table-striped" id="p_shape_shift_my_table">

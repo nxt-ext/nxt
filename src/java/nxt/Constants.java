@@ -155,10 +155,13 @@ public final class Constants {
     public static final int CHECKSUM_BLOCK_20 = isTestnet ? 944000 : 1000100;
     public static final int CHECKSUM_BLOCK_21 = isTestnet ? 1051000 : 1105000;
     public static final int CHECKSUM_BLOCK_22 = isTestnet ? 1152000 : 1204000;
+    public static final int CHECKSUM_BLOCK_23 = isTestnet ? 1367000 : 1412000;
+    public static final String HARDFORK_ALIAS = "hardforkheight";
+    //public static final int IGNIS_BLOCK = Integer.MAX_VALUE;
 
-    public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_22;
+    public static final int LAST_CHECKSUM_BLOCK = CHECKSUM_BLOCK_23;
     // LAST_KNOWN_BLOCK must also be set in html/www/js/nrs.constants.js
-    public static final int LAST_KNOWN_BLOCK = CHECKSUM_BLOCK_22;
+    public static final int LAST_KNOWN_BLOCK = CHECKSUM_BLOCK_23;
 
     public static final int[] MIN_VERSION = new int[] {1, 10, 1};
     public static final int[] MIN_PROXY_VERSION = new int[] {1, 10, 1};

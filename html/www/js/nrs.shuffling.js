@@ -410,8 +410,7 @@ var NRS = (function(NRS, $) {
             recipientAccount.val("");
             return;
         }
-        var account = NRS.getAccountId(secretPhraseValue);
-        recipientAccount.val(NRS.convertNumericToRSAccountFormat(account));
+        recipientAccount.val(NRS.getAccountId(secretPhraseValue, true));
     });
 
     NRS.forms.startShuffler = function ($modal) {

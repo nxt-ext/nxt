@@ -305,6 +305,21 @@ public final class Nxt {
         return time.getTime();
     }
 
+    public static int getHardForkHeight() {
+        if (getBlockchain().getHeight() < Constants.LAST_KNOWN_BLOCK) {
+            return Integer.MAX_VALUE;
+        }
+        Alias hardforkAlias = Alias.getAlias(Constants.HARDFORK_ALIAS);
+        if (hardforkAlias == null) {
+            return Integer.MAX_VALUE;
+        }
+        try {
+            return Integer.parseInt(hardforkAlias.getAliasURI());
+        } catch (NumberFormatException e) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
     static void setTime(Time time) {
         Nxt.time = time;
     }
@@ -411,7 +426,7 @@ public final class Nxt {
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
                 Logger.logMessage("Copyright © 2013-2016 The Nxt Core Developers.");
                 Logger.logMessage("Copyright © 2016-2017 Jelurida IP B.V.");
-                Logger.logMessage("Distributed under GPLv2, with ABSOLUTELY NO WARRANTY.");
+                Logger.logMessage("Distributed under the Jelurida Public License version 1.0 for the Nxt Public Blockchain Platform, with ABSOLUTELY NO WARRANTY.");
                 if (API.getWelcomePageUri() != null) {
                     Logger.logMessage("Client UI is at " + API.getWelcomePageUri());
                 }

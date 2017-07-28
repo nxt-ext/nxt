@@ -36,7 +36,7 @@ proguard.bat @nxt.pro
 mv ../nxt.map ../nxt.map.${VERSION}
 mkdir -p nxt/src/
 else
-FILES="${FILES} classes src COPYING.txt"
+FILES="${FILES} classes src JPL-NRS.pdf"
 FILES="${FILES} compile.sh javadoc.sh jar.sh package.sh"
 FILES="${FILES} win-compile.sh win-javadoc.sh win-package.sh"
 echo javadoc

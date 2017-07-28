@@ -1534,6 +1534,9 @@ public final class Account {
         accountAsset.save();
         listeners.notify(this, Event.UNCONFIRMED_ASSET_BALANCE);
         assetListeners.notify(accountAsset, Event.UNCONFIRMED_ASSET_BALANCE);
+        if (event == null) {
+            return;
+        }
         if (AccountLedger.mustLogEntry(this.id, true)) {
             AccountLedger.logEntry(new LedgerEntry(event, eventId, this.id,
                     LedgerHolding.UNCONFIRMED_ASSET_BALANCE, assetId,
@@ -1693,6 +1696,9 @@ public final class Account {
         checkBalance(this.id, this.balanceNQT, this.unconfirmedBalanceNQT);
         save();
         listeners.notify(this, Event.UNCONFIRMED_BALANCE);
+        if (event == null) {
+            return;
+        }
         if (AccountLedger.mustLogEntry(this.id, true)) {
             if (feeNQT != 0) {
                 AccountLedger.logEntry(new LedgerEntry(LedgerEvent.TRANSACTION_FEE, eventId, this.id,

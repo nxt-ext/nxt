@@ -120,6 +120,7 @@ public final class JSONResponses {
     public static final JSONStreamAware MISSING_OFFER = missing("offer");
     public static final JSONStreamAware UNKNOWN_OFFER = unknown("offer");
     public static final JSONStreamAware INCORRECT_OFFER = incorrect("offer");
+    public static final JSONStreamAware MISSING_ADMIN_PASSWORD = missing("adminPassword");
     public static final JSONStreamAware INCORRECT_ADMIN_PASSWORD = incorrect("adminPassword", "(the specified password does not match nxt.adminPassword)");
     public static final JSONStreamAware LOCKED_ADMIN_PASSWORD = incorrect("adminPassword", "(locked for 1 hour, too many incorrect password attempts)");
     public static final JSONStreamAware OVERFLOW = error("overflow");
@@ -139,7 +140,8 @@ public final class JSONResponses {
     public static final JSONStreamAware INCORRECT_TAGGED_DATA_CHANNEL = incorrect("channel", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_CHANNEL_LENGTH + " characters)");
     public static final JSONStreamAware INCORRECT_TAGGED_DATA_FILE = incorrect("data", "cannot read file data");
     public static final JSONStreamAware INCORRECT_FILE = incorrect("file", "cannot read file data");
-    public static final JSONStreamAware INCORRECT_DATA = incorrect("data", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DATA_LENGTH + " bytes)");
+    public static final JSONStreamAware INCORRECT_DATA_TOO_LONG = incorrect("data", "(length must be not longer than " + Constants.MAX_TAGGED_DATA_DATA_LENGTH + " bytes)");
+    public static final JSONStreamAware INCORRECT_DATA_ZERO_LENGTH = incorrect("data", "(length cannot be 0 bytes)");
     public static final JSONStreamAware MISSING_MESSAGE_ENCRYPTED_MESSAGE = missing("message", "encryptedMessageData");
     public static final JSONStreamAware EITHER_MESSAGE_ENCRYPTED_MESSAGE = either("message", "encryptedMessageData");
     public static final JSONStreamAware INCORRECT_HASH_ALGORITHM = incorrect("hashAlgorithm");

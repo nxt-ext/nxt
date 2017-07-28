@@ -1,3 +1,41 @@
+IMPORTANT LICENSING CHANGE:
+
+The Nxt software is now distributed under the Jelurida Public License (JPL)
+version 1.0 for the Nxt Public Blockchain Platform. The full text of the JPL
+is in the LICENSE.txt file (use JPL-NRS.pdf for a printable version).
+
+The client UI remains under the MIT license.
+
+This release is a mandatory upgrade. A hard fork will be scheduled at the
+Ardor Genesis Snapshot block, expected to be set some time after the end of
+the IGNIS token sale. At that time, nodes running 1.11.5 or older will be left
+on a fork.
+
+Added IGNIS Token Sale page. See https://www.jelurida.com/ico for latest token
+sale terms and schedule.
+
+Added support for the Changelly cryptocurrency exchange.
+
+Added code to disable trading or transferring of assets that will be migrated
+to Ardor after the Ardor Genesis Snapshot, and delete open ask/bid orders for
+them at that time. Currently such assets and their ids are:
+
+ARDR: 12422608354438203866
+Bitswift: 12034575542068240440
+Janus: 4348103880042995903
+JanusXT: 14572747084550678873
+ComJNSXT: 13363533560620557665
+
+Added support for printing a "paper wallet" when creating a new account and
+from the account details modal.
+
+Added a custom installer panel that allows to: shutdown NXT server if it is
+running; remove existing installation; customize conf/nxt.properties by
+choosing from a fixed set of settings.
+
+The pre-defined installer settings are taken from property files under
+conf/examples. The installer makes sure no settings are in conflict.
+
 Added password recovery tool for brute forcing partially forgotten or mistyped
 passphrases. Use the passwordRecovery.sh or passwordRecovery.bat script to run,
 after first setting the known password text fragments and guesses dictionary in
@@ -8,6 +46,8 @@ configurable as nxt.customLoginWarning.
 
 Added active shufflings notification in the header bar.
 
+Added image loading progress bar to the lock screen.
+
 Performance optimizations when under higher transaction load.
 
 Monetary System UI improvements and bugfixes.
@@ -15,8 +55,21 @@ Monetary System UI improvements and bugfixes.
 API gzip filter is now automatically enabled for open API nodes, unless
 explicitly disabled in nxt.enableAPIServerGZIPFilter.
 
+Support running Nxt as a Windows service.
+
 Updated mobile app to latest Cordova Android platform.
 
-Updated H2 to version 1.4.195, bouncy castle to 1.57, and jetty to 9.3.20.
+Added IntelliJ IDE project files to folder ./ide/intellij/project, developers 
+working on the source code should copy the content of folder 
+./ide/intellij/project to the root folder of the project and open the project 
+from inside IntelliJ using File-Open for the project root folder. 
+The IntelliJ project is pre-configured with the necessary dependencies to build 
+and run the Java source code.
+To copy the IntelliJ files to the project root folder, open a command prompt
+at the project root folder and issue the following command:
+Windows: xcopy /e/k/s/h ide\intellij\project .
+Linux: cp -r ide/intellij/project/. .
+
+Updated H2 to version 1.4.196, bouncy castle to 1.57, and jetty to 9.3.20.
 Delete the old lib folder first if unpacking on top.
 

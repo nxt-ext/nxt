@@ -69,8 +69,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
+import static nxt.http.JSONResponses.MISSING_ADMIN_PASSWORD;
 import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
 import static nxt.http.JSONResponses.LOCKED_ADMIN_PASSWORD;
 import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
@@ -379,12 +381,20 @@ public final class API {
                     if (passwordCount == null) {
                         passwordCount = new PasswordCount();
                         incorrectPasswords.put(remoteHost, passwordCount);
+                        if (incorrectPasswords.size() > 1000) {
+                            // Remove one of the locked hosts at random to prevent unlimited growth of the map
+                            List<String> remoteHosts = new ArrayList<>(incorrectPasswords.keySet());
+                            Random r = new Random();
+                            incorrectPasswords.remove(remoteHosts.get(r.nextInt(remoteHosts.size())));
+                        }
                     }
                     passwordCount.count++;
                     passwordCount.time = now;
+                    Logger.logWarningMessage("Incorrect adminPassword from " + remoteHost);
+                    throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
+                } else {
+                    throw new ParameterException(MISSING_ADMIN_PASSWORD);
                 }
-                Logger.logWarningMessage("Incorrect adminPassword from " + remoteHost);
-                throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
             }
             if (passwordCount != null) {
                 incorrectPasswords.remove(remoteHost);

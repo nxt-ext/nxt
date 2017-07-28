@@ -52,9 +52,7 @@ public final class AccountRestrictions {
             PhasingParams phasingParams = attachment.getPhasingParams();
             if (phasingParams.getVoteWeighting().getVotingModel() == VotingModel.NONE) {
                 //no voting - remove the control
-                senderAccount.removeControl(ControlType.PHASING_ONLY);
-                PhasingOnly phasingOnly = get(senderAccount.getId());
-                phasingControlTable.delete(phasingOnly);
+                unset(senderAccount);
             } else {
                 senderAccount.addControl(ControlType.PHASING_ONLY);
                 PhasingOnly phasingOnly = get(senderAccount.getId());
@@ -69,6 +67,12 @@ public final class AccountRestrictions {
                 }
                 phasingControlTable.insert(phasingOnly);
             }
+        }
+
+        static void unset(Account account) {
+            account.removeControl(ControlType.PHASING_ONLY);
+            PhasingOnly phasingOnly = get(account.getId());
+            phasingControlTable.delete(phasingOnly);
         }
 
         private final DbKey dbKey;

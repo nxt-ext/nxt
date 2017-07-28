@@ -40,7 +40,7 @@ echo obfuscate
 ~/proguard/proguard5.3.3/bin/proguard.sh @nxt.pro
 mv ../nxt.map ../nxt.map.${VERSION}
 else
-FILES="${FILES} classes src COPYING.txt"
+FILES="${FILES} classes src JPL-NRS.pdf"
 FILES="${FILES} compile.sh javadoc.sh jar.sh package.sh"
 FILES="${FILES} win-compile.sh win-javadoc.sh win-package.sh"
 echo javadoc
