@@ -149,6 +149,9 @@ var ATS = (function(ATS, $, undefined) {
                 }
             }
         }
+        if (params["requestType"] == "downloadJPLSnapshot" || params["requestType"] == "downloadPrunableMessage" || params["requestType"] == "downloadTaggedData") {
+            return true;
+        }
         var contentType;
         var processData;
         var formData = null;
@@ -156,7 +159,8 @@ var ATS = (function(ATS, $, undefined) {
         if (form.encoding == "multipart/form-data") {
             uploadField = $('#' + fileParameter + params["requestType"]);
         }
-        if (params["requestType"].startsWith("download")) {
+        /*
+        if (params["requestType"] == "downloadPrunableMessage" || params["requestType"] == "downloadTaggedData") {
             url += "?";
             for (key in params) {
                 if (!params.hasOwnProperty(key)) {
@@ -166,7 +170,9 @@ var ATS = (function(ATS, $, undefined) {
             }
             window.location = url;
             return false;
-        } else if (uploadField) {
+        } else
+        */
+        if (uploadField) {
             // inspired by http://stackoverflow.com/questions/5392344/sending-multipart-formdata-with-jquery-ajax
             contentType = false;
             processData = false;
