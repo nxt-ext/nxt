@@ -175,6 +175,7 @@ public final class JPLSnapshot implements AddOn {
                 SortedMap<String, String> snapshotPublicKeys = snapshotPublicKeys();
                 JSONArray inputPublicKeys = (JSONArray)inputJSON.get("publicKeys");
                 if (inputPublicKeys != null) {
+                    Logger.logInfoMessage("Loading " + inputPublicKeys.size() + " input public keys");
                     inputPublicKeys.forEach(publicKey -> {
                         String account = Long.toUnsignedString(Account.getId(Convert.parseHexString((String)publicKey)));
                         String snapshotPublicKey = snapshotPublicKeys.putIfAbsent(account, (String)publicKey);
@@ -190,6 +191,7 @@ public final class JPLSnapshot implements AddOn {
                 BigInteger snapshotTotal = BigInteger.valueOf(snapshotNxtBalances.values().stream().mapToLong(Long::longValue).sum());
                 JSONObject inputBalances = (JSONObject)inputJSON.get("balances");
                 if (inputBalances != null) {
+                    Logger.logInfoMessage("Loading " + inputBalances.size() + " input account balances");
                     BigInteger inputTotal = BigInteger.valueOf(inputBalances.values().stream().mapToLong(value -> (Long) value).sum());
                     if (!inputTotal.equals(BigInteger.ZERO)) {
                         snapshotNxtBalances.entrySet().forEach(entry -> {
