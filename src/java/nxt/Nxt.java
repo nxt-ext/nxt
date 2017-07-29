@@ -114,8 +114,8 @@ public final class Nxt {
     private static final Properties properties = new Properties(defaultProperties);
 
     static {
+        loadProperties(properties, NXT_INSTALLER_PROPERTIES, true);
         loadProperties(properties, NXT_PROPERTIES, false);
-        loadProperties(properties, NXT_INSTALLER_PROPERTIES, false);
     }
 
     public static Properties loadProperties(Properties properties, String propertiesFile, boolean isDefault) {
