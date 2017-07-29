@@ -14,7 +14,7 @@
   ~                                                                           ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<div id="lockscreen">
+<div id="lockscreen" class="loading">
     <div id="old_browser_warning" style="display:none;margin-left:auto;margin-right:auto;margin-top:200px;background:white;color:black;padding:20px;width:300px;" data-i18n="old_browser_warning">You are using an old browser which this application does not support.</div>
 
     <table id="center" style="display:none;width:100%;height:100%;">
@@ -22,7 +22,9 @@
             <img src="img/nxt_logo.png" alt="Nxt" id="logo-nxt-img" />
 
             <div id="login_panel">
-                <div class="callout callout-danger" id="testnet_login" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div><div id="login_error" style="max-width:400px;min-width:400px;display:none">
+                <div class="callout callout-danger custom_login_warning"></div>
+                <div class="callout callout-danger" id="testnet_login" data-i18n="testnet_login_warning">Log in with your TestNet account - not your real one!</div>
+                <div id="login_error" style="max-width:400px;min-width:400px;display:none">
                     <div class="callout callout-danger"></div>
                 </div>
 
@@ -114,6 +116,7 @@
 
             <div class="panel panel-default" id="welcome_panel" style="display:none;max-width:500px;">
                 <div class="panel-heading">
+                    <div class="callout custom_login_warning"></div>
                     <div style="float:right;">
                         <select name="language" class="form-control" style="width:150px">
                         </select>
@@ -210,9 +213,17 @@
                                         Don't ever disclose your passphrase. If you lose it you lose access to your account!
                                     </span>
                                 </div>
+                                <div class="paper-wallet-link-container" style="display: none;">
+                                    <a href="#" id="generator_paper_wallet_link" data-i18n="print_paper_wallet">Print Paper Wallet</a>
+                                </div>
+                                <p></p>
+                                <div id="confirm_passphrase_warning_container">
+                                    <input type="checkbox" id="confirm_passphrase_warning" value="0"/> <span></span>
+                                    <label for="confirm_passphrase_warning" data-i18n="confirm_passphrase_warning">I will not forget my passphrase and I will never disclose it</label>
+                                </div>
 
                                 <div style="text-align:right">
-                                    <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="$('.step_2').hide();$('.step_3').show();return false;" />
+                                    <input type="submit" class="btn btn-primary btn-sm" value="Next" data-i18n="[value]next" onclick="NRS.createPassphraseToConfirmPassphrase()" />
                                     &nbsp;&nbsp;
                                     <button class="btn btn-sm btn-default" onclick="NRS.showLoginOrWelcomeScreen();return false;" data-i18n="cancel">Cancel</button>
                                 </div>

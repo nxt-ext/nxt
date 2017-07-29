@@ -1,3 +1,14 @@
+nxt-client-1.11.5:
+
+Added firstIndex, lastIndex parameters to the getUnconfirmedTransactions and
+getUnconfirmedTransactionIds APIs to support pagination.
+
+Minor performance optimizations and UI improvements.
+
+Updated H2 to version 1.4.194 and jetty to 9.3.17.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.11.4:
 
 Added Node JS module, see html/www/js/README.

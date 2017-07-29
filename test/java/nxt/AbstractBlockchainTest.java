@@ -131,4 +131,8 @@ public abstract class AbstractBlockchainTest {
         Assert.assertArrayEquals(Crypto.getPublicKey(secretPhrase), blockchain.getLastBlock().getGeneratorPublicKey());
         blockchainProcessor.removeListener(stopListener, BlockchainProcessor.Event.BLOCK_PUSHED);
     }
+
+    protected int getHeight() {
+        return blockchain.getHeight();
+    }
 }

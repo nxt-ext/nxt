@@ -69,8 +69,9 @@ var NRS = (function (NRS, $) {
         'FORGING': 'forging',
         'NOT_FORGING': 'not_forging',
         'UNKNOWN': 'unknown',
-        'LAST_KNOWN_BLOCK': { id: "4936781828829390790", height: "1204000" },
-        'LAST_KNOWN_TESTNET_BLOCK': { id: "5448152106691693909", height: "1152000" }
+        'LAST_KNOWN_BLOCK': { id: "2057812077851428759", height: "1412000" },
+        'LAST_KNOWN_TESTNET_BLOCK': { id: "5232413087824425542", height: "1367000" },
+        'IGNIS_CURRENCY_CODE': "JLRDA"
     };
 
     NRS.loadAlgorithmList = function (algorithmSelect, isPhasingHash) {
@@ -107,8 +108,9 @@ var NRS = (function (NRS, $) {
             NRS.constants.DISABLED_APIS = response.disabledAPIs;
             NRS.constants.DISABLED_API_TAGS = response.disabledAPITags;
             NRS.constants.PEER_STATES = response.peerStates;
-            NRS.loadTransactionTypeConstants(response);
+            NRS.constants.CURRENCY_TYPES = response.currencyTypes;
             NRS.constants.PROXY_NOT_FORWARDED_REQUESTS = response.proxyNotForwardedRequests;
+            NRS.loadTransactionTypeConstants(response);
             console.log("done loading server constants");
             if (resolve) {
                 resolve();

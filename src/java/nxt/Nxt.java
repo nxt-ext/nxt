@@ -37,6 +37,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Files;
@@ -51,13 +52,14 @@ import java.util.Properties;
 
 public final class Nxt {
 
-    public static final String VERSION = "1.11.5";
+    public static final String VERSION = "1.11.6";
     public static final String APPLICATION = "NRS";
 
     private static volatile Time time = new Time.EpochTime();
 
     public static final String NXT_DEFAULT_PROPERTIES = "nxt-default.properties";
     public static final String NXT_PROPERTIES = "nxt.properties";
+    public static final String NXT_INSTALLER_PROPERTIES = "nxt-installer.properties";
     public static final String CONFIG_DIR = "conf";
 
     private static final RuntimeMode runtimeMode;
@@ -112,6 +114,7 @@ public final class Nxt {
     private static final Properties properties = new Properties(defaultProperties);
 
     static {
+        loadProperties(properties, NXT_INSTALLER_PROPERTIES, true);
         loadProperties(properties, NXT_PROPERTIES, false);
     }
 
@@ -219,13 +222,24 @@ public final class Nxt {
     }
 
     public static String getStringProperty(String name, String defaultValue, boolean doNotLog) {
+        return getStringProperty(name, defaultValue, doNotLog, null);
+    }
+
+    public static String getStringProperty(String name, String defaultValue, boolean doNotLog, String encoding) {
         String value = properties.getProperty(name);
         if (value != null && ! "".equals(value)) {
             Logger.logMessage(name + " = \"" + (doNotLog ? "{not logged}" : value) + "\"");
-            return value;
         } else {
             Logger.logMessage(name + " not defined");
-            return defaultValue;
+            value = defaultValue;
+        }
+        if (encoding == null || value == null) {
+            return value;
+        }
+        try {
+            return new String(value.getBytes("ISO-8859-1"), encoding);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -244,7 +258,11 @@ public final class Nxt {
         return result;
     }
 
-    public static Boolean getBooleanProperty(String name) {
+    public static boolean getBooleanProperty(String name) {
+        return getBooleanProperty(name, false);
+    }
+
+    public static boolean getBooleanProperty(String name, boolean defaultValue) {
         String value = properties.getProperty(name);
         if (Boolean.TRUE.toString().equals(value)) {
             Logger.logMessage(name + " = \"true\"");
@@ -253,8 +271,8 @@ public final class Nxt {
             Logger.logMessage(name + " = \"false\"");
             return false;
         }
-        Logger.logMessage(name + " not defined, assuming false");
-        return false;
+        Logger.logMessage(name + " not defined, using default " + defaultValue);
+        return defaultValue;
     }
 
     public static Blockchain getBlockchain() {
@@ -287,6 +305,21 @@ public final class Nxt {
 
     public static int getEpochTime() {
         return time.getTime();
+    }
+
+    public static int getHardForkHeight() {
+        if (getBlockchain().getHeight() < Constants.LAST_KNOWN_BLOCK) {
+            return Integer.MAX_VALUE;
+        }
+        Alias hardforkAlias = Alias.getAlias(Constants.HARDFORK_ALIAS);
+        if (hardforkAlias == null) {
+            return Integer.MAX_VALUE;
+        }
+        try {
+            return Integer.parseInt(hardforkAlias.getAliasURI());
+        } catch (NumberFormatException e) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     static void setTime(Time time) {
@@ -395,7 +428,7 @@ public final class Nxt {
                 Logger.logMessage("Nxt server " + VERSION + " started successfully.");
                 Logger.logMessage("Copyright © 2013-2016 The Nxt Core Developers.");
                 Logger.logMessage("Copyright © 2016-2017 Jelurida IP B.V.");
-                Logger.logMessage("Distributed under GPLv2, with ABSOLUTELY NO WARRANTY.");
+                Logger.logMessage("Distributed under the Jelurida Public License version 1.0 for the Nxt Public Blockchain Platform, with ABSOLUTELY NO WARRANTY.");
                 if (API.getWelcomePageUri() != null) {
                     Logger.logMessage("Client UI is at " + API.getWelcomePageUri());
                 }

@@ -25,6 +25,9 @@
         "ionic-plugin-keyboard": {
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
         },
+        "cordova.plugins.diagnostic": {
+            "PACKAGE_NAME": "org.nxt.mobile.wallet"
+        },
         "cordova-plugin-android-permissions": {
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
         },
@@ -35,9 +38,6 @@
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
         },
         "cordova-plugin-inappbrowser": {
-            "PACKAGE_NAME": "org.nxt.mobile.wallet"
-        },
-        "cordova.plugins.diagnostic": {
             "PACKAGE_NAME": "org.nxt.mobile.wallet"
         },
         "phonegap-plugin-barcodescanner": {

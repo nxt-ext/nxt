@@ -55,6 +55,8 @@ var PassPhraseGenerator = {
 			$container.find(".step_2 textarea").val(this.passPhrase).prop("readonly", true);
 			setTimeout(function () {
 				$("#account_phrase_generator_start").hide();
+                $("#confirm_passphrase_warning").prop('checked', false);
+                $("#confirm_passphrase_warning_container").css("background-color", "");
 				$("#account_phrase_generator_stop").fadeIn("slow");
 				$("#custom_passphrase_link").show();
 			}, 1500);

@@ -272,7 +272,7 @@ public final class Peers {
             servicesList.add(Peer.Service.API_SSL);
         }
 
-        if (API.openAPIPort > 0 || API.openAPISSLPort > 0) {
+        if (API.isOpenAPI) {
             EnumSet<APIEnum> disabledAPISet = EnumSet.noneOf(APIEnum.class);
 
             API.disabledAPIs.forEach(apiName -> {

@@ -64,6 +64,14 @@ var NRS = (function(NRS, $, undefined) {
 		$("#welcome_panel").show();
 	};
 
+    NRS.createPassphraseToConfirmPassphrase = function() {
+        if ($("#confirm_passphrase_warning").is(":checked")) {
+            $('.step_2').hide();$('.step_3').show();
+        } else {
+            $("#confirm_passphrase_warning_container").css("background-color", "red");
+		}
+    };
+
 	NRS.registerUserDefinedAccount = function() {
 		$("#account_phrase_generator_panel, #login_panel, #welcome_panel, #custom_passphrase_link").hide();
 		$("#account_phrase_generator_panel").find(":input:not(:button):not([type=submit])").val("");
@@ -81,6 +89,9 @@ var NRS = (function(NRS, $, undefined) {
 
 		var $loading = $("#account_phrase_generator_loading");
 		var $loaded = $("#account_phrase_generator_loaded");
+		if (NRS.isWindowPrintSupported()) {
+            $(".paper-wallet-link-container").show();
+		}
 
 		//noinspection JSUnresolvedVariable
 		if (window.crypto || window.msCrypto) {
@@ -108,6 +119,11 @@ var NRS = (function(NRS, $, undefined) {
 			PassPhraseGenerator.generatePassPhrase("#account_phrase_generator_panel");
 		}
 	};
+
+    $("#generator_paper_wallet_link").click(function(e) {
+    	e.preventDefault();
+        NRS.printPaperWallet($("#account_phrase_generator_panel").find(".step_2 textarea").val());
+    });
 
 	NRS.verifyGeneratedPassphrase = function() {
 		var accountPhraseGeneratorPanel = $("#account_phrase_generator_panel");
@@ -163,7 +179,7 @@ var NRS = (function(NRS, $, undefined) {
 							.attr("href","#")
 							.attr("onClick","NRS.login(false,'"+account+"')")
 							.text(account))
-						.append($('<button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>')
+						.append($('<button data-dismiss="modal" class="close" type="button">×</button>')
 							.attr("onClick","NRS.removeAccount('"+account+"')"))
 					);
 				}
@@ -463,7 +479,7 @@ var NRS = (function(NRS, $, undefined) {
 					$('#dashboard_link').find('a').addClass("ignore").click();
 
 					var accounts;
-					if ($("#remember_me").is(":checked") || NRS.newlyCreatedAccount) {
+					if (rememberMe.is(":checked") || NRS.newlyCreatedAccount) {
 						rememberAccount(NRS.accountRS);
 					}
 

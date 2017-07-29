@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                          *
+ * Copyright © 2016-2017 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -43,6 +43,13 @@ body {
   min-height: 100%;
   background: #f9f9f9;
   color: black !important;
+}
+/* preload images or they will flicker */
+body::after{
+  position:absolute; width:0; height:0; overflow:hidden; z-index:-1;
+  content:url(../img/client_background.png)
+  url(../img/nxt-load-progress-logo-circle.png)
+  url(../img/nxt-load-progress-logo-circle.png);
 }
 html.lockscreen, html.lockscreen body {
   height:100%;
@@ -1767,7 +1774,7 @@ body > .header .logo .icon {
 .callout.callout-danger {
   background-color: #fcf2f2;
   border-color: #dFb5b4;
-  word-break: break-all;
+  word-break: normal;
 }
 .callout.callout-warning {
   background-color: #fefbed;
@@ -3128,10 +3135,57 @@ hr {
   margin-bottom:10px;
 }
 
-
 #lockscreen {
   height:100%;
   overflow:auto;
+}
+
+/**
+ * Initial progress indicator component
+ */
+
+#lockscreen.loading {
+  height:99%;
+  overflow:hidden;
+  position:relative;
+}
+
+html.loading, body.loading {
+  overflow:hidden;
+}
+
+#progress-container {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  left: 50%;
+  top: 50%;
+}
+
+#progress-container > img {
+  position: absolute;
+  left: -50%;
+  top: -50%;
+}
+
+#progress {
+  position: absolute;
+  height:100%;
+  overflow: hidden;
+  left: -50%;
+  top: -50%;
+}
+
+#progress > #img-wrapper {
+  position: relative;
+  height: 100%;
+  width: 220px;
+}
+
+#progress > #img-wrapper > img {
+  position: absolute;
+  left:0;
+  top:0;
 }
 
 #center .panel {
@@ -3140,6 +3194,14 @@ hr {
 
 #center .panel-heading, #center .panel-body {
   text-align:left;
+}
+
+.custom_login_warning {
+    display: none;
+    text-align: center;
+    margin: auto auto 0px auto;
+    width: 100%;
+    max-width: 400px;
 }
 
 #testnet_login {

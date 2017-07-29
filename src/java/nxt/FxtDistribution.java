@@ -16,6 +16,8 @@
 
 package nxt;
 
+import nxt.addons.Snapshot;
+import nxt.db.DbIterator;
 import nxt.db.DerivedDbTable;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -97,6 +99,51 @@ public final class FxtDistribution implements Listener<Block> {
     public void notify(Block block) {
 
         final int currentHeight = block.getHeight();
+        if (currentHeight == Nxt.getHardForkHeight()) {
+            boolean wasInTransaction = Db.db.isInTransaction();
+            if (!wasInTransaction) {
+                Db.db.beginTransaction();
+            }
+            try {
+                for (long assetId : Snapshot.ardorSnapshotAssets) {
+                    int count = 0;
+                    try (DbIterator<Order.Ask> askOrders = Order.Ask.getAskOrdersByAsset(assetId, 0, -1)) {
+                        while (askOrders.hasNext()) {
+                            Order order = askOrders.next();
+                            Order.Ask.removeOrder(order.getId());
+                            Account.getAccount(order.getAccountId()).addToUnconfirmedAssetBalanceQNT(null, 0, assetId, order.getQuantityQNT());
+                            if (++count % 1000 == 0) {
+                                Db.db.commitTransaction();
+                            }
+                        }
+                    }
+                    Logger.logDebugMessage("Deleted " + count + " ask orders for asset " + Long.toUnsignedString(assetId));
+                    count = 0;
+                    try (DbIterator<Order.Bid> bidOrders = Order.Bid.getBidOrdersByAsset(assetId, 0, -1)) {
+                        while (bidOrders.hasNext()) {
+                            Order order = bidOrders.next();
+                            Order.Bid.removeOrder(order.getId());
+                            Account.getAccount(order.getAccountId()).addToUnconfirmedBalanceNQT(null, 0, Math.multiplyExact(order.getQuantityQNT(), order.getPriceNQT()));
+                            if (++count % 1000 == 0) {
+                                Db.db.commitTransaction();
+                            }
+                        }
+                    }
+                    Logger.logDebugMessage("Deleted " + count + " bid orders for asset " + Long.toUnsignedString(assetId));
+                }
+                Account issuerAccount = Account.getAccount(FXT_ISSUER_ID);
+                AccountRestrictions.PhasingOnly.unset(issuerAccount);
+                Db.db.commitTransaction();
+            } catch (Exception e) {
+                Db.db.rollbackTransaction();
+                throw new RuntimeException(e.toString(), e);
+            } finally {
+                if (!wasInTransaction) {
+                    Db.db.endTransaction();
+                }
+            }
+            return;
+        }
         if (hasSnapshot) {
             if (currentHeight == DISTRIBUTION_END) {
                 Logger.logDebugMessage("Distributing FXT based on snapshot file " + fxtJsonFile);

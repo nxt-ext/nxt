@@ -6,7 +6,7 @@
     <info>
         <appname>NXT</appname>
         <appversion>@{runtime.nxt.version}</appversion>
-        <url>https://nxt.org</url>
+        <url>https://www.jelurida.com/</url>
         <run-privileged condition="izpack.windowsinstall"/>
     </info>
 
@@ -18,6 +18,7 @@
         <listener classname="RegistryUninstallerListener" stage="uninstall" >
             <os family="windows"/>
         </listener>
+        <listener classname="nxt.installer.InstallListener" stage="install"/>
     </listeners>
 
     <natives>
@@ -102,6 +103,7 @@
         <panel classname="LicencePanel"/>
         <panel classname="InfoPanel"/>
         <panel classname="TargetPanel"/>
+        <panel classname="nxt.installer.ConfigPanel"/>
         <panel classname="ShortcutPanel" condition="!izpack.macinstall"/>
         <panel classname="InstallPanel"/>
         <panel classname="SimpleFinishPanel"/>
@@ -115,8 +117,8 @@
             <file src="NXT_Wallet.url" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="3RD-PARTY-LICENSES.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="AUTHORS.txt" targetdir="${INSTALL_PATH}" override="true"/>
-            <file src="COPYING.txt" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="LICENSE.txt" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="JPL-NRS.pdf" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="DEVELOPERS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="OPERATORS-GUIDE.md" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="README.md" targetdir="${INSTALL_PATH}" override="true"/>
@@ -153,6 +155,8 @@
             <file src="run.bat" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="mint.bat" targetdir="${INSTALL_PATH}" override="true"/>
             <file src="compact.bat" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="sign.bat" targetdir="${INSTALL_PATH}" override="true"/>
+            <file src="passphraseRecovery.bat" targetdir="${INSTALL_PATH}" override="true"/>
             <parsable targetfile="${INSTALL_PATH}/run.bat"/>
             <singlefile src="resource/nxt.properties" target="${INSTALL_PATH}/resource/nxt.properties" override="true"/>
             <singlefile src="resource/nxtservice.properties" target="${INSTALL_PATH}/resource/nxtservice.properties" override="true"/>
@@ -184,6 +188,8 @@
             <executable targetfile="${INSTALL_PATH}/compact.sh"/>
             <file src="sign.sh" targetdir="${INSTALL_PATH}" override="true"/>
             <executable targetfile="${INSTALL_PATH}/sign.sh"/>
+            <file src="passphraseRecovery.sh" targetdir="${INSTALL_PATH}" override="true"/>
+            <executable targetfile="${INSTALL_PATH}/passphraseRecovery.sh"/>
         </pack>
 
         <pack name="jre.win" os="windows" required="yes" uninstall="false">

@@ -253,7 +253,7 @@ public class APITestServlet extends HttpServlet {
             buf.append(" &nbsp;&nbsp;\n");
         }
         buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='/doc/");
-        buf.append(className.replace('.', '/')).append(".html' target='_blank'>javadoc</a>&nbsp;&nbsp;\n");
+        buf.append(className.replace('.', '/').replace('$', '.')).append(".html' target='_blank'>javadoc</a>&nbsp;&nbsp;\n");
         buf.append("<a style='font-weight:normal;font-size:14px;color:#777;' href='https://nxtwiki.org/wiki/The_Nxt_API#");
         appendWikiLink(className.substring(className.lastIndexOf('.') + 1), buf);
         buf.append("' target='_blank'>wiki</a>&nbsp;&nbsp;\n");

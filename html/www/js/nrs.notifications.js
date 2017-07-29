@@ -53,8 +53,8 @@ var NRS = (function(NRS, $, undefined) {
 			});
 		});
 		if (totalCount > 0) {
-			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
-			$menuItem.find('span .nm_inner_total').css('backgroundColor', '#e06054');
+			$menuItem.find('.nm_inner_subtype').css('backgroundColor', '#337ab7');
+			$menuItem.find('.nm_inner_total').css('backgroundColor', '#e06054');
 
 			var $markReadDiv = $("<div style='text-align:center;padding:12px 12px 8px 12px;'></div>");
 			var $markReadLink= $("<a href='#' style='color:#3c8dbc;'>" + $.t('notifications_mark_as_read', 'Mark all as read') + "</a>");
@@ -67,16 +67,16 @@ var NRS = (function(NRS, $, undefined) {
 			$popoverItem.append($markReadDiv);
 			document.title = $.t('app_title') + ' (' + String(totalCount) + ')';
 		} else {
-			$menuItem.find('span .nm_inner_subtype').css('backgroundColor', '#337ab7');
-			$menuItem.find('span .nm_inner_total').css('backgroundColor', '');
+			$menuItem.find('.nm_inner_subtype').css('backgroundColor', '#337ab7');
+			$menuItem.find('.nm_inner_total').css('backgroundColor', '');
 			var html = "";
 			html += "<div style='text-align:center;padding:12px;'>" + $.t('no_notifications', 'No current notifications') + "</div>";
 			$popoverItem.append(html);
 			document.title = $.t('app_title');
 		}
 
-		$menuItem.find('span .nm_inner_subtype').html(String(subTypeCount));
-		$menuItem.find('span .nm_inner_total').html(String(totalCount));
+		$menuItem.find('.nm_inner_subtype').html(String(subTypeCount));
+		$menuItem.find('.nm_inner_total').html(String(totalCount));
 		$menuItem.show();
 
 		var template = '<div class="popover" style="min-width:320px;"><div class="arrow"></div><div class="popover-inner">';
@@ -215,7 +215,13 @@ var NRS = (function(NRS, $, undefined) {
 	};
 
 	NRS.setUnconfirmedNotifications = function() {
-		$('#unconfirmed_notification_counter').html(String(NRS.unconfirmedTransactions.length));
+        var count;
+        if (NRS.unconfirmedTransactions.length > NRS.itemsPerPage) {
+            count = String(NRS.itemsPerPage) + "+";
+        } else {
+            count = String(NRS.unconfirmedTransactions.length);
+        }
+        $('#unconfirmed_notification_counter').html(count);
 		$('#unconfirmed_notification_menu').show();
 	};
 
@@ -232,6 +238,18 @@ var NRS = (function(NRS, $, undefined) {
 		});
 	};
 
+	NRS.setShufflingNotifications = function() {
+        NRS.sendRequest("getAllShufflings", {},
+            function (response) {
+                if (response.shufflings) {
+                    $('#shuffling_notification_counter').html(String(response.shufflings.length));
+                    $('#shuffling_notification_menu').show();
+				} else {
+                    $('#shuffling_notification_counter').html("0");
+                }
+            }
+		)
+	};
 
 	return NRS;
 }(NRS || {}, jQuery));

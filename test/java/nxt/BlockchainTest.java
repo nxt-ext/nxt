@@ -19,7 +19,6 @@ package nxt;
 import nxt.util.Logger;
 import nxt.util.Time;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
@@ -37,21 +36,16 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
 
     protected static String forgerSecretPhrase = "aSykrgKGZNlSVOMDxkZZgbTvQqJPGtsBggb";
     protected static final String forgerAccountId = "NXT-9KZM-KNYY-QBXZ-5TD8V";
-    protected static String secretPhrase1 = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
-    protected static String secretPhrase2 = "rshw9abtpsa2";
-    protected static String secretPhrase3 = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
-    protected static String secretPhrase4 = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
-    private static final String aliceSecretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
+    public static final String aliceSecretPhrase = "hope peace happen touch easy pretend worthless talk them indeed wheel state";
     private static final String bobSecretPhrase2 = "rshw9abtpsa2";
     private static final String chuckSecretPhrase = "eOdBVLMgySFvyiTy8xMuRXDTr45oTzB7L5J";
     private static final String daveSecretPhrase = "t9G2ymCmDsQij7VtYinqrbGCOAtDDA3WiNr";
 
-    protected static boolean isNxtInitted = false;
-    protected static boolean needShutdownAfterClass = false;
+    protected static boolean isNxtInitialized = false;
 
     public static void initNxt() {
-        if (!isNxtInitted) {
+        if (!isNxtInitialized) {
             Properties properties = ManualForgingTest.newTestProperties();
             properties.setProperty("nxt.isTestnet", "true");
             properties.setProperty("nxt.isOffline", "true");
@@ -62,16 +56,16 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
             properties.setProperty("nxt.testnetLeasingDelay", "1");
             properties.setProperty("nxt.disableProcessTransactionsThread", "true");
             properties.setProperty("nxt.deleteFinishedShufflings", "false");
-            AbstractForgingTest.init(properties);
-            isNxtInitted = true;
+            properties.setProperty("nxt.disableSecurityPolicy", "true");
+            properties.setProperty("nxt.disableAdminPassword", "true");
+            AbstractBlockchainTest.init(properties);
+            isNxtInitialized = true;
         }
     }
     
     @BeforeClass
     public static void init() {
-        needShutdownAfterClass = !isNxtInitted;
         initNxt();
-        
         Nxt.setTime(new Time.CounterTime(Nxt.getEpochTime()));
         baseHeight = blockchain.getHeight();
         Logger.logMessage("baseHeight: " + baseHeight);
@@ -82,18 +76,10 @@ public abstract class BlockchainTest extends AbstractBlockchainTest {
         DAVE = new Tester(daveSecretPhrase);
     }
 
-    @AfterClass
-    public static void shutdown() {
-        if (needShutdownAfterClass) {
-            Nxt.shutdown();
-        }
-    }
-
     @After
     public void destroy() {
         TransactionProcessorImpl.getInstance().clearUnconfirmedTransactions();
         blockchainProcessor.popOffTo(baseHeight);
-        shutdown();
     }
 
     public static void generateBlock() {

@@ -59,22 +59,7 @@ public class CountingInputReader extends FilterReader {
     }
 
     /**
-     * Read characters into an array
-     *
-     * @param   cbuf                Character array
-     * @return                      Number of characters read or -1 if end of stream reached
-     * @throws  IOException         I/O error occurred
-     */
-    @Override
-    public int read(char [] cbuf) throws IOException {
-        int c = super.read(cbuf);
-        if (c != -1)
-            incCount(c);
-        return c;
-    }
-
-    /**
-     * Read characters into an arry starting at the specified offset
+     * Read characters into an array starting at the specified offset
      *
      * @param   cbuf                Character array
      * @param   off                 Starting offset

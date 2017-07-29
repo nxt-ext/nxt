@@ -21,6 +21,7 @@ import nxt.AccountLedger.LedgerEvent;
 import nxt.Attachment.AbstractAttachment;
 import nxt.NxtException.ValidationException;
 import nxt.VoteWeighting.VotingModel;
+import nxt.addons.Snapshot;
 import nxt.util.Convert;
 import nxt.util.Logger;
 import org.apache.tika.Tika;
@@ -1656,6 +1657,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
+                if (Snapshot.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset transfer of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
+                }
             }
 
             @Override
@@ -1738,6 +1742,9 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
+                if (Snapshot.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset delete of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
+                }
             }
 
             @Override
@@ -1768,6 +1775,9 @@ public abstract class TransactionType {
                 if (asset == null) {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
+                }
+                if (Snapshot.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
+                    throw new NxtException.NotCurrentlyValidException("Asset order placements for ARDR asset not allowed after height " + Nxt.getHardForkHeight());
                 }
             }
 

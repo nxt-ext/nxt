@@ -69,11 +69,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
+import static nxt.http.JSONResponses.MISSING_ADMIN_PASSWORD;
 import static nxt.http.JSONResponses.INCORRECT_ADMIN_PASSWORD;
-import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 import static nxt.http.JSONResponses.LOCKED_ADMIN_PASSWORD;
+import static nxt.http.JSONResponses.NO_PASSWORD_IN_CONFIG;
 
 public final class API {
 
@@ -83,6 +85,7 @@ public final class API {
 
     public static final int openAPIPort;
     public static final int openAPISSLPort;
+    public static final boolean isOpenAPI;
 
     public static final List<String> disabledAPIs;
     public static final List<APITag> disabledAPITags;
@@ -204,6 +207,7 @@ public final class API {
             }
             openAPIPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && (!enableSSL || port != sslPort) ? port : 0;
             openAPISSLPort = !Constants.isLightClient && "0.0.0.0".equals(host) && allowedBotHosts == null && enableSSL ? sslPort : 0;
+            isOpenAPI = openAPIPort > 0 || openAPISSLPort > 0;
 
             HandlerList apiHandlers = new HandlerList();
 
@@ -241,10 +245,9 @@ public final class API {
                     "" + Math.max(apiServerIdleTimeout - APIProxyServlet.PROXY_IDLE_TIMEOUT_DELTA, 0)));
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     null, Math.max(Nxt.getIntProperty("nxt.maxUploadFileSize"), Constants.MAX_TAGGED_DATA_DATA_LENGTH), -1L, 0));
-            apiHandler.addServlet(ShapeShiftProxyServlet.class, ShapeShiftProxyServlet.SHAPESHIFT_TARGET + "/*");
 
             GzipHandler gzipHandler = new GzipHandler();
-            if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter")) {
+            if (!Nxt.getBooleanProperty("nxt.enableAPIServerGZIPFilter", isOpenAPI)) {
                 gzipHandler.setExcludedPaths("/nxt", "/nxt-proxy");
             }
             gzipHandler.setIncludedMethods("GET", "POST");
@@ -304,6 +307,7 @@ public final class API {
             disableAdminPassword = false;
             openAPIPort = 0;
             openAPISSLPort = 0;
+            isOpenAPI = false;
             Logger.logMessage("API server not enabled");
         }
 
@@ -367,19 +371,30 @@ public final class API {
         String remoteHost = req.getRemoteHost();
         synchronized(incorrectPasswords) {
             PasswordCount passwordCount = incorrectPasswords.get(remoteHost);
-            if (passwordCount != null && passwordCount.count >= 3 && now - passwordCount.time < 60*60) {
+            if (passwordCount != null && passwordCount.count >= 25 && now - passwordCount.time < 60*60) {
                 Logger.logWarningMessage("Too many incorrect admin password attempts from " + remoteHost);
                 throw new ParameterException(LOCKED_ADMIN_PASSWORD);
             }
-            if (!API.adminPassword.equals(req.getParameter("adminPassword"))) {
-                if (passwordCount == null) {
-                    passwordCount = new PasswordCount();
-                    incorrectPasswords.put(remoteHost, passwordCount);
+            String adminPassword = Convert.nullToEmpty(req.getParameter("adminPassword"));
+            if (!API.adminPassword.equals(adminPassword)) {
+                if (adminPassword.length() > 0) {
+                    if (passwordCount == null) {
+                        passwordCount = new PasswordCount();
+                        incorrectPasswords.put(remoteHost, passwordCount);
+                        if (incorrectPasswords.size() > 1000) {
+                            // Remove one of the locked hosts at random to prevent unlimited growth of the map
+                            List<String> remoteHosts = new ArrayList<>(incorrectPasswords.keySet());
+                            Random r = new Random();
+                            incorrectPasswords.remove(remoteHosts.get(r.nextInt(remoteHosts.size())));
+                        }
+                    }
+                    passwordCount.count++;
+                    passwordCount.time = now;
+                    Logger.logWarningMessage("Incorrect adminPassword from " + remoteHost);
+                    throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
+                } else {
+                    throw new ParameterException(MISSING_ADMIN_PASSWORD);
                 }
-                passwordCount.count++;
-                passwordCount.time = now;
-                Logger.logWarningMessage("Incorrect adminPassword from " + remoteHost);
-                throw new ParameterException(INCORRECT_ADMIN_PASSWORD);
             }
             if (passwordCount != null) {
                 incorrectPasswords.remove(remoteHost);
