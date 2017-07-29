@@ -59,6 +59,7 @@ public final class Nxt {
 
     public static final String NXT_DEFAULT_PROPERTIES = "nxt-default.properties";
     public static final String NXT_PROPERTIES = "nxt.properties";
+    public static final String NXT_INSTALLER_PROPERTIES = "nxt-installer.properties";
     public static final String CONFIG_DIR = "conf";
 
     private static final RuntimeMode runtimeMode;
@@ -114,6 +115,7 @@ public final class Nxt {
 
     static {
         loadProperties(properties, NXT_PROPERTIES, false);
+        loadProperties(properties, NXT_INSTALLER_PROPERTIES, false);
     }
 
     public static Properties loadProperties(Properties properties, String propertiesFile, boolean isDefault) {

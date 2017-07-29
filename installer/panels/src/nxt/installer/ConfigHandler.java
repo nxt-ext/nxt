@@ -44,7 +44,7 @@ final class ConfigHandler {
     private static final int[] PORTS = { 6876, 7876 };   // try to detect both testnet and real servers
     private static final String VAR_PREFIX = "nxt.installer.";
 
-    public static final String FILE_PATH = "conf/nxt.properties";
+    public static final String FILE_PATH = "conf/nxt-installer.properties";
     public static final String VAR_CLEAN_INSTALL_DIR = VAR_PREFIX + "cleanInstallDir";
     public static final String VAR_SHUTDOWN_SERVER = VAR_PREFIX + "shutdownServer";
     public static final String VAR_FILE_CONTENTS = "settings";
