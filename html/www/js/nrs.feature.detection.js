@@ -225,7 +225,7 @@ var NRS = (function (NRS) {
     };
 
     NRS.isWindowPrintSupported = function() {
-        return !isDesktopApplication;
+        return !isDesktopApplication && !isMobileDevice;
     };
 
     return NRS;
