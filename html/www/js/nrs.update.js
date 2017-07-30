@@ -18,6 +18,7 @@
  * @depends {nrs.js}
  */
 var NRS = (function(NRS, $) {
+	var DOWNLOAD_REPOSITORY_URL = "https://bitbucket.org/Jelurida/nxt/downloads/";
 	var index = 0;
 	var bundles = [
 		{alias: "nrsVersion", status: "release", prefix: "nxt-client-", ext: "zip"},
@@ -146,7 +147,7 @@ var NRS = (function(NRS, $) {
             return;
         }
         var filename = bundle.prefix + NRS.downloadedVersion.versionNr + "." + bundle.ext;
-        var fileurl = "https://bitbucket.org/JeanLucPicard/nxt/downloads/" + filename;
+        var fileurl = DOWNLOAD_REPOSITORY_URL + filename;
         var nrsUpdateExplanation = $("#nrs_update_explanation");
         if (window.java !== undefined) {
             window.java.popupHandlerURLChange(fileurl);
