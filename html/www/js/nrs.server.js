@@ -397,7 +397,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
             addAddressData(data);
-            if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error) {
+            if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error && !data.calculateFee)  {
                 var publicKey = NRS.generatePublicKey(secretPhrase);
                 var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
