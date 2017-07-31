@@ -1580,7 +1580,6 @@ var NRS = (function (NRS, $, undefined) {
             buyIgnisButton.data("currency", response.currency);
             buyIgnisButton.data("code", response.code);
             buyIgnisButton.data("decimals", response.decimals);
-            buyIgnisButton.prop("disabled", true);
             NRS.loadCurrencyOffers("sell", response.currency, false, true);
             NRS.getExchangeHistory(response.currency, false, "ignis_table");
 
