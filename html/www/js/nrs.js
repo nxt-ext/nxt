@@ -715,7 +715,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-NRS.addPagination = function () {
+	NRS.addPagination = function () {
         var firstStartNr = 1;
 		var firstEndNr = NRS.itemsPerPage;
 		var currentStartNr = (NRS.pageNumber-1) * NRS.itemsPerPage + 1;
@@ -766,7 +766,6 @@ NRS.addPagination = function () {
 
 	$(document).on("click", ".data-pagination a", function(e) {
 		e.preventDefault();
-
 		NRS.goToPageNumber($(this).data("page"));
 	});
 
