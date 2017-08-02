@@ -1543,6 +1543,28 @@ var NRS = (function (NRS, $, undefined) {
         NRS.pages.ignis();
     };
 
+
+    NRS.setup.ignis = function() {
+        NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
+            $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3") + "<br>" + $.t("ignis_message_4"));
+            $(".currency_code").html(response.code);
+            $("#currency_id").text(response.currency);
+            $("#buy_ignis_currency").val(response.currency);
+            $("#currency_decimals").text(response.decimals);
+            var buyIgnisButton = $("#buy_ignis_button");
+            buyIgnisButton.data("currency", response.currency);
+            buyIgnisButton.data("code", response.code);
+            buyIgnisButton.data("decimals", response.decimals);
+            buyIgnisButton.prop("disabled", true);
+            $('#ignis_shape_shift_select_coin').append('<option value="BTC_NXT">Bitcoin [BTC]</option>');
+            $("#ignis_shape_shift_button").data("pair", "BTC_NXT");
+            $('#ignis_changelly_select_coin').append('<option value="BTC">BTC</option>');
+            var changellyButton = $("#ignis_changelly_button");
+            changellyButton.data("from", "BTC");
+            changellyButton.data("to", "NXT");
+        });
+    };
+
     NRS.pages.ignis = function() {
         var $ignisDisabled = $("#ignis_disabled");
         var $ignisContent = $("#ignis_content");
@@ -1557,11 +1579,6 @@ var NRS = (function (NRS, $, undefined) {
             $ignisContent.show();
         }
         NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
-            $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3") + "<br>" + $.t("ignis_message_4"));
-            $(".currency_code").html(response.code);
-            $("#currency_id").text(response.currency);
-            $("#buy_ignis_currency").val(response.currency);
-            $("#currency_decimals").text(response.decimals);
             $("#your_nxt_balance_message").html(
                 $.t("ignis_message_11", { balance: $("#account_balance_sidebar").text() })
             );
@@ -1576,23 +1593,8 @@ var NRS = (function (NRS, $, undefined) {
                     $.t("ignis_message_12", { balance: balance })
                 );
             });
-            var buyIgnisButton = $("#buy_ignis_button");
-            buyIgnisButton.data("currency", response.currency);
-            buyIgnisButton.data("code", response.code);
-            buyIgnisButton.data("decimals", response.decimals);
-            var units = $("#buy_ignis_units").val();
-            if (units == "0") {
-                buyIgnisButton.prop("disabled", true);
-            }
             NRS.loadCurrencyOffers("sell", response.currency, false, true);
             NRS.getExchangeHistory(response.currency, false, "ignis_table");
-
-            $('#ignis_shape_shift_select_coin').append('<option value="BTC_NXT">Bitcoin [BTC]</option>');
-            $("#ignis_shape_shift_button").data("pair", "BTC_NXT");
-            $('#ignis_changelly_select_coin').append('<option value="BTC">BTC</option>');
-            var changellyButton = $("#ignis_changelly_button");
-            changellyButton.data("from", "BTC");
-            changellyButton.data("to", "NXT");
         });
     };
 
