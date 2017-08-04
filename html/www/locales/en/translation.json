@@ -1901,5 +1901,6 @@
   "print": "Print",
   "nxt_ardor_paper_wallet": "NXT and Ardor Paper Wallet",
   "accept": "Accept",
-  "load": "Load"
+  "load": "Load",
+  "your_account_is": "Your public account address is:"
 }
