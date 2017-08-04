@@ -1683,7 +1683,7 @@ var NRS = (function (NRS, $, undefined) {
         var $pageHeader = $("<h2 data-i18n='nxt_ardor_paper_wallet'>NXT and Ardor Paper Wallet</h2>");
         var $passphraseHeader = $("<h3 data-i18n='passphrase'>Passphrase</h3>");
         var $passphraseText = $("<div></div>");
-        $passphraseText.html(passphrase);
+        $passphraseText.text(passphrase);
         var passphraseImg = NRS.generateQRCode(null, passphrase, 2, 4);
         $(passphraseImg).load(function() {
             var account = NRS.getAccountId(passphrase, true);
