@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -46,7 +47,7 @@ public class APIProxy {
     private volatile List<String> peersHosts = Collections.emptyList();
     private volatile String mainPeerAnnouncedAddress;
 
-    private final ConcurrentHashMap<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
+    private final Map<String, Integer> blacklistedPeers = new ConcurrentHashMap<>();
 
     static {
         Set<String> requests = new HashSet<>();
@@ -182,12 +183,17 @@ public class APIProxy {
         return Constants.isLightClient || (enableAPIProxy && Nxt.getBlockchainProcessor().isDownloading());
     }
 
-    void blacklistHost(String host) {
+    boolean blacklistHost(String host) {
+        if (blacklistedPeers.size() > 1000) {
+            Logger.logInfoMessage("Too many blacklisted peers");
+            return false;
+        }
         blacklistedPeers.put(host, Nxt.getEpochTime() + blacklistingPeriod);
         if (peersHosts.contains(host)) {
             peersHosts = Collections.emptyList();
             getServingPeer(null);
         }
+        return true;
     }
 
     private Peer getRandomAPIPeer(List<Peer> peers) {
