@@ -47,4 +47,19 @@ public final class GetScheduledTransactions extends APIServlet.APIRequestHandler
         return response;
     }
 
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
+    @Override
+    protected boolean requirePassword() {
+        return true;
+    }
+
+    @Override
+    protected boolean allowRequiredBlockParameters() {
+        return false;
+    }
+
 }
