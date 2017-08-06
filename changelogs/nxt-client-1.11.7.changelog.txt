@@ -1,4 +1,18 @@
-IGNIS Token Sale UI bugfixes and improvements:
+This release adds the ability to submit a JLRDA purchase transaction from the
+IGNIS Token Sale page even before the sell offer has been published. Such
+transactions are not broadcasted immediately, but held in memory and only
+sent out when the expected sell offer arrives in the unconfirmed transaction
+pool. For this to work, you must keep the client running after submitting the
+purchase transaction, until the sell offer has been received and processed.
+
+This functionality is currently available for full clients only, i.e. those
+that have downloaded the full blockchain. Users of light clients can submit
+JLRDA purchase transactions only after the sell offer has been accepted in a
+block. To switch from a light client to full node, set nxt.isLightClient=true
+in conf/nxt.properties, and wait for the blockchain to download.
+
+
+More IGNIS Token Sale UI bugfixes and improvements:
 
 Add paging buttons to the exchange history table on the Ignis page.
 
