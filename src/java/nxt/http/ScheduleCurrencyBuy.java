@@ -24,6 +24,7 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.TransactionScheduler;
+import nxt.util.Filter;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
@@ -51,7 +52,7 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
         Account account = ParameterParser.getSenderAccount(req);
 
         long offerIssuerId = ParameterParser.getAccountId(req, "offerIssuer", true);
-        TransactionScheduler.SenderAndTypeFilter filter = new TransactionScheduler.SenderAndTypeFilter(offerIssuerId, MonetarySystem.PUBLISH_EXCHANGE_OFFER);
+        Filter<Transaction> filter = new ExchangeOfferFilter(offerIssuerId, currency.getId(), rateNQT);
 
         Attachment attachment = new Attachment.MonetarySystemExchangeBuy(currency.getId(), rateNQT, units);
         try {
@@ -76,5 +77,35 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
     protected boolean requirePassword() {
         return true;
     }
+
+
+    private static class ExchangeOfferFilter implements Filter<Transaction> {
+
+        private final long senderId;
+        private final long currencyId;
+        private final long rateNQT;
+
+        public ExchangeOfferFilter(long senderId, long currencyId, long rateNQT) {
+            this.senderId = senderId;
+            this.currencyId = currencyId;
+            this.rateNQT = rateNQT;
+        }
+
+        @Override
+        public boolean ok(Transaction transaction) {
+            if (transaction.getSenderId() != senderId
+                    || transaction.getType() != MonetarySystem.PUBLISH_EXCHANGE_OFFER
+                    || transaction.getPhasing() != null) {
+                return false;
+            }
+            Attachment.MonetarySystemPublishExchangeOffer attachment = (Attachment.MonetarySystemPublishExchangeOffer)transaction.getAttachment();
+            if (attachment.getCurrencyId() != currencyId || attachment.getSellRateNQT() > rateNQT) {
+                return false;
+            }
+            return true;
+        }
+
+    }
+
 
 }

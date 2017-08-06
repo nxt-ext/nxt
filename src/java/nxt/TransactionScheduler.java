@@ -61,23 +61,6 @@ public class TransactionScheduler {
 
     static void init() {}
 
-    public static class SenderAndTypeFilter implements Filter<Transaction> {
-
-        private final long senderId;
-        private final TransactionType transactionType;
-
-        public SenderAndTypeFilter(long senderId, TransactionType transactionType) {
-            this.senderId = senderId;
-            this.transactionType = transactionType;
-        }
-
-        @Override
-        public boolean ok(Transaction transaction) {
-            return transaction.getSenderId() == senderId && transaction.getType() == transactionType && transaction.getPhasing() == null;
-        }
-
-    }
-
     private final Transaction transaction;
     private final Filter<Transaction> filter;
 

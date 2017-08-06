@@ -10,6 +10,18 @@ passphrase.
 Implemented TransactionScheduler, added ScheduleCurrencyBuy and
 GetScheduledTransactions APIs.
 
+ScheduleCurrencyBuy API accepts same parameters as CurrencyBuy API, and an
+additional offerIssuer parameter. Instead of broadcasting the prepared
+transaction immediately, it schedules it to be broadcast as soon as an
+unconfirmed currency exchange offer transaction from that issuer, for that
+currency and a sell rate not higher than the requested, arrives in the
+unconfirmed transaction pool. The broadcast parameter must be set to false.
+This API requires a full node (not a light client) and admin password unless
+running on localhost.
+
+GetScheduledTransactions API returns a list of all scheduled transactions for
+a given account.
+
 Note that these APIs were specifically added for the purpose of the IGNIS
 Token Sale, and may be removed or modified in the future.
 
