@@ -771,7 +771,7 @@ var NRS = (function (NRS, $, undefined) {
             $("#currency_order_no_broadcast").val("true");
             $("#currency_order_currency_issuer").val($("#buy_ignis_currency_issuer").val());
         } else {
-            $("#currency_order_no_broadcast").val("false");
+            $("#currency_order_no_broadcast").val("");
         }
         return {
             "requestType": orderType,
