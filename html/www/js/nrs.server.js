@@ -425,7 +425,7 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     callback(response, data);
                 } else {
-                    if (response.broadcasted == false && !data.calculateFee) {
+                    if (response.broadcasted == false && !data.calculateFee && !data.requestType == "scheduleCurrencyBuy") {
                         async.waterfall([
                             function (callback) {
                                 addMissingData(data);
