@@ -51,6 +51,7 @@ public class TransactionScheduler {
                 for (Transaction transaction : transactions) {
                     if (transactionScheduler.processEvent(transaction)) {
                         iterator.remove();
+                        Logger.logInfoMessage("Removed " + transaction.getStringId() + " from transaction scheduler");
                         break;
                     }
                 }
@@ -86,6 +87,10 @@ public class TransactionScheduler {
     }
 
     private boolean processEvent(Transaction unconfirmedTransaction) {
+        if (transaction.getExpiration() < Nxt.getEpochTime()) {
+            Logger.logInfoMessage("Expired transaction in transaction scheduler " + transaction.getSenderId());
+            return true;
+        }
         if (!filter.ok(unconfirmedTransaction)) {
             return false;
         }
@@ -94,7 +99,7 @@ public class TransactionScheduler {
             return true;
         } catch (NxtException.ValidationException e) {
             Logger.logInfoMessage("Failed to broadcast: " + e.getMessage());
-            return false;
+            return true;
         }
     }
 

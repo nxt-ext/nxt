@@ -59,11 +59,22 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
             JSONObject transactionJSON = (JSONObject)json.get("transactionJSON");
             Transaction.Builder builder = Nxt.newTransactionBuilder(transactionJSON);
             Transaction transaction = builder.build();
+            transaction.validate();
             TransactionScheduler.schedule(filter, transaction);
             return json;
         } catch (NxtException.InsufficientBalanceException e) {
             return JSONResponses.NOT_ENOUGH_FUNDS;
         }
+    }
+
+    @Override
+    protected boolean requireFullClient() {
+        return true;
+    }
+
+    @Override
+    protected boolean requirePassword() {
+        return true;
     }
 
 }
