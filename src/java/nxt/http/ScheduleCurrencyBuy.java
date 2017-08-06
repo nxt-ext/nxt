@@ -50,6 +50,7 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
         long rateNQT = ParameterParser.getLong(req, "rateNQT", 0, Long.MAX_VALUE, true);
         long units = ParameterParser.getLong(req, "units", 0, Long.MAX_VALUE, true);
         Account account = ParameterParser.getSenderAccount(req);
+        String secretPhrase = ParameterParser.getSecretPhrase(req, false);
 
         long offerIssuerId = ParameterParser.getAccountId(req, "offerIssuer", true);
         Filter<Transaction> filter = new ExchangeOfferFilter(offerIssuerId, currency.getId(), rateNQT);
@@ -57,11 +58,16 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
         Attachment attachment = new Attachment.MonetarySystemExchangeBuy(currency.getId(), rateNQT, units);
         try {
             JSONObject json = (JSONObject)JSONValue.parse(JSON.toString(createTransaction(req, account, attachment)));
-            JSONObject transactionJSON = (JSONObject)json.get("transactionJSON");
-            Transaction.Builder builder = Nxt.newTransactionBuilder(transactionJSON);
-            Transaction transaction = builder.build();
-            transaction.validate();
-            TransactionScheduler.schedule(filter, transaction);
+            if (secretPhrase != null) {
+                JSONObject transactionJSON = (JSONObject) json.get("transactionJSON");
+                Transaction.Builder builder = Nxt.newTransactionBuilder(transactionJSON);
+                Transaction transaction = builder.build();
+                transaction.validate();
+                TransactionScheduler.schedule(filter, transaction);
+                json.put("scheduled", true);
+            } else {
+                json.put("scheduled", false);
+            }
             return json;
         } catch (NxtException.InsufficientBalanceException e) {
             return JSONResponses.NOT_ENOUGH_FUNDS;
