@@ -228,6 +228,10 @@ var NRS = (function (NRS) {
         return !isDesktopApplication && !isMobileDevice;
     };
 
+    NRS.isDisableScheduleRequest = function() {
+        return NRS.isMobileApp() || (NRS.state && NRS.state.apiProxy);
+    };
+
     return NRS;
 }(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
 
