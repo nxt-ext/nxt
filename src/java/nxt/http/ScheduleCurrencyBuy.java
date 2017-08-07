@@ -128,7 +128,7 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
         private final long currencyId;
         private final long rateNQT;
 
-        public ExchangeOfferFilter(long senderId, long currencyId, long rateNQT) {
+        private ExchangeOfferFilter(long senderId, long currencyId, long rateNQT) {
             this.senderId = senderId;
             this.currencyId = currencyId;
             this.rateNQT = rateNQT;
