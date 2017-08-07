@@ -829,7 +829,7 @@ var NRS = (function (NRS, $, undefined) {
                 submitButton.prop('disabled', true);
                 return;
             }
-            if (response.rateNQT = "0") {
+            if (response.rateNQT == "0") {
                 if (NRS.isDisableScheduleRequest()) {
                     submitButton.prop('disabled', true);
                     $.growl($.t("offer_not_published"), {
