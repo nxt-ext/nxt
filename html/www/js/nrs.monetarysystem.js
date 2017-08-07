@@ -830,6 +830,13 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
             if (response.rateNQT = "0") {
+                if (NRS.state.isLightClient) {
+                    submitButton.prop('disabled', true);
+                    $.growl($.t("light_client_cannot_schedule_requests"), {
+                        "type": "danger"
+                    });
+                    return;
+                }
                 var ignisCurrencyIssuer = $("#buy_ignis_currency_issuer");
                 NRS.sendRequest("getAccountProperties", {
                     "recipient": ignisCurrencyIssuer.val(),

@@ -1902,5 +1902,6 @@
   "nxt_ardor_paper_wallet": "NXT and Ardor Paper Wallet",
   "accept": "Accept",
   "load": "Load",
-  "your_account_is": "Your public account address is:"
+  "your_account_is": "Your public account address is:",
+  "light_client_cannot_schedule_requests": "Light Client cannot issue scheduled requests before exchange offer is published"
 }
