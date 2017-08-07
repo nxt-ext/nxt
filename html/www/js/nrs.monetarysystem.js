@@ -830,9 +830,9 @@ var NRS = (function (NRS, $, undefined) {
                 return;
             }
             if (response.rateNQT = "0") {
-                if (NRS.state.isLightClient) {
+                if (NRS.isDisableScheduleRequest()) {
                     submitButton.prop('disabled', true);
-                    $.growl($.t("light_client_cannot_schedule_requests"), {
+                    $.growl($.t("offer_not_published"), {
                         "type": "danger"
                     });
                     return;

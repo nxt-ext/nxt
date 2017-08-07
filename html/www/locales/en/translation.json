@@ -1903,5 +1903,5 @@
   "accept": "Accept",
   "load": "Load",
   "your_account_is": "Your public account address is:",
-  "light_client_cannot_schedule_requests": "Light Client cannot issue scheduled requests before exchange offer is published"
+  "offer_not_published": "Only full node can schedule to buy currency before the offer is published"
 }
