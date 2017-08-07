@@ -5,6 +5,11 @@ sent out when the expected sell offer arrives in the unconfirmed transaction
 pool. For this to work, you must keep the node running after submitting the
 purchase transaction, until the sell offer has been received and processed.
 
+Note that after submitting a purchase transaction in advance of the sell
+offer, you will get a pop-up that your currency buy order has been submitted,
+but it will not show in the unconfirmed pool. This is normal as such advance
+orders are kept separately.
+
 This functionality is currently available for full nodes only, i.e. those
 that have downloaded the full blockchain. Users of light clients can submit
 JLRDA purchase transactions only after the sell offer has been accepted in a
