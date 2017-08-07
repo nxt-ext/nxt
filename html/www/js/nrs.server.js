@@ -242,16 +242,8 @@ var NRS = (function (NRS, $, undefined) {
             currentSubPage = NRS.currentSubPage;
         }
 
-        var type = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
-        var url;
-        if (options.remoteNode) {
-            url = options.remoteNode.getUrl() + "/nxt";
-        } else {
-            url = NRS.getRequestPath(options.noProxy);
-        }
-        url += "?requestType=" + requestType;
-
-        if (type == "GET") {
+        var httpMethod = (NRS.isRequirePost(requestType) || "secretPhrase" in data || "doNotSign" in data || "adminPassword" in data ? "POST" : "GET");
+        if (httpMethod == "GET") {
             if (typeof data == "string") {
                 data += "&random=" + Math.random();
             } else {
@@ -279,7 +271,14 @@ var NRS = (function (NRS, $, undefined) {
         }
 
         var secretPhrase = "";
-        var isVolatile = isVolatileRequest(data.doNotSign, type, requestType, data.secretPhrase);
+        var isVolatile = isVolatileRequest(data.doNotSign, httpMethod, requestType, data.secretPhrase);
+        if (NRS.isScheduleRequest(requestType)) {
+            data.adminPassword = NRS.settings.admin_password;
+            if (!extra) {
+                extra = {};
+            }
+            extra.isSchedule = true;
+        }
         if (isVolatile) {
             if (NRS.rememberPassword) {
                 secretPhrase = _password;
@@ -298,7 +297,12 @@ var NRS = (function (NRS, $, undefined) {
             var ecBlock = NRS.getECBlock(NRS.isTestNet);
             data.ecBlockId = ecBlock.id;
             data.ecBlockHeight = ecBlock.height;
-        } else if (type == "POST" && NRS.rememberPassword) {
+
+            var keywordLength = NRS.constants.SCHEDULE_PREFIX.length;
+            if (extra && extra.isSchedule && requestType.length >= keywordLength + 1) {
+                requestType = requestType.substring(keywordLength, keywordLength + 1).toLowerCase() + requestType.substring(keywordLength + 1);
+            }
+        } else if (httpMethod == "POST" && NRS.rememberPassword) {
             data.secretPhrase = _password;
         }
 
@@ -306,7 +310,7 @@ var NRS = (function (NRS, $, undefined) {
         // Used for passing row query string which is too long for a GET request
         if (data.querystring) {
             data = data.querystring;
-            type = "POST";
+            httpMethod = "POST";
         }
         var contentType;
         var processData;
@@ -343,7 +347,7 @@ var NRS = (function (NRS, $, undefined) {
                 }, data);
                 return;
             }
-            type = "POST";
+            httpMethod = "POST";
             formData.append(config.requestParam, file);
             for (var key in data) {
                 if (!data.hasOwnProperty(key)) {
@@ -362,18 +366,25 @@ var NRS = (function (NRS, $, undefined) {
             contentType = "application/x-www-form-urlencoded; charset=UTF-8";
             processData = true;
         }
+        var url;
+        if (options.remoteNode) {
+            url = options.remoteNode.getUrl() + "/nxt";
+        } else {
+            url = NRS.getRequestPath(options.noProxy);
+        }
+        url += "?requestType=" + requestType;
         NRS.logConsole("Send request " + requestType + " to url " + url);
 
         $.ajax({
             url: url,
             crossDomain: true,
             dataType: "json",
-            type: type,
+            type: httpMethod,
             timeout: 30000,
             async: (options.isAsync === undefined ? true : options.isAsync),
             currentPage: currentPage,
             currentSubPage: currentSubPage,
-            shouldRetry: (type == "GET" ? 2 : undefined),
+            shouldRetry: (httpMethod == "GET" ? 2 : undefined),
             traditional: true,
             data: (formData != null ? formData : data),
             contentType: contentType,
@@ -397,7 +408,7 @@ var NRS = (function (NRS, $, undefined) {
                 NRS.addToConsole(this.url, this.type, this.data, response);
             }
             addAddressData(data);
-            if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error) {
+            if (secretPhrase && response.unsignedTransactionBytes && !data.doNotSign && !response.errorCode && !response.error && !data.calculateFee)  {
                 var publicKey = NRS.generatePublicKey(secretPhrase);
                 var signature = NRS.signBytes(response.unsignedTransactionBytes, converters.stringToHexString(secretPhrase));
 
@@ -425,7 +436,7 @@ var NRS = (function (NRS, $, undefined) {
                     }
                     callback(response, data);
                 } else {
-                    if (response.broadcasted == false && !data.calculateFee) {
+                    if (response.broadcasted == false && !data.calculateFee && !NRS.isScheduleRequest(requestType)) {
                         async.waterfall([
                             function (callback) {
                                 addMissingData(data);
@@ -479,7 +490,7 @@ var NRS = (function (NRS, $, undefined) {
             }
 
             if ((error == "error" || textStatus == "error") && (xhr.status == 404 || xhr.status == 0)) {
-                if (type == "POST") {
+                if (httpMethod == "POST") {
                     NRS.connectionError();
                 }
             }
@@ -510,8 +521,15 @@ var NRS = (function (NRS, $, undefined) {
             }, data);
             return;
         }
+        var isSchedule = false;
+        if (extra) {
+            data["_extra"] = extra;
+            if (extra.isSchedule) {
+                isSchedule = true;
+            }
+        }
         var payload = transactionBytes.substr(0, 192) + signature + transactionBytes.substr(320);
-        if (data.broadcast == "false") {
+        if (data.broadcast == "false" && !isSchedule) {
             response.transactionBytes = payload;
             response.transactionJSON.signature = signature;
             NRS.showRawTransactionModal(response);
@@ -519,7 +537,7 @@ var NRS = (function (NRS, $, undefined) {
             if (extra) {
                 data["_extra"] = extra;
             }
-            NRS.broadcastTransactionBytes(payload, callback, response, data);
+            NRS.broadcastTransactionBytes(payload, callback, response, data, isSchedule, requestType);
         }
     };
 
@@ -1507,8 +1525,18 @@ var NRS = (function (NRS, $, undefined) {
         return true;
     };
 
-    NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData) {
-        var requestType = NRS.state.apiProxy ? "sendTransaction": "broadcastTransaction";
+    NRS.broadcastTransactionBytes = function (transactionData, callback, originalResponse, originalData, isSchedule, requestType) {
+        var data = {
+            "transactionBytes": transactionData,
+            "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment),
+            "adminPassword": NRS.settings.admin_password,
+        };
+        if (isSchedule) {
+            requestType = NRS.constants.SCHEDULE_PREFIX + requestType.substring(0, 1).toUpperCase() + requestType.substring(1);
+            data.offerIssuer = originalData.offerIssuer; // Specific to currency buy
+        } else {
+            requestType = NRS.state.apiProxy ? "sendTransaction": "broadcastTransaction";
+        }
         $.ajax({
             url: NRS.getRequestPath() + "?requestType=" + requestType,
             crossDomain: true,
@@ -1516,11 +1544,7 @@ var NRS = (function (NRS, $, undefined) {
             type: "POST",
             timeout: 30000,
             async: true,
-            data: {
-                "transactionBytes": transactionData,
-                "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment),
-                "adminPassword": NRS.settings.admin_password
-            }
+            data: data
         }).done(function (response) {
             NRS.escapeResponseObjStrings(response);
             if (NRS.console) {

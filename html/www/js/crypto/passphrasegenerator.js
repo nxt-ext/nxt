@@ -53,6 +53,7 @@ var PassPhraseGenerator = {
 			this.passPhrase = phraseWords.join(" ");
 			crypto.getRandomValues(random);
 			$container.find(".step_2 textarea").val(this.passPhrase).prop("readonly", true);
+			$container.find("#step_2_account").val(NRS.getAccountId(this.passPhrase, true));
 			setTimeout(function () {
 				$("#account_phrase_generator_start").hide();
                 $("#confirm_passphrase_warning").prop('checked', false);
