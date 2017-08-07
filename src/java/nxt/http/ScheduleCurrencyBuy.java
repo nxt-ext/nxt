@@ -24,6 +24,7 @@ import nxt.Nxt;
 import nxt.NxtException;
 import nxt.Transaction;
 import nxt.TransactionScheduler;
+import nxt.db.DbIterator;
 import nxt.util.Filter;
 import nxt.util.JSON;
 import org.json.simple.JSONObject;
@@ -62,9 +63,23 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
                 JSONObject transactionJSON = (JSONObject) json.get("transactionJSON");
                 Transaction.Builder builder = Nxt.newTransactionBuilder(transactionJSON);
                 Transaction transaction = builder.build();
-                transaction.validate();
-                TransactionScheduler.schedule(filter, transaction);
-                json.put("scheduled", true);
+                Nxt.getBlockchain().readLock();
+                try {
+                    transaction.validate();
+                    try (DbIterator<? extends Transaction> unconfirmedTransactions = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
+                        while (unconfirmedTransactions.hasNext()) {
+                            if (filter.ok(unconfirmedTransactions.next())) {
+                                Nxt.getTransactionProcessor().broadcast(transaction);
+                                json.put("broadcasted", true);
+                                return json;
+                            }
+                        }
+                    }
+                    TransactionScheduler.schedule(filter, transaction);
+                    json.put("scheduled", true);
+                } finally {
+                    Nxt.getBlockchain().readUnlock();
+                }
             } else {
                 json.put("scheduled", false);
             }
