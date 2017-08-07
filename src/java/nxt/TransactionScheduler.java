@@ -30,6 +30,9 @@ public class TransactionScheduler {
     private static final Map<Transaction, TransactionScheduler> transactionSchedulers = new ConcurrentHashMap<>();
 
     public static void schedule(Filter<Transaction> filter, Transaction transaction) {
+        if (transactionSchedulers.size() >= 100) {
+            throw new RuntimeException("Cannot schedule more than 100 transactions! Please restart your node if you want to clear existing scheduled transactions.");
+        }
         transactionSchedulers.put(transaction, new TransactionScheduler(filter, transaction));
     }
 
