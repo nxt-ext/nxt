@@ -71,7 +71,8 @@ var NRS = (function (NRS, $) {
         'UNKNOWN': 'unknown',
         'LAST_KNOWN_BLOCK': { id: "2057812077851428759", height: "1412000" },
         'LAST_KNOWN_TESTNET_BLOCK': { id: "5232413087824425542", height: "1367000" },
-        'IGNIS_CURRENCY_CODE': "JLRDA"
+        'IGNIS_CURRENCY_CODE': "JLRDA",
+        'SCHEDULE_PREFIX': "schedule"
     };
 
     NRS.loadAlgorithmList = function (algorithmSelect, isPhasingHash) {
@@ -234,6 +235,11 @@ var NRS = (function (NRS, $) {
             requestType == "getForging" ||
             requestType == "markHost" ||
             requestType == "startFundingMonitor";
+    };
+
+    NRS.isScheduleRequest = function (requestType) {
+        var keyword = NRS.constants.SCHEDULE_PREFIX;
+        return requestType && requestType.length >= keyword.length && requestType.substring(0, keyword.length) == keyword;
     };
 
     NRS.getFileUploadConfig = function (requestType, data) {
