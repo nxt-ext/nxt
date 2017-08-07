@@ -775,7 +775,7 @@ var NRS = (function (NRS, $, undefined) {
         }
         return {
             "requestType": orderType,
-            "successMessage": (orderType == "currencyBuy" ? $.t("success_buy_order_currency") : $.t("success_sell_order_currency")),
+            "successMessage": (orderType == "currencySell" ? $.t("success_sell_order_currency") : $.t("success_buy_order_currency")),
             "errorMessage": $.t("error_order_currency")
         };
     };
