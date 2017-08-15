@@ -1494,21 +1494,18 @@ var NRS = (function (NRS, $, undefined) {
             buyOffer = response.buyOffer;
             sellOffer = response.sellOffer;
         }, { isAsync: false });
-        var data = {};
+        var data = {
+            "type": $.t("exchange_offer"),
+            "code": currency.code,
+            "expiration_height": transaction.attachment.expirationHeight
+        };
         if (buyOffer && sellOffer) {
-            data = {
-                "type": $.t("exchange_offer"),
-                "code": currency.code,
-                "buy_supply_formatted_html": NRS.formatQuantity(buyOffer.supply, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.initialBuySupply, currency.decimals) + ")",
-                "buy_limit_formatted_html": NRS.formatQuantity(buyOffer.limit, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.totalBuyLimit, currency.decimals) + ")",
-                "buy_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.buyRateNQT, currency.decimals) + rateUnitsStr,
-                "sell_supply_formatted_html": NRS.formatQuantity(sellOffer.supply, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.initialSellSupply, currency.decimals) + ")",
-                "sell_limit_formatted_html": NRS.formatQuantity(sellOffer.limit, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.totalSellLimit, currency.decimals) + ")",
-                "sell_rate_formatted_html": NRS.calculateOrderPricePerWholeQNT(transaction.attachment.sellRateNQT, currency.decimals) + rateUnitsStr,
-                "expiration_height": transaction.attachment.expirationHeight
-            };
-        } else {
-            data["offer"] = $.t("no_matching_exchange_offer");
+            data["buy_supply_formatted_html"] = NRS.formatQuantity(buyOffer.supply, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.initialBuySupply, currency.decimals) + ")";
+            data["buy_limit_formatted_html"] = NRS.formatQuantity(buyOffer.limit, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.totalBuyLimit, currency.decimals) + ")";
+            data["buy_rate_formatted_html"] = NRS.calculateOrderPricePerWholeQNT(transaction.attachment.buyRateNQT, currency.decimals) + rateUnitsStr;
+            data["sell_supply_formatted_html"] = NRS.formatQuantity(sellOffer.supply, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.initialSellSupply, currency.decimals) + ")";
+            data["sell_limit_formatted_html"] = NRS.formatQuantity(sellOffer.limit, currency.decimals) + " (initial: " + NRS.formatQuantity(transaction.attachment.totalSellLimit, currency.decimals) + ")";
+            data["sell_rate_formatted_html"] = NRS.calculateOrderPricePerWholeQNT(transaction.attachment.sellRateNQT, currency.decimals) + rateUnitsStr;
         }
         var rows = "";
         NRS.sendRequest("getExchangesByOffer", {

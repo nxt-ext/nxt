@@ -1901,5 +1901,7 @@
   "print": "Print",
   "nxt_ardor_paper_wallet": "NXT and Ardor Paper Wallet",
   "accept": "Accept",
-  "load": "Load"
+  "load": "Load",
+  "your_account_is": "Your public account address is:",
+  "offer_not_published": "Only full node can schedule to buy currency before the offer is published"
 }

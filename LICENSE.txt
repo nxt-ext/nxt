@@ -515,9 +515,7 @@ Article 4. DLT Instances that by design do not use a fixed number of tokens
 issued all at once, or that have substituted the proof-of-stake algorithm with a
 different one and as a result do not use forging tokens, have to contact the
 Copyright Holder for a custom license agreement. However the Copyright Holder is
-in no way obliged to provide a license but he shall negotiate in good faith
-every such case always trying to satisfy the sharedrop requirement as much as
-possible.
+in no way obliged to provide such a custom license.
 
 
 Article 5. Interpretation

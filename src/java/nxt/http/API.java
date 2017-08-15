@@ -99,6 +99,7 @@ public final class API {
     static final boolean enableAPIUPnP = Nxt.getBooleanProperty("nxt.enableAPIUPnP");
     public static final int apiServerIdleTimeout = Nxt.getIntProperty("nxt.apiServerIdleTimeout");
     public static final boolean apiServerCORS = Nxt.getBooleanProperty("nxt.apiServerCORS");
+    private static final String forwardedForHeader = Nxt.getStringProperty("nxt.forwardedForHeader");
 
     private static final Server apiServer;
     private static URI welcomePageUri;
@@ -368,7 +369,13 @@ public final class API {
 
     private static void checkOrLockPassword(HttpServletRequest req) throws ParameterException {
         int now = Nxt.getEpochTime();
-        String remoteHost = req.getRemoteHost();
+        String remoteHost = null;
+        if (forwardedForHeader != null) {
+            remoteHost = req.getHeader(forwardedForHeader);
+        }
+        if (remoteHost == null) {
+            remoteHost = req.getRemoteHost();
+        }
         synchronized(incorrectPasswords) {
             PasswordCount passwordCount = incorrectPasswords.get(remoteHost);
             if (passwordCount != null && passwordCount.count >= 25 && now - passwordCount.time < 60*60) {

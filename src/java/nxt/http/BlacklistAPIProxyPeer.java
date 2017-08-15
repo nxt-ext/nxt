@@ -47,8 +47,7 @@ public class BlacklistAPIProxyPeer extends APIServlet.APIRequestHandler {
         if (peer == null) {
             return UNKNOWN_PEER;
         } else {
-            APIProxy.getInstance().blacklistHost(peer.getHost());
-            response.put("done", true);
+            response.put("done", APIProxy.getInstance().blacklistHost(peer.getHost()));
         }
 
         return response;
