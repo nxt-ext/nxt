@@ -1123,6 +1123,9 @@ var NRS = (function (NRS, $, undefined) {
 
     NRS.forms.orderAsset = function () {
         var orderType = $("#asset_order_type").val();
+        if (orderType == "placeBidOrder" && NRS.isShowFakeWarning()) {
+            return NRS.composeFakeWarning($.t("asset"), $("#asset_order_asset").val());
+        }
         return {
             "requestType": orderType,
             "successMessage": (orderType == "placeBidOrder" ? $.t("success_buy_order_asset") : $.t("success_sell_order_asset")),

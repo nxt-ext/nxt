@@ -131,3 +131,37 @@
         <div class="data-pagination"></div>
     </section>
 </div>
+
+<div id="scheduled_transactions_page" class="paginated page">
+    <section class="content-header">
+        <h1 data-i18n="scheduled_transactions">Scheduled Transactions</h1>
+    </section>
+
+    <section class="content">
+        <div id="scheduled_transactions_error_message" class="callout callout-danger" style="display:none"></div>
+        <div class="panel panel-default">
+            <div class="data-container data-loading panel-body">
+                <table class="table table-striped" id="scheduled_transactions_table">
+                    <thead>
+                    <tr>
+                        <th data-i18n="date">Date</th>
+                        <th style="width:60px;text-align:center;"><i class="fa fa-envelope-o"></i></th>
+                        <th data-i18n="type">Type</th>
+                        <th class="numeric" data-i18n="amount">Amount</th>
+                        <th class="numeric" data-i18n="fee">Fee</th>
+                        <th data-i18n="account">Account</th>
+                        <th data-i18n="actions" style="text-align:right;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <div class="data-loading-container"><img src="img/loading_indicator.gif" alt="Loading..." width="32" height="32" /></div>
+                <div class="data-empty-container" style="text-align:center;">
+                    <p style="padding-top:80px;padding-bottom:100px;"><span data-i18n="no_transactions_found">No transactions found</span>.</p>
+                </div>
+            </div>
+        </div>
+        <div class="data-pagination"></div>
+    </section>
+</div>

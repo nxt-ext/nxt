@@ -646,6 +646,10 @@ var NRS = (function(NRS, $) {
 			}
 		}, { isAsync: false });
 
+        if (NRS.isShowFakeWarning()) {
+            return NRS.composeFakeWarning($.t("goods"), data.goods);
+        }
+
 		data.deliveryDeadlineTimestamp = String(NRS.toEpochTime() + 60 * 60 * data.deliveryDeadlineTimestamp);
 
 		delete data.seller;

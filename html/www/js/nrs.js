@@ -1329,7 +1329,9 @@ var NRS = (function(NRS, $, undefined) {
                         $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
                                 "account_id": NRS.escapeRespStr(NRS.accountRS),
                                 "public_key": NRS.escapeRespStr(NRS.publicKey)
-                            }) + "<br/><br/>" + NRS.blockchainDownloadingMessage() +
+                            }) +
+                            NRS.getPassphraseValidationLink() +
+							"<br/><br/>" + NRS.blockchainDownloadingMessage() +
                             "<br/><br/>" + NRS.getFundAccountLink()).show();
                     } else {
                         $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(NRS.blockchainDownloadingMessage()).show();
@@ -1342,6 +1344,7 @@ var NRS = (function(NRS, $, undefined) {
                         message = $.t("status_new_account_no_pk_v2", {
                             "account_id": NRS.escapeRespStr(NRS.accountRS)
                         });
+                        message += NRS.getPassphraseValidationLink();
                         if (NRS.downloadingBlockchain) {
                             message += "<br/><br/>" + NRS.blockchainDownloadingMessage();
                         }
@@ -1350,6 +1353,7 @@ var NRS = (function(NRS, $, undefined) {
                             "account_id": NRS.escapeRespStr(NRS.accountRS),
                             "public_key": NRS.escapeRespStr(NRS.publicKey)
                         });
+                        message += NRS.getPassphraseValidationLink();
                         if (NRS.downloadingBlockchain) {
                             message += "<br/><br/>" + NRS.blockchainDownloadingMessage();
                         }
@@ -1773,15 +1777,25 @@ var NRS = (function(NRS, $, undefined) {
 						} else {
 							NRS.sendRequest("getBlock", {
 								"block": id,
-                                "includeTransactions": "true"
-							}, function(response, input) {
+                                "includeTransactions": "true",
+								"includeExecutedPhased": "true"
+							}, function(response) {
 								if (!response.errorCode) {
-									response.block = input.block;
 									NRS.showBlockModal(response);
 								} else {
-									$.growl($.t("error_search_no_results"), {
-										"type": "danger"
-									});
+                                    NRS.sendRequest("getBlock", {
+                                        "height": id,
+                                        "includeTransactions": "true",
+                                        "includeExecutedPhased": "true"
+                                    }, function(response) {
+                                        if (!response.errorCode) {
+                                            NRS.showBlockModal(response);
+                                        } else {
+                                            $.growl($.t("error_search_no_results"), {
+                                                "type": "danger"
+                                            });
+                                        }
+                                    });
 								}
 							});
 						}

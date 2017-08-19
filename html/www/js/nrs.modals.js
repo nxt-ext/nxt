@@ -20,6 +20,7 @@
 var NRS = (function(NRS, $, undefined) {
 	NRS.fetchingModalData = false;
 	NRS.modalStack = [];
+	var isFakeWarningDisplayed;
 
 	// save the original function object
 	var _superModal = $.fn.modal;
@@ -144,6 +145,7 @@ var NRS = (function(NRS, $, undefined) {
 		$(this).find("input[type=text]:first, textarea:first, input[type=password]:first").not("[readonly]").first().focus();
 		$(this).find("input[name=converted_account_id]").val("");
 		NRS.showedFormWarning = false; //maybe not the best place... we assume forms are only in modals?
+		isFakeWarningDisplayed = false;
 	});
 
 	modal.on("hide.bs.modal", function() {
@@ -222,6 +224,7 @@ var NRS = (function(NRS, $, undefined) {
 
 		$(this).find(".tx-modal-approve").empty();
 		NRS.showedFormWarning = false;
+		isFakeWarningDisplayed = false;
         var isOffline = !!$(this).find(".mobile-offline").val();
         if (isOffline) {
             $("#mobile_settings_modal").modal();
@@ -285,6 +288,23 @@ var NRS = (function(NRS, $, undefined) {
 		// Close accidentally triggered popovers
 		$(".show_popover").popover("hide");
 	});
+
+	NRS.isShowFakeWarning = function() {
+		if (NRS.settings.fake_entity_warning != "1") {
+			return false;
+		}
+		return !isFakeWarningDisplayed;
+    };
+
+	NRS.composeFakeWarning = function (entity, id) {
+		isFakeWarningDisplayed = true;
+        return {
+            "error": $.t("fake_warning", {
+                entity: entity,
+                id: id
+            }) + " " + $.t("ignis_token_sale_reference") + " " + $.t("click_submit_again")
+        };
+    };
 
 	return NRS;
 }(NRS || {}, jQuery));

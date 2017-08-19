@@ -32,7 +32,8 @@ var NRS = (function(NRS, $, undefined) {
 		var block = $(this).data("block");
         var isBlockId = $(this).data("id");
         var params = {
-            "includeTransactions": "true"
+            "includeTransactions": "true",
+            "includeExecutedPhased": "true"
         };
         if (isBlockId) {
             params["block"] = block;
@@ -74,9 +75,6 @@ var NRS = (function(NRS, $, undefined) {
             if (block.transactions.length) {
                 $("#block_info_transactions_none").hide();
                 transactionsTable.show();
-                block.transactions.sort(function (a, b) {
-                    return a.timestamp - b.timestamp;
-                });
                 var rows = "";
                 for (var i = 0; i < block.transactions.length; i++) {
                     var transaction = block.transactions[i];
@@ -84,6 +82,7 @@ var NRS = (function(NRS, $, undefined) {
                         transaction.amount = new BigInteger(transaction.amountNQT);
                         transaction.fee = new BigInteger(transaction.feeNQT);
                         rows += "<tr>" +
+                        "<td>" + transaction.transactionIndex + (transaction.phased ? "&nbsp<i class='fa fa-gavel' title='" + $.t("phased") + "'></i>" : "") + "</td>" +
                         "<td>" + NRS.getTransactionLink(transaction.transaction, NRS.formatTimestamp(transaction.timestamp)) + "</td>" +
                         "<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "</td>" +
                         "<td>" + NRS.formatAmount(transaction.amount) + "</td>" +
@@ -97,6 +96,24 @@ var NRS = (function(NRS, $, undefined) {
             } else {
                 $("#block_info_transactions_none").show();
                 transactionsTable.hide();
+            }
+            var executedPhasedTable = $("#block_info_executed_phased_table");
+            if (block.executedPhasedTransactions.length) {
+                $("#block_info_executed_phased_none").hide();
+                executedPhasedTable.show();
+                rows = "";
+                for (i = 0; i < block.executedPhasedTransactions.length; i++) {
+                    transaction = block.executedPhasedTransactions[i];
+                    rows += "<tr>" +
+                        "<td>" + NRS.getTransactionLink(transaction.transaction, NRS.formatTimestamp(transaction.timestamp)) + "</td>" +
+                        "<td>" + NRS.getTransactionIconHTML(transaction.type, transaction.subtype) + "</td>" +
+                        "<td>" + NRS.getBlockLink(transaction.height) + "</td>" +
+                        "<td>" + (transaction.attachment.phasingFinishHeight == block.height ? $.t("finished") : $.t("approved")) + "</td>";
+                }
+                executedPhasedTable.find("tbody").empty().append(rows);
+            } else {
+                $("#block_info_executed_phased_none").show();
+                executedPhasedTable.hide();
             }
             var blockInfoModal = $('#block_info_modal');
             if (!blockInfoModal.data('bs.modal') || !blockInfoModal.data('bs.modal').isShown) {

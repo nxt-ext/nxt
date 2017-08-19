@@ -24,7 +24,7 @@ in such a way that no trusted third parties are required anymore.
     - *Debian* - `http://www.webupd8.org/2014/03/how-to-install-oracle-java-8-in-debian.html`
     - *FreeBSD* - `pkg install openjdk8`
 
-  - *repository* - `git clone https://bitbucket.org/JeanLucPicard/nxt.git`
+  - *repository* - `git clone https://bitbucket.org/Jelurida/nxt.git`
   
 ----
 ## Run it! ##

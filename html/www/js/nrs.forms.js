@@ -366,6 +366,10 @@ var NRS = (function(NRS, $) {
 				if (output.stop) {
 					if (errorMessage) {
 						$form.find(".error_message").html(errorMessage).show();
+					} else if (successMessage) {
+						$.growl(successMessage.escapeHTML(), {
+							type: "success"
+						});
 					}
 					NRS.unlockForm($modal, $btn, !output.keepOpen);
 					return;

@@ -40,12 +40,18 @@ public final class RSConvert extends APIServlet.APIRequestHandler {
             return MISSING_ACCOUNT;
         }
         try {
-            long accountId = Convert.parseAccountId(accountValue);
+            long accountId;
+            if (accountValue.startsWith("-")) {
+                accountId = Long.valueOf(accountValue);
+            } else {
+                accountId = Convert.parseAccountId(accountValue);
+            }
             if (accountId == 0) {
                 return INCORRECT_ACCOUNT;
             }
             JSONObject response = new JSONObject();
             JSONData.putAccount(response, "account", accountId);
+            response.put("accountLongId", String.valueOf(accountId));
             return response;
         } catch (RuntimeException e) {
             return INCORRECT_ACCOUNT;

@@ -18,33 +18,30 @@ package nxt.http;
 
 import nxt.Transaction;
 import nxt.TransactionScheduler;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import nxt.util.JSON;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 
-public final class GetScheduledTransactions extends APIServlet.APIRequestHandler {
+public final class DeleteScheduledTransaction extends APIServlet.APIRequestHandler {
 
-    static final GetScheduledTransactions instance = new GetScheduledTransactions();
+    static final DeleteScheduledTransaction instance = new DeleteScheduledTransaction();
 
-    private GetScheduledTransactions() {
-        super(new APITag[] {APITag.TRANSACTIONS, APITag.ACCOUNTS}, "account");
+    private DeleteScheduledTransaction() {
+        super(new APITag[] {APITag.TRANSACTIONS, APITag.ACCOUNTS}, "transaction");
     }
 
     @Override
     protected JSONStreamAware processRequest(HttpServletRequest req) throws ParameterException {
 
-        long accountId = ParameterParser.getAccountId(req, false);
-        JSONArray jsonArray = new JSONArray();
-        List<Transaction> transactions = TransactionScheduler.getScheduledTransactions(accountId);
-        for (Transaction transaction : transactions) {
-            jsonArray.add(JSONData.unconfirmedTransaction(transaction));
-        }
-        JSONObject response = new JSONObject();
-        response.put("scheduledTransactions", jsonArray);
-        return response;
+        long transactionId = ParameterParser.getUnsignedLong(req, "transaction", true);
+        Transaction transaction = TransactionScheduler.deleteScheduledTransaction(transactionId);
+        return transaction == null ? JSON.emptyJSON : JSONData.unconfirmedTransaction(transaction);
+    }
+
+    @Override
+    protected boolean requirePost() {
+        return true;
     }
 
     @Override

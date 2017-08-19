@@ -278,6 +278,13 @@ var NRS = (function (NRS, $, undefined) {
                 extra = {};
             }
             extra.isSchedule = true;
+            if (isVolatile || data.calculateFee) {
+                // remove the schedule prefix from the request
+                var keywordLength = NRS.constants.SCHEDULE_PREFIX.length;
+                if (extra && extra.isSchedule && requestType.length >= keywordLength + 1) {
+                    requestType = requestType.substring(keywordLength, keywordLength + 1).toLowerCase() + requestType.substring(keywordLength + 1);
+                }
+            }
         }
         if (isVolatile) {
             if (NRS.rememberPassword) {
@@ -297,11 +304,6 @@ var NRS = (function (NRS, $, undefined) {
             var ecBlock = NRS.getECBlock(NRS.isTestNet);
             data.ecBlockId = ecBlock.id;
             data.ecBlockHeight = ecBlock.height;
-
-            var keywordLength = NRS.constants.SCHEDULE_PREFIX.length;
-            if (extra && extra.isSchedule && requestType.length >= keywordLength + 1) {
-                requestType = requestType.substring(keywordLength, keywordLength + 1).toLowerCase() + requestType.substring(keywordLength + 1);
-            }
         } else if (httpMethod == "POST" && NRS.rememberPassword) {
             data.secretPhrase = _password;
         }
@@ -1529,7 +1531,7 @@ var NRS = (function (NRS, $, undefined) {
         var data = {
             "transactionBytes": transactionData,
             "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment),
-            "adminPassword": NRS.settings.admin_password,
+            "adminPassword": NRS.settings.admin_password
         };
         if (isSchedule) {
             requestType = NRS.constants.SCHEDULE_PREFIX + requestType.substring(0, 1).toUpperCase() + requestType.substring(1);
@@ -1653,7 +1655,7 @@ var NRS = (function (NRS, $, undefined) {
         pos += 8;
         var whiteListLength = byteArray[pos];
         pos++;
-        for (i = 0; i < whiteListLength; i++) {
+        for (var i = 0; i < whiteListLength; i++) {
             var accountId = converters.byteArrayToBigInteger(byteArray, pos);
             var accountRS = NRS.convertNumericToRSAccountFormat(accountId);
             pos += 8;

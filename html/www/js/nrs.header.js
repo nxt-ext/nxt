@@ -139,5 +139,31 @@ var NRS = (function(NRS, $) {
         return false;
     });
 
+    $("#passphrase_validation_modal").on("show.bs.modal", function() {
+        $("#passphrae_validation_account").val(NRS.accountRS);
+    });
+
+    NRS.forms.validatePassphrase = function($modal) {
+        var data = NRS.getFormData($modal.find("form:first"));
+        var secretPhrase = data.secretPhrase;
+        var account = data.account;
+        var calculatedAccount = NRS.getAccountId(secretPhrase, true);
+        if (account == calculatedAccount) {
+            $(".btn-passphrase-validation").removeClass("btn-danger").addClass("btn-success");
+            return {
+                "successMessage": $.t("correct_passphrase"),
+                "stop": true
+            };
+        } else {
+            return {
+                "error": $.t("wrong_passphrase")
+            };
+        }
+    };
+
+    NRS.getPassphraseValidationLink = function() {
+        return "<br/><a href='#' class='btn btn-xs btn-danger btn-passphrase-validation' data-toggle='modal' data-target='#passphrase_validation_modal'>" + $.t("validate_passphrase") + "</a>";
+    };
+
     return NRS;
 }(NRS || {}, jQuery));

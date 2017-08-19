@@ -761,12 +761,19 @@ var NRS = (function (NRS, $, undefined) {
             $("#currency_order_type").val((exchangeType == "buy" ? "currencyBuy" : "currencySell"));
         }
         $("#currency_order_currency").val(currencyId);
+        $("#currency_order_currency_code").val(currencyCode.escapeHTML());
         $("#currency_order_units").val(unitsQNT);
         $("#currency_order_rate").val(rateNQT);
     });
 
     NRS.forms.orderCurrency = function () {
         var orderType = $("#currency_order_type").val();
+        var currencyCode = $("#currency_order_currency_code").val();
+
+        if (orderType == "currencyBuy" && currencyCode != "JLRDA" && NRS.isShowFakeWarning()) {
+            return NRS.composeFakeWarning($.t("currency"), currencyCode);
+        }
+
         if (orderType == "scheduleCurrencyBuy") {
             $("#currency_order_no_broadcast").val("true");
             $("#currency_order_currency_issuer").val($("#buy_ignis_currency_issuer").val());
@@ -1598,11 +1605,8 @@ var NRS = (function (NRS, $, undefined) {
     NRS.setup.ignis = function() {
         NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
             $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3") + "<br>" + $.t("ignis_message_4"));
-            $(".currency_code").html(response.code);
-            $("#currency_id").text(response.currency);
             $("#buy_ignis_currency").val(response.currency);
             $("#buy_ignis_currency_issuer").val(response.account);
-            $("#currency_decimals").text(response.decimals);
             var buyIgnisButton = $("#buy_ignis_button");
             buyIgnisButton.data("currency", response.currency);
             buyIgnisButton.data("code", response.code);
@@ -1631,6 +1635,9 @@ var NRS = (function (NRS, $, undefined) {
             $ignisContent.show();
         }
         NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
+            $(".currency_code").html(response.code);
+            $("#currency_id").text(response.currency);
+            $("#currency_decimals").text(response.decimals);
             var decimals = response.decimals;
             $("#your_nxt_balance_message").html(
                 $.t("ignis_message_11", { balance: $("#account_balance_sidebar").text() })

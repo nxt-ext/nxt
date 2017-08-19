@@ -39,30 +39,42 @@ public class TransactionScheduler {
     public static List<Transaction> getScheduledTransactions(long accountId) {
         ArrayList<Transaction> list = new ArrayList<>();
         for (Transaction transaction : transactionSchedulers.keySet()) {
-            if (transaction.getSenderId() == accountId) {
+            if (accountId == 0 || transaction.getSenderId() == accountId) {
                 list.add(transaction);
             }
         }
         return list;
     }
 
+    public static Transaction deleteScheduledTransaction(long transactionId) {
+        Iterator<Transaction> iterator = transactionSchedulers.keySet().iterator();
+        while (iterator.hasNext()) {
+            Transaction transaction = iterator.next();
+            if (transaction.getId() == transactionId) {
+                iterator.remove();
+                return transaction;
+            }
+        }
+        return null;
+    }
+
     static {
         TransactionProcessorImpl.getInstance().addListener(transactions -> {
             Iterator<Map.Entry<Transaction, TransactionScheduler>> iterator = transactionSchedulers.entrySet().iterator();
             while (iterator.hasNext()) {
-                TransactionScheduler transactionScheduler = iterator.next().getValue();
+                Map.Entry<Transaction, TransactionScheduler> entry = iterator.next();
+                Transaction scheduledTransaction = entry.getKey();
+                TransactionScheduler transactionScheduler = entry.getValue();
                 for (Transaction transaction : transactions) {
                     if (transactionScheduler.processEvent(transaction)) {
                         iterator.remove();
-                        Logger.logInfoMessage("Removed " + transaction.getStringId() + " from transaction scheduler");
+                        Logger.logInfoMessage("Removed " + scheduledTransaction.getStringId() + " from transaction scheduler");
                         break;
                     }
                 }
             }
         }, TransactionProcessor.Event.ADDED_UNCONFIRMED_TRANSACTIONS);
     }
-
-    static void init() {}
 
     private final Transaction transaction;
     private final Filter<Transaction> filter;

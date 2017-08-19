@@ -47,7 +47,8 @@ var NRS = (function(NRS, $) {
         "changelly_coin1": "ARDR",
         "changelly_coin2": "ETH",
 		"max_nxt_decimals": "2",
-		"ignis_tc_accepted": "-1"
+		"ignis_tc_accepted": "-1",
+		"fake_entity_warning": "1"
 	};
 
 	NRS.defaultColors = {
@@ -213,7 +214,11 @@ var NRS = (function(NRS, $) {
 
 	};
 
-	NRS.pages.settings = function() {
+    function isAmountWarning(key) {
+        return key != "asset_transfer_warning" && key != "currency_transfer_warning" && key != "fake_entity_warning";
+    }
+
+    NRS.pages.settings = function() {
 		for (var style in userStyles) {
 			if (!userStyles.hasOwnProperty(style)) {
 				continue;
@@ -251,7 +256,7 @@ var NRS = (function(NRS, $) {
 				continue;
 			}
 			var setting = $("#settings_" + key);
-            if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
+            if (/_warning/i.test(key) && isAmountWarning(key)) {
 				if (setting.length) {
 					setting.val(NRS.convertToNXT(NRS.settings[key]));
 				}
@@ -638,7 +643,7 @@ var NRS = (function(NRS, $) {
         $("#settings_box").find("input[type=text]").on("input", function() {
             var key = $(this).attr("name");
             var value = $(this).val();
-            if (/_warning/i.test(key) && key != "asset_transfer_warning" && key != "currency_transfer_warning") {
+            if (/_warning/i.test(key) && isAmountWarning(key)) {
                 value = NRS.convertToNQT(value);
             }
             NRS.updateSettings(key, value);

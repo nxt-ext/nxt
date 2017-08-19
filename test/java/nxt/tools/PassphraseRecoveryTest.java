@@ -47,4 +47,14 @@ public class PassphraseRecoveryTest {
         PassphraseRecovery.Solution solution = scanner.scan();
         Assert.assertEquals("NXT-XK4R-7VJU-6EQG-7R335", solution.getRsAccount());
     }
+
+    @Test
+    public void searchSingleTypo() {
+        char[] wildcard = BlockchainTest.aliceSecretPhrase.toCharArray();
+        wildcard[18] = '*';
+        PassphraseRecovery.Scanner scanner = new PassphraseRecovery.Scanner(publicKeys, new int[0], wildcard, PassphraseRecovery.getDefaultDictionary());
+        PassphraseRecovery.Solution solution = scanner.scan();
+        Assert.assertEquals("NXT-XK4R-7VJU-6EQG-7R335", solution.getRsAccount());
+    }
+
 }

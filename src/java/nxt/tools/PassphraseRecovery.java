@@ -61,7 +61,11 @@ public final class PassphraseRecovery {
             String positionsStr = Nxt.getStringProperty("recoveryPositions", "");
             int[] positions;
             try {
-                positions = Arrays.stream(positionsStr.split(",")).map(String::trim).mapToInt(Integer::parseInt).map(i -> i - 1).toArray();
+                if (positionsStr.length() == 0) {
+                    positions = new int[0];
+                } else {
+                    positions = Arrays.stream(positionsStr.split(",")).map(String::trim).mapToInt(Integer::parseInt).map(i -> i - 1).toArray();
+                }
                 List<Integer> list = IntStream.of(positions).boxed().collect(Collectors.toList());
                 String s = list.stream().map(p -> Character.toString(wildcard.charAt(p))).collect(Collectors.joining(" "));
                 Logger.logInfoMessage("Recovering chars: " + s);
@@ -136,6 +140,20 @@ public final class PassphraseRecovery {
         }
 
         Solution scan() {
+            if (positions.length == 0) {
+                Logger.logInfoMessage("Position not specified scanning for a single typo");
+                char[] copy = new char[wildcard.length];
+                for (int i=0; i<wildcard.length; i++) {
+                    positions = new int[1];
+                    positions[0] = i;
+                    System.arraycopy(wildcard, 0, copy, 0, wildcard.length);
+                    Solution solution = scan(0, copy);
+                    if (solution != NO_SOLUTION) {
+                        return solution;
+                    }
+                }
+                return NO_SOLUTION;
+            }
             Logger.logInfoMessage("Scanning " + Math.pow(dictionary.length, positions.length) + " permutations");
             if (positions.length == 1) {
                 return scan(0, wildcard);
@@ -187,8 +205,8 @@ public final class PassphraseRecovery {
                     String secretPhrase = new String(wildcard);
                     byte[] publicKey = Crypto.getPublicKey(secretPhrase);
                     long id = Account.getId(publicKey);
-                    if (publicKeys.get(id) != null) {
-                        return new Solution(secretPhrase, publicKey, id, Convert.rsAccount(id));
+                    if (publicKeys.keySet().contains(id)) {
+                        return new Solution(secretPhrase, publicKeys.get(id), id, Convert.rsAccount(id));
                     }
                 }
             }
@@ -226,7 +244,7 @@ public final class PassphraseRecovery {
             return "Solution{" +
                     "passphrase=" + passphrase +
                     ", passphraseChars=" + Arrays.toString(passphraseChars) +
-                    ", publicKey=" + Convert.toHexString(publicKey) +
+                    ", publicKey=" + (publicKey != null ? Convert.toHexString(publicKey) : "not registered on blockchain") +
                     ", accountId=" + accountId +
                     ", rsAccount=" + rsAccount +
                     '}';

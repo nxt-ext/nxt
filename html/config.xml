@@ -4,8 +4,8 @@
     <description>
         Reference implementation mobile wallet for NXT.
     </description>
-    <author email="support@nxt.org" href="http://nxt.org/">
-        Riker
+    <author email="info@jelurida.com" href="https://jelurida.com/">
+        Jelurida
     </author>
     <version>111.5.0</version>
     <content src="index.html" />

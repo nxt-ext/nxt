@@ -1903,5 +1903,17 @@
   "accept": "Accept",
   "load": "Load",
   "your_account_is": "Your public account address is:",
-  "offer_not_published": "Only full node can schedule to buy currency before the offer is published"
+  "offer_not_published": "Only full node can schedule to buy currency before the offer is published",
+  "index": "Index",
+  "click_submit_again": "Click cancel to abort, click the submit button again to confirm the action.",
+  "fake_warning": "Beware of fake tokens! You are about to buy an entity of type __entity__ with unique id __id__. Please double check before you buy, there are no refunds.",
+  "ignis_token_sale_reference": "To participate in the IGNIS Token Sale, please cancel out and click the 'IGNIS Token Sale' button on the page header.",
+  "show_fake_warnings": "Show Fake Warnings",
+  "executed_phased_transactions": "Executed Phased Transactions",
+  "no_executed_phased_in_block": "No executed phased transactions in this block.",
+  "passphrase_validation": "Passphrase Validation",
+  "correct_passphrase": "Your passphrase is correct, you may continue to use your account",
+  "wrong_passphrase": "Your passphrase is wrong, you cannot use your account without passphrase",
+  "validate_passphrase": "Validate Passphrase",
+  "delete_scheduled_transaction": "Delete Scheduled Transaction"
 }

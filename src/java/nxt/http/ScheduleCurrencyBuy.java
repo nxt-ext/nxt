@@ -19,6 +19,7 @@ package nxt.http;
 import nxt.Account;
 import nxt.Attachment;
 import nxt.Currency;
+import nxt.CurrencySellOffer;
 import nxt.MonetarySystem;
 import nxt.Nxt;
 import nxt.NxtException;
@@ -28,6 +29,7 @@ import nxt.db.DbIterator;
 import nxt.util.Convert;
 import nxt.util.Filter;
 import nxt.util.JSON;
+import nxt.util.Logger;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONStreamAware;
 import org.json.simple.JSONValue;
@@ -40,7 +42,7 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
 
     private ScheduleCurrencyBuy() {
         super(new APITag[] {APITag.MS, APITag.CREATE_TRANSACTION}, "currency", "rateNQT", "units", "offerIssuer",
-                "transactionJSON", "transactionBytes", "prunableAttachmentJSON");
+                "transactionJSON", "transactionBytes", "prunableAttachmentJSON", "adminPassword");
     }
 
     @Override
@@ -65,7 +67,7 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
                 String secretPhrase = ParameterParser.getSecretPhrase(req, false);
                 Attachment attachment = new Attachment.MonetarySystemExchangeBuy(currency.getId(), rateNQT, units);
                 response = (JSONObject)JSONValue.parse(JSON.toString(createTransaction(req, account, attachment)));
-                if (secretPhrase == null) {
+                if (secretPhrase == null || "true".equalsIgnoreCase(req.getParameter("calculateFee"))) {
                     response.put("scheduled", false);
                     return response;
                 }
@@ -87,22 +89,36 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
             Attachment.MonetarySystemExchangeBuy attachment = (Attachment.MonetarySystemExchangeBuy)transaction.getAttachment();
             Filter<Transaction> filter = new ExchangeOfferFilter(offerIssuerId, attachment.getCurrencyId(), attachment.getRateNQT());
 
-            Nxt.getBlockchain().readLock();
+            Nxt.getBlockchain().updateLock();
             try {
                 transaction.validate();
+                CurrencySellOffer sellOffer = CurrencySellOffer.getOffer(attachment.getCurrencyId(), offerIssuerId);
+                if (sellOffer != null && sellOffer.getSupply() > 0 && sellOffer.getRateNQT() <= attachment.getRateNQT()) {
+                    Logger.logDebugMessage("Exchange offer found in blockchain, broadcasting transaction " + transaction.getStringId());
+                    Nxt.getTransactionProcessor().broadcast(transaction);
+                    response.put("broadcasted", true);
+                    return response;
+                }
                 try (DbIterator<? extends Transaction> unconfirmedTransactions = Nxt.getTransactionProcessor().getAllUnconfirmedTransactions()) {
                     while (unconfirmedTransactions.hasNext()) {
                         if (filter.ok(unconfirmedTransactions.next())) {
+                            Logger.logDebugMessage("Exchange offer found in unconfirmed pool, broadcasting transaction " + transaction.getStringId());
                             Nxt.getTransactionProcessor().broadcast(transaction);
                             response.put("broadcasted", true);
                             return response;
                         }
                     }
                 }
-                TransactionScheduler.schedule(filter, transaction);
-                response.put("scheduled", true);
+                if (API.checkPassword(req)) {
+                    Logger.logDebugMessage("Scheduling transaction " + transaction.getStringId());
+                    TransactionScheduler.schedule(filter, transaction);
+                    response.put("scheduled", true);
+                } else {
+                    return JSONResponses.error("No sell offer is currently available. Please try again when there is an open sell offer. " +
+                            "(To schedule a buy order even in the absence of a sell offer, on a node protected by admin password, please first specify the admin password in the account settings.)");
+                }
             } finally {
-                Nxt.getBlockchain().readUnlock();
+                Nxt.getBlockchain().updateUnlock();
             }
             return response;
 
@@ -115,12 +131,6 @@ public final class ScheduleCurrencyBuy extends CreateTransaction {
     protected boolean requireFullClient() {
         return true;
     }
-
-    @Override
-    protected boolean requirePassword() {
-        return true;
-    }
-
 
     private static class ExchangeOfferFilter implements Filter<Transaction> {
 
