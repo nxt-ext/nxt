@@ -17,6 +17,7 @@
 package nxt.db;
 
 
+import nxt.Constants;
 import nxt.Nxt;
 
 import java.sql.Connection;
@@ -130,23 +131,33 @@ public abstract class VersionedEntityDbTable<T> extends EntityDbTable<T> {
              PreparedStatement pstmtSelect = con.prepareStatement("SELECT " + dbKeyFactory.getPKColumns() + ", MAX(height) AS max_height"
                      + " FROM " + table + " WHERE height < ? GROUP BY " + dbKeyFactory.getPKColumns() + " HAVING COUNT(DISTINCT height) > 1");
              PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM " + table + dbKeyFactory.getPKClause()
-                     + " AND height < ? AND height >= 0");
-            PreparedStatement pstmtDeleteDeleted = con.prepareStatement("DELETE FROM " + table + " WHERE height < ? AND height >= 0 AND latest = FALSE "
-                    + " AND (" + dbKeyFactory.getPKColumns() + ") NOT IN (SELECT (" + dbKeyFactory.getPKColumns() + ") FROM "
-                    + table + " WHERE height >= ?)")) {
+                     + " AND height < ? AND height >= 0 LIMIT " + Constants.BATCH_COMMIT_SIZE);
+             PreparedStatement pstmtDeleteDeleted = con.prepareStatement("DELETE FROM " + table + " WHERE height < ? AND height >= 0 AND latest = FALSE "
+                     + " AND (" + dbKeyFactory.getPKColumns() + ") NOT IN (SELECT (" + dbKeyFactory.getPKColumns() + ") FROM "
+                     + table + " WHERE height >= ?) LIMIT " + Constants.BATCH_COMMIT_SIZE)) {
             pstmtSelect.setInt(1, height);
             try (ResultSet rs = pstmtSelect.executeQuery()) {
+                int count = 0;
+                int deleted;
                 while (rs.next()) {
                     DbKey dbKey = dbKeyFactory.newKey(rs);
-                    int maxHeight = rs.getInt("max_height");
                     int i = 1;
                     i = dbKey.setPK(pstmtDelete, i);
-                    pstmtDelete.setInt(i, maxHeight);
-                    pstmtDelete.executeUpdate();
+                    pstmtDelete.setInt(i, rs.getInt("max_height"));
+                    do {
+                        deleted = pstmtDelete.executeUpdate();
+                        if ((count += deleted) >= Constants.BATCH_COMMIT_SIZE) {
+                            db.commitTransaction();
+                            count = 0;
+                        }
+                    } while (deleted >= Constants.BATCH_COMMIT_SIZE);
                 }
                 pstmtDeleteDeleted.setInt(1, height);
                 pstmtDeleteDeleted.setInt(2, height);
-                pstmtDeleteDeleted.executeUpdate();
+                do {
+                    deleted = pstmtDeleteDeleted.executeUpdate();
+                    db.commitTransaction();
+                } while (deleted >= Constants.BATCH_COMMIT_SIZE);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e.toString(), e);

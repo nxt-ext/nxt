@@ -11,6 +11,7 @@ exports.init = function(params) {
     options.url = params.url;
     options.secretPhrase = params.secretPhrase;
     options.isTestNet = params.isTestNet;
+    options.adminPassword = params.adminPassword;
     return this;
 };
 
@@ -69,6 +70,9 @@ exports.load = function(callback) {
             global.client = Object.assign(client, require('./nrs.util'));
             client.getRemoteNodeUrl = function () {
                 return options.url;
+            };
+            client.getAdminPassword = function () {
+                return options.adminPassword;
             };
             client.account = client.getAccountId(options.secretPhrase);
             client.accountRS = converters.convertNumericToRSAccountFormat(client.account);

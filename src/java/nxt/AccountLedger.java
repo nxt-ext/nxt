@@ -127,10 +127,13 @@ public class AccountLedger {
             if (trimKeep <= 0)
                 return;
             try (Connection con = db.getConnection();
-                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_ledger WHERE height <= ?")) {
-                int trimHeight = Math.max(blockchain.getHeight() - trimKeep, 0);
-                pstmt.setInt(1, trimHeight);
-                pstmt.executeUpdate();
+                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM account_ledger WHERE height <= ? LIMIT " + Constants.BATCH_COMMIT_SIZE)) {
+                pstmt.setInt(1, Math.max(blockchain.getHeight() - trimKeep, 0));
+                int trimmed;
+                do {
+                    trimmed = pstmt.executeUpdate();
+                    Db.db.commitTransaction();
+                } while (trimmed >= Constants.BATCH_COMMIT_SIZE);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }

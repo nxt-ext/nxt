@@ -273,7 +273,7 @@ var NRS = (function (NRS, $, undefined) {
         var secretPhrase = "";
         var isVolatile = isVolatileRequest(data.doNotSign, httpMethod, requestType, data.secretPhrase);
         if (NRS.isScheduleRequest(requestType)) {
-            data.adminPassword = NRS.settings.admin_password;
+            data.adminPassword = NRS.getAdminPassword();
             if (!extra) {
                 extra = {};
             }
@@ -1531,7 +1531,7 @@ var NRS = (function (NRS, $, undefined) {
         var data = {
             "transactionBytes": transactionData,
             "prunableAttachmentJSON": JSON.stringify(originalResponse.transactionJSON.attachment),
-            "adminPassword": NRS.settings.admin_password
+            "adminPassword": NRS.getAdminPassword()
         };
         if (isSchedule) {
             requestType = NRS.constants.SCHEDULE_PREFIX + requestType.substring(0, 1).toUpperCase() + requestType.substring(1);

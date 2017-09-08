@@ -20,6 +20,7 @@ grant {
   permission java.lang.RuntimePermission "getFileStoreAttributes";
   permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
   permission java.lang.RuntimePermission "getenv.TIKA_CONFIG";
+  permission java.lang.RuntimePermission "accessClassInPackage.com.sun.javafx.scene.web";
   permission java.net.NetPermission "getNetworkInformation";
 };
 

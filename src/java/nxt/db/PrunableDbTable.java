@@ -47,12 +47,16 @@ public abstract class PrunableDbTable<T> extends PersistentDbTable<T> {
     protected void prune() {
         if (Constants.ENABLE_PRUNING) {
             try (Connection con = db.getConnection();
-                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table + " WHERE transaction_timestamp < ?")) {
+                 PreparedStatement pstmt = con.prepareStatement("DELETE FROM " + table + " WHERE transaction_timestamp < ? LIMIT " + Constants.BATCH_COMMIT_SIZE)) {
                 pstmt.setInt(1, Nxt.getEpochTime() - Constants.MAX_PRUNABLE_LIFETIME);
-                int deleted = pstmt.executeUpdate();
-                if (deleted > 0) {
-                    Logger.logDebugMessage("Deleted " + deleted + " expired prunable data from " + table);
-                }
+                int deleted;
+                do {
+                    deleted = pstmt.executeUpdate();
+                    if (deleted > 0) {
+                        Logger.logDebugMessage("Deleted " + deleted + " expired prunable data from " + table);
+                    }
+                    db.commitTransaction();
+                } while (deleted >= Constants.BATCH_COMMIT_SIZE);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }

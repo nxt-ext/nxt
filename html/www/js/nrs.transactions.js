@@ -998,7 +998,7 @@ var NRS = (function(NRS, $, undefined) {
     NRS.pages.scheduled_transactions = function(callback, subpage) {
         NRS.sendRequest("getScheduledTransactions+", {
         	account: NRS.accountRS,
-			adminPassword: NRS.settings.admin_password
+			adminPassword: NRS.getAdminPassword()
 		}, function(response) {
             var errorMessage = $("#scheduled_transactions_error_message");
             if (response.errorCode) {

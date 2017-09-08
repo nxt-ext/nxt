@@ -16,7 +16,8 @@ var config = loader.config;
 loader.init({
     url: config.url,
     secretPhrase: config.secretPhrase,
-    isTestNet: config.isTestNet
+    isTestNet: config.isTestNet,
+    adminPassword: config.adminPassword
 });
 
 module.exports = loader;

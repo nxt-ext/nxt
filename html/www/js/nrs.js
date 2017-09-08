@@ -374,14 +374,9 @@ var NRS = (function(NRS, $, undefined) {
     NRS.initClipboard = function() {
         var clipboard = new Clipboard('#copy_account_id');
         function onCopySuccess(e) {
-            NRS.logConsole('Action:' + e.action);
-            NRS.logConsole('Text:' + e.text);
-            NRS.logConsole('Trigger:' + e.trigger);
-
             $.growl($.t("success_clipboard_copy"), {
                 "type": "success"
             });
-
             e.clearSelection();
         }
         clipboard.on('success', onCopySuccess);

@@ -29,7 +29,13 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import netscape.javascript.JSObject;
-import nxt.*;
+import nxt.Block;
+import nxt.BlockchainProcessor;
+import nxt.Nxt;
+import nxt.PrunableMessage;
+import nxt.TaggedData;
+import nxt.Transaction;
+import nxt.TransactionProcessor;
 import nxt.http.API;
 import nxt.util.Convert;
 import nxt.util.Logger;
@@ -47,8 +53,14 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DesktopApplication extends Application {
@@ -61,6 +73,7 @@ public class DesktopApplication extends Application {
     private JSObject nrs;
     private volatile long updateTime;
     private volatile List<Transaction> unconfirmedTransactionUpdates = new ArrayList<>();
+    private JavaScriptBridge javaScriptBridge;
 
     public static void launch() {
         if (!isLaunched) {
@@ -94,6 +107,14 @@ public class DesktopApplication extends Application {
     public static void shutdown() {
         System.out.println("shutting down JavaFX platform");
         Platform.exit();
+        if (ENABLE_JAVASCRIPT_DEBUGGER) {
+            try {
+                Class<?> aClass = Class.forName("com.mohamnag.fxwebview_debugger.DevToolsDebuggerServer");
+                aClass.getMethod("stopDebugServer").invoke(null);
+            } catch (Exception e) {
+                Logger.logInfoMessage("Error shutting down webview debugger", e);
+            }
+        }
         System.out.println("JavaFX platform shutdown complete");
     }
 
@@ -121,7 +142,8 @@ public class DesktopApplication extends Application {
                         return;
                     }
                     JSObject window = (JSObject)webEngine.executeScript("window");
-                    window.setMember("java", new JavaScriptBridge(this));
+                    javaScriptBridge = new JavaScriptBridge(this); // Must be a member variable to prevent gc
+                    window.setMember("java", javaScriptBridge);
                     Locale locale = Locale.getDefault();
                     String language = locale.getLanguage().toLowerCase() + "-" + locale.getCountry().toUpperCase();
                     window.setMember("javaFxLanguage", language);

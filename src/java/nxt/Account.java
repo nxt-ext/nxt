@@ -637,9 +637,13 @@ public final class Account {
         public void trim(int height) {
             try (Connection con = Db.db.getConnection();
                  PreparedStatement pstmtDelete = con.prepareStatement("DELETE FROM account_guaranteed_balance "
-                         + "WHERE height < ? AND height >= 0")) {
+                         + "WHERE height < ? AND height >= 0 LIMIT " + Constants.BATCH_COMMIT_SIZE)) {
                 pstmtDelete.setInt(1, height - Constants.GUARANTEED_BALANCE_CONFIRMATIONS);
-                pstmtDelete.executeUpdate();
+                int count;
+                do {
+                    count = pstmtDelete.executeUpdate();
+                    Db.db.commitTransaction();
+                } while (count >= Constants.BATCH_COMMIT_SIZE);
             } catch (SQLException e) {
                 throw new RuntimeException(e.toString(), e);
             }
