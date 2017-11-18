@@ -40,12 +40,7 @@ public final class RSConvert extends APIServlet.APIRequestHandler {
             return MISSING_ACCOUNT;
         }
         try {
-            long accountId;
-            if (accountValue.startsWith("-")) {
-                accountId = Long.valueOf(accountValue);
-            } else {
-                accountId = Convert.parseAccountId(accountValue);
-            }
+            long accountId = Convert.parseAccountId(accountValue);
             if (accountId == 0) {
                 return INCORRECT_ACCOUNT;
             }

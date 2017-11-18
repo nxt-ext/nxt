@@ -302,7 +302,7 @@ var NRS = (function(NRS, $, undefined) {
             "error": $.t("fake_warning", {
                 entity: entity,
                 id: id
-            }) + " " + $.t("ignis_token_sale_reference") + " " + $.t("click_submit_again")
+            }) + " " + $.t("click_submit_again")
         };
     };
 

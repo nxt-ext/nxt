@@ -47,7 +47,6 @@ var NRS = (function(NRS, $) {
         "changelly_coin1": "ARDR",
         "changelly_coin2": "ETH",
 		"max_nxt_decimals": "2",
-		"ignis_tc_accepted": "-1",
 		"fake_entity_warning": "1"
 	};
 
@@ -625,13 +624,6 @@ var NRS = (function(NRS, $) {
 			id: "settings"
 		}]);
 		NRS.applySettings(key);
-	};
-
-	NRS.getAdminPassword = function() {
-		if (window.java) {
-			return window.java.getAdminPassword();
-		}
-		return NRS.settings.admin_password;
 	};
 
     NRS.initSettings = function() {

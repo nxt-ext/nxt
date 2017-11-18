@@ -19,6 +19,7 @@ package nxt;
 import nxt.Account.ControlType;
 import nxt.NxtException.AccountControlException;
 import nxt.VoteWeighting.VotingModel;
+import nxt.db.DbClause;
 import nxt.db.DbIterator;
 import nxt.db.DbKey;
 import nxt.db.DbUtils;
@@ -37,7 +38,8 @@ public final class AccountRestrictions {
     public static final class PhasingOnly {
 
         public static PhasingOnly get(long accountId) {
-            return phasingControlTable.get(phasingControlDbKeyFactory.newKey(accountId));
+            return phasingControlTable.getBy(new DbClause.LongClause("account_id", accountId).
+                    and(new DbClause.ByteClause("voting_model", DbClause.Op.NE, VotingModel.NONE.getCode())));
         }
 
         public static int getCount() {
@@ -52,6 +54,10 @@ public final class AccountRestrictions {
             PhasingParams phasingParams = attachment.getPhasingParams();
             if (phasingParams.getVoteWeighting().getVotingModel() == VotingModel.NONE) {
                 //no voting - remove the control
+                senderAccount.removeControl(ControlType.PHASING_ONLY);
+                PhasingOnly phasingOnly = get(senderAccount.getId());
+                phasingOnly.phasingParams = phasingParams;
+                phasingControlTable.delete(phasingOnly);
                 unset(senderAccount);
             } else {
                 senderAccount.addControl(ControlType.PHASING_ONLY);
@@ -156,9 +162,9 @@ public final class AccountRestrictions {
         }
 
         private void save(Connection con) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO account_control_phasing "
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO account_control_phasing "
                     + "(account_id, whitelist, voting_model, quorum, min_balance, holding_id, min_balance_model, "
-                    + "max_fees, min_duration, max_duration, height, latest) "
+                    + "max_fees, min_duration, max_duration, height, latest) KEY (account_id, height) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.accountId);

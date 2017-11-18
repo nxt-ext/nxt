@@ -56,18 +56,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class Snapshot implements AddOn {
 
-    private static final long BITSWIFT_ASSET_ID = Long.parseUnsignedLong("12034575542068240440"); //TODO
-    private static final long JANUS_ASSET_ID = Long.parseUnsignedLong("4348103880042995903"); //TODO
-    private static final long JANUSXT_ASSET_ID = Long.parseUnsignedLong("14572747084550678873"); //TODO
-    private static final long COMJNSXT_ASSET_ID = Long.parseUnsignedLong("13363533560620557665"); //TODO
-    public static final Set<Long> ardorSnapshotAssets = Collections.unmodifiableSet(
-            Convert.toSet(new long[] {FxtDistribution.FXT_ASSET_ID, BITSWIFT_ASSET_ID, JANUS_ASSET_ID, JANUSXT_ASSET_ID, COMJNSXT_ASSET_ID}));
+    private static final int snapshotHeight = Nxt.getIntProperty("nxt.snapshotHeight", Integer.MAX_VALUE);
+    private static final boolean snapshotForTestnet = Nxt.getBooleanProperty("nxt.snapshotForTestnet", true);
 
     @Override
     public void init() {
@@ -77,7 +72,7 @@ public class Snapshot implements AddOn {
             List<byte[]> developerPublicKeys = new ArrayList<>();
 
             {
-                if (Constants.isTestnet) {
+                if (snapshotForTestnet) {
                     InputStream is = ClassLoader.getSystemResourceAsStream("developerPasswords.txt");
                     if (is != null) {
                         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
@@ -97,7 +92,7 @@ public class Snapshot implements AddOn {
 
             @Override
             public void notify(Block block) {
-                if (block.getHeight() == Nxt.getHardForkHeight()) {
+                if (block.getHeight() == snapshotHeight) {
                     exportPublicKeys();
                     Map ignisBalances = exportIgnisBalances();
                     exportBitswiftBalances(ignisBalances);
@@ -130,7 +125,7 @@ public class Snapshot implements AddOn {
                 developerPublicKeys.forEach(publicKey -> publicKeys.add(Convert.toHexString(publicKey)));
                 Logger.logInfoMessage("Will save " + publicKeys.size() + " public keys");
                 try (PrintWriter writer = new PrintWriter((new BufferedWriter( new OutputStreamWriter(new FileOutputStream(
-                        Constants.isTestnet ? "PUBLIC_KEY-testnet.json" : "PUBLIC_KEY.json")))), true)) {
+                        snapshotForTestnet ? "PUBLIC_KEY-testnet.json" : "PUBLIC_KEY.json")))), true)) {
                     JSON.writeJSONString(publicKeys, writer);
                 } catch (IOException e) {
                     throw new RuntimeException(e.getMessage(), e);
@@ -155,15 +150,17 @@ public class Snapshot implements AddOn {
                             if (balance <= 0) {
                                 continue;
                             }
+                            // on mainnet reduce balance by 2 because of JLRDA ICO
                             if (!Constants.isTestnet) {
                                 balance = balance / 2;
                             }
-                            if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                            // if for testnet, reduce by 2 again to reserve for developer accounts
+                            if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
                                 balance = balance / 2;
                             }
                             String account = Long.toUnsignedString(accountId);
                             snapshotMap.put(account, balance);
-                            if (Constants.isTestnet) {
+                            if (snapshotForTestnet) {
                                 btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 600);
                                 usdSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
                                 eurSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
@@ -201,6 +198,9 @@ public class Snapshot implements AddOn {
                                 if (units <= 0) {
                                     continue;
                                 }
+                                if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
+                                    units = units / 2;
+                                }
                                 long balance = Convert.nullToZero(snapshotMap.get(accountId));
                                 balance += units * 10000;
                                 snapshotMap.put(accountId, balance);
@@ -211,7 +211,7 @@ public class Snapshot implements AddOn {
                         throw new RuntimeException(e.getMessage(), e);
                     }
                 }
-                if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
                     final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
                     developerPublicKeys.forEach(publicKey -> {
                         String account = Long.toUnsignedString(Account.getId(publicKey));
@@ -221,8 +221,8 @@ public class Snapshot implements AddOn {
                         eurSnapshotMap.put(account, ((developerBalance * 300 / 5) / Constants.ONE_NXT));
                     });
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "IGNIS-testnet.json" : "IGNIS.json");
-                if (Constants.isTestnet) {
+                saveMap(snapshotMap, snapshotForTestnet ? "IGNIS-testnet.json" : "IGNIS.json");
+                if (snapshotForTestnet) {
                     saveMap(btcSnapshotMap, "BTC-testnet.json");
                     saveMap(usdSnapshotMap, "USD-testnet.json");
                     saveMap(eurSnapshotMap, "EUR-testnet.json");
@@ -245,7 +245,7 @@ public class Snapshot implements AddOn {
                             if (accountId == FxtDistribution.FXT_ISSUER_ID) {
                                 continue;
                             }
-                            if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                            if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
                                 balance = balance / 2;
                             }
                             snapshotMap.put(Long.toUnsignedString(accountId), balance * 10000);
@@ -268,18 +268,18 @@ public class Snapshot implements AddOn {
                         snapshotMap.put(senderId, balance);
                     }
                 }
-                if (Constants.isTestnet && !developerPublicKeys.isEmpty()) {
+                if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
                     final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
                     developerPublicKeys.forEach(publicKey -> {
                         String account = Long.toUnsignedString(Account.getId(publicKey));
                         snapshotMap.put(account, developerBalance);
                     });
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "ARDR-testnet.json" : "ARDR.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "ARDR-testnet.json" : "ARDR.json");
             }
 
             private void exportBitswiftBalances(Map<String,Long> ignisBalances) {
-                Asset bitswiftAsset = Asset.getAsset(BITSWIFT_ASSET_ID);
+                Asset bitswiftAsset = Asset.getAsset(FxtDistribution.BITSWIFT_ASSET_ID);
                 if (bitswiftAsset == null) {
                     return;
                 }
@@ -288,7 +288,7 @@ public class Snapshot implements AddOn {
                 SortedMap<String, Long> snapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
-                    pstmt.setLong(1, BITSWIFT_ASSET_ID);
+                    pstmt.setLong(1, FxtDistribution.BITSWIFT_ASSET_ID);
                     try (ResultSet rs = pstmt.executeQuery()) {
                         while (rs.next()) {
                             long quantity = rs.getLong("quantity");
@@ -296,13 +296,17 @@ public class Snapshot implements AddOn {
                                 continue;
                             }
                             String accountId = Long.toUnsignedString(rs.getLong("account_id"));
-                            long ignisBalance = ignisBalances.get(accountId);
-                            quantity += totalQuantity.multiply(BigInteger.valueOf(ignisBalance)).divide(totalIgnisBalance).divide(BigInteger.TEN).longValueExact();
                             snapshotMap.put(accountId, quantity);
                         }
                     }
-                    //TODO: is the Bitswift sharedrop coming from asset issuer account?
-                    String bitswiftSharedropAccount = Long.toUnsignedString(bitswiftAsset.getAccountId());
+                    for (Map.Entry<String, Long> entry : ignisBalances.entrySet()) {
+                        String accountId = entry.getKey();
+                        long ignisBalance = Convert.nullToZero(entry.getValue());
+                        long sharedropQuantity = totalQuantity.multiply(BigInteger.valueOf(ignisBalance)).divide(totalIgnisBalance).divide(BigInteger.TEN).longValueExact();
+                        Long quantity = snapshotMap.get(accountId);
+                        snapshotMap.put(accountId, quantity == null ? sharedropQuantity : quantity + sharedropQuantity);
+                    }
+                    String bitswiftSharedropAccount = Long.toUnsignedString(FxtDistribution.BITSWIFT_SHAREDROP_ACCOUNT);
                     long bitswiftIssuerBalance = snapshotMap.get(bitswiftSharedropAccount);
                     bitswiftIssuerBalance -= totalQuantity.divide(BigInteger.TEN).longValueExact();
                     if (bitswiftIssuerBalance < 0) {
@@ -312,15 +316,20 @@ public class Snapshot implements AddOn {
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "BITSWIFT-testnet.json" : "BITSWIFT.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "BITSWIFT-testnet.json" : "BITSWIFT.json");
             }
 
             private void exportAssetBalances() {
-                SortedMap<String, Map<String, Long>> snapshotMap = new TreeMap<>();
+                SortedMap<String, Map<String, Object>> snapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
-                    for (long assetId : new long[] {JANUS_ASSET_ID, JANUSXT_ASSET_ID, COMJNSXT_ASSET_ID}) { //TODO: others?
-                        SortedMap<String, Long> asset = new TreeMap<>();
+                    for (long assetId : new long[] {FxtDistribution.JANUS_ASSET_ID, FxtDistribution.JANUSXT_ASSET_ID, FxtDistribution.COMJNSXT_ASSET_ID}) { //TODO: others?
+                        Asset asset = Asset.getAsset(assetId);
+                        String name = asset.getName();
+                        String description = asset.getDescription();
+                        String assetIssuer = Long.toUnsignedString(asset.getAccountId());
+                        byte decimals = asset.getDecimals();
+                        SortedMap<String, Long> assetBalances = new TreeMap<>();
                         pstmt.setLong(1, assetId);
                         try (ResultSet rs = pstmt.executeQuery()) {
                             while (rs.next()) {
@@ -329,15 +338,21 @@ public class Snapshot implements AddOn {
                                 if (balance <= 0) {
                                     continue;
                                 }
-                                asset.put(Long.toUnsignedString(accountId), balance);
+                                assetBalances.put(Long.toUnsignedString(accountId), balance);
                             }
                         }
-                        snapshotMap.put(Long.toUnsignedString(assetId), asset);
+                        SortedMap<String, Object> assetMap = new TreeMap<>();
+                        assetMap.put("name", name);
+                        assetMap.put("description", description);
+                        assetMap.put("issuer", assetIssuer);
+                        assetMap.put("decimals", decimals);
+                        assetMap.put("balances", assetBalances);
+                        snapshotMap.put(Long.toUnsignedString(assetId), assetMap);
                     }
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "ASSETS-testnet.json" : "ASSETS.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "ASSETS-testnet.json" : "ASSETS.json");
             }
 
             private void exportAliases() {
@@ -358,7 +373,7 @@ public class Snapshot implements AddOn {
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "IGNIS_ALIASES-testnet.json" : "IGNIS_ALIASES.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "IGNIS_ALIASES-testnet.json" : "IGNIS_ALIASES.json");
             }
 
             private void exportCurrencies() {
@@ -383,7 +398,7 @@ public class Snapshot implements AddOn {
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "IGNIS_CURRENCIES-testnet.json" : "IGNIS_CURRENCIES.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "IGNIS_CURRENCIES-testnet.json" : "IGNIS_CURRENCIES.json");
             }
 
             private boolean invalidCurrency(String code, String normalizedName) {
@@ -394,6 +409,9 @@ public class Snapshot implements AddOn {
                     return true;
                 }
                 if (code.equals("IGNIS") || "ignis".equals(normalizedName)) {
+                    return true;
+                }
+                if ("bitswift".equals(normalizedName)) {
                     return true;
                 }
                 //TODO: add production child chain names, when known
@@ -418,7 +436,7 @@ public class Snapshot implements AddOn {
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "ACCOUNT_INFO-testnet.json" : "ACCOUNT_INFO.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "ACCOUNT_INFO-testnet.json" : "ACCOUNT_INFO.json");
             }
 
             private void exportAccountProperties() {
@@ -439,7 +457,7 @@ public class Snapshot implements AddOn {
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "ACCOUNT_PROPERTIES-testnet.json" : "ACCOUNT_PROPERTIES.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "ACCOUNT_PROPERTIES-testnet.json" : "ACCOUNT_PROPERTIES.json");
             }
 
             private void exportAccountControl() {
@@ -470,7 +488,7 @@ public class Snapshot implements AddOn {
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                saveMap(snapshotMap, Constants.isTestnet ? "ACCOUNT_CONTROL-testnet.json" : "ACCOUNT_CONTROL.json");
+                saveMap(snapshotMap, snapshotForTestnet ? "ACCOUNT_CONTROL-testnet.json" : "ACCOUNT_CONTROL.json");
             }
 
             private void saveMap(Map<String, ? extends Object> snapshotMap, String file) {

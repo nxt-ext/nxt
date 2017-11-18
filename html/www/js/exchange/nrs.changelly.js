@@ -533,20 +533,6 @@ var NRS = (function(NRS, $) {
         });
     });
 
-    $("#ignis_changelly_button").on("click", function(e) {
-        e.preventDefault();
-        var from = $(this).data("from");
-        var to = $(this).data("to");
-        apiCall("getMinAmount", { from: from, to: to }, function (response) {
-            $(this).data("min", response.result);
-            apiCall("getExchangeAmount", { from: from, to: to, amount: "1" }, function (response) {
-                $(this).data("from", from); // It's unclear why this line is necessary but the value is not passed without it
-                $(this).data("to", to); // It's unclear why this line is necessary but the value is not passed without it
-                $(this).data("rate", response.result);
-                $("#changelly_sell_modal").modal({}, $(this));
-            })
-        })
-    });
 
     return NRS;
 }(NRS || {}, jQuery));

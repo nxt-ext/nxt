@@ -1,0 +1,6 @@
+Removed the IGNIS Token Sale page.
+
+Mobile app bugfixes, node.js module improvements, other minor bugfixes.
+
+Updated jetty to 9.3.22 and bouncycastle to 1.58.
+

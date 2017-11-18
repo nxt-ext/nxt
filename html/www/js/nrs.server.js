@@ -382,7 +382,7 @@ var NRS = (function (NRS, $, undefined) {
             crossDomain: true,
             dataType: "json",
             type: httpMethod,
-            timeout: 30000,
+            timeout: (options.timeout === undefined ? 30000 : options.timeout),
             async: (options.isAsync === undefined ? true : options.isAsync),
             currentPage: currentPage,
             currentSubPage: currentSubPage,
@@ -1677,7 +1677,7 @@ var NRS = (function (NRS, $, undefined) {
     }
 
     return NRS;
-}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+}(isNode ? client : NRS || {}, jQuery));
 
 if (isNode) {
     module.exports = NRS;

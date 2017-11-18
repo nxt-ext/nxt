@@ -1,7 +1,8 @@
 const options = {
     url: "http://localhost:6876", // URL of NXT remote node
     secretPhrase: "", // Secret phrase of the current account
-    isTestNet: false // Select testnet or mainnet
+    isTestNet: false, // Select testnet or mainnet
+    adminPassword: "" // Node admin password
 };
 
 exports.init = function(params) {
@@ -26,11 +27,12 @@ exports.load = function(callback) {
             console.log("Started");
 
             // Load the necessary node modules and assign them to the global scope
-            // the NXT client was note designed with modularity in mind there we have
+            // the NXT client wasn't designed with modularity in mind therefore we need
             // to include every 3rd party library function in the global scope
             global.jQuery = require("jquery")(window);
-            global.$ = global.jQuery;
-            $.t = function(text) { return text; };
+            jQuery.growl = function(msg) { console.log("growl: " + msg)}; // disable growl messages
+            jQuery.t = function(text) { return text; }; // Disable the translation functionality
+            global.$ = global.jQuery; // Needed by extensions.js
             global.crypto = require("crypto");
             global.CryptoJS = require("crypto-js");
             global.async = require("async");
@@ -57,9 +59,7 @@ exports.load = function(callback) {
             // The main challenge is that in node every JavaScript file is a module with it's own scope
             // however the NXT client relies on a global browser scope which defines the NRS object
             // The idea here is to gradually compose the NRS object by adding functions from each
-            // JavaScript files into the existing global.client scope
-            // In addition we initialize some client specific functions which typically rely on the browser or
-            // the login page.
+            // JavaScript file into the existing global.client scope
             global.client = {};
             global.client.isTestNet = options.isTestNet;
             global.client = Object.assign(client, require('./nrs.encryption'));
@@ -68,19 +68,12 @@ exports.load = function(callback) {
             global.client = Object.assign(client, require('./nrs.constants'));
             global.client = Object.assign(client, require('./nrs.console'));
             global.client = Object.assign(client, require('./nrs.util'));
-            client.getRemoteNodeUrl = function () {
-                return options.url;
+            client.getModuleConfig = function() {
+                return options;
             };
-            client.getAdminPassword = function () {
-                return options.adminPassword;
-            };
-            client.account = client.getAccountId(options.secretPhrase);
-            client.accountRS = converters.convertNumericToRSAccountFormat(client.account);
             global.client = Object.assign(client, require('./nrs'));
-            client.accountInfo = {};
             global.client = Object.assign(client, require('./nrs.server'));
-            global.client = Object.assign(client, require('./nrs.constants'));
-            global.client.constants = {};
+            setCurrentAccount(options.secretPhrase);
 
             // Now load the constants locally since we cannot trust the remote node to
             // return the correct constants.
@@ -94,3 +87,11 @@ exports.load = function(callback) {
         }
     });
 };
+
+function setCurrentAccount(secretPhrase) {
+    client.account = client.getAccountId(secretPhrase);
+    client.accountRS = converters.convertNumericToRSAccountFormat(client.account);
+    client.accountInfo = {}; // Do not cache the public key
+    client.resetEncryptionState();
+}
+exports.setCurrentAccount = setCurrentAccount;

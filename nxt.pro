@@ -29,6 +29,18 @@
 -keepclassmembers class nxt.env.RuntimeEnvironment {
     static boolean isHeadless();
 }
+-keepclassmembers class nxt.env.service.NxtService_ServiceManagement {
+	public static boolean serviceInit();
+    public static java.lang.String[] serviceGetInfo();
+	public static boolean serviceIsCreate();
+	public static boolean serviceIsLaunch();
+	public static boolean serviceIsDelete();
+	public static boolean serviceControl_Pause();
+	public static boolean serviceControl_Continue();
+	public static boolean serviceControl_Stop();
+	public static boolean serviceControl_Shutdown();
+	public static void serviceFinish();
+}
 -keepclassmembers class * {
     void launch();
     void shutdown();

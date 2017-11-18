@@ -51,8 +51,8 @@ public final class Alias {
         }
 
         private void save(Connection con) throws SQLException {
-            try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias_offer (id, price, buyer_id, "
-                    + "height) VALUES (?, ?, ?, ?)")) {
+            try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO alias_offer (id, price, buyer_id, "
+                    + "height) KEY (id, height) VALUES (?, ?, ?, ?)")) {
                 int i = 0;
                 pstmt.setLong(++i, this.aliasId);
                 pstmt.setLong(++i, this.priceNQT);
@@ -152,13 +152,14 @@ public final class Alias {
     }
 
     public static Offer getOffer(Alias alias) {
-        return offerTable.get(offerDbKeyFactory.newKey(alias.getId()));
+        return offerTable.getBy(new DbClause.LongClause("id", alias.getId()).and(new DbClause.LongClause("price", DbClause.Op.NE, Long.MAX_VALUE)));
     }
 
     static void deleteAlias(final String aliasName) {
         final Alias alias = getAlias(aliasName);
         final Offer offer = Alias.getOffer(alias);
         if (offer != null) {
+            offer.priceNQT = Long.MAX_VALUE;
             offerTable.delete(offer);
         }
         aliasTable.delete(alias);
@@ -202,7 +203,10 @@ public final class Alias {
         alias.timestamp = Nxt.getBlockchain().getLastBlockTimestamp();
         aliasTable.insert(alias);
         Offer offer = getOffer(alias);
-        offerTable.delete(offer);
+        if (offer != null) {
+            offer.priceNQT = Long.MAX_VALUE;
+            offerTable.delete(offer);
+        }
     }
 
     static void init() {}
@@ -234,8 +238,8 @@ public final class Alias {
     }
 
     private void save(Connection con) throws SQLException {
-        try (PreparedStatement pstmt = con.prepareStatement("INSERT INTO alias (id, account_id, alias_name, "
-                + "alias_uri, timestamp, height) "
+        try (PreparedStatement pstmt = con.prepareStatement("MERGE INTO alias (id, account_id, alias_name, "
+                + "alias_uri, timestamp, height) KEY (id, height) "
                 + "VALUES (?, ?, ?, ?, ?, ?)")) {
             int i = 0;
             pstmt.setLong(++i, this.id);

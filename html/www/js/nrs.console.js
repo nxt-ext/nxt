@@ -168,7 +168,7 @@ var NRS = (function (NRS, $) {
     };
 
     return NRS;
-}(NRS || {}, jQuery));
+}(isNode ? client : NRS || {}, jQuery));
 
 if (isNode) {
     module.exports = NRS;

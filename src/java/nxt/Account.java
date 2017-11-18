@@ -835,7 +835,7 @@ public final class Account {
         if (account == null) {
             PublicKey publicKey = publicKeyTable.get(dbKey, height);
             if (publicKey != null) {
-                account = accountTable.newEntity(dbKey);
+                account = new Account(id);
                 account.publicKey = publicKey;
             }
         }

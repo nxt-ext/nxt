@@ -1704,7 +1704,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     return NRS;
-}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+}(isNode ? client : NRS || {}, jQuery));
 
 if (isNode) {
     module.exports = NRS;

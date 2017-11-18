@@ -104,7 +104,10 @@ var NRS = (function (NRS) {
 
     NRS.getRemoteNodeUrl = function() {
         if (!NRS.isMobileApp()) {
-            return "";
+            if (!isNode) {
+                return "";
+            }
+            return NRS.getModuleConfig().url;
         }
         if (remoteNode) {
             return remoteNode.getUrl();
@@ -232,8 +235,18 @@ var NRS = (function (NRS) {
         return NRS.isMobileApp() || (NRS.state && NRS.state.apiProxy);
     };
 
+    NRS.getAdminPassword = function() {
+        if (window.java) {
+            return window.java.getAdminPassword();
+        }
+        if (isNode) {
+            return NRS.getModuleConfig().adminPassword;
+        }
+        return NRS.settings.admin_password;
+    };
+
     return NRS;
-}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+}(isNode ? client : NRS || {}, jQuery));
 
 if (isNode) {
     module.exports = NRS;

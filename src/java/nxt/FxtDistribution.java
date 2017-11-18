@@ -16,7 +16,6 @@
 
 package nxt;
 
-import nxt.addons.Snapshot;
 import nxt.db.DbIterator;
 import nxt.db.DerivedDbTable;
 import nxt.util.Convert;
@@ -40,9 +39,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -59,6 +60,14 @@ public final class FxtDistribution implements Listener<Block> {
     private static final long logAccountId = Convert.parseAccountId(logAccount);
     private static final String fxtJsonFile = Constants.isTestnet ? "fxt-testnet.json" : "fxt.json";
     private static final boolean hasSnapshot = ClassLoader.getSystemResource(fxtJsonFile) != null;
+
+    public static final long BITSWIFT_ASSET_ID = Long.parseUnsignedLong("12034575542068240440");
+    public static final long BITSWIFT_SHAREDROP_ACCOUNT = Convert.parseAccountId("NXT-2HKA-GTP2-ZBFL-34B9L");
+    public static final long JANUS_ASSET_ID = Long.parseUnsignedLong("4348103880042995903");
+    public static final long JANUSXT_ASSET_ID = Long.parseUnsignedLong("14572747084550678873");
+    public static final long COMJNSXT_ASSET_ID = Long.parseUnsignedLong("13363533560620557665");
+    public static final Set<Long> ardorSnapshotAssets = Collections.unmodifiableSet(
+            Convert.toSet(new long[] {FXT_ASSET_ID, BITSWIFT_ASSET_ID, JANUS_ASSET_ID, JANUSXT_ASSET_ID, COMJNSXT_ASSET_ID}));
 
     private static final DerivedDbTable accountFXTTable = new DerivedDbTable("account_fxt") {
         @Override
@@ -105,7 +114,7 @@ public final class FxtDistribution implements Listener<Block> {
                 Db.db.beginTransaction();
             }
             try {
-                for (long assetId : Snapshot.ardorSnapshotAssets) {
+                for (long assetId : ardorSnapshotAssets) {
                     int count = 0;
                     try (DbIterator<Order.Ask> askOrders = Order.Ask.getAskOrdersByAsset(assetId, 0, -1)) {
                         while (askOrders.hasNext()) {

@@ -1,3 +1,12 @@
+nxt-client-1.11.9:
+
+Performance optimizations of derived table trimming and pruning, should fix the
+issues some nodes encounter with these database operations taking too long.
+
+Other minor bugfixes.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.11.8:
 
 Transaction Scheduler improvements and bugfixes.

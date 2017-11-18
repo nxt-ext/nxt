@@ -22,14 +22,12 @@ var NRS = (function (NRS, $) {
 	var _decryptionPassword;
 	var _decryptedTransactions;
 	var _encryptedNote;
-	var _sharedKeys;
 
 	NRS.resetEncryptionState = function () {
 		_password = null;
 		_decryptionPassword = null;
 		_decryptedTransactions = {};
 		_encryptedNote = null;
-		_sharedKeys = {};
 	};
 	NRS.resetEncryptionState();
 
@@ -201,43 +199,6 @@ var NRS = (function (NRS, $) {
 					"errorCode": 3
 				};
 			}
-		}
-	};
-
-	NRS.getSharedKeyWithAccount = function(account) {
-		try {
-			if (account in _sharedKeys) {
-				return _sharedKeys[account];
-			}
-
-			var secretPhrase;
-
-			if (NRS.rememberPassword) {
-				secretPhrase = _password;
-			} else if (_decryptionPassword) {
-				secretPhrase = _decryptionPassword;
-			} else {
-				throw {
-					"message": $.t("error_passphrase_required"),
-					"errorCode": 3
-				};
-			}
-
-			var privateKey = converters.hexStringToByteArray(NRS.getPrivateKey(secretPhrase));
-
-			var publicKey = converters.hexStringToByteArray(NRS.getPublicKey(account, true));
-
-			var sharedKey = getSharedSecret(privateKey, publicKey);
-
-			var sharedKeys = Object.keys(_sharedKeys);
-
-			if (sharedKeys.length > 50) {
-				delete _sharedKeys[sharedKeys[0]];
-			}
-
-			_sharedKeys[account] = sharedKey;
-		} catch (err) {
-			throw err;
 		}
 	};
 
@@ -503,7 +464,6 @@ var NRS = (function (NRS, $) {
 		}
 
 		var rememberPassword = $form.find("input[name=rememberPassword]").is(":checked");
-		var otherAccount = _encryptedNote.account;
 		var output = "";
 		var decryptionError = false;
 		var decryptedFields = {};
@@ -515,8 +475,9 @@ var NRS = (function (NRS, $) {
 			var nonce = "";
 			var nonceField = (typeof title != "string" ? title.nonce : key + "Nonce");
 			if (key == "encryptedMessage" || key == "encryptToSelfMessage") {
+                var otherAccount = _encryptedNote.account;
 			    if (key == "encryptToSelfMessage") {
-					otherAccount=accountId;
+					otherAccount = accountId;
 				}
 				encrypted = _encryptedNote.transaction.attachment[key].data;
 				nonce = _encryptedNote.transaction.attachment[key].nonce;
@@ -874,7 +835,7 @@ var NRS = (function (NRS, $) {
     };
 
     return NRS;
-}(Object.assign(NRS || {}, isNode ? global.client : {}), jQuery));
+}(isNode ? client : NRS || {}, jQuery));
 
 if (isNode) {
     module.exports = NRS;

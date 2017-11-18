@@ -310,13 +310,13 @@ var NRS = (function (NRS, $, undefined) {
         currenciesTable.find('[data-i18n="units"]').hide();
     };
 
-    function processOffers(offers, type, refresh, isIgnis) {
+    function processOffers(offers, type, refresh) {
         if (offers && offers.length > NRS.itemsPerPage) {
             NRS.hasMorePages = true;
             offers.pop();
         }
         var offersTable = $("#ms_open_" + type + "_orders_table");
-        var entity = (isIgnis ? "ignis" : "currency");
+        var entity = "currency";
         var rate = $("#" + (type == "sell" ? "buy" : "sell") + "_" + entity + "_rate");
         var supply = $("#" + type + "_" + entity + "_supply");
         var decimals = parseInt($("#currency_decimals").text(), 10);
@@ -347,38 +347,21 @@ var NRS = (function (NRS, $, undefined) {
                     "</tr>";
             }
             offersTable.find("tbody").empty().append(rows);
-            if (isIgnis) {
-                $("#buy_ignis_button").data("scheduled", false);
-            }
         } else {
-            if (isIgnis) {
-                $("#buy_ignis_button").data("scheduled", true);
-                var ignisCurrencyIssuer = $("#buy_ignis_currency_issuer");
-                NRS.sendRequest("getAccountProperties", {
-                    "recipient": ignisCurrencyIssuer.val(),
-                    "setter": ignisCurrencyIssuer.val(),
-                    "property": NRS.constants.IGNIS_CURRENCY_CODE + "rate"
-                }, function(propertiesResponse) {
-                    if (propertiesResponse.properties.length) {
-                        rate.val(NRS.calculateOrderPricePerWholeQNT(propertiesResponse.properties[0].value, decimals));
-                    }
-                }, { isAsync: false });
-            } else {
-                rate.val("0");
-            }
+            rate.val("0");
             supply.text("0");
             offersTable.find("tbody").empty();
         }
         NRS.dataLoadFinished(offersTable, !refresh);
     }
 
-    NRS.loadCurrencyOffers = function (type, currencyId, refresh, isIgnis) {
+    NRS.loadCurrencyOffers = function (type, currencyId, refresh) {
         async.parallel([
             function(callback) {
                 NRS.sendRequest("get" + type.capitalize() + "Offers+", {
                     "currency": currencyId, "availableOnly": "true",
-                    "firstIndex": NRS.pageNumber * NRS.itemsPerPage - NRS.itemsPerPage,
-                    "lastIndex": NRS.pageNumber * NRS.itemsPerPage
+                    "firstIndex": 0,
+                    "lastIndex": NRS.itemsPerPage
                 }, function (response) {
                     var offers = response["offers"];
                     if (!offers) {
@@ -414,7 +397,7 @@ var NRS = (function (NRS, $, undefined) {
                     return b.rateNQT - a.rateNQT;
                 }
             });
-            processOffers(offers, type, refresh, isIgnis);
+            processOffers(offers, type, refresh);
         });
     };
 
@@ -815,8 +798,8 @@ var NRS = (function (NRS, $, undefined) {
     unitFields.on("change", function() {
         var decimals = parseInt($("#currency_decimals").text(), 10);
         var type = $(this).data("type").toLowerCase();
-        var orderType = (type == "ignis" ? "buy" : type);
-        var entity = (type == "ignis" ? type : "currency");
+        var orderType = type;
+        var entity = "currency";
         var units_field = "#" + orderType + "_" + entity + "_units";
         var units = NRS.convertToQNT(String($(units_field).val()), decimals);
         NRS.sendRequest("getAvailableTo" + NRS.initialCaps(orderType), {
@@ -836,32 +819,8 @@ var NRS = (function (NRS, $, undefined) {
                 submitButton.prop('disabled', true);
                 return;
             }
-            if (response.rateNQT == "0") {
-                if (NRS.isDisableScheduleRequest()) {
-                    submitButton.prop('disabled', true);
-                    $.growl($.t("offer_not_published"), {
-                        "type": "danger"
-                    });
-                    return;
-                }
-                var ignisCurrencyIssuer = $("#buy_ignis_currency_issuer");
-                NRS.sendRequest("getAccountProperties", {
-                    "recipient": ignisCurrencyIssuer.val(),
-                    "setter": ignisCurrencyIssuer.val(),
-                    "property": NRS.constants.IGNIS_CURRENCY_CODE + "rate"
-                }, function(propertiesResponse) {
-                    if (propertiesResponse.properties.length) {
-                        var rate = NRS.calculateOrderPricePerWholeQNT(propertiesResponse.properties[0].value, decimals);
-                        rateField.val(rate);
-                        response.rateNQT = propertiesResponse.properties[0].value;
-                        response.units = NRS.convertToQNT(String($(units_field).val()), decimals);
-                        response.amountNQT = NRS.calculateOrderTotalNQT(response.units, response.rateNQT, decimals)
-                    }
-                }, { isAsync: false });
-            } else {
-                var rate = NRS.calculateOrderPricePerWholeQNT(response.rateNQT, decimals);
-                rateField.val(rate);
-            }
+            var rate = NRS.calculateOrderPricePerWholeQNT(response.rateNQT, decimals);
+            rateField.val(rate);
             var units = NRS.convertToQNTf(response.units, decimals);
             unitsField.val(units);
             var amount = NRS.convertToNXT(response.amountNQT);
@@ -1033,8 +992,8 @@ var NRS = (function (NRS, $, undefined) {
     $("#publish_exchange_offer_modal").on("show.bs.modal", function (e) {
         var $invoker = $(e.relatedTarget);
 
-        $("#publish_exchange_offer_currency").val($invoker.data("currency"));
-        $("#publish_exchange_offer_decimals").val($invoker.data("decimals"));
+        $("#publish_exchange_offer_currency_id").val($invoker.data("currency"));
+        $("#publish_exchange_offer_decimals_id").val($invoker.data("decimals"));
         $(".currency_code").html(String($invoker.data("code")).escapeHTML());
 
         context = {
@@ -1596,107 +1555,6 @@ var NRS = (function (NRS, $, undefined) {
             "data": data
         };
     };
-
-    NRS.incoming.ignis = function () {
-        NRS.pages.ignis();
-    };
-
-
-    NRS.setup.ignis = function() {
-        NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
-            $("#ignis_message").html($.t("ignis_message_1") + "<br>" + $.t("ignis_message_2") + "<br>" + $.t("ignis_message_3") + "<br>" + $.t("ignis_message_4"));
-            $("#buy_ignis_currency").val(response.currency);
-            $("#buy_ignis_currency_issuer").val(response.account);
-            var buyIgnisButton = $("#buy_ignis_button");
-            buyIgnisButton.data("currency", response.currency);
-            buyIgnisButton.data("code", response.code);
-            buyIgnisButton.data("decimals", response.decimals);
-            buyIgnisButton.prop("disabled", true);
-            $('#ignis_shape_shift_select_coin').append('<option value="BTC_NXT">Bitcoin [BTC]</option>');
-            $("#ignis_shape_shift_button").data("pair", "BTC_NXT");
-            $('#ignis_changelly_select_coin').append('<option value="BTC">BTC</option>');
-            var changellyButton = $("#ignis_changelly_button");
-            changellyButton.data("from", "BTC");
-            changellyButton.data("to", "NXT");
-        });
-    };
-
-    NRS.pages.ignis = function() {
-        var $ignisDisabled = $("#ignis_disabled");
-        var $ignisContent = $("#ignis_content");
-        var $ignisTcContainer = $("#ignis_tc_container");
-        if (NRS.settings.ignis_tc_accepted != "1") {
-            $ignisTcContainer.html($("#ignis_tc").html());
-            $ignisDisabled.show();
-            $ignisContent.hide();
-            return;
-        } else {
-            $ignisDisabled.hide();
-            $ignisContent.show();
-        }
-        NRS.sendRequest("getCurrency", { code: NRS.constants.IGNIS_CURRENCY_CODE }, function(response) {
-            $(".currency_code").html(response.code);
-            $("#currency_id").text(response.currency);
-            $("#currency_decimals").text(response.decimals);
-            var decimals = response.decimals;
-            $("#your_nxt_balance_message").html(
-                $.t("ignis_message_11", { balance: $("#account_balance_sidebar").text() })
-            );
-
-            NRS.sendRequest("getAccountCurrencies", {
-                "account": NRS.accountRS,
-                "currency": response.currency,
-                "includeCurrencyInfo": true
-            }, function (response) {
-                var balance = response.unconfirmedUnits ? NRS.formatQuantity(response.unconfirmedUnits, response.decimals) : "0";
-                $("#your_ingis_balance_message").html(
-                    $.t("ignis_message_12", { balance: balance })
-                );
-            });
-            NRS.loadCurrencyOffers("sell", response.currency, false, true);
-            NRS.getExchangeHistory(response.currency, false, "ignis_table");
-        });
-    };
-
-    $("#ignis_shape_shift_load_button").on("click", function(e) {
-        e.preventDefault();
-        var inputFields = [];
-        inputFields.push($('#ignis_shape_shift_select_coin'));
-        var selectedCoins = [];
-        selectedCoins.push("BTC");
-        NRS.shapeShiftSelectCoins(inputFields, selectedCoins);
-        $("#ignis_shape_shift_button").data("pair", "BTC_NXT");
-    });
-
-    $("#ignis_changelly_load_button").on("click", function(e) {
-        e.preventDefault();
-        var inputFields = [];
-        inputFields.push($('#ignis_changelly_select_coin'));
-        var selectedCoins = [];
-        selectedCoins.push("BTC");
-        NRS.changellySelectCoins(inputFields, selectedCoins);
-        var changellyButton = $("#ignis_changelly_button");
-        changellyButton.data("from", "BTC");
-        changellyButton.data("to", "NXT");
-    });
-
-    $("#accept_ignis_tc_link").on("click", function(e) {
-        e.preventDefault();
-        NRS.updateSettings("ignis_tc_accepted", "1");
-        NRS.pages.ignis();
-    });
-
-    $('#ignis_shape_shift_select_coin').change(function() {
-        var ignisSelectCoin = $("#ignis_shape_shift_select_coin");
-        var shapeShiftButton = $("#ignis_shape_shift_button");
-        shapeShiftButton.data("pair", ignisSelectCoin.val() + "_NXT");
-    });
-
-    $('#ignis_changelly_select_coin').change(function() {
-        var ignisSelectCoin = $("#ignis_changelly_select_coin");
-        var changellyButton = $("#ignis_changelly_button");
-        changellyButton.data("from", ignisSelectCoin.val());
-    });
 
     return NRS;
 }(NRS || {}, jQuery));
