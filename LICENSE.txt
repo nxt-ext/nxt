@@ -66,9 +66,18 @@ developers, community and holders sharing the common interest to preserve and
 increase the value of this blockchain token.
 
 Crypto currency tokens today have value of their own, people can buy, sell and
-invest in them and the unlimited permission of cloning the existing blockchains
+invest in them and the unlimited permission of cloning the existing blockchain
 platforms and creating new coins inevitably results in decreasing the value of
 the original tokens.
+
+Crypto currency tokens are also an inseparable part of each distributed ledger
+software, without which such software cannot really be used. Ensuring that a
+clone project shares back the modified source code is no longer sufficient to
+allow the users of the original project access to that derived work, unless they
+are also allocated some of the newly created tokens in the clone blockchain
+instance. Thus such allocation is important in order to preserve not only the
+value of the original tokens, but also to preserve the users freedom to use any
+works derived from the original software.
 
 With the above being said, the terms and conditions for using, copying and
 modification of distributed ledger software programs are outlined below, called
@@ -79,7 +88,7 @@ Public License and any other license terms and conditions other than this JPL
 are explicitly excluded.
 
 
-JPL version: 1.0
+JPL version: 1.1
 
 
 Article 0. Definitions:
@@ -182,7 +191,7 @@ conveyed or modified only under the terms of this License. It also applies to
 any work which is not a DLT per se but is still a Covered Work because it is
 based on the covered DLT Software or contains a portion of it. This is to ensure
 that if such work is included into another DLT Software that DLT Software must
-satisfy the below stated sharedrop requirement and other terms of this License.
+satisfy the below stated airdrop requirement and other terms of this License.
 
 1.2. All rights granted under this License are granted for the term of copyright
 on the Covered Work, and are irrevocable provided the conditions of this License
@@ -265,17 +274,17 @@ algorithm or resulting in a permanent fork. For the purpose of this clause
 modification also includes changing the configuration or network environment in
 which the Covered Work is run that results in permanent disconnection, fork or
 isolation from the original DLT Instance. If your modifications result in a
-different DLT Instance you must satisfy the following sharedrop requirement:
+different DLT Instance you must satisfy the following airdrop requirement:
 
-3.4.1 The token holders from the original distributed ledger instance are
-allocated a portion (a sharedrop) of the tokens in that new DLT Instance
+3.4.1 The token holders from the original distributed ledger instance shall be
+allocated a portion (an "airdrop") of the tokens in that new DLT Instance
 proportional to their token balances. This shall also apply to anyone who
 intends to make a copy of your copy, i.e. any such person needs to allocate the
-same sharedrop of the newly created tokens to the account holders from the
+same airdrop of the newly created tokens to the account holders from the
 original DLT Instance (not to your copy). If the Covered Work is not a DLT
 Software per se this requirement still applies to any other work based on or
 including this work or portions of it which is a DLT Software or in any other
-way distributes tokens to its users. The specific percentage of the sharedrop
+way distributes tokens to its users. The specific percentage of the airdrop
 and the tokens to which it applies, which may also depend on how the new DLT
 Instance relates to the original one, are defined in the Special Conditions.
 
@@ -365,9 +374,9 @@ accordance with this License. In this regard, the license granted on behalf of
 the original Licensor by the propagator of the Covered Work may amend this
 License only to the following extent:
 
-7.1 You can add additional sharedrop requirements towards the holders of your
+7.1 You can add additional airdrop requirements towards the holders of your
 unique DLT Instance as long as those do not in any way reduce or interfere with
-the sharedrop owed to the original DLT Instance account holders.
+the airdrop owed to the original DLT Instance account holders.
 
 7.2 If the distribution and/or use of the Covered Work is restricted in certain
 countries either by patents, by copyrighted interfaces or by law, the original
@@ -461,7 +470,7 @@ Article 0. The Copyright Holder of the Nxt Reference Software (NRS) is Jelurida
 IP B.V.
 
 
-Article 1. The sharedrop requirement of Article 3.4.1 of the General Conditions,
+Article 1. The airdrop requirement of Article 3.4.1 of the General Conditions,
 as related to the Nxt Reference Software (NRS) is the following:
 
 1.1 The NXT holders from the original Nxt Public Blockchain Platform as
@@ -471,19 +480,19 @@ the forging tokens in the new DLT Instance, proportional to their NXT holdings,
 OR
 
 1.2 The forging token holders from a DLT Instance which is based on the NRS that
-has already satisfied the JPL sharedrop requirement, are allocated 100% (one
+has already satisfied the JPL airdrop requirement, are allocated 100% (one
 hundred percent) of the forging tokens in that new DLT Instance, proportional to
 their forging token holdings.
 
 The first case covers clones and forks of the Nxt platform, and ensures that NXT
-owners will receive a sharedrop from any such clone or fork launched in the
+owners will receive an airdrop from any such clone or fork launched in the
 future, or any existing Nxt clone that decides to upgrade to this NRS version or
 copy or backport code from it.
 
 The second case is to cover forks of Nxt clones which have already satisfied the
-JPL sharedrop, as by definition at the time of the hard fork all accounts start
+JPL airdrop, as by definition at the time of the hard fork all accounts start
 with the same balances on either fork, and it would be difficult to make a hard
-fork satisfy the first condition. The Nxt holders who received the sharedrop
+fork satisfy the first condition. The Nxt holders who received the airdrop
 would still have the same balances on either fork.
 
 
@@ -497,18 +506,26 @@ uncertainty due to the 720 blocks rolling checkpoint.
 Article 3.
 
 3.1 There should be under no circumstances any restrictions or any type of
-discrimination against accounts receiving tokens as a sharedrop.
+discrimination against accounts receiving tokens as an airdrop.
 
 3.2 If token distribution must be restricted by some criteria that not all
 existing NXT holders can potentially satisfy, a specific exemption from the full
-JPL sharedrop requirements must be obtained in advance. The Copyright Holder
+JPL airdrop requirements must be obtained in advance. The Copyright Holder
 reserves the right to not grant such exemption, or to require a commercial
 license in such situations, to be decided on a case by case basis.
 
 3.3 As internal (private) use of Nxt software for evaluating and testing
-purposes cannot satisfy the JPL sharedrop requirement, any such use will also
+purposes cannot satisfy the JPL airdrop requirement, any such use will also
 require an evaluation license agreement with the Copyright Holder if it lasts
 longer than 3 months.
+
+3.4 Nothing in this license shall be understood as giving NXT token holders the
+right to hold the Licensor, its affiliate parties, or sublicensors, liable in
+case the NXT holders do not obtain any airdrop, or liable for not taking action
+to enforce the airdrop requirement, or for not observing, verifying or
+monitoring the compliance with any airdrop. The Licensor also retains the right
+to change the percentage of the airdrop requirement in Article 1.1 or to
+completely eliminate this airdrop requirement at any time.
 
 
 Article 4. DLT Instances that by design do not use a fixed number of tokens

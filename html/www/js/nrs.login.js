@@ -349,6 +349,14 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.account = NRS.escapeRespStr(response.account);
 					NRS.accountRS = NRS.escapeRespStr(response.accountRS);
 				}
+				if (response.errorCode == 19 || response.errorCode == 21) {
+                    $.growl($.t("light_client_connecting_to_network"), {
+                                    "type": "danger",
+                                    "offset": 10
+                                });
+                    NRS.spinner.stop();
+                    return;
+				}
 				if (!NRS.account) {
 					$.growl($.t("error_find_account_id", { accountRS: (data && data.account ? String(data.account).escapeHTML() : "") }), {
 						"type": "danger",

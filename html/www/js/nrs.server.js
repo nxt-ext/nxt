@@ -215,6 +215,8 @@ var NRS = (function (NRS, $, undefined) {
         return (NRS.isPassphraseAtRisk() || doNotSign) && type == "POST" && !NRS.isSubmitPassphrase(requestType);
     }
 
+    NRS.requestId = 0;
+
     NRS.processAjaxRequest = function (requestType, data, callback, options) {
         var extra = null;
         if (data["_extra"]) {
@@ -375,7 +377,9 @@ var NRS = (function (NRS, $, undefined) {
             url = NRS.getRequestPath(options.noProxy);
         }
         url += "?requestType=" + requestType;
-        NRS.logConsole("Send request " + requestType + " to url " + url);
+
+        var currentRequestId = NRS.requestId++;
+        NRS.logConsole("Send request " + requestType + " to url " + url + " id=" + currentRequestId);
 
         $.ajax({
             url: url,
@@ -486,7 +490,7 @@ var NRS = (function (NRS, $, undefined) {
             }
         }).fail(function (xhr, textStatus, error) {
             NRS.logConsole("Node " + (options.remoteNode ? options.remoteNode.getUrl() : NRS.getRemoteNodeUrl()) + " received an error for request type " + requestType +
-                " status " + textStatus + " error " + error);
+                " status " + textStatus + " error " + error + " id=" + currentRequestId);
             if (NRS.console) {
                 NRS.addToConsole(this.url, this.type, this.data, error, true);
             }

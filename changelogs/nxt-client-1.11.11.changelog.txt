@@ -1,0 +1,7 @@
+Peer networking improvements, increased nxt.maxNumberOfInboundConnections to
+2000.
+
+Snapshot code bugfixes.
+
+Updated Lucene to version 5.5.5.
+

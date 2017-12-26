@@ -18,7 +18,6 @@ package nxt.addons;
 
 import nxt.Account;
 import nxt.Asset;
-import nxt.AssetTransfer;
 import nxt.Block;
 import nxt.BlockchainProcessor;
 import nxt.Constants;
@@ -27,10 +26,7 @@ import nxt.Db;
 import nxt.FxtDistribution;
 import nxt.Genesis;
 import nxt.Nxt;
-import nxt.Transaction;
-import nxt.TransactionType;
 import nxt.crypto.Crypto;
-import nxt.db.DbIterator;
 import nxt.db.DbUtils;
 import nxt.util.Convert;
 import nxt.util.JSON;
@@ -54,8 +50,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -63,6 +61,15 @@ public class Snapshot implements AddOn {
 
     private static final int snapshotHeight = Nxt.getIntProperty("nxt.snapshotHeight", Integer.MAX_VALUE);
     private static final boolean snapshotForTestnet = Nxt.getBooleanProperty("nxt.snapshotForTestnet", true);
+
+    private static final Set<String> scammerAccounts = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            Long.toUnsignedString(Convert.parseAccountId("NXT-TN8U-RBVE-GBJ3-7DEBN")),
+            Long.toUnsignedString(Convert.parseAccountId("NXT-V79Z-RQ5X-XXJR-H8P87")),
+            Long.toUnsignedString(Convert.parseAccountId("NXT-BH28-PKY6-LES8-29DBN")),
+            Long.toUnsignedString(Convert.parseAccountId("NXT-ZKV3-J2WN-T6VM-B28DA")),
+            Long.toUnsignedString(Convert.parseAccountId("NXT-ZPRA-ZDUQ-SYEL-7AAJM")),
+            Long.toUnsignedString(Convert.parseAccountId("NXT-UMZH-XLBB-BGSY-7WESP"))
+    )));
 
     @Override
     public void init() {
@@ -135,17 +142,12 @@ public class Snapshot implements AddOn {
 
             private Map<String, Long> exportIgnisBalances() {
                 SortedMap<String, Long> snapshotMap = new TreeMap<>();
-                SortedMap<String, Long> btcSnapshotMap = new TreeMap<>();
-                SortedMap<String, Long> usdSnapshotMap = new TreeMap<>();
                 SortedMap<String, Long> eurSnapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT id, balance FROM account WHERE LATEST=true")) {
                     try (ResultSet rs = pstmt.executeQuery()) {
                         while (rs.next()) {
                             long accountId = rs.getLong("id");
-                            if (accountId == FxtDistribution.FXT_ISSUER_ID) {
-                                continue;
-                            }
                             long balance = rs.getLong("balance");
                             if (balance <= 0) {
                                 continue;
@@ -161,36 +163,21 @@ public class Snapshot implements AddOn {
                             String account = Long.toUnsignedString(accountId);
                             snapshotMap.put(account, balance);
                             if (snapshotForTestnet) {
-                                btcSnapshotMap.put(account, (balance / Constants.ONE_NXT) * 600);
-                                usdSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
-                                eurSnapshotMap.put(account, ((balance * 300 / 5) / Constants.ONE_NXT));
+                                eurSnapshotMap.put(account, BigInteger.valueOf(balance).multiply(BigInteger.valueOf(10000))
+                                        .divide(BigInteger.valueOf(Constants.ONE_NXT)).longValueExact());
                             }
+                            //TODO: hardcode AEUR initial distribution for mainnet
                         }
                     }
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
                 }
-                try (DbIterator<? extends Transaction> transactions = Nxt.getBlockchain().getTransactions(
-                        FxtDistribution.FXT_ISSUER_ID, 0, TransactionType.Payment.ORDINARY.getType(),
-                        TransactionType.Payment.ORDINARY.getSubtype(), Nxt.getBlockchain().getBlockAtHeight(FxtDistribution.DISTRIBUTION_START).getTimestamp(),
-                        false, false, false, 0, -1, false, true)) {
-                    while (transactions.hasNext()) {
-                        Transaction transaction = transactions.next();
-                        if (transaction.getRecipientId() != FxtDistribution.FXT_ISSUER_ID) {
-                            continue;
-                        }
-                        String senderId = Long.toUnsignedString(transaction.getSenderId());
-                        long amount = transaction.getAmountNQT() / 2;
-                        Logger.logDebugMessage("Will refund " + amount + " IGNIS to " + Convert.rsAccount(transaction.getSenderId()));
-                        long balance = Convert.nullToZero(snapshotMap.get(senderId));
-                        balance += amount;
-                        snapshotMap.put(senderId, balance);
-                    }
-                }
                 if (!Constants.isTestnet) {
                     try (Connection con = Db.db.getConnection();
                     PreparedStatement pstmt = con.prepareStatement("SELECT account_id, units FROM account_currency WHERE currency_id = ? AND LATEST=true")) {
-                        pstmt.setLong(1, Currency.getCurrencyByCode("JLRDA").getId());
+                        Currency jlrdaCurrency = Currency.getCurrencyByCode("JLRDA");
+                        String jlrdaIssuer = Long.toUnsignedString(jlrdaCurrency.getAccountId());
+                        pstmt.setLong(1, jlrdaCurrency.getId());
                         try (ResultSet rs = pstmt.executeQuery()) {
                             while (rs.next()) {
                                 String accountId = Long.toUnsignedString(rs.getLong("account_id"));
@@ -201,12 +188,20 @@ public class Snapshot implements AddOn {
                                 if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
                                     units = units / 2;
                                 }
+                                if (scammerAccounts.contains(accountId)) {
+                                    Logger.logDebugMessage("Will allocate " + units + " JLRDA from " + Convert.rsAccount(Long.parseUnsignedLong(accountId))
+                                            + " back to " + Convert.rsAccount(Long.parseUnsignedLong(jlrdaIssuer)));
+                                    accountId = jlrdaIssuer;
+                                }
                                 long balance = Convert.nullToZero(snapshotMap.get(accountId));
                                 balance += units * 10000;
                                 snapshotMap.put(accountId, balance);
+                                if (snapshotForTestnet) {
+                                    long eurBalance = Convert.nullToZero(eurSnapshotMap.get(accountId));
+                                    eurSnapshotMap.put(accountId, eurBalance + units);
+                                }
                             }
                         }
-
                     } catch (SQLException e) {
                         throw new RuntimeException(e.getMessage(), e);
                     }
@@ -216,17 +211,11 @@ public class Snapshot implements AddOn {
                     developerPublicKeys.forEach(publicKey -> {
                         String account = Long.toUnsignedString(Account.getId(publicKey));
                         snapshotMap.put(account, developerBalance);
-                        btcSnapshotMap.put(account, (developerBalance / Constants.ONE_NXT) * 600);
-                        usdSnapshotMap.put(account, ((developerBalance * 300 / 5) / Constants.ONE_NXT));
-                        eurSnapshotMap.put(account, ((developerBalance * 300 / 5) / Constants.ONE_NXT));
+                        eurSnapshotMap.put(account, (developerBalance / Constants.ONE_NXT) * 10000);
                     });
                 }
                 saveMap(snapshotMap, snapshotForTestnet ? "IGNIS-testnet.json" : "IGNIS.json");
-                if (snapshotForTestnet) {
-                    saveMap(btcSnapshotMap, "BTC-testnet.json");
-                    saveMap(usdSnapshotMap, "USD-testnet.json");
-                    saveMap(eurSnapshotMap, "EUR-testnet.json");
-                }
+                saveMap(eurSnapshotMap, snapshotForTestnet ? "AEUR-testnet.json" : "AEUR.json");
                 return Collections.unmodifiableMap(snapshotMap);
             }
 
@@ -242,9 +231,6 @@ public class Snapshot implements AddOn {
                             if (balance <= 0) {
                                 continue;
                             }
-                            if (accountId == FxtDistribution.FXT_ISSUER_ID) {
-                                continue;
-                            }
                             if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
                                 balance = balance / 2;
                             }
@@ -253,20 +239,6 @@ public class Snapshot implements AddOn {
                     }
                 } catch (SQLException e) {
                     throw new RuntimeException(e.getMessage(), e);
-                }
-                try (DbIterator<AssetTransfer> transfers = AssetTransfer.getAccountAssetTransfers(FxtDistribution.FXT_ISSUER_ID, FxtDistribution.FXT_ASSET_ID, 0, -1)) {
-                    while (transfers.hasNext()) {
-                        AssetTransfer transfer = transfers.next();
-                        if (transfer.getRecipientId() != FxtDistribution.FXT_ISSUER_ID) {
-                            continue;
-                        }
-                        String senderId = Long.toUnsignedString(transfer.getSenderId());
-                        long quantityQNT = transfer.getQuantityQNT();
-                        Logger.logDebugMessage("Will refund " + quantityQNT + " ARDR to " + Convert.rsAccount(transfer.getSenderId()));
-                        long balance = Convert.nullToZero(snapshotMap.get(senderId));
-                        balance += quantityQNT * 10000;
-                        snapshotMap.put(senderId, balance);
-                    }
                 }
                 if (snapshotForTestnet && !developerPublicKeys.isEmpty()) {
                     final long developerBalance = Constants.MAX_BALANCE_NQT / (2 * developerPublicKeys.size());
@@ -283,7 +255,7 @@ public class Snapshot implements AddOn {
                 if (bitswiftAsset == null) {
                     return;
                 }
-                BigInteger totalQuantity = BigInteger.valueOf(bitswiftAsset.getQuantityQNT());
+                BigInteger totalQuantity = BigInteger.valueOf(bitswiftAsset.getInitialQuantityQNT());
                 BigInteger totalIgnisBalance = BigInteger.valueOf(ignisBalances.values().stream().mapToLong(Long::longValue).sum());
                 SortedMap<String, Long> snapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
@@ -323,7 +295,7 @@ public class Snapshot implements AddOn {
                 SortedMap<String, Map<String, Object>> snapshotMap = new TreeMap<>();
                 try (Connection con = Db.db.getConnection();
                      PreparedStatement pstmt = con.prepareStatement("SELECT account_id, quantity FROM account_asset WHERE asset_id = ? AND LATEST=true")) {
-                    for (long assetId : new long[] {FxtDistribution.JANUS_ASSET_ID, FxtDistribution.JANUSXT_ASSET_ID, FxtDistribution.COMJNSXT_ASSET_ID}) { //TODO: others?
+                    for (long assetId : new long[] {FxtDistribution.JANUS_ASSET_ID, FxtDistribution.JANUSXT_ASSET_ID, FxtDistribution.COMJNSXT_ASSET_ID}) {
                         Asset asset = Asset.getAsset(assetId);
                         String name = asset.getName();
                         String description = asset.getDescription();
@@ -364,7 +336,7 @@ public class Snapshot implements AddOn {
                             String aliasName = rs.getString("alias_name");
                             String aliasURI = Convert.nullToEmpty(rs.getString("alias_uri"));
                             long accountId = rs.getLong("account_id");
-                            Map alias = new TreeMap();
+                            Map<String, String> alias = new TreeMap<>();
                             alias.put("account", Long.toUnsignedString(accountId));
                             alias.put("uri", aliasURI);
                             snapshotMap.put(aliasName, alias);
@@ -389,7 +361,7 @@ public class Snapshot implements AddOn {
                                 continue;
                             }
                             long accountId = rs.getLong("account_id");
-                            Map currency = new TreeMap();
+                            Map<String, String> currency = new TreeMap<>();
                             currency.put("account", Long.toUnsignedString(accountId));
                             currency.put("name", currencyName);
                             snapshotMap.put(currencyCode, currency);
@@ -414,7 +386,9 @@ public class Snapshot implements AddOn {
                 if ("bitswift".equals(normalizedName)) {
                     return true;
                 }
-                //TODO: add production child chain names, when known
+                if (code.equals("AEUR") || "aeur".equals(normalizedName)) {
+                    return true;
+                }
                 return false;
             }
 
@@ -427,7 +401,7 @@ public class Snapshot implements AddOn {
                             String accountName = Convert.nullToEmpty(rs.getString("name"));
                             String accountDescription = Convert.nullToEmpty(rs.getString("description"));
                             long accountId = rs.getLong("account_id");
-                            Map account = new TreeMap();
+                            Map<String, String> account = new TreeMap<>();
                             account.put("name", accountName);
                             account.put("description", accountDescription);
                             snapshotMap.put(Long.toUnsignedString(accountId), account);
@@ -449,7 +423,7 @@ public class Snapshot implements AddOn {
                             String value = Convert.nullToEmpty(rs.getString("value"));
                             String recipientId = Long.toUnsignedString(rs.getLong("recipient_id"));
                             String setterId = Long.toUnsignedString(rs.getLong("setter_id"));
-                            Map<String, Map<String, String>> account = snapshotMap.computeIfAbsent(recipientId, k -> new TreeMap());
+                            Map<String, Map<String, String>> account = snapshotMap.computeIfAbsent(recipientId, k -> new TreeMap<>());
                             Map<String, String> properties = account.computeIfAbsent(setterId, k -> new TreeMap<>());
                             properties.put(property, value);
                         }
@@ -467,8 +441,11 @@ public class Snapshot implements AddOn {
                              + "FROM account_control_phasing WHERE voting_model = 0 AND min_balance IS NULL AND whitelist IS NOT NULL AND LATEST=true")) {
                     try (ResultSet rs = pstmt.executeQuery()) {
                         while (rs.next()) {
-                            String accountId = Long.toUnsignedString(rs.getLong("account_id"));
-                            Map<String, Object> accountControl = new TreeMap();
+                            long accountId = rs.getLong("account_id");
+                            if (accountId == FxtDistribution.FXT_ISSUER_ID) {
+                                continue;
+                            }
+                            Map<String, Object> accountControl = new TreeMap<>();
                             Long[] whitelist = DbUtils.getArray(rs, "whitelist", Long[].class);
                             for (int i = 0; i < whitelist.length; i++) {
                                 if (whitelist[i] == Genesis.CREATOR_ID) {
@@ -482,7 +459,7 @@ public class Snapshot implements AddOn {
                             accountControl.put("maxFees", rs.getLong("max_fees"));
                             accountControl.put("minDuration", rs.getInt("min_duration"));
                             accountControl.put("maxDuration", rs.getInt("max_duration"));
-                            snapshotMap.put(accountId, accountControl);
+                            snapshotMap.put(Long.toUnsignedString(accountId), accountControl);
                         }
                     }
                 } catch (SQLException e) {
@@ -491,7 +468,7 @@ public class Snapshot implements AddOn {
                 saveMap(snapshotMap, snapshotForTestnet ? "ACCOUNT_CONTROL-testnet.json" : "ACCOUNT_CONTROL.json");
             }
 
-            private void saveMap(Map<String, ? extends Object> snapshotMap, String file) {
+            private void saveMap(Map<String, ?> snapshotMap, String file) {
                 Logger.logInfoMessage("Will save " + snapshotMap.size() + " entries to " + file);
                 try (PrintWriter writer = new PrintWriter((new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)))), true)) {
                     StringBuilder sb = new StringBuilder(1024);

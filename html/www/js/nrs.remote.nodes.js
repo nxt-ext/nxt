@@ -33,7 +33,9 @@ var NRS = (function(NRS) {
     };
 
     NRS.initRemoteNodesMgr = function (isTestnet, resolve, reject) {
-        NRS.remoteNodesMgr = new RemoteNodesManager(isTestnet);
+        if (!NRS.remoteNodesMgr) {
+            NRS.remoteNodesMgr = new RemoteNodesManager(isTestnet);
+        }
         if (NRS.isMobileApp()) {
             if (NRS.mobileSettings.remote_node_address == "") {
                 NRS.remoteNodesMgr.addBootstrapNodes(resolve, reject);

@@ -507,12 +507,10 @@ public final class Peers {
                     if (!hasEnoughConnectedPublicPeers(Peers.maxNumberOfConnectedPublicPeers)) {
                         List<Future<?>> futures = new ArrayList<>();
                         List<Peer> hallmarkedPeers = getPeers(peer -> !peer.isBlacklisted()
-                                && peer.getAnnouncedAddress() != null
                                 && peer.getState() != Peer.State.CONNECTED
                                 && now - peer.getLastConnectAttempt() > 600
                                 && peer.providesService(Peer.Service.HALLMARK));
                         List<Peer> nonhallmarkedPeers = getPeers(peer -> !peer.isBlacklisted()
-                                && peer.getAnnouncedAddress() != null
                                 && peer.getState() != Peer.State.CONNECTED
                                 && now - peer.getLastConnectAttempt() > 600
                                 && !peer.providesService(Peer.Service.HALLMARK));
@@ -1067,7 +1065,7 @@ public final class Peers {
     }
 
     public static List<Peer> getPublicPeers(final Peer.State state, final boolean applyPullThreshold) {
-        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == state && peer.getAnnouncedAddress() != null
+        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == state && peer.shareAddress()
                 && (!applyPullThreshold || !Peers.enableHallmarkProtection || peer.getWeight() >= Peers.pullThreshold));
     }
 
@@ -1181,7 +1179,7 @@ public final class Peers {
     }
 
     private static boolean hasEnoughConnectedPublicPeers(int limit) {
-        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.getAnnouncedAddress() != null
+        return getPeers(peer -> !peer.isBlacklisted() && peer.getState() == Peer.State.CONNECTED && peer.shareAddress()
                 && (! Peers.enableHallmarkProtection || peer.getWeight() > 0), limit).size() >= limit;
     }
 

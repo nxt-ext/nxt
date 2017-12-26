@@ -268,11 +268,17 @@ final class PeerImpl implements Peer {
     }
 
     void setBlockchainState(Object blockchainStateObj) {
-        if (blockchainStateObj instanceof Integer) {
-            int blockchainStateInt = (int)blockchainStateObj;
+        BlockchainState state = null;
+        if (blockchainStateObj instanceof Number) {
+            int blockchainStateInt = ((Number)blockchainStateObj).intValue();
             if (blockchainStateInt >= 0 && blockchainStateInt < BlockchainState.values().length) {
-                this.blockchainState = BlockchainState.values()[blockchainStateInt];
+                state = BlockchainState.values()[blockchainStateInt];
             }
+        }
+        if (state != null) {
+            this.blockchainState = state;
+        } else {
+            Logger.logDebugMessage("Invalid blockchain state " + blockchainStateObj + " " + getHost());
         }
     }
 

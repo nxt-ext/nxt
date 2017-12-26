@@ -1356,7 +1356,15 @@ var NRS = (function(NRS, $, undefined) {
                     $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html(message).show();
                 }
             } else {
-                $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(NRS.accountInfo.errorDescription ? NRS.escapeRespStr(NRS.accountInfo.errorDescription) : $.t("error_unknown")).show();
+                var errorMessage;
+                if (NRS.accountInfo.errorCode == 19) {
+                    errorMessage = $.t("no_open_api_peers");
+                } else {
+                    errorMessage = NRS.accountInfo.errorDescription ? NRS.escapeRespStr(NRS.accountInfo.errorDescription) : $.t("error_unknown");
+                }
+
+
+                $("#dashboard_message").addClass("alert-danger").removeClass("alert-success").html(errorMessage).show();
             }
         } else {
             if (NRS.downloadingBlockchain) {

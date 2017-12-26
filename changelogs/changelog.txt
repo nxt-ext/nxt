@@ -1,3 +1,13 @@
+nxt-client-1.11.10:
+
+Removed the IGNIS Token Sale page.
+
+Mobile app bugfixes, node.js module improvements, other minor bugfixes.
+
+Updated jetty to 9.3.22 and bouncycastle to 1.58.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.11.9:
 
 Performance optimizations of derived table trimming and pruning, should fix the

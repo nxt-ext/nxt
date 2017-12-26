@@ -403,6 +403,14 @@ public final class JSONResponses {
         LIGHT_CLIENT_DISABLED_API = JSON.prepare(response);
     }
 
+    public static final JSONStreamAware API_PROXY_NO_PUBLIC_PEERS;
+    static {
+        JSONObject response = new JSONObject();
+        response.put("errorCode", 21);
+        response.put("errorDescription", "No public peers found. Please wait while retrying connection to peers...");
+        API_PROXY_NO_PUBLIC_PEERS = JSON.prepare(response);
+    }
+
     public static final JSONStreamAware PEER_NOT_CONNECTED;
     static {
         JSONObject response = new JSONObject();
