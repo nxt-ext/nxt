@@ -177,7 +177,17 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
             new byte[] {
                     29, -13, -77, -107, -64, -81, -70, -19, -77, 11, 20, 119, -44, -61, -91, 51,
                     83, 38, 127, 123, 103, 92, 7, 14, -108, 91, -70, -66, -48, -95, -110, -71
-    };
+            };
+    private static final byte[] CHECKSUM_24 = Constants.isTestnet ?
+            new byte[] {
+                    16, 122, 103, -91, -92, 20, 51, 4, 62, 107, 4, -109, -117, -91, -108, -20,
+                    -125, -91, 35, 40, -123, 87, -119, 13, 95, -20, -47, 109, -65, -99, -26, 16
+            }
+            :
+            new byte[] {
+                    -72, -49, 110, 104, -14, 9, 85, -108, 106, 78, -122, 13, -113, 123, -5, 56,
+                    -30, 69, -90, -82, -70, -15, 75, -118, 64, -46, -59, 50, -75, 104, 82, 6
+            };
 
 
     private static final BlockchainProcessorImpl instance = new BlockchainProcessorImpl();
@@ -1050,6 +1060,10 @@ final class BlockchainProcessorImpl implements BlockchainProcessor {
         } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_23) {
             if (! verifyChecksum(CHECKSUM_23, Constants.CHECKSUM_BLOCK_22, Constants.CHECKSUM_BLOCK_23)) {
                 popOffTo(Constants.CHECKSUM_BLOCK_22);
+            }
+        } else if (block.getHeight() == Constants.CHECKSUM_BLOCK_24) {
+            if (! verifyChecksum(CHECKSUM_24, Constants.CHECKSUM_BLOCK_23, Constants.CHECKSUM_BLOCK_24)) {
+                popOffTo(Constants.CHECKSUM_BLOCK_23);
             }
         }
     };

@@ -317,7 +317,7 @@ var NRS = (function(NRS, $, undefined) {
 		console.log("login calling getBlockchainStatus");
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
-			    NRS.connectionError(response.errorDescription);
+			    NRS.connectionError(response.errorDescription, response.errorCode);
                 NRS.spinner.stop();
 				console.log("getBlockchainStatus returned error");
 				return;

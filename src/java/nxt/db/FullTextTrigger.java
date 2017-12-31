@@ -54,6 +54,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -288,8 +289,8 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
      */
     public static void createIndex(Connection conn, String schema, String table, String columnList)
                                     throws SQLException {
-        String upperSchema = schema.toUpperCase();
-        String upperTable = table.toUpperCase();
+        String upperSchema = schema.toUpperCase(Locale.ROOT);
+        String upperTable = table.toUpperCase(Locale.ROOT);
         String tableName = upperSchema + "." + upperTable;
         getIndexAccess(conn);
         //
@@ -303,7 +304,7 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(String.format("INSERT INTO FTL.INDEXES (schema, table, columns) "
                     + "VALUES('%s', '%s', '%s')",
-                    upperSchema, upperTable, columnList.toUpperCase()));
+                    upperSchema, upperTable, columnList.toUpperCase(Locale.ROOT)));
             stmt.execute(String.format("CREATE TRIGGER FTL_%s AFTER INSERT,UPDATE,DELETE ON %s "
                     + "FOR EACH ROW CALL \"%s\"",
                     upperTable, tableName, FullTextTrigger.class.getName()));
@@ -334,8 +335,8 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
      * @throws  SQLException        Unable to drop fulltext index
      */
     public static void dropIndex(Connection conn, String schema, String table) throws SQLException {
-        String upperSchema = schema.toUpperCase();
-        String upperTable = table.toUpperCase();
+        String upperSchema = schema.toUpperCase(Locale.ROOT);
+        String upperTable = table.toUpperCase(Locale.ROOT);
         boolean reindex = false;
         //
         // Drop an existing database trigger
@@ -434,7 +435,7 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
             QueryParser parser = new QueryParser("_DATA", analyzer);
             parser.setDateResolution("_MODIFIED", DateTools.Resolution.SECOND);
             parser.setDefaultOperator(QueryParser.Operator.AND);
-            Query query = parser.parse("_TABLE:" + schema.toUpperCase() + "." + table.toUpperCase() + " AND (" + queryText + ")");
+            Query query = parser.parse("_TABLE:" + schema.toUpperCase(Locale.ROOT) + "." + table.toUpperCase(Locale.ROOT) + " AND (" + queryText + ")");
             TopDocs documents = indexSearcher.search(query, limit);
             ScoreDoc[] hits = documents.scoreDocs;
             int resultCount = Math.min(hits.length, (limit == 0 ? hits.length : limit));

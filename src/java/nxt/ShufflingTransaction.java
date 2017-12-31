@@ -23,6 +23,7 @@ import org.json.simple.JSONObject;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -188,8 +189,8 @@ public abstract class ShufflingTransaction extends TransactionType {
                 return false;
             }
             Currency currency = Currency.getCurrency(attachment.getHoldingId());
-            String nameLower = currency.getName().toLowerCase();
-            String codeLower = currency.getCode().toLowerCase();
+            String nameLower = currency.getName().toLowerCase(Locale.ROOT);
+            String codeLower = currency.getCode().toLowerCase(Locale.ROOT);
             boolean isDuplicate = TransactionType.isDuplicate(MonetarySystem.CURRENCY_ISSUANCE, nameLower, duplicates, false);
             if (! nameLower.equals(codeLower)) {
                 isDuplicate = isDuplicate || TransactionType.isDuplicate(MonetarySystem.CURRENCY_ISSUANCE, codeLower, duplicates, false);

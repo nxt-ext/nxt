@@ -19,6 +19,7 @@ package nxt;
 import nxt.crypto.HashFunction;
 
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -291,7 +292,7 @@ public enum CurrencyType {
                 || description.length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
             throw new NxtException.NotValidException(String.format("Invalid currency name %s code %s or description %s", name, code, description));
         }
-        String normalizedName = name.toLowerCase();
+        String normalizedName = name.toLowerCase(Locale.ROOT);
         for (int i = 0; i < normalizedName.length(); i++) {
             if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                 throw new NxtException.NotValidException("Invalid currency name: " + normalizedName);

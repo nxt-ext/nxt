@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -63,13 +64,22 @@ public class Snapshot implements AddOn {
     private static final boolean snapshotForTestnet = Nxt.getBooleanProperty("nxt.snapshotForTestnet", true);
 
     private static final Set<String> scammerAccounts = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            Long.toUnsignedString(Convert.parseAccountId("NXT-TN8U-RBVE-GBJ3-7DEBN")),
-            Long.toUnsignedString(Convert.parseAccountId("NXT-V79Z-RQ5X-XXJR-H8P87")),
-            Long.toUnsignedString(Convert.parseAccountId("NXT-BH28-PKY6-LES8-29DBN")),
-            Long.toUnsignedString(Convert.parseAccountId("NXT-ZKV3-J2WN-T6VM-B28DA")),
-            Long.toUnsignedString(Convert.parseAccountId("NXT-ZPRA-ZDUQ-SYEL-7AAJM")),
-            Long.toUnsignedString(Convert.parseAccountId("NXT-UMZH-XLBB-BGSY-7WESP"))
+            Long.toUnsignedString(Convert.parseAccountId("NXT-TN8U-RBVE-GBJ3-7DEBN")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-V79Z-RQ5X-XXJR-H8P87")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-BH28-PKY6-LES8-29DBN")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-ZKV3-J2WN-T6VM-B28DA")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-ZPRA-ZDUQ-SYEL-7AAJM")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-UMZH-XLBB-BGSY-7WESP")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-5CFL-QTTH-D6K2-AC4TF")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-B2KJ-DAAF-884G-GENQ8")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-L8JG-U967-NUNS-BA4RK")), // scammer
+            Long.toUnsignedString(Convert.parseAccountId("NXT-LSMJ-YCH7-QESX-AH42N")), // compromised
+            Long.toUnsignedString(Convert.parseAccountId("NXT-E8JD-FHKJ-CQ9H-5KGMQ"))  // compromised
     )));
+
+    private static final String wrongBountyAccount = Long.toUnsignedString(Convert.parseAccountId("NXT-XTJE-PLDX-EZ6E-6FQX6"));
+
+    private static final String AEUR_ACCOUNT = "NXT-NJ92-R5GB-HQB4-6NW7T";
 
     @Override
     public void init() {
@@ -165,8 +175,9 @@ public class Snapshot implements AddOn {
                             if (snapshotForTestnet) {
                                 eurSnapshotMap.put(account, BigInteger.valueOf(balance).multiply(BigInteger.valueOf(10000))
                                         .divide(BigInteger.valueOf(Constants.ONE_NXT)).longValueExact());
+                            } else {
+                                eurSnapshotMap.put(Long.toUnsignedString(Convert.parseAccountId(AEUR_ACCOUNT)), 10000000L * 10000);
                             }
-                            //TODO: hardcode AEUR initial distribution for mainnet
                         }
                     }
                 } catch (SQLException e) {
@@ -192,6 +203,14 @@ public class Snapshot implements AddOn {
                                     Logger.logDebugMessage("Will allocate " + units + " JLRDA from " + Convert.rsAccount(Long.parseUnsignedLong(accountId))
                                             + " back to " + Convert.rsAccount(Long.parseUnsignedLong(jlrdaIssuer)));
                                     accountId = jlrdaIssuer;
+                                }
+                                if (accountId.equals(wrongBountyAccount)) {
+                                    units -= 75000 * 10000;
+                                    long jlrdaIssuerBalance = Convert.nullToZero(snapshotMap.get(jlrdaIssuer));
+                                    jlrdaIssuerBalance += 75000L * 100000000L;
+                                    snapshotMap.put(jlrdaIssuer, jlrdaIssuerBalance);
+                                    Logger.logDebugMessage("Will allocate 75k JLRDA from " + Convert.rsAccount(Long.parseUnsignedLong(wrongBountyAccount))
+                                            + " back to " + Convert.rsAccount(Long.parseUnsignedLong(jlrdaIssuer)));
                                 }
                                 long balance = Convert.nullToZero(snapshotMap.get(accountId));
                                 balance += units * 10000;
@@ -356,7 +375,7 @@ public class Snapshot implements AddOn {
                         while (rs.next()) {
                             String currencyName = rs.getString("name");
                             String currencyCode = rs.getString("code");
-                            if (invalidCurrency(currencyCode, currencyName.toLowerCase())) {
+                            if (invalidCurrency(currencyCode, currencyName.toLowerCase(Locale.ROOT))) {
                                 Logger.logDebugMessage("Skipping currency " + currencyCode + " " + currencyName);
                                 continue;
                             }

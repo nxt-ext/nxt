@@ -25,6 +25,7 @@ import nxt.util.Convert;
 import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Locale;
 
 /**
  * Issue a currency on the NXT blockchain
@@ -105,7 +106,7 @@ public final class IssueCurrency extends CreateTransaction {
         if (description.length() > Constants.MAX_CURRENCY_DESCRIPTION_LENGTH) {
             return JSONResponses.INCORRECT_CURRENCY_DESCRIPTION_LENGTH;
         }
-        String normalizedName = name.toLowerCase();
+        String normalizedName = name.toLowerCase(Locale.ROOT);
         for (int i = 0; i < normalizedName.length(); i++) {
             if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                 return JSONResponses.INCORRECT_CURRENCY_NAME;
@@ -120,7 +121,7 @@ public final class IssueCurrency extends CreateTransaction {
         int type = 0;
         if (Convert.emptyToNull(req.getParameter("type")) == null) {
             for (CurrencyType currencyType : CurrencyType.values()) {
-                if ("1".equals(req.getParameter(currencyType.toString().toLowerCase()))) {
+                if ("1".equals(req.getParameter(currencyType.toString().toLowerCase(Locale.ROOT)))) {
                     type = type | currencyType.getCode();
                 }
             }

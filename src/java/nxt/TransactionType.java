@@ -31,6 +31,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -541,7 +542,7 @@ public abstract class TransactionType {
             @Override
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasAssignment attachment = (Attachment.MessagingAliasAssignment) transaction.getAttachment();
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(Locale.ROOT), duplicates, true);
             }
 
             @Override
@@ -559,7 +560,7 @@ public abstract class TransactionType {
                         || attachment.getAliasURI().length() > Constants.MAX_ALIAS_URI_LENGTH) {
                     throw new NxtException.NotValidException("Invalid alias assignment: " + attachment.getJSONObject());
                 }
-                String normalizedAlias = attachment.getAliasName().toLowerCase();
+                String normalizedAlias = attachment.getAliasName().toLowerCase(Locale.ROOT);
                 for (int i = 0; i < normalizedAlias.length(); i++) {
                     if (Constants.ALPHABET.indexOf(normalizedAlias.charAt(i)) < 0) {
                         throw new NxtException.NotValidException("Invalid alias name: " + normalizedAlias);
@@ -619,7 +620,7 @@ public abstract class TransactionType {
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasSell attachment = (Attachment.MessagingAliasSell) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(Locale.ROOT), duplicates, true);
             }
 
             @Override
@@ -712,7 +713,7 @@ public abstract class TransactionType {
             boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasBuy attachment = (Attachment.MessagingAliasBuy) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(Locale.ROOT), duplicates, true);
             }
 
             @Override
@@ -793,7 +794,7 @@ public abstract class TransactionType {
             boolean isDuplicate(final Transaction transaction, final Map<TransactionType, Map<String, Integer>> duplicates) {
                 Attachment.MessagingAliasDelete attachment = (Attachment.MessagingAliasDelete) transaction.getAttachment();
                 // not a bug, uniqueness is based on Messaging.ALIAS_ASSIGNMENT
-                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(), duplicates, true);
+                return isDuplicate(Messaging.ALIAS_ASSIGNMENT, attachment.getAliasName().toLowerCase(Locale.ROOT), duplicates, true);
             }
 
             @Override
@@ -1539,7 +1540,7 @@ public abstract class TransactionType {
                         ) {
                     throw new NxtException.NotValidException("Invalid asset issuance: " + attachment.getJSONObject());
                 }
-                String normalizedName = attachment.getName().toLowerCase();
+                String normalizedName = attachment.getName().toLowerCase(Locale.ROOT);
                 for (int i = 0; i < normalizedName.length(); i++) {
                     if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                         throw new NxtException.NotValidException("Invalid asset name: " + normalizedName);
@@ -1656,8 +1657,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
-                if (FxtDistribution.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
-                    throw new NxtException.NotCurrentlyValidException("Asset transfer of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
+                if (FxtDistribution.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset transfer of ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
                 }
             }
 
@@ -1741,8 +1742,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
-                if (FxtDistribution.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
-                    throw new NxtException.NotCurrentlyValidException("Asset delete of ARDR asset not allowed after height " + Nxt.getHardForkHeight());
+                if (FxtDistribution.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset delete of ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
                 }
             }
 
@@ -1775,8 +1776,8 @@ public abstract class TransactionType {
                     throw new NxtException.NotCurrentlyValidException("Asset " + Long.toUnsignedString(attachment.getAssetId()) +
                             " does not exist yet");
                 }
-                if (FxtDistribution.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Nxt.getHardForkHeight()) {
-                    throw new NxtException.NotCurrentlyValidException("Asset order placements for ARDR asset not allowed after height " + Nxt.getHardForkHeight());
+                if (FxtDistribution.ardorSnapshotAssets.contains(attachment.getAssetId()) && Nxt.getBlockchain().getHeight() >= Constants.IGNIS_BLOCK) {
+                    throw new NxtException.NotCurrentlyValidException("Asset order placements for ARDR asset not allowed after height " + Constants.IGNIS_BLOCK);
                 }
             }
 

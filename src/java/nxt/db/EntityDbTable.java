@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Locale;
 
 public abstract class EntityDbTable<T> extends DerivedDbTable {
 
@@ -456,7 +457,7 @@ public abstract class EntityDbTable<T> extends DerivedDbTable {
     public final void createSearchIndex(Connection con) throws SQLException {
         if (fullTextSearchColumns != null) {
             Logger.logDebugMessage("Creating search index on " + table + " (" + fullTextSearchColumns + ")");
-            FullTextTrigger.createIndex(con, "PUBLIC", table.toUpperCase(), fullTextSearchColumns.toUpperCase());
+            FullTextTrigger.createIndex(con, "PUBLIC", table.toUpperCase(Locale.ROOT), fullTextSearchColumns.toUpperCase(Locale.ROOT));
         }
     }
 

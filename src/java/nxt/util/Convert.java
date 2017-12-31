@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -102,7 +103,7 @@ public final class Convert {
         if (account == null || (account = account.trim()).isEmpty()) {
             return 0;
         }
-        account = account.toUpperCase();
+        account = account.toUpperCase(Locale.ROOT);
         int prefixEnd = account.indexOf('-');
         if (prefixEnd > 0) {
             return Crypto.rsDecode(account.substring(prefixEnd + 1));

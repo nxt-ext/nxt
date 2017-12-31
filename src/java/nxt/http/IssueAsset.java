@@ -25,6 +25,8 @@ import org.json.simple.JSONStreamAware;
 
 import javax.servlet.http.HttpServletRequest;
 
+import java.util.Locale;
+
 import static nxt.http.JSONResponses.INCORRECT_ASSET_DESCRIPTION;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME;
 import static nxt.http.JSONResponses.INCORRECT_ASSET_NAME_LENGTH;
@@ -54,7 +56,7 @@ public final class IssueAsset extends CreateTransaction {
         if (name.length() < Constants.MIN_ASSET_NAME_LENGTH || name.length() > Constants.MAX_ASSET_NAME_LENGTH) {
             return INCORRECT_ASSET_NAME_LENGTH;
         }
-        String normalizedName = name.toLowerCase();
+        String normalizedName = name.toLowerCase(Locale.ROOT);
         for (int i = 0; i < normalizedName.length(); i++) {
             if (Constants.ALPHABET.indexOf(normalizedName.charAt(i)) < 0) {
                 return INCORRECT_ASSET_NAME;

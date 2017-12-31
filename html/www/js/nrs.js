@@ -481,8 +481,11 @@ var NRS = (function(NRS, $, undefined) {
 		}
 	};
 
-    NRS.connectionError = function(errorDescription) {
-        NRS.serverConnect = false;
+    NRS.connectionError = function(errorDescription, errorCode) {
+        if (errorCode != 19) {
+            NRS.serverConnect = false;
+        }
+
         var msg = $.t("error_server_connect", {url: NRS.getRequestPath()}) +
             (errorDescription ? " " + NRS.escapeRespStr(errorDescription) : "");
         $.growl(msg, {
@@ -498,7 +501,7 @@ var NRS = (function(NRS, $, undefined) {
 		}
 		NRS.sendRequest("getBlockchainStatus", {}, function(response) {
 			if (response.errorCode) {
-                NRS.connectionError(response.errorDescription);
+                NRS.connectionError(response.errorDescription, response.errorCode);
 			} else {
 				var clientOptionsLink = $("#header_client_options_link");
                 if (NRS.isMobileApp()) {
@@ -516,7 +519,7 @@ var NRS = (function(NRS, $, undefined) {
 						"firstIndex": 0, "lastIndex": 0
 					}, function(proxyBlocksResponse) {
 						if (proxyBlocksResponse.errorCode) {
-                            NRS.connectionError(proxyBlocksResponse.errorDescription);
+                            NRS.connectionError(proxyBlocksResponse.errorDescription, proxyBlocksResponse.errorCode);
 						} else {
 							_prevLastProxyBlock = NRS.lastProxyBlock;
 							var prevHeight = NRS.lastProxyBlockHeight;

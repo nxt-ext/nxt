@@ -20,6 +20,7 @@ import nxt.AccountLedger.LedgerEvent;
 import org.json.simple.JSONObject;
 
 import java.nio.ByteBuffer;
+import java.util.Locale;
 import java.util.Map;
 
 public abstract class MonetarySystem extends TransactionType {
@@ -70,8 +71,8 @@ public abstract class MonetarySystem extends TransactionType {
     boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
         Attachment.MonetarySystemAttachment attachment = (Attachment.MonetarySystemAttachment) transaction.getAttachment();
         Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-        String nameLower = currency.getName().toLowerCase();
-        String codeLower = currency.getCode().toLowerCase();
+        String nameLower = currency.getName().toLowerCase(Locale.ROOT);
+        String codeLower = currency.getCode().toLowerCase(Locale.ROOT);
         boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, nameLower, duplicates, false);
         if (! nameLower.equals(codeLower)) {
             isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates, false);
@@ -108,7 +109,7 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         Fee getBaselineFee(Transaction transaction) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-            if (Nxt.getBlockchain().getHeight() < Nxt.getHardForkHeight() && (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName()) != null
+            if (Nxt.getBlockchain().getHeight() < Constants.IGNIS_BLOCK && (Currency.getCurrencyByCode(attachment.getCode()) != null || Currency.getCurrencyByCode(attachment.getName()) != null
                     || Currency.getCurrencyByName(attachment.getName()) != null || Currency.getCurrencyByName(attachment.getCode()) != null)) {
                 return FIVE_LETTER_CURRENCY_ISSUANCE_FEE;
             }
@@ -162,8 +163,8 @@ public abstract class MonetarySystem extends TransactionType {
         @Override
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyIssuance attachment = (Attachment.MonetarySystemCurrencyIssuance) transaction.getAttachment();
-            String nameLower = attachment.getName().toLowerCase();
-            String codeLower = attachment.getCode().toLowerCase();
+            String nameLower = attachment.getName().toLowerCase(Locale.ROOT);
+            String codeLower = attachment.getCode().toLowerCase(Locale.ROOT);
             boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, nameLower, duplicates, true);
             if (! nameLower.equals(codeLower)) {
                 isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates, true);
@@ -811,8 +812,8 @@ public abstract class MonetarySystem extends TransactionType {
         boolean isDuplicate(Transaction transaction, Map<TransactionType, Map<String, Integer>> duplicates) {
             Attachment.MonetarySystemCurrencyDeletion attachment = (Attachment.MonetarySystemCurrencyDeletion) transaction.getAttachment();
             Currency currency = Currency.getCurrency(attachment.getCurrencyId());
-            String nameLower = currency.getName().toLowerCase();
-            String codeLower = currency.getCode().toLowerCase();
+            String nameLower = currency.getName().toLowerCase(Locale.ROOT);
+            String codeLower = currency.getCode().toLowerCase(Locale.ROOT);
             boolean isDuplicate = TransactionType.isDuplicate(CURRENCY_ISSUANCE, nameLower, duplicates, true);
             if (! nameLower.equals(codeLower)) {
                 isDuplicate = isDuplicate || TransactionType.isDuplicate(CURRENCY_ISSUANCE, codeLower, duplicates, true);

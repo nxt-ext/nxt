@@ -53,7 +53,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 final class PeerImpl implements Peer {
@@ -566,11 +570,12 @@ final class PeerImpl implements Peer {
             // Check for an error response
             //
             if (response != null && response.get("error") != null) {
-                deactivate();
-                if (Errors.SEQUENCE_ERROR.equals(response.get("error")) && request != Peers.getMyPeerInfoRequest()) {
+                Object error = response.get("error");
+                if (Errors.SEQUENCE_ERROR.equals(error) && request != Peers.getMyPeerInfoRequest()) {
                     Logger.logDebugMessage("Sequence error, reconnecting to " + host);
                     connect();
-                } else {
+                } else if (!Errors.DOWNLOADING.equals(error) && !Errors.LIGHT_CLIENT.equals(error)) {
+                    deactivate();
                     Logger.logDebugMessage("Peer " + host + " version " + version + " returned error: " +
                             response.toJSONString() + ", request was: " + JSON.toString(request) +
                             ", disconnecting");

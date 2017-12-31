@@ -1904,5 +1904,6 @@
   "validate_passphrase": "Validate Passphrase",
   "delete_scheduled_transaction": "Delete Scheduled Transaction",
   "light_client_connecting_to_network": "Connecting to the network... Please try again later.",
-  "no_open_api_peers": "No openAPI peers found. Please wait or try to add an openAPI peer manually."
+  "no_open_api_peers": "No openAPI peers found. Please wait or try to add an openAPI peer manually.",
+  "execution_height":	"Execution Height"
 }

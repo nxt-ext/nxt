@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Locale;
 
 public class TestMintCalculations {
 
@@ -96,7 +97,7 @@ public class TestMintCalculations {
     @Test
     public void sha3() {
         byte[] hash = HashFunction.SHA3.hash(new byte[]{(byte)0x41, (byte)0xFB});
-        Assert.assertEquals("A8EACEDA4D47B3281A795AD9E1EA2122B407BAF9AABCB9E18B5717B7873537D2".toLowerCase(), Convert.toHexString(hash));
+        Assert.assertEquals("A8EACEDA4D47B3281A795AD9E1EA2122B407BAF9AABCB9E18B5717B7873537D2".toLowerCase(Locale.ROOT), Convert.toHexString(hash));
         hash = HashFunction.SHA3.hash(new byte[]{});
         Assert.assertEquals("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", Convert.toHexString(hash));
     }
@@ -104,7 +105,7 @@ public class TestMintCalculations {
     @Test
     public void scrypt() {
         byte[] hash = HashFunction.SCRYPT.hash(new byte[]{(byte) 0x41, (byte) 0xFB});
-        Assert.assertEquals("da3f4f010d772567a8896465d11df28693b244c91b8ba4bea5a30f6be572b667".toLowerCase(), Convert.toHexString(hash));
+        Assert.assertEquals("da3f4f010d772567a8896465d11df28693b244c91b8ba4bea5a30f6be572b667".toLowerCase(Locale.ROOT), Convert.toHexString(hash));
         hash = HashFunction.SCRYPT.hash(new byte[]{});
         Assert.assertEquals("0cf2967ca5c120e80b37f8f75c971842e05da107278c1058e6ffbc68911c11f1", Convert.toHexString(hash));
     }

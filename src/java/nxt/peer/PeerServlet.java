@@ -251,7 +251,9 @@ public final class PeerServlet extends WebSocketServlet {
             jsonObject.put("cause", peer.getBlacklistingCause());
             return jsonObject;
         }
-        Peers.addPeer(peer);
+        if (Peers.getMorePeers) {
+            Peers.addPeer(peer);
+        }
         //
         // Process the request
         //

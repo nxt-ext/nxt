@@ -52,7 +52,8 @@ var NRS = (function (NRS, $, undefined) {
         try {
             if (typeof transaction != "object") {
                 NRS.sendRequest("getTransaction", {
-                    "transaction": transaction
+                    "transaction": transaction,
+                    "includePhasingResult": true
                 }, function (response, input) {
                     response.transaction = input.transaction;
                     NRS.processTransactionModalData(response, isModalVisible, sharedKey);
@@ -154,6 +155,10 @@ var NRS = (function (NRS, $, undefined) {
             } else {
                 transactionDetails.height_formatted_html = NRS.getBlockLink(transactionDetails.height);
                 delete transactionDetails.height;
+            }
+            if (transactionDetails.executionHeight !== undefined) {
+                transactionDetails.execution_height_formatted_html = NRS.getBlockLink(transactionDetails.executionHeight);
+                delete transactionDetails.executionHeight;
             }
             $("#transaction_info_modal_transaction").html(NRS.escapeRespStr(transaction.transaction));
 

@@ -34,6 +34,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Locale;
 
 public final class Crypto {
 
@@ -287,7 +288,7 @@ public final class Crypto {
     }
 
     public static long rsDecode(String rsString) {
-        rsString = rsString.toUpperCase();
+        rsString = rsString.toUpperCase(Locale.ROOT);
         try {
             long id = ReedSolomon.decode(rsString);
             if (! rsString.equals(ReedSolomon.encode(id))) {

@@ -1034,7 +1034,7 @@ final class TransactionImpl implements Transaction {
                 }
             }
         }
-        if (blockchainHeight < Nxt.getHardForkHeight() || !validatingAtFinish) {
+        if (blockchainHeight < Constants.IGNIS_BLOCK || !validatingAtFinish) {
             AccountRestrictions.checkTransaction(this, validatingAtFinish);
         }
     }

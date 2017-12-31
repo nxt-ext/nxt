@@ -108,7 +108,7 @@ public final class FxtDistribution implements Listener<Block> {
     public void notify(Block block) {
 
         final int currentHeight = block.getHeight();
-        if (currentHeight == Nxt.getHardForkHeight()) {
+        if (currentHeight == Constants.IGNIS_BLOCK) {
             boolean wasInTransaction = Db.db.isInTransaction();
             if (!wasInTransaction) {
                 Db.db.beginTransaction();
