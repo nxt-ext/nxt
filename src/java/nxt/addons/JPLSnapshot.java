@@ -132,7 +132,7 @@ public final class JPLSnapshot implements AddOn {
         }
 
         @Override
-        protected JSONStreamAware processRequest(HttpServletRequest request) throws NxtException {
+        protected JSONStreamAware processRequest(HttpServletRequest request) {
             throw new UnsupportedOperationException();
         }
 

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -1238,6 +1238,9 @@ public final class Account {
             while (iterator.hasNext()) {
                 lessors.add(iterator.next());
             }
+        }
+        if (lessors.isEmpty()) {
+            return 0;
         }
         Long[] lessorIds = new Long[lessors.size()];
         long[] balances = new long[lessors.size()];

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -33,7 +33,7 @@ public enum CurrencyType {
     EXCHANGEABLE(0x01) {
 
         @Override
-        void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.NotValidException {
+        void validate(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
         }
 
         @Override
@@ -221,7 +221,7 @@ public enum CurrencyType {
         }
 
         @Override
-        void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) throws NxtException.ValidationException {
+        void validateMissing(Currency currency, Transaction transaction, Set<CurrencyType> validators) {
         }
     };
 

@@ -90,7 +90,8 @@
         <res id="shortcutSpec.xml" src="../installer/shortcutSpec.xml"/>
         <res id="Unix_shortcutSpec.xml" src="../installer/Unix_shortcutSpec.xml"/>
         <res id="RegistrySpec.xml" src="../installer/RegistrySpec.xml"/>
-    </resources>
+        <res id="installer.langsel.img" src="html/www/img/nxt_logo.png"/>
+	</resources>
 
     <variables>
         <variable name="$InstallerFrame.logfilePath" value="default"/>

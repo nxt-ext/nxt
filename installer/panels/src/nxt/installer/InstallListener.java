@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -21,14 +21,15 @@ import com.izforge.izpack.api.data.Pack;
 import com.izforge.izpack.api.event.ProgressListener;
 import com.izforge.izpack.api.event.ProgressNotifiers;
 import com.izforge.izpack.event.AbstractProgressInstallerListener;
-import static nxt.installer.ConfigHandler.VAR_CLEAN_INSTALL_DIR;
-import static nxt.installer.ConfigHandler.VAR_SHUTDOWN_SERVER;
 
 import java.util.List;
 
+import static nxt.installer.ConfigHandler.VAR_CLEAN_INSTALL_DIR;
+import static nxt.installer.ConfigHandler.VAR_SHUTDOWN_SERVER;
+
 public class InstallListener extends AbstractProgressInstallerListener {
 
-    private ConfigHandler handler = new ConfigHandler();
+    private final ConfigHandler handler = new ConfigHandler();
 
     public InstallListener(InstallData installData, ProgressNotifiers notifiers) {
         super(installData, notifiers);
@@ -43,8 +44,7 @@ public class InstallListener extends AbstractProgressInstallerListener {
 
         if (getVariable(VAR_CLEAN_INSTALL_DIR)) {
             // We might have to retry removal a few times until server shutdown is complete
-            boolean retry = shutdownServer;
-            if (!handler.cleanNxtInstallDir(getInstallData().getInstallPath(), retry)) {
+            if (!handler.cleanNxtInstallDir(getInstallData().getInstallPath(), shutdownServer)) {
                 error("Failed to remove existing installation");
             }
         }

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -65,8 +65,8 @@ public class AccountLedger {
     /** Pending ledger entries */
     private static final List<LedgerEntry> pendingEntries = new ArrayList<>();
 
-    /**
-     * Process nxt.ledgerAccounts
+    /*
+      Process nxt.ledgerAccounts
      */
     static {
         List<String> ledgerAccounts = Nxt.getStringListProperty("nxt.ledgerAccounts");

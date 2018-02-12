@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -221,7 +221,7 @@ public interface Appendix {
             }
         }
 
-        Message(JSONObject attachmentData) {
+        private Message(JSONObject attachmentData) {
             super(attachmentData);
             String messageString = (String)attachmentData.get("message");
             this.isText = Boolean.TRUE.equals(attachmentData.get("messageIsText"));
@@ -1127,7 +1127,7 @@ public interface Appendix {
             buffer.get(this.publicKey);
         }
 
-        PublicKeyAnnouncement(JSONObject attachmentData) {
+        private PublicKeyAnnouncement(JSONObject attachmentData) {
             super(attachmentData);
             this.publicKey = Convert.parseHexString((String)attachmentData.get("recipientPublicKey"));
         }
@@ -1249,7 +1249,7 @@ public interface Appendix {
             algorithm = buffer.get();
         }
 
-        Phasing(JSONObject attachmentData) {
+        private Phasing(JSONObject attachmentData) {
             super(attachmentData);
             finishHeight = ((Long) attachmentData.get("phasingFinishHeight")).intValue();
             params = new PhasingParams(attachmentData);

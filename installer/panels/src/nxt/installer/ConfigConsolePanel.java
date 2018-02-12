@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -22,17 +22,22 @@ import com.izforge.izpack.installer.console.AbstractConsolePanel;
 import com.izforge.izpack.installer.console.ConsolePanel;
 import com.izforge.izpack.installer.panel.PanelView;
 import com.izforge.izpack.util.Console;
-import static nxt.installer.ConfigHandler.*;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import static nxt.installer.ConfigHandler.Setting;
+import static nxt.installer.ConfigHandler.VAR_CLEAN_INSTALL_DIR;
+import static nxt.installer.ConfigHandler.VAR_FILE_CONTENTS;
+import static nxt.installer.ConfigHandler.VAR_SHUTDOWN_SERVER;
+
 public class ConfigConsolePanel extends AbstractConsolePanel
 {
-    private ConfigHandler handler = new ConfigHandler();
-    private Prompt prompt;
+    private final ConfigHandler handler = new ConfigHandler();
+    private final Prompt prompt;
 
     public ConfigConsolePanel(PanelView<ConsolePanel> panel, InstallData installData, Prompt prompt) {
         super(panel);

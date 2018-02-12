@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -19,7 +19,6 @@ package nxt.http;
 import nxt.Constants;
 import nxt.util.Convert;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -133,11 +132,7 @@ public class APITestServlet extends HttpServlet {
             String requestType = entry.getKey();
             Set<APITag> apiTags = entry.getValue().getAPITags();
             for (APITag apiTag : apiTags) {
-                SortedSet<String> set = requestTags.get(apiTag.name());
-                if (set == null) {
-                    set = new TreeSet<>();
-                    requestTags.put(apiTag.name(), set);
-                }
+                SortedSet<String> set = requestTags.computeIfAbsent(apiTag.name(), k -> new TreeSet<>());
                 set.add(requestType);
             }
         }
@@ -171,7 +166,7 @@ public class APITestServlet extends HttpServlet {
         return buf.toString();
     }
 
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate, private");
         resp.setHeader("Pragma", "no-cache");
@@ -293,10 +288,10 @@ public class APITestServlet extends HttpServlet {
         for (String parameter : parameters) {
             buf.append("<tr class='api-call-input-tr'>\n");
             buf.append("<td>").append(parameter).append(":</td>\n");
-            if (isTextArea(parameter)) {
+            if (isTextArea(parameter, requestHandler)) {
                 buf.append("<td><textarea ");
             } else {
-                buf.append("<td><input type='").append(isPassword(parameter) ? "password" : "text").append("' ");
+                buf.append("<td><input type='").append(isPassword(parameter, requestHandler) ? "password" : "text").append("' ");
             }
             buf.append("name='").append(parameter).append("' ");
             String value = Convert.emptyToNull(req.getParameter(parameter));
@@ -304,7 +299,7 @@ public class APITestServlet extends HttpServlet {
                 buf.append("value='").append(value.replace("'", "&quot;")).append("' ");
             }
             buf.append("style='width:100%;min-width:200px;'");
-            if (isTextArea(parameter)) {
+            if (isTextArea(parameter, requestHandler)) {
                 buf.append("></textarea></td>\n");
             } else {
                 buf.append("/></td>\n");
@@ -334,12 +329,13 @@ public class APITestServlet extends HttpServlet {
         return buf.toString();
     }
 
-    private static boolean isPassword(String parameter) {
-        return "secretPhrase".equals(parameter) || "adminPassword".equals(parameter) || "recipientSecretPhrase".equals(parameter);
+    private static boolean isPassword(String parameter, APIServlet.APIRequestHandler requestHandler) {
+        return "secretPhrase".equals(parameter) || "adminPassword".equals(parameter)
+                || "recipientSecretPhrase".equals(parameter) || requestHandler.isPassword(parameter);
     }
 
-    private static boolean isTextArea(String parameter) {
-        return "website".equals(parameter);
+    private static boolean isTextArea(String parameter, APIServlet.APIRequestHandler requestHandler) {
+        return "website".equals(parameter) || requestHandler.isTextArea(parameter);
     }
 
     private static void appendWikiLink(String className, StringBuilder buf) {

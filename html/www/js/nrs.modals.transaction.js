@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -1446,7 +1446,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.formatCurrencyExchange = function (currency, transaction, type) {
-        var rateUnitsStr = " [ " + currency.code + " / NXT ]";
+        var rateUnitsStr = " [NXT " + $.t("per") + " " + currency.code +"]";
         var data = {
             "type": type == "sell" ? $.t("sell_currency") : $.t("buy_currency"),
             "code": currency.code,
@@ -1490,7 +1490,7 @@ var NRS = (function (NRS, $, undefined) {
     };
 
     NRS.formatCurrencyOffer = function (currency, transaction) {
-        var rateUnitsStr = " [ " + currency.code + " / NXT ]";
+        var rateUnitsStr = " [" + currency.code + " " + $.t("per") + " NXT]";
         var buyOffer;
         var sellOffer;
         NRS.sendRequest("getOffer", {

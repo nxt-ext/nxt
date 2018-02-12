@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -260,11 +260,7 @@ public final class FundingMonitor {
                     return false;
                 }
                 accountList.forEach(account -> {
-                    List<MonitoredAccount> activeList = accounts.get(account.accountId);
-                    if (activeList == null) {
-                        activeList = new ArrayList<>();
-                        accounts.put(account.accountId, activeList);
-                    }
+                    List<MonitoredAccount> activeList = accounts.computeIfAbsent(account.accountId, k -> new ArrayList<>());
                     activeList.add(account);
                     pendingEvents.add(account);
                     Logger.logDebugMessage(String.format("Created %s monitor for target account %s, property '%s', holding %s, "
@@ -427,9 +423,9 @@ public final class FundingMonitor {
      * @return                      Account monitor list
      */
     public static List<FundingMonitor> getAllMonitors() {
-        List<FundingMonitor> allMonitors = new ArrayList<>();
+        List<FundingMonitor> allMonitors;
         synchronized(monitors) {
-            allMonitors.addAll(monitors);
+            allMonitors = new ArrayList<>(monitors);
         }
         return allMonitors;
     }
@@ -953,11 +949,7 @@ public final class FundingMonitor {
                         for (FundingMonitor monitor : monitors) {
                             if (monitor.property.equals(property.getProperty())) {
                                 MonitoredAccount account = createMonitoredAccount(accountId, monitor, property.getValue());
-                                accountList = accounts.get(accountId);
-                                if (accountList == null) {
-                                    accountList = new ArrayList<>();
-                                    accounts.put(accountId, accountList);
-                                }
+                                accountList = accounts.computeIfAbsent(accountId, k -> new ArrayList<>());
                                 accountList.add(account);
                                 pendingEvents.add(account);
                                 Logger.logDebugMessage(

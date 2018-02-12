@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -40,11 +40,7 @@ public final class Shuffler {
         long accountId = Account.getId(Crypto.getPublicKey(secretPhrase));
         BlockchainImpl.getInstance().writeLock();
         try {
-            Map<Long, Shuffler> map = shufflingsMap.get(hash);
-            if (map == null) {
-                map = new HashMap<>();
-                shufflingsMap.put(hash, map);
-            }
+            Map<Long, Shuffler> map = shufflingsMap.computeIfAbsent(hash, k -> new HashMap<>());
             Shuffler shuffler = map.get(accountId);
             if (recipientPublicKey == null) {
                 return shuffler;
@@ -274,11 +270,7 @@ public final class Shuffler {
 
     private static void scheduleExpiration(Shuffling shuffling) {
         int expirationHeight = Nxt.getBlockchain().getHeight() + 720;
-        Set<String> shufflingIds = expirations.get(expirationHeight);
-        if (shufflingIds == null) {
-            shufflingIds = new HashSet<>();
-            expirations.put(expirationHeight, shufflingIds);
-        }
+        Set<String> shufflingIds = expirations.computeIfAbsent(expirationHeight, k -> new HashSet<>());
         shufflingIds.add(Convert.toHexString(shuffling.getFullHash()));
     }
 

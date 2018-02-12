@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -295,19 +295,6 @@ var converters = function() {
             }
 
             return CryptoJS.lib.WordArray.create(words, len);
-        },
-        convertNumericToRSAccountFormat: function (account) {
-            if (/^NXT\-/i.test(account)) {
-                return String(account).escapeHTML();
-            } else {
-                var address = new NxtAddress();
-
-                if (address.set(account)) {
-                    return address.toString().escapeHTML();
-                } else {
-                    return "";
-                }
-            }
         }
     };
 }();

@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -150,19 +150,31 @@ var NRS = (function(NRS, $) {
         var calculatedAccount = NRS.getAccountId(secretPhrase, true);
         if (account == calculatedAccount) {
             $(".btn-passphrase-validation").removeClass("btn-danger").addClass("btn-success");
+            var publicKey = NRS.getPublicKey(converters.stringToHexString(secretPhrase));
+            $("#passphrae_validation_public_key").val(publicKey);
             return {
                 "successMessage": $.t("correct_passphrase"),
-                "stop": true
+                "stop": true,
+                "keepOpen": true
             };
         } else {
+            $("#passphrae_validation_public_key").val("");
             return {
-                "error": $.t("wrong_passphrase")
+                "error": $.t("wrong_passphrase"),
+                "stop": true,
+                "keepOpen": true
             };
         }
     };
 
-    NRS.getPassphraseValidationLink = function() {
-        return "<br/><a href='#' class='btn btn-xs btn-danger btn-passphrase-validation' data-toggle='modal' data-target='#passphrase_validation_modal'>" + $.t("validate_passphrase") + "</a>";
+    NRS.getPassphraseValidationLink = function(isPassphraseLogin) {
+        var label;
+        if (isPassphraseLogin) {
+            label = $.t("validate_passphrase");
+        } else {
+            label = $.t("account_public_key");
+        }
+        return "<br/><a href='#' class='btn btn-xs btn-danger btn-passphrase-validation' data-toggle='modal' data-target='#passphrase_validation_modal'>" + label + "</a>";
     };
 
     return NRS;

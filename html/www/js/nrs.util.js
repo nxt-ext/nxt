@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -627,10 +627,6 @@ var NRS = (function (NRS, $, undefined) {
         }
     };
 
-    NRS.convertNumericToRSAccountFormat = function (account) {
-		return converters.convertNumericToRSAccountFormat(account);
-	};
-
     NRS.getAccountLink = function (object, accountKey, accountRef, title, showAccountRS, clazz) {
         var accountRS;
         if (typeof object[accountKey + "RS"] != "undefined") {
@@ -746,10 +742,16 @@ var NRS = (function (NRS, $, undefined) {
 		if ($el.length) {
 			$el.empty().append(data);
 		} else {
-			$el = $("#" + NRS.currentPage + "_table");
-			$el.find("tbody").empty().append(data);
-            $el.find('[data-toggle="tooltip"]').tooltip();
-		}
+            try {
+                $el = $("#" + NRS.currentPage + "_table");
+                $el.find("tbody").empty().append(data);
+                $el.find('[data-toggle="tooltip"]').tooltip();
+            } catch (e) {
+                NRS.logException(e);
+                NRS.logConsole("Raw data: " + data);
+                $el.find("tbody").empty().append("<tr><td>Error processing table data: " + e.message + "</td></tr>");
+            }
+        }
 
 		NRS.dataLoadFinished($el);
 
@@ -809,7 +811,12 @@ var NRS = (function (NRS, $, undefined) {
 		}
 	};
 
-    NRS.createInfoTable = function (data, fixed) {
+    NRS.createInfoTable = function(data, fixed) {
+        var orderedData = {};
+        Object.keys(data).sort().forEach(function(key) {
+            orderedData[key] = data[key];
+        });
+        data = orderedData;
 		var rows = "";
 		for (var key in data) {
             if (!data.hasOwnProperty(key)) {
@@ -1676,6 +1683,20 @@ var NRS = (function (NRS, $, undefined) {
         return {
             feeNQT: "0",
             deadline: "1440"
+        }
+    };
+
+    NRS.convertNumericToRSAccountFormat = function(account) {
+        if (/^NXT\-/i.test(account)) {
+            return String(account).escapeHTML();
+        } else {
+            var address = new NxtAddress();
+
+            if (address.set(account)) {
+                return address.toString().escapeHTML();
+            } else {
+                return "";
+            }
         }
     };
 

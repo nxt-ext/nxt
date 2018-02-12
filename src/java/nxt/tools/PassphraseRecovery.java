@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -126,10 +126,10 @@ public final class PassphraseRecovery {
     }
 
     static class Scanner implements Callable<Solution> {
-        private Map<Long, byte[]> publicKeys;
+        private final Map<Long, byte[]> publicKeys;
         private int[] positions;
-        private char[] wildcard;
-        private char[] dictionary;
+        private final char[] wildcard;
+        private final char[] dictionary;
         private Solution realSolution = NO_SOLUTION;
 
         Scanner(Map<Long, byte[]> publicKeys, int[] positions, char[] wildcard, char[] dictionary) {

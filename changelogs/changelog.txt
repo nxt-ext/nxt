@@ -1,3 +1,17 @@
+nxt-client-1.11.12:
+
+Fixed peer disconnections while downloading the blockchain. Upgrade to this
+release is recommended for all public nodes, to help improve download speeds.
+
+Snapshot code bugfixes. Added a checkpoint after the snapshot hardfork.
+
+Made all toLowerCase/toUpperCase conversions locale insensitive. Should fix the
+problems with running Nxt under Turkish locale.
+
+Updated Bouncy Castle to version 1.59.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.11.11:
 
 Peer networking improvements, increased nxt.maxNumberOfInboundConnections to

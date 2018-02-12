@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -44,7 +44,9 @@ var NRS = (function(NRS, $) {
 		try {
 			NRS.submitForm($modal, $btn);
 		} catch(e) {
-			$modal.find(".error_message").html("Form submission error '" + e.message + "' - please report to developers").show();
+        	NRS.logException(e);
+        	var stackTrace = (e.stack ? " " + e.stack : "");
+			$modal.find(".error_message").html("Form submission error '" + e.message + "' - please report to developers" + stackTrace).show();
 			NRS.unlockForm($modal, $btn);
 		}
 	});
@@ -256,7 +258,7 @@ var NRS = (function(NRS, $) {
 
 		var originalRequestType = requestType;
         if (NRS.isRequireBlockchain(requestType)) {
-			if (NRS.downloadingBlockchain && !NRS.state.apiProxy) {
+			if (NRS.downloadingBlockchain && NRS.settings.transact_during_download === "0" && !NRS.state.apiProxy) {
 				$form.find(".error_message").html($.t("error_blockchain_downloading")).show();
 				if (formErrorFunction) {
 					formErrorFunction();
@@ -367,6 +369,7 @@ var NRS = (function(NRS, $) {
 					if (errorMessage) {
 						$form.find(".error_message").html(errorMessage).show();
 					} else if (successMessage) {
+                        $form.find(".error_message").html("").hide();
 						$.growl(successMessage.escapeHTML(), {
 							type: "success"
 						});

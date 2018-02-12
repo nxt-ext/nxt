@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -165,7 +165,7 @@ public final class VoteWeighting {
             return code;
         }
 
-        public abstract long getBalance(VoteWeighting voteWeighting, long voterId, int height);
+        protected abstract long getBalance(VoteWeighting voteWeighting, long voterId, int height);
 
         public static MinBalanceModel get(byte code) {
             for (MinBalanceModel minBalanceModel : values()) {

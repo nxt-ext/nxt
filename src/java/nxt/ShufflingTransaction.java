@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -109,30 +109,34 @@ public abstract class ShufflingTransaction extends TransactionType {
             Attachment.ShufflingCreation attachment = (Attachment.ShufflingCreation) transaction.getAttachment();
             HoldingType holdingType = attachment.getHoldingType();
             long amount = attachment.getAmount();
-            if (holdingType == HoldingType.NXT) {
-                if (amount < Constants.SHUFFLING_DEPOSIT_NQT || amount > Constants.MAX_BALANCE_NQT) {
-                    throw new NxtException.NotValidException("Invalid NQT amount " + amount
-                            + ", minimum is " + Constants.SHUFFLING_DEPOSIT_NQT);
-                }
-            } else if (holdingType == HoldingType.ASSET) {
-                Asset asset = Asset.getAsset(attachment.getHoldingId());
-                if (asset == null) {
-                    throw new NxtException.NotCurrentlyValidException("Unknown asset " + Long.toUnsignedString(attachment.getHoldingId()));
-                }
-                if (amount <= 0 || amount > asset.getInitialQuantityQNT()) {
-                    throw new NxtException.NotValidException("Invalid asset quantity " + amount);
-                }
-            } else if (holdingType == HoldingType.CURRENCY) {
-                Currency currency = Currency.getCurrency(attachment.getHoldingId());
-                CurrencyType.validate(currency, transaction);
-                if (!currency.isActive()) {
-                    throw new NxtException.NotCurrentlyValidException("Currency is not active: " + currency.getCode());
-                }
-                if (amount <= 0 || amount > Constants.MAX_CURRENCY_TOTAL_SUPPLY) {
-                    throw new NxtException.NotValidException("Invalid currency amount " + amount);
-                }
-            } else {
-                throw new RuntimeException("Unsupported holding type " + holdingType);
+            switch (holdingType) {
+                case NXT:
+                    if (amount < Constants.SHUFFLING_DEPOSIT_NQT || amount > Constants.MAX_BALANCE_NQT) {
+                        throw new NxtException.NotValidException("Invalid NQT amount " + amount
+                                + ", minimum is " + Constants.SHUFFLING_DEPOSIT_NQT);
+                    }
+                    break;
+                case ASSET:
+                    Asset asset = Asset.getAsset(attachment.getHoldingId());
+                    if (asset == null) {
+                        throw new NxtException.NotCurrentlyValidException("Unknown asset " + Long.toUnsignedString(attachment.getHoldingId()));
+                    }
+                    if (amount <= 0 || amount > asset.getInitialQuantityQNT()) {
+                        throw new NxtException.NotValidException("Invalid asset quantity " + amount);
+                    }
+                    break;
+                case CURRENCY:
+                    Currency currency = Currency.getCurrency(attachment.getHoldingId());
+                    CurrencyType.validate(currency, transaction);
+                    if (!currency.isActive()) {
+                        throw new NxtException.NotCurrentlyValidException("Currency is not active: " + currency.getCode());
+                    }
+                    if (amount <= 0 || amount > Constants.MAX_CURRENCY_TOTAL_SUPPLY) {
+                        throw new NxtException.NotValidException("Invalid currency amount " + amount);
+                    }
+                    break;
+                default:
+                    throw new RuntimeException("Unsupported holding type " + holdingType);
             }
             if (attachment.getParticipantCount() < Constants.MIN_NUMBER_OF_SHUFFLING_PARTICIPANTS
                     || attachment.getParticipantCount() > Constants.MAX_NUMBER_OF_SHUFFLING_PARTICIPANTS) {
@@ -326,12 +330,12 @@ public abstract class ShufflingTransaction extends TransactionType {
         }
 
         @Override
-        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) throws NxtException.NotValidException {
+        Attachment.AbstractAttachment parseAttachment(ByteBuffer buffer, byte transactionVersion) {
             return new Attachment.ShufflingProcessing(buffer, transactionVersion);
         }
 
         @Override
-        Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) throws NxtException.NotValidException {
+        Attachment.AbstractAttachment parseAttachment(JSONObject attachmentData) {
             return new Attachment.ShufflingProcessing(attachmentData);
         }
 

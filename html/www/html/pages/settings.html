@@ -1,6 +1,6 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~ Copyright © 2013-2016 The Nxt Core Developers.                            ~
-  ~ Copyright © 2016-2017 Jelurida IP B.V.                                    ~
+  ~ Copyright © 2016-2018 Jelurida IP B.V.                                    ~
   ~                                                                           ~
   ~ See the LICENSE.txt file at the top-level directory of this distribution  ~
   ~ for licensing information.                                                ~
@@ -81,6 +81,13 @@
                                 <div class="input-group" style="width:150px">
                                     <input type="password" name="admin_password" id="settings_admin_password" class="form-control" />
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="settings_transact_during_download" data-i18n="transact_during_download">Transact During Download</label>
+                                <select name="transact_during_download" id="settings_transact_during_download" class="form-control" style="width:150px">
+                                    <option value="1" data-i18n="yes">Yes</option>
+                                    <option value="0" data-i18n="no">No</option>
+                                </select>
                             </div>
                         </div>
                     </form>

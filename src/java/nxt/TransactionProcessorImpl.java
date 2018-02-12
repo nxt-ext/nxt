@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -338,7 +338,7 @@ final class TransactionProcessorImpl implements TransactionProcessor {
         return getUnconfirmedTransaction(dbKey);
     }
 
-    Transaction getUnconfirmedTransaction(DbKey dbKey) {
+    private Transaction getUnconfirmedTransaction(DbKey dbKey) {
         Nxt.getBlockchain().readLock();
         try {
             Transaction transaction = transactionCache.get(dbKey);

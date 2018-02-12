@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -573,6 +573,7 @@ final class PeerImpl implements Peer {
                 Object error = response.get("error");
                 if (Errors.SEQUENCE_ERROR.equals(error) && request != Peers.getMyPeerInfoRequest()) {
                     Logger.logDebugMessage("Sequence error, reconnecting to " + host);
+                    deactivate();
                     connect();
                 } else if (!Errors.DOWNLOADING.equals(error) && !Errors.LIGHT_CLIENT.equals(error)) {
                     deactivate();

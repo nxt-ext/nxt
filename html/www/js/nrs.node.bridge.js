@@ -90,7 +90,7 @@ exports.load = function(callback) {
 
 function setCurrentAccount(secretPhrase) {
     client.account = client.getAccountId(secretPhrase);
-    client.accountRS = converters.convertNumericToRSAccountFormat(client.account);
+    client.accountRS = client.convertNumericToRSAccountFormat(client.account);
     client.accountInfo = {}; // Do not cache the public key
     client.resetEncryptionState();
 }

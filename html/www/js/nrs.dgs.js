@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -517,12 +517,21 @@ var NRS = (function(NRS, $) {
         var reader = new FileReader();
         var image = input[0].files[0];
         var img = new Image();
-        img.src = window.URL.createObjectURL(image);
+        if (NRS.isFileReaderSupported()) {
+            img.src = window.URL.createObjectURL(image);
+        } else {
+            NRS.logConsole("Image not displayed when using desktop application");
+            example.hide();
+            return;
+        }
         img.onload = function() {
-            reader.onload = function(output){
-                example.attr("src", output.target.result);
-            };
-        	reader.readAsDataURL(image);
+            var reader = new FileReader();
+            if (reader) {
+                reader.onload = function(output){
+                    example.attr("src", output.target.result);
+                };
+                reader.readAsDataURL(image);
+            }
         }
     };
 

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -556,11 +556,9 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
 
     /**
      * Close the trigger (Trigger interface)
-     *
-     * @throws  SQLException        A SQL error occurred
      */
     @Override
-    public void close() throws SQLException {
+    public void close() {
         if (isEnabled) {
             isEnabled = false;
             indexTriggers.remove(tableName);
@@ -569,11 +567,9 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
 
     /**
      * Remove the trigger (Trigger interface)
-     *
-     * @throws  SQLException        A SQL error occurred
      */
     @Override
-    public void remove() throws SQLException {
+    public void remove() {
         if (isEnabled) {
             isEnabled = false;
             indexTriggers.remove(tableName);
@@ -586,10 +582,9 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
      * @param   conn                Database connection
      * @param   oldRow              The old row or null
      * @param   newRow              The new row or null
-     * @throws  SQLException        A SQL error occurred
      */
     @Override
-    public void fire(Connection conn, Object[] oldRow, Object[] newRow) throws SQLException {
+    public void fire(Connection conn, Object[] oldRow, Object[] newRow) {
         //
         // Ignore the trigger if it is not enabled
         //
@@ -663,13 +658,7 @@ public class FullTextTrigger implements Trigger, TransactionalDb.TransactionCall
     public void rollback() {
         Thread thread = Thread.currentThread();
         synchronized(tableUpdates) {
-            Iterator<TableUpdate> it = tableUpdates.iterator();
-            while (it.hasNext()) {
-                TableUpdate update = it.next();
-                if (update.getThread() == thread) {
-                    it.remove();
-                }
-            }
+            tableUpdates.removeIf(update -> update.getThread() == thread);
         }
     }
 

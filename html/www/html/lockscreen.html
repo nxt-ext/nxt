@@ -1,6 +1,6 @@
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~ Copyright © 2013-2016 The Nxt Core Developers.                            ~
-  ~ Copyright © 2016-2017 Jelurida IP B.V.                                    ~
+  ~ Copyright © 2016-2018 Jelurida IP B.V.                                    ~
   ~                                                                           ~
   ~ See the LICENSE.txt file at the top-level directory of this distribution  ~
   ~ for licensing information.                                                ~
@@ -69,7 +69,7 @@
                         <div class="input-group" style="display:none">
                             <input type="password" class="form-control" id="login_password" name="login_password" placeholder="Your Passphrase" data-i18n="[placeholder]your_passphrase" autofocus />
                             <div class="input-group-btn" style="border:1px solid #fff;">
-                                <button class="btn btn-flat" onclick="NRS.login(1,$('#login_password').val())"><i class="fa fa-arrow-right text-muted"></i></button>
+                                <button class="btn btn-flat" onclick="NRS.login(1,$('#login_password').val(), null, { isPreventLoginToNewAccount: true })"><i class="fa fa-arrow-right text-muted"></i></button>
                             </div>
                         </div>
                     </div>

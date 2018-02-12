@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -381,8 +381,8 @@ final class TransactionDb {
         private final boolean prunablePlainMessage;
         private final boolean prunableEncryptedMessage;
 
-        public PrunableTransaction(long id, TransactionType transactionType, boolean prunableAttachment,
-                                   boolean prunablePlainMessage, boolean prunableEncryptedMessage) {
+        private PrunableTransaction(long id, TransactionType transactionType, boolean prunableAttachment,
+                                    boolean prunablePlainMessage, boolean prunableEncryptedMessage) {
             this.id = id;
             this.transactionType = transactionType;
             this.prunableAttachment = prunableAttachment;

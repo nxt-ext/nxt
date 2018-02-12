@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -343,6 +343,7 @@ var NRS = (function(NRS, $, undefined) {
 					$(this).popover("destroy");
 					$(".popover").remove();
 				});
+                $(".coin-symbol-separator").html(" " + $.t("per") + " ");
 
 				_fix();
 
@@ -364,7 +365,7 @@ var NRS = (function(NRS, $, undefined) {
 					NRS.login(false, NRS.getUrlParameter("account"));
 				} else if (savedPassphrase) {
 					$("#remember_me").prop("checked", true);
-					NRS.login(true, savedPassphrase, null, false, true);
+					NRS.login(true, savedPassphrase, null, { isSavedPassphrase: true });
 				}
 			});
 		});
@@ -708,7 +709,9 @@ var NRS = (function(NRS, $, undefined) {
 		if (callback) {
 			try {
                 callback();
-            } catch(e) { /* ignore since sometimes callback is not a function */ }
+            } catch(e) {
+				NRS.logException(e);
+			}
 		}
 	};
 
@@ -1326,8 +1329,7 @@ var NRS = (function(NRS, $, undefined) {
                         $("#dashboard_message").addClass("alert-success").removeClass("alert-danger").html($.t("status_new_account", {
                                 "account_id": NRS.escapeRespStr(NRS.accountRS),
                                 "public_key": NRS.escapeRespStr(NRS.publicKey)
-                            }) +
-                            NRS.getPassphraseValidationLink() +
+                            }) + NRS.getPassphraseValidationLink(true) +
 							"<br/><br/>" + NRS.blockchainDownloadingMessage() +
                             "<br/><br/>" + NRS.getFundAccountLink()).show();
                     } else {
@@ -1338,10 +1340,10 @@ var NRS = (function(NRS, $, undefined) {
                 } else {
                     var message;
                     if (NRS.publicKey == "") {
-                        message = $.t("status_new_account_no_pk_v2", {
+                        message = $.t("status_new_account_no_pk_v3", {
                             "account_id": NRS.escapeRespStr(NRS.accountRS)
                         });
-                        message += NRS.getPassphraseValidationLink();
+                        message += NRS.getPassphraseValidationLink(false);
                         if (NRS.downloadingBlockchain) {
                             message += "<br/><br/>" + NRS.blockchainDownloadingMessage();
                         }
@@ -1350,7 +1352,7 @@ var NRS = (function(NRS, $, undefined) {
                             "account_id": NRS.escapeRespStr(NRS.accountRS),
                             "public_key": NRS.escapeRespStr(NRS.publicKey)
                         });
-                        message += NRS.getPassphraseValidationLink();
+                        message += NRS.getPassphraseValidationLink(true);
                         if (NRS.downloadingBlockchain) {
                             message += "<br/><br/>" + NRS.blockchainDownloadingMessage();
                         }
@@ -1709,7 +1711,7 @@ var NRS = (function(NRS, $, undefined) {
 				});
 			}
 
-            if (NRS.blocks && NRS.blocks.length > 0 && NRS.baseTargetPercent(NRS.blocks[0]) > 1000 && !NRS.isTestNet) {
+            if (NRS.blocks && NRS.blocks.length > 0 && NRS.baseTargetPercent(NRS.blocks[0]) > 1500 && !NRS.isTestNet) {
                 $.growl($.t("fork_warning_base_target"), {
                     "type": "danger"
                 });

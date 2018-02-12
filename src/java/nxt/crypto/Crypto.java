@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -40,19 +40,16 @@ public final class Crypto {
 
     private static final boolean useStrongSecureRandom = Nxt.getBooleanProperty("nxt.useStrongSecureRandom");
 
-    private static final ThreadLocal<SecureRandom> secureRandom = new ThreadLocal<SecureRandom>() {
-        @Override
-        protected SecureRandom initialValue() {
-            try {
-                SecureRandom secureRandom = useStrongSecureRandom ? SecureRandom.getInstanceStrong() : new SecureRandom();
-                secureRandom.nextBoolean();
-                return secureRandom;
-            } catch (NoSuchAlgorithmException e) {
-                Logger.logErrorMessage("No secure random provider available");
-                throw new RuntimeException(e.getMessage(), e);
-            }
+    private static final ThreadLocal<SecureRandom> secureRandom = ThreadLocal.withInitial(() -> {
+        try {
+            SecureRandom secureRandom = useStrongSecureRandom ? SecureRandom.getInstanceStrong() : new SecureRandom();
+            secureRandom.nextBoolean();
+            return secureRandom;
+        } catch (NoSuchAlgorithmException e) {
+            Logger.logErrorMessage("No secure random provider available");
+            throw new RuntimeException(e.getMessage(), e);
         }
-    };
+    });
 
     private Crypto() {} //never
 

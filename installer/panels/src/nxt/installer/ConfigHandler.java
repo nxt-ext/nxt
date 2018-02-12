@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -27,10 +27,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 final class ConfigHandler {
@@ -108,7 +110,7 @@ final class ConfigHandler {
     private boolean rmdir(String path) {
         try {
             for (Path p: Files.walk(Paths.get(path))
-                    .sorted((a, b) -> b.compareTo(a))
+                    .sorted(Comparator.reverseOrder())
                     .toArray(Path[]::new))
             {
                 Files.delete(p);
@@ -120,9 +122,9 @@ final class ConfigHandler {
     }
 
     public static class Setting {
-        String description;
-        Map<String, String> properties = new HashMap<>();
-        List<String> lines = new LinkedList<>();
+        final String description;
+        final Map<String, String> properties = new HashMap<>();
+        final List<String> lines = new LinkedList<>();
 
         Setting(String description) {
             this.description = description;
@@ -139,7 +141,7 @@ final class ConfigHandler {
         {
             return in.lines()
                     .map(this::readSetting)
-                    .filter(s -> s != null)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             return Collections.emptyList();

@@ -1905,5 +1905,12 @@
   "delete_scheduled_transaction": "Delete Scheduled Transaction",
   "light_client_connecting_to_network": "Connecting to the network... Please try again later.",
   "no_open_api_peers": "No openAPI peers found. Please wait or try to add an openAPI peer manually.",
-  "execution_height":	"Execution Height"
+  "execution_height":	"Execution Height",
+  "passphrase_login_to_new_account": "Your passphrase is associated with an unregistered account __account__. Make sure there is no typo in the passphrase. If you still like to use this passphrase create a new account and use the 'choose your own passphrase' link",
+  "account_public_key": "Account Public Key",
+  "status_new_account_no_pk_v3": "Welcome to your new account. Your account ID is __account_id__ - When funding your account for the first time, you can increase security by also providing your public key.",
+  "currency_mint_initial_difficulty_help": "The exponent of the initial difficulty.",
+  "currency_mint_final_difficulty_help": "The exponent of the final difficulty.",
+  "transact_during_download": "Transact During Download",
+  "per": "per"
 }

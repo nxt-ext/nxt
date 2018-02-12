@@ -1,6 +1,6 @@
 /******************************************************************************
  * Copyright © 2013-2016 The Nxt Core Developers.                             *
- * Copyright © 2016-2017 Jelurida IP B.V.                                     *
+ * Copyright © 2016-2018 Jelurida IP B.V.                                     *
  *                                                                            *
  * See the LICENSE.txt file at the top-level directory of this distribution   *
  * for licensing information.                                                 *
@@ -183,6 +183,7 @@ var NRS = (function(NRS) {
                 expectedResponseStr = NRS.getComparableResponse(expectedResponse, requestType);
             } catch(e) {
                 NRS.logConsole("Cannot parse JSON response for request " + requestType);
+                NRS.logException(e);
                 return;
             }
             var ignoredAddresses = [];
@@ -219,7 +220,7 @@ var NRS = (function(NRS) {
                 var index = confirmationReport.processing.indexOf(fromNode.announcedAddress);
                 confirmationReport.processing.splice(index, 1);
 
-                if (!response.errorCode) {
+                if (!response.errorCode && data["_extra"] !== undefined) {
                     // here it's Ok to modify the response since it is only being used for comparison
                     var node = data["_extra"].node;
                     var type = data["_extra"].requestType;

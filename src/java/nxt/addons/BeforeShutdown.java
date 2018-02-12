@@ -1,6 +1,6 @@
 /*
  * Copyright © 2013-2016 The Nxt Core Developers.
- * Copyright © 2016-2017 Jelurida IP B.V.
+ * Copyright © 2016-2018 Jelurida IP B.V.
  *
  * See the LICENSE.txt file at the top-level directory of this distribution
  * for licensing information.
@@ -21,7 +21,7 @@ import nxt.util.Logger;
 
 public final class BeforeShutdown implements AddOn {
 
-    final String beforeShutdownScript = Nxt.getStringProperty("nxt.beforeShutdownScript");
+    private final String beforeShutdownScript = Nxt.getStringProperty("nxt.beforeShutdownScript");
 
     @Override
     public void shutdown() {
