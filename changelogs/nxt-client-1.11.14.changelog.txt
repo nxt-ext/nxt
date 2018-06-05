@@ -1,0 +1,4 @@
+Updated the translation resource files.
+
+Updated default peers, added checkpoint at height 1865000.
+
