@@ -1,3 +1,11 @@
+nxt-client-1.11.14:
+
+Updated the translation resource files.
+
+Updated default peers, added checkpoint at height 1865000.
+
+
+--------------------------------------------------------------------------------
 nxt-client-1.11.13:
 
 Desktop wallet performance optimizations to reduce excessive load.

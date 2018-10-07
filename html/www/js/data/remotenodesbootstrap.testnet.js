@@ -18,82 +18,32 @@ RemoteNodesManager.prototype.REMOTE_NODES_BOOTSTRAP =
     {
         "peers": [
             {
-                "downloadedVolume": 35186073,
-                "address": "178.150.207.53",
+                "downloadedVolume": 57669241,
+                "address": "159.89.98.88",
                 "inbound": true,
                 "blockchainState": "UP_TO_DATE",
                 "weight": 0,
-                "uploadedVolume": 32756158,
+                "uploadedVolume": 53021877,
                 "services": [
+                    "PRUNABLE",
                     "API",
                     "API_SSL",
                     "CORS"
                 ],
-                "version": "1.11.13",
-                "platform": "https://nxt.noip.me:6877/",
+                "version": "1.11.14",
+                "platform": "FreeBSD amd64",
                 "inboundWebSocket": true,
                 "apiSSLPort": 6877,
-                "lastUpdated": 142893457,
+                "lastUpdated": 153604540,
                 "blacklisted": false,
-                "announcedAddress": "178.150.207.53",
+                "announcedAddress": "testnxt.jelurida.com",
                 "apiPort": 6876,
                 "application": "NRS",
                 "port": 6874,
-                "outboundWebSocket": true,
-                "lastConnectAttempt": 142886221,
-                "state": 1,
-                "shareAddress": true
-            },
-            {
-                "downloadedVolume": 431618414,
-                "address": "5.200.23.15",
-                "inbound": true,
-                "blockchainState": "DOWNLOADING",
-                "weight": 0,
-                "uploadedVolume": 7052432185,
-                "services": [
-                    "API",
-                    "CORS"
-                ],
-                "version": "1.11.12",
-                "platform": "Linux amd64",
-                "inboundWebSocket": false,
-                "lastUpdated": 142896561,
-                "blacklisted": false,
-                "announcedAddress": "5.200.23.15",
-                "apiPort": 6876,
-                "application": "NRS",
-                "port": 6874,
-                "outboundWebSocket": true,
-                "lastConnectAttempt": 142896561,
-                "state": 1,
-                "shareAddress": true
-            },
-            {
-                "downloadedVolume": 2451171,
-                "address": "188.190.229.97",
-                "inbound": true,
-                "blockchainState": "UP_TO_DATE",
-                "weight": 0,
-                "uploadedVolume": 6725015,
-                "services": [
-                    "API",
-                    "CORS"
-                ],
-                "version": "1.11.12",
-                "platform": "Linux amd64",
-                "inboundWebSocket": true,
-                "lastUpdated": 142894857,
-                "blacklisted": false,
-                "announcedAddress": "188.190.229.97",
-                "apiPort": 6876,
-                "application": "NRS",
-                "port": 6874,
-                "outboundWebSocket": true,
-                "lastConnectAttempt": 142891241,
+                "outboundWebSocket": false,
+                "lastConnectAttempt": 153604540,
                 "state": 1,
                 "shareAddress": true
             }
-        ],
-        "requestProcessingTime": 3
+        ]
     };
